@@ -49,7 +49,7 @@ public class ConformalLab {
 	
 	
 	public static void setStatus(final String status) {
-		getDisplay().asyncExec(new Runnable(){
+		invokeOnSWT(new Runnable(){
 			public void run() {
 				applicationWindow.setStatus(status);				
 			}
