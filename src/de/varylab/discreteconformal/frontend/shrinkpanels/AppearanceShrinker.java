@@ -52,7 +52,7 @@ import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
 import de.varylab.discreteconformal.frontend.widget.ColorButton.ColorChangedListener;
 import de.varylab.discreteconformal.heds.CFace;
 import de.varylab.discreteconformal.heds.CVertex;
-import de.varylab.discreteconformal.heds.HDS;
+import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.bsp.KdTree;
 import de.varylab.discreteconformal.heds.util.MeshUtility;
 
@@ -202,7 +202,7 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 		IndexedFaceSet ifs = ConformalLab.getGeometryController().getIndexedFaceSet();
 		if (vColorCurvature.getSelection()) {
 			if (vertexColors == null ) {
-				HDS mesh = ConformalLab.getGeometryController().getHDS();
+				CHDS mesh = ConformalLab.getGeometryController().getHDS();
 				double scale = meanEdgeLength * 5;
 				KdTree<CVertex> kd = ConformalLab.getGeometryController().getKdTree();
 				Double[] K    = new Double[mesh.numFaces()];
@@ -239,7 +239,7 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 			updateVertexColors();
 	}
 
-	public void geometryChanged(HDS heds) {
+	public void geometryChanged(CHDS heds) {
 		updateStates();
 		vertexColors = null;
 		vColorNone.setSelection(true);

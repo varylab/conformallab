@@ -16,7 +16,7 @@ import no.uib.cipr.matrix.EVD;
 import de.varylab.discreteconformal.heds.CEdge;
 import de.varylab.discreteconformal.heds.CFace;
 import de.varylab.discreteconformal.heds.CVertex;
-import de.varylab.discreteconformal.heds.HDS;
+import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.bsp.KdTree;
 import de.varylab.discreteconformal.heds.bsp.KdUtility;
 import de.varylab.discreteconformal.heds.bsp.KdTree.KdPosition;
@@ -155,7 +155,7 @@ public class MeshUtility {
 			return new Basis(c1,c2,c3);
 	}
 	
-	public static double meanEdgeLength(HDS mesh) {
+	public static double meanEdgeLength(CHDS mesh) {
 		double result = 0.0;
 		for (CEdge e : mesh.getEdges()) {
 			Point s = e.getStartVertex().getPosition();

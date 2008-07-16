@@ -13,13 +13,13 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CEdge;
 import de.varylab.discreteconformal.heds.CFace;
 import de.varylab.discreteconformal.heds.CVertex;
-import de.varylab.discreteconformal.heds.HDS;
+import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.bsp.KdTree;
 
 public class GeometryController {
 
-	private HDS
+	private CHDS
 		heds = null;
 	private IndexedFaceSet
 		ifs = new IndexedFaceSet();
@@ -30,7 +30,7 @@ public class GeometryController {
 	
 	public static interface GeometryChangedListener{
 		
-		public void geometryChanged(HDS heds);
+		public void geometryChanged(CHDS heds);
 		
 	}
 	
@@ -52,7 +52,7 @@ public class GeometryController {
 			l.geometryChanged(getHDS());
 	}
 	
-	public HDS getHDS() {
+	public CHDS getHDS() {
 		return heds;
 	}
 	
@@ -64,7 +64,7 @@ public class GeometryController {
 		return kdTree;
 	}
 
-	public void setGeometry(HDS heds) {
+	public void setGeometry(CHDS heds) {
 		ConverterHeds2JR<CVertex, CEdge, CFace> converter = new ConverterHeds2JR<CVertex, CEdge, CFace>();
 		this.heds = heds;
 		ifs = converter.heds2ifs(heds, new PositionAdapter());
@@ -74,7 +74,7 @@ public class GeometryController {
 	
 	public void setGeometry(IndexedFaceSet ifs) {
 		ConverterJR2Heds<CVertex, CEdge, CFace> converter = new ConverterJR2Heds<CVertex, CEdge, CFace>(CVertex.class, CEdge.class, CFace.class);
-		heds = new HDS();
+		heds = new CHDS();
 		
 		converter.ifs2heds(ifs, heds, new PositionAdapter());
 		triangulateQuadMesh(heds);

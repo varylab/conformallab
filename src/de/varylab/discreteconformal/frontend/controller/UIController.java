@@ -14,7 +14,7 @@ import de.jreality.ui.viewerapp.ViewerApp;
 import de.jreality.util.CameraUtility;
 import de.varylab.discreteconformal.ConformalLab;
 import de.varylab.discreteconformal.frontend.controller.GeometryController.GeometryChangedListener;
-import de.varylab.discreteconformal.heds.HDS;
+import de.varylab.discreteconformal.heds.CHDS;
 
 public class UIController implements GeometryChangedListener{
 
@@ -81,7 +81,7 @@ public class UIController implements GeometryChangedListener{
 		return meshRoot;
 	}
 	
-	public void geometryChanged(HDS heds) {
+	public void geometryChanged(CHDS heds) {
 		updateGeometry();
 		encompass();
 	}
