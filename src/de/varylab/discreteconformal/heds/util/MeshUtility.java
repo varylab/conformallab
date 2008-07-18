@@ -1,10 +1,8 @@
 package de.varylab.discreteconformal.heds.util;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.min;
 import geom3d.Basis;
 import geom3d.Point;
-import geom3d.Quad;
 import geom3d.Vector;
 
 import java.util.Collection;
@@ -13,10 +11,12 @@ import java.util.LinkedList;
 
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.EVD;
+import de.jreality.math.Matrix;
+import de.jreality.math.MatrixBuilder;
 import de.varylab.discreteconformal.heds.CEdge;
 import de.varylab.discreteconformal.heds.CFace;
-import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.heds.CHDS;
+import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.heds.bsp.KdTree;
 import de.varylab.discreteconformal.heds.bsp.KdUtility;
 import de.varylab.discreteconformal.heds.bsp.KdTree.KdPosition;
@@ -63,7 +63,7 @@ public class MeshUtility {
 		double edgeLength = 0;
 		
 		for(CEdge e : edges){
-			beta = e.getAngle();
+			beta = e.getCurvature();
 			edgeLength = e.getLength();
 			
 			Vector edge = e.getVector();
@@ -143,7 +143,7 @@ public class MeshUtility {
 			double edgeLength = 0;
 			
 			for(CEdge e :edges){
-				beta = e.getAngle();
+				beta = e.getCurvature();
 				edgeLength = e.getLength();
 				tmp = getEdgeCurvatureTensor(e);
 				matrix.add(beta*edgeLength,tmp);
@@ -182,7 +182,7 @@ public class MeshUtility {
 		double edgeLength = 0;
 		
 		for(CEdge e :edges){
-			beta = e.getAngle();
+			beta = e.getCurvature();
 			edgeLength = e.getLength();
 			tmp = getEdgeCurvatureTensor(e);
 			matrix.add(beta*edgeLength,tmp);
@@ -218,68 +218,38 @@ public class MeshUtility {
 		}
 		return new LinkedList<CFace>(faces);
 	}
-	
-	public static double getSpacingDistance(double k, double eps){
-		return 2*Math.sqrt(eps*(2/abs(k)-eps));
-	}
-	
-	public static double getSpacingDistance(double k){
-		double eps = 0.008;
-		return 2*Math.sqrt(eps*(2/abs(k)-eps));
-	}
-	
-	public static Quad createQuad(Basis basis, Point center,double kMin,double kMax, double scale ){
-		Quad quad = new Quad();
-		double distMin = getSpacingDistance(kMin);
-		Vector dMin = new Vector(basis.getX()).scaleTo(distMin);
-		
-		double distMax = getSpacingDistance(kMax);
-		Vector dMax = new Vector(basis.getY()).scaleTo(distMax);
-		if(distMin>scale*20)
-			dMin = new Vector(basis.getX()).scaleTo(scale*50);
-		
-		if (distMax>scale*20)
-			dMax = new Vector(basis.getY()).scaleTo(scale*50);
-		
-		Point min1 = new Point(center).add(dMin).asPoint();
-		
-		quad.setA( new Point(min1).add(dMax).asPoint());
-		quad.setB( new Point(min1).add(dMax.times(-1)).asPoint());
-		Point min2 = new Point(center).add(dMin.times(-1)).asPoint();
-		quad.setC( new Point(min2).add(dMax).asPoint());
-		quad.setD(new Point(min2).add(dMax.times(-1)).asPoint());
 
-		return quad;
-	}
-	public static Quad createQuad(Basis basis, Point center,double kMin,double kMax,double scale, double maxScale ){
-		Quad quad = new Quad();
-		
-		double distMin = getSpacingDistance(kMin, scale);
-		distMin = min(distMin, maxScale);
-		Vector dMin = new Vector(basis.getX()).scaleTo(distMin);
-		
-		double distMax = getSpacingDistance(kMax, scale);
-		distMax = min(distMax, maxScale);
-		Vector dMax = new Vector(basis.getY()).scaleTo(distMax);
-		
-		Point min1 = new Point(center).add(dMin).asPoint();
-		
-		quad.setA( new Point(min1).add(dMax).asPoint());
-		quad.setB( new Point(min1).add(dMax.times(-1)).asPoint());
-		Point min2 = new Point(center).add(dMin.times(-1)).asPoint();
-		quad.setC( new Point(min2).add(dMax).asPoint());
-		quad.setD(new Point(min2).add(dMax.times(-1)).asPoint());
 
-		return quad;
+	public static double getCurvature(CEdge e) {
+		CFace lf = e.getLeftFace();
+		CFace rf = e.getRightFace();
+		if (lf == null || rf == null)
+			return 0;
+		
+		return curvatureSign(e)*lf.getNormal().getAngle(rf.getNormal());
 	}
-//	test usage
-//	public static void main(String[] args) {
-//		Basis basis = new Basis();
-//		basis.setX(new Vector(1,0,0));
-//		basis.setY(new Vector(0,1,0));
-//		basis.setZ(new Vector(0,0,1));
-//		Point center = new Point(0,0,0);
-//		Quad result = createQuad(basis, center, 0.01, 0.1);
-//		System.err.println(result.toString());
-//	}
+	
+	/*
+	 * 
+	 * @param e, an MEdge
+	 * @return -1,0,1 the sign of the angle between the left and the right face.
+	 * 			negative is concave, positive if convex
+	 *          
+	 */
+	private static double curvatureSign(CEdge e){
+		Matrix m = MatrixBuilder.euclidean().getMatrix();
+		for (int i = 0; i < 3; i++) {
+			m.setEntry(i, 0, e.getVector().get(i));
+			m.setEntry(i, 1, e.getLeftFace().getNormal().get(i));
+			m.setEntry(i, 2, e.getRightFace().getNormal().get(i));
+		}
+		double det = m.getDeterminant() ;
+		if(Math.abs(det)< 1E-7)
+			return 0;
+		else if (det<0)
+			return -1;
+		else 
+			return 1;
+	}
+	
 }

@@ -18,22 +18,6 @@ public class CVertex extends Vertex<CVertex, CEdge, CFace> implements HasPositio
 		theta = 2 * PI;
 
 	
-	public double getVertexEnergy() {
-		return 0.5 * theta * u;
-		
-	}
-//	
-//	public double getVertexGradient() {
-//		
-//	}
-//	
-//	
-//	public getSumAlpha() {
-//		
-//		
-//	}
-	
-	
 	public double getU() {
 		return u;
 	}
