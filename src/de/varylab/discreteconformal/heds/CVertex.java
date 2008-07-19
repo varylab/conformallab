@@ -14,17 +14,8 @@ public class CVertex extends Vertex<CVertex, CEdge, CFace> implements HasPositio
 	private Vector
 		N = new Vector();
 	private double 
-		u = 1.0,
 		theta = 2 * PI;
 
-	
-	public double getU() {
-		return u;
-	}
-
-	public void setU(double u) {
-		this.u = u;
-	}
 
 	public Point getPosition() {
 		return P;
