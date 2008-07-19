@@ -1,58 +1,49 @@
 package de.varylab.discreteconformal.heds;
 
+import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static java.lang.Math.PI;
 import static java.lang.Math.atan2;
 import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
-import geom3d.Point;
-import geom3d.Triangle;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
+import no.uib.cipr.matrix.sparse.SparseVector;
 import de.jtem.halfedge.HalfEdgeDataStructure;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.math.Lob;
 
 public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 
+	
 	public CHDS() {
 		super(CVertex.class, CEdge.class, CFace.class);
 	}
 
 	
-	public void prepareData(final Vector theta) {
+	public void prepareInvariantData(final Vector theta) {
 		// set initial lambdas
 		for (final CEdge e : getPositiveEdges()) {
 			final double l = e.getLength();
-			e.setLambda(2.0 * log(l));
+			e.setLambda(log(l));
 			e.getOppositeEdge().setLambda(e.getLambda());
 		}
 		// set thetas
 		for (final CVertex v : getVertices()) {
-			v.setTheta(theta.get(v.getIndex()));
+			if (HalfEdgeUtils.isBoundaryVertex(v))
+				v.setTheta(0.0);
+			else
+				v.setTheta(theta.get(v.getIndex()));
 		}
-		// set initial face energy
+		Vector u = new SparseVector(numVertices());
+		double a[] = new double[3];
 		for (final CFace f : getFaces()) {
-			final CEdge 
-				e1 = f.getBoundaryEdge(),
-				e2 = e1.getNextEdge(),
-				e3 = e1.getPreviousEdge();
-			final Point 
-				p1 = e1.getTargetVertex().getPosition(),
-				p2 = e2.getTargetVertex().getPosition(),
-				p3 = e3.getTargetVertex().getPosition();
-			final double 
-				a1 = Triangle.angleAt(p2, p1, p3),
-				a2 = Triangle.angleAt(p3, p2, p1),
-				a3 = Triangle.angleAt(p1, p3, p2);
-			final double 
-				E1 = a1*e1.getLambda() + a2*e2.getLambda() + a3*e3.getLambda(),
-				E2 = Lob.valueAt(a1) + Lob.valueAt(a2) + Lob.valueAt(a3);
-			f.setEnergy(E1 + E2);
+			f.setEnergy(triangleEnergyAndAlphas(u, f, a));
 		}
 	}
 	
 	
-	private void cotEntries(final Vector u, final CFace f, final double[] cotE, final double[] cotV) {
+	private void triangleHessian(final Vector u, final CFace f, final double[] cotE, final double[] cotV) {
 		final CEdge
 			e1 = f.getBoundaryEdge(),
 			e2 = e1.getNextEdge(),
@@ -164,8 +155,10 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 		if (H != null)
 			H.zero();
 		for (final CVertex v : getVertices()) {
-			if (E != null)
-				E[0] += v.getTheta() * u.get(v.getIndex());
+			if (E != null) {
+				if (!HalfEdgeUtils.isBoundaryVertex(v))
+					E[0] += v.getTheta() * u.get(v.getIndex());
+			}
 			if (G != null)
 				G.add(v.getIndex(), v.getTheta());
 		}
@@ -194,18 +187,27 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 				final double[] 
 				     cotE = {0, 0, 0},
 				     cotV = {0, 0, 0};
-				cotEntries(u, t, cotE, cotV);
+				triangleHessian(u, t, cotE, cotV);
 				// edge hessian
-				H.add(v1.getIndex(), v3.getIndex(), cotE[0]);
-				H.add(v3.getIndex(), v1.getIndex(), cotE[0]);
-				H.add(v2.getIndex(), v1.getIndex(), cotE[1]);
-				H.add(v1.getIndex(), v2.getIndex(), cotE[1]);
-				H.add(v2.getIndex(), v3.getIndex(), cotE[2]);
-				H.add(v3.getIndex(), v2.getIndex(), cotE[2]);
+				if (!isBoundaryVertex(v1) && !isBoundaryVertex(v3)) {
+					H.add(v1.getIndex(), v3.getIndex(), -cotE[0]);
+					H.add(v3.getIndex(), v1.getIndex(), -cotE[0]);
+				}
+				if (!isBoundaryVertex(v2) && !isBoundaryVertex(v1)) {
+					H.add(v2.getIndex(), v1.getIndex(), -cotE[1]);
+					H.add(v1.getIndex(), v2.getIndex(), -cotE[1]);
+				}
+				if (!isBoundaryVertex(v3) && !isBoundaryVertex(v2)) {
+					H.add(v2.getIndex(), v3.getIndex(), -cotE[2]);
+					H.add(v3.getIndex(), v2.getIndex(), -cotE[2]);
+				}
 				// vertex hessian
-				H.add(v1.getIndex(), v1.getIndex(), cotV[0]);
-				H.add(v2.getIndex(), v2.getIndex(), cotV[1]);
-				H.add(v3.getIndex(), v3.getIndex(), cotV[2]);
+				if (!isBoundaryVertex(v1))
+					H.add(v1.getIndex(), v1.getIndex(), cotV[0]);
+				if (!isBoundaryVertex(v2))
+					H.add(v2.getIndex(), v2.getIndex(), cotV[1]);
+				if (!isBoundaryVertex(v3))
+					H.add(v3.getIndex(), v3.getIndex(), cotV[2]);
 			}
 		}
 	}

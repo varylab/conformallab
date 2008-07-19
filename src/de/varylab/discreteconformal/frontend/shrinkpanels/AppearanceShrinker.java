@@ -103,7 +103,7 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 	}
 
 	private void createLayout() {
-		setLayout(new GridLayout(2, true));
+		setLayout(new GridLayout(1, true));
 		
 		Group viewGroup = new Group(this, SHADOW_ETCHED_IN);
 		viewGroup.setText("View Settings");
@@ -202,7 +202,7 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 		IndexedFaceSet ifs = ConformalLab.getGeometryController().getIndexedFaceSet();
 		if (vColorCurvature.getSelection()) {
 			if (vertexColors == null ) {
-				CHDS mesh = ConformalLab.getGeometryController().getHDS();
+				CHDS mesh = ConformalLab.getGeometryController().getCHDS();
 				double scale = meanEdgeLength * 5;
 				KdTree<CVertex> kd = ConformalLab.getGeometryController().getKdTree();
 				Double[] K    = new Double[mesh.numFaces()];

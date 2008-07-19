@@ -49,10 +49,10 @@ public class GeometryController {
 	
 	private void fireGeometryChanged() {
 		for (GeometryChangedListener l : changeListener)
-			l.geometryChanged(getHDS());
+			l.geometryChanged(getCHDS());
 	}
 	
-	public CHDS getHDS() {
+	public CHDS getCHDS() {
 		return heds;
 	}
 	

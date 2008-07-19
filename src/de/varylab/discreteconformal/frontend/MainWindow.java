@@ -31,6 +31,7 @@ import de.varylab.discreteconformal.frontend.action.ExportU3DAction;
 import de.varylab.discreteconformal.frontend.action.OpenMeshAction;
 import de.varylab.discreteconformal.frontend.action.QuitProgramAction;
 import de.varylab.discreteconformal.frontend.shrinkpanels.AppearanceShrinker;
+import de.varylab.discreteconformal.frontend.shrinkpanels.ConformalUnwrapShrinker;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
 
 public class MainWindow extends ApplicationWindow implements IExceptionHandler{
@@ -99,12 +100,8 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 //		new KdTreeTest(testsShrinkContainer);
 //		new PrincipalTests(testsShrinkContainer);
 		ShrinkPanelContainer mainShrinkContainer = new ShrinkPanelContainer(leftFolder);
+		new ConformalUnwrapShrinker(mainShrinkContainer);
 		new AppearanceShrinker(mainShrinkContainer);
-//		new CircleCoverTests(mainShrinkContainer);
-//		new QuadMeshShrinker(mainShrinkContainer);
-//		new StatusShrinker(mainShrinkContainer);
-//		new PrincipalShrinker(mainShrinkContainer);
-		
 		
 		testsPage.setControl(testsShrinkContainer);
 		mainPage.setControl(mainShrinkContainer);
