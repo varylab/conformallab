@@ -15,9 +15,10 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.ConformalLab;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanel;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
-import de.varylab.discreteconformal.heds.CEdge;
 import de.varylab.discreteconformal.heds.CHDS;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.varylab.discreteconformal.math.optimization.NotConvergentException;
+import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer;
+import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer.Solver;
 
 public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionListener{
 
@@ -40,13 +41,11 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 	}
 
 
-	@Override
 	public void widgetDefaultSelected(SelectionEvent e) {
 		
 	}
 
 
-	@Override
 	public void widgetSelected(SelectionEvent e) {
 		Object s = e.getSource();
 		if (computeEnergyBtn == s) {
@@ -57,18 +56,28 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 	
 	private void computeEnergy() {
 		CHDS hds = ConformalLab.getGeometryController().getCHDS();
-		DenseVector u = new DenseVector(hds.numVertices());
 		DenseVector theta = new DenseVector(hds.numVertices());
-		DenseVector G = new DenseVector(hds.numVertices());
-		Matrix H = new DenseMatrix(hds.numVertices(), hds.numVertices());
 		for (int i = 0; i < theta.size(); i++) {
 			if (HalfEdgeUtils.isBoundaryVertex(hds.getVertex(i)))
 				theta.set(i, 0.0);
 			else
 				theta.set(i, 2 * Math.PI);
 		}
-		double[] E = {0.0};
 		hds.prepareInvariantData(theta);
+		int n = hds.getDomainDimension();
+
+		DenseVector u = new DenseVector(n);
+		NewtonOptimizer optimizer = new NewtonOptimizer();
+		optimizer.setSolver(Solver.GMRES);
+		try {
+			optimizer.minimize(u, hds);
+		} catch (NotConvergentException e) {
+			e.printStackTrace();
+		}
+
+		double[] E = {0.0};
+		DenseVector G = new DenseVector(n);
+		Matrix H = new DenseMatrix(n, n);
 		hds.conformalEnergy(u, E, G, H);
 		System.err.println("Energy: " + E[0]);
 		System.err.println(G.toString());
@@ -78,12 +87,6 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 			}
 			System.err.print("\n");
 		}
-		for (CEdge e : hds.getPositiveEdges()) {
-			System.err.println("Lambda: " + e.getLambda());
-		}
-		System.err.println("Vertices -------------------------");
-		for (CVertex v: hds.getVertices()) 
-			System.err.println("V" + v.getIndex() + ": "+ v.getPosition());
 	}
 	
 	

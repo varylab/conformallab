@@ -15,6 +15,8 @@ public class CVertex extends Vertex<CVertex, CEdge, CFace> implements HasPositio
 		N = new Vector();
 	private double 
 		theta = 2 * PI;
+	private Integer
+		solverIndex = -1;
 
 
 	public Point getPosition() {
@@ -39,6 +41,14 @@ public class CVertex extends Vertex<CVertex, CEdge, CFace> implements HasPositio
 
 	public void setTheta(double theta) {
 		this.theta = theta;
+	}
+
+	public Integer getSolverIndex() {
+		return solverIndex;
+	}
+
+	public void setSolverIndex(Integer solverIndex) {
+		this.solverIndex = solverIndex;
 	}
 
 

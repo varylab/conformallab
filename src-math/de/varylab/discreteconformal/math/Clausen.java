@@ -16,7 +16,7 @@ public class Clausen {
 	
 	private Clausen() {}
 
-	public static double valueAt(double x) {
+	public static double clausen(double x) {
 		x = Math.IEEEremainder(x, TWO_PI);
 		if (x == 0.0) {
 			return 0.0;

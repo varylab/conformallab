@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.heds;
 
-import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
+import static de.varylab.discreteconformal.math.Lob.lob;
 import static java.lang.Math.PI;
 import static java.lang.Math.atan2;
 import static java.lang.Math.exp;
@@ -11,16 +11,27 @@ import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.SparseVector;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.varylab.discreteconformal.math.Lob;
+import de.varylab.discreteconformal.math.optimization.Optimizable;
 
-public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
+public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implements Optimizable{
 
+	
+	private Integer 
+		dim = 0;
 	
 	public CHDS() {
 		super(CVertex.class, CEdge.class, CFace.class);
 	}
 
 	
+	private boolean isVariable(CVertex v) {
+		return v.getSolverIndex() >= 0;
+	}
+	
+	/**
+	 * Compute algorithm invariant data
+	 * @param theta the prescribed angle sum of triangles around each vertex
+	 */
 	public void prepareInvariantData(final Vector theta) {
 		// set initial lambdas
 		for (final CEdge e : getPositiveEdges()) {
@@ -28,12 +39,16 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 			e.setLambda(log(l));
 			e.getOppositeEdge().setLambda(e.getLambda());
 		}
-		// set thetas
+		// set thetas and solver indices
+		dim = 0;
 		for (final CVertex v : getVertices()) {
-			if (HalfEdgeUtils.isBoundaryVertex(v))
+			if (HalfEdgeUtils.isBoundaryVertex(v)) {
 				v.setTheta(0.0);
-			else
+				v.setSolverIndex(dim++);
+			} else {
 				v.setTheta(theta.get(v.getIndex()));
+				v.setSolverIndex(-1);
+			}
 		}
 		Vector u = new SparseVector(numVertices());
 		double a[] = new double[3];
@@ -53,9 +68,9 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 			v2 = e2.getTargetVertex(),
 			v3 = e3.getTargetVertex();
 		final double 
-			u1 = u.get(v1.getIndex()),
-			u2 = u.get(v2.getIndex()),
-			u3 = u.get(v3.getIndex());
+			u1 = isVariable(v1) ? u.get(v1.getSolverIndex()) : 0.0,
+			u2 = isVariable(v2) ? u.get(v2.getSolverIndex()) : 0.0,
+			u3 = isVariable(v3) ? u.get(v3.getSolverIndex()) : 0.0;
 		final double 
 			x12 = e2.getLambda() + u1 + u2,
 			x23 = e3.getLambda() + u2 + u3,
@@ -105,9 +120,9 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 		a123[1] = 0.0;
 		a123[2] = 0.0;
 		final double 
-			u1 = u.get(v1.getIndex()),
-			u2 = u.get(v2.getIndex()),
-			u3 = u.get(v3.getIndex());
+			u1 = isVariable(v1) ? u.get(v1.getSolverIndex()) : 0.0,
+			u2 = isVariable(v2) ? u.get(v2.getSolverIndex()) : 0.0,
+			u3 = isVariable(v3) ? u.get(v3.getSolverIndex()) : 0.0;
 		final double 
 			umean = (u1+u2+u3)/3;
 		final double 
@@ -138,7 +153,7 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 		}
 		final double 
 			E1 = a123[0]*x23 + a123[1]*x31 + a123[2]*x12,
-			E2 = Lob.valueAt(a123[0]) + Lob.valueAt(a123[1]) + Lob.valueAt(a123[2]),
+			E2 = lob(a123[0]) + lob(a123[1]) + lob(a123[2]),
 			E3 = - PI * umean - f.getEnergy();
 		return E1 + E2 + E3; 
 	}
@@ -155,12 +170,12 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 		if (H != null)
 			H.zero();
 		for (final CVertex v : getVertices()) {
-			if (E != null) {
-				if (!HalfEdgeUtils.isBoundaryVertex(v))
-					E[0] += v.getTheta() * u.get(v.getIndex());
-			}
+			if (!isVariable(v))
+				continue;
+			if (E != null)
+				E[0] += v.getTheta() * u.get(v.getSolverIndex());
 			if (G != null)
-				G.add(v.getIndex(), v.getTheta());
+				G.add(v.getSolverIndex(), v.getTheta());
 		}
 		if (E != null)
 			E[0] *= 0.5;
@@ -179,9 +194,12 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 			if (E != null)
 				E[0] += e;
 			if (G != null) {
-				G.add(v1.getIndex(), -a123[0]);
-				G.add(v2.getIndex(), -a123[1]);
-				G.add(v3.getIndex(), -a123[2]);
+				if (isVariable(v1))
+					G.add(v1.getSolverIndex(), -a123[0]);
+				if (isVariable(v2))
+					G.add(v2.getSolverIndex(), -a123[1]);
+				if (isVariable(v3))
+					G.add(v3.getSolverIndex(), -a123[2]);
 			}
 			if (H != null) {
 				final double[] 
@@ -189,27 +207,60 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 				     cotV = {0, 0, 0};
 				triangleHessian(u, t, cotE, cotV);
 				// edge hessian
-				if (!isBoundaryVertex(v1) && !isBoundaryVertex(v3)) {
-					H.add(v1.getIndex(), v3.getIndex(), -cotE[0]);
-					H.add(v3.getIndex(), v1.getIndex(), -cotE[0]);
+				if (isVariable(v1) && isVariable(v3)) {
+					H.add(v1.getSolverIndex(), v3.getSolverIndex(), -cotE[0]);
+					H.add(v3.getSolverIndex(), v1.getSolverIndex(), -cotE[0]);
 				}
-				if (!isBoundaryVertex(v2) && !isBoundaryVertex(v1)) {
-					H.add(v2.getIndex(), v1.getIndex(), -cotE[1]);
-					H.add(v1.getIndex(), v2.getIndex(), -cotE[1]);
+				if (isVariable(v2) && isVariable(v1)) {
+					H.add(v2.getSolverIndex(), v1.getSolverIndex(), -cotE[1]);
+					H.add(v1.getSolverIndex(), v2.getSolverIndex(), -cotE[1]);
 				}
-				if (!isBoundaryVertex(v3) && !isBoundaryVertex(v2)) {
-					H.add(v2.getIndex(), v3.getIndex(), -cotE[2]);
-					H.add(v3.getIndex(), v2.getIndex(), -cotE[2]);
+				if (isVariable(v3) && isVariable(v2)) {
+					H.add(v2.getSolverIndex(), v3.getSolverIndex(), -cotE[2]);
+					H.add(v3.getSolverIndex(), v2.getSolverIndex(), -cotE[2]);
 				}
 				// vertex hessian
-				if (!isBoundaryVertex(v1))
-					H.add(v1.getIndex(), v1.getIndex(), cotV[0]);
-				if (!isBoundaryVertex(v2))
-					H.add(v2.getIndex(), v2.getIndex(), cotV[1]);
-				if (!isBoundaryVertex(v3))
-					H.add(v3.getIndex(), v3.getIndex(), cotV[2]);
+				if (isVariable(v1))
+					H.add(v1.getSolverIndex(), v1.getSolverIndex(), cotV[0]);
+				if (isVariable(v2))
+					H.add(v2.getSolverIndex(), v2.getSolverIndex(), cotV[1]);
+				if (isVariable(v3))
+					H.add(v3.getSolverIndex(), v3.getSolverIndex(), cotV[2]);
 			}
 		}
+	}
+
+
+	public Double evaluate(Vector x, Vector gradient, Matrix hessian) {
+		double[] E = new double[]{0.0};
+		conformalEnergy(x, E, gradient, hessian);
+		return E[0];
+	}
+
+
+	public Double evaluate(Vector x, Vector gradient) {
+		double[] E = new double[]{0.0};
+		conformalEnergy(x, E, gradient, null);
+		return E[0];
+	}
+
+
+	public Double evaluate(Vector x, Matrix hessian) {
+		double[] E = new double[]{0.0};
+		conformalEnergy(x, E, null, hessian);
+		return E[0];
+	}
+
+
+	public Double evaluate(Vector x) {
+		double[] E = new double[]{0.0};
+		conformalEnergy(x, E, null, null);
+		return E[0];
+	}
+
+
+	public Integer getDomainDimension() {
+		return dim;
 	}
 	
 	
