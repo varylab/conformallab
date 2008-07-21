@@ -114,8 +114,8 @@ public class NewtonOptimizer implements Optimizer{
 				try {
 					S.solve(hess, grad, dx);
 				} catch (IterativeSolverNotConvergedException e) {
-					System.err.println("Hessian: " + hess);
-					System.err.println("Gradient: " + grad);
+//					System.err.println("Hessian: " + hess);
+//					System.err.println("Gradient: " + grad);
 					throw new NotConvergentException("Error 1: Newton's step could not be computed!", grad.norm(norm));
 				}
 			}

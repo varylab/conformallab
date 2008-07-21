@@ -44,10 +44,10 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 		for (final CVertex v : getVertices()) {
 			if (HalfEdgeUtils.isBoundaryVertex(v)) {
 				v.setTheta(0.0);
-				v.setSolverIndex(dim++);
+				v.setSolverIndex(0);
 			} else {
 				v.setTheta(theta.get(v.getIndex()));
-				v.setSolverIndex(-1);
+				v.setSolverIndex(dim++);
 			}
 		}
 		Vector u = new SparseVector(numVertices());

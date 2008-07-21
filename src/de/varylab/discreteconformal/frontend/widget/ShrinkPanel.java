@@ -1,8 +1,5 @@
 package de.varylab.discreteconformal.frontend.widget;
 
-import static org.eclipse.swt.layout.GridData.FILL_BOTH;
-import static org.eclipse.swt.layout.GridData.GRAB_HORIZONTAL;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -15,14 +12,10 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 
 
 public class ShrinkPanel extends Composite implements PaintListener, MouseListener, DisposeListener{
@@ -192,41 +185,41 @@ public class ShrinkPanel extends Composite implements PaintListener, MouseListen
 	}
 	
 	
-	public static void main(String[] args) {
-		Display display = null;
-		if (Display.getCurrent() != null)
-			display = Display.getCurrent();
-		else
-			display = new Display();
-		Shell shell = new Shell(display);
-		shell.setText("ShrinkPanel Test");
-		shell.setSize(210, 300);
-		shell.setLayout(new FillLayout());
-		ShrinkPanelContainer spc = new ShrinkPanelContainer(shell,SWT.NONE);
-		new ShrinkPanel(spc, "Test Panel 1");
-		new ShrinkPanel(spc, "Test Panel 2");
-		new ShrinkPanel(spc, "Test Panel 3");
-		new ShrinkPanel(spc, "Test Panel 4");
-		ShrinkPanel panel2 = new ShrinkPanel(spc, "Test Panel 5");
-		GridLayout layout = new GridLayout(2, true);
-		GridData gData = new GridData(GRAB_HORIZONTAL | FILL_BOTH);
-		panel2.setLayout(layout);
-		Label l1 = new Label(panel2, SWT.NORMAL);
-		l1.setText("Test Text:");
-		Text t1 = new Text(panel2, SWT.SINGLE);
-		t1.setLayoutData(gData);
-		Label l2 = new Label(panel2, SWT.NORMAL);
-		l2.setText("Longer Text:");
-		Text t2 = new Text(panel2, SWT.SINGLE);
-		t2.setLayoutData(gData);
-		
-		shell.open();
-		while (!shell.isDisposed()){
-			if (!display.readAndDispatch ()) 
-				display.sleep ();
-		}
-		display.dispose();
-	}
+//	public static void main(String[] args) {
+//		Display display = null;
+//		if (Display.getCurrent() != null)
+//			display = Display.getCurrent();
+//		else
+//			display = new Display();
+//		Shell shell = new Shell(display);
+//		shell.setText("ShrinkPanel Test");
+//		shell.setSize(210, 300);
+//		shell.setLayout(new FillLayout());
+//		ShrinkPanelContainer spc = new ShrinkPanelContainer(shell,SWT.NONE);
+//		new ShrinkPanel(spc, "Test Panel 1");
+//		new ShrinkPanel(spc, "Test Panel 2");
+//		new ShrinkPanel(spc, "Test Panel 3");
+//		new ShrinkPanel(spc, "Test Panel 4");
+//		ShrinkPanel panel2 = new ShrinkPanel(spc, "Test Panel 5");
+//		GridLayout layout = new GridLayout(2, true);
+//		GridData gData = new GridData(GRAB_HORIZONTAL | FILL_BOTH);
+//		panel2.setLayout(layout);
+//		Label l1 = new Label(panel2, SWT.NORMAL);
+//		l1.setText("Test Text:");
+//		Text t1 = new Text(panel2, SWT.SINGLE);
+//		t1.setLayoutData(gData);
+//		Label l2 = new Label(panel2, SWT.NORMAL);
+//		l2.setText("Longer Text:");
+//		Text t2 = new Text(panel2, SWT.SINGLE);
+//		t2.setLayoutData(gData);
+//		
+//		shell.open();
+//		while (!shell.isDisposed()){
+//			if (!display.readAndDispatch ()) 
+//				display.sleep ();
+//		}
+//		display.dispose();
+//	}
 
 	public void mouseDoubleClick(MouseEvent arg0) {}
 
