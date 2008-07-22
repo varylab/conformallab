@@ -18,7 +18,6 @@ import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jtem.halfedge.jReality.converter.ConverterJR2Heds;
-import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.ConformalLab;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanel;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
@@ -29,6 +28,7 @@ import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.math.optimization.NotConvergentException;
 import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer;
+import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer.Solver;
 
 public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionListener{
 
@@ -65,16 +65,9 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 	
 	
 	private static void computeEnergy(CHDS hds) {
-		DenseVector theta = new DenseVector(hds.numVertices());
-		for (int i = 0; i < theta.size(); i++) {
-			if (HalfEdgeUtils.isBoundaryVertex(hds.getVertex(i)))
-				theta.set(i, 0.0);
-			else
-				theta.set(i, 2 * Math.PI);
-		}
-		hds.prepareInvariantData(theta);
+		hds.prepareInvariantData();
 		int n = hds.getDomainDimension();
-
+		
 		DenseVector u = new DenseVector(n);
 		double[] E = {0.0};
 		DenseVector G = new DenseVector(n);
@@ -82,29 +75,40 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 		
 		hds.conformalEnergy(u, E, G, H);
 		System.err.println("Dimension: " + n);
-		System.err.println("Energy befor: " + E[0]);
-		System.err.println("Gradient befor: \n" + G);
-		System.err.println("Hessian befor: \n" + H);
+		System.err.println("Energy before: " + E[0]);
+//		System.err.println("Gradient before: \n" + G);
+//		System.err.println("Hessian before: \n" + H);
 		
 		
-		NewtonOptimizer optimizer = new NewtonOptimizer();
-		try {
-			optimizer.minimize(u, hds);
-		} catch (NotConvergentException e) {
-			e.printStackTrace();
+		for (Solver s : Solver.values()) {
+			long time = System.currentTimeMillis();
+			NewtonOptimizer optimizer = new NewtonOptimizer();
+			optimizer.setSolver(s);
+			optimizer.setError(1E-3);
+			try {
+				System.err.print(s.toString() + ": ");
+				u.zero();
+				optimizer.minimize(u, hds);
+				time = System.currentTimeMillis() - time;
+				System.err.println(time / 1000.0 + "sec");
+			} catch (NotConvergentException e) {
+//				e.printStackTrace();
+				System.err.println(s.toString() + ": Exception no solution");
+			}
 		}
 
 		
 		hds.conformalEnergy(u, E, G, H);
+//		System.err.println("Solution: " + u);
 		System.err.println("Energy after: " + E[0]);
-		System.err.println("Gradient after: \n" + G);
-		System.err.println("Hessian after: \n" + H);
+//		System.err.println("Gradient after: \n" + G);
+//		System.err.println("Hessian after: \n" + H);
 	}
 	
 	
 	
 	public static void main(String[] args) throws IOException{
-		File file = new File("data/test02.obj");
+		File file = new File("data/test01.obj");
 		ReaderOBJ reader = new ReaderOBJ();
 		SceneGraphComponent c =reader.read(file);
 		IndexedFaceSet ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();

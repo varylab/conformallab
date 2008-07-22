@@ -3,8 +3,6 @@ package de.varylab.discreteconformal.math.optimization.newton;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
-import no.uib.cipr.matrix.NotConvergedException;
-import no.uib.cipr.matrix.SVD;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.Vector.Norm;
 import no.uib.cipr.matrix.sparse.AbstractIterativeSolver;
@@ -52,7 +50,7 @@ public class NewtonOptimizer implements Optimizer{
 		CGS,
 		BiCGstab,
 		GMRES,
-		SVD,
+//		SVD,
 		QMR
 	}
 	
@@ -71,31 +69,32 @@ public class NewtonOptimizer implements Optimizer{
 			Vector dx = new DenseVector(grad.size());
 			Vector templateVector = new DenseVector(grad.size());
 			
-			if (solver == Solver.SVD) {
-				SVD svd = null;
-				try {
-					svd = SVD.factorize(hess);
-				} catch (NotConvergedException e) {
-					throw new NotConvergentException("Error 1: Newton's step could not be computed!", grad.norm(norm));
-				}
-				Matrix V = svd.getVt().transpose();
-				Matrix DInv = new DenseMatrix(hess.numRows(), hess.numColumns());
-				for (int i = 0; i < svd.getS().length; i++) {
-					DInv.set(i, i, 1 / svd.getS()[i]);
-				}
-				Matrix Ut = svd.getU().transpose(); 
-				Matrix tmp = new DenseMatrix(hess.numRows(), hess.numColumns());
-				Matrix AInv = new DenseMatrix(hess.numRows(), hess.numColumns());
-				V.mult(DInv, tmp);
-				tmp.mult(Ut, AInv);
-				AInv.mult(grad, dx);
-			} else {
+//			if (solver == Solver.SVD) {
+//				SVD svd = null;
+//				try {
+//					svd = SVD.factorize(hess);
+//				} catch (NotConvergedException e) {
+//					throw new NotConvergentException("Error 1: Newton's step could not be computed!", grad.norm(norm));
+//				}
+//				Matrix V = svd.getVt().transpose();
+//				Matrix DInv = new DenseMatrix(hess.numRows(), hess.numColumns());
+//				for (int i = 0; i < svd.getS().length; i++) {
+//					DInv.set(i, i, 1 / svd.getS()[i]);
+//				}
+//				Matrix Ut = svd.getU().transpose(); 
+//				Matrix tmp = new DenseMatrix(hess.numRows(), hess.numColumns());
+//				Matrix AInv = new DenseMatrix(hess.numRows(), hess.numColumns());
+//				V.mult(DInv, tmp);
+//				tmp.mult(Ut, AInv);
+//				AInv.mult(grad, dx);
+//			} else {
 				AbstractIterativeSolver S = null;
 //				DiagonalPreconditioner preconditioner = new DiagonalPreconditioner(grad.size());
 				switch (solver) {
 					case CG:
 						S = new CG(templateVector);
 					break;
+					default:
 					case Generic:
 					case CGS:
 						S = new CGS(templateVector);
@@ -118,7 +117,7 @@ public class NewtonOptimizer implements Optimizer{
 //					System.err.println("Gradient: " + grad);
 					throw new NotConvergentException("Error 1: Newton's step could not be computed!", grad.norm(norm));
 				}
-			}
+//			}
 			
 			dx.scale(-1);
 			value = stepController.step(guess, value, dx, func, grad, hess);

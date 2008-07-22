@@ -32,7 +32,7 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 	 * Compute algorithm invariant data
 	 * @param theta the prescribed angle sum of triangles around each vertex
 	 */
-	public void prepareInvariantData(final Vector theta) {
+	public void prepareInvariantData() {
 		// set initial lambdas
 		for (final CEdge e : getPositiveEdges()) {
 			final double l = e.getLength();
@@ -44,9 +44,9 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 		for (final CVertex v : getVertices()) {
 			if (HalfEdgeUtils.isBoundaryVertex(v)) {
 				v.setTheta(0.0);
-				v.setSolverIndex(0);
+				v.setSolverIndex(-1);
 			} else {
-				v.setTheta(theta.get(v.getIndex()));
+				v.setTheta(2 * PI);
 				v.setSolverIndex(dim++);
 			}
 		}
@@ -145,11 +145,11 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 			a123[1] = 2 * atan2(t23 * t12, denom);
 			a123[2] = 2 * atan2(t31 * t23, denom);
 		} else if (t31 <= 0) {
-			a123[1] = 0.0;
+			a123[1] = PI;
 		} else if (t23 <= 0) {
-			a123[0] = 0.0;
+			a123[0] = PI;
 		} else if (t12 <= 0) {
-			a123[2] = 0.0;
+			a123[2] = PI;
 		}
 		final double 
 			E1 = a123[0]*x23 + a123[1]*x31 + a123[2]*x12,
@@ -177,8 +177,6 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 			if (G != null)
 				G.add(v.getSolverIndex(), v.getTheta());
 		}
-		if (E != null)
-			E[0] *= 0.5;
 		// Face Energy
 		final double[] a123 = {0, 0, 0};
 		for (final CFace t : getFaces()) {
@@ -190,16 +188,20 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 				v1 = e1.getTargetVertex(),
 				v2 = e2.getTargetVertex(),
 				v3 = e3.getTargetVertex();
+			final int
+				v1i = v1.getSolverIndex(),
+				v2i = v2.getSolverIndex(),
+				v3i = v3.getSolverIndex();
 			final double e = triangleEnergyAndAlphas(u, t, a123);
 			if (E != null)
 				E[0] += e;
 			if (G != null) {
 				if (isVariable(v1))
-					G.add(v1.getSolverIndex(), -a123[0]);
+					G.add(v1i, -a123[0]);
 				if (isVariable(v2))
-					G.add(v2.getSolverIndex(), -a123[1]);
+					G.add(v2i, -a123[1]);
 				if (isVariable(v3))
-					G.add(v3.getSolverIndex(), -a123[2]);
+					G.add(v3i, -a123[2]);
 			}
 			if (H != null) {
 				final double[] 
@@ -208,24 +210,24 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 				triangleHessian(u, t, cotE, cotV);
 				// edge hessian
 				if (isVariable(v1) && isVariable(v3)) {
-					H.add(v1.getSolverIndex(), v3.getSolverIndex(), -cotE[0]);
-					H.add(v3.getSolverIndex(), v1.getSolverIndex(), -cotE[0]);
+					H.add(v1i, v3i, -cotE[0]);
+					H.add(v3i, v1i, -cotE[0]);
 				}
 				if (isVariable(v2) && isVariable(v1)) {
-					H.add(v2.getSolverIndex(), v1.getSolverIndex(), -cotE[1]);
-					H.add(v1.getSolverIndex(), v2.getSolverIndex(), -cotE[1]);
+					H.add(v2i, v1i, -cotE[1]);
+					H.add(v1i, v2i, -cotE[1]);
 				}
 				if (isVariable(v3) && isVariable(v2)) {
-					H.add(v2.getSolverIndex(), v3.getSolverIndex(), -cotE[2]);
-					H.add(v3.getSolverIndex(), v2.getSolverIndex(), -cotE[2]);
+					H.add(v2i, v3i, -cotE[2]);
+					H.add(v3i, v2i, -cotE[2]);
 				}
 				// vertex hessian
 				if (isVariable(v1))
-					H.add(v1.getSolverIndex(), v1.getSolverIndex(), cotV[0]);
+					H.add(v1i, v1i, cotV[0]);
 				if (isVariable(v2))
-					H.add(v2.getSolverIndex(), v2.getSolverIndex(), cotV[1]);
+					H.add(v2i, v2i, cotV[1]);
 				if (isVariable(v3))
-					H.add(v3.getSolverIndex(), v3.getSolverIndex(), cotV[2]);
+					H.add(v3i, v3i, cotV[2]);
 			}
 		}
 	}
