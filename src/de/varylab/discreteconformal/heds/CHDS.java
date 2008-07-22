@@ -24,7 +24,7 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 	}
 
 	
-	private boolean isVariable(CVertex v) {
+	protected boolean isVariable(CVertex v) {
 		return v.getSolverIndex() >= 0;
 	}
 	
@@ -58,7 +58,7 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 	}
 	
 	
-	private void triangleHessian(final Vector u, final CFace f, final double[] cotE, final double[] cotV) {
+	protected void triangleHessian(final Vector u, final CFace f, final double[] cotE, final double[] cotV) {
 		final CEdge
 			e1 = f.getBoundaryEdge(),
 			e2 = e1.getNextEdge(),
@@ -107,7 +107,7 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 	
 	
 	
-	private double triangleEnergyAndAlphas(final Vector u, final CFace f, final double[] a123) {
+	protected double triangleEnergyAndAlphas(final Vector u, final CFace f, final double[] a123) {
 		final CEdge 
 			e1 = f.getBoundaryEdge(),
 			e2 = e1.getNextEdge(),

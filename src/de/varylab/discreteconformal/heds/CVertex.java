@@ -6,11 +6,13 @@ import geom3d.Vector;
 import de.jtem.halfedge.Vertex;
 import de.varylab.discreteconformal.heds.decoration.HasNormal;
 import de.varylab.discreteconformal.heds.decoration.HasPosition;
+import de.varylab.discreteconformal.heds.decoration.HasTextureCoord;
 
-public class CVertex extends Vertex<CVertex, CEdge, CFace> implements HasPosition, HasNormal{
+public class CVertex extends Vertex<CVertex, CEdge, CFace> implements HasPosition, HasNormal, HasTextureCoord {
 
 	private Point
-	    P = new Point();
+	    P = new Point(),
+	    T = new Point();
 	private Vector
 		N = new Vector();
 	private double 
@@ -27,6 +29,14 @@ public class CVertex extends Vertex<CVertex, CEdge, CFace> implements HasPositio
 		P.set(P);
 	}
 
+	public Point getTextureCoord() {
+		return T;
+	}
+	
+	public void setTextureCoord(Point t) {
+		T.set(t);
+	}
+	
 	public Vector getNormal() {
 		return N;
 	}
