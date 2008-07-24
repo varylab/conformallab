@@ -6,6 +6,10 @@ import static java.lang.Math.atan2;
 import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.SparseVector;
@@ -232,6 +236,25 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 		}
 	}
 
+	
+	
+	public Map<CEdge, Double> calculateAlphas(final Vector u) {
+		HashMap<CEdge, Double> a = new HashMap<CEdge, Double>();
+		double[] a123 = new double[3];
+		for (CFace f : getFaces()) {
+			final CEdge 
+				e1 = f.getBoundaryEdge(),
+				e2 = e1.getNextEdge(),
+				e3 = e1.getPreviousEdge();
+			triangleEnergyAndAlphas(u, f, a123);
+			a.put(e1, a123[0]);
+			a.put(e2, a123[1]);
+			a.put(e3, a123[2]);
+		}
+		return a;
+	}
+	
+	
 
 	public Double evaluate(Vector x, Vector gradient, Matrix hessian) {
 		double[] E = new double[]{0.0};

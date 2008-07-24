@@ -26,7 +26,7 @@ public class CVertex extends Vertex<CVertex, CEdge, CFace> implements HasPositio
 	}
 
 	public void setPosition(Point p) {
-		P.set(P);
+		P.set(p);
 	}
 
 	public Point getTextureCoord() {
@@ -60,6 +60,5 @@ public class CVertex extends Vertex<CVertex, CEdge, CFace> implements HasPositio
 	public void setSolverIndex(Integer solverIndex) {
 		this.solverIndex = solverIndex;
 	}
-
-
+	
 }
