@@ -20,7 +20,6 @@ import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jtem.halfedge.jReality.converter.ConverterJR2Heds;
-import de.varylab.discreteconformal.ConformalLab;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanel;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
 import de.varylab.discreteconformal.heds.CEdge;
@@ -63,7 +62,9 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 	public void widgetSelected(SelectionEvent e) {
 		Object s = e.getSource();
 		if (computeEnergyBtn == s) {
-			computeEnergy(ConformalLab.getGeometryController().getCHDS());
+			CHDS hds = getGeometryController().getCHDS();
+			computeEnergy(hds);
+			getGeometryController().setGeometry(hds);
 		}
 	}
 	
@@ -80,8 +81,8 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 		hds.conformalEnergy(u, E, G, H);
 		System.err.println("Dimension: " + n);
 		System.err.println("Energy before: " + E[0]);
-		System.err.println("Gradient before: \n" + G);
-		System.err.println("Hessian before: \n" + H);
+//		System.err.println("Gradient before: \n" + G);
+//		System.err.println("Hessian before: \n" + H);
 		
 		// optimization
 		NewtonOptimizer optimizer = new NewtonOptimizer();
@@ -98,8 +99,8 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 		hds.conformalEnergy(u, E, G, H);
 //		System.err.println("Solution: " + u);
 		System.err.println("Energy after: " + E[0]);
-		System.err.println("Gradient after: \n" + G);
-		System.err.println("Hessian after: \n" + H);
+//		System.err.println("Gradient after: \n" + G);
+//		System.err.println("Hessian after: \n" + H);
 		
 		
 		// layout
@@ -109,7 +110,6 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 			v.setPosition(v.getTextureCoord());
 			System.err.println(v.getIndex() + ": " + v.getTextureCoord());
 		}
-		getGeometryController().setGeometry(hds);
 	}
 	
 	

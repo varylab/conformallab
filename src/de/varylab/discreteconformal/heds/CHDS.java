@@ -55,9 +55,9 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 			}
 		}
 		Vector u = new SparseVector(numVertices());
-		double a[] = new double[3];
+		Map<CEdge, Double> aMap = new HashMap<CEdge, Double>();
 		for (final CFace f : getFaces()) {
-			f.setEnergy(triangleEnergyAndAlphas(u, f, a));
+			f.setEnergy(triangleEnergyAndAlphas(u, f, aMap));
 		}
 	}
 	
@@ -111,7 +111,7 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 	
 	
 	
-	protected double triangleEnergyAndAlphas(final Vector u, final CFace f, final double[] a123) {
+	protected double triangleEnergyAndAlphas(final Vector u, final CFace f, Map<CEdge, Double> alphas) {
 		final CEdge 
 			e1 = f.getBoundaryEdge(),
 			e2 = e1.getNextEdge(),
@@ -120,9 +120,10 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 			v1 = e1.getTargetVertex(),
 			v2 = e2.getTargetVertex(),
 			v3 = e3.getTargetVertex();
-		a123[0] = 0.0;
-		a123[1] = 0.0;
-		a123[2] = 0.0;
+		double 
+			a1 = 0.0,
+			a2 = 0.0,
+			a3 = 0.0;
 		final double 
 			u1 = isVariable(v1) ? u.get(v1.getSolverIndex()) : 0.0,
 			u2 = isVariable(v2) ? u.get(v2.getSolverIndex()) : 0.0,
@@ -145,27 +146,42 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 			final double 
 				l123 = l12 + l23 + l31,
 				denom = sqrt(t12 * t23 * t31 * l123);
-			a123[0] = 2 * atan2(t12 * t31, denom);
-			a123[1] = 2 * atan2(t23 * t12, denom);
-			a123[2] = 2 * atan2(t31 * t23, denom);
+			a1 = 2 * atan2(t12 * t31, denom);
+			a2 = 2 * atan2(t23 * t12, denom);
+			a3 = 2 * atan2(t31 * t23, denom);
 		} else if (t31 <= 0) {
-			a123[1] = PI;
+			a2 = PI;
 		} else if (t23 <= 0) {
-			a123[0] = PI;
+			a1 = PI;
 		} else if (t12 <= 0) {
-			a123[2] = PI;
+			a3 = PI;
 		}
 		final double 
-			E1 = a123[0]*x23 + a123[1]*x31 + a123[2]*x12,
-			E2 = lob(a123[0]) + lob(a123[1]) + lob(a123[2]),
+			E1 = a1*x23 + a2*x31 + a3*x12,
+			E2 = lob(a1) + lob(a2) + lob(a3),
 			E3 = - PI * umean - f.getEnergy();
+		alphas.put(e1, a2);
+		alphas.put(e2, a3);
+		alphas.put(e3, a1);
 		return E1 + E2 + E3; 
 	}
 	
 	
 	
 	
-	public void conformalEnergy(final Vector u, final double[] E, final Vector G, final Matrix H) {
+	public Map<CEdge, Double> calculateAlphas(final Vector u) {
+		HashMap<CEdge, Double> a = new HashMap<CEdge, Double>();
+		for (CFace f : getFaces())
+			triangleEnergyAndAlphas(u, f, a);
+		return a;
+	}
+	
+	
+	
+	
+	public void conformalEnergy(final Vector u, final double[] E, final Vector G, final Matrix H, Map<CEdge, Double>... a) {
+		Map<CEdge, Double> aMap = a.length != 0 ? a[0] : new HashMap<CEdge, Double>();
+		aMap.clear();
 		// Vertex Energy
 		if (E != null) 
 			E[0] = 0.0;
@@ -182,7 +198,6 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 				G.add(v.getSolverIndex(), v.getTheta());
 		}
 		// Face Energy
-		final double[] a123 = {0, 0, 0};
 		for (final CFace t : getFaces()) {
 			final CEdge 
 				e1 = t.getBoundaryEdge(),
@@ -196,16 +211,16 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 				v1i = v1.getSolverIndex(),
 				v2i = v2.getSolverIndex(),
 				v3i = v3.getSolverIndex();
-			final double e = triangleEnergyAndAlphas(u, t, a123);
+			final double e = triangleEnergyAndAlphas(u, t, aMap);
 			if (E != null)
 				E[0] += e;
 			if (G != null) {
 				if (isVariable(v1))
-					G.add(v1i, -a123[0]);
+					G.add(v1i, -aMap.get(e3));
 				if (isVariable(v2))
-					G.add(v2i, -a123[1]);
+					G.add(v2i, -aMap.get(e1));
 				if (isVariable(v3))
-					G.add(v3i, -a123[2]);
+					G.add(v3i, -aMap.get(e2));
 			}
 			if (H != null) {
 				final double[] 
@@ -236,25 +251,6 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 		}
 	}
 
-	
-	
-	public Map<CEdge, Double> calculateAlphas(final Vector u) {
-		HashMap<CEdge, Double> a = new HashMap<CEdge, Double>();
-		double[] a123 = new double[3];
-		for (CFace f : getFaces()) {
-			final CEdge 
-				e1 = f.getBoundaryEdge(),
-				e2 = e1.getNextEdge(),
-				e3 = e1.getPreviousEdge();
-			triangleEnergyAndAlphas(u, f, a123);
-			a.put(e1, a123[0]);
-			a.put(e2, a123[1]);
-			a.put(e3, a123[2]);
-		}
-		return a;
-	}
-	
-	
 
 	public Double evaluate(Vector x, Vector gradient, Matrix hessian) {
 		double[] E = new double[]{0.0};
