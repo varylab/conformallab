@@ -7,10 +7,11 @@ import static java.lang.Math.PI;
 import geom3d.Point;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.TestCase;
+import junit.framework.Assert;
 import no.uib.cipr.matrix.DenseVector;
 
 import org.junit.After;
@@ -34,23 +35,31 @@ import de.varylab.discreteconformal.math.optimization.stepcontrol.ArmijoStepCont
  * @author sechel
  *
  */
-public class CHDSTest extends TestCase{
+public class CHDSTest {
 
 	private static CHDS 	
 		hds = null;
 	
+	
 	/**
 	 * @throws java.lang.Exception
 	 */
-	@BeforeClass
+	@BeforeClass 
 	public static void setUpBeforeClass() throws Exception {
-		File file = new File("data/test01.obj");
+		System.out.println("CHDSTest.setUpBeforeClass()");
+		File file = new File("data/test02.obj");
 		ReaderOBJ reader = new ReaderOBJ();
-		SceneGraphComponent c =reader.read(file);
-		IndexedFaceSet ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
-		ConverterJR2Heds<CVertex, CEdge, CFace> converter = new ConverterJR2Heds<CVertex, CEdge, CFace>(CVertex.class, CEdge.class, CFace.class);
-		hds = new CHDS();
-		converter.ifs2heds(ifs, hds, new PositionAdapter());
+		SceneGraphComponent c = null;
+		try {
+			c =reader.read(file);
+			IndexedFaceSet ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
+			ConverterJR2Heds<CVertex, CEdge, CFace> converter = new ConverterJR2Heds<CVertex, CEdge, CFace>(CVertex.class, CEdge.class, CFace.class);
+			hds = new CHDS();
+			converter.ifs2heds(ifs, hds, new PositionAdapter());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		hds.prepareInvariantData();
 	}
 
 	/**
@@ -58,6 +67,7 @@ public class CHDSTest extends TestCase{
 	 */
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
+		System.out.println("CHDSTest.tearDownAfterClass()");
 	}
 
 	/**
@@ -65,7 +75,7 @@ public class CHDSTest extends TestCase{
 	 */
 	@Before
 	public void setUp() throws Exception {
-
+		System.out.println("CHDSTest.setUp()");
 	}
 
 	/**
@@ -73,6 +83,7 @@ public class CHDSTest extends TestCase{
 	 */
 	@After
 	public void tearDown() throws Exception {
+		System.out.println("CHDSTest.tearDown()");
 	}
 
 	/**
@@ -80,7 +91,7 @@ public class CHDSTest extends TestCase{
 	 */
 	@Test
 	public void testConformalEnergy() throws Exception {
-		hds.prepareInvariantData();
+		System.out.println("CHDSTest.testConformalEnergy()");
 		int n = hds.getDomainDimension();
 		DenseVector u = new DenseVector(n);
 		NewtonOptimizer optimizer = new NewtonOptimizer();
@@ -101,13 +112,14 @@ public class CHDSTest extends TestCase{
 			double aSum = 0.0;
 			for (CEdge e : HalfEdgeUtils.incomingEdges(v))
 				aSum += aMpa.get(e.getPreviousEdge());
-			assertEquals(2 * PI, aSum, 1E-8);
+			Assert.assertEquals(2 * PI, aSum, 1E-8);
 		}
 		
 	}
 
-	
+	@Test
 	public void testTriangleEnergyAndAlphas() throws Exception {
+		System.out.println("CHDSTest.testTriangleEnergyAndAlphas()");
 		CHDS hds = new CHDS();
 		CVertex v0 = hds.addNewVertex();
 		CVertex v1 = hds.addNewVertex();
