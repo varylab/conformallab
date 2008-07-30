@@ -1,12 +1,11 @@
 package de.varylab.discreteconformal.heds;
 
+import static de.jreality.scene.data.Attribute.LABELS;
+
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import junit.framework.Assert;
-
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.SparseVector;
 
@@ -19,6 +18,9 @@ import org.junit.Test;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
+import de.jreality.scene.data.StringArray;
+import de.jreality.ui.viewerapp.ViewerApp;
+import de.jtem.halfedge.jReality.converter.ConverterHeds2JR;
 import de.jtem.halfedge.jReality.converter.ConverterJR2Heds;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 
@@ -31,12 +33,13 @@ public class CLayoutTest {
 	public static void setUpBeforeClass() throws Exception {
 		System.out.println("CLayoutTest.setUpBeforeClass()");
 		System.out.println("CHDSTest.setUpBeforeClass()");
-		File file = new File("data/planar01.obj");
+		File file = new File("data/test02.obj");
 		ReaderOBJ reader = new ReaderOBJ();
 		SceneGraphComponent c = null;
+		IndexedFaceSet ifs = null;
 		try {
 			c =reader.read(file);
-			IndexedFaceSet ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
+			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds<CVertex, CEdge, CFace> converter = new ConverterJR2Heds<CVertex, CEdge, CFace>(CVertex.class, CEdge.class, CFace.class);
 			hds = new CHDS();
 			converter.ifs2heds(ifs, hds, new PositionAdapter());
@@ -77,4 +80,19 @@ public class CLayoutTest {
 		}
 	}
 
+	public static void main(String[] args) throws Exception{
+		setUpBeforeClass();
+		ConverterHeds2JR<CVertex, CEdge, CFace> converter = new ConverterHeds2JR<CVertex, CEdge, CFace>();
+		IndexedFaceSet ifs = converter.heds2ifs(hds, new PositionAdapter());
+		String[] vertexLabels = new String[hds.numVertices()];
+		for (int  i = 0; i < hds.numVertices(); i++) {
+			vertexLabels[i] = "" + i;
+		}
+		ifs.setVertexAttributes(LABELS, new StringArray(vertexLabels));
+		SceneGraphComponent c = new SceneGraphComponent();
+		c.setGeometry(ifs);
+		ViewerApp.display(c);
+	}
+	
+	
 }

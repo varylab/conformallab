@@ -1,7 +1,9 @@
 package de.varylab.discreteconformal.heds;
 
 import static java.lang.Math.PI;
+import static java.lang.Math.cos;
 import static java.lang.Math.exp;
+import static java.lang.Math.sin;
 import geom3d.Point;
 
 import java.util.HashSet;
@@ -87,6 +89,7 @@ public class CLayout {
 	public static void doLayout2(CHDS hds, Vector u, Map<CEdge, Double>... aMap) {
 		Map<CEdge, Double> alphaMap = aMap.length == 0 ? hds.calculateAlphas(u) : aMap[0];
 		Set<CVertex> visited = new HashSet<CVertex>();
+		Set<CVertex> processed = new HashSet<CVertex>();
 		Queue<CEdge> Qe = new LinkedList<CEdge>(); 
 		Queue<CVertex> Qv = new LinkedList<CVertex>();
 		Queue<Double> Qa = new LinkedList<Double>();
@@ -112,49 +115,50 @@ public class CLayout {
 		v1.setTextureCoord(new Point(l, 0, 0));
 		visited.add(v0);
 		visited.add(v1);
-			
-		while (!Qv.isEmpty()) {
+		
+		System.out.println("Layouting " + hds.numVertices() + " Vertices...");
+		
+		while (!Qv.isEmpty()){// && hds.numVertices() != visited.size()) {
 			CVertex v = Qv.poll();
 			CEdge inE = Qe.poll();
 			Double a = Qa.poll();
 			CEdge outE = inE.getOppositeEdge();
 			Point tp = v.getTextureCoord();
 			
-			
+			processed.add(v);
 			System.out.println("Reached Vertex " + v + ": " + tp);
 			
 			CEdge e = inE.getNextEdge();
 			Double localAngle = a;
 			while (e != outE) {
-//				Double alpha = alphaMap.get(e.getNextEdge());
-//				if (alpha == null) {
-//					e = e.getOppositeEdge().getNextEdge();
-//					continue;
-//				}
-//				localAngle += PI - alpha;
-				CVertex nextVertex = e.getTargetVertex();
-				if (visited.contains(nextVertex)) {
-					e = e.getOppositeEdge().getNextEdge();
-					continue;
+				CVertex nearVertex = e.getTargetVertex();
+				if (!visited.contains(nearVertex)) {
+					visited.add(nearVertex);
+					Qv.offer(nearVertex);
+					Qe.offer(e);	
+					Qa.offer(localAngle);
+
+					Double alpha = alphaMap.get(e.getNextEdge());
+					if (alpha == null) {
+						e = e.getOppositeEdge().getNextEdge();
+						continue;
+					}
+					localAngle += PI - alpha;
+					v0 = e.getTargetVertex();
+					v1 = e.getStartVertex();
+					u0 = v0.getSolverIndex() >= 0 ? u.get(v0.getSolverIndex()) : 0.0; 
+					u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
+					l = exp(0.5 * (u0 + u1)) * e.getLength(); 
+					geom3d.Vector dif = new geom3d.Vector(cos(localAngle), sin(localAngle), 0.0).times(l);
+					nearVertex.getTextureCoord().set(tp).add(dif);
+				} else  {
+					assert (processed.contains(nearVertex) || Qv.contains(nearVertex));
 				}
-//				v0 = e.getTargetVertex();
-//				v1 = e.getStartVertex();
-//				u0 = v0.getSolverIndex() >= 0 ? u.get(v0.getSolverIndex()) : 0.0; 
-//				u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
-//				l = exp(0.5 * (u0 + u1)) * e.getLength(); 
-//				geom3d.Vector dif = new geom3d.Vector(cos(localAngle), sin(localAngle), 0.0).times(l);
-//				nextVertex.getTextureCoord().set(tp).add(dif);
-//				
-				
-				visited.add(nextVertex);
-				Qv.offer(nextVertex);
-				Qe.offer(e.getOppositeEdge());	
-				Qa.offer(localAngle);
 				e = e.getOppositeEdge().getNextEdge();
 			}
 			
 		}
-		
+		System.out.println("Layouted " + visited.size() + "Vertices");
 	}
 	
 	
