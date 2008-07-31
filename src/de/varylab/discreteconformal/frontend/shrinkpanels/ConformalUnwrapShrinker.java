@@ -1,6 +1,12 @@
 package de.varylab.discreteconformal.frontend.shrinkpanels;
 
 import static de.varylab.discreteconformal.ConformalLab.getGeometryController;
+import static org.eclipse.jface.layout.GridDataFactory.fillDefaults;
+import static org.eclipse.swt.SWT.BORDER;
+import static org.eclipse.swt.SWT.NONE;
+import static org.eclipse.swt.SWT.SHADOW_ETCHED_IN;
+import static org.eclipse.swt.layout.GridData.BEGINNING;
+import static org.eclipse.swt.layout.GridData.CENTER;
 import no.uib.cipr.matrix.DenseVector;
 
 import org.eclipse.jface.layout.GridDataFactory;
@@ -9,6 +15,9 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Spinner;
 
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanel;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
@@ -24,17 +33,39 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 
 	private Button
 		computeEnergyBtn = null;
+	private Group
+		coneConfigGroup = null;
+	private Spinner
+		numConesSpinner = null;
+	
+	private int
+		numCones = 0; 
 	
 	
 	public ConformalUnwrapShrinker(ShrinkPanelContainer parent) {
 		super(parent, "Conformal Unwrap");
 		createLayout();
 		computeEnergyBtn.addSelectionListener(this);
+		numConesSpinner.addSelectionListener(this);
 	}
 
 	
 	private void createLayout() {
 		setLayout(new GridLayout(1, true));
+		
+		coneConfigGroup = new Group(this, SHADOW_ETCHED_IN);
+		coneConfigGroup.setText("Cone Singularities");
+		coneConfigGroup.setLayout(new GridLayout(2, true));
+		GridDataFactory.fillDefaults().grab(true, false).applyTo(coneConfigGroup);
+		
+		Label numConesLabel = new Label(coneConfigGroup, NONE);
+		numConesLabel.setText("Cones");
+		fillDefaults().grab(true, false).align(BEGINNING, CENTER).applyTo(numConesLabel);
+		numConesSpinner = new Spinner(coneConfigGroup, BORDER);
+		numConesSpinner.setValues(numCones, 1, 100, 0, 1, 1);
+		fillDefaults().grab(true, false).applyTo(numConesSpinner);
+		
+		
 		computeEnergyBtn = new Button(this, SWT.PUSH);
 		computeEnergyBtn.setText("Unwrap");
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(computeEnergyBtn);
@@ -53,10 +84,14 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 			computeEnergy(hds);
 			getGeometryController().setGeometry(hds);
 		}
+		if (numConesSpinner == s) {
+			numCones = numConesSpinner.getSelection();
+		}
 	}
 	
 	
-	private static void computeEnergy(CHDS hds) {
+	private void computeEnergy(CHDS hds) {
+		System.out.println("Unwrapping with " + numCones + " cones");
 		hds.prepareInvariantData();
 		int n = hds.getDomainDimension();
 		

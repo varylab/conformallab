@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.heds;
 
+import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static java.lang.Math.PI;
 import static java.lang.Math.cos;
 import static java.lang.Math.exp;
@@ -8,6 +9,7 @@ import geom3d.Point;
 
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -22,31 +24,27 @@ public class CLayout {
 	 * @param hds
 	 * @param u
 	 */
-	public static void doLayout(CHDS hds, Vector u, Map<CEdge, Double>... aMap) {
-		Map<CEdge, Double> alphaMap = aMap.length == 0 ? hds.calculateAlphas(u) : aMap[0];
-		Set<CVertex> visited = new HashSet<CVertex>();
-		Queue<CEdge> Qe = new LinkedList<CEdge>(); 
+	public static void doLayout(CHDS hds, Vector u, Map<CEdge, Double>... angleMapParam) {
+		Map<CEdge, Double> aMap = angleMapParam.length == 0 ? hds.calculateAlphas(u) : angleMapParam[0];
+		Set<CVertex> visited = new HashSet<CVertex>(hds.numVertices());
 		Queue<CVertex> Qv = new LinkedList<CVertex>();
+		Queue<CEdge> Qe = new LinkedList<CEdge>();
 		Queue<Double> Qa = new LinkedList<Double>();
-		
 		// start
 		CEdge e0 = hds.getEdge(0);
 		CEdge e1 = e0.getOppositeEdge();
 		CVertex v1 = e0.getStartVertex();
 		CVertex v2 = e0.getTargetVertex();
-		double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
-		double u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0; 
-		double lambda = e0.getLambda();
-		double l = exp(lambda + u1 + u2 ); 
 		// queued data
 		Qv.offer(v1);
-		Qe.offer(e1);
 		Qv.offer(v2);
+		Qe.offer(e1);
 		Qe.offer(e0);
 		Qa.offer(PI);
 		Qa.offer(0.0);
 
 		// vertices
+		Double l = getNewLength(e0, u);
 		v1.setTextureCoord(new Point(0, 0, 0));
 		v2.setTextureCoord(new Point(l, 0, 0));
 		visited.add(v1);
@@ -64,10 +62,9 @@ public class CLayout {
 			while (e != outE) {
 				CVertex nearVertex = e.getTargetVertex();
 				
-				Double alpha = alphaMap.get(e.getNextEdge());
-				if (alpha == null) {
-					break;
-//					alpha = 2*PI - getAngleSum(v, alphaMap);
+				Double alpha = aMap.get(e.getNextEdge());
+				if (alpha == null) { // a boundary edge
+					alpha = 2*PI - getAngleSum(v, aMap);
 				}
 				
 				globalAngle -= alpha;
@@ -78,12 +75,7 @@ public class CLayout {
 					Qe.offer(e);	
 					Qa.offer(globalAngle);
 
-					v1 = e.getStartVertex();
-					v2 = e.getTargetVertex();
-					u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
-					u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0;
-					lambda = e.getLambda();
-					l = exp(lambda + u1 + u2); 
+					l = getNewLength(e, u);
 					geom3d.Vector dif = new geom3d.Vector(cos(globalAngle), sin(globalAngle), 0.0).times(l);
 					nearVertex.getTextureCoord().set(tp).add(dif);
 				} 
@@ -94,27 +86,39 @@ public class CLayout {
 	}
 	
 	
-//	
-//	/**
-//	 * Calculate the angle sum at this vertex. Usually this will be 2PI, but at the boundary
-//	 * we sum only the inner angles
-//	 * @param v
-//	 * @return
-//	 */
-//	private static Double getAngleSum(CVertex v, Map<CEdge, Double> aMap) {
-//		Double r = 0.0;
-//		List<CEdge> star = HalfEdgeUtils.incomingEdges(v);
-//		for (CEdge e : star) {
-//			Double a = aMap.get(e.getPreviousEdge());
-//			if (a != null)
-//				r += a;
-//		}
-//		return r;
-//	}
-//	
-//	
-//	
 	
+	/**
+	 * Calculate the angle sum at this vertex. Usually this will be 2PI, but at the boundary
+	 * we sum only the inner angles
+	 * @param v
+	 * @return the angle sum
+	 */
+	protected static Double getAngleSum(CVertex v, Map<CEdge, Double> aMap) {
+		Double r = 0.0;
+		List<CEdge> star = incomingEdges(v);
+		for (CEdge e : star) {
+			Double a = aMap.get(e.getPreviousEdge());
+			if (a != null)
+				r += a;
+		}
+		return r;
+	}
+	
+	
+	/**
+	 * Calculate the edge length for the flat metric
+	 * @param e
+	 * @param u
+	 * @return the new edge length
+	 */
+	protected static Double getNewLength(CEdge e, Vector u) {
+		CVertex v1 = e.getStartVertex();
+		CVertex v2 = e.getTargetVertex();
+		Double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
+		Double u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0;
+		Double lambda = e.getLambda();
+		return exp(lambda + u1 + u2);
+	}
 	
 	
 }
