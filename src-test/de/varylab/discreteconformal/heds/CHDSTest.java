@@ -47,7 +47,7 @@ public class CHDSTest {
 	@BeforeClass 
 	public static void setUpBeforeClass() throws Exception {
 		System.out.println("CHDSTest.setUpBeforeClass()");
-		File file = new File("data/test02.obj");
+		File file = new File("data/test03.obj");
 		ReaderOBJ reader = new ReaderOBJ();
 		SceneGraphComponent c = null;
 		try {

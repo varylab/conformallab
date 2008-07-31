@@ -19,7 +19,7 @@ public class ConformalLab {
 		uiController = new UIController();
 	
 	public static void main(String[] args) {
-		OpenMeshAction.openMesh("data/test01.obj");
+		OpenMeshAction.openMesh("data/test02.obj");
 		applicationWindow.setBlockOnOpen(true);
 		applicationWindow.open();
 		Display.getCurrent().dispose();

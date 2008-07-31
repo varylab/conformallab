@@ -33,7 +33,7 @@ public class CLayoutTest {
 	public static void setUpBeforeClass() throws Exception {
 		System.out.println("CLayoutTest.setUpBeforeClass()");
 		System.out.println("CHDSTest.setUpBeforeClass()");
-		File file = new File("data/test02.obj");
+		File file = new File("data/planar04.obj");
 		ReaderOBJ reader = new ReaderOBJ();
 		SceneGraphComponent c = null;
 		IndexedFaceSet ifs = null;
@@ -69,14 +69,14 @@ public class CLayoutTest {
 		System.out.println("CLayoutTest.testDoLayout()");
 		int n = hds.getDomainDimension();
 		Vector u = new SparseVector(n);
-		CLayout.doLayout2(hds, u);
+		CLayout.doLayout(hds, u);
 		
 		for (CEdge e : hds.getPositiveEdges()) {
 			CVertex s = e.getStartVertex();
 			CVertex t = e.getTargetVertex();
 			double l1 = s.getPosition().distanceTo(t.getPosition());
 			double l2 = s.getTextureCoord().distanceTo(t.getTextureCoord());
-			Assert.assertEquals(l1, l2, 1E-5);
+			Assert.assertEquals(l1, l2, 1E-8);
 		}
 	}
 

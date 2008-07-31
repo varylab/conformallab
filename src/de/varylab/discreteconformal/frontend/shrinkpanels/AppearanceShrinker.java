@@ -51,8 +51,8 @@ import de.varylab.discreteconformal.frontend.widget.ShrinkPanel;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
 import de.varylab.discreteconformal.frontend.widget.ColorButton.ColorChangedListener;
 import de.varylab.discreteconformal.heds.CFace;
-import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.heds.CHDS;
+import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.heds.bsp.KdTree;
 import de.varylab.discreteconformal.heds.util.MeshUtility;
 
@@ -175,7 +175,7 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 	
 	private void updateStates() {
 		Appearance meshApp = ConformalLab.getUIController().getMeshAppearance();
-	
+
 		meshApp.setAttribute(FACE_DRAW, showFaces.getSelection());
 		meshApp.setAttribute(EDGE_DRAW, showEdges.getSelection());
 		meshApp.setAttribute(VERTEX_DRAW, showVertices.getSelection());

@@ -15,6 +15,7 @@ import de.varylab.discreteconformal.heds.CFace;
 import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.VertexLabelAdapter;
 import de.varylab.discreteconformal.heds.bsp.KdTree;
 
 public class GeometryController {
@@ -67,7 +68,7 @@ public class GeometryController {
 	public void setGeometry(CHDS heds) {
 		ConverterHeds2JR<CVertex, CEdge, CFace> converter = new ConverterHeds2JR<CVertex, CEdge, CFace>();
 		this.heds = heds;
-		ifs = converter.heds2ifs(heds, new PositionAdapter());
+		ifs = converter.heds2ifs(heds, new PositionAdapter(), new VertexLabelAdapter());
 		generateKdTree();
 		fireGeometryChanged();
 	}
