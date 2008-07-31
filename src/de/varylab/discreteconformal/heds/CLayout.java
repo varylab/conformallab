@@ -8,9 +8,12 @@ import geom3d.Point;
 
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+
+import de.jtem.halfedge.util.HalfEdgeUtils;
 
 import no.uib.cipr.matrix.Vector;
 
@@ -23,73 +26,9 @@ public class CLayout {
 	 * @param u
 	 */
 	public static void doLayout(CHDS hds, Vector u, Map<CEdge, Double>... aMap) {
-		doLayout2(hds, u, aMap);
-//		Map<CEdge, Double> alphaMap = aMap.length == 0 ? hds.calculateAlphas(u) : aMap[0];
-//		Map<CEdge, Double> absoluteMap = new HashMap<CEdge, Double>();
-//		Set<CVertex> readyVertices = new HashSet<CVertex>();
-//		Set<CEdge> readyEdges = new HashSet<CEdge>();
-//		Queue<CEdge> Q = new LinkedList<CEdge>(); 
-//		
-//		// start
-//		CEdge e0 = hds.getEdge(0);
-//		CEdge e1 = e0.getOppositeEdge();
-//		CVertex v0 = e0.getStartVertex();
-//		CVertex v1 = e0.getTargetVertex();
-//		double u0 = v0.getSolverIndex() >= 0 ? u.get(v0.getSolverIndex()) : 0.0; 
-//		double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
-//		double l = exp(0.5 * (u0 + u1)) * e0.getLength(); 
-//		//edges
-//		Q.offer(e0);
-//		Q.offer(e1);
-//		absoluteMap.put(e0, 0.0);
-//		absoluteMap.put(e1, PI);
-//		readyEdges.add(e0);
-//		readyEdges.add(e1);
-//		// vertices
-//		v0.setTextureCoord(new Point(0, 0, 0));
-//		v1.setTextureCoord(new Point(l, 0, 0));
-//		readyVertices.add(v0);
-//		readyVertices.add(v1);
-//		
-//		// evolution
-//		while (!Q.isEmpty()) {
-//			CEdge e = Q.poll();
-//			e0 = e.getNextEdge();
-//			v0 = e0.getStartVertex();
-//			v1 = e0.getTargetVertex();
-//			if (e.getLeftFace() == null)
-//				continue;
-//			if (!readyEdges.contains(e0.getOppositeEdge()))
-//				Q.offer(e0.getOppositeEdge());
-//			if (readyVertices.contains(v1)) {
-//				continue;
-//			}
-//			u0 = v0.getSolverIndex() >= 0 ? u.get(v0.getSolverIndex()) : 0.0; 
-//			u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
-//			l = exp(0.5 * (u0 + u1)) * e0.getLength(); 
-//			double ae = absoluteMap.get(e);
-//			double a = ae + PI - abs(alphaMap.get(e.getPreviousEdge()));
-//			geom3d.Vector dif = new geom3d.Vector(cos(a), sin(a), 0).times(l);
-//			v1.getTextureCoord().set(v0.getTextureCoord()).add(dif);
-//			Q.offer(e0.getOppositeEdge());
-//			absoluteMap.put(e0.getOppositeEdge(), a + PI);
-//			readyEdges.add(e0);
-//			readyEdges.add(e0.getOppositeEdge());
-//			readyVertices.add(v1);
-//			CEdge ne = e0.getNextEdge();
-//			if (!readyEdges.contains(ne))
-//				Q.offer(ne);
-//		}
-//		assert (readyVertices.size() == hds.numVertices());
-//		
-	}
-	
-	
-	
-	public static void doLayout2(CHDS hds, Vector u, Map<CEdge, Double>... aMap) {
+		System.out.println("Layouting " + hds.numVertices() + " Vertices...");
 		Map<CEdge, Double> alphaMap = aMap.length == 0 ? hds.calculateAlphas(u) : aMap[0];
 		Set<CVertex> visited = new HashSet<CVertex>();
-		Set<CVertex> processed = new HashSet<CVertex>();
 		Queue<CEdge> Qe = new LinkedList<CEdge>(); 
 		Queue<CVertex> Qv = new LinkedList<CVertex>();
 		Queue<Double> Qa = new LinkedList<Double>();
@@ -97,69 +36,106 @@ public class CLayout {
 		// start
 		CEdge e0 = hds.getEdge(0);
 		CEdge e1 = e0.getOppositeEdge();
-		CVertex v0 = e0.getStartVertex();
-		CVertex v1 = e0.getTargetVertex();
-		double u0 = v0.getSolverIndex() >= 0 ? u.get(v0.getSolverIndex()) : 0.0; 
+		CVertex v1 = e0.getStartVertex();
+		CVertex v2 = e0.getTargetVertex();
 		double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
-		double l = exp(0.5 * (u0 + u1)) * e0.getLength(); 
+		double u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0; 
+		double lambda = e0.getLambda();
+		double l = exp(lambda + u1 + u2 ); 
 		// queued data
-		Qv.offer(v0);
-		Qe.offer(e1);
 		Qv.offer(v1);
+		Qe.offer(e1);
+		Qv.offer(v2);
 		Qe.offer(e0);
 		Qa.offer(PI);
 		Qa.offer(0.0);
 
 		// vertices
-		v0.setTextureCoord(new Point(0, 0, 0));
-		v1.setTextureCoord(new Point(l, 0, 0));
-		visited.add(v0);
+		v1.setTextureCoord(new Point(0, 0, 0));
+		v2.setTextureCoord(new Point(l, 0, 0));
 		visited.add(v1);
+		visited.add(v2);
 		
-		System.out.println("Layouting " + hds.numVertices() + " Vertices...");
+		System.out.println("Layouted Vertex " + v1 + ": " + v1.getTextureCoord());
+		System.out.println("Layouted Vertex " + v2 + ": " + v2.getTextureCoord());
 		
-		while (!Qv.isEmpty()){// && hds.numVertices() != visited.size()) {
+		while (!Qv.isEmpty() && hds.numVertices() > visited.size()) {
 			CVertex v = Qv.poll();
 			CEdge inE = Qe.poll();
 			Double a = Qa.poll();
 			CEdge outE = inE.getOppositeEdge();
 			Point tp = v.getTextureCoord();
 			
-			processed.add(v);
-			System.out.println("Reached Vertex " + v + ": " + tp);
+			System.out.println("Layouting vertex star of " + v + "...");
 			
 			CEdge e = inE.getNextEdge();
-			Double localAngle = a;
+			Double globalAngle = a + PI;
 			while (e != outE) {
 				CVertex nearVertex = e.getTargetVertex();
+				System.out.println("Near Vertex is " + nearVertex);
+				
+				Double alpha = alphaMap.get(e.getNextEdge());
+				if (alpha == null) {
+					System.out.println("We are at the boundary: calculate the angle sum");
+					alpha = 2*PI - getAngleSum(v, alphaMap);
+				}
+				
+				System.out.println("Local alpha is " + alpha);
+				globalAngle -= alpha;
+				System.out.println("Global angle is " + globalAngle);
+				
+				
 				if (!visited.contains(nearVertex)) {
 					visited.add(nearVertex);
 					Qv.offer(nearVertex);
 					Qe.offer(e);	
-					Qa.offer(localAngle);
+					Qa.offer(globalAngle);
 
-					Double alpha = alphaMap.get(e.getNextEdge());
-					if (alpha == null) {
-						e = e.getOppositeEdge().getNextEdge();
-						continue;
-					}
-					localAngle += PI - alpha;
-					v0 = e.getTargetVertex();
 					v1 = e.getStartVertex();
-					u0 = v0.getSolverIndex() >= 0 ? u.get(v0.getSolverIndex()) : 0.0; 
+					v2 = e.getTargetVertex();
 					u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
-					l = exp(0.5 * (u0 + u1)) * e.getLength(); 
-					geom3d.Vector dif = new geom3d.Vector(cos(localAngle), sin(localAngle), 0.0).times(l);
+					u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0;
+					lambda = e.getLambda();
+					l = exp(lambda + u1 + u2); 
+					System.out.println("Length is" + l);
+					System.out.println("Old Length is" + e.getLength());
+					geom3d.Vector dif = new geom3d.Vector(cos(globalAngle), sin(globalAngle), 0.0).times(l);
 					nearVertex.getTextureCoord().set(tp).add(dif);
-				} else  {
-					assert (processed.contains(nearVertex) || Qv.contains(nearVertex));
+					
+					System.out.println("Layouted Vertex " + nearVertex + ": " + nearVertex.getTextureCoord());
+				} else {
+					System.out.println("Vertex already visited continue...");
 				}
 				e = e.getOppositeEdge().getNextEdge();
 			}
 			
 		}
+		assert (visited.size() == hds.numVertices());
 		System.out.println("Layouted " + visited.size() + "Vertices");
 	}
+	
+	
+	
+	/**
+	 * Calculate the angle sum at this vertex. Usually this will be 2PI, but at the boundary
+	 * we sum only the inner angles
+	 * @param v
+	 * @return
+	 */
+	private static Double getAngleSum(CVertex v, Map<CEdge, Double> aMap) {
+		Double r = 0.0;
+		List<CEdge> star = HalfEdgeUtils.incomingEdges(v);
+		for (CEdge e : star) {
+			Double a = aMap.get(e.getPreviousEdge());
+			if (a != null)
+				r += a;
+		}
+		return r;
+	}
+	
+	
+	
+	
 	
 	
 }
