@@ -8,12 +8,9 @@ import geom3d.Point;
 
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-
-import de.jtem.halfedge.util.HalfEdgeUtils;
 
 import no.uib.cipr.matrix.Vector;
 
@@ -26,7 +23,6 @@ public class CLayout {
 	 * @param u
 	 */
 	public static void doLayout(CHDS hds, Vector u, Map<CEdge, Double>... aMap) {
-		System.out.println("Layouting " + hds.numVertices() + " Vertices...");
 		Map<CEdge, Double> alphaMap = aMap.length == 0 ? hds.calculateAlphas(u) : aMap[0];
 		Set<CVertex> visited = new HashSet<CVertex>();
 		Queue<CEdge> Qe = new LinkedList<CEdge>(); 
@@ -56,9 +52,6 @@ public class CLayout {
 		visited.add(v1);
 		visited.add(v2);
 		
-		System.out.println("Layouted Vertex " + v1 + ": " + v1.getTextureCoord());
-		System.out.println("Layouted Vertex " + v2 + ": " + v2.getTextureCoord());
-		
 		while (!Qv.isEmpty() && hds.numVertices() > visited.size()) {
 			CVertex v = Qv.poll();
 			CEdge inE = Qe.poll();
@@ -66,24 +59,18 @@ public class CLayout {
 			CEdge outE = inE.getOppositeEdge();
 			Point tp = v.getTextureCoord();
 			
-			System.out.println("Layouting vertex star of " + v + "...");
-			
 			CEdge e = inE.getNextEdge();
 			Double globalAngle = a + PI;
 			while (e != outE) {
 				CVertex nearVertex = e.getTargetVertex();
-				System.out.println("Near Vertex is " + nearVertex);
 				
 				Double alpha = alphaMap.get(e.getNextEdge());
 				if (alpha == null) {
-					System.out.println("We are at the boundary: calculate the angle sum");
-					alpha = 2*PI - getAngleSum(v, alphaMap);
+					break;
+//					alpha = 2*PI - getAngleSum(v, alphaMap);
 				}
 				
-				System.out.println("Local alpha is " + alpha);
 				globalAngle -= alpha;
-				System.out.println("Global angle is " + globalAngle);
-				
 				
 				if (!visited.contains(nearVertex)) {
 					visited.add(nearVertex);
@@ -97,44 +84,36 @@ public class CLayout {
 					u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0;
 					lambda = e.getLambda();
 					l = exp(lambda + u1 + u2); 
-					System.out.println("Length is" + l);
-					System.out.println("Old Length is" + e.getLength());
 					geom3d.Vector dif = new geom3d.Vector(cos(globalAngle), sin(globalAngle), 0.0).times(l);
 					nearVertex.getTextureCoord().set(tp).add(dif);
-					
-					System.out.println("Layouted Vertex " + nearVertex + ": " + nearVertex.getTextureCoord());
-				} else {
-					System.out.println("Vertex already visited continue...");
-				}
+				} 
 				e = e.getOppositeEdge().getNextEdge();
 			}
-			
 		}
 		assert (visited.size() == hds.numVertices());
-		System.out.println("Layouted " + visited.size() + "Vertices");
 	}
 	
 	
-	
-	/**
-	 * Calculate the angle sum at this vertex. Usually this will be 2PI, but at the boundary
-	 * we sum only the inner angles
-	 * @param v
-	 * @return
-	 */
-	private static Double getAngleSum(CVertex v, Map<CEdge, Double> aMap) {
-		Double r = 0.0;
-		List<CEdge> star = HalfEdgeUtils.incomingEdges(v);
-		for (CEdge e : star) {
-			Double a = aMap.get(e.getPreviousEdge());
-			if (a != null)
-				r += a;
-		}
-		return r;
-	}
-	
-	
-	
+//	
+//	/**
+//	 * Calculate the angle sum at this vertex. Usually this will be 2PI, but at the boundary
+//	 * we sum only the inner angles
+//	 * @param v
+//	 * @return
+//	 */
+//	private static Double getAngleSum(CVertex v, Map<CEdge, Double> aMap) {
+//		Double r = 0.0;
+//		List<CEdge> star = HalfEdgeUtils.incomingEdges(v);
+//		for (CEdge e : star) {
+//			Double a = aMap.get(e.getPreviousEdge());
+//			if (a != null)
+//				r += a;
+//		}
+//		return r;
+//	}
+//	
+//	
+//	
 	
 	
 	
