@@ -20,12 +20,13 @@ public class CLayout {
 
 	
 	/**
-	 * Do flat layout for a HDS and a scale vector u
-	 * @param hds
-	 * @param u
+	 * Do flat layout for a HDS and a metric vector u
+	 * @param hds mesh
+	 * @param u new metric
+	 * @param angleMapParam may be null
 	 */
-	public static void doLayout(CHDS hds, Vector u, Map<CEdge, Double>... angleMapParam) {
-		Map<CEdge, Double> aMap = angleMapParam.length == 0 ? hds.calculateAlphas(u) : angleMapParam[0];
+	public static void doLayout(CHDS hds, Vector u, Map<CEdge, Double> aMapParam) {
+		Map<CEdge, Double> aMap = aMapParam == null ? hds.calculateAlphas(u) : aMapParam;
 		Set<CVertex> visited = new HashSet<CVertex>(hds.numVertices());
 		Queue<CVertex> Qv = new LinkedList<CVertex>();
 		Queue<CEdge> Qe = new LinkedList<CEdge>();
@@ -93,7 +94,7 @@ public class CLayout {
 	 * @param v
 	 * @return the angle sum
 	 */
-	protected static Double getAngleSum(CVertex v, Map<CEdge, Double> aMap) {
+	public static Double getAngleSum(CVertex v, Map<CEdge, Double> aMap) {
 		Double r = 0.0;
 		List<CEdge> star = incomingEdges(v);
 		for (CEdge e : star) {
@@ -111,7 +112,7 @@ public class CLayout {
 	 * @param u
 	 * @return the new edge length
 	 */
-	protected static Double getNewLength(CEdge e, Vector u) {
+	public static Double getNewLength(CEdge e, Vector u) {
 		CVertex v1 = e.getStartVertex();
 		CVertex v2 = e.getTargetVertex();
 		Double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 

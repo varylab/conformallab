@@ -284,6 +284,8 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 		return dim;
 	}
 	
-	
+	public void setDomainDimension(Integer dim) {
+		this.dim = dim;
+	}
 	
 }

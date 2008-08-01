@@ -1,12 +1,17 @@
 package de.varylab.discreteconformal.frontend.shrinkpanels;
 
 import static de.varylab.discreteconformal.ConformalLab.getGeometryController;
+import static java.lang.Math.PI;
 import static org.eclipse.jface.layout.GridDataFactory.fillDefaults;
 import static org.eclipse.swt.SWT.BORDER;
 import static org.eclipse.swt.SWT.NONE;
 import static org.eclipse.swt.SWT.SHADOW_ETCHED_IN;
 import static org.eclipse.swt.layout.GridData.BEGINNING;
 import static org.eclipse.swt.layout.GridData.CENTER;
+
+import java.util.Collection;
+import java.util.Map;
+
 import no.uib.cipr.matrix.DenseVector;
 
 import org.eclipse.jface.layout.GridDataFactory;
@@ -21,6 +26,8 @@ import org.eclipse.swt.widgets.Spinner;
 
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanel;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
+import de.varylab.discreteconformal.heds.CCones;
+import de.varylab.discreteconformal.heds.CEdge;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CLayout;
 import de.varylab.discreteconformal.heds.CVertex;
@@ -62,7 +69,7 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 		numConesLabel.setText("Cones");
 		fillDefaults().grab(true, false).align(BEGINNING, CENTER).applyTo(numConesLabel);
 		numConesSpinner = new Spinner(coneConfigGroup, BORDER);
-		numConesSpinner.setValues(numCones, 1, 100, 0, 1, 1);
+		numConesSpinner.setValues(numCones, 0, 100, 0, 1, 1);
 		fillDefaults().grab(true, false).applyTo(numConesSpinner);
 		
 		
@@ -92,7 +99,12 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 	
 	private void computeEnergy(CHDS hds) {
 		System.out.println("Unwrapping with " + numCones + " cones");
+
 		hds.prepareInvariantData();
+		Collection<CVertex> cones = CCones.setUpMesh(hds, numCones);
+		System.out.println("Cones: " + cones);
+		
+		
 		int n = hds.getDomainDimension();
 		
 		DenseVector u = new DenseVector(n);
@@ -123,8 +135,17 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 //		System.err.println("Gradient after: \n" + G);
 //		System.err.println("Hessian after: \n" + H);
 		
+		
+		System.out.println("cone angles are:");
+		Map<CEdge, Double> aMap = hds.calculateAlphas(u);
+		for (CVertex c : cones) {
+			System.out.println(c + ": " + 180 / PI * CLayout.getAngleSum(c, aMap));
+		}
+		
+		
 		// layout
-		CLayout.doLayout(hds, u);
+		CCones.cutMesh(hds, cones);
+		CLayout.doLayout(hds, u, aMap);
 		for (CVertex v : hds.getVertices()) {
 			v.setPosition(v.getTextureCoord());
 		}
