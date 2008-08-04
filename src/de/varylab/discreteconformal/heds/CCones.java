@@ -2,9 +2,9 @@ package de.varylab.discreteconformal.heds;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static java.lang.Math.abs;
-import static java.util.Collections.reverse;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
@@ -34,10 +34,12 @@ public class CCones {
 				bSet.add(v);
 		}
 
+		LambdaEdgeComparatore comp = new LambdaEdgeComparatore();
 		for (CVertex c : cones) {
-			java.util.Vector<CEdge> path = Search.bFS(c, bSet, true);
-			reverse(path);
+			//TODO Implement shortest path cutting
+			java.util.Vector<CEdge> path = Search.bFS(c, bSet, true, comp);
 			for (CEdge e : path) {
+				CEdge eOpp = e.getOppositeEdge();
 				Map<CVertex, CVertex> vMap = GraphUtility.cutAtEdge(e);
 				for (CVertex v : vMap.keySet()) {
 					CVertex nV = vMap.get(v);
@@ -45,10 +47,20 @@ public class CCones {
 					nV.setTheta(v.getTheta());
 					nV.setPosition(v.getPosition());
 				}
+				e.getOppositeEdge().setLambda(e.getLambda());
+				eOpp.getOppositeEdge().setLambda(eOpp.getLambda());
 			}
 		}
 	}
 	
+	
+	protected static class LambdaEdgeComparatore implements Comparator<CEdge> {
+
+		public int compare(CEdge o1, CEdge o2) {
+			return o1.getLambda() > o2.getLambda() ? -1 : 1;
+		}
+		
+	}
 	
 	
 	/**

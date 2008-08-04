@@ -2,7 +2,9 @@ package de.varylab.discreteconformal.heds.util;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isInteriorEdge;
+import static java.util.Collections.sort;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -28,7 +30,7 @@ public class Search {
 	> Vector<E> bFS(V start, V end, boolean avoidBorder) throws NoSuchElementException{
 		HashSet<V> endSet = new HashSet<V>();
 		endSet.add(end);
-		return bFS(start, endSet, avoidBorder);
+		return bFS(start, endSet, avoidBorder, null);
 	}
 
 	/**
@@ -44,7 +46,7 @@ public class Search {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> Vector<E> bFS(V start, Set<V> endPoints, boolean avoidBorder) throws NoSuchElementException{
+	> Vector<E> bFS(V start, Set<V> endPoints, boolean avoidBorder, Comparator<E> comp) throws NoSuchElementException{
 		HashMap<V, Stack<E>> pathMap = new HashMap<V, Stack<E>>();
 		LinkedList<V> queue = new LinkedList<V>();
 		HashSet<V> visited = new HashSet<V>();
@@ -55,6 +57,9 @@ public class Search {
 			actVertex = queue.poll();
 			Stack<E> path = pathMap.get(actVertex);
 			List<E> star = incomingEdges(actVertex);
+			if (comp != null) { 
+				sort(star, comp);
+			}
 			for (E e : star){
 				if (!isInteriorEdge(e) && avoidBorder)
 					continue;
