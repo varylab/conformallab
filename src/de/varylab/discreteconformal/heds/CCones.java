@@ -57,7 +57,7 @@ public class CCones {
 	protected static class LambdaEdgeComparatore implements Comparator<CEdge> {
 
 		public int compare(CEdge o1, CEdge o2) {
-			return o1.getLambda() > o2.getLambda() ? -1 : 1;
+			return o1.getLambda() < o2.getLambda() ? -1 : 1;
 		}
 		
 	}
