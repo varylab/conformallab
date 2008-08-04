@@ -2,7 +2,6 @@ package de.varylab.discreteconformal.heds.util;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
-import static de.jtem.halfedge.util.HalfEdgeUtils.isInteriorEdge;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -13,6 +12,7 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 
 public class GraphUtility {
 
@@ -34,7 +34,7 @@ public class GraphUtility {
 		F extends Face<V, E, F>
 	> Map<V, V> cutAtEdge(E edge) throws IllegalArgumentException{
 		Map<V, V> result = new HashMap<V, V>();
-		if (!isInteriorEdge(edge))
+		if (!HalfEdgeUtils.isInteriorEdge(edge))
 			throw new IllegalArgumentException("No border edges in cutAtEdge()!");
 		HalfEdgeDataStructure<V, E, F> graph = edge.getHalfEdgeDataStructure();
 		V v1 = edge.getStartVertex();
@@ -114,6 +114,17 @@ public class GraphUtility {
 		return result;
 		
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	

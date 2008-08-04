@@ -144,7 +144,7 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 		
 		
 		// layout
-		CCones.cutMesh(hds, cones);
+		CCones.cutMesh(hds, cones, u);
 		CLayout.doLayout(hds, u, aMap);
 		for (CVertex v : hds.getVertices()) {
 			v.setPosition(v.getTextureCoord());

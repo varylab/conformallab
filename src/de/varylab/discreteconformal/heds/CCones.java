@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,6 +19,7 @@ import no.uib.cipr.matrix.sparse.CG;
 import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
 import de.varylab.discreteconformal.heds.util.GraphUtility;
 import de.varylab.discreteconformal.heds.util.Search;
+import de.varylab.discreteconformal.heds.util.Search.WeightAdapter;
 
 public class CCones {
 
@@ -27,17 +29,17 @@ public class CCones {
 	 * @param hds the mesh
 	 * @param cones the cones
 	 */
-	public static void cutMesh(CHDS hds, Collection<CVertex> cones) {
+	public static void cutMesh(CHDS hds, Collection<CVertex> cones, Vector u) {
 		Set<CVertex> bSet = new HashSet<CVertex>();
 		for (CVertex v : hds.getVertices()){
 			if (isBoundaryVertex(v))
 				bSet.add(v);
 		}
 
-		LambdaEdgeComparatore comp = new LambdaEdgeComparatore();
+//		LambdaEdgeComparatore comp = new LambdaEdgeComparatore();
 		for (CVertex c : cones) {
-			//TODO Implement shortest path cutting
-			java.util.Vector<CEdge> path = Search.bFS(c, bSet, true, comp);
+//			List<CEdge> path = Search.bFS(c, bSet, true, comp);
+			List<CEdge> path = Search.getShortestPath(c, bSet, new EdgeLengthAdapter(u));
 			for (CEdge e : path) {
 				CEdge eOpp = e.getOppositeEdge();
 				Map<CVertex, CVertex> vMap = GraphUtility.cutAtEdge(e);
@@ -51,6 +53,26 @@ public class CCones {
 				eOpp.getOppositeEdge().setLambda(eOpp.getLambda());
 			}
 		}
+	}
+	
+	
+	protected static class EdgeLengthAdapter implements WeightAdapter<CEdge> {
+
+		private Vector
+			u = null;
+		
+		public EdgeLengthAdapter(Vector u) {
+			this.u = u;
+		}
+		
+		public double getWeight(CEdge e) {
+			CVertex s = e.getStartVertex();
+			CVertex t = e.getTargetVertex();
+			double u1 = s.getSolverIndex() == -1 ? 0 : u.get(s.getSolverIndex()); 
+			double u2 = t.getSolverIndex() == -1 ? 0 : u.get(t.getSolverIndex()); 
+			return e.getLambda() + u1 + u2; 
+		}
+		
 	}
 	
 	
