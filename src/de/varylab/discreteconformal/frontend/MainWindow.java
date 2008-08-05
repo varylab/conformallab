@@ -3,7 +3,6 @@ package de.varylab.discreteconformal.frontend;
 import static org.eclipse.swt.SWT.BORDER;
 import static org.eclipse.swt.SWT.FLAT;
 import static org.eclipse.swt.SWT.NONE;
-import static org.eclipse.swt.SWT.TOP;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -82,7 +81,7 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 		getShell().setText("Discrete Conformal Parametrization");
 		getShell().setSize(1000,740);
 		
-		CTabFolder mainFolder = new CTabFolder(parent, TOP | BORDER | FLAT);
+		CTabFolder mainFolder = new CTabFolder(parent, BORDER | FLAT);
 
 
 		// object content -----------------------
@@ -106,6 +105,7 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 
 		CTabItem mainPage = new CTabItem(mainFolder, NONE);
 		mainPage.setText("Object");
+		mainPage.setImage(ImageHook.getImage("Standard_24i_box.png"));
 		mainPage.setControl(objectContent);
 		mainFolder.setSelection(mainPage);
 		
@@ -119,7 +119,7 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 		
 		CTabItem texturePage = new CTabItem(mainFolder, NONE);
 		texturePage.setText("Texture");
-		texturePage.setImage(ImageHook.getImage("save.png"));
+		texturePage.setImage(ImageHook.getImage("texture.png"));
 		texturePage.setControl(textureContent);
 		
  		return parent;
