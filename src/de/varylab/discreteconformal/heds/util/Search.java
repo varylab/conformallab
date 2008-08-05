@@ -211,9 +211,7 @@ public class Search {
 		V v = Collections.min(ends, new DComparator<V>(d));
 		Stack<V> vPath = new Stack<V>();
 		while (v != start) {
-			if (vPath.contains(v)) {
-				assert false;
-			}
+			assert !vPath.contains(v);
 			vPath.push(v);
 			v = hds.getVertex(p[v.getIndex()]);
 		}

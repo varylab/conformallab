@@ -12,7 +12,6 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
-import de.jtem.halfedge.util.HalfEdgeUtils;
 
 public class GraphUtility {
 
@@ -34,8 +33,6 @@ public class GraphUtility {
 		F extends Face<V, E, F>
 	> Map<V, V> cutAtEdge(E edge) throws IllegalArgumentException{
 		Map<V, V> result = new HashMap<V, V>();
-		if (!HalfEdgeUtils.isInteriorEdge(edge))
-			throw new IllegalArgumentException("No border edges in cutAtEdge()!");
 		HalfEdgeDataStructure<V, E, F> graph = edge.getHalfEdgeDataStructure();
 		V v1 = edge.getStartVertex();
 		V v2 = edge.getTargetVertex();

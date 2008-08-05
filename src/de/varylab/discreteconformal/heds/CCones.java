@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.heds;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static java.lang.Math.abs;
+import static java.lang.Math.exp;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -36,9 +37,7 @@ public class CCones {
 				bSet.add(v);
 		}
 
-//		LambdaEdgeComparatore comp = new LambdaEdgeComparatore();
 		for (CVertex c : cones) {
-//			List<CEdge> path = Search.bFS(c, bSet, true, comp);
 			List<CEdge> path = Search.getShortestPath(c, bSet, new EdgeLengthAdapter(u));
 			for (CEdge e : path) {
 				CEdge eOpp = e.getOppositeEdge();
@@ -66,11 +65,12 @@ public class CCones {
 		}
 		
 		public double getWeight(CEdge e) {
-			CVertex s = e.getStartVertex();
-			CVertex t = e.getTargetVertex();
-			double u1 = s.getSolverIndex() == -1 ? 0 : u.get(s.getSolverIndex()); 
-			double u2 = t.getSolverIndex() == -1 ? 0 : u.get(t.getSolverIndex()); 
-			return e.getLambda() + u1 + u2; 
+			CVertex v1 = e.getStartVertex();
+			CVertex v2 = e.getTargetVertex();
+			Double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
+			Double u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0;
+			Double lambda = e.getLambda();
+			return exp(lambda + u1 + u2);
 		}
 		
 	}
