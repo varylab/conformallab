@@ -1,5 +1,7 @@
 package de.varylab.discreteconformal;
 
+import static org.eclipse.jface.dialogs.MessageDialog.openError;
+
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -19,7 +21,7 @@ public class ConformalLab {
 		uiController = new UIController();
 	
 	public static void main(String[] args) {
-		OpenMeshAction.openMesh("data/test02.obj");
+		OpenMeshAction.openMesh("data/cathead.obj");
 		applicationWindow.setBlockOnOpen(true);
 		applicationWindow.open();
 		Display.getCurrent().dispose();
@@ -52,6 +54,15 @@ public class ConformalLab {
 		invokeOnSWT(new Runnable(){
 			public void run() {
 				applicationWindow.setStatus(status);				
+			}
+		});
+	}
+	
+	
+	public static void errorMessage(final String title, final String message) {
+		invokeOnSWT(new Runnable() {
+			public void run() {
+				openError(getMainShell(), title, message);						
 			}
 		});
 	}

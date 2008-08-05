@@ -28,7 +28,7 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 	}
 
 	
-	protected boolean isVariable(CVertex v) {
+	public boolean isVariable(CVertex v) {
 		return v.getSolverIndex() >= 0;
 	}
 	

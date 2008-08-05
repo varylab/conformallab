@@ -239,12 +239,16 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 			updateVertexColors();
 	}
 
-	public void geometryChanged(CHDS heds) {
-		updateStates();
-		vertexColors = null;
-		vColorNone.setSelection(true);
-		vColorCurvature.setSelection(false);
-		meanEdgeLength = MeshUtility.meanEdgeLength(heds);
+	public void geometryChanged(final CHDS heds) {
+		ConformalLab.invokeOnSWT(new Runnable() {
+			public void run() {
+				updateStates();
+				vertexColors = null;
+				vColorNone.setSelection(true);
+				vColorCurvature.setSelection(false);
+				meanEdgeLength = MeshUtility.meanEdgeLength(heds);				
+			}
+		});
 	}
 
 

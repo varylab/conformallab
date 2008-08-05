@@ -26,7 +26,6 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 
 public class Search {
 
-	
 	/**
 	 * Breadth-first-search from start to end
 	 * @param <V>
@@ -256,7 +255,17 @@ public class Search {
 	
 	
 	
-	
+	/**
+	 * Algorithm from the Cormen, Leiserson, Rivest, Stein
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param e
+	 * @param d
+	 * @param p
+	 * @param w
+	 * @param Q
+	 */
 	protected static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
@@ -293,26 +302,6 @@ public class Search {
 			p[v.getIndex()] = -1;
 		}
 		d[s.getIndex()] = 0;
-	}
-	
-	
-	
-	protected static <
-		V extends Vertex<V, E, F>,
-		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>
-	> int[][] makeAllPairsNonZeros(HalfEdgeDataStructure<V, E, F> hds) {
-		int[][] nz = new int[hds.numVertices()][];
-		for (V v : hds.getVertices()) {
-			List<E> star = HalfEdgeUtils.incomingEdges(v);
-			nz[v.getIndex()] = new int[star.size()];
-			int i = 0;
-			for (E e : star) {
-				V connectedVertex = e.getOppositeEdge().getTargetVertex();
-				nz[v.getIndex()][i++] = connectedVertex.getIndex();
-			}
-		}
-		return nz;
 	}
 	
 }

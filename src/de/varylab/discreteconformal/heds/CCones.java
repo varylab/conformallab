@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.heds;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
+import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
 import static java.lang.Math.abs;
 import static java.lang.Math.exp;
 
@@ -12,11 +13,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CG;
+import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
 import de.varylab.discreteconformal.heds.util.GraphUtility;
 import de.varylab.discreteconformal.heds.util.Search;
@@ -97,7 +98,7 @@ public class CCones {
 			int n = hds.getDomainDimension();
 			Vector u = new DenseVector(n);
 			Vector G = new DenseVector(n);
-			Matrix H = new DenseMatrix(n, n);
+			Matrix H = new CompRowMatrix(n, n, makeNonZeros(hds));
 			CG cg = new CG(u);
 			hds.conformalEnergy(u, null, G, H);
 			try {

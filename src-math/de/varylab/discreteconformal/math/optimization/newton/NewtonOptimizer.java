@@ -43,6 +43,15 @@ public class NewtonOptimizer implements Optimizer{
 		norm = Norm.Two;
 	private Solver
 		solver = Solver.Generic;
+	private Matrix
+		hess = null;
+	
+	public NewtonOptimizer() {
+	}
+
+	public NewtonOptimizer(Matrix template) {
+		this.hess = template;
+	}
 	
 	public static enum Solver{
 		Generic,
@@ -57,11 +66,9 @@ public class NewtonOptimizer implements Optimizer{
 	
 	public void minimize(Vector guess, Optimizable func) throws NotConvergentException{
 		Integer iteration = 0;
-		/*
-		 * A Sparse Matrix here consumes over 60% of calculation time 
-		 * in a methon called getIndex()
-		 */
-		Matrix hess = new DenseMatrix(func.getDomainDimension(), func.getDomainDimension());
+
+		if (hess == null)
+			hess = new DenseMatrix(func.getDomainDimension(), func.getDomainDimension());
 		Vector grad = new DenseVector(func.getDomainDimension());
 		Double value = func.evaluate(guess, grad, hess);
 		

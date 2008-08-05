@@ -19,6 +19,10 @@ import de.varylab.discreteconformal.frontend.io.OFFReader;
 import de.varylab.discreteconformal.image.ImageHook;
 
 public class OpenMeshAction extends Action {
+	
+	private FileDialog 
+		dialog = null; 
+	
 	public OpenMeshAction(){
 		super("Open");
 		setToolTipText("Open a new mesh");
@@ -57,15 +61,20 @@ public class OpenMeshAction extends Action {
 		}
 	}
 	
+	private FileDialog getFileDialog() {
+		if (dialog == null) {
+			dialog = new FileDialog (ConformalLab.getApplicationWindow().getShell(), SWT.OPEN);
+			dialog.setFilterNames (new String [] {"OBJ Files", "OFF Files", "All Files (*.*)"});
+			dialog.setFilterExtensions (new String [] {"*.obj", "*.off", "*.*"});
+			dialog.setFilterPath(System.getProperty("user.dir") + "/data");
+		}
+		return dialog;
+	}
 	
 	
 	@Override
 	public void run() {
-		FileDialog dialog = new FileDialog (ConformalLab.getApplicationWindow().getShell(), SWT.OPEN);
-		dialog.setFilterNames (new String [] {"OBJ Files", "OFF Files", "All Files (*.*)"});
-		dialog.setFilterExtensions (new String [] {"*.obj", "*.off", "*.*"});
-		dialog.setFilterPath(System.getProperty("user.dir") + "/data");
-		String filename = dialog.open();
+		String filename = getFileDialog().open();
 		if (filename != null) {
 			openMesh(filename);
 		}
