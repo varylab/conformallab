@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.frontend;
 
 import static org.eclipse.swt.SWT.BORDER;
-import static org.eclipse.swt.SWT.CLOSE;
 import static org.eclipse.swt.SWT.FLAT;
 import static org.eclipse.swt.SWT.NONE;
 import static org.eclipse.swt.SWT.TOP;
@@ -9,11 +8,9 @@ import static org.eclipse.swt.SWT.TOP;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 
-import org.eclipse.jface.action.CoolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.StatusLineManager;
-import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.jface.window.Window.IExceptionHandler;
@@ -33,16 +30,12 @@ import de.varylab.discreteconformal.frontend.action.QuitProgramAction;
 import de.varylab.discreteconformal.frontend.shrinkpanels.AppearanceShrinker;
 import de.varylab.discreteconformal.frontend.shrinkpanels.ConformalUnwrapShrinker;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
+import de.varylab.discreteconformal.image.ImageHook;
 
 public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 	
-	private int 
-		folderWidth = 180;
 	private EmbeddedSwingComposite 
 		sourceViewer = null;
-	private CTabFolder
-		leftFolder = null,
-		rightFolder = null;
 	
 	public MainWindow(){
 		super(null);
@@ -52,8 +45,20 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 		setExceptionHandler(this);
 	}
 	
-	private class MainLayout extends Layout {
+	private class ControlsLayout extends Layout {
 
+		private Control
+			controls = null,
+			mainView = null;
+		private int 
+			controlsWidth = 180;
+		
+		public ControlsLayout(Control controls, Control mainView, int width) {
+			this.controls = controls;
+			this.mainView = mainView;
+			this.controlsWidth = width;
+		}
+		
 		protected Point computeSize(Composite comp, int xh, int yh, boolean ch) {
 			return comp.computeSize(SWT.DEFAULT, SWT.DEFAULT, ch);
 		}
@@ -61,14 +66,11 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 		protected void layout(Composite comp, boolean arg1) {
 			Point pSize = comp.getSize();
 			for (Control c : comp.getChildren()) {
-				if (c == rightFolder){
-					c.setBounds(pSize.x - folderWidth, 0, folderWidth, pSize.y);
+				if (c == controls){
+					c.setBounds(0, 0, controlsWidth, pSize.y);
 				}
-				if (c == leftFolder){
-					c.setBounds(0, 0, folderWidth, pSize.y);
-				}
-				if (c == sourceViewer){
-					c.setBounds(folderWidth + 1, 0, pSize.x - 2*folderWidth - 2, pSize.y);
+				if (c == mainView){
+					c.setBounds(controlsWidth + 1, 0, pSize.x - controlsWidth - 2, pSize.y);
 				}
 			}
 		}
@@ -80,33 +82,12 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 		getShell().setText("Discrete Conformal Parametrization");
 		getShell().setSize(1000,740);
 		
-		Composite content = new Composite(parent, NONE);
-		content.setLayout(new MainLayout());
+		CTabFolder mainFolder = new CTabFolder(parent, TOP | BORDER | FLAT);
 
-		leftFolder = new CTabFolder(content, TOP | BORDER | CLOSE | FLAT);
-		rightFolder = new CTabFolder(content, TOP | BORDER | CLOSE | FLAT);
-		CTabItem mainPage = new CTabItem(leftFolder, NONE);
-		CTabItem testsPage = new CTabItem(rightFolder, NONE);
-		testsPage.setText("Tests");
-		mainPage.setText("Controls");
-		leftFolder.setSelection(mainPage);
-		rightFolder.setSelection(testsPage);
-		
-		ShrinkPanelContainer testsShrinkContainer = new ShrinkPanelContainer(rightFolder);
-//		new StableSpread(testsShrinkContainer);
-//		new SpreadTests(testsShrinkContainer);
-//		new QuadTestShrinker(testsShrinkContainer);
-//		new CircleIntersectionTest(testsShrinkContainer);
-//		new KdTreeTest(testsShrinkContainer);
-//		new PrincipalTests(testsShrinkContainer);
-		ShrinkPanelContainer mainShrinkContainer = new ShrinkPanelContainer(leftFolder);
-		new ConformalUnwrapShrinker(mainShrinkContainer);
-		new AppearanceShrinker(mainShrinkContainer);
-		
-		testsPage.setControl(testsShrinkContainer);
-		mainPage.setControl(mainShrinkContainer);
-		
-		sourceViewer = new EmbeddedSwingComposite(content, BORDER) {
+
+		// object content -----------------------
+		Composite objectContent = new Composite(mainFolder, NONE);
+		sourceViewer = new EmbeddedSwingComposite(objectContent, BORDER) {
 			protected JComponent createSwingComponent() {
 				JPanel panel = new JPanel();
 				panel.setLayout(new java.awt.GridLayout(1, 1));
@@ -115,6 +96,32 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 			}
 		};
 		sourceViewer.populate();
+		
+		ShrinkPanelContainer objectShrinkContainer = new ShrinkPanelContainer(objectContent);
+		new ConformalUnwrapShrinker(objectShrinkContainer);
+		new AppearanceShrinker(objectShrinkContainer);
+
+		ControlsLayout layout1 = new ControlsLayout(objectShrinkContainer, sourceViewer, 180);
+		objectContent.setLayout(layout1);
+
+		CTabItem mainPage = new CTabItem(mainFolder, NONE);
+		mainPage.setText("Object");
+		mainPage.setControl(objectContent);
+		mainFolder.setSelection(mainPage);
+		
+		// texture content -------------------------
+		Composite textureContent = new Composite(mainFolder, NONE);
+		Composite textureViewer = new Composite(objectContent, BORDER); // dummy
+		
+		ShrinkPanelContainer textureShrinkContainer = new ShrinkPanelContainer(textureContent);
+		ControlsLayout layout2 = new ControlsLayout(textureShrinkContainer, textureViewer, 180);
+		textureContent.setLayout(layout2);	
+		
+		CTabItem texturePage = new CTabItem(mainFolder, NONE);
+		texturePage.setText("Texture");
+		texturePage.setImage(ImageHook.getImage("save.png"));
+		texturePage.setControl(textureContent);
+		
  		return parent;
     }	
 	
@@ -131,14 +138,14 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 		return manager;
 	}
 	
-	@Override
-	protected CoolBarManager createCoolBarManager(int style) {
-		CoolBarManager cm = new CoolBarManager(style);
-		ToolBarManager fileTools = new ToolBarManager(style);
-		fileTools.add(new OpenMeshAction());
-		cm.add(fileTools);
-		return cm;
-	}
+//	@Override
+//	protected CoolBarManager createCoolBarManager(int style) {
+//		CoolBarManager cm = new CoolBarManager(style);
+//		ToolBarManager fileTools = new ToolBarManager(style);
+//		fileTools.add(new OpenMeshAction());
+//		cm.add(fileTools);
+//		return cm;
+//	}
 	
 	@Override
 	protected StatusLineManager createStatusLineManager() {
