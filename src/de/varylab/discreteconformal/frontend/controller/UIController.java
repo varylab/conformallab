@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.frontend.controller;
 
-import static de.jreality.geometry.GeometryUtility.calculateAndSetFaceNormals;
+import static de.jreality.geometry.GeometryUtility.calculateAndSetNormals;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.SMOOTH_SHADING;
@@ -34,6 +34,8 @@ public class UIController implements GeometryChangedListener{
 		viewerApp.update();
 		viewerApp.setBackgroundColor(WHITE);
 		viewerApp.getSceneRoot().addTool(cameraZoomTool);
+		viewerApp.setExternalNavigator(true);
+		viewerApp.setExternalBeanShell(true);
 		cameraZoomTool.setSpeed(1.2);
 		ConformalLab.getGeometryController().addChangeListener(this);
 		createScene();
@@ -41,7 +43,7 @@ public class UIController implements GeometryChangedListener{
 	
 	
 	private void createScene() {
-		rootAppearance.setAttribute(SMOOTH_SHADING, false);
+		rootAppearance.setAttribute(SMOOTH_SHADING, true);
 		rootAppearance.setAttribute(VERTEX_DRAW, false);
 		rootAppearance.setAttribute(EDGE_DRAW, false);
 		rootAppearance.setAttribute(FACE_DRAW, true);
@@ -59,7 +61,7 @@ public class UIController implements GeometryChangedListener{
 	
 	private void updateGeometry() {
 		IndexedFaceSet ifs = ConformalLab.getGeometryController().getIndexedFaceSet();
-		calculateAndSetFaceNormals(ifs);
+		calculateAndSetNormals(ifs);
 		meshRoot.setGeometry(ifs);
 	}
 	
@@ -83,7 +85,6 @@ public class UIController implements GeometryChangedListener{
 	
 	public void geometryChanged(CHDS heds) {
 		updateGeometry();
-		encompass();
 	}
 
 	

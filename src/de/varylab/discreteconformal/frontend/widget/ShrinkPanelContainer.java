@@ -114,5 +114,9 @@ public class ShrinkPanelContainer extends Composite implements SelectionListener
 	public void setWidth(int width) {
 		this.width = width;
 	}
+	
+	protected boolean isDragging() {
+		return dragging;
+	}
 
 }

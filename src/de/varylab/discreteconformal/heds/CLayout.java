@@ -83,6 +83,15 @@ public class CLayout {
 				e = e.getOppositeEdge().getNextEdge();
 			}
 		}
+		
+		// projective texture coordinates
+		for (CVertex v : hds.getVertices()) {
+			double uv = v.getSolverIndex() < 0 ? 0.0 : u.get(v.getSolverIndex());
+			Point t = v.getTextureCoord();
+			double e = exp( -uv );
+			t.set(e * t.x(), e * t.y(), e);
+		}
+		
 		assert (visited.size() == hds.numVertices());
 	}
 	

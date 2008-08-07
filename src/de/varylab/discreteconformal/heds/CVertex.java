@@ -60,5 +60,6 @@ public class CVertex extends Vertex<CVertex, CEdge, CFace> implements HasPositio
 	public void setSolverIndex(Integer solverIndex) {
 		this.solverIndex = solverIndex;
 	}
+
 	
 }

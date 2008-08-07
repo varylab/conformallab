@@ -48,6 +48,7 @@ public class OpenMeshAction extends Action {
 				ifsf.setFaceIndices(reader.getFaces());
 				ifsf.update();
 				ConformalLab.getGeometryController().setGeometry(ifsf.getIndexedFaceSet());
+				ConformalLab.getUIController().encompass();
 			} else {
 				MessageDialog.openError(ConformalLab.getApplicationWindow().getShell(), "Unknown file extension", "File format unknown");
 			}

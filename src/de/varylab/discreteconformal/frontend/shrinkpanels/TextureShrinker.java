@@ -7,14 +7,22 @@ import static java.lang.Math.PI;
 import static org.eclipse.jface.layout.GridDataFactory.fillDefaults;
 import static org.eclipse.swt.SWT.BORDER;
 import static org.eclipse.swt.SWT.NONE;
+import static org.eclipse.swt.SWT.PUSH;
 import static org.eclipse.swt.layout.GridData.BEGINNING;
 import static org.eclipse.swt.layout.GridData.CENTER;
 
 import java.awt.Image;
+import java.io.FileInputStream;
 
+import javax.imageio.ImageIO;
+
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
@@ -41,6 +49,10 @@ public class TextureShrinker extends ShrinkPanel implements SelectionListener, C
 		texImage = ImageHook.getAWTImage("checker.jpg");
 	private org.eclipse.swt.graphics.Image
 		swtTexImage = ImageHook.getSWTImage("checker.jpg");
+	private Texture2D 
+		jrTex2D = null;
+	private boolean
+		jrTextureIsInvalid = false;
 	private Label
 		texLabel = null;
 	private double
@@ -56,6 +68,10 @@ public class TextureShrinker extends ShrinkPanel implements SelectionListener, C
 		uOffsetSpinner = null,
 		vOffsetSpinner = null,
 		texAngleSpinner = null;
+	private Button
+		loadImageBtn = null;
+	private FileDialog
+		dialog = null;
 	
 	public TextureShrinker(ShrinkPanelContainer parent) {
 		super(parent, "Texture");
@@ -69,6 +85,7 @@ public class TextureShrinker extends ShrinkPanel implements SelectionListener, C
 		uOffsetSpinner.addSelectionListener(this);
 		vOffsetSpinner.addSelectionListener(this);
 		texAngleSpinner.addSelectionListener(this);
+		loadImageBtn.addSelectionListener(this);
 	}
 
 	private void createLayout() {
@@ -112,6 +129,9 @@ public class TextureShrinker extends ShrinkPanel implements SelectionListener, C
 		texAngleSpinner.setValues((int)(texAngle * 10), -3600, 3600, 1, 10, 10);
 		fillDefaults().span(2, 1).grab(true, false).applyTo(texAngleSpinner);
 		
+		loadImageBtn = new Button(this, PUSH);
+		loadImageBtn.setText("Load Image...");
+		fillDefaults().grab(true, false).applyTo(loadImageBtn);
 		
 		texLabel = new Label(this, BORDER);
 		texLabel.setImage(swtTexImage);
@@ -123,13 +143,17 @@ public class TextureShrinker extends ShrinkPanel implements SelectionListener, C
 		Appearance meshApp = ConformalLab.getUIController().getMeshAppearance();
 		CHDS hds = ConformalLab.getGeometryController().getCHDS();
 		if (hds.isTexCoordinatesValid()) {
-			Texture2D tex2D = createTexture(meshApp, POLYGON_SHADER, new ImageData(texImage));
+			if (jrTex2D == null || jrTextureIsInvalid) {
+				jrTex2D = createTexture(meshApp, POLYGON_SHADER, new ImageData(texImage));
+				jrTextureIsInvalid = false;
+			}
 			MatrixBuilder texBuilder = MatrixBuilder.euclidean();
 			texBuilder.scale(uTexScale / meanEdgeLength, vTexScale / meanEdgeLength, 1.0);
 			texBuilder.rotate(texAngle / 180 * PI, 0.0, 0.0, 1.0);
 			texBuilder.translate(uTexOffset / meanEdgeLength, vTexOffset / meanEdgeLength, 0.0);
-			tex2D.setTextureMatrix(texBuilder.getMatrix());
+			jrTex2D.setTextureMatrix(texBuilder.getMatrix());
 		} else {
+			jrTex2D = null;
 			removeTexture(meshApp, POLYGON_SHADER);
 		}
 	}
@@ -146,10 +170,10 @@ public class TextureShrinker extends ShrinkPanel implements SelectionListener, C
 	public void widgetSelected(SelectionEvent e) {
 		Object s = e.getSource();
 		if (uScaleSpinner == s) {
-			uTexScale = uScaleSpinner.getSelection() / 100.0;
+			uTexScale = 100.0 / uScaleSpinner.getSelection();
 		}
 		if (vScaleSpinner == s) {
-			vTexScale = vScaleSpinner.getSelection() / 100.0;
+			vTexScale = 100.0 / vScaleSpinner.getSelection();
 		}
 		if (uOffsetSpinner == s) {
 			uTexOffset = uOffsetSpinner.getSelection() / 100.0;
@@ -159,6 +183,23 @@ public class TextureShrinker extends ShrinkPanel implements SelectionListener, C
 		}
 		if (texAngleSpinner == s) {
 			texAngle = texAngleSpinner.getSelection() / 10.0;
+		}
+		if (loadImageBtn == s) {
+			String fileName = getFileDialog().open();
+			if (fileName == null) return;
+			try {
+				FileInputStream fin = new FileInputStream(fileName);
+				texImage = ImageIO.read(fin);
+				if (!swtTexImage.isDisposed())
+					swtTexImage.dispose();
+				fin = new FileInputStream(fileName);
+				swtTexImage = new org.eclipse.swt.graphics.Image(Display.getCurrent(), fin);
+				texLabel.setImage(swtTexImage);
+				jrTextureIsInvalid = true;
+			} catch (Exception e1) {
+				ConformalLab.handleException(e1);
+				return;
+			}
 		}
 		updateStates();
 	}
@@ -173,4 +214,15 @@ public class TextureShrinker extends ShrinkPanel implements SelectionListener, C
 	}
 
 
+	private FileDialog getFileDialog() {
+		if (dialog == null) {
+			dialog = new FileDialog (ConformalLab.getApplicationWindow().getShell(), SWT.OPEN);
+			dialog.setFilterNames (new String [] {"Image Files(jpg, png, gif, bmp, ico, tif)", "All Files"});
+			dialog.setFilterExtensions (new String [] {"*.jpg; *.jpeg; *.png; *.gif; *.bmp; *.ico; *.tif, *.tiff", "*.*"});
+			dialog.setFilterPath(System.getProperty("user.dir") + "/data");
+		}
+		return dialog;
+	}
+	
+	
 }

@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.heds.adapter;
 
 import static de.jtem.halfedge.jReality.interfaces.Adapter.AdapterType.VERTEX_ADAPTER;
+import geom3d.Point;
 import de.jtem.halfedge.Node;
 import de.jtem.halfedge.jReality.interfaces.CoordinateAdapter2Heds;
 import de.jtem.halfedge.jReality.interfaces.CoordinateAdapter2Ifs;
@@ -16,7 +17,8 @@ public class PositionAdapter implements CoordinateAdapter2Heds,
 
 	public double[] getCoordinate(Node<?, ?, ?> node) {
 		CVertex v = (CVertex)node;
-		return v.getPosition().get();
+		Point p = v.getPosition();
+		return new double[] {p.x(), p.y(), p.z(), 1.0};
 	}
 
 	public AdapterType getAdapterType() {

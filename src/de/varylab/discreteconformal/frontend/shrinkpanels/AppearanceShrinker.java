@@ -12,7 +12,6 @@ import static de.jreality.shader.CommonAttributes.POINT_SIZE;
 import static de.jreality.shader.CommonAttributes.POLYGON_SHADER;
 import static de.jreality.shader.CommonAttributes.SMOOTH_SHADING;
 import static de.jreality.shader.CommonAttributes.SPHERES_DRAW;
-import static de.jreality.shader.CommonAttributes.TRANSPARENCY;
 import static de.jreality.shader.CommonAttributes.TRANSPARENCY_ENABLED;
 import static de.jreality.shader.CommonAttributes.TUBES_DRAW;
 import static de.jreality.shader.CommonAttributes.TUBE_RADIUS;
@@ -56,6 +55,7 @@ import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.PositionTexCoordAdapter;
+import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
 import de.varylab.discreteconformal.heds.bsp.KdTree;
 import de.varylab.discreteconformal.heds.util.MeshUtility;
 
@@ -79,7 +79,8 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 		showUnwrapped = null,
 		vColorCurvature = null,
 		vColorNone = null,
-		transparentButton = null;
+		smoothChecker = null,
+		useProjectiveMap = null;
 	private Scale
 		meshWidthScale = null;
 	private double[][]
@@ -100,8 +101,9 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 		meshWidthScale.addSelectionListener(this);
 		vColorNone.addSelectionListener(this);
 		vColorCurvature.addSelectionListener(this);
-		transparentButton.addSelectionListener(this);
+		smoothChecker.addSelectionListener(this);
 		showUnwrapped.addSelectionListener(this);
+		useProjectiveMap.addSelectionListener(this);
 		
 		updateStates();
 		ConformalLab.getGeometryController().addChangeListener(this);
@@ -128,10 +130,10 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 		showFaces.setSelection(true);
 		fillDefaults().grab(true, false).applyTo(showFaces);
 		
-		transparentButton = new Button(this, CHECK);
-		transparentButton.setText("Transparent Faces");
-		transparentButton.setSelection(false);
-		fillDefaults().span(2, 1).grab(true, false).applyTo(transparentButton);
+		smoothChecker = new Button(this, CHECK);
+		smoothChecker.setText("Smooth Shading");
+		smoothChecker.setSelection(true);
+		fillDefaults().span(2, 1).grab(true, false).applyTo(smoothChecker);
 		
 		Group colorGroup = new Group(this, SHADOW_ETCHED_IN);
 		colorGroup.setText("Color Settings");
@@ -179,6 +181,11 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 		showUnwrapped = new Button(this, CHECK);
 		showUnwrapped.setText("Unwrapped Geometry");
 		fillDefaults().span(2, 1).grab(true, false).applyTo(showUnwrapped);
+		
+		useProjectiveMap = new Button(this, CHECK);
+		useProjectiveMap.setText("Projective Texture Mapping");
+		useProjectiveMap.setSelection(true);
+		fillDefaults().span(2, 1).grab(true, false).applyTo(useProjectiveMap);
 	}
 
 	
@@ -190,8 +197,8 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 		meshApp.setAttribute(VERTEX_DRAW, showVertices.getSelection());
 		
 		meshApp.setAttribute(POLYGON_SHADER + "." + DIFFUSE_COLOR, faceColorButton.getColor());
-		meshApp.setAttribute(TRANSPARENCY_ENABLED, transparentButton.getSelection());
-		meshApp.setAttribute(TRANSPARENCY, transparentButton.getSelection() ? 0.8 : 0.0);
+		meshApp.setAttribute(POLYGON_SHADER + "." + TRANSPARENCY_ENABLED, false);
+		meshApp.setAttribute(POLYGON_SHADER + "." + SMOOTH_SHADING, smoothChecker.getSelection());
 		
 		meshApp.setAttribute(LINE_SHADER + "." + POLYGON_SHADER + "." + DIFFUSE_COLOR, edgeColorButton.getColor());
 		meshApp.setAttribute(LINE_SHADER + "." + POLYGON_SHADER + "." + SMOOTH_SHADING, true);
@@ -252,6 +259,18 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 			} else {
 				gc.setCoordAdapter(new PositionAdapter());
 			}
+			gc.setGeometry(gc.getCHDS());
+		}
+		if (useProjectiveMap == e.getSource()) {
+			if (useProjectiveMap.getSelection()) {
+				gc.setTexCoordAdapter(new TexCoordAdapter(true));
+			} else {
+				gc.setTexCoordAdapter(new TexCoordAdapter(false));
+			}
+			gc.setGeometry(gc.getCHDS());
+		}
+		if (smoothChecker == e.getSource()) {
+			updateStates();
 			gc.setGeometry(gc.getCHDS());
 		}
 		updateStates();

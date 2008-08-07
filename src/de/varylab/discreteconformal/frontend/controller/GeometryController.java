@@ -10,14 +10,14 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.jReality.converter.ConverterHeds2JR;
 import de.jtem.halfedge.jReality.converter.ConverterJR2Heds;
 import de.jtem.halfedge.jReality.interfaces.CoordinateAdapter2Ifs;
+import de.jtem.halfedge.jReality.interfaces.TextCoordsAdapter2Ifs;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CEdge;
 import de.varylab.discreteconformal.heds.CFace;
-import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.heds.CHDS;
+import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
-import de.varylab.discreteconformal.heds.adapter.VertexLabelAdapter;
 import de.varylab.discreteconformal.heds.bsp.KdTree;
 
 public class GeometryController {
@@ -32,6 +32,8 @@ public class GeometryController {
 		changeListener = new LinkedList<GeometryChangedListener>();
 	private CoordinateAdapter2Ifs
 		coordAdapter = new PositionAdapter();
+	private TextCoordsAdapter2Ifs
+		texCoordAdapter = new TexCoordAdapter(true);
 	
 	public static interface GeometryChangedListener{
 		
@@ -73,9 +75,9 @@ public class GeometryController {
 		ConverterHeds2JR<CVertex, CEdge, CFace> converter = new ConverterHeds2JR<CVertex, CEdge, CFace>();
 		this.heds = heds;
 		if (heds.isTexCoordinatesValid()) {
-			ifs = converter.heds2ifs(heds, coordAdapter, new VertexLabelAdapter(), new TexCoordAdapter());
+			ifs = converter.heds2ifs(heds, coordAdapter, texCoordAdapter);
 		} else {
-			ifs = converter.heds2ifs(heds, coordAdapter, new VertexLabelAdapter());
+			ifs = converter.heds2ifs(heds, coordAdapter);
 		}
 		generateKdTree();
 		fireGeometryChanged();
@@ -152,6 +154,16 @@ public class GeometryController {
 
 	public void setCoordAdapter(CoordinateAdapter2Ifs coordAdapter) {
 		this.coordAdapter = coordAdapter;
+	}
+
+
+	public TextCoordsAdapter2Ifs getTexCoordAdapter() {
+		return texCoordAdapter;
+	}
+
+
+	public void setTexCoordAdapter(TextCoordsAdapter2Ifs texCoordAdapter) {
+		this.texCoordAdapter = texCoordAdapter;
 	}
 
 

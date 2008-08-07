@@ -5,6 +5,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -18,7 +19,7 @@ import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Shell;
 
 
-public class ShrinkPanel extends Composite implements PaintListener, MouseListener, DisposeListener{
+public class ShrinkPanel extends Composite implements PaintListener, MouseListener, MouseMoveListener, DisposeListener{
 	private static final long 
 		serialVersionUID = 1L;
 	private String 
@@ -226,6 +227,8 @@ public class ShrinkPanel extends Composite implements PaintListener, MouseListen
 	public void mouseDown(MouseEvent arg0) {}
 
 	public void mouseUp(MouseEvent m) {
+		if (parentContainer.isDragging())
+			return;
 		Point dim = container.getSize();
 		if (!floated && dim.x - name_space - name_box_height <= m.x && 
 		        m.x <= dim.x - name_space - 8 &&
@@ -239,5 +242,8 @@ public class ShrinkPanel extends Composite implements PaintListener, MouseListen
 
 	
 	
+	public void mouseMove(MouseEvent arg0) {
+		parentContainer.mouseMove(arg0);
+	}
 
 }

@@ -58,6 +58,10 @@ public class ConformalLab {
 		});
 	}
 	
+	public static void handleException(Exception e) {
+		errorMessage(e.getClass().getCanonicalName(), e.getLocalizedMessage());
+	}
+	
 	
 	public static void errorMessage(final String title, final String message) {
 		invokeOnSWT(new Runnable() {
