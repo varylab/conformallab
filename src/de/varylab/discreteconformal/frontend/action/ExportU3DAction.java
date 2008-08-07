@@ -24,7 +24,7 @@ public class ExportU3DAction extends Action {
 		super("Export U3D...");
 		setToolTipText("Export current scene as U3D file");
 		setAccelerator(SWT.CTRL | 'E');
-		setImageDescriptor(createFromImage(ImageHook.getImage("save.png")));
+		setImageDescriptor(createFromImage(ImageHook.getSWTImage("save.png")));
 	}
 	
 	

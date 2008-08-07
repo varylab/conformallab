@@ -28,6 +28,7 @@ import de.varylab.discreteconformal.frontend.action.OpenMeshAction;
 import de.varylab.discreteconformal.frontend.action.QuitProgramAction;
 import de.varylab.discreteconformal.frontend.shrinkpanels.AppearanceShrinker;
 import de.varylab.discreteconformal.frontend.shrinkpanels.ConformalUnwrapShrinker;
+import de.varylab.discreteconformal.frontend.shrinkpanels.TextureShrinker;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
 import de.varylab.discreteconformal.image.ImageHook;
 
@@ -99,13 +100,14 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 		ShrinkPanelContainer objectShrinkContainer = new ShrinkPanelContainer(objectContent);
 		new ConformalUnwrapShrinker(objectShrinkContainer);
 		new AppearanceShrinker(objectShrinkContainer);
+		new TextureShrinker(objectShrinkContainer);
 
 		ControlsLayout layout1 = new ControlsLayout(objectShrinkContainer, sourceViewer, 180);
 		objectContent.setLayout(layout1);
 
 		CTabItem mainPage = new CTabItem(mainFolder, NONE);
 		mainPage.setText("Object");
-		mainPage.setImage(ImageHook.getImage("Standard_24i_box.png"));
+		mainPage.setImage(ImageHook.getSWTImage("Standard_24i_box.png"));
 		mainPage.setControl(objectContent);
 		mainFolder.setSelection(mainPage);
 		
@@ -119,7 +121,7 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 		
 		CTabItem texturePage = new CTabItem(mainFolder, NONE);
 		texturePage.setText("Texture");
-		texturePage.setImage(ImageHook.getImage("texture.png"));
+		texturePage.setImage(ImageHook.getSWTImage("texture.png"));
 		texturePage.setControl(textureContent);
 		
  		return parent;

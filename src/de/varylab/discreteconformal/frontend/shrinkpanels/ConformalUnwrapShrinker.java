@@ -114,6 +114,7 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 
 		public void run(IProgressMonitor mon) throws InvocationTargetException, InterruptedException {
 			final CHDS hds = getGeometryController().getCHDS();
+			hds.setTexCoordinatesValid(false);
 			if (hds.numVertices() - hds.numEdges() / 2 + hds.numFaces() != 1) {
 				errorMessage("No Disk", "Input mesh is no topological disk");
 				mon.setCanceled(true);
@@ -145,9 +146,7 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 			mon.subTask("Layout");
 			CCones.cutMesh(hds, cones, u);
 			CLayout.doLayout(hds, u, hds.calculateAlphas(u));
-			for (CVertex v : hds.getVertices()) {
-				v.setPosition(v.getTextureCoord());
-			}
+			hds.setTexCoordinatesValid(true);
 			mon.worked(1);
 			SwingUtilities.invokeLater(new Runnable(){
 				public void run() {

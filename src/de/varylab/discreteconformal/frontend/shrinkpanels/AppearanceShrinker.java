@@ -45,6 +45,7 @@ import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.data.DoubleArrayArray;
 import de.varylab.discreteconformal.ConformalLab;
+import de.varylab.discreteconformal.frontend.controller.GeometryController;
 import de.varylab.discreteconformal.frontend.controller.GeometryController.GeometryChangedListener;
 import de.varylab.discreteconformal.frontend.widget.ColorButton;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanel;
@@ -53,6 +54,8 @@ import de.varylab.discreteconformal.frontend.widget.ColorButton.ColorChangedList
 import de.varylab.discreteconformal.heds.CFace;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
+import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.PositionTexCoordAdapter;
 import de.varylab.discreteconformal.heds.bsp.KdTree;
 import de.varylab.discreteconformal.heds.util.MeshUtility;
 
@@ -73,6 +76,7 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 		showEdges = null,
 		showFaces = null,
 		showVertices = null,
+		showUnwrapped = null,
 		vColorCurvature = null,
 		vColorNone = null,
 		transparentButton = null;
@@ -97,13 +101,14 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 		vColorNone.addSelectionListener(this);
 		vColorCurvature.addSelectionListener(this);
 		transparentButton.addSelectionListener(this);
+		showUnwrapped.addSelectionListener(this);
 		
 		updateStates();
 		ConformalLab.getGeometryController().addChangeListener(this);
 	}
 
 	private void createLayout() {
-		setLayout(new GridLayout(1, true));
+		setLayout(new GridLayout(2, true));
 		
 		Group viewGroup = new Group(this, SHADOW_ETCHED_IN);
 		viewGroup.setText("View Settings");
@@ -170,6 +175,10 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 		vColorCurvature = new Button(vColorGroup, RADIO);
 		vColorCurvature.setText("Curvature");
 		fillDefaults().grab(true, false).applyTo(vColorCurvature);
+		
+		showUnwrapped = new Button(this, CHECK);
+		showUnwrapped.setText("Unwrapped Geometry");
+		fillDefaults().span(2, 1).grab(true, false).applyTo(showUnwrapped);
 	}
 
 	
@@ -234,9 +243,18 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 	}
 
 	public void widgetSelected(SelectionEvent e) {
-		updateStates();
+		GeometryController gc = ConformalLab.getGeometryController();
 		if (vColorCurvature == e.getSource() || vColorNone == e.getSource())
 			updateVertexColors();
+		if (showUnwrapped == e.getSource()) {
+			if (showUnwrapped.getSelection()) {
+				gc.setCoordAdapter(new PositionTexCoordAdapter());
+			} else {
+				gc.setCoordAdapter(new PositionAdapter());
+			}
+			gc.setGeometry(gc.getCHDS());
+		}
+		updateStates();
 	}
 
 	public void geometryChanged(final CHDS heds) {

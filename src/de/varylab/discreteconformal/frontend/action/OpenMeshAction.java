@@ -27,7 +27,7 @@ public class OpenMeshAction extends Action {
 		super("Open");
 		setToolTipText("Open a new mesh");
 		setAccelerator(SWT.CTRL | 'O');
-		setImageDescriptor(ImageDescriptor.createFromImage(ImageHook.getImage("open.gif")));
+		setImageDescriptor(ImageDescriptor.createFromImage(ImageHook.getSWTImage("open.gif")));
 	}
 	
 	

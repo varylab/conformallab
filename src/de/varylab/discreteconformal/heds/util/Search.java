@@ -212,6 +212,8 @@ public class Search {
 		while (v != start) {
 			assert !vPath.contains(v);
 			vPath.push(v);
+			if (p[v.getIndex()] < 0)
+				break;
 			v = hds.getVertex(p[v.getIndex()]);
 		}
 		vPath.push(start);

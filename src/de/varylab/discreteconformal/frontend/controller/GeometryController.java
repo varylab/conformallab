@@ -9,12 +9,14 @@ import de.jreality.scene.IndexedFaceSet;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.jReality.converter.ConverterHeds2JR;
 import de.jtem.halfedge.jReality.converter.ConverterJR2Heds;
+import de.jtem.halfedge.jReality.interfaces.CoordinateAdapter2Ifs;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CEdge;
 import de.varylab.discreteconformal.heds.CFace;
 import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
 import de.varylab.discreteconformal.heds.adapter.VertexLabelAdapter;
 import de.varylab.discreteconformal.heds.bsp.KdTree;
 
@@ -28,6 +30,8 @@ public class GeometryController {
 		kdTree = null;
 	private LinkedList<GeometryChangedListener>
 		changeListener = new LinkedList<GeometryChangedListener>();
+	private CoordinateAdapter2Ifs
+		coordAdapter = new PositionAdapter();
 	
 	public static interface GeometryChangedListener{
 		
@@ -68,7 +72,11 @@ public class GeometryController {
 	public void setGeometry(CHDS heds) {
 		ConverterHeds2JR<CVertex, CEdge, CFace> converter = new ConverterHeds2JR<CVertex, CEdge, CFace>();
 		this.heds = heds;
-		ifs = converter.heds2ifs(heds, new PositionAdapter(), new VertexLabelAdapter());
+		if (heds.isTexCoordinatesValid()) {
+			ifs = converter.heds2ifs(heds, coordAdapter, new VertexLabelAdapter(), new TexCoordAdapter());
+		} else {
+			ifs = converter.heds2ifs(heds, coordAdapter, new VertexLabelAdapter());
+		}
 		generateKdTree();
 		fireGeometryChanged();
 	}
@@ -135,6 +143,16 @@ public class GeometryController {
     	}
     	
     }
+
+
+	public CoordinateAdapter2Ifs getCoordAdapter() {
+		return coordAdapter;
+	}
+
+
+	public void setCoordAdapter(CoordinateAdapter2Ifs coordAdapter) {
+		this.coordAdapter = coordAdapter;
+	}
 
 
 }

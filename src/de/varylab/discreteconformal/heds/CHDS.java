@@ -22,6 +22,8 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 	
 	private Integer 
 		dim = 0;
+	private boolean
+		texCoordinatesValid = false;
 	
 	public CHDS() {
 		super(CVertex.class, CEdge.class, CFace.class);
@@ -286,6 +288,16 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 	
 	public void setDomainDimension(Integer dim) {
 		this.dim = dim;
+	}
+
+
+	public boolean isTexCoordinatesValid() {
+		return texCoordinatesValid;
+	}
+
+
+	public void setTexCoordinatesValid(boolean texCoordinatesValid) {
+		this.texCoordinatesValid = texCoordinatesValid;
 	}
 	
 }
