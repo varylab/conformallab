@@ -198,4 +198,8 @@ public class NewtonOptimizer implements Optimizer{
 		this.solver = solver;
 	}
 	
+	public void setHessianTemplate(Matrix template) {
+		this.hess = template;
+	}
+	
 }

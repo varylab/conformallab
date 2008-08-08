@@ -27,7 +27,7 @@ import de.varylab.discreteconformal.frontend.action.ExportU3DAction;
 import de.varylab.discreteconformal.frontend.action.OpenMeshAction;
 import de.varylab.discreteconformal.frontend.action.QuitProgramAction;
 import de.varylab.discreteconformal.frontend.shrinkpanels.AppearanceShrinker;
-import de.varylab.discreteconformal.frontend.shrinkpanels.ConformalUnwrapShrinker;
+import de.varylab.discreteconformal.frontend.shrinkpanels.UnwrapShrinker;
 import de.varylab.discreteconformal.frontend.shrinkpanels.TextureShrinker;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
 import de.varylab.discreteconformal.image.ImageHook;
@@ -98,7 +98,7 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 		sourceViewer.populate();
 		
 		ShrinkPanelContainer objectShrinkContainer = new ShrinkPanelContainer(objectContent);
-		new ConformalUnwrapShrinker(objectShrinkContainer);
+		new UnwrapShrinker(objectShrinkContainer);
 		new AppearanceShrinker(objectShrinkContainer);
 		new TextureShrinker(objectShrinkContainer);
 

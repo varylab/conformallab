@@ -1,7 +1,9 @@
 package de.varylab.discreteconformal.heds;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
+import static de.varylab.discreteconformal.heds.CLayout.getAngleSum;
 import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
+import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.exp;
 
@@ -127,7 +129,7 @@ public class CCones {
 			if (v.getSolverIndex() >= 0)
 				v.setSolverIndex(i++);
 		}
-		hds.setDomainDimension(hds.getDomainDimension() - 1);
+		hds.setDomainDimension(i);
 	}
 	
 	
@@ -164,6 +166,27 @@ public class CCones {
 				return v;
 		}
 		return null;
+	}
+	
+	
+	public static Collection<CVertex> quantizeCones(CHDS hds, Collection<CVertex> cones, Vector u, Map<CEdge, Double> aMap) {
+		for (CVertex v : cones) {
+			double a = abs(getAngleSum(v, aMap) % (2*PI));
+			if (a < PI / 4) {
+				cones.remove(v);
+			} else if (PI / 4 < a && a < PI * 3 / 4) {
+				v.setTheta(PI / 2);
+				v.setSolverIndex(0);
+			} else if (PI * 3 / 4 < a && a < PI * 5 / 4) {
+				v.setTheta(PI);
+				v.setSolverIndex(0);
+			} else if (PI * 5 / 4 < a) {
+				v.setTheta(PI * 3 / 2);
+				v.setSolverIndex(0);
+			}
+		}
+		reorderSolverIndices(hds);
+		return cones;
 	}
 	
 	

@@ -5,6 +5,7 @@ import static de.varylab.discreteconformal.ConformalLab.getGeometryController;
 import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
 import static org.eclipse.jface.layout.GridDataFactory.fillDefaults;
 import static org.eclipse.swt.SWT.BORDER;
+import static org.eclipse.swt.SWT.CHECK;
 import static org.eclipse.swt.SWT.NONE;
 import static org.eclipse.swt.SWT.SHADOW_ETCHED_IN;
 import static org.eclipse.swt.layout.GridData.BEGINNING;
@@ -44,7 +45,7 @@ import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer;
 import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer.Solver;
 import de.varylab.discreteconformal.math.optimization.stepcontrol.ArmijoStepController;
 
-public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionListener{
+public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 
 	private Button
 		computeEnergyBtn = null;
@@ -52,16 +53,21 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 		coneConfigGroup = null;
 	private Spinner
 		numConesSpinner = null;
+	private Button
+		quantizeChecker = null;
 	
 	private int
 		numCones = 0; 
+	private boolean
+		quantizeCones = true;
 	
 	
-	public ConformalUnwrapShrinker(ShrinkPanelContainer parent) {
-		super(parent, "Conformal Unwrap");
+	public UnwrapShrinker(ShrinkPanelContainer parent) {
+		super(parent, "Unwrap");
 		createLayout();
 		computeEnergyBtn.addSelectionListener(this);
 		numConesSpinner.addSelectionListener(this);
+		quantizeChecker.addSelectionListener(this);
 	}
 
 	
@@ -80,6 +86,10 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 		numConesSpinner.setValues(numCones, 0, 100, 0, 1, 1);
 		fillDefaults().grab(true, false).applyTo(numConesSpinner);
 		
+		quantizeChecker = new Button(coneConfigGroup, CHECK);
+		quantizeChecker.setText("Quantize Cone Angles");
+		quantizeChecker.setSelection(true);
+		fillDefaults().span(2,1).grab(true, false).applyTo(quantizeChecker);
 		
 		computeEnergyBtn = new Button(this, SWT.PUSH);
 		computeEnergyBtn.setText("Unwrap");
@@ -107,6 +117,9 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 		if (numConesSpinner == s) {
 			numCones = numConesSpinner.getSelection();
 		}
+		if (quantizeChecker == s) {
+			quantizeCones = quantizeChecker.getSelection();
+		}
 	}
 	
 	
@@ -120,7 +133,7 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 				mon.setCanceled(true);
 				return;
 			}
-			mon.beginTask("Unwrapping", 3);
+			mon.beginTask("Unwrapping", 3 + (quantizeCones ? 1 : 0));
 			mon.subTask("Processing " + numCones + " cones");
 			hds.prepareInvariantData();
 			Collection<CVertex> cones = CCones.setUpMesh(hds, numCones);
@@ -139,8 +152,25 @@ public class ConformalUnwrapShrinker extends ShrinkPanel implements SelectionLis
 				optimizer.minimize(u, hds);
 			} catch (NotConvergentException e) {
 				e.printStackTrace();
+				return;
 			}
 			mon.worked(1);
+			
+			if (quantizeCones) {
+				mon.subTask("Quantizing Cone Singularities");
+				cones = CCones.quantizeCones(hds, cones, u, hds.calculateAlphas(u));
+				n = hds.getDomainDimension();
+				u = new DenseVector(n);
+				H = new CompRowMatrix(n,n,makeNonZeros(hds));
+				optimizer.setHessianTemplate(H);
+				try {
+					optimizer.minimize(u, hds);
+				} catch (NotConvergentException e) {
+					e.printStackTrace();
+					return;
+				}
+				mon.worked(1);
+			}
 			
 			// layout
 			mon.subTask("Layout");
