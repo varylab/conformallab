@@ -5,21 +5,13 @@ dirs:
 	mkdir /tmp/webstart
 	
 copy:	
-#	cp ../lib/jReality.jar /tmp/webstart/
-	cp ../lib/jSyntax.jar /tmp/webstart/
-#	cp ../lib/synthetica.jar /tmp/webstart/
-#	cp ../lib/syntheticaBlueSteel.jar /tmp/webstart/
-#	cp ../lib/syntheticaGreenDream.jar /tmp/webstart/
-#	cp ../lib/syntheticaSilverMoon.jar /tmp/webstart/
 	cp ../lib/mtj.jar /tmp/webstart/
-#	cp ../lib/jtem-beans.jar /tmp/webstart/
-	cp ../lib/numericalMethods.jar /tmp/webstart/
-	cp ../lib/vecmath.jar /tmp/webstart/
-	cp ../lib/mfc.jar /tmp/webstart/
-#	cp ../lib/bsh.jar /tmp/webstart/	
-#	cp ../lib/itext-1.4.6.jar /tmp/webstart/	
-	cp ../lib/substance.jar /tmp/webstart/
+	cp ../lib/swingintegration0.0.2.jar /tmp/webstart/
+	cp ../lib/junit.jar /tmp/webstart/
 	cp -rf ../bin/* /tmp/webstart/
+	cp -rf ../../CurvatureGeometry/bin/* /tmp/webstart/
+	cp -rf ../../Halfedge/bin/* /tmp/webstart/
+	cp -rf ../../jreality_halfedge/bin/* /tmp/webstart/
 	
 unzip:	
 	for jar in /tmp/webstart/*.jar;do unzip -o $$jar -d /tmp/webstart; chmod -R +rwx /tmp/webstart/org; done
@@ -33,17 +25,15 @@ clean:
 	rm -f /tmp/webstart/Makefile
 	
 pack:
-	cd /tmp/webstart; jar cf matheonF1webstart.jar * 
+	cd /tmp/webstart; jar cf conformalUnwrapWebstart.jar * 
 
 sign:
-	cd /tmp/webstart; jarsigner -storepass hallo123 matheonF1webstart.jar sechel
+	cd /tmp/webstart; jarsigner -storepass hallo123 conformalUnwrapWebstart.jar sechel
 
 access:
-	cp -vf /tmp/webstart/matheonF1webstart.jar ~sechel/WWW/webstart/
-	chmod og+r ~sechel/WWW/webstart/matheonF1webstart.jar
+	cp -vf /tmp/webstart/conformalUnwrapWebstart.jar ~sechel/WWW/webstart/
+	chmod og+r ~sechel/WWW/webstart/conformalUnwrapWebstart.jar
 	cp -vf *.jnlp ~sechel/WWW/webstart/
-	cp -vf *.png ~sechel/WWW/webstart/
 	chmod og+r ~sechel/WWW/webstart/*.jnlp
-	chmod og+r ~sechel/WWW/webstart/*.png
 	rm -rf /tmp/webstart
 		
