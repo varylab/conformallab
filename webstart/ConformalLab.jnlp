@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp spec="1.0+" 
+	codebase="http://www.math.tu-berlin.de/~sechel/webstart/"
+	href="ConformalLab.jnlp">
+	<information>
+		<title>Discrete Conformal Lab</title>		
+		<vendor>TU-Berlin</vendor>
+		<homepage href="http://www.math.tu-berlin.de/~sechel"/>
+		<description>Discrete Conformal Lab</description>
+		<description kind="short">Discrete Conformal Lab</description>
+		<offline-allowed/>
+	</information>
+	<security>
+		<all-permissions/>
+	</security>
+	<resources>
+		<j2se href="http://java.sun.com/products/autodl/j2se" version="1.6+"/>
+		<jar href="conformalLab.jar"/>
+		<extension name="jReality" href="http://www3.math.tu-berlin.de/jreality/ws/jReality.jnlp" />
+		<extension name="jogl" href="http://download.java.net/media/jogl/builds/archive/jsr-231-webstart-current/jogl.jnlp" />
+		<extension name="swt" href="http://www.math.tu-berlin.de/~sechel/webstart/swt/swt_3.4.0.jnlp" />
+	</resources>
+  	<application-desc main-class="koebe.frontend.KoebesPolyhedron"/>
+</jnlp>

@@ -39,7 +39,6 @@ public class CCones {
 			if (isBoundaryVertex(v))
 				bSet.add(v);
 		}
-
 		for (CVertex c : cones) {
 			List<CEdge> path = Search.getShortestPath(c, bSet, new EdgeLengthAdapter(u));
 			for (CEdge e : path) {
@@ -55,6 +54,7 @@ public class CCones {
 				eOpp.getOppositeEdge().setLambda(eOpp.getLambda());
 			}
 		}
+
 	}
 	
 	
@@ -170,10 +170,11 @@ public class CCones {
 	
 	
 	public static Collection<CVertex> quantizeCones(CHDS hds, Collection<CVertex> cones, Vector u, Map<CEdge, Double> aMap) {
+		List<CVertex> result = new LinkedList<CVertex>(cones);
 		for (CVertex v : cones) {
 			double a = abs(getAngleSum(v, aMap) % (2*PI));
 			if (a < PI / 4) {
-				cones.remove(v);
+				result.remove(v);
 			} else if (PI / 4 < a && a < PI * 3 / 4) {
 				v.setTheta(PI / 2);
 				v.setSolverIndex(0);
@@ -186,7 +187,7 @@ public class CCones {
 			}
 		}
 		reorderSolverIndices(hds);
-		return cones;
+		return result;
 	}
 	
 	
