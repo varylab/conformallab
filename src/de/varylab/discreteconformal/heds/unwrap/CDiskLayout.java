@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds;
+package de.varylab.discreteconformal.heds.unwrap;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static java.lang.Math.PI;
@@ -14,9 +14,13 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import de.varylab.discreteconformal.heds.CEdge;
+import de.varylab.discreteconformal.heds.CHDS;
+import de.varylab.discreteconformal.heds.CVertex;
+
 import no.uib.cipr.matrix.Vector;
 
-public class CLayout {
+public class CDiskLayout {
 
 	
 	/**

@@ -2,7 +2,6 @@ package de.varylab.discreteconformal.frontend.shrinkpanels;
 
 import static de.varylab.discreteconformal.ConformalLab.errorMessage;
 import static de.varylab.discreteconformal.ConformalLab.getGeometryController;
-import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
 import static org.eclipse.jface.layout.GridDataFactory.fillDefaults;
 import static org.eclipse.swt.SWT.BORDER;
 import static org.eclipse.swt.SWT.CHECK;
@@ -12,13 +11,8 @@ import static org.eclipse.swt.layout.GridData.BEGINNING;
 import static org.eclipse.swt.layout.GridData.CENTER;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
 
 import javax.swing.SwingUtilities;
-
-import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.Matrix;
-import no.uib.cipr.matrix.sparse.CompRowMatrix;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
@@ -36,14 +30,11 @@ import org.eclipse.swt.widgets.Spinner;
 import de.varylab.discreteconformal.ConformalLab;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanel;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
-import de.varylab.discreteconformal.heds.CCones;
 import de.varylab.discreteconformal.heds.CHDS;
-import de.varylab.discreteconformal.heds.CLayout;
-import de.varylab.discreteconformal.heds.CVertex;
-import de.varylab.discreteconformal.math.optimization.NotConvergentException;
-import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer;
-import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer.Solver;
-import de.varylab.discreteconformal.math.optimization.stepcontrol.ArmijoStepController;
+import de.varylab.discreteconformal.heds.unwrap.CDisk;
+import de.varylab.discreteconformal.heds.unwrap.CSphere;
+import de.varylab.discreteconformal.heds.unwrap.CUnwrapper;
+import de.varylab.discreteconformal.heds.unwrap.UnwrapException;
 
 public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 
@@ -128,63 +119,40 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 		public void run(IProgressMonitor mon) throws InvocationTargetException, InterruptedException {
 			final CHDS hds = getGeometryController().getCHDS();
 			hds.setTexCoordinatesValid(false);
-			if (hds.numVertices() - hds.numEdges() / 2 + hds.numFaces() != 1) {
-				errorMessage("No Disk", "Input mesh is no topological disk");
+			
+			// topology
+			int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
+			CUnwrapper unwrapper = null;
+			switch (X) {
+				case 1:
+					unwrapper = new CDisk(numCones, quantizeCones);
+					break;
+				case 2:
+					unwrapper = new CSphere();
+					break;
+				default:
+					errorMessage("Error", "Unsupported topology");
+					mon.setCanceled(true);
+					return;
+			}
+			
+			// unwrap
+			try {
+				unwrapper.unwrap(hds, mon);
+			} catch (UnwrapException ue) {
+				errorMessage("Error", ue.getMessage());
 				mon.setCanceled(true);
 				return;
 			}
-			mon.beginTask("Unwrapping", 3 + (quantizeCones ? 1 : 0));
-			mon.subTask("Processing " + numCones + " cones");
-			hds.prepareInvariantData();
-			Collection<CVertex> cones = CCones.setUpMesh(hds, numCones);
-			mon.worked(1);
-			int n = hds.getDomainDimension();
 			
-			// optimization
-			mon.subTask("Minimizing");
-			DenseVector u = new DenseVector(n);
-			Matrix H = new CompRowMatrix(n,n,makeNonZeros(hds));
-			NewtonOptimizer optimizer = new NewtonOptimizer(H);
-			optimizer.setStepController(new ArmijoStepController());
-			optimizer.setSolver(Solver.CG);
-			optimizer.setError(1E-5);
-			try {
-				optimizer.minimize(u, hds);
-			} catch (NotConvergentException e) {
-				e.printStackTrace();
-				return;
-			}
-			mon.worked(1);
-			
-			if (quantizeCones) {
-				mon.subTask("Quantizing Cone Singularities");
-				cones = CCones.quantizeCones(hds, cones, u, hds.calculateAlphas(u));
-				n = hds.getDomainDimension();
-				u = new DenseVector(n);
-				H = new CompRowMatrix(n,n,makeNonZeros(hds));
-				optimizer.setHessianTemplate(H);
-				try {
-					optimizer.minimize(u, hds);
-				} catch (NotConvergentException e) {
-					e.printStackTrace();
-					return;
-				}
-				mon.worked(1);
-			}
-			
-			// layout
-			mon.subTask("Layout");
-			CCones.cutMesh(hds, cones, u);
-			CLayout.doLayout(hds, u, hds.calculateAlphas(u));
-			hds.setTexCoordinatesValid(true);
-			mon.worked(1);
+			hds.setTexCoordinatesValid(true);			
+			// set geometry
 			SwingUtilities.invokeLater(new Runnable(){
 				public void run() {
 					getGeometryController().setGeometry(hds);
 					ConformalLab.getUIController().encompass();
 				}
 			});
-			mon.done();
 		}
 		
 	}

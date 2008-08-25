@@ -23,6 +23,7 @@ import de.jreality.ui.viewerapp.ViewerApp;
 import de.jtem.halfedge.jReality.converter.ConverterHeds2JR;
 import de.jtem.halfedge.jReality.converter.ConverterJR2Heds;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.unwrap.CDiskLayout;
 
 public class CLayoutTest {
 
@@ -69,7 +70,7 @@ public class CLayoutTest {
 		System.out.println("CLayoutTest.testDoLayout()");
 		int n = hds.getDomainDimension();
 		Vector u = new SparseVector(n);
-		CLayout.doLayout(hds, u, null);
+		CDiskLayout.doLayout(hds, u, null);
 		
 		for (CEdge e : hds.getPositiveEdges()) {
 			CVertex s = e.getStartVertex();

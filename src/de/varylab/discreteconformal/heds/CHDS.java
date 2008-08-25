@@ -7,7 +7,9 @@ import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import no.uib.cipr.matrix.Matrix;
@@ -34,11 +36,21 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 		return v.getSolverIndex() >= 0;
 	}
 	
+	
 	/**
-	 * Compute algorithm invariant data
-	 * @param theta the prescribed angle sum of triangles around each vertex
+	 * Compute algorithm invariant data. Boundary is the natural mesh boundary.
 	 */
 	public void prepareInvariantData() {
+		HashSet<CVertex> b = new HashSet<CVertex>();
+		b.addAll(HalfEdgeUtils.boundaryVertices(this));
+		prepareInvariantData(b);
+	}
+	
+	/**
+	 * Compute algorithm invariant data
+	 * @param boundary the boundary vertices which do not belong to the solver system
+	 */
+	public void prepareInvariantData(Collection<CVertex> boundary) {
 		// set initial lambdas
 		for (final CEdge e : getPositiveEdges()) {
 			final double l = e.getLength();
@@ -48,7 +60,7 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 		// set thetas and solver indices
 		dim = 0;
 		for (final CVertex v : getVertices()) {
-			if (HalfEdgeUtils.isBoundaryVertex(v)) {
+			if (boundary.contains(v)) {
 				v.setTheta(0.0);
 				v.setSolverIndex(-1);
 			} else {
