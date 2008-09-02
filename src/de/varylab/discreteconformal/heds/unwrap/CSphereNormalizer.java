@@ -71,7 +71,7 @@ public class CSphereNormalizer {
 		
 		// transform
 		for (CVertex v : hds.getVertices()){
-			Point p = v.getPosition();
+			Point p = v.getTextureCoord();
 			Vector v1 = new DenseVector(new double[]{p.x(), p.y(), p.z(), 1.0});
 			Vector newV = A_inv.mult(v1, new DenseVector(4));
 			p.set(0, newV.get(0) / newV.get(3));
@@ -125,7 +125,7 @@ public class CSphereNormalizer {
 			double result = 0;
 			double l = myLength(x);
 			for (CVertex v : hds.getVertices())
-				result += log( dot(v.getPosition(), x) / sqrt(l) );
+				result += log( dot(v.getTextureCoord(), x) / sqrt(l) );
 			return result;
 		}
 
@@ -144,14 +144,14 @@ public class CSphereNormalizer {
 			List<CVertex> vList = hds.getVertices(); 
 			for (int i = 0; i < 3; i++){
 				for (CVertex v : vList){
-					Point p = v.getPosition();
+					Point p = v.getTextureCoord();
 					double pi = 0;
 					if (i == 0) pi = p.x();
 					if (i == 1) pi = p.y();
 					if (i == 2) pi = p.z();
 					double xi = x.get(i);
 					
-					double dot = dot(v.getPosition(), x);
+					double dot = dot(v.getTextureCoord(), x);
 					double l = myLength(x);
 					
 					g.add(i, (-pi/dot + xi/l));
@@ -166,7 +166,7 @@ public class CSphereNormalizer {
 			for (int i = 0; i < 3; i++){
 				for (int j = 0; j < 3; j++){
 					for (CVertex v : vList){
-						Point p = v.getPosition();
+						Point p = v.getTextureCoord();
 						double xi = x.get(i);
 						double xj = x.get(j);
 						double pi = 0;
@@ -178,7 +178,7 @@ public class CSphereNormalizer {
 						if (j == 1) pj = p.y();
 						if (j == 2) pj = p.z();
 						
-						double d = dot(v.getPosition(), x);
+						double d = dot(v.getTextureCoord(), x);
 						double l = myLength(x);
 						double diag = i == j ? 1 : 0;
 						hess.add(i, j, diag/l + 2*xi*xj/(l*l) - pi*pj/(d*d));

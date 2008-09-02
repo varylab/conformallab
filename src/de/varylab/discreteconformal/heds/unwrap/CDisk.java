@@ -61,7 +61,7 @@ public class CDisk implements CUnwrapper{
 		}
 		mon.worked(1);
 		
-		if (quantizeCones) {
+		if (quantizeCones && numCones > 0) {
 			mon.subTask("Quantizing Cone Singularities");
 			cones = CCones.quantizeCones(hds, cones, u, hds.calculateAlphas(u));
 			n = hds.getDomainDimension();

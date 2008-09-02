@@ -26,7 +26,7 @@ public class CSphere implements CUnwrapper{
 		mon.beginTask("Unwrapping", 3);
 		
 		// punch out vertex 0 and reorder solver indices
-		CVertex v0 = hds.getVertex(0);
+		CVertex v0 = hds.getVertex(hds.numVertices() - 1);
 		HashSet<CVertex> boundary = new HashSet<CVertex>();
 		boundary.add(v0);
 		boundary.addAll(neighboringVertices(v0));
@@ -56,15 +56,31 @@ public class CSphere implements CUnwrapper{
 		
 		// spherical mapping
 		mon.subTask("Sphere mapping");
-//		normalizeBeforeProjection(hds, 1.0);
-//		inverseStereographicProjection(hds, 1.0);
-		v0.setTextureCoord(new Point(0, 0, 1.0));
-//		try {
-//			CSphereNormalizer.normalize(hds);
-//		} catch (NotConvergentException e) {
-//			mon.setCanceled(true);
-//			throw new UnwrapException("Sphere normalization did not succeed: " + e.getMessage());
-//		}
+		for (CVertex v : hds.getVertices()) {
+			Point t = v.getPosition();
+			t.setX(t.x() / t.z());
+			t.setY(t.y() / t.z());
+			t.setZ(1.0);
+		}
+		normalizeBeforeProjection(hds, 10.0);
+		inverseStereographicProjection(hds, 1.0);
+		v0.setTextureCoord(new Point(0.0, 0.0, 1.0));
+		try {
+			CSphereNormalizer.normalize(hds);
+		} catch (NotConvergentException e) {
+			mon.setCanceled(true);
+			throw new UnwrapException("Sphere normalization did not succeed: " + e.getMessage());
+		}
+		for (CVertex v : hds.getVertices()) {
+			v.setPosition(v.getTextureCoord());
+			Point p = v.getPosition();
+			Point t = v.getTextureCoord();
+			double U = Math.acos(p.z());
+			double V = Math.acos(p.x() / Math.sin(U));
+			t.setX(U);
+			t.setY(V);
+			t.setZ(1.0);
+		}
 		mon.worked(1);
 		
 		mon.done();
@@ -79,13 +95,13 @@ public class CSphere implements CUnwrapper{
 	 */
 	public static void inverseStereographicProjection(CHDS hds, double scale){
 		for (CVertex v : hds.getVertices()){
-			double x = v.getPosition().x() / scale;
-			double y = v.getPosition().y() / scale;
+			double x = v.getTextureCoord().x() / scale;
+			double y = v.getTextureCoord().y() / scale;
 			double nx = 2 * x;
 			double ny = x*x + y*y - 1;
 			double nz = 2 * y;
 			double nw = ny + 2;
-			v.getPosition().set(nx / nw, ny / nw, nz / nw);
+			v.getTextureCoord().set(nx / nw, ny / nw, nz / nw);
 		}
 	}
 	
@@ -93,7 +109,7 @@ public class CSphere implements CUnwrapper{
 	public static Point baryCenter(CHDS hds){
 		Point result = new Point(0,0,0);
 		for (CVertex v : hds.getVertices()){
-			result.add(v.getPosition());
+			result.add(v.getTextureCoord());
 		}
 		result.times(1.0 / hds.numVertices());
 		return result;
@@ -103,7 +119,7 @@ public class CSphere implements CUnwrapper{
 	public static double meanRadius(CHDS hds){
 		double result = 0;
 		for (CVertex v : hds.getVertices()){
-			result += v.getPosition().getLength();
+			result += v.getTextureCoord().getLength();
 		}
 		return result / hds.numVertices();
 	}
@@ -111,11 +127,11 @@ public class CSphere implements CUnwrapper{
 	public static void normalizeBeforeProjection(CHDS hds, double scale){
 		Point offset = baryCenter(hds);
 		for (CVertex v : hds.getVertices()){
-			v.getPosition().subtract(offset);
+			v.getTextureCoord().subtract(offset);
 		}
 		scale = meanRadius(hds) / scale;
 		for (CVertex v : hds.getVertices()){
-			v.getPosition().times(1 / scale);
+			v.getTextureCoord().times(1 / scale);
 		}
 	
 	}
