@@ -22,7 +22,7 @@ public class ConformalLab {
 	
 	public static void main(String[] args) {
 		try {
-			OpenMeshAction.openOBJMesh(MainWindow.class.getResourceAsStream("mann.obj"));
+			OpenMeshAction.openOBJMesh(MainWindow.class.getResourceAsStream("sphere03.obj"));
 		} catch (Exception e) {
 			handleException(e);
 		}

@@ -26,7 +26,7 @@ public class CSphere implements CUnwrapper{
 		mon.beginTask("Unwrapping", 3);
 		
 		// punch out vertex 0 and reorder solver indices
-		CVertex v0 = hds.getVertex(hds.numVertices() - 1);
+		CVertex v0 = hds.getVertex(0);
 		HashSet<CVertex> boundary = new HashSet<CVertex>();
 		boundary.add(v0);
 		boundary.addAll(neighboringVertices(v0));
