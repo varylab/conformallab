@@ -39,18 +39,21 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 	
 	/**
 	 * Compute algorithm invariant data. Boundary is the natural mesh boundary.
+	 * @return the dimension of the parameter space
 	 */
-	public void prepareInvariantData() {
+	public int prepareInvariantData() {
 		HashSet<CVertex> b = new HashSet<CVertex>();
 		b.addAll(HalfEdgeUtils.boundaryVertices(this));
 		prepareInvariantData(b);
+		return dim;
 	}
 	
 	/**
 	 * Compute algorithm invariant data
 	 * @param boundary the boundary vertices which do not belong to the solver system
+	 * @return the dimension of the parameter space
 	 */
-	public void prepareInvariantData(Collection<CVertex> boundary) {
+	public int prepareInvariantData(Collection<CVertex> boundary) {
 		// set initial lambdas
 		for (final CEdge e : getPositiveEdges()) {
 			final double l = e.getLength();
@@ -73,6 +76,7 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 		for (final CFace f : getFaces()) {
 			f.setEnergy(triangleEnergyAndAlphas(u, f, aMap));
 		}
+		return dim;
 	}
 	
 	

@@ -128,7 +128,7 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 					unwrapper = new CDisk(numCones, quantizeCones);
 					break;
 				case 2:
-					unwrapper = new CSphere();
+					unwrapper = new CSphere(numCones, quantizeCones);
 					break;
 				default:
 					errorMessage("Error", "Unsupported topology");
