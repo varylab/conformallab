@@ -32,6 +32,7 @@ import de.varylab.discreteconformal.frontend.widget.ShrinkPanel;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.unwrap.CDisk;
+import de.varylab.discreteconformal.heds.unwrap.CDiskPETSc;
 import de.varylab.discreteconformal.heds.unwrap.CSphere;
 import de.varylab.discreteconformal.heds.unwrap.CUnwrapper;
 import de.varylab.discreteconformal.heds.unwrap.UnwrapException;
@@ -125,7 +126,11 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 			CUnwrapper unwrapper = null;
 			switch (X) {
 				case 1:
-					unwrapper = new CDisk(numCones, quantizeCones);
+					boolean petsc = true;
+					if(petsc)
+						unwrapper = new CDiskPETSc(numCones, quantizeCones);
+					else
+						unwrapper = new CDisk(numCones, quantizeCones);
 					break;
 				case 2:
 					unwrapper = new CSphere(numCones, quantizeCones);
