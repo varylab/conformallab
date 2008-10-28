@@ -140,7 +140,7 @@ public class PETScCHDSEvaluator extends TaoApplicationWithCombinedObjectiveAndGr
 		if (E != null) 
 			E[0] = 0.0;
 		if (G != null)
-			G.zero();
+			G.zeroEntries();
 		if (H != null)
 			H.zero();
 		for (final CVertex v : hds.getVertices()) {
