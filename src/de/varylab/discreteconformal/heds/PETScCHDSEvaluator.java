@@ -32,9 +32,9 @@ public class PETScCHDSEvaluator extends TaoApplicationWithCombinedObjectiveAndGr
 			v2 = e2.getTargetVertex(),
 			v3 = e3.getTargetVertex();
 		final double 
-			u1 = hds.isVariable(v1) ? u.get(v1.getSolverIndex()) : 0.0,
-			u2 = hds.isVariable(v2) ? u.get(v2.getSolverIndex()) : 0.0,
-			u3 = hds.isVariable(v3) ? u.get(v3.getSolverIndex()) : 0.0;
+			u1 = hds.isVariable(v1) ? u.getValue(v1.getSolverIndex()) : 0.0,
+			u2 = hds.isVariable(v2) ? u.getValue(v2.getSolverIndex()) : 0.0,
+			u3 = hds.isVariable(v3) ? u.getValue(v3.getSolverIndex()) : 0.0;
 		final double 
 			x12 = e2.getLambda() + u1 + u2,
 			x23 = e3.getLambda() + u2 + u3,
@@ -85,9 +85,9 @@ public class PETScCHDSEvaluator extends TaoApplicationWithCombinedObjectiveAndGr
 			a2 = 0.0,
 			a3 = 0.0;
 		final double 
-			u1 = hds.isVariable(v1) ? u.get(v1.getSolverIndex()) : 0.0,
-			u2 = hds.isVariable(v2) ? u.get(v2.getSolverIndex()) : 0.0,
-			u3 = hds.isVariable(v3) ? u.get(v3.getSolverIndex()) : 0.0;
+			u1 = hds.isVariable(v1) ? u.getValue(v1.getSolverIndex()) : 0.0,
+			u2 = hds.isVariable(v2) ? u.getValue(v2.getSolverIndex()) : 0.0,
+			u3 = hds.isVariable(v3) ? u.getValue(v3.getSolverIndex()) : 0.0;
 		final double 
 			umean = (u1+u2+u3)/3;
 		final double 
@@ -147,7 +147,7 @@ public class PETScCHDSEvaluator extends TaoApplicationWithCombinedObjectiveAndGr
 			if (!hds.isVariable(v))
 				continue;
 			if (E != null)
-				E[0] += v.getTheta() * u.get(v.getSolverIndex());
+				E[0] += v.getTheta() * u.getValue(v.getSolverIndex());
 			if (G != null)
 				G.add(v.getSolverIndex(), v.getTheta());
 		}
