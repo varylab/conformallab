@@ -78,7 +78,7 @@ public class CDiskPETSc implements CUnwrapper{
 			H.assemblyEnd(Mat.AssemblyType.FINAL_ASSEMBLY);
 
 
-			optimizer = new Tao("tao_nls");
+			optimizer = new Tao(Tao.Method.NLS);
 			app.setInitialSolutionVec(u);
 			app.setHessianMat(H, H);			
 			optimizer.setApplication(app);

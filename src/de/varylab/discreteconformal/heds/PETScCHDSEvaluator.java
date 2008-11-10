@@ -12,10 +12,11 @@ import java.util.Map;
 import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.PETScException;
 import de.varylab.jpetsc.Vec;
-import de.varylab.jtao.TaoApplicationAddHessian;
-import de.varylab.jtao.TaoApplicationWithCombinedObjectiveAndGradientFunction;
+import de.varylab.jtao.TaoAppAddHess;
+import de.varylab.jtao.TaoAppAddCombinedObjectiveAndGrad;
+import de.varylab.jtao.TaoApplication;
 
-public class PETScCHDSEvaluator extends TaoApplicationWithCombinedObjectiveAndGradientFunction implements TaoApplicationAddHessian {
+public class PETScCHDSEvaluator extends TaoApplication implements TaoAppAddCombinedObjectiveAndGrad, TaoAppAddHess {
 	private CHDS hds =  null;
 	
 	public PETScCHDSEvaluator(CHDS hds) {
@@ -213,7 +214,6 @@ public class PETScCHDSEvaluator extends TaoApplicationWithCombinedObjectiveAndGr
 		}
 	}
 
-	@Override
 	public double evaluateObjectiveAndGradient(Vec x, Vec g) throws PETScException {
 		double[] E = new double[]{0.0};
 		conformalEnergy(x, E, g, null);
