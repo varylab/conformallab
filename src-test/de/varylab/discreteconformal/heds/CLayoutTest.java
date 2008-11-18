@@ -20,8 +20,8 @@ import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.data.StringArray;
 import de.jreality.ui.viewerapp.ViewerApp;
-import de.jtem.halfedge.jReality.converter.ConverterHeds2JR;
-import de.jtem.halfedge.jReality.converter.ConverterJR2Heds;
+import de.jtem.halfedge.jreality.ConverterHeds2JR;
+import de.jtem.halfedge.jreality.ConverterJR2Heds;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.unwrap.CDiskLayout;
 
@@ -34,7 +34,8 @@ public class CLayoutTest {
 	public static void setUpBeforeClass() throws Exception {
 		System.out.println("CLayoutTest.setUpBeforeClass()");
 		System.out.println("CHDSTest.setUpBeforeClass()");
-		File file = new File("data/planar04.obj");
+		//TODO
+		File file = new File("data/cathead.obj"); 
 		ReaderOBJ reader = new ReaderOBJ();
 		SceneGraphComponent c = null;
 		IndexedFaceSet ifs = null;

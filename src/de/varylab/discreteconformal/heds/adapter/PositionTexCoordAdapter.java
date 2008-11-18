@@ -2,7 +2,7 @@ package de.varylab.discreteconformal.heds.adapter;
 
 import geom3d.Point;
 import de.jtem.halfedge.Node;
-import de.jtem.halfedge.jReality.interfaces.CoordinateAdapter2Ifs;
+import de.jtem.halfedge.jreality.adapter.CoordinateAdapter2Ifs;
 import de.varylab.discreteconformal.heds.CVertex;
 
 public class PositionTexCoordAdapter implements CoordinateAdapter2Ifs {

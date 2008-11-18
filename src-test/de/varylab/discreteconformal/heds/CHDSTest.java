@@ -23,7 +23,7 @@ import org.junit.Test;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
-import de.jtem.halfedge.jReality.converter.ConverterJR2Heds;
+import de.jtem.halfedge.jreality.ConverterJR2Heds;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.math.optimization.NotConvergentException;
@@ -47,7 +47,7 @@ public class CHDSTest {
 	@BeforeClass 
 	public static void setUpBeforeClass() throws Exception {
 		System.out.println("CHDSTest.setUpBeforeClass()");
-		File file = new File("data/test03.obj");
+		File file = new File("data/cathead.obj");
 		ReaderOBJ reader = new ReaderOBJ();
 		SceneGraphComponent c = null;
 		try {

@@ -38,6 +38,7 @@ public class ShrinkPanelContainer extends Composite implements SelectionListener
 	}
 	private class ShrinkLayout extends Layout{
 
+		@Override
 		protected Point computeSize(Composite comp, int xh, int yh, boolean ch) {
 			Control[] children = comp.getChildren();
 			int height = 0;
@@ -48,6 +49,7 @@ public class ShrinkPanelContainer extends Composite implements SelectionListener
 			return new Point(width, height);
 		}
 
+		@Override
 		protected void layout(Composite comp, boolean arg1) { 
 			Control[] children = comp.getChildren();
 			int height = 0;

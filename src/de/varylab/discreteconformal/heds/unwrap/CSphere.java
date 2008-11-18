@@ -16,15 +16,15 @@ public class CSphere implements CUnwrapper{
 
 	private int
 		numCones = 0;
-	private boolean
-		quantizeCones = true;
+//	private boolean
+//		quantizeCones = true;
 	private CDisk
 		diskUnwrapper = null;
 	
 	
 	public CSphere(int numCones, boolean quantizeCones) {
 		this.numCones = numCones;
-		this.quantizeCones = quantizeCones;
+//		this.quantizeCones = quantizeCones;
 		diskUnwrapper = new CDisk(numCones, quantizeCones);
 	}
 	

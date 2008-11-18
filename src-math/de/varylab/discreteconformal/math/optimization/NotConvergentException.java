@@ -19,6 +19,7 @@ public class NotConvergentException extends Exception {
 		error = reachedError;
 	}
 	
+	@Override
 	public String getMessage() {
 		return super.getMessage() + "\nReached Error: " + error;
 	}

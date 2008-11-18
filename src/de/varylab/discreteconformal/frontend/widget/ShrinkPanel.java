@@ -69,6 +69,7 @@ public class ShrinkPanel extends Composite implements PaintListener, MouseListen
 	
 	private class ShrinkPanelLayout extends Layout{
 
+		@Override
 		protected Point computeSize(Composite comp, int xh, int yh, boolean ch) {
 			if (isShrinked())
 				return getShrinkedSize();
@@ -76,6 +77,7 @@ public class ShrinkPanel extends Composite implements PaintListener, MouseListen
 				return getUnshrinkedSize();
 		}
 
+		@Override
 		protected void layout(Composite comp, boolean flush) {
 			Point compSize = comp.getSize();
 			if (isShrinked()){

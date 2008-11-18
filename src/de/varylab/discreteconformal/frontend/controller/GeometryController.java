@@ -7,10 +7,10 @@ import java.util.List;
 
 import de.jreality.scene.IndexedFaceSet;
 import de.jtem.halfedge.HalfEdgeDataStructure;
-import de.jtem.halfedge.jReality.converter.ConverterHeds2JR;
-import de.jtem.halfedge.jReality.converter.ConverterJR2Heds;
-import de.jtem.halfedge.jReality.interfaces.CoordinateAdapter2Ifs;
-import de.jtem.halfedge.jReality.interfaces.TextCoordsAdapter2Ifs;
+import de.jtem.halfedge.jreality.ConverterHeds2JR;
+import de.jtem.halfedge.jreality.ConverterJR2Heds;
+import de.jtem.halfedge.jreality.adapter.CoordinateAdapter2Ifs;
+import de.jtem.halfedge.jreality.adapter.TextCoordsAdapter2Ifs;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CEdge;
 import de.varylab.discreteconformal.heds.CFace;

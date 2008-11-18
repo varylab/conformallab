@@ -59,10 +59,12 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 			this.controlsWidth = width;
 		}
 		
+		@Override
 		protected Point computeSize(Composite comp, int xh, int yh, boolean ch) {
 			return comp.computeSize(SWT.DEFAULT, SWT.DEFAULT, ch);
 		}
 
+		@Override
 		protected void layout(Composite comp, boolean arg1) {
 			Point pSize = comp.getSize();
 			for (Control c : comp.getChildren()) {
@@ -77,6 +79,7 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 	}
 	
 	
+	@Override
 	protected Control createContents(Composite parent) {
 		setStatus("Welcome");
 		getShell().setText("Discrete Conformal Parametrization");
@@ -88,6 +91,7 @@ public class MainWindow extends ApplicationWindow implements IExceptionHandler{
 		// object content -----------------------
 		Composite objectContent = new Composite(mainFolder, NONE);
 		sourceViewer = new EmbeddedSwingComposite(objectContent, BORDER) {
+			@Override
 			protected JComponent createSwingComponent() {
 				JPanel panel = new JPanel();
 				panel.setLayout(new java.awt.GridLayout(1, 1));

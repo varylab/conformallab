@@ -64,6 +64,7 @@ public class GraphUtility {
 					break;
 				}
 			}
+			assert (b != null);
 			E b2 = b.getNextEdge();
 			List<E> newTargetEdges = new LinkedList<E>();
 			E actEdge = opp;
@@ -90,6 +91,7 @@ public class GraphUtility {
 					break;
 				}
 			}
+			assert (b != null);
 			E b2 = b.getNextEdge();
 			List<E> newTargetEdges = new LinkedList<E>();
 			E actEdge = edge;

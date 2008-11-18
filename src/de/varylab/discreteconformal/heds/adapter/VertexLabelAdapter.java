@@ -1,8 +1,8 @@
 package de.varylab.discreteconformal.heds.adapter;
 
-import static de.jtem.halfedge.jReality.interfaces.Adapter.AdapterType.VERTEX_ADAPTER;
+import static de.jtem.halfedge.jreality.adapter.Adapter.AdapterType.VERTEX_ADAPTER;
 import de.jtem.halfedge.Node;
-import de.jtem.halfedge.jReality.interfaces.LabelAdapter2Ifs;
+import de.jtem.halfedge.jreality.adapter.LabelAdapter2Ifs;
 
 public class VertexLabelAdapter implements LabelAdapter2Ifs {
 
