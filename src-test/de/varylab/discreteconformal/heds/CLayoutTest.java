@@ -2,7 +2,6 @@ package de.varylab.discreteconformal.heds;
 
 import static de.jreality.scene.data.Attribute.LABELS;
 
-import java.io.File;
 import java.io.IOException;
 
 import junit.framework.Assert;
@@ -20,6 +19,7 @@ import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.data.StringArray;
 import de.jreality.ui.viewerapp.ViewerApp;
+import de.jreality.util.Input;
 import de.jtem.halfedge.jreality.ConverterHeds2JR;
 import de.jtem.halfedge.jreality.ConverterJR2Heds;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
@@ -34,13 +34,12 @@ public class CLayoutTest {
 	public static void setUpBeforeClass() throws Exception {
 		System.out.println("CLayoutTest.setUpBeforeClass()");
 		System.out.println("CHDSTest.setUpBeforeClass()");
-		//TODO
-		File file = new File("data/cathead.obj"); 
 		ReaderOBJ reader = new ReaderOBJ();
 		SceneGraphComponent c = null;
 		IndexedFaceSet ifs = null;
 		try {
-			c =reader.read(file);
+			Input in = new Input("Obj File", CLayoutTest.class.getResourceAsStream("planar01.obj"));
+			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds<CVertex, CEdge, CFace> converter = new ConverterJR2Heds<CVertex, CEdge, CFace>(CVertex.class, CEdge.class, CFace.class);
 			hds = new CHDS();
@@ -78,7 +77,7 @@ public class CLayoutTest {
 			CVertex t = e.getTargetVertex();
 			double l1 = s.getPosition().distanceTo(t.getPosition());
 			double l2 = s.getTextureCoord().distanceTo(t.getTextureCoord());
-			Assert.assertEquals(l1, l2, 1E-8);
+			Assert.assertEquals(l1, l2, 1E-6);
 		}
 	}
 

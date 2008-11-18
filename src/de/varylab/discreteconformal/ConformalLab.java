@@ -2,6 +2,8 @@ package de.varylab.discreteconformal;
 
 import static org.eclipse.jface.dialogs.MessageDialog.openError;
 
+import java.io.InputStream;
+
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -22,7 +24,8 @@ public class ConformalLab {
 	
 	public static void main(String[] args) {
 		try {
-			OpenMeshAction.openOBJMesh(MainWindow.class.getResourceAsStream("sphere03.obj"));
+			InputStream in = MainWindow.class.getResourceAsStream("mann.obj");
+			OpenMeshAction.openOBJMesh(in);
 		} catch (Exception e) {
 			handleException(e);
 		}

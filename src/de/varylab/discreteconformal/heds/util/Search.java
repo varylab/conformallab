@@ -43,9 +43,20 @@ public class Search {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> List<E> bFS(V start, V end, boolean avoidBorder) throws NoSuchElementException{
-		return bFS(start, singleton(end), avoidBorder, null);
+		Set<E> allEdges = new HashSet<E>(start.getHalfEdgeDataStructure().getEdges());
+		return bFS(allEdges, start, singleton(end), avoidBorder, null);
 	}
 
+	
+	public static 
+	<
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> List<E> bFS(Set<E> valid, V start, V end) throws NoSuchElementException{
+		return bFS(valid, start, singleton(end), false, null);
+	}
+	
 	
 	/**
 	 * Breadth-first-search to the first hit in endPoints
@@ -60,7 +71,7 @@ public class Search {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> List<E> bFS(V start, Set<V> endPoints, boolean avoidBorder, Comparator<E> comp) throws NoSuchElementException{
+	> List<E> bFS(Set<E> valid, V start, Set<V> endPoints, boolean avoidBorder, Comparator<E> comp) throws NoSuchElementException{
 		HashMap<V, Stack<E>> pathMap = new HashMap<V, Stack<E>>();
 		LinkedList<V> queue = new LinkedList<V>();
 		HashSet<V> visited = new HashSet<V>();
@@ -75,8 +86,12 @@ public class Search {
 				sort(star, comp);
 			}
 			for (E e : star){
-				if (!isInteriorEdge(e) && avoidBorder)
+				if (!isInteriorEdge(e) && avoidBorder) {
 					continue;
+				}
+				if (!valid.contains(e)) {
+					continue;
+				}
 				E pathEdge = e.getOppositeEdge();
 				V v = pathEdge.getTargetVertex();
 				Stack<E> newPath = new Stack<E>();

@@ -30,9 +30,9 @@ public class GeometryController {
 		kdTree = null;
 	private LinkedList<GeometryChangedListener>
 		changeListener = new LinkedList<GeometryChangedListener>();
-	private CoordinateAdapter2Ifs
+	private CoordinateAdapter2Ifs<CVertex>
 		coordAdapter = new PositionAdapter();
-	private TextCoordsAdapter2Ifs
+	private TextCoordsAdapter2Ifs<CVertex>
 		texCoordAdapter = new TexCoordAdapter(true);
 	
 	public static interface GeometryChangedListener{
@@ -147,22 +147,22 @@ public class GeometryController {
     }
 
 
-	public CoordinateAdapter2Ifs getCoordAdapter() {
+	public CoordinateAdapter2Ifs<CVertex> getCoordAdapter() {
 		return coordAdapter;
 	}
 
 
-	public void setCoordAdapter(CoordinateAdapter2Ifs coordAdapter) {
+	public void setCoordAdapter(CoordinateAdapter2Ifs<CVertex> coordAdapter) {
 		this.coordAdapter = coordAdapter;
 	}
 
 
-	public TextCoordsAdapter2Ifs getTexCoordAdapter() {
+	public TextCoordsAdapter2Ifs<CVertex> getTexCoordAdapter() {
 		return texCoordAdapter;
 	}
 
 
-	public void setTexCoordAdapter(TextCoordsAdapter2Ifs texCoordAdapter) {
+	public void setTexCoordAdapter(TextCoordsAdapter2Ifs<CVertex> texCoordAdapter) {
 		this.texCoordAdapter = texCoordAdapter;
 	}
 

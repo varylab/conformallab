@@ -1,0 +1,148 @@
+package de.varylab.discreteconformal.heds;
+
+
+import static de.jreality.shader.CommonAttributes.DIFFUSE_COLOR;
+import static de.jreality.shader.CommonAttributes.FACE_DRAW;
+import static de.jreality.shader.CommonAttributes.POLYGON_SHADER;
+import static de.jreality.shader.CommonAttributes.TUBE_RADIUS;
+import static de.jreality.shader.CommonAttributes.TUBE_RADIUS_DEFAULT;
+import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
+import static java.awt.Color.LIGHT_GRAY;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import de.jreality.geometry.GeometryUtility;
+import de.jreality.reader.ReaderOBJ;
+import de.jreality.scene.Appearance;
+import de.jreality.scene.IndexedFaceSet;
+import de.jreality.scene.SceneGraphComponent;
+import de.jreality.ui.viewerapp.ViewerApp;
+import de.jreality.util.Input;
+import de.jtem.halfedge.jreality.ConverterHeds2JR;
+import de.jtem.halfedge.jreality.ConverterJR2Heds;
+import de.jtem.halfedge.jreality.adapter.ColorAdapter2Ifs;
+import de.jtem.halfedge.jreality.adapter.RelRadiusAdapter2Ifs;
+import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.util.HomologyUtility;
+
+public class HomologyTest {
+
+	private static CHDS 	
+		hds = null;
+	
+	@BeforeClass
+	public static void setUpBeforeClass() throws Exception {
+		ReaderOBJ reader = new ReaderOBJ();
+		SceneGraphComponent c = null;
+		IndexedFaceSet ifs = null;
+		try {
+			Input in = new Input("Obj File", CLayoutTest.class.getResourceAsStream("torus.obj"));
+			c =reader.read(in);
+			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
+			ConverterJR2Heds<CVertex, CEdge, CFace> converter = new ConverterJR2Heds<CVertex, CEdge, CFace>(CVertex.class, CEdge.class, CFace.class);
+			hds = new CHDS();
+			converter.ifs2heds(ifs, hds, new PositionAdapter());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	@Test
+	public void testHomology() throws Exception{
+		System.out.println("HomologyTest.testHomology()");
+		System.out.println(hds);
+		List<Set<CEdge>> paths = HomologyUtility.getGeneratorPaths(hds.getVertex(0));
+		System.out.println("Found " + paths.size() + " generator paths:");
+		for (Set<CEdge> path : paths) {
+			System.out.println("Path: length=" + path.size());
+		}
+	}
+	
+	
+	private static class EdgeColorAdapter implements ColorAdapter2Ifs<CEdge>, RelRadiusAdapter2Ifs<CEdge> {
+
+		private double[][]
+		    colors = null;
+		private double[]
+		    defaultColor = {0,0,0};
+		private List<Set<CEdge>> 
+			paths = null;
+		
+		
+		public EdgeColorAdapter(List<Set<CEdge>> paths) {
+			this.paths = paths;
+			colors = new double[paths.size()][3];
+			Random rnd = new Random();
+			for (double[] color : colors) {
+				color[0] = rnd.nextDouble();
+				color[1] = rnd.nextDouble();
+				color[2] = rnd.nextDouble();
+			}
+		}
+		
+		@Override
+		public double[] getColor(CEdge edge) {
+			for (Set<CEdge> path : paths) {
+				if (path.contains(edge) || path.contains(edge.getOppositeEdge())) {
+					return colors[paths.indexOf(path)];
+				}
+			}
+			return defaultColor;
+		}
+
+
+		@Override
+		public double getReelRadius(CEdge edge) {
+			for (Set<CEdge> path : paths) {
+				if (path.contains(edge) || path.contains(edge.getOppositeEdge())) {
+					return 20.0;
+				}
+			}
+			return 0.0;
+		}
+		
+		@Override
+		public AdapterType getAdapterType() {
+			return AdapterType.EDGE_ADAPTER;
+		}
+		
+	}
+	
+	
+	public static void main(String[] args) throws Exception {
+		HomologyTest.setUpBeforeClass();
+		
+		Random rnd = new Random();
+		CVertex root = hds.getVertex(rnd.nextInt(hds.numVertices()));
+		
+		List<Set<CEdge>> paths = HomologyUtility.getGeneratorPaths(root);
+		
+		PositionAdapter positionAdapter = new PositionAdapter();
+		EdgeColorAdapter colorAdapter = new EdgeColorAdapter(paths);
+		
+		ConverterHeds2JR<CVertex, CEdge, CFace> converter = new ConverterHeds2JR<CVertex, CEdge, CFace>();
+		IndexedFaceSet ifs = converter.heds2ifs(hds, colorAdapter, positionAdapter);
+		
+		SceneGraphComponent c = new SceneGraphComponent();
+		c.setGeometry(ifs);
+		GeometryUtility.calculateAndSetFaceNormals(ifs);
+		Appearance app = new Appearance();
+		app.setAttribute(TUBE_RADIUS, TUBE_RADIUS_DEFAULT / 10.0);
+		app.setAttribute(VERTEX_DRAW, false);
+		app.setAttribute(FACE_DRAW, true);
+		app.setAttribute(POLYGON_SHADER + "." + DIFFUSE_COLOR, LIGHT_GRAY);
+		c.setAppearance(app);
+		ViewerApp.display(c);
+	}
+	
+	
+	
+
+}
