@@ -42,7 +42,7 @@ public class HomologyTest {
 		SceneGraphComponent c = null;
 		IndexedFaceSet ifs = null;
 		try {
-			Input in = new Input("Obj File", CLayoutTest.class.getResourceAsStream("torus.obj"));
+			Input in = new Input("Obj File", CLayoutTest.class.getResourceAsStream("brezel.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds<CVertex, CEdge, CFace> converter = new ConverterJR2Heds<CVertex, CEdge, CFace>(CVertex.class, CEdge.class, CFace.class);
@@ -102,7 +102,7 @@ public class HomologyTest {
 		public double getReelRadius(CEdge edge) {
 			for (Set<CEdge> path : paths) {
 				if (path.contains(edge) || path.contains(edge.getOppositeEdge())) {
-					return 20.0;
+					return 2.0;
 				}
 			}
 			return 0.0;
