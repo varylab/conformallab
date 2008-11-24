@@ -10,10 +10,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.varylab.jpetsc.Mat;
-import de.varylab.jpetsc.PETScException;
 import de.varylab.jpetsc.Vec;
-import de.varylab.jtao.TaoAppAddHess;
 import de.varylab.jtao.TaoAppAddCombinedObjectiveAndGrad;
+import de.varylab.jtao.TaoAppAddHess;
 import de.varylab.jtao.TaoApplication;
 
 public class PETScCHDSEvaluator extends TaoApplication implements TaoAppAddCombinedObjectiveAndGrad, TaoAppAddHess {
@@ -23,7 +22,7 @@ public class PETScCHDSEvaluator extends TaoApplication implements TaoAppAddCombi
 		this.hds = hds;
 	}
 
-	protected void triangleHessian(final Vec u, final CFace f, final double[] cotE, final double[] cotV) throws PETScException {
+	protected void triangleHessian(final Vec u, final CFace f, final double[] cotE, final double[] cotV)  {
 		final CEdge
 			e1 = f.getBoundaryEdge(),
 			e2 = e1.getNextEdge(),
@@ -72,7 +71,7 @@ public class PETScCHDSEvaluator extends TaoApplication implements TaoAppAddCombi
 	
 	
 	
-	protected double triangleEnergyAndAlphas(final Vec u, final CFace f, Map<CEdge, Double> alphas) throws PETScException  {
+	protected double triangleEnergyAndAlphas(final Vec u, final CFace f, Map<CEdge, Double> alphas)   {
 		final CEdge 
 			e1 = f.getBoundaryEdge(),
 			e2 = e1.getNextEdge(),
@@ -127,14 +126,14 @@ public class PETScCHDSEvaluator extends TaoApplication implements TaoAppAddCombi
 		return E1 + E2 + E3; 
 	}
 	
-	public Map<CEdge, Double> calculateAlphas(final Vec u)  throws PETScException  {
+	public Map<CEdge, Double> calculateAlphas(final Vec u)    {
 		HashMap<CEdge, Double> a = new HashMap<CEdge, Double>();
 		for (CFace f : hds.getFaces())
 			triangleEnergyAndAlphas(u, f, a);
 		return a;
 	}
 	
-	public void conformalEnergy(final Vec u, final double[] E, Vec G, final Mat H, Map<CEdge, Double>... a) throws PETScException {
+	public void conformalEnergy(final Vec u, final double[] E, Vec G, final Mat H, Map<CEdge, Double>... a)  {
 		Map<CEdge, Double> aMap = a.length != 0 ? a[0] : new HashMap<CEdge, Double>();
 		aMap.clear();
 		// Vertex Energy
@@ -214,13 +213,13 @@ public class PETScCHDSEvaluator extends TaoApplication implements TaoAppAddCombi
 		}
 	}
 
-	public double evaluateObjectiveAndGradient(Vec x, Vec g) throws PETScException {
+	public double evaluateObjectiveAndGradient(Vec x, Vec g)  {
 		double[] E = new double[]{0.0};
 		conformalEnergy(x, E, g, null);
 		return E[0];
 	}
 
-	public PreconditionerType evaluateHessian(Vec x, Mat H, Mat Hpre) throws PETScException {
+	public PreconditionerType evaluateHessian(Vec x, Mat H, Mat Hpre)  {
 		conformalEnergy(x, null, null, H);
 		return null;
 	}

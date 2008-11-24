@@ -10,9 +10,9 @@ import no.uib.cipr.matrix.sparse.CompRowMatrix;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import de.varylab.discreteconformal.heds.CCones;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
+import de.varylab.discreteconformal.heds.CConesUtility;
 import de.varylab.discreteconformal.math.optimization.NotConvergentException;
 import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer;
 import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer.Solver;
@@ -40,7 +40,7 @@ public class CDisk implements CUnwrapper{
 		Collection<CVertex> cones = null;
 		if (numCones > 0) {
 			mon.subTask("Processing " + numCones + " cones");
-			cones = CCones.setUpMesh(hds, numCones);
+			cones = CConesUtility.setUpMesh(hds, numCones);
 			mon.worked(1);
 		}
 		int n = hds.getDomainDimension();
@@ -63,7 +63,7 @@ public class CDisk implements CUnwrapper{
 		
 		if (quantizeCones && numCones > 0) {
 			mon.subTask("Quantizing Cone Singularities");
-			cones = CCones.quantizeCones(hds, cones, u, hds.calculateAlphas(u));
+			cones = CConesUtility.quantizeCones(hds, cones, u);
 			n = hds.getDomainDimension();
 			u = new DenseVector(n);
 			H = new CompRowMatrix(n,n,makeNonZeros(hds));
@@ -80,9 +80,9 @@ public class CDisk implements CUnwrapper{
 		// layout
 		mon.subTask("Layout");
 		if (numCones > 0) {
-			CCones.cutMesh(hds, cones, u);
+			CConesUtility.cutMesh(hds, cones, u);
 		}
-		CDiskLayout.doLayout(hds, u, hds.calculateAlphas(u));
+		CDiskLayout.doLayout(hds, u);
 		mon.worked(1);
 		mon.done();
 	}

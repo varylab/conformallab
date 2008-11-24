@@ -10,15 +10,13 @@ import geom3d.Point;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import no.uib.cipr.matrix.Vector;
 import de.varylab.discreteconformal.heds.CEdge;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
-
-import no.uib.cipr.matrix.Vector;
 
 public class CDiskLayout {
 
@@ -29,8 +27,7 @@ public class CDiskLayout {
 	 * @param u new metric
 	 * @param angleMapParam may be null
 	 */
-	public static void doLayout(CHDS hds, Vector u, Map<CEdge, Double> aMapParam) {
-		Map<CEdge, Double> aMap = aMapParam == null ? hds.calculateAlphas(u) : aMapParam;
+	public static void doLayout(CHDS hds, Vector u) {
 		Set<CVertex> visited = new HashSet<CVertex>(hds.numVertices());
 		Queue<CVertex> Qv = new LinkedList<CVertex>();
 		Queue<CEdge> Qe = new LinkedList<CEdge>();
@@ -67,9 +64,11 @@ public class CDiskLayout {
 			while (e != outE) {
 				CVertex nearVertex = e.getTargetVertex();
 				
-				Double alpha = aMap.get(e.getNextEdge());
-				if (alpha == null) { // a boundary edge
-					alpha = 2*PI - getAngleSum(v, aMap);
+				CEdge next = e.getNextEdge();
+				Double alpha = next.getAlpha();
+				// TODO: make this work
+				if (next.getLeftFace() == null) { // a boundary edge
+					alpha = 2*PI - getAngleSum(v);
 				}
 				
 				globalAngle -= alpha;
@@ -107,13 +106,14 @@ public class CDiskLayout {
 	 * @param v
 	 * @return the angle sum
 	 */
-	public static Double getAngleSum(CVertex v, Map<CEdge, Double> aMap) {
+	public static Double getAngleSum(CVertex v) {
 		Double r = 0.0;
 		List<CEdge> star = incomingEdges(v);
 		for (CEdge e : star) {
-			Double a = aMap.get(e.getPreviousEdge());
-			if (a != null)
-				r += a;
+			// TODO: make this work
+			if (e.getLeftFace() != null) {
+				r += e.getAlpha();
+			}
 		}
 		return r;
 	}

@@ -189,8 +189,9 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 	
 	public Map<CEdge, Double> calculateAlphas(final Vector u) {
 		HashMap<CEdge, Double> a = new HashMap<CEdge, Double>();
-		for (CFace f : getFaces())
+		for (CFace f : getFaces()) {
 			triangleEnergyAndAlphas(u, f, a);
+		}
 		return a;
 	}
 	
@@ -201,19 +202,25 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 		Map<CEdge, Double> aMap = a.length != 0 ? a[0] : new HashMap<CEdge, Double>();
 		aMap.clear();
 		// Vertex Energy
-		if (E != null) 
+		if (E != null) {
 			E[0] = 0.0;
-		if (G != null)
+		}
+		if (G != null) {
 			G.zero();
-		if (H != null)
+		}
+		if (H != null) {
 			H.zero();
+		}
 		for (final CVertex v : getVertices()) {
-			if (!isVariable(v))
+			if (!isVariable(v)) {
 				continue;
-			if (E != null)
+			}
+			if (E != null) {
 				E[0] += v.getTheta() * u.get(v.getSolverIndex());
-			if (G != null)
+			}
+			if (G != null) {
 				G.add(v.getSolverIndex(), v.getTheta());
+			}
 		}
 		// Face Energy
 		for (final CFace t : getFaces()) {
@@ -230,15 +237,19 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 				v2i = v2.getSolverIndex(),
 				v3i = v3.getSolverIndex();
 			final double e = triangleEnergyAndAlphas(u, t, aMap);
-			if (E != null)
+			if (E != null) {
 				E[0] += e;
+			}
 			if (G != null) {
-				if (isVariable(v1))
+				if (isVariable(v1)) {
 					G.add(v1i, -aMap.get(e3));
-				if (isVariable(v2))
+				}
+				if (isVariable(v2)) {
 					G.add(v2i, -aMap.get(e1));
-				if (isVariable(v3))
+				}
+				if (isVariable(v3)) {
 					G.add(v3i, -aMap.get(e2));
+				}
 			}
 			if (H != null) {
 				final double[] 
@@ -259,12 +270,15 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> implement
 					H.add(v3i, v2i, -cotE[2]);
 				}
 				// vertex hessian
-				if (isVariable(v1))
+				if (isVariable(v1)) {
 					H.add(v1i, v1i, cotV[0]);
-				if (isVariable(v2))
+				}
+				if (isVariable(v2)) {
 					H.add(v2i, v2i, cotV[1]);
-				if (isVariable(v3))
+				}
+				if (isVariable(v3)) {
 					H.add(v3i, v3i, cotV[2]);
+				}
 			}
 		}
 	}

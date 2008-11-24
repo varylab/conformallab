@@ -25,7 +25,7 @@ import de.varylab.discreteconformal.heds.util.GraphUtility;
 import de.varylab.discreteconformal.heds.util.Search;
 import de.varylab.discreteconformal.heds.util.Search.WeightAdapter;
 
-public class CCones {
+public class CConesUtility {
 
 	
 	/**
@@ -169,10 +169,10 @@ public class CCones {
 	}
 	
 	
-	public static Collection<CVertex> quantizeCones(CHDS hds, Collection<CVertex> cones, Vector u, Map<CEdge, Double> aMap) {
+	public static Collection<CVertex> quantizeCones(CHDS hds, Collection<CVertex> cones, Vector u) {
 		List<CVertex> result = new LinkedList<CVertex>(cones);
 		for (CVertex v : cones) {
-			double a = abs(getAngleSum(v, aMap) % (2*PI));
+			double a = abs(getAngleSum(v) % (2*PI));
 			if (a < PI / 4) {
 				result.remove(v);
 			} else if (PI / 4 < a && a < PI * 3 / 4) {

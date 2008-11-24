@@ -126,7 +126,7 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 			CUnwrapper unwrapper = null;
 			switch (X) {
 				case 1:
-					boolean petsc = false;
+					boolean petsc = true;
 					if(petsc)
 						unwrapper = new CDiskPETSc(numCones, quantizeCones);
 					else

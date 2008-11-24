@@ -14,7 +14,8 @@ public class CEdge extends Edge<CVertex, CEdge, CFace> {
     private Double
     	curvature = null;
     private double
-    	lambda = 1.0;    
+    	lambda = 1.0,
+    	alpha = 0.0;
     
     public double getCurvature() {
     	if (curvature == null) {
@@ -47,5 +48,12 @@ public class CEdge extends Edge<CVertex, CEdge, CFace> {
 		this.lambda = lambda;
 	}
 
+	public double getAlpha() {
+		return alpha;
+	}
 
+	public void setAlpha(double alpha) {
+		this.alpha = alpha;
+	}
+	
 }

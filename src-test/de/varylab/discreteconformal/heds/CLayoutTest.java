@@ -70,7 +70,7 @@ public class CLayoutTest {
 		System.out.println("CLayoutTest.testDoLayout()");
 		int n = hds.getDomainDimension();
 		Vector u = new SparseVector(n);
-		CDiskLayout.doLayout(hds, u, null);
+		CDiskLayout.doLayout(hds, u);
 		
 		for (CEdge e : hds.getPositiveEdges()) {
 			CVertex s = e.getStartVertex();
