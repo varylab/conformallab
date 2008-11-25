@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds.unwrap;
+package de.varylab.discreteconformal.unwrapper;
 
 import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
 
@@ -13,13 +13,13 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.heds.CConesUtility;
-import de.varylab.discreteconformal.math.CEuclideanOptimizable;
 import de.varylab.discreteconformal.math.optimization.NotConvergentException;
 import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer;
 import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer.Solver;
 import de.varylab.discreteconformal.math.optimization.stepcontrol.ArmijoStepController;
+import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 
-public class CDisk implements CUnwrapper{
+public class CDiskUnwrapper implements CUnwrapper{
 
 	
 	private int
@@ -27,7 +27,7 @@ public class CDisk implements CUnwrapper{
 	private boolean
 		quantizeCones = true;
 	
-	public CDisk(int numCones, boolean quantizeCones) {
+	public CDiskUnwrapper(int numCones, boolean quantizeCones) {
 		this.numCones = numCones;
 		this.quantizeCones = quantizeCones;
 	}

@@ -31,11 +31,11 @@ import de.varylab.discreteconformal.ConformalLab;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanel;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
 import de.varylab.discreteconformal.heds.CHDS;
-import de.varylab.discreteconformal.heds.unwrap.CDisk;
-import de.varylab.discreteconformal.heds.unwrap.CDiskPETSc;
-import de.varylab.discreteconformal.heds.unwrap.CSphere;
-import de.varylab.discreteconformal.heds.unwrap.CUnwrapper;
-import de.varylab.discreteconformal.heds.unwrap.UnwrapException;
+import de.varylab.discreteconformal.unwrapper.CDiskUnwrapper;
+import de.varylab.discreteconformal.unwrapper.CDiskUnwrapperPETSc;
+import de.varylab.discreteconformal.unwrapper.CSphereUnwrapper;
+import de.varylab.discreteconformal.unwrapper.CUnwrapper;
+import de.varylab.discreteconformal.unwrapper.UnwrapException;
 
 public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 
@@ -128,12 +128,12 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 				case 1:
 					boolean petsc = true;
 					if(petsc)
-						unwrapper = new CDiskPETSc(numCones, quantizeCones);
+						unwrapper = new CDiskUnwrapperPETSc(numCones, quantizeCones);
 					else
-						unwrapper = new CDisk(numCones, quantizeCones);
+						unwrapper = new CDiskUnwrapper(numCones, quantizeCones);
 					break;
 				case 2:
-					unwrapper = new CSphere(numCones, quantizeCones);
+					unwrapper = new CSphereUnwrapper(numCones, quantizeCones);
 					break;
 				default:
 					errorMessage("Error", "Unsupported topology");

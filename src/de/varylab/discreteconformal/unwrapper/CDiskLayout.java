@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds.unwrap;
+package de.varylab.discreteconformal.unwrapper;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static java.lang.Math.PI;

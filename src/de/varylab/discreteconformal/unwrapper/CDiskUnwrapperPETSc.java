@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds.unwrap;
+package de.varylab.discreteconformal.unwrapper;
 
 import static de.varylab.discreteconformal.heds.util.SparseUtility.getPETScNonZeros;
 
@@ -11,21 +11,21 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import de.varylab.discreteconformal.heds.CConesUtility;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
-import de.varylab.discreteconformal.math.CEuclideanApplication;
+import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
 import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.PETSc;
 import de.varylab.jpetsc.Vec;
 import de.varylab.jtao.Tao;
 import de.varylab.jtao.Tao.GetSolutionStatusResult;
 
-public class CDiskPETSc implements CUnwrapper{
+public class CDiskUnwrapperPETSc implements CUnwrapper{
 
 	private int
 		numCones = 0;
 	private boolean
 		quantizeCones = true;
 	
-	public CDiskPETSc(int numCones, boolean quantizeCones) {
+	public CDiskUnwrapperPETSc(int numCones, boolean quantizeCones) {
 		this.numCones = numCones;
 		this.quantizeCones = quantizeCones;
 	}

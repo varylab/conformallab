@@ -11,9 +11,9 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.functional.CEuclideanFuctional;
 import de.varylab.discreteconformal.functional.CEuclideanFuctional.InitialEnergy;
 import de.varylab.discreteconformal.functional.CEuclideanFuctional.U;
-import de.varylab.discreteconformal.math.Adapters.CAlpha;
-import de.varylab.discreteconformal.math.Adapters.CLambda;
-import de.varylab.discreteconformal.math.Adapters.CVariable;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 
 public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 

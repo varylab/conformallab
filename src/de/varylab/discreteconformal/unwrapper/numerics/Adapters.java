@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.math;
+package de.varylab.discreteconformal.unwrapper.numerics;
 
 import de.varylab.discreteconformal.functional.CEuclideanFuctional.Alpha;
 import de.varylab.discreteconformal.functional.CEuclideanFuctional.InitialEnergy;

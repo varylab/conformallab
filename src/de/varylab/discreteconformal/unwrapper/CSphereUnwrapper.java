@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds.unwrap;
+package de.varylab.discreteconformal.unwrapper;
 
 import geom3d.Point;
 
@@ -12,20 +12,20 @@ import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.heds.util.GraphUtility;
 
-public class CSphere implements CUnwrapper{
+public class CSphereUnwrapper implements CUnwrapper{
 
 	private int
 		numCones = 0;
 //	private boolean
 //		quantizeCones = true;
-	private CDisk
+	private CDiskUnwrapper
 		diskUnwrapper = null;
 	
 	
-	public CSphere(int numCones, boolean quantizeCones) {
+	public CSphereUnwrapper(int numCones, boolean quantizeCones) {
 		this.numCones = numCones;
 //		this.quantizeCones = quantizeCones;
-		diskUnwrapper = new CDisk(numCones, quantizeCones);
+		diskUnwrapper = new CDiskUnwrapper(numCones, quantizeCones);
 	}
 	
 

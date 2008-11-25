@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.math;
+package de.varylab.discreteconformal.unwrapper.numerics;
 
 import static de.varylab.jpetsc.Vec.InsertMode.INSERT_VALUES;
 import static de.varylab.jtao.TaoAppAddHess.PreconditionerType.SAME_NONZERO_PATTERN;
@@ -8,11 +8,11 @@ import de.varylab.discreteconformal.functional.CEuclideanFuctional.Hessian;
 import de.varylab.discreteconformal.functional.CEuclideanFuctional.U;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
-import de.varylab.discreteconformal.math.Adapters.CAlpha;
-import de.varylab.discreteconformal.math.Adapters.CInitialEnergy;
-import de.varylab.discreteconformal.math.Adapters.CLambda;
-import de.varylab.discreteconformal.math.Adapters.CTheta;
-import de.varylab.discreteconformal.math.Adapters.CVariable;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.Vec;
 import de.varylab.jtao.TaoAppAddCombinedObjectiveAndGrad;
