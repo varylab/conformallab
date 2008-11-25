@@ -25,7 +25,7 @@ public class CEuclideanFuctional {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> void conformalEnergy(
+	> void conformalEnergyAndGradient(
 		// combinatorics
 			final HalfEdgeDataStructure<V, E, F> hds,
 		// input
@@ -33,7 +33,6 @@ public class CEuclideanFuctional {
 		// output
 			final double[] E, 
 			final Gradient G,
-			final Hessian H,
 		// adapters
 			final Variable<V> var,
 			final Theta<V> theta,
@@ -47,9 +46,6 @@ public class CEuclideanFuctional {
 		}
 		if (G != null) {
 			G.setZero();
-		}
-		if (H != null) {
-			H.setZero();
 		}
 		for (final V v : hds.getVertices()) {
 			if (!var.isVariable(v)) {
@@ -91,37 +87,69 @@ public class CEuclideanFuctional {
 					G.addGradient(v3i, -alpha.getAlpha(e2));
 				}
 			}
-			if (H != null) {
-				final double[] 
-				     cotE = {0, 0, 0},
-				     cotV = {0, 0, 0};
-				triangleHessian(hds, u, t, cotE, cotV, var, lambda);
-				// edge hessian
-				if (var.isVariable(v1) && var.isVariable(v3)) {
-					H.addHessian(v1i, v3i, -cotE[0]);
-					H.addHessian(v3i, v1i, -cotE[0]);
-				}
-				if (var.isVariable(v2) && var.isVariable(v1)) {
-					H.addHessian(v2i, v1i, -cotE[1]);
-					H.addHessian(v1i, v2i, -cotE[1]);
-				}
-				if (var.isVariable(v3) && var.isVariable(v2)) {
-					H.addHessian(v2i, v3i, -cotE[2]);
-					H.addHessian(v3i, v2i, -cotE[2]);
-				}
-				// vertex hessian
-				if (var.isVariable(v1)) {
-					H.addHessian(v1i, v1i, cotV[0]);
-				}
-				if (var.isVariable(v2)) {
-					H.addHessian(v2i, v2i, cotV[1]);
-				}
-				if (var.isVariable(v3)) {
-					H.addHessian(v3i, v3i, cotV[2]);
-				}
+		}
+	}
+	
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> void conformalHessian(
+		// combinatorics
+			final HalfEdgeDataStructure<V, E, F> hds,
+		// input
+			final U<V> u,
+			final Hessian H,
+		// adapters
+			final Variable<V> var,
+			final Lambda<E> lambda
+	) {
+		H.setZero();
+		// Face Energy
+		for (final F t : hds.getFaces()) {
+			final E 
+				e1 = t.getBoundaryEdge(),
+				e2 = e1.getNextEdge(),
+				e3 = e1.getPreviousEdge();
+			final V 
+				v1 = e1.getTargetVertex(),
+				v2 = e2.getTargetVertex(),
+				v3 = e3.getTargetVertex();
+			final int
+				v1i = var.getVarIndex(v1),
+				v2i = var.getVarIndex(v2),
+				v3i = var.getVarIndex(v3);
+			final double[] 
+			     cotE = {0, 0, 0},
+			     cotV = {0, 0, 0};
+			triangleHessian(hds, u, t, cotE, cotV, var, lambda);
+			// edge hessian
+			if (var.isVariable(v1) && var.isVariable(v3)) {
+				H.addHessian(v1i, v3i, -cotE[0]);
+				H.addHessian(v3i, v1i, -cotE[0]);
+			}
+			if (var.isVariable(v2) && var.isVariable(v1)) {
+				H.addHessian(v2i, v1i, -cotE[1]);
+				H.addHessian(v1i, v2i, -cotE[1]);
+			}
+			if (var.isVariable(v3) && var.isVariable(v2)) {
+				H.addHessian(v2i, v3i, -cotE[2]);
+				H.addHessian(v3i, v2i, -cotE[2]);
+			}
+			// vertex hessian
+			if (var.isVariable(v1)) {
+				H.addHessian(v1i, v1i, cotV[0]);
+			}
+			if (var.isVariable(v2)) {
+				H.addHessian(v2i, v2i, cotV[1]);
+			}
+			if (var.isVariable(v3)) {
+				H.addHessian(v3i, v3i, cotV[2]);
 			}
 		}
 	}
+	
 	
 	
 	private static <
@@ -197,7 +225,7 @@ public class CEuclideanFuctional {
 	
 	
 	
-	protected static <
+	private static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>

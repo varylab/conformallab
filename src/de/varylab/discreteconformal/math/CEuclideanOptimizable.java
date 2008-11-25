@@ -112,7 +112,8 @@ public class CEuclideanOptimizable implements Optimizable {
 		MTJU u = new MTJU(x);
 		MTJGradient G = new MTJGradient(gradient);
 		MTJHessian H = new MTJHessian(hessian);
-		CEuclideanFuctional.conformalEnergy(hds, u, E, G, H, variable, theta, lambda, alpha, energy);
+		CEuclideanFuctional.conformalEnergyAndGradient(hds, u, E, G, variable, theta, lambda, alpha, energy);
+		CEuclideanFuctional.conformalHessian(hds, u, H, variable, lambda);
 		return E[0];
 	}
 
@@ -121,7 +122,7 @@ public class CEuclideanOptimizable implements Optimizable {
 		double[] E = new double[1];
 		MTJU u = new MTJU(x);
 		MTJGradient G = new MTJGradient(gradient);
-		CEuclideanFuctional.conformalEnergy(hds, u, E, G, null, variable, theta, lambda, alpha, energy);
+		CEuclideanFuctional.conformalEnergyAndGradient(hds, u, E, G, variable, theta, lambda, alpha, energy);
 		return E[0];
 	}
 
@@ -130,7 +131,7 @@ public class CEuclideanOptimizable implements Optimizable {
 		double[] E = new double[1];
 		MTJU u = new MTJU(x);
 		MTJHessian H = new MTJHessian(hessian);
-		CEuclideanFuctional.conformalEnergy(hds, u, E, null, H, variable, theta, lambda, alpha, energy);
+		CEuclideanFuctional.conformalHessian(hds, u, H, variable, lambda);
 		return E[0];
 	}
 
@@ -138,7 +139,7 @@ public class CEuclideanOptimizable implements Optimizable {
 	public Double evaluate(Vector x) {
 		double[] E = new double[1];
 		MTJU u = new MTJU(x);
-		CEuclideanFuctional.conformalEnergy(hds, u, E, null, null, variable, theta, lambda, alpha, energy);
+		CEuclideanFuctional.conformalEnergyAndGradient(hds, u, E, null, variable, theta, lambda, alpha, energy);
 		return E[0];
 	}
 

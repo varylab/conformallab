@@ -1,8 +1,8 @@
 package de.varylab.discreteconformal.math;
 
-import static de.varylab.discreteconformal.functional.CEuclideanFuctional.conformalEnergy;
 import static de.varylab.jpetsc.Vec.InsertMode.INSERT_VALUES;
 import static de.varylab.jtao.TaoAppAddHess.PreconditionerType.SAME_NONZERO_PATTERN;
+import de.varylab.discreteconformal.functional.CEuclideanFuctional;
 import de.varylab.discreteconformal.functional.CAdapters.Gradient;
 import de.varylab.discreteconformal.functional.CAdapters.Hessian;
 import de.varylab.discreteconformal.functional.CAdapters.U;
@@ -40,7 +40,7 @@ public class CEuclideanApplication extends TaoApplication implements
 		this.hds = hds;
 	}
 
-	private class TaoU implements U<CVertex> {
+	public static class TaoU implements U<CVertex> {
 
 		private Vec
 			u = null;
@@ -68,7 +68,7 @@ public class CEuclideanApplication extends TaoApplication implements
 	}
 	
 	
-	private class TaoGradient implements Gradient {
+	private static class TaoGradient implements Gradient {
 
 		private Vec
 			G = null;
@@ -90,7 +90,7 @@ public class CEuclideanApplication extends TaoApplication implements
 	}
 	
 	
-	private class TaoHessian implements Hessian {
+	private static class TaoHessian implements Hessian {
 		
 		private Mat
 			H = null;
@@ -117,7 +117,7 @@ public class CEuclideanApplication extends TaoApplication implements
 		double[] E = new double[1];
 		TaoU u = new TaoU(x);
 		TaoGradient taoGrad = new TaoGradient(g);
-		conformalEnergy(hds, u, E, taoGrad, null, variable, theta, lambda, alpha, energy);
+		CEuclideanFuctional.conformalEnergyAndGradient(hds, u, E, taoGrad, variable, theta, lambda, alpha, energy);
 		g.assemble();
 		return E[0];
 	}
@@ -126,7 +126,7 @@ public class CEuclideanApplication extends TaoApplication implements
 	public PreconditionerType evaluateHessian(Vec x, Mat H, Mat Hpre) {
 		TaoU u = new TaoU(x);
 		TaoHessian taoHess = new TaoHessian(H);
-		conformalEnergy(hds, u, null, null, taoHess, variable, theta, lambda, alpha, energy);
+		CEuclideanFuctional.conformalHessian(hds, u, taoHess, variable, lambda);
 		H.assemble();
 		return SAME_NONZERO_PATTERN;
 	}

@@ -66,8 +66,7 @@ public class CDiskLayout {
 				
 				CEdge next = e.getNextEdge();
 				Double alpha = next.getAlpha();
-				// TODO: make this work
-				if (next.getLeftFace() == null) { // a boundary edge
+				if (e.getLeftFace() == null) { // a boundary edge
 					alpha = 2*PI - getAngleSum(v);
 				}
 				
@@ -110,9 +109,8 @@ public class CDiskLayout {
 		Double r = 0.0;
 		List<CEdge> star = incomingEdges(v);
 		for (CEdge e : star) {
-			// TODO: make this work
 			if (e.getLeftFace() != null) {
-				r += e.getAlpha();
+				r += e.getPreviousEdge().getAlpha();
 			}
 		}
 		return r;
