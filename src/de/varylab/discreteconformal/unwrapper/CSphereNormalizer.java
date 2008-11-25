@@ -12,11 +12,11 @@ import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
-import de.varylab.discreteconformal.math.optimization.NotConvergentException;
-import de.varylab.discreteconformal.math.optimization.Optimizable;
-import de.varylab.discreteconformal.math.optimization.Optimizer;
-import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer;
-import de.varylab.discreteconformal.math.optimization.stepcontrol.ArmijoStepController;
+import de.varylab.mtjoptimization.NotConvergentException;
+import de.varylab.mtjoptimization.Optimizable;
+import de.varylab.mtjoptimization.Optimizer;
+import de.varylab.mtjoptimization.newton.NewtonOptimizer;
+import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
 public class CSphereNormalizer {
 
@@ -190,6 +190,11 @@ public class CSphereNormalizer {
 		
 		public Integer getDomainDimension() {
 			return 3;
+		}
+
+		@Override
+		public Matrix getHessianTemplate() {
+			return new DenseMatrix(3, 3);
 		}
 		
 		

@@ -23,11 +23,11 @@ import de.jreality.util.Input;
 import de.jtem.halfedge.jreality.ConverterJR2Heds;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
-import de.varylab.discreteconformal.math.optimization.NotConvergentException;
-import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer;
-import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer.Solver;
-import de.varylab.discreteconformal.math.optimization.stepcontrol.ArmijoStepController;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
+import de.varylab.mtjoptimization.NotConvergentException;
+import de.varylab.mtjoptimization.newton.NewtonOptimizer;
+import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
+import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
 /**
  * @author sechel

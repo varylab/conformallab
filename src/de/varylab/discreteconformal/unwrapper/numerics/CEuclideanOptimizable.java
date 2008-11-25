@@ -1,19 +1,21 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
+import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
+import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.jtem.halfedge.functional.Gradient;
 import de.jtem.halfedge.functional.Hessian;
 import de.jtem.halfedge.functional.conformal.CEuclideanFuctional;
 import de.jtem.halfedge.functional.conformal.CAdapters.U;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
-import de.varylab.discreteconformal.math.optimization.Optimizable;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
+import de.varylab.mtjoptimization.Optimizable;
 
 public class CEuclideanOptimizable implements Optimizable {
 
@@ -161,6 +163,12 @@ public class CEuclideanOptimizable implements Optimizable {
 			}
 		}
 		return dim;
+	}
+
+	@Override
+	public Matrix getHessianTemplate() {
+		int dim = getDomainDimension();
+		return new CompRowMatrix(dim, dim, makeNonZeros(hds));
 	}
 
 }

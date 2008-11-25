@@ -13,11 +13,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import de.varylab.discreteconformal.heds.CConesUtility;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
-import de.varylab.discreteconformal.math.optimization.NotConvergentException;
-import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer;
-import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer.Solver;
-import de.varylab.discreteconformal.math.optimization.stepcontrol.ArmijoStepController;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
+import de.varylab.mtjoptimization.NotConvergentException;
+import de.varylab.mtjoptimization.newton.NewtonOptimizer;
+import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
+import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
 public class CDiskUnwrapper implements CUnwrapper{
 
