@@ -24,6 +24,7 @@ import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
 import de.varylab.discreteconformal.heds.util.GraphUtility;
 import de.varylab.discreteconformal.heds.util.Search;
 import de.varylab.discreteconformal.heds.util.Search.WeightAdapter;
+import de.varylab.discreteconformal.math.CEuclideanOptimizable;
 
 public class CConesUtility {
 
@@ -97,12 +98,13 @@ public class CConesUtility {
 	public static Collection<CVertex> setUpMesh(CHDS hds, int cones) {
 		Collection<CVertex> result = new LinkedList<CVertex>();
 		for (int i = 0; i < cones; i++) {
-			int n = hds.getDomainDimension();
+			CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
+			int n = opt.getDomainDimension();
 			Vector u = new DenseVector(n);
 			Vector G = new DenseVector(n);
 			Matrix H = new CompRowMatrix(n, n, makeNonZeros(hds));
 			CG cg = new CG(u);
-			hds.conformalEnergy(u, null, G, H);
+			opt.evaluate(u, G, H);
 			try {
 				cg.solve(H, G, u);
 			} catch (IterativeSolverNotConvergedException e) {
@@ -126,10 +128,10 @@ public class CConesUtility {
 	public static void reorderSolverIndices(CHDS hds) {
 		int i = 0;
 		for (CVertex v : hds.getVertices()) {
-			if (v.getSolverIndex() >= 0)
+			if (v.getSolverIndex() >= 0) {
 				v.setSolverIndex(i++);
+			}
 		}
-		hds.setDomainDimension(i);
 	}
 	
 	
@@ -169,11 +171,12 @@ public class CConesUtility {
 	}
 	
 	
-	public static Collection<CVertex> quantizeCones(CHDS hds, Collection<CVertex> cones, Vector u) {
+	public static Collection<CVertex> quantizeCones(CHDS hds, Collection<CVertex> cones) {
 		List<CVertex> result = new LinkedList<CVertex>(cones);
 		for (CVertex v : cones) {
 			double a = abs(getAngleSum(v) % (2*PI));
 			if (a < PI / 4) {
+				v.setSolverIndex(0); // reinsert cone
 				result.remove(v);
 			} else if (PI / 4 < a && a < PI * 3 / 4) {
 				v.setTheta(PI / 2);

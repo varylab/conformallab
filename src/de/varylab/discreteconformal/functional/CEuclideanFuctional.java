@@ -9,14 +9,6 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
-import de.varylab.discreteconformal.functional.CAdapters.Alpha;
-import de.varylab.discreteconformal.functional.CAdapters.Energy;
-import de.varylab.discreteconformal.functional.CAdapters.Gradient;
-import de.varylab.discreteconformal.functional.CAdapters.Hessian;
-import de.varylab.discreteconformal.functional.CAdapters.Lambda;
-import de.varylab.discreteconformal.functional.CAdapters.Theta;
-import de.varylab.discreteconformal.functional.CAdapters.U;
-import de.varylab.discreteconformal.functional.CAdapters.Variable;
 
 public class CEuclideanFuctional {
 
@@ -38,7 +30,7 @@ public class CEuclideanFuctional {
 			final Theta<V> theta,
 			final Lambda<E> lambda,
 			final Alpha<E> alpha,
-			final Energy<F> energy
+			final InitialEnergy<F> energy
 	) {
 		// Vertex Energy
 		if (E != null) {
@@ -152,7 +144,7 @@ public class CEuclideanFuctional {
 	
 	
 	
-	private static <
+	public static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
@@ -166,7 +158,7 @@ public class CEuclideanFuctional {
 			final Variable<V> var,
 			final Lambda<E> lambda,
 			final Alpha<E> alpha,
-			final Energy<F> energy
+			final InitialEnergy<F> energy
 	) {
 		final E 
 			e1 = f.getBoundaryEdge(),
@@ -215,7 +207,7 @@ public class CEuclideanFuctional {
 		final double 
 			E1 = a1*x23 + a2*x31 + a3*x12,
 			E2 = lob(a1) + lob(a2) + lob(a3),
-			E3 = - PI * umean - energy.getEnergy(f);
+			E3 = - PI * umean - energy.getInitialEnergy(f);
 		alpha.setAlpha(e1, a2);
 		alpha.setAlpha(e2, a3);
 		alpha.setAlpha(e3, a1);
@@ -225,7 +217,7 @@ public class CEuclideanFuctional {
 	
 	
 	
-	private static <
+	public static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
@@ -287,5 +279,47 @@ public class CEuclideanFuctional {
 		cotV[1] = cot3 + cot1;
 		cotV[2] = cot1 + cot2;
 	}
+
+	
+	
+	
+	public static interface U <V extends Vertex<V, ?, ?>> {
+		public double getU(V v);
+		public void setU(V v, double u);
+	}
+	
+	public static interface Variable <V extends Vertex<V, ?, ?>> {
+		public boolean isVariable(V v);
+		public int getVarIndex(V v);
+	}
+	
+	public static interface Alpha <E extends Edge<?, E, ?>> {
+		public double getAlpha(E e);
+		public void setAlpha(E e, double alpha);
+	}
+	
+	public static interface Lambda <E extends Edge<?, E, ?>> {
+		public double getLambda(E e);
+	}
+	
+	public static interface Theta <V extends Vertex<V, ?, ?>> {
+		public double getTheta(V v);
+	}
+	
+	public static interface InitialEnergy <F extends Face<?, ?, F>> {
+		public double getInitialEnergy(F f);
+	}
+	
+	public static interface Gradient {
+		public void addGradient(int i, double value);
+		public void setZero();
+	}
+
+	public static interface Hessian {
+		public void addHessian(int i, int j, double value);
+		public void setZero();
+	}
+	
+	
 	
 }

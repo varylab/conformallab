@@ -1,10 +1,10 @@
 package de.varylab.discreteconformal.math;
 
-import de.varylab.discreteconformal.functional.CAdapters.Alpha;
-import de.varylab.discreteconformal.functional.CAdapters.Energy;
-import de.varylab.discreteconformal.functional.CAdapters.Lambda;
-import de.varylab.discreteconformal.functional.CAdapters.Theta;
-import de.varylab.discreteconformal.functional.CAdapters.Variable;
+import de.varylab.discreteconformal.functional.CEuclideanFuctional.Alpha;
+import de.varylab.discreteconformal.functional.CEuclideanFuctional.InitialEnergy;
+import de.varylab.discreteconformal.functional.CEuclideanFuctional.Lambda;
+import de.varylab.discreteconformal.functional.CEuclideanFuctional.Theta;
+import de.varylab.discreteconformal.functional.CEuclideanFuctional.Variable;
 import de.varylab.discreteconformal.heds.CEdge;
 import de.varylab.discreteconformal.heds.CFace;
 import de.varylab.discreteconformal.heds.CVertex;
@@ -42,9 +42,9 @@ public abstract class Adapters {
 		}
 	}
 	
-	public static class CEnergy implements Energy<CFace> {
-		public double getEnergy(CFace f) {
-			return f.getEnergy();
+	public static class CInitialEnergy implements InitialEnergy<CFace> {
+		public double getInitialEnergy(CFace f) {
+			return f.getInitialEnergy();
 		}
 	}
 	

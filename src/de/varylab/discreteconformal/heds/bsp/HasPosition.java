@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds.decoration;
+package de.varylab.discreteconformal.heds.bsp;
 
 import geom3d.Point;
 

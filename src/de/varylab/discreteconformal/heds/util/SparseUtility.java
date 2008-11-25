@@ -10,8 +10,25 @@ import de.varylab.discreteconformal.heds.CVertex;
 
 public class SparseUtility {
 
+	
+	
+	public static int[] getPETScNonZeros(CHDS hds){
+		int [][] sparseStucture = makeNonZeros(hds);
+		int [] nnz = new int[sparseStucture.length];
+		for(int i = 0; i < nnz.length; i++){
+			nnz[i] = sparseStucture[i].length;
+		}
+		return nnz;
+	}
+	
+	
 	public static int[][] makeNonZeros(CHDS hds) {
-		int n = hds.getDomainDimension();
+		int n = 0;
+		for (CVertex v : hds.getVertices()) {
+			if (v.getSolverIndex() >= 0) {
+				n++;
+			}
+		}
 		int[][] nz = new int[n][];
 		for (CVertex v : hds.getVertices()) {
 			if (v.getSolverIndex() < 0)

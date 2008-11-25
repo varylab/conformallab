@@ -68,7 +68,7 @@ public class CLayoutTest {
 	@Test
 	public void testDoLayout() {
 		System.out.println("CLayoutTest.testDoLayout()");
-		int n = hds.getDomainDimension();
+		int n = hds.prepareInvariantData();
 		Vector u = new SparseVector(n);
 		CDiskLayout.doLayout(hds, u);
 		

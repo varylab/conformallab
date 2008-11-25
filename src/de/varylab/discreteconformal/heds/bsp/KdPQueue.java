@@ -2,7 +2,6 @@ package de.varylab.discreteconformal.heds.bsp;
 
 import java.util.PriorityQueue;
 
-import de.varylab.discreteconformal.heds.decoration.HasPosition;
 
 
 

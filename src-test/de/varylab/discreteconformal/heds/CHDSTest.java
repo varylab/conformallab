@@ -4,11 +4,8 @@
 package de.varylab.discreteconformal.heds;
 
 import static java.lang.Math.PI;
-import geom3d.Point;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import junit.framework.Assert;
 import no.uib.cipr.matrix.DenseVector;
@@ -26,6 +23,7 @@ import de.jreality.util.Input;
 import de.jtem.halfedge.jreality.ConverterJR2Heds;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.math.CEuclideanOptimizable;
 import de.varylab.discreteconformal.math.optimization.NotConvergentException;
 import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer;
 import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer.Solver;
@@ -92,49 +90,32 @@ public class CHDSTest {
 	@Test
 	public void testConformalEnergy() throws Exception {
 		System.out.println("CHDSTest.testConformalEnergy()");
-		int n = hds.getDomainDimension();
+		CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
+		int n = opt.getDomainDimension();
 		DenseVector u = new DenseVector(n);
 		NewtonOptimizer optimizer = new NewtonOptimizer();
 		optimizer.setStepController(new ArmijoStepController());
 		optimizer.setSolver(Solver.CG);
 		optimizer.setError(1E-10);
 		try {
-			optimizer.minimize(u, hds);
+			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
 			e.printStackTrace();
 		}
 
 		
-		Map<CEdge, Double> aMpa = hds.calculateAlphas(u);
 		for (CVertex v : hds.getVertices()) {
-			if (!hds.isVariable(v)) 
+			if (v.getSolverIndex() < 0) {
 				continue;
+			}
 			double aSum = 0.0;
-			for (CEdge e : HalfEdgeUtils.incomingEdges(v))
-				aSum += aMpa.get(e.getPreviousEdge());
+			for (CEdge e : HalfEdgeUtils.incomingEdges(v)) {
+				aSum += e.getPreviousEdge().getAlpha();
+			}
 			Assert.assertEquals(2 * PI, aSum, 1E-8);
 		}
 		
 	}
 
-	@Test
-	public void testTriangleEnergyAndAlphas() throws Exception {
-		System.out.println("CHDSTest.testTriangleEnergyAndAlphas()");
-		CHDS hds = new CHDS();
-		CVertex v0 = hds.addNewVertex();
-		CVertex v1 = hds.addNewVertex();
-		CVertex v2 = hds.addNewVertex();
-		HalfEdgeUtils.constructFaceByVertices(hds, v0, v1, v2);
-		v0.setPosition(new Point(0,0,0));
-		v1.setPosition(new Point(1,0,0));
-		v2.setPosition(new Point(1,1,0));
-		hds.prepareInvariantData();
-		Map<CEdge, Double> aMap = new HashMap<CEdge, Double>();
-		hds.triangleEnergyAndAlphas(null, hds.getFace(0), aMap);
-		for (CEdge e : aMap.keySet()) {
-			System.err.println("Vertex " + e.getNextEdge().getTargetVertex() + ": " + aMap.get(e));
-		}
-	}
-	
 	
 }

@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.heds.CConesUtility;
+import de.varylab.discreteconformal.math.CEuclideanOptimizable;
 import de.varylab.discreteconformal.math.optimization.NotConvergentException;
 import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer;
 import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer.Solver;
@@ -43,7 +44,9 @@ public class CDisk implements CUnwrapper{
 			cones = CConesUtility.setUpMesh(hds, numCones);
 			mon.worked(1);
 		}
-		int n = hds.getDomainDimension();
+		
+		CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
+		int n = opt.getDomainDimension();
 		
 		// optimization
 		mon.subTask("Minimizing");
@@ -54,7 +57,7 @@ public class CDisk implements CUnwrapper{
 		optimizer.setSolver(Solver.CG);
 		optimizer.setError(1E-5);
 		try {
-			optimizer.minimize(u, hds);
+			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
 			mon.setCanceled(true);
 			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
@@ -63,13 +66,13 @@ public class CDisk implements CUnwrapper{
 		
 		if (quantizeCones && numCones > 0) {
 			mon.subTask("Quantizing Cone Singularities");
-			cones = CConesUtility.quantizeCones(hds, cones, u);
-			n = hds.getDomainDimension();
+			cones = CConesUtility.quantizeCones(hds, cones);
+			n = opt.getDomainDimension();
 			u = new DenseVector(n);
 			H = new CompRowMatrix(n,n,makeNonZeros(hds));
 			optimizer.setHessianTemplate(H);
 			try {
-				optimizer.minimize(u, hds);
+				optimizer.minimize(u, opt);
 			} catch (NotConvergentException e) {
 				mon.setCanceled(true);
 				throw new UnwrapException("Cone quantization did not succeed: " + e.getMessage());

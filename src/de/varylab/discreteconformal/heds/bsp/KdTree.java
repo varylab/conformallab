@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Vector;
 
-import de.varylab.discreteconformal.heds.decoration.HasPosition;
 
 /**
  * Simple KdTree class to query neighbourhood information 

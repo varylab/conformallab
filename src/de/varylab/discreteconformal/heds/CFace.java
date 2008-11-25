@@ -17,7 +17,7 @@ public class CFace extends Face<CVertex, CEdge, CFace> {
     private Double
     	curvature = null;
     private double 
-    	energy = 0.0;
+    	initialEnergy = 0.0;
     
     
     public double getCurvature() {
@@ -55,13 +55,11 @@ public class CFace extends Face<CVertex, CEdge, CFace> {
 
 
 
-	public double getEnergy() {
-		return energy;
+	public double getInitialEnergy() {
+		return initialEnergy;
 	}
 
-
-
-	public void setEnergy(double energy) {
-		this.energy = energy;
+	public void setInitialEnergy(double energy) {
+		this.initialEnergy = energy;
 	}
 }

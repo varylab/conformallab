@@ -3,13 +3,13 @@ package de.varylab.discreteconformal.math;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import de.varylab.discreteconformal.functional.CEuclideanFuctional;
-import de.varylab.discreteconformal.functional.CAdapters.Gradient;
-import de.varylab.discreteconformal.functional.CAdapters.Hessian;
-import de.varylab.discreteconformal.functional.CAdapters.U;
+import de.varylab.discreteconformal.functional.CEuclideanFuctional.Gradient;
+import de.varylab.discreteconformal.functional.CEuclideanFuctional.Hessian;
+import de.varylab.discreteconformal.functional.CEuclideanFuctional.U;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.math.Adapters.CAlpha;
-import de.varylab.discreteconformal.math.Adapters.CEnergy;
+import de.varylab.discreteconformal.math.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.math.Adapters.CLambda;
 import de.varylab.discreteconformal.math.Adapters.CTheta;
 import de.varylab.discreteconformal.math.Adapters.CVariable;
@@ -25,8 +25,8 @@ public class CEuclideanOptimizable implements Optimizable {
 		variable = new CVariable();
 	private CLambda
 		lambda = new CLambda();
-	private CEnergy
-		energy = new CEnergy();
+	private CInitialEnergy
+		energy = new CInitialEnergy();
 	private CAlpha
 		alpha = new CAlpha();
 
@@ -143,9 +143,14 @@ public class CEuclideanOptimizable implements Optimizable {
 		return E[0];
 	}
 
-	@Override
 	public Integer getDomainDimension() {
-		return hds.getDomainDimension();
+		int dim = 0;
+		for (CVertex v : hds.getVertices()) {
+			if (v.getSolverIndex() >= 0) {
+				dim++;
+			}
+		}
+		return dim;
 	}
 
 }

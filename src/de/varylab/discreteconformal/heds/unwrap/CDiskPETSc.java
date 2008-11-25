@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.heds.unwrap;
 
-import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
+import static de.varylab.discreteconformal.heds.util.SparseUtility.getPETScNonZeros;
 
 import java.util.Collection;
 
@@ -20,7 +20,6 @@ import de.varylab.jtao.Tao.GetSolutionStatusResult;
 
 public class CDiskPETSc implements CUnwrapper{
 
-	
 	private int
 		numCones = 0;
 	private boolean
@@ -31,18 +30,6 @@ public class CDiskPETSc implements CUnwrapper{
 		this.quantizeCones = quantizeCones;
 	}
 	
-	
-	public int[] getPETScNonZeros(CHDS hds){
-		int n = hds.getDomainDimension();
-		int [] nnz = new int[n];
-		{
-			int [][] sparseStucture = makeNonZeros(hds);
-			for(int i = 0; i < n; i++){
-				nnz[i] = sparseStucture[i].length;
-			}
-		}
-		return nnz;
-	}
 	
 	public void unwrap(CHDS hds, IProgressMonitor mon) throws UnwrapException {
 		mon.beginTask("Unwrapping", 2 + (quantizeCones ? 2 : 0));
@@ -56,31 +43,27 @@ public class CDiskPETSc implements CUnwrapper{
 			mon.worked(1);
 		}
 
-		int n = hds.getDomainDimension();
-		
 		// optimization
 		mon.subTask("Minimizing");
 		Vec u;
 		Mat H;
 		Tao optimizer;
 		Tao.Initialize();
-//		PETScCHDSEvaluator app = new PETScCHDSEvaluator(hds);
 		CEuclideanApplication app = new CEuclideanApplication(hds);
+		int n = app.getDomainDimension();
 		
 		u = new Vec(n);
 		H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(hds));
-		H.assemblyBegin(Mat.AssemblyType.FINAL_ASSEMBLY);
-		H.assemblyEnd(Mat.AssemblyType.FINAL_ASSEMBLY);
-
-
-		optimizer = new Tao(Tao.Method.NLS);
+		H.assemble();
+		
 		app.setInitialSolutionVec(u);
-		app.setHessianMat(H, H);			
+		app.setHessianMat(H, H);	
+		
+		optimizer = new Tao(Tao.Method.NLS);
 		optimizer.setApplication(app);
-//		TODO: optimizer.setStepController(new ArmijoStepController());
-//		optimizer.setTolerances(1E-5, 1E-5, 0, 0);
 		optimizer.setGradientTolerances(1E-5, 0, 0);
 		optimizer.solve();
+		
 		GetSolutionStatusResult status = optimizer.getSolutionStatus();
 		System.out.println("Minimization: " + status);
 		if (status.reason.cvalue() < 0) {
@@ -89,25 +72,26 @@ public class CDiskPETSc implements CUnwrapper{
 		}
 		mon.worked(1);
 
-		double [] uValues; 
-		
 		if (quantizeCones && numCones > 0) {
-			CEuclideanApplication app2 = new CEuclideanApplication(hds);
 			mon.subTask("Quantizing Cone Singularities");
-			uValues = u.getArray();
-			cones = CConesUtility.quantizeCones(hds, cones, new DenseVector(uValues));
-			u.restoreArray();
-			n = hds.getDomainDimension();
+			// calculating cones
+			cones = CConesUtility.quantizeCones(hds, cones);
+			
+			// optimizing conformal structure
+			CEuclideanApplication app2 = new CEuclideanApplication(hds);
+			n = app2.getDomainDimension();
+
 			u = new Vec(n);
-			u.assemblyBegin();
-			u.assemblyEnd();
-			app2.setInitialSolutionVec(u);
 			H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(hds));
-			H.assemblyBegin(Mat.AssemblyType.FINAL_ASSEMBLY);
-			H.assemblyEnd(Mat.AssemblyType.FINAL_ASSEMBLY);
+			H.assemble();
+			
+			app2.setInitialSolutionVec(u);
 			app2.setHessianMat(H, H);
+			
 			optimizer.setApplication(app2);
+			optimizer.setGradientTolerances(1E-5, 0, 0);
 			optimizer.solve();
+			
 			status = optimizer.getSolutionStatus();
 			System.out.println("Cone Quantization: " + status);
 			if (status.reason.cvalue() < 0) {
@@ -119,7 +103,7 @@ public class CDiskPETSc implements CUnwrapper{
 		
 		// layout
 		mon.subTask("Layout");
-		uValues = u.getArray();
+		double [] uValues = u.getArray();
 		if (numCones > 0) {
 			CConesUtility.cutMesh(hds, cones, new DenseVector(uValues));
 		}

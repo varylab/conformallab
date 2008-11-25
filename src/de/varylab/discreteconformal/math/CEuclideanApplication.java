@@ -3,13 +3,13 @@ package de.varylab.discreteconformal.math;
 import static de.varylab.jpetsc.Vec.InsertMode.INSERT_VALUES;
 import static de.varylab.jtao.TaoAppAddHess.PreconditionerType.SAME_NONZERO_PATTERN;
 import de.varylab.discreteconformal.functional.CEuclideanFuctional;
-import de.varylab.discreteconformal.functional.CAdapters.Gradient;
-import de.varylab.discreteconformal.functional.CAdapters.Hessian;
-import de.varylab.discreteconformal.functional.CAdapters.U;
+import de.varylab.discreteconformal.functional.CEuclideanFuctional.Gradient;
+import de.varylab.discreteconformal.functional.CEuclideanFuctional.Hessian;
+import de.varylab.discreteconformal.functional.CEuclideanFuctional.U;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.math.Adapters.CAlpha;
-import de.varylab.discreteconformal.math.Adapters.CEnergy;
+import de.varylab.discreteconformal.math.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.math.Adapters.CLambda;
 import de.varylab.discreteconformal.math.Adapters.CTheta;
 import de.varylab.discreteconformal.math.Adapters.CVariable;
@@ -30,8 +30,8 @@ public class CEuclideanApplication extends TaoApplication implements
 		variable = new CVariable();
 	private CLambda
 		lambda = new CLambda();
-	private CEnergy
-		energy = new CEnergy();
+	private CInitialEnergy
+		energy = new CInitialEnergy();
 	private CAlpha
 		alpha = new CAlpha();
 		
@@ -39,6 +39,7 @@ public class CEuclideanApplication extends TaoApplication implements
 	public CEuclideanApplication(CHDS hds) {
 		this.hds = hds;
 	}
+
 
 	public static class TaoU implements U<CVertex> {
 
@@ -131,4 +132,16 @@ public class CEuclideanApplication extends TaoApplication implements
 		return SAME_NONZERO_PATTERN;
 	}
 
+	
+	public int getDomainDimension() {
+		int dim = 0;
+		for (CVertex v : hds.getVertices()) {
+			if (v.getSolverIndex() >= 0) {
+				dim++;
+			}
+		}
+		return dim;
+	}
+	
+	
 }

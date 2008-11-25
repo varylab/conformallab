@@ -4,11 +4,9 @@ import static java.lang.Math.PI;
 import geom3d.Point;
 import geom3d.Vector;
 import de.jtem.halfedge.Vertex;
-import de.varylab.discreteconformal.heds.decoration.HasNormal;
-import de.varylab.discreteconformal.heds.decoration.HasPosition;
-import de.varylab.discreteconformal.heds.decoration.HasTextureCoord;
+import de.varylab.discreteconformal.heds.bsp.HasPosition;
 
-public class CVertex extends Vertex<CVertex, CEdge, CFace> implements HasPosition, HasNormal, HasTextureCoord {
+public class CVertex extends Vertex<CVertex, CEdge, CFace> implements HasPosition {
 
 	private Point
 	    P = new Point(),

@@ -9,7 +9,6 @@ import java.util.Vector;
 import de.varylab.discreteconformal.heds.CEdge;
 import de.varylab.discreteconformal.heds.CFace;
 import de.varylab.discreteconformal.heds.CVertex;
-import de.varylab.discreteconformal.heds.decoration.HasPosition;
 
 public final class KdUtility {
 
