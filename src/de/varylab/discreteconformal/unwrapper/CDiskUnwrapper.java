@@ -10,9 +10,9 @@ import no.uib.cipr.matrix.sparse.CompRowMatrix;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
+import de.varylab.discreteconformal.heds.CConesUtility;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
-import de.varylab.discreteconformal.heds.CConesUtility;
 import de.varylab.discreteconformal.math.optimization.NotConvergentException;
 import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer;
 import de.varylab.discreteconformal.math.optimization.newton.NewtonOptimizer.Solver;

@@ -2,10 +2,6 @@ package de.varylab.discreteconformal.unwrapper.numerics;
 
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
-import de.varylab.discreteconformal.functional.CEuclideanFuctional;
-import de.varylab.discreteconformal.functional.CEuclideanFuctional.Gradient;
-import de.varylab.discreteconformal.functional.CEuclideanFuctional.Hessian;
-import de.varylab.discreteconformal.functional.CEuclideanFuctional.U;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.math.optimization.Optimizable;
@@ -14,6 +10,10 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
+import de.varylab.functional.conformal.CEuclideanFuctional;
+import de.varylab.functional.conformal.CEuclideanFuctional.Gradient;
+import de.varylab.functional.conformal.CEuclideanFuctional.Hessian;
+import de.varylab.functional.conformal.CEuclideanFuctional.U;
 
 public class CEuclideanOptimizable implements Optimizable {
 

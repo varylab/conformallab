@@ -27,8 +27,8 @@ import de.varylab.discreteconformal.frontend.action.ExportU3DAction;
 import de.varylab.discreteconformal.frontend.action.OpenMeshAction;
 import de.varylab.discreteconformal.frontend.action.QuitProgramAction;
 import de.varylab.discreteconformal.frontend.shrinkpanels.AppearanceShrinker;
-import de.varylab.discreteconformal.frontend.shrinkpanels.UnwrapShrinker;
 import de.varylab.discreteconformal.frontend.shrinkpanels.TextureShrinker;
+import de.varylab.discreteconformal.frontend.shrinkpanels.UnwrapShrinker;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
 import de.varylab.discreteconformal.image.ImageHook;
 
