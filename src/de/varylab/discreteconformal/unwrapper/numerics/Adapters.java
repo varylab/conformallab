@@ -1,13 +1,13 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
+import de.jtem.halfedge.functional.conformal.CAdapters.Alpha;
+import de.jtem.halfedge.functional.conformal.CAdapters.InitialEnergy;
+import de.jtem.halfedge.functional.conformal.CAdapters.Lambda;
+import de.jtem.halfedge.functional.conformal.CAdapters.Theta;
+import de.jtem.halfedge.functional.conformal.CAdapters.Variable;
 import de.varylab.discreteconformal.heds.CEdge;
 import de.varylab.discreteconformal.heds.CFace;
 import de.varylab.discreteconformal.heds.CVertex;
-import de.varylab.functional.conformal.CEuclideanFuctional.Alpha;
-import de.varylab.functional.conformal.CEuclideanFuctional.InitialEnergy;
-import de.varylab.functional.conformal.CEuclideanFuctional.Lambda;
-import de.varylab.functional.conformal.CEuclideanFuctional.Theta;
-import de.varylab.functional.conformal.CEuclideanFuctional.Variable;
 
 public abstract class Adapters {
 

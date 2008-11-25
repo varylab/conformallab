@@ -7,13 +7,13 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import de.jtem.halfedge.HalfEdgeDataStructure;
+import de.jtem.halfedge.functional.conformal.CEuclideanFuctional;
+import de.jtem.halfedge.functional.conformal.CAdapters.InitialEnergy;
+import de.jtem.halfedge.functional.conformal.CAdapters.U;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
-import de.varylab.functional.conformal.CEuclideanFuctional;
-import de.varylab.functional.conformal.CEuclideanFuctional.InitialEnergy;
-import de.varylab.functional.conformal.CEuclideanFuctional.U;
 
 public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 

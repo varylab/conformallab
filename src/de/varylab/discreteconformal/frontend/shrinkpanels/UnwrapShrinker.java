@@ -16,13 +16,13 @@ import javax.swing.SwingUtilities;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
-import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
@@ -47,11 +47,14 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 		numConesSpinner = null;
 	private Button
 		quantizeChecker = null;
+	private Combo
+		numericsCombo = null;
 	
 	private int
 		numCones = 0; 
 	private boolean
-		quantizeCones = true;
+		quantizeCones = true,
+		usePetsc = false;
 	
 	
 	public UnwrapShrinker(ShrinkPanelContainer parent) {
@@ -60,6 +63,7 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 		computeEnergyBtn.addSelectionListener(this);
 		numConesSpinner.addSelectionListener(this);
 		quantizeChecker.addSelectionListener(this);
+		numericsCombo.addSelectionListener(this);
 	}
 
 	
@@ -69,7 +73,7 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 		coneConfigGroup = new Group(this, SHADOW_ETCHED_IN);
 		coneConfigGroup.setText("Cone Singularities");
 		coneConfigGroup.setLayout(new GridLayout(2, true));
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(coneConfigGroup);
+		fillDefaults().grab(true, false).applyTo(coneConfigGroup);
 		
 		Label numConesLabel = new Label(coneConfigGroup, NONE);
 		numConesLabel.setText("Cones");
@@ -83,9 +87,14 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 		quantizeChecker.setSelection(true);
 		fillDefaults().span(2,1).grab(true, false).applyTo(quantizeChecker);
 		
+		numericsCombo = new Combo(this, SWT.NONE);
+		numericsCombo.setItems(new String[] {"Java/MTJ Numerics", "Petsc/Tao Numerics"});
+		numericsCombo.select(0);
+		fillDefaults().grab(true, false).applyTo(numericsCombo);
+		
 		computeEnergyBtn = new Button(this, SWT.PUSH);
 		computeEnergyBtn.setText("Unwrap");
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(computeEnergyBtn);
+		fillDefaults().grab(true, false).applyTo(computeEnergyBtn);
 	}
 
 
@@ -112,6 +121,9 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 		if (quantizeChecker == s) {
 			quantizeCones = quantizeChecker.getSelection();
 		}
+		if (numericsCombo == s) {
+			usePetsc = numericsCombo.getSelectionIndex() != 0;
+		}
 	}
 	
 	
@@ -126,11 +138,11 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 			CUnwrapper unwrapper = null;
 			switch (X) {
 				case 1:
-					boolean petsc = true;
-					if(petsc)
+					if(usePetsc) {
 						unwrapper = new CDiskUnwrapperPETSc(numCones, quantizeCones);
-					else
+					} else {
 						unwrapper = new CDiskUnwrapper(numCones, quantizeCones);
+					}
 					break;
 				case 2:
 					unwrapper = new CSphereUnwrapper(numCones, quantizeCones);

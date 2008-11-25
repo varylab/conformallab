@@ -2,6 +2,10 @@ package de.varylab.discreteconformal.unwrapper.numerics;
 
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
+import de.jtem.halfedge.functional.Gradient;
+import de.jtem.halfedge.functional.Hessian;
+import de.jtem.halfedge.functional.conformal.CEuclideanFuctional;
+import de.jtem.halfedge.functional.conformal.CAdapters.U;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.math.optimization.Optimizable;
@@ -10,10 +14,6 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
-import de.varylab.functional.conformal.CEuclideanFuctional;
-import de.varylab.functional.conformal.CEuclideanFuctional.Gradient;
-import de.varylab.functional.conformal.CEuclideanFuctional.Hessian;
-import de.varylab.functional.conformal.CEuclideanFuctional.U;
 
 public class CEuclideanOptimizable implements Optimizable {
 
@@ -72,10 +72,15 @@ public class CEuclideanOptimizable implements Optimizable {
 		}
 		
 		@Override
-		public void addGradient(int i, double value) {
+		public void add(int i, double value) {
 			G.add(i, value);
 		}
 
+		@Override
+		public void set(int i, double value) {
+			G.set(i, value);
+		}
+		
 		@Override
 		public void setZero() {
 			G.zero();
@@ -94,10 +99,15 @@ public class CEuclideanOptimizable implements Optimizable {
 		}
 
 		@Override
-		public void addHessian(int i, int j, double value) {
+		public void add(int i, int j, double value) {
 			H.add(i, j, value);
 		}
 
+		@Override
+		public void set(int i, int j, double value) {
+			H.set(i, j, value);
+		}
+		
 		@Override
 		public void setZero() {
 			H.zero();

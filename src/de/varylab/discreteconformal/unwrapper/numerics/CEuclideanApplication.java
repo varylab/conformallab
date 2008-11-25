@@ -2,6 +2,10 @@ package de.varylab.discreteconformal.unwrapper.numerics;
 
 import static de.varylab.jpetsc.Vec.InsertMode.INSERT_VALUES;
 import static de.varylab.jtao.TaoAppAddHess.PreconditionerType.SAME_NONZERO_PATTERN;
+import de.jtem.halfedge.functional.Gradient;
+import de.jtem.halfedge.functional.Hessian;
+import de.jtem.halfedge.functional.conformal.CEuclideanFuctional;
+import de.jtem.halfedge.functional.conformal.CAdapters.U;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
@@ -9,12 +13,9 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
-import de.varylab.functional.conformal.CEuclideanFuctional;
-import de.varylab.functional.conformal.CEuclideanFuctional.Gradient;
-import de.varylab.functional.conformal.CEuclideanFuctional.Hessian;
-import de.varylab.functional.conformal.CEuclideanFuctional.U;
 import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.Vec;
+import de.varylab.jpetsc.Mat.InsertMode;
 import de.varylab.jtao.TaoAppAddCombinedObjectiveAndGrad;
 import de.varylab.jtao.TaoAppAddHess;
 import de.varylab.jtao.TaoApplication;
@@ -79,10 +80,15 @@ public class CEuclideanApplication extends TaoApplication implements
 		}
 		
 		@Override
-		public void addGradient(int i, double value) {
+		public void add(int i, double value) {
 			G.add(i, value);
 		}
 
+		@Override
+		public void set(int i, double value) {
+			G.setValue(i, value, INSERT_VALUES);
+		}
+		
 		@Override
 		public void setZero() {
 			G.zeroEntries();
@@ -101,13 +107,18 @@ public class CEuclideanApplication extends TaoApplication implements
 		}
 
 		@Override
-		public void addHessian(int i, int j, double value) {
+		public void add(int i, int j, double value) {
 			H.add(i, j, value);
 		}
 
 		@Override
 		public void setZero() {
 			H.zeroEntries();
+		}
+
+		@Override
+		public void set(int i, int j, double value) {
+			H.setValue(i, j, value, InsertMode.INSERT_VALUES);
 		}
 		
 	}
