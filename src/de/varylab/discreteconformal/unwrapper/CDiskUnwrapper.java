@@ -35,7 +35,7 @@ public class CDiskUnwrapper implements CUnwrapper{
 	
 	public void unwrap(CHDS hds, IProgressMonitor mon) throws UnwrapException {
 		mon.beginTask("Unwrapping", 2 + (quantizeCones ? 2 : 0));
-		hds.prepareInvariantData();
+		hds.prepareInvariantDataEuclidean();
 		
 		// cones
 		Collection<CVertex> cones = null;

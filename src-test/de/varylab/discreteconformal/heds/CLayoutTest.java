@@ -47,7 +47,7 @@ public class CLayoutTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		hds.prepareInvariantData();
+		hds.prepareInvariantDataEuclidean();
 	}
 
 	@AfterClass
@@ -68,7 +68,7 @@ public class CLayoutTest {
 	@Test
 	public void testDoLayout() {
 		System.out.println("CLayoutTest.testDoLayout()");
-		int n = hds.prepareInvariantData();
+		int n = hds.prepareInvariantDataEuclidean();
 		Vector u = new SparseVector(n);
 		CDiskLayout.doLayout(hds, u);
 		

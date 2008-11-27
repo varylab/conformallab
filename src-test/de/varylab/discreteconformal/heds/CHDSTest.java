@@ -57,7 +57,7 @@ public class CHDSTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		hds.prepareInvariantData();
+		hds.prepareInvariantDataEuclidean();
 	}
 
 	/**
