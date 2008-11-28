@@ -6,6 +6,8 @@ import de.jtem.halfedge.functional.Gradient;
 import de.jtem.halfedge.functional.Hessian;
 import de.jtem.halfedge.functional.conformal.CHyperbolicFunctional;
 import de.jtem.halfedge.functional.conformal.CAdapters.U;
+import de.varylab.discreteconformal.heds.CEdge;
+import de.varylab.discreteconformal.heds.CFace;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
@@ -13,6 +15,7 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.ConformalEnergy;
 import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.Vec;
 import de.varylab.jpetsc.Mat.InsertMode;
@@ -35,6 +38,8 @@ public class CHyperbolicApplication extends TaoApplication implements
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
+	private CHyperbolicFunctional<CVertex, CEdge, CFace> 
+		functional = new CHyperbolicFunctional<CVertex, CEdge, CFace>(variable, theta, lambda, alpha, energy);
 		
 
 	public CHyperbolicApplication(CHDS hds) {
@@ -123,35 +128,29 @@ public class CHyperbolicApplication extends TaoApplication implements
 		
 	}
 	
-
+	
 	@Override
 	public double evaluateObjectiveAndGradient(Vec x, Vec g) {
-		double[] E = new double[1];
 		TaoU u = new TaoU(x);
-		TaoGradient taoGrad = new TaoGradient(g);
-		CHyperbolicFunctional.conformalEnergyAndGradient(hds, u, E, taoGrad, variable, theta, lambda, alpha, energy);
+		ConformalEnergy E = new ConformalEnergy();
+		TaoGradient G = new TaoGradient(g);
+		functional.evaluate(hds, u, E, G, null);
 		g.assemble();
-		return E[0];
+		return E.get();
 	}
 
 	@Override
 	public PreconditionerType evaluateHessian(Vec x, Mat H, Mat Hpre) {
 		TaoU u = new TaoU(x);
 		TaoHessian taoHess = new TaoHessian(H);
-		CHyperbolicFunctional.conformalHessian(hds, u, taoHess, variable, lambda, energy, alpha);
+		functional.evaluate(hds, u, null, null, taoHess);
 		H.assemble();
 		return SAME_NONZERO_PATTERN;
 	}
 
 	
 	public int getDomainDimension() {
-		int dim = 0;
-		for (CVertex v : hds.getVertices()) {
-			if (v.getSolverIndex() >= 0) {
-				dim++;
-			}
-		}
-		return dim;
+		return functional.getDimension(hds);
 	}
 	
 	

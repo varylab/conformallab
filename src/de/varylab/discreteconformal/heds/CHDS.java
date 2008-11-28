@@ -7,14 +7,17 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import de.jtem.halfedge.HalfEdgeDataStructure;
-import de.jtem.halfedge.functional.conformal.CEuclideanFuctional;
+import de.jtem.halfedge.functional.MyEnergy;
+import de.jtem.halfedge.functional.conformal.CEuclideanFunctional;
 import de.jtem.halfedge.functional.conformal.CHyperbolicFunctional;
 import de.jtem.halfedge.functional.conformal.CAdapters.InitialEnergy;
 import de.jtem.halfedge.functional.conformal.CAdapters.U;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.ConformalEnergy;
 
 public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 
@@ -76,10 +79,14 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 		CVariable var = new CVariable();
 		CLambda lambda = new CLambda();
 		CAlpha alpha = new CAlpha();
+		CTheta theta = new CTheta();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
+		MyEnergy E = new MyEnergy();
+		CEuclideanFunctional<CVertex, CEdge, CFace> func = new CEuclideanFunctional<CVertex, CEdge, CFace>(var, theta, lambda, alpha, zeroEnergy);
 		for (final CFace f : getFaces()) {
-			double E = CEuclideanFuctional.triangleEnergyAndAlphas(this, zeroU, f, var, lambda, alpha, zeroEnergy);
-			f.setInitialEnergy(E);
+			E.setZero();
+			func.triangleEnergyAndAlphas(this, zeroU, f, E);
+			f.setInitialEnergy(E.get());
 		}
 		return dim;
 	}
@@ -111,11 +118,15 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 		ZeroU zeroU = new ZeroU();
 		CVariable var = new CVariable();
 		CLambda lambda = new CLambda();
+		CTheta theta = new CTheta();
+		CAlpha alpha = new CAlpha();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
+		ConformalEnergy E = new ConformalEnergy();
+		CHyperbolicFunctional<CVertex, CEdge, CFace> func = new CHyperbolicFunctional<CVertex, CEdge, CFace>(var, theta, lambda, alpha, zeroEnergy);
 		for (final CFace f : getFaces()) {
-			double[] E = {0}; 
-			CHyperbolicFunctional.triangleEnergyAndAlphas(zeroU, f, E, var, lambda, null, zeroEnergy);
-			f.setInitialEnergy(E[0]);
+			E.setZero();
+			func.triangleEnergyAndAlphas(zeroU, f, E);
+			f.setInitialEnergy(E.get());
 		}
 		return dim;
 	}

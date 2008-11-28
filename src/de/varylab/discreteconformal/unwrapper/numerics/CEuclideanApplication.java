@@ -4,8 +4,10 @@ import static de.varylab.jpetsc.Vec.InsertMode.INSERT_VALUES;
 import static de.varylab.jtao.TaoAppAddHess.PreconditionerType.SAME_NONZERO_PATTERN;
 import de.jtem.halfedge.functional.Gradient;
 import de.jtem.halfedge.functional.Hessian;
-import de.jtem.halfedge.functional.conformal.CEuclideanFuctional;
+import de.jtem.halfedge.functional.conformal.CEuclideanFunctional;
 import de.jtem.halfedge.functional.conformal.CAdapters.U;
+import de.varylab.discreteconformal.heds.CEdge;
+import de.varylab.discreteconformal.heds.CFace;
 import de.varylab.discreteconformal.heds.CHDS;
 import de.varylab.discreteconformal.heds.CVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
@@ -13,6 +15,7 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.ConformalEnergy;
 import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.Vec;
 import de.varylab.jpetsc.Mat.InsertMode;
@@ -35,6 +38,8 @@ public class CEuclideanApplication extends TaoApplication implements
 		energy = new CInitialEnergy();
 	private CAlpha
 		alpha = new CAlpha();
+	private CEuclideanFunctional<CVertex, CEdge, CFace>
+		functional = new CEuclideanFunctional<CVertex, CEdge, CFace>(variable, theta, lambda, alpha, energy);
 		
 
 	public CEuclideanApplication(CHDS hds) {
@@ -126,19 +131,19 @@ public class CEuclideanApplication extends TaoApplication implements
 
 	@Override
 	public double evaluateObjectiveAndGradient(Vec x, Vec g) {
-		double[] E = new double[1];
 		TaoU u = new TaoU(x);
-		TaoGradient taoGrad = new TaoGradient(g);
-		CEuclideanFuctional.conformalEnergyAndGradient(hds, u, E, taoGrad, variable, theta, lambda, alpha, energy);
+		TaoGradient G = new TaoGradient(g);
+		ConformalEnergy E = new ConformalEnergy();
+		functional.evaluate(hds, u, E, G, null);
 		g.assemble();
-		return E[0];
+		return E.get();
 	}
 
 	@Override
 	public PreconditionerType evaluateHessian(Vec x, Mat H, Mat Hpre) {
 		TaoU u = new TaoU(x);
 		TaoHessian taoHess = new TaoHessian(H);
-		CEuclideanFuctional.conformalHessian(hds, u, taoHess, variable, lambda);
+		functional.evaluate(hds, u, null, null, taoHess);
 		H.assemble();
 		return SAME_NONZERO_PATTERN;
 	}

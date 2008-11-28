@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
+import de.jtem.halfedge.functional.Energy;
 import de.jtem.halfedge.functional.conformal.CAdapters.Alpha;
 import de.jtem.halfedge.functional.conformal.CAdapters.InitialEnergy;
 import de.jtem.halfedge.functional.conformal.CAdapters.Lambda;
@@ -46,6 +47,33 @@ public abstract class Adapters {
 		public double getInitialEnergy(CFace f) {
 			return f.getInitialEnergy();
 		}
+	}
+	
+	
+	public static class ConformalEnergy implements Energy {
+
+		public double 
+			E = 0.0;
+		
+		public double get() {
+			return E;
+		}
+		
+		@Override
+		public void add(double E) {
+			this.E += E;
+		}
+
+		@Override
+		public void set(double E) {
+			this.E = E;
+		}
+
+		@Override
+		public void setZero() {
+			E = 0.0;
+		}
+		
 	}
 	
 }
