@@ -7,9 +7,9 @@ import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.varylab.discreteconformal.heds.CEdge;
-import de.varylab.discreteconformal.heds.CHDS;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.util.GraphUtility;
 
 public class CSphereUnwrapper implements CUnwrapper{
@@ -29,15 +29,15 @@ public class CSphereUnwrapper implements CUnwrapper{
 	}
 	
 
-	public void unwrap(CHDS hds, IProgressMonitor mon) throws UnwrapException {
+	public void unwrap(CoHDS hds, IProgressMonitor mon) throws UnwrapException {
 		mon.beginTask("Unwrapping", 3);
 		
 		// punch out vertex 0 and reorder solver indices
-		CVertex v0 = hds.getVertex(0);
-		for (CEdge e : HalfEdgeUtils.incomingEdges(v0)) {
-			Map<CVertex, CVertex> vMap = GraphUtility.cutAtEdge(e);
-			for (CVertex vOld : vMap.keySet()) {
-				CVertex vNew = vMap.get(vOld);
+		CoVertex v0 = hds.getVertex(0);
+		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
+			Map<CoVertex, CoVertex> vMap = GraphUtility.cutAtEdge(e);
+			for (CoVertex vOld : vMap.keySet()) {
+				CoVertex vNew = vMap.get(vOld);
 				vNew.setPosition(vOld.getPosition());
 			}
 			if (numCones != 0) {
@@ -112,8 +112,8 @@ public class CSphereUnwrapper implements CUnwrapper{
 	 * @param graph
 	 * @param scale
 	 */
-	public static void inverseStereographicProjection(CHDS hds, double scale){
-		for (CVertex v : hds.getVertices()){
+	public static void inverseStereographicProjection(CoHDS hds, double scale){
+		for (CoVertex v : hds.getVertices()){
 			double x = v.getTextureCoord().x() / scale;
 			double y = v.getTextureCoord().y() / scale;
 			double nx = 2 * x;
@@ -125,9 +125,9 @@ public class CSphereUnwrapper implements CUnwrapper{
 	}
 	
 	
-	public static Point baryCenter(CHDS hds){
+	public static Point baryCenter(CoHDS hds){
 		Point result = new Point(0,0,0);
-		for (CVertex v : hds.getVertices()){
+		for (CoVertex v : hds.getVertices()){
 			result.add(v.getTextureCoord());
 		}
 		result.times(1.0 / hds.numVertices());
@@ -135,21 +135,21 @@ public class CSphereUnwrapper implements CUnwrapper{
 	}
 	
 	
-	public static double meanRadius(CHDS hds){
+	public static double meanRadius(CoHDS hds){
 		double result = 0;
-		for (CVertex v : hds.getVertices()){
+		for (CoVertex v : hds.getVertices()){
 			result += v.getTextureCoord().getLength();
 		}
 		return result / hds.numVertices();
 	}
 	
-	public static void normalizeBeforeProjection(CHDS hds, double scale){
+	public static void normalizeBeforeProjection(CoHDS hds, double scale){
 		Point offset = baryCenter(hds);
-		for (CVertex v : hds.getVertices()){
+		for (CoVertex v : hds.getVertices()){
 			v.getTextureCoord().subtract(offset);
 		}
 		scale = meanRadius(hds) / scale;
-		for (CVertex v : hds.getVertices()){
+		for (CoVertex v : hds.getVertices()){
 			v.getTextureCoord().times(1 / scale);
 		}
 	

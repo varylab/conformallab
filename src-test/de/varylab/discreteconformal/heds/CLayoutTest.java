@@ -27,7 +27,7 @@ import de.varylab.discreteconformal.unwrapper.CDiskLayout;
 
 public class CLayoutTest {
 
-	private static CHDS 	
+	private static CoHDS 	
 		hds = null;
 	
 	@BeforeClass
@@ -41,8 +41,8 @@ public class CLayoutTest {
 			Input in = new Input("Obj File", CLayoutTest.class.getResourceAsStream("planar01.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
-			ConverterJR2Heds<CVertex, CEdge, CFace> converter = new ConverterJR2Heds<CVertex, CEdge, CFace>(CVertex.class, CEdge.class, CFace.class);
-			hds = new CHDS();
+			ConverterJR2Heds<CoVertex, CoEdge, CoFace> converter = new ConverterJR2Heds<CoVertex, CoEdge, CoFace>(CoVertex.class, CoEdge.class, CoFace.class);
+			hds = new CoHDS();
 			converter.ifs2heds(ifs, hds, new PositionAdapter());
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -72,9 +72,9 @@ public class CLayoutTest {
 		Vector u = new SparseVector(n);
 		CDiskLayout.doLayout(hds, u);
 		
-		for (CEdge e : hds.getPositiveEdges()) {
-			CVertex s = e.getStartVertex();
-			CVertex t = e.getTargetVertex();
+		for (CoEdge e : hds.getPositiveEdges()) {
+			CoVertex s = e.getStartVertex();
+			CoVertex t = e.getTargetVertex();
 			double l1 = s.getPosition().distanceTo(t.getPosition());
 			double l2 = s.getTextureCoord().distanceTo(t.getTextureCoord());
 			Assert.assertEquals(l1, l2, 1E-6);
@@ -83,7 +83,7 @@ public class CLayoutTest {
 
 	public static void main(String[] args) throws Exception{
 		setUpBeforeClass();
-		ConverterHeds2JR<CVertex, CEdge, CFace> converter = new ConverterHeds2JR<CVertex, CEdge, CFace>();
+		ConverterHeds2JR<CoVertex, CoEdge, CoFace> converter = new ConverterHeds2JR<CoVertex, CoEdge, CoFace>();
 		IndexedFaceSet ifs = converter.heds2ifs(hds, new PositionAdapter());
 		String[] vertexLabels = new String[hds.numVertices()];
 		for (int  i = 0; i < hds.numVertices(); i++) {

@@ -2,20 +2,12 @@ package de.varylab.discreteconformal.heds;
 
 import geom3d.Point;
 import geom3d.Vector;
-import de.jtem.halfedge.Edge;
 import de.varylab.discreteconformal.heds.util.MeshUtility;
 
-public class CEdge extends Edge<CVertex, CEdge, CFace> {
-
-
-    private static final long
-        serialVersionUID = 1L;
+public class CoEdge extends de.jtem.halfedge.functional.conformal.node.ConformalEdge<CoVertex, CoEdge, CoFace> {
 
     private Double
     	curvature = null;
-    private double
-    	lambda = 1.0,
-    	alpha = -1.0;
     
     public double getCurvature() {
     	if (curvature == null) {
@@ -23,7 +15,6 @@ public class CEdge extends Edge<CVertex, CEdge, CFace> {
 		}
 		return curvature;
     }
-    
 
     
     public double getLength(){
@@ -38,22 +29,5 @@ public class CEdge extends Edge<CVertex, CEdge, CFace> {
 		return start.vectorTo(target);
     	
     }
-
-
-	public double getLambda() {
-		return lambda;
-	}
-	
-	public void setLambda(double lambda) {
-		this.lambda = lambda;
-	}
-
-	public double getAlpha() {
-		return alpha;
-	}
-
-	public void setAlpha(double alpha) {
-		this.alpha = alpha;
-	}
 	
 }

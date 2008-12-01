@@ -4,16 +4,16 @@ import static de.jtem.halfedge.jreality.adapter.Adapter.AdapterType.VERTEX_ADAPT
 import geom3d.Point;
 import de.jtem.halfedge.jreality.adapter.CoordinateAdapter2Heds;
 import de.jtem.halfedge.jreality.adapter.CoordinateAdapter2Ifs;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.varylab.discreteconformal.heds.CoVertex;
 
-public class PositionAdapter implements CoordinateAdapter2Heds<CVertex>,
-		CoordinateAdapter2Ifs<CVertex> {
+public class PositionAdapter implements CoordinateAdapter2Heds<CoVertex>,
+		CoordinateAdapter2Ifs<CoVertex> {
 
-	public void setCoordinate(CVertex v, double[] coord) {
+	public void setCoordinate(CoVertex v, double[] coord) {
 		v.getPosition().set(coord);
 	}
 
-	public double[] getCoordinate(CVertex v) {
+	public double[] getCoordinate(CoVertex v) {
 		Point p = v.getPosition();
 		return new double[] {p.x(), p.y(), p.z(), 1.0};
 	}

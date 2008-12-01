@@ -2,14 +2,14 @@ package de.varylab.discreteconformal.unwrapper.numerics;
 
 import static de.varylab.jpetsc.Vec.InsertMode.INSERT_VALUES;
 import static de.varylab.jtao.TaoAppAddHess.PreconditionerType.SAME_NONZERO_PATTERN;
+import de.jtem.halfedge.functional.DomainValue;
 import de.jtem.halfedge.functional.Gradient;
 import de.jtem.halfedge.functional.Hessian;
-import de.jtem.halfedge.functional.conformal.CHyperbolicFunctional;
-import de.jtem.halfedge.functional.conformal.CAdapters.U;
-import de.varylab.discreteconformal.heds.CEdge;
-import de.varylab.discreteconformal.heds.CFace;
-import de.varylab.discreteconformal.heds.CHDS;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.jtem.halfedge.functional.conformal.ConformalHyperbolicFunctional;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
@@ -26,7 +26,7 @@ import de.varylab.jtao.TaoApplication;
 public class CHyperbolicApplication extends TaoApplication implements
 		TaoAppAddCombinedObjectiveAndGrad, TaoAppAddHess {
 
-	private CHDS
+	private CoHDS
 		hds = null;
 	private CTheta
 		theta = new CTheta();
@@ -38,16 +38,16 @@ public class CHyperbolicApplication extends TaoApplication implements
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	private CHyperbolicFunctional<CVertex, CEdge, CFace> 
-		functional = new CHyperbolicFunctional<CVertex, CEdge, CFace>(variable, theta, lambda, alpha, energy);
+	private ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace, TaoU> 
+		functional = new ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace, TaoU>(variable, theta, lambda, alpha, energy);
 		
 
-	public CHyperbolicApplication(CHDS hds) {
+	public CHyperbolicApplication(CoHDS hds) {
 		this.hds = hds;
 	}
 
 
-	public static class TaoU implements U<CVertex> {
+	public static class TaoU implements DomainValue {
 
 		private Vec
 			u = null;
@@ -55,21 +55,25 @@ public class CHyperbolicApplication extends TaoApplication implements
 		public TaoU(Vec u) {
 			this.u = u;
 		}
-		
+
 		@Override
-		public double getU(CVertex v) {
-			if (v.getSolverIndex() >= 0) {
-				return u.getValue(v.getSolverIndex());
-			} else {
-				return 0;
-			}
+		public void add(int i, double value) {
+			u.add(i, value);
 		}
 
 		@Override
-		public void setU(CVertex v, double u) {
-			if (v.getSolverIndex() >= 0) {
-				this.u.setValue(v.getSolverIndex(), u, INSERT_VALUES);
-			}
+		public void set(int i, double value) {
+			u.setValue(i, value, INSERT_VALUES);
+		}
+
+		@Override
+		public void setZero() {
+			u.zeroEntries();
+		}
+
+		@Override
+		public double get(int i) {
+			return u.getValue(i);
 		}
 		
 	}

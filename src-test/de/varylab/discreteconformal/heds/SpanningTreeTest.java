@@ -30,7 +30,7 @@ import de.varylab.discreteconformal.heds.util.SpanningTreeUtility;
 
 public class SpanningTreeTest {
 
-	private static CHDS 	
+	private static CoHDS 	
 		hds = null;
 	
 	@BeforeClass
@@ -42,8 +42,8 @@ public class SpanningTreeTest {
 			Input in = new Input("Obj File", CLayoutTest.class.getResourceAsStream("brezel.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
-			ConverterJR2Heds<CVertex, CEdge, CFace> converter = new ConverterJR2Heds<CVertex, CEdge, CFace>(CVertex.class, CEdge.class, CFace.class);
-			hds = new CHDS();
+			ConverterJR2Heds<CoVertex, CoEdge, CoFace> converter = new ConverterJR2Heds<CoVertex, CoEdge, CoFace>(CoVertex.class, CoEdge.class, CoFace.class);
+			hds = new CoHDS();
 			converter.ifs2heds(ifs, hds, new PositionAdapter());
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -51,39 +51,39 @@ public class SpanningTreeTest {
 	}
 	
 	
-	public Set<CEdge> makeSpanningTree(Set<CEdge> edges) throws Exception{
-		CEdge root = edges.iterator().next();
-		Set<CEdge> tree = SpanningTreeUtility.getSpanningTree(edges, root);
+	public Set<CoEdge> makeSpanningTree(Set<CoEdge> edges) throws Exception{
+		CoEdge root = edges.iterator().next();
+		Set<CoEdge> tree = SpanningTreeUtility.getSpanningTree(edges, root);
 		return tree;
 	}
 	
 	
-	public Set<CEdge> makeDualSpanningTree(Set<CEdge> edges) throws Exception{
-		CEdge root = edges.iterator().next();
-		Set<CEdge> tree = SpanningTreeUtility.getDualSpanningTree(edges, root);
+	public Set<CoEdge> makeDualSpanningTree(Set<CoEdge> edges) throws Exception{
+		CoEdge root = edges.iterator().next();
+		Set<CoEdge> tree = SpanningTreeUtility.getDualSpanningTree(edges, root);
 		return tree;
 	}
 
 	
-	private static class EdgeColorAdapter implements ColorAdapter2Ifs<CEdge> {
+	private static class EdgeColorAdapter implements ColorAdapter2Ifs<CoEdge> {
 
 		private double[]
 		    normalColor = {0.0, 0.0, 0.0},
 		    markedColor = {9.0, 0.3, 0.2},
 		    marked2Color = {0.0, 1.0, 0.2},
 		    bothColor = {1.0, 1.0, 0.0};
-		private Set<CEdge>
+		private Set<CoEdge>
 			markedEdges = null,
 			markedEdges2 = null;
 		
 		
-		public EdgeColorAdapter(Set<CEdge> marked, Set<CEdge> marked2) {
+		public EdgeColorAdapter(Set<CoEdge> marked, Set<CoEdge> marked2) {
 			this.markedEdges = marked;
 			this.markedEdges2 = marked2;
 		}
 		
 		@Override
-		public double[] getColor(CEdge edge) {
+		public double[] getColor(CoEdge edge) {
 			if (markedEdges.contains(edge) && markedEdges2.contains(edge)) {
 				return bothColor;
 			} else if (markedEdges.contains(edge)) {
@@ -106,14 +106,14 @@ public class SpanningTreeTest {
 	public static void main(String[] args) throws Exception {
 		SpanningTreeTest.setUpBeforeClass();
 		SpanningTreeTest test = new SpanningTreeTest();
-		Set<CEdge> edges = new HashSet<CEdge>(hds.getEdges());
-		Set<CEdge> tree = test.makeSpanningTree(edges);
+		Set<CoEdge> edges = new HashSet<CoEdge>(hds.getEdges());
+		Set<CoEdge> tree = test.makeSpanningTree(edges);
 		edges.removeAll(tree);
-		Set<CEdge> treeDual = test.makeDualSpanningTree(edges);
+		Set<CoEdge> treeDual = test.makeDualSpanningTree(edges);
 		PositionAdapter positionAdapter = new PositionAdapter();
 		EdgeColorAdapter colorAdapter = new EdgeColorAdapter(tree, treeDual);
 		
-		ConverterHeds2JR<CVertex, CEdge, CFace> converter = new ConverterHeds2JR<CVertex, CEdge, CFace>();
+		ConverterHeds2JR<CoVertex, CoEdge, CoFace> converter = new ConverterHeds2JR<CoVertex, CoEdge, CoFace>();
 		IndexedFaceSet ifs = converter.heds2ifs(hds, colorAdapter, positionAdapter);
 		
 		SceneGraphComponent c = new SceneGraphComponent();

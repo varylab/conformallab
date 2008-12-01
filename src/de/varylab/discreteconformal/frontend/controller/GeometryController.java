@@ -12,32 +12,32 @@ import de.jtem.halfedge.jreality.ConverterJR2Heds;
 import de.jtem.halfedge.jreality.adapter.CoordinateAdapter2Ifs;
 import de.jtem.halfedge.jreality.adapter.TextCoordsAdapter2Ifs;
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.varylab.discreteconformal.heds.CEdge;
-import de.varylab.discreteconformal.heds.CFace;
-import de.varylab.discreteconformal.heds.CHDS;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
 import de.varylab.discreteconformal.heds.bsp.KdTree;
 
 public class GeometryController {
 
-	private CHDS
+	private CoHDS
 		heds = null;
 	private IndexedFaceSet
 		ifs = new IndexedFaceSet();
-	private KdTree<CVertex>
+	private KdTree<CoVertex>
 		kdTree = null;
 	private LinkedList<GeometryChangedListener>
 		changeListener = new LinkedList<GeometryChangedListener>();
-	private CoordinateAdapter2Ifs<CVertex>
+	private CoordinateAdapter2Ifs<CoVertex>
 		coordAdapter = new PositionAdapter();
-	private TextCoordsAdapter2Ifs<CVertex>
+	private TextCoordsAdapter2Ifs<CoVertex>
 		texCoordAdapter = new TexCoordAdapter(true);
 	
 	public static interface GeometryChangedListener{
 		
-		public void geometryChanged(CHDS heds);
+		public void geometryChanged(CoHDS heds);
 		
 	}
 	
@@ -59,7 +59,7 @@ public class GeometryController {
 			l.geometryChanged(getCHDS());
 	}
 	
-	public CHDS getCHDS() {
+	public CoHDS getCHDS() {
 		return heds;
 	}
 	
@@ -67,12 +67,12 @@ public class GeometryController {
 		return ifs;
 	}
 	
-	public KdTree<CVertex> getKdTree() {
+	public KdTree<CoVertex> getKdTree() {
 		return kdTree;
 	}
 
-	public void setGeometry(CHDS heds) {
-		ConverterHeds2JR<CVertex, CEdge, CFace> converter = new ConverterHeds2JR<CVertex, CEdge, CFace>();
+	public void setGeometry(CoHDS heds) {
+		ConverterHeds2JR<CoVertex, CoEdge, CoFace> converter = new ConverterHeds2JR<CoVertex, CoEdge, CoFace>();
 		this.heds = heds;
 		if (heds.isTexCoordinatesValid()) {
 			ifs = converter.heds2ifs(heds, coordAdapter, texCoordAdapter);
@@ -84,8 +84,8 @@ public class GeometryController {
 	}
 	
 	public void setGeometry(IndexedFaceSet ifs) {
-		ConverterJR2Heds<CVertex, CEdge, CFace> converter = new ConverterJR2Heds<CVertex, CEdge, CFace>(CVertex.class, CEdge.class, CFace.class);
-		heds = new CHDS();
+		ConverterJR2Heds<CoVertex, CoEdge, CoFace> converter = new ConverterJR2Heds<CoVertex, CoEdge, CoFace>(CoVertex.class, CoEdge.class, CoFace.class);
+		heds = new CoHDS();
 		
 		converter.ifs2heds(ifs, heds, new PositionAdapter());
 		triangulateQuadMesh(heds);
@@ -100,30 +100,30 @@ public class GeometryController {
 	private void generateKdTree() {
 		if (heds == null)
 			throw new RuntimeException("No Halfedge Datastructure loaded");
-		CVertex[] points = new CVertex[heds.numVertices()];
+		CoVertex[] points = new CoVertex[heds.numVertices()];
 		points = heds.getVertices().toArray(points);
-		kdTree = new KdTree<CVertex>(points, 10, false);
+		kdTree = new KdTree<CoVertex>(points, 10, false);
 	}
 	
 	
-	public static void triangulateQuadMesh(HalfEdgeDataStructure<CVertex, CEdge, CFace> graph) {
-    	LinkedList<CFace> faces = new LinkedList<CFace>(graph.getFaces());
-    	for (CFace f : faces) {
-    		List<CEdge> b = HalfEdgeUtils.boundaryEdges(f);
+	public static void triangulateQuadMesh(HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> graph) {
+    	LinkedList<CoFace> faces = new LinkedList<CoFace>(graph.getFaces());
+    	for (CoFace f : faces) {
+    		List<CoEdge> b = HalfEdgeUtils.boundaryEdges(f);
     		if (b.size() != 4)
     			continue;
-    		CEdge ea = b.get(0);
-    		CEdge eb = b.get(1);
-    		CEdge ec = b.get(2);
-    		CEdge ed = b.get(3);
-    		CVertex va = ea.getTargetVertex();
-    		CVertex vc = ec.getTargetVertex();
-    		CFace f1 = ea.getLeftFace();
-    		CFace fn = null;
+    		CoEdge ea = b.get(0);
+    		CoEdge eb = b.get(1);
+    		CoEdge ec = b.get(2);
+    		CoEdge ed = b.get(3);
+    		CoVertex va = ea.getTargetVertex();
+    		CoVertex vc = ec.getTargetVertex();
+    		CoFace f1 = ea.getLeftFace();
+    		CoFace fn = null;
     		if (f1 != null)
     			fn = graph.addNewFace();
-    		CEdge en1 = graph.addNewEdge();
-    		CEdge en2 = graph.addNewEdge();
+    		CoEdge en1 = graph.addNewEdge();
+    		CoEdge en2 = graph.addNewEdge();
     		
     		ea.linkNextEdge(en1);
     		ec.linkNextEdge(en2);
@@ -147,22 +147,22 @@ public class GeometryController {
     }
 
 
-	public CoordinateAdapter2Ifs<CVertex> getCoordAdapter() {
+	public CoordinateAdapter2Ifs<CoVertex> getCoordAdapter() {
 		return coordAdapter;
 	}
 
 
-	public void setCoordAdapter(CoordinateAdapter2Ifs<CVertex> coordAdapter) {
+	public void setCoordAdapter(CoordinateAdapter2Ifs<CoVertex> coordAdapter) {
 		this.coordAdapter = coordAdapter;
 	}
 
 
-	public TextCoordsAdapter2Ifs<CVertex> getTexCoordAdapter() {
+	public TextCoordsAdapter2Ifs<CoVertex> getTexCoordAdapter() {
 		return texCoordAdapter;
 	}
 
 
-	public void setTexCoordAdapter(TextCoordsAdapter2Ifs<CVertex> texCoordAdapter) {
+	public void setTexCoordAdapter(TextCoordsAdapter2Ifs<CoVertex> texCoordAdapter) {
 		this.texCoordAdapter = texCoordAdapter;
 	}
 

@@ -14,9 +14,9 @@ import java.util.Queue;
 import java.util.Set;
 
 import no.uib.cipr.matrix.Vector;
-import de.varylab.discreteconformal.heds.CEdge;
-import de.varylab.discreteconformal.heds.CHDS;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 
 public class CDiskLayout {
 
@@ -27,16 +27,16 @@ public class CDiskLayout {
 	 * @param u new metric
 	 * @param angleMapParam may be null
 	 */
-	public static void doLayout(CHDS hds, Vector u) {
-		Set<CVertex> visited = new HashSet<CVertex>(hds.numVertices());
-		Queue<CVertex> Qv = new LinkedList<CVertex>();
-		Queue<CEdge> Qe = new LinkedList<CEdge>();
+	public static void doLayout(CoHDS hds, Vector u) {
+		Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
+		Queue<CoVertex> Qv = new LinkedList<CoVertex>();
+		Queue<CoEdge> Qe = new LinkedList<CoEdge>();
 		Queue<Double> Qa = new LinkedList<Double>();
 		// start
-		CEdge e0 = hds.getEdge(0);
-		CEdge e1 = e0.getOppositeEdge();
-		CVertex v1 = e0.getStartVertex();
-		CVertex v2 = e0.getTargetVertex();
+		CoEdge e0 = hds.getEdge(0);
+		CoEdge e1 = e0.getOppositeEdge();
+		CoVertex v1 = e0.getStartVertex();
+		CoVertex v2 = e0.getTargetVertex();
 		// queued data
 		Qv.offer(v1);
 		Qv.offer(v2);
@@ -53,18 +53,18 @@ public class CDiskLayout {
 		visited.add(v2);
 		
 		while (!Qv.isEmpty() && hds.numVertices() > visited.size()) {
-			CVertex v = Qv.poll();
-			CEdge inE = Qe.poll();
+			CoVertex v = Qv.poll();
+			CoEdge inE = Qe.poll();
 			Double a = Qa.poll();
-			CEdge outE = inE.getOppositeEdge();
+			CoEdge outE = inE.getOppositeEdge();
 			Point tp = v.getTextureCoord();
 			
-			CEdge e = inE.getNextEdge();
+			CoEdge e = inE.getNextEdge();
 			Double globalAngle = a + PI;
 			while (e != outE) {
-				CVertex nearVertex = e.getTargetVertex();
+				CoVertex nearVertex = e.getTargetVertex();
 				
-				CEdge next = e.getNextEdge();
+				CoEdge next = e.getNextEdge();
 				Double alpha = next.getAlpha();
 				if (e.getLeftFace() == null) { // a boundary edge
 					alpha = 2*PI - getAngleSum(v);
@@ -87,7 +87,7 @@ public class CDiskLayout {
 		}
 		
 		// projective texture coordinates
-		for (CVertex v : hds.getVertices()) {
+		for (CoVertex v : hds.getVertices()) {
 			double uv = v.getSolverIndex() < 0 ? 0.0 : u.get(v.getSolverIndex());
 			Point t = v.getTextureCoord();
 			double e = exp( -uv );
@@ -105,10 +105,10 @@ public class CDiskLayout {
 	 * @param v
 	 * @return the angle sum
 	 */
-	public static Double getAngleSum(CVertex v) {
+	public static Double getAngleSum(CoVertex v) {
 		Double r = 0.0;
-		List<CEdge> star = incomingEdges(v);
-		for (CEdge e : star) {
+		List<CoEdge> star = incomingEdges(v);
+		for (CoEdge e : star) {
 			if (e.getLeftFace() != null) {
 				r += e.getPreviousEdge().getAlpha();
 			}
@@ -123,9 +123,9 @@ public class CDiskLayout {
 	 * @param u
 	 * @return the new edge length
 	 */
-	public static Double getNewLength(CEdge e, Vector u) {
-		CVertex v1 = e.getStartVertex();
-		CVertex v2 = e.getTargetVertex();
+	public static Double getNewLength(CoEdge e, Vector u) {
+		CoVertex v1 = e.getStartVertex();
+		CoVertex v2 = e.getTargetVertex();
 		Double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
 		Double u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0;
 		Double lambda = e.getLambda();

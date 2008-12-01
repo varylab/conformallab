@@ -33,7 +33,7 @@ import de.varylab.discreteconformal.heds.util.HomologyUtility;
 
 public class HomologyTest {
 
-	private static CHDS 	
+	private static CoHDS 	
 		hds = null;
 	
 	@BeforeClass
@@ -45,8 +45,8 @@ public class HomologyTest {
 			Input in = new Input("Obj File", CLayoutTest.class.getResourceAsStream("brezel.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
-			ConverterJR2Heds<CVertex, CEdge, CFace> converter = new ConverterJR2Heds<CVertex, CEdge, CFace>(CVertex.class, CEdge.class, CFace.class);
-			hds = new CHDS();
+			ConverterJR2Heds<CoVertex, CoEdge, CoFace> converter = new ConverterJR2Heds<CoVertex, CoEdge, CoFace>(CoVertex.class, CoEdge.class, CoFace.class);
+			hds = new CoHDS();
 			converter.ifs2heds(ifs, hds, new PositionAdapter());
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -58,25 +58,25 @@ public class HomologyTest {
 	public void testHomology() throws Exception{
 		System.out.println("HomologyTest.testHomology()");
 		System.out.println(hds);
-		List<Set<CEdge>> paths = HomologyUtility.getGeneratorPaths(hds.getVertex(0));
+		List<Set<CoEdge>> paths = HomologyUtility.getGeneratorPaths(hds.getVertex(0));
 		System.out.println("Found " + paths.size() + " generator paths:");
-		for (Set<CEdge> path : paths) {
+		for (Set<CoEdge> path : paths) {
 			System.out.println("Path: length=" + path.size());
 		}
 	}
 	
 	
-	private static class EdgeColorAdapter implements ColorAdapter2Ifs<CEdge>, RelRadiusAdapter2Ifs<CEdge> {
+	private static class EdgeColorAdapter implements ColorAdapter2Ifs<CoEdge>, RelRadiusAdapter2Ifs<CoEdge> {
 
 		private double[][]
 		    colors = null;
 		private double[]
 		    defaultColor = {0,0,0};
-		private List<Set<CEdge>> 
+		private List<Set<CoEdge>> 
 			paths = null;
 		
 		
-		public EdgeColorAdapter(List<Set<CEdge>> paths) {
+		public EdgeColorAdapter(List<Set<CoEdge>> paths) {
 			this.paths = paths;
 			colors = new double[paths.size()][3];
 			Random rnd = new Random();
@@ -88,8 +88,8 @@ public class HomologyTest {
 		}
 		
 		@Override
-		public double[] getColor(CEdge edge) {
-			for (Set<CEdge> path : paths) {
+		public double[] getColor(CoEdge edge) {
+			for (Set<CoEdge> path : paths) {
 				if (path.contains(edge) || path.contains(edge.getOppositeEdge())) {
 					return colors[paths.indexOf(path)];
 				}
@@ -99,8 +99,8 @@ public class HomologyTest {
 
 
 		@Override
-		public double getReelRadius(CEdge edge) {
-			for (Set<CEdge> path : paths) {
+		public double getReelRadius(CoEdge edge) {
+			for (Set<CoEdge> path : paths) {
 				if (path.contains(edge) || path.contains(edge.getOppositeEdge())) {
 					return 2.0;
 				}
@@ -120,14 +120,14 @@ public class HomologyTest {
 		HomologyTest.setUpBeforeClass();
 		
 		Random rnd = new Random();
-		CVertex root = hds.getVertex(rnd.nextInt(hds.numVertices()));
+		CoVertex root = hds.getVertex(rnd.nextInt(hds.numVertices()));
 		
-		List<Set<CEdge>> paths = HomologyUtility.getGeneratorPaths(root);
+		List<Set<CoEdge>> paths = HomologyUtility.getGeneratorPaths(root);
 		
 		PositionAdapter positionAdapter = new PositionAdapter();
 		EdgeColorAdapter colorAdapter = new EdgeColorAdapter(paths);
 		
-		ConverterHeds2JR<CVertex, CEdge, CFace> converter = new ConverterHeds2JR<CVertex, CEdge, CFace>();
+		ConverterHeds2JR<CoVertex, CoEdge, CoFace> converter = new ConverterHeds2JR<CoVertex, CoEdge, CoFace>();
 		IndexedFaceSet ifs = converter.heds2ifs(hds, colorAdapter, positionAdapter);
 		
 		SceneGraphComponent c = new SceneGraphComponent();

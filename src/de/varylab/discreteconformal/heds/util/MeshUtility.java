@@ -13,10 +13,10 @@ import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.EVD;
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
-import de.varylab.discreteconformal.heds.CEdge;
-import de.varylab.discreteconformal.heds.CFace;
-import de.varylab.discreteconformal.heds.CHDS;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.bsp.KdTree;
 import de.varylab.discreteconformal.heds.bsp.KdUtility;
 import de.varylab.discreteconformal.heds.bsp.KdTree.KdPosition;
@@ -28,7 +28,7 @@ public class MeshUtility {
 	public static double[] getMinMaxCurvatureAt(
 		Point p,
 		double scale,
-		KdTree<CVertex> kd
+		KdTree<CoVertex> kd
 	) {
 		EVD evd = getTensorInformation(p, scale, kd);
 		double[] eigVal= evd.getRealEigenvalues();
@@ -48,13 +48,13 @@ public class MeshUtility {
 	public static EVD getTensorInformation(
 			Point p,
 			double scale,
-			KdTree<CVertex> kd
+			KdTree<CoVertex> kd
 	) {
 		KdPosition position = new KdPosition(p);
-		Collection<CFace> faces = KdUtility.collectFacesInRadius(kd, position, scale);
-		Collection<CEdge> edges = KdUtility.collectEdgesInRadius(kd, position, scale);
+		Collection<CoFace> faces = KdUtility.collectFacesInRadius(kd, position, scale);
+		Collection<CoEdge> edges = KdUtility.collectEdgesInRadius(kd, position, scale);
 		double area=0;
-		for(CFace f :faces){
+		for(CoFace f :faces){
 			area += f.toTriangle().computeArea();
 		}
 		DenseMatrix matrix = new DenseMatrix(3,3);
@@ -62,7 +62,7 @@ public class MeshUtility {
 		double beta = 0;
 		double edgeLength = 0;
 		
-		for(CEdge e : edges){
+		for(CoEdge e : edges){
 			beta = e.getCurvature();
 			edgeLength = e.getLength();
 			
@@ -128,13 +128,13 @@ public class MeshUtility {
 	public static Basis getTensor(
 			Point p,
 			double scale,
-			KdTree<CVertex> kd
+			KdTree<CoVertex> kd
 		 ){
 			KdPosition position = new KdPosition(p);
-			Collection<CFace> faces = KdUtility.collectFacesInRadius(kd, position, scale);
-			Collection<CEdge> edges = KdUtility.collectEdgesInRadius(kd, position, scale);
+			Collection<CoFace> faces = KdUtility.collectFacesInRadius(kd, position, scale);
+			Collection<CoEdge> edges = KdUtility.collectEdgesInRadius(kd, position, scale);
 			double area=0;
-			for(CFace f :faces){
+			for(CoFace f :faces){
 				area += f.toTriangle().computeArea();
 			}
 			DenseMatrix matrix = new DenseMatrix(3,3);
@@ -142,7 +142,7 @@ public class MeshUtility {
 			double beta = 0;
 			double edgeLength = 0;
 			
-			for(CEdge e :edges){
+			for(CoEdge e :edges){
 				beta = e.getCurvature();
 				edgeLength = e.getLength();
 				tmp = getEdgeCurvatureTensor(e);
@@ -155,9 +155,9 @@ public class MeshUtility {
 			return new Basis(c1,c2,c3);
 	}
 	
-	public static double meanEdgeLength(CHDS mesh) {
+	public static double meanEdgeLength(CoHDS mesh) {
 		double result = 0.0;
-		for (CEdge e : mesh.getEdges()) {
+		for (CoEdge e : mesh.getEdges()) {
 			Point s = e.getStartVertex().getPosition();
 			Point t = e.getTargetVertex().getPosition();
 			result += s.distanceTo(t);
@@ -168,20 +168,20 @@ public class MeshUtility {
 	public static double absoluteCurvatureAt(
 			Point p,
 			double scale,
-			KdTree<CVertex> kd
+			KdTree<CoVertex> kd
 	){
 		KdPosition position = new KdPosition(p);
-		Collection<CEdge> edges = KdUtility.collectEdgesInRadius(kd, position, scale);
-		Collection<CFace> faces = incidentFaces(edges);
+		Collection<CoEdge> edges = KdUtility.collectEdgesInRadius(kd, position, scale);
+		Collection<CoFace> faces = incidentFaces(edges);
 		double area=0;
-		for(CFace f :faces)
+		for(CoFace f :faces)
 			area += f.toTriangle().computeArea();
 		DenseMatrix matrix = new DenseMatrix(3,3);
 		DenseMatrix tmp = new DenseMatrix(3,3);
 		double beta = 0;
 		double edgeLength = 0;
 		
-		for(CEdge e :edges){
+		for(CoEdge e :edges){
 			beta = e.getCurvature();
 			edgeLength = e.getLength();
 			tmp = getEdgeCurvatureTensor(e);
@@ -198,7 +198,7 @@ public class MeshUtility {
 		return (abs(c1.getLength())+abs(c2.getLength()))/2.0;
 	}
 
-	private static DenseMatrix getEdgeCurvatureTensor(CEdge e) {
+	private static DenseMatrix getEdgeCurvatureTensor(CoEdge e) {
 		Vector edge = e.getVector();
 		edge.normalize();
 		DenseMatrix  result = new DenseMatrix(3,3);
@@ -210,19 +210,19 @@ public class MeshUtility {
 		return result;
 	}
 	
-	public static Collection<CFace> incidentFaces(Collection<CEdge> edges) {
-		HashSet<CFace> faces = new HashSet<CFace>(edges.size() / 3);
-		for (CEdge e : edges) {
+	public static Collection<CoFace> incidentFaces(Collection<CoEdge> edges) {
+		HashSet<CoFace> faces = new HashSet<CoFace>(edges.size() / 3);
+		for (CoEdge e : edges) {
 			if (e.getLeftFace() != null)
 				faces.add(e.getLeftFace());
 		}
-		return new LinkedList<CFace>(faces);
+		return new LinkedList<CoFace>(faces);
 	}
 
 
-	public static double getCurvature(CEdge e) {
-		CFace lf = e.getLeftFace();
-		CFace rf = e.getRightFace();
+	public static double getCurvature(CoEdge e) {
+		CoFace lf = e.getLeftFace();
+		CoFace rf = e.getRightFace();
 		if (lf == null || rf == null)
 			return 0;
 		
@@ -236,7 +236,7 @@ public class MeshUtility {
 	 * 			negative is concave, positive if convex
 	 *          
 	 */
-	private static double curvatureSign(CEdge e){
+	private static double curvatureSign(CoEdge e){
 		Matrix m = MatrixBuilder.euclidean().getMatrix();
 		for (int i = 0; i < 3; i++) {
 			m.setEntry(i, 0, e.getVector().get(i));

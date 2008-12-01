@@ -37,7 +37,7 @@ import de.varylab.discreteconformal.frontend.widget.ColorButton;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanel;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
 import de.varylab.discreteconformal.frontend.widget.ColorButton.ColorChangedListener;
-import de.varylab.discreteconformal.heds.CHDS;
+import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.util.MeshUtility;
 import de.varylab.discreteconformal.image.ImageHook;
 
@@ -141,7 +141,7 @@ public class TextureShrinker extends ShrinkPanel implements SelectionListener, C
 	
 	private void updateStates() {
 		Appearance meshApp = ConformalLab.getUIController().getMeshAppearance();
-		CHDS hds = ConformalLab.getGeometryController().getCHDS();
+		CoHDS hds = ConformalLab.getGeometryController().getCHDS();
 		if (hds.isTexCoordinatesValid()) {
 			if (jrTex2D == null || jrTextureIsInvalid) {
 				jrTex2D = createTexture(meshApp, POLYGON_SHADER, new ImageData(texImage));
@@ -204,7 +204,7 @@ public class TextureShrinker extends ShrinkPanel implements SelectionListener, C
 		updateStates();
 	}
 
-	public void geometryChanged(final CHDS heds) {
+	public void geometryChanged(final CoHDS heds) {
 		ConformalLab.invokeOnSWT(new Runnable() {
 			public void run() {
 				meanEdgeLength = MeshUtility.meanEdgeLength(heds);

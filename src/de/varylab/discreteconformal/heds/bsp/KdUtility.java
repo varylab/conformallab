@@ -6,33 +6,33 @@ import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import java.util.HashSet;
 import java.util.Vector;
 
-import de.varylab.discreteconformal.heds.CEdge;
-import de.varylab.discreteconformal.heds.CFace;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoVertex;
 
 public final class KdUtility {
 
-	public static Vector<CFace> collectFacesInRadius(KdTree<CVertex> kdTree, HasPosition p, double radius) {
-		Vector<CVertex> vertresult = kdTree.collectInRadius(p, radius);
-		HashSet<CFace> faceSet = new HashSet<CFace>(vertresult.size() * 2);
+	public static Vector<CoFace> collectFacesInRadius(KdTree<CoVertex> kdTree, HasPosition p, double radius) {
+		Vector<CoVertex> vertresult = kdTree.collectInRadius(p, radius);
+		HashSet<CoFace> faceSet = new HashSet<CoFace>(vertresult.size() * 2);
 		
-		for (CVertex v : vertresult)
+		for (CoVertex v : vertresult)
 			faceSet.addAll(facesIncidentWithVertex(v));
 		
-		Vector<CFace> result = new Vector<CFace>();
+		Vector<CoFace> result = new Vector<CoFace>();
 		result.addAll(faceSet);
 		return result;
 	}
 	
 	
-	public static Vector<CEdge> collectEdgesInRadius(KdTree<CVertex> kdTree, HasPosition p, double radius) {
-		Vector<CVertex> vertresult = kdTree.collectInRadius(p, radius);
-		HashSet<CEdge> edgeSet = new HashSet<CEdge>(vertresult.size() * 3);
+	public static Vector<CoEdge> collectEdgesInRadius(KdTree<CoVertex> kdTree, HasPosition p, double radius) {
+		Vector<CoVertex> vertresult = kdTree.collectInRadius(p, radius);
+		HashSet<CoEdge> edgeSet = new HashSet<CoEdge>(vertresult.size() * 3);
 		
-		for (CVertex v : vertresult)
+		for (CoVertex v : vertresult)
 			edgeSet.addAll(incomingEdges(v));
 		
-		Vector<CEdge> result = new Vector<CEdge>();
+		Vector<CoEdge> result = new Vector<CoEdge>();
 		result.addAll(edgeSet);
 		return result;
 	}

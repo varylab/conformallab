@@ -4,15 +4,15 @@ import java.util.LinkedList;
 import java.util.List;
 
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.varylab.discreteconformal.heds.CEdge;
-import de.varylab.discreteconformal.heds.CHDS;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 
 public class SparseUtility {
 
 	
 	
-	public static int[] getPETScNonZeros(CHDS hds){
+	public static int[] getPETScNonZeros(CoHDS hds){
 		int [][] sparseStucture = makeNonZeros(hds);
 		int [] nnz = new int[sparseStucture.length];
 		for(int i = 0; i < nnz.length; i++){
@@ -22,22 +22,22 @@ public class SparseUtility {
 	}
 	
 	
-	public static int[][] makeNonZeros(CHDS hds) {
+	public static int[][] makeNonZeros(CoHDS hds) {
 		int n = 0;
-		for (CVertex v : hds.getVertices()) {
+		for (CoVertex v : hds.getVertices()) {
 			if (v.getSolverIndex() >= 0) {
 				n++;
 			}
 		}
 		int[][] nz = new int[n][];
-		for (CVertex v : hds.getVertices()) {
+		for (CoVertex v : hds.getVertices()) {
 			if (v.getSolverIndex() < 0)
 				continue;
-			List<CEdge> star = HalfEdgeUtils.incomingEdges(v);
+			List<CoEdge> star = HalfEdgeUtils.incomingEdges(v);
 			List<Integer> nonZeroIndices = new LinkedList<Integer>();
 			nonZeroIndices.add(v.getSolverIndex());
-			for (CEdge e : star) {
-				CVertex connectedVertex = e.getOppositeEdge().getTargetVertex();
+			for (CoEdge e : star) {
+				CoVertex connectedVertex = e.getOppositeEdge().getTargetVertex();
 				if (connectedVertex.getSolverIndex() < 0)
 					continue;
 				nonZeroIndices.add(connectedVertex.getSolverIndex());

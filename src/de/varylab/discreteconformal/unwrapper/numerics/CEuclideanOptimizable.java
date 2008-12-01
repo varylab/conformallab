@@ -4,14 +4,14 @@ import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
+import de.jtem.halfedge.functional.DomainValue;
 import de.jtem.halfedge.functional.Gradient;
 import de.jtem.halfedge.functional.Hessian;
-import de.jtem.halfedge.functional.conformal.CEuclideanFunctional;
-import de.jtem.halfedge.functional.conformal.CAdapters.U;
-import de.varylab.discreteconformal.heds.CEdge;
-import de.varylab.discreteconformal.heds.CFace;
-import de.varylab.discreteconformal.heds.CHDS;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.jtem.halfedge.functional.conformal.ConformalEuclideanFunctional;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
@@ -22,7 +22,7 @@ import de.varylab.mtjoptimization.Optimizable;
 
 public class CEuclideanOptimizable implements Optimizable {
 
-	private CHDS
+	private CoHDS
 		hds = null;
 	private CTheta
 		theta = new CTheta();
@@ -34,14 +34,14 @@ public class CEuclideanOptimizable implements Optimizable {
 		energy = new CInitialEnergy();
 	private CAlpha
 		alpha = new CAlpha();
-	private CEuclideanFunctional<CVertex, CEdge, CFace>
-		functional = new CEuclideanFunctional<CVertex, CEdge, CFace>(variable, theta, lambda, alpha, energy);
+	private ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace, MTJU>
+		functional = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace, MTJU>(variable, theta, lambda, alpha, energy);
 
-	public CEuclideanOptimizable(CHDS hds) {
+	public CEuclideanOptimizable(CoHDS hds) {
 		this.hds = hds;
 	}
 	
-	private class MTJU implements U<CVertex> {
+	private class MTJU implements DomainValue {
 
 		private Vector
 			u = null;
@@ -51,19 +51,23 @@ public class CEuclideanOptimizable implements Optimizable {
 		}
 		
 		@Override
-		public double getU(CVertex v) {
-			if (v.getSolverIndex() >= 0) {
-				return u.get(v.getSolverIndex());
-			} else {
-				return 0;
-			}
+		public void add(int i, double value) {
+			u.add(i, value);
 		}
 
 		@Override
-		public void setU(CVertex v, double u) {
-			if (v.getSolverIndex() >= 0) {
-				this.u.set(v.getSolverIndex(), u);
-			}
+		public void set(int i, double value) {
+			u.set(i, value);
+		}
+
+		@Override
+		public void setZero() {
+			u.zero();
+		}
+		
+		@Override
+		public double get(int i) {
+			return u.get(i);
 		}
 		
 	}

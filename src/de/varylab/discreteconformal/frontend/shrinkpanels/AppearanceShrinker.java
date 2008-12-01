@@ -50,9 +50,9 @@ import de.varylab.discreteconformal.frontend.widget.ColorButton;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanel;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
 import de.varylab.discreteconformal.frontend.widget.ColorButton.ColorChangedListener;
-import de.varylab.discreteconformal.heds.CFace;
-import de.varylab.discreteconformal.heds.CHDS;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.PositionTexCoordAdapter;
 import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
@@ -218,17 +218,17 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 		IndexedFaceSet ifs = ConformalLab.getGeometryController().getIndexedFaceSet();
 		if (vColorCurvature.getSelection()) {
 			if (vertexColors == null ) {
-				CHDS mesh = ConformalLab.getGeometryController().getCHDS();
+				CoHDS mesh = ConformalLab.getGeometryController().getCHDS();
 				double scale = meanEdgeLength * 5;
-				KdTree<CVertex> kd = ConformalLab.getGeometryController().getKdTree();
+				KdTree<CoVertex> kd = ConformalLab.getGeometryController().getKdTree();
 				Double[] K    = new Double[mesh.numFaces()];
-				for (CFace f : mesh.getFaces())
+				for (CoFace f : mesh.getFaces())
 					K[f.getIndex()] = MeshUtility.absoluteCurvatureAt(f.toTriangle().getBaryCenter(), scale, kd);				
 				double max = max(Arrays.asList(K));
 				double min = min(Arrays.asList(K));
 				double range = max - min;
 				vertexColors = new double[mesh.numFaces()][];
-				for (CFace f : mesh.getFaces()) {
+				for (CoFace f : mesh.getFaces()) {
 					double k = K[f.getIndex()];
 					float val = (float)((k + min) / range);
 					vertexColors[f.getIndex()] = new double[] {val, 1 - val, 0};
@@ -276,7 +276,7 @@ public class AppearanceShrinker extends ShrinkPanel implements SelectionListener
 		updateStates();
 	}
 
-	public void geometryChanged(final CHDS heds) {
+	public void geometryChanged(final CoHDS heds) {
 		ConformalLab.invokeOnSWT(new Runnable() {
 			public void run() {
 				updateStates();

@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds;
+package de.varylab.discreteconformal.heds.util;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
@@ -21,12 +21,13 @@ import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CG;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
-import de.varylab.discreteconformal.heds.util.GraphUtility;
-import de.varylab.discreteconformal.heds.util.Search;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.util.Search.WeightAdapter;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 
-public class CConesUtility {
+public class ConesUtility {
 
 	
 	/**
@@ -34,19 +35,19 @@ public class CConesUtility {
 	 * @param hds the mesh
 	 * @param cones the cones
 	 */
-	public static void cutMesh(CHDS hds, Collection<CVertex> cones, Vector u) {
-		Set<CVertex> bSet = new HashSet<CVertex>();
-		for (CVertex v : hds.getVertices()){
+	public static void cutMesh(CoHDS hds, Collection<CoVertex> cones, Vector u) {
+		Set<CoVertex> bSet = new HashSet<CoVertex>();
+		for (CoVertex v : hds.getVertices()){
 			if (isBoundaryVertex(v))
 				bSet.add(v);
 		}
-		for (CVertex c : cones) {
-			List<CEdge> path = Search.getShortestPath(c, bSet, new EdgeLengthAdapter(u));
-			for (CEdge e : path) {
-				CEdge eOpp = e.getOppositeEdge();
-				Map<CVertex, CVertex> vMap = GraphUtility.cutAtEdge(e);
-				for (CVertex v : vMap.keySet()) {
-					CVertex nV = vMap.get(v);
+		for (CoVertex c : cones) {
+			List<CoEdge> path = Search.getShortestPath(c, bSet, new EdgeLengthAdapter(u));
+			for (CoEdge e : path) {
+				CoEdge eOpp = e.getOppositeEdge();
+				Map<CoVertex, CoVertex> vMap = GraphUtility.cutAtEdge(e);
+				for (CoVertex v : vMap.keySet()) {
+					CoVertex nV = vMap.get(v);
 					nV.setSolverIndex(v.getSolverIndex());
 					nV.setTheta(v.getTheta());
 					nV.setPosition(v.getPosition());
@@ -59,7 +60,7 @@ public class CConesUtility {
 	}
 	
 	
-	protected static class EdgeLengthAdapter implements WeightAdapter<CEdge> {
+	protected static class EdgeLengthAdapter implements WeightAdapter<CoEdge> {
 
 		private Vector
 			u = null;
@@ -68,9 +69,9 @@ public class CConesUtility {
 			this.u = u;
 		}
 		
-		public double getWeight(CEdge e) {
-			CVertex v1 = e.getStartVertex();
-			CVertex v2 = e.getTargetVertex();
+		public double getWeight(CoEdge e) {
+			CoVertex v1 = e.getStartVertex();
+			CoVertex v2 = e.getTargetVertex();
 			Double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
 			Double u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0;
 			Double lambda = e.getLambda();
@@ -80,9 +81,9 @@ public class CConesUtility {
 	}
 	
 	
-	protected static class LambdaEdgeComparatore implements Comparator<CEdge> {
+	protected static class LambdaEdgeComparatore implements Comparator<CoEdge> {
 
-		public int compare(CEdge o1, CEdge o2) {
+		public int compare(CoEdge o1, CoEdge o2) {
 			return o1.getLambda() < o2.getLambda() ? -1 : 1;
 		}
 		
@@ -95,8 +96,8 @@ public class CConesUtility {
 	 * @param hds
 	 * @param cones
 	 */
-	public static Collection<CVertex> setUpMesh(CHDS hds, int cones) {
-		Collection<CVertex> result = new LinkedList<CVertex>();
+	public static Collection<CoVertex> setUpMesh(CoHDS hds, int cones) {
+		Collection<CoVertex> result = new LinkedList<CoVertex>();
 		for (int i = 0; i < cones; i++) {
 			CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
 			int n = opt.getDomainDimension();
@@ -112,7 +113,7 @@ public class CConesUtility {
 				return result;
 			}
 			int max = getMaxAbsIndex(u);
-			CVertex coneVertex = findVertexWidthSolverIndex(hds, max);
+			CoVertex coneVertex = findVertexWidthSolverIndex(hds, max);
 			coneVertex.setSolverIndex(-1);
 			reorderSolverIndices(hds);
 			result.add(coneVertex);
@@ -125,9 +126,9 @@ public class CConesUtility {
 	 * Reorders the solver indices for  
 	 * @param hds
 	 */
-	public static void reorderSolverIndices(CHDS hds) {
+	public static void reorderSolverIndices(CoHDS hds) {
 		int i = 0;
-		for (CVertex v : hds.getVertices()) {
+		for (CoVertex v : hds.getVertices()) {
 			if (v.getSolverIndex() >= 0) {
 				v.setSolverIndex(i++);
 			}
@@ -162,8 +163,8 @@ public class CConesUtility {
 	 * @param i
 	 * @return
 	 */
-	public static CVertex findVertexWidthSolverIndex(CHDS hds, int i) {
-		for (CVertex v : hds.getVertices()) {
+	public static CoVertex findVertexWidthSolverIndex(CoHDS hds, int i) {
+		for (CoVertex v : hds.getVertices()) {
 			if (v.getSolverIndex() == i)
 				return v;
 		}
@@ -171,9 +172,9 @@ public class CConesUtility {
 	}
 	
 	
-	public static Collection<CVertex> quantizeCones(CHDS hds, Collection<CVertex> cones) {
-		List<CVertex> result = new LinkedList<CVertex>(cones);
-		for (CVertex v : cones) {
+	public static Collection<CoVertex> quantizeCones(CoHDS hds, Collection<CoVertex> cones) {
+		List<CoVertex> result = new LinkedList<CoVertex>(cones);
+		for (CoVertex v : cones) {
 			double a = abs(getAngleSum(v) % (2*PI));
 			if (a < PI / 4) {
 				v.setSolverIndex(0); // reinsert cone

@@ -1,23 +1,17 @@
 package de.varylab.discreteconformal.heds;
 
-import static java.lang.Math.PI;
 import geom3d.Point;
 import geom3d.Vector;
-import de.jtem.halfedge.Vertex;
+import de.jtem.halfedge.functional.conformal.node.ConformalVertex;
 import de.varylab.discreteconformal.heds.bsp.HasPosition;
 
-public class CVertex extends Vertex<CVertex, CEdge, CFace> implements HasPosition {
+public class CoVertex extends ConformalVertex<CoVertex, CoEdge, CoFace> implements HasPosition {
 
 	private Point
 	    P = new Point(),
 	    T = new Point();
 	private Vector
 		N = new Vector();
-	private double 
-		theta = 2 * PI;
-	private Integer
-		solverIndex = -1;
-
 
 	public Point getPosition() {
 		return P;
@@ -43,21 +37,4 @@ public class CVertex extends Vertex<CVertex, CEdge, CFace> implements HasPositio
 		N.set(normal);
 	}
 
-	public double getTheta() {
-		return theta;
-	}
-
-	public void setTheta(double theta) {
-		this.theta = theta;
-	}
-
-	public Integer getSolverIndex() {
-		return solverIndex;
-	}
-
-	public void setSolverIndex(Integer solverIndex) {
-		this.solverIndex = solverIndex;
-	}
-
-	
 }

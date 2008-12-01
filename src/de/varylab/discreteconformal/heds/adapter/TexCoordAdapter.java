@@ -2,9 +2,9 @@ package de.varylab.discreteconformal.heds.adapter;
 
 import geom3d.Point;
 import de.jtem.halfedge.jreality.adapter.TextCoordsAdapter2Ifs;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.varylab.discreteconformal.heds.CoVertex;
 
-public class TexCoordAdapter implements TextCoordsAdapter2Ifs<CVertex> {
+public class TexCoordAdapter implements TextCoordsAdapter2Ifs<CoVertex> {
 
 	private boolean
 		useProjectiveMap = true;
@@ -19,7 +19,7 @@ public class TexCoordAdapter implements TextCoordsAdapter2Ifs<CVertex> {
 	}
 	
 	
-	public double[] getTextCoordinate(CVertex v) {
+	public double[] getTextCoordinate(CoVertex v) {
 		Point t = v.getTextureCoord();
 		if (useProjectiveMap) {
 			return new double[] {t.x(), t.y(), 0.0, t.z()};

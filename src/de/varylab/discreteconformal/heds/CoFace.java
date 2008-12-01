@@ -7,24 +7,20 @@ import geom3d.Vector;
 
 import java.util.List;
 
-import de.jtem.halfedge.Face;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 
-public class CFace extends Face<CVertex, CEdge, CFace> {
+public class CoFace extends de.jtem.halfedge.functional.conformal.node.ConformalFace<CoVertex, CoEdge, CoFace> {
 
     private Vector
     	normal = null;
     private Double
     	curvature = null;
-    private double 
-    	initialEnergy = 0.0;
-    
     
     public double getCurvature() {
     	if (curvature == null) {
-    		List<CEdge> b = boundaryEdges(this);
+    		List<CoEdge> b = boundaryEdges(this);
     		curvature = 0.0;
-    		for (CEdge e : b)
+    		for (CoEdge e : b)
     			curvature += e.getCurvature();
     		curvature /= b.size();
 		}
@@ -33,7 +29,7 @@ public class CFace extends Face<CVertex, CEdge, CFace> {
     
     
     public Triangle toTriangle() {
-    	List<CEdge> b = HalfEdgeUtils.boundaryEdges(this);
+    	List<CoEdge> b = HalfEdgeUtils.boundaryEdges(this);
     	if (b.size() != 3)
     		throw new RuntimeException("No triangle in toTriangle()");
     	return new Triangle(b.get(0).getTargetVertex().getPosition(), b.get(1).getTargetVertex().getPosition(), b.get(2).getTargetVertex().getPosition());
@@ -42,7 +38,7 @@ public class CFace extends Face<CVertex, CEdge, CFace> {
     
     public Vector getNormal() {
     	if (normal == null) {
-    		List<CEdge> boundary = HalfEdgeUtils.boundaryEdges(this);
+    		List<CoEdge> boundary = HalfEdgeUtils.boundaryEdges(this);
     		Point a = boundary.get(0).getTargetVertex().getPosition();
     		Point b = boundary.get(1).getTargetVertex().getPosition();
     		Point c = boundary.get(2).getTargetVertex().getPosition();
@@ -54,12 +50,4 @@ public class CFace extends Face<CVertex, CEdge, CFace> {
 	}
 
 
-
-	public double getInitialEnergy() {
-		return initialEnergy;
-	}
-
-	public void setInitialEnergy(double energy) {
-		this.initialEnergy = energy;
-	}
 }

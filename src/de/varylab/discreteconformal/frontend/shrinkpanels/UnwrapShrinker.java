@@ -30,7 +30,7 @@ import org.eclipse.swt.widgets.Spinner;
 import de.varylab.discreteconformal.ConformalLab;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanel;
 import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
-import de.varylab.discreteconformal.heds.CHDS;
+import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.CSphereUnwrapper;
@@ -130,7 +130,7 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 	private class ComputationThread implements IRunnableWithProgress {
 
 		public void run(IProgressMonitor mon) throws InvocationTargetException, InterruptedException {
-			final CHDS hds = getGeometryController().getCHDS();
+			final CoHDS hds = getGeometryController().getCHDS();
 			hds.setTexCoordinatesValid(false);
 			
 			// topology

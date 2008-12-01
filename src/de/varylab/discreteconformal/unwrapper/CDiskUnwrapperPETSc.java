@@ -8,9 +8,9 @@ import no.uib.cipr.matrix.DenseVector;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import de.varylab.discreteconformal.heds.CConesUtility;
-import de.varylab.discreteconformal.heds.CHDS;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.util.ConesUtility;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
 import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.PETSc;
@@ -31,15 +31,15 @@ public class CDiskUnwrapperPETSc implements CUnwrapper{
 	}
 	
 	
-	public void unwrap(CHDS hds, IProgressMonitor mon) throws UnwrapException {
+	public void unwrap(CoHDS hds, IProgressMonitor mon) throws UnwrapException {
 		mon.beginTask("Unwrapping", 2 + (quantizeCones ? 2 : 0));
 		hds.prepareInvariantDataEuclidean();
 		
 		// cones
-		Collection<CVertex> cones = null;
+		Collection<CoVertex> cones = null;
 		if (numCones > 0) {
 			mon.subTask("Processing " + numCones + " cones");
-			cones = CConesUtility.setUpMesh(hds, numCones);
+			cones = ConesUtility.setUpMesh(hds, numCones);
 			mon.worked(1);
 		}
 
@@ -75,7 +75,7 @@ public class CDiskUnwrapperPETSc implements CUnwrapper{
 		if (quantizeCones && numCones > 0) {
 			mon.subTask("Quantizing Cone Singularities");
 			// calculating cones
-			cones = CConesUtility.quantizeCones(hds, cones);
+			cones = ConesUtility.quantizeCones(hds, cones);
 			
 			// optimizing conformal structure
 			CEuclideanApplication app2 = new CEuclideanApplication(hds);
@@ -105,7 +105,7 @@ public class CDiskUnwrapperPETSc implements CUnwrapper{
 		mon.subTask("Layout");
 		double [] uValues = u.getArray();
 		if (numCones > 0) {
-			CConesUtility.cutMesh(hds, cones, new DenseVector(uValues));
+			ConesUtility.cutMesh(hds, cones, new DenseVector(uValues));
 		}
 		CDiskLayout.doLayout(hds,  new DenseVector(uValues));
 		u.restoreArray();

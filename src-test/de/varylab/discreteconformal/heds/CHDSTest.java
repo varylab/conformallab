@@ -35,7 +35,7 @@ import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
  */
 public class CHDSTest {
 
-	private static CHDS 	
+	private static CoHDS 	
 		hds = null;
 	
 	
@@ -51,8 +51,8 @@ public class CHDSTest {
 			Input in = new Input("Obj File", CLayoutTest.class.getResourceAsStream("cathead.obj"));
 			c =reader.read(in);
 			IndexedFaceSet ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
-			ConverterJR2Heds<CVertex, CEdge, CFace> converter = new ConverterJR2Heds<CVertex, CEdge, CFace>(CVertex.class, CEdge.class, CFace.class);
-			hds = new CHDS();
+			ConverterJR2Heds<CoVertex, CoEdge, CoFace> converter = new ConverterJR2Heds<CoVertex, CoEdge, CoFace>(CoVertex.class, CoEdge.class, CoFace.class);
+			hds = new CoHDS();
 			converter.ifs2heds(ifs, hds, new PositionAdapter());
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -85,7 +85,7 @@ public class CHDSTest {
 	}
 
 	/**
-	 * Test method for {@link de.varylab.discreteconformal.heds.CHDS#conformalEnergy(no.uib.cipr.matrix.Vector, double[], no.uib.cipr.matrix.Vector, no.uib.cipr.matrix.Matrix)}.
+	 * Test method for {@link de.varylab.discreteconformal.heds.CoHDS#conformalEnergy(no.uib.cipr.matrix.Vector, double[], no.uib.cipr.matrix.Vector, no.uib.cipr.matrix.Matrix)}.
 	 */
 	@Test
 	public void testConformalEnergy() throws Exception {
@@ -104,12 +104,12 @@ public class CHDSTest {
 		}
 
 		
-		for (CVertex v : hds.getVertices()) {
+		for (CoVertex v : hds.getVertices()) {
 			if (v.getSolverIndex() < 0) {
 				continue;
 			}
 			double aSum = 0.0;
-			for (CEdge e : HalfEdgeUtils.incomingEdges(v)) {
+			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
 				aSum += e.getPreviousEdge().getAlpha();
 			}
 			Assert.assertEquals(2 * PI, aSum, 1E-8);

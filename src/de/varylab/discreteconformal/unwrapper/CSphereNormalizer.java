@@ -10,8 +10,8 @@ import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
-import de.varylab.discreteconformal.heds.CHDS;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.Optimizable;
 import de.varylab.mtjoptimization.Optimizer;
@@ -21,7 +21,7 @@ import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 public class CSphereNormalizer {
 
 	
-	public static void normalize(CHDS hds) throws NotConvergentException{
+	public static void normalize(CoHDS hds) throws NotConvergentException{
 		CNormalizerOptimizable opt = new CNormalizerOptimizable(hds);
 		Optimizer o = new NewtonOptimizer();
 		ArmijoStepController stepController = new ArmijoStepController();
@@ -47,7 +47,7 @@ public class CSphereNormalizer {
 	}
 	
 
-	private static void int_normalize(Vector center, CHDS hds){
+	private static void int_normalize(Vector center, CoHDS hds){
 		Vector e1 = new DenseVector(new double[]{1,0,0,0});
 		Vector e2 = new DenseVector(new double[]{0,1,0,0});
 		Vector e3 = new DenseVector(new double[]{0,0,1,0});
@@ -70,7 +70,7 @@ public class CSphereNormalizer {
 		test = A_inv.mult(test, new DenseVector(4));
 		
 		// transform
-		for (CVertex v : hds.getVertices()){
+		for (CoVertex v : hds.getVertices()){
 			Point p = v.getTextureCoord();
 			Vector v1 = new DenseVector(new double[]{p.x(), p.y(), p.z(), 1.0});
 			Vector newV = A_inv.mult(v1, new DenseVector(4));
@@ -98,10 +98,10 @@ public class CSphereNormalizer {
 	
 	protected static class CNormalizerOptimizable implements Optimizable{
 		
-		private CHDS
+		private CoHDS
 			hds = null;
 		
-		public CNormalizerOptimizable(CHDS hds){
+		public CNormalizerOptimizable(CoHDS hds){
 			this.hds = hds;
 		}
 		
@@ -124,7 +124,7 @@ public class CSphereNormalizer {
 		public Double evaluate(Vector x) {
 			double result = 0;
 			double l = myLength(x);
-			for (CVertex v : hds.getVertices())
+			for (CoVertex v : hds.getVertices())
 				result += log( dot(v.getTextureCoord(), x) / sqrt(l) );
 			return result;
 		}
@@ -141,9 +141,9 @@ public class CSphereNormalizer {
 		
 		private void makeGradient(Vector x, Vector g){
 			g.zero();
-			List<CVertex> vList = hds.getVertices(); 
+			List<CoVertex> vList = hds.getVertices(); 
 			for (int i = 0; i < 3; i++){
-				for (CVertex v : vList){
+				for (CoVertex v : vList){
 					Point p = v.getTextureCoord();
 					double pi = 0;
 					if (i == 0) pi = p.x();
@@ -162,10 +162,10 @@ public class CSphereNormalizer {
 		
 		private void makeHessian(Vector x, Matrix hess){
 			hess.zero();
-			List<CVertex> vList = hds.getVertices(); 
+			List<CoVertex> vList = hds.getVertices(); 
 			for (int i = 0; i < 3; i++){
 				for (int j = 0; j < 3; j++){
-					for (CVertex v : vList){
+					for (CoVertex v : vList){
 						Point p = v.getTextureCoord();
 						double xi = x.get(i);
 						double xj = x.get(j);

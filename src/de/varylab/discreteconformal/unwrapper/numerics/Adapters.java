@@ -1,50 +1,50 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
 import de.jtem.halfedge.functional.Energy;
-import de.jtem.halfedge.functional.conformal.CAdapters.Alpha;
-import de.jtem.halfedge.functional.conformal.CAdapters.InitialEnergy;
-import de.jtem.halfedge.functional.conformal.CAdapters.Lambda;
-import de.jtem.halfedge.functional.conformal.CAdapters.Theta;
-import de.jtem.halfedge.functional.conformal.CAdapters.Variable;
-import de.varylab.discreteconformal.heds.CEdge;
-import de.varylab.discreteconformal.heds.CFace;
-import de.varylab.discreteconformal.heds.CVertex;
+import de.jtem.halfedge.functional.conformal.ConformalAdapters.Alpha;
+import de.jtem.halfedge.functional.conformal.ConformalAdapters.InitialEnergy;
+import de.jtem.halfedge.functional.conformal.ConformalAdapters.Lambda;
+import de.jtem.halfedge.functional.conformal.ConformalAdapters.Theta;
+import de.jtem.halfedge.functional.conformal.ConformalAdapters.Variable;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoVertex;
 
 public abstract class Adapters {
 
 
-	public static class CVariable implements Variable<CVertex> {
-		public boolean isVariable(CVertex v) {
+	public static class CVariable implements Variable<CoVertex> {
+		public boolean isVariable(CoVertex v) {
 			return getVarIndex(v) >= 0;
 		}
-		public int getVarIndex(CVertex v) {
+		public int getVarIndex(CoVertex v) {
 			return v.getSolverIndex();
 		}
 	}
 	
-	public static class CAlpha implements Alpha<CEdge> {
-		public double getAlpha(CEdge e) {
+	public static class CAlpha implements Alpha<CoEdge> {
+		public double getAlpha(CoEdge e) {
 			return e.getAlpha();
 		}
-		public void setAlpha(CEdge e, double alpha) {
+		public void setAlpha(CoEdge e, double alpha) {
 			e.setAlpha(alpha);
 		}
 	}
 	
-	public static class CLambda implements Lambda<CEdge> {
-		public double getLambda(CEdge e) {
+	public static class CLambda implements Lambda<CoEdge> {
+		public double getLambda(CoEdge e) {
 			return e.getLambda();
 		}
 	}
 	
-	public static class CTheta implements Theta<CVertex> {
-		public double getTheta(CVertex v) {
+	public static class CTheta implements Theta<CoVertex> {
+		public double getTheta(CoVertex v) {
 			return v.getTheta();
 		}
 	}
 	
-	public static class CInitialEnergy implements InitialEnergy<CFace> {
-		public double getInitialEnergy(CFace f) {
+	public static class CInitialEnergy implements InitialEnergy<CoFace> {
+		public double getInitialEnergy(CoFace f) {
 			return f.getInitialEnergy();
 		}
 	}

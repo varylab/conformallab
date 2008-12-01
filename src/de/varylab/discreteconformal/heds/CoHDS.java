@@ -7,11 +7,11 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import de.jtem.halfedge.HalfEdgeDataStructure;
+import de.jtem.halfedge.functional.DomainValue;
 import de.jtem.halfedge.functional.MyEnergy;
-import de.jtem.halfedge.functional.conformal.CEuclideanFunctional;
-import de.jtem.halfedge.functional.conformal.CHyperbolicFunctional;
-import de.jtem.halfedge.functional.conformal.CAdapters.InitialEnergy;
-import de.jtem.halfedge.functional.conformal.CAdapters.U;
+import de.jtem.halfedge.functional.conformal.ConformalEuclideanFunctional;
+import de.jtem.halfedge.functional.conformal.ConformalHyperbolicFunctional;
+import de.jtem.halfedge.functional.conformal.ConformalAdapters.InitialEnergy;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
@@ -19,13 +19,13 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.ConformalEnergy;
 
-public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
+public class CoHDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> {
 
 	private boolean
 		texCoordinatesValid = false;
 	
-	public CHDS() {
-		super(CVertex.class, CEdge.class, CFace.class);
+	public CoHDS() {
+		super(CoVertex.class, CoEdge.class, CoFace.class);
 	}
 
 	
@@ -34,7 +34,7 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 	 * @return the dimension of the parameter space
 	 */
 	public int prepareInvariantDataEuclidean() {
-		HashSet<CVertex> b = new HashSet<CVertex>();
+		HashSet<CoVertex> b = new HashSet<CoVertex>();
 		b.addAll(HalfEdgeUtils.boundaryVertices(this));
 		return prepareInvariantDataEuclidean(b);
 	}
@@ -45,7 +45,7 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 	 * @return the dimension of the parameter space
 	 */
 	public int prepareInvariantDataHyperbolic() {
-		HashSet<CVertex> b = new HashSet<CVertex>();
+		HashSet<CoVertex> b = new HashSet<CoVertex>();
 		b.addAll(HalfEdgeUtils.boundaryVertices(this));
 		return prepareInvariantDataHyperbolic(b);
 	}
@@ -56,16 +56,16 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 	 * @param boundary the boundary vertices which do not belong to the solver system
 	 * @return the dimension of the parameter space
 	 */
-	public int prepareInvariantDataEuclidean(Collection<CVertex> boundary) {
+	public int prepareInvariantDataEuclidean(Collection<CoVertex> boundary) {
 		// set initial lambdas
-		for (final CEdge e : getPositiveEdges()) {
+		for (final CoEdge e : getPositiveEdges()) {
 			final double l = e.getLength();
 			e.setLambda(log(l));
 			e.getOppositeEdge().setLambda(e.getLambda());
 		}
 		// set thetas and solver indices
 		int dim = 0;
-		for (final CVertex v : getVertices()) {
+		for (final CoVertex v : getVertices()) {
 			if (boundary.contains(v)) {
 				v.setTheta(0.0);
 				v.setSolverIndex(-1);
@@ -82,8 +82,8 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 		CTheta theta = new CTheta();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		MyEnergy E = new MyEnergy();
-		CEuclideanFunctional<CVertex, CEdge, CFace> func = new CEuclideanFunctional<CVertex, CEdge, CFace>(var, theta, lambda, alpha, zeroEnergy);
-		for (final CFace f : getFaces()) {
+		ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace, ZeroU> func = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace, ZeroU>(var, theta, lambda, alpha, zeroEnergy);
+		for (final CoFace f : getFaces()) {
 			E.setZero();
 			func.triangleEnergyAndAlphas(this, zeroU, f, E);
 			f.setInitialEnergy(E.get());
@@ -96,16 +96,16 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 	 * @param boundary the boundary vertices which do not belong to the solver system
 	 * @return the dimension of the parameter space
 	 */
-	public int prepareInvariantDataHyperbolic(Collection<CVertex> boundary) {
+	public int prepareInvariantDataHyperbolic(Collection<CoVertex> boundary) {
 		// set initial lambdas
-		for (final CEdge e : getPositiveEdges()) {
+		for (final CoEdge e : getPositiveEdges()) {
 			final double l = e.getLength();
 			e.setLambda(2*log(l));
 			e.getOppositeEdge().setLambda(e.getLambda());
 		}
 		// set thetas and solver indices
 		int dim = 0;
-		for (final CVertex v : getVertices()) {
+		for (final CoVertex v : getVertices()) {
 			if (boundary.contains(v)) {
 				v.setTheta(0.0);
 				v.setSolverIndex(-1);
@@ -122,8 +122,8 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 		CAlpha alpha = new CAlpha();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		ConformalEnergy E = new ConformalEnergy();
-		CHyperbolicFunctional<CVertex, CEdge, CFace> func = new CHyperbolicFunctional<CVertex, CEdge, CFace>(var, theta, lambda, alpha, zeroEnergy);
-		for (final CFace f : getFaces()) {
+		ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace, ZeroU> func = new ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace, ZeroU>(var, theta, lambda, alpha, zeroEnergy);
+		for (final CoFace f : getFaces()) {
 			E.setZero();
 			func.triangleEnergyAndAlphas(zeroU, f, E);
 			f.setInitialEnergy(E.get());
@@ -133,20 +133,26 @@ public class CHDS extends HalfEdgeDataStructure<CVertex, CEdge, CFace> {
 	
 	
 	
-	private class ZeroInitialEnergy implements InitialEnergy<CFace> {
+	private class ZeroInitialEnergy implements InitialEnergy<CoFace> {
 		@Override
-		public double getInitialEnergy(CFace f) {
+		public double getInitialEnergy(CoFace f) {
 			return 0.0;
 		}
 	}
 	
-	private class ZeroU implements U<CVertex> {
+	private class ZeroU implements DomainValue {
 		@Override
-		public double getU(CVertex v) {
-			return 0;
+		public void add(int i, double value) {
 		}
 		@Override
-		public void setU(CVertex v, double u) {
+		public void set(int i, double value) {
+		}
+		@Override
+		public void setZero() {
+		}
+		@Override
+		public double get(int i) {
+			return 0.0;
 		}
 	}
 	
