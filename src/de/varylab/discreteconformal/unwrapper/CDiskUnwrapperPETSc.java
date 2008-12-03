@@ -107,7 +107,7 @@ public class CDiskUnwrapperPETSc implements CUnwrapper{
 		if (numCones > 0) {
 			ConesUtility.cutMesh(hds, cones, new DenseVector(uValues));
 		}
-		CDiskLayout.doLayout(hds,  new DenseVector(uValues));
+		CEuclideanLayout.doLayout(hds,  new DenseVector(uValues));
 		u.restoreArray();
 		mon.worked(1);
 		mon.done();

@@ -85,7 +85,7 @@ public class CDiskUnwrapper implements CUnwrapper{
 		if (numCones > 0) {
 			ConesUtility.cutMesh(hds, cones, u);
 		}
-		CDiskLayout.doLayout(hds, u);
+		CEuclideanLayout.doLayout(hds, u);
 		mon.worked(1);
 		mon.done();
 	}

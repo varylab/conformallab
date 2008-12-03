@@ -2,7 +2,7 @@ package de.varylab.discreteconformal.heds.util;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
-import static de.varylab.discreteconformal.unwrapper.CDiskLayout.getAngleSum;
+import static de.varylab.discreteconformal.unwrapper.CEuclideanLayout.getAngleSum;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.exp;

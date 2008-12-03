@@ -6,6 +6,7 @@ import static org.eclipse.jface.layout.GridDataFactory.fillDefaults;
 import static org.eclipse.swt.SWT.BORDER;
 import static org.eclipse.swt.SWT.CHECK;
 import static org.eclipse.swt.SWT.NONE;
+import static org.eclipse.swt.SWT.RADIO;
 import static org.eclipse.swt.SWT.SHADOW_ETCHED_IN;
 import static org.eclipse.swt.layout.GridData.BEGINNING;
 import static org.eclipse.swt.layout.GridData.CENTER;
@@ -33,6 +34,7 @@ import de.varylab.discreteconformal.frontend.widget.ShrinkPanelContainer;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapperPETSc;
+import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CSphereUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CUnwrapper;
 import de.varylab.discreteconformal.unwrapper.UnwrapException;
@@ -40,9 +42,12 @@ import de.varylab.discreteconformal.unwrapper.UnwrapException;
 public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 
 	private Button
-		computeEnergyBtn = null;
+		computeEnergyBtn = null,
+		euclideanButton = null,
+		hyperbolicButton = null;
 	private Group
-		coneConfigGroup = null;
+		coneConfigGroup = null,
+		geometryGroup = null;
 	private Spinner
 		numConesSpinner = null;
 	private Button
@@ -54,7 +59,8 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 		numCones = 0; 
 	private boolean
 		quantizeCones = true,
-		usePetsc = false;
+		usePetsc = false,
+		hyperbolic = false;
 	
 	
 	public UnwrapShrinker(ShrinkPanelContainer parent) {
@@ -64,6 +70,8 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 		numConesSpinner.addSelectionListener(this);
 		quantizeChecker.addSelectionListener(this);
 		numericsCombo.addSelectionListener(this);
+		euclideanButton.addSelectionListener(this);
+		hyperbolicButton.addSelectionListener(this);
 	}
 
 	
@@ -86,6 +94,21 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 		quantizeChecker.setText("Quantize Cone Angles");
 		quantizeChecker.setSelection(true);
 		fillDefaults().span(2,1).grab(true, false).applyTo(quantizeChecker);
+		
+		geometryGroup = new Group(this, SHADOW_ETCHED_IN);
+		geometryGroup.setText("Geometry");
+		geometryGroup.setLayout(new GridLayout(1, true));
+		fillDefaults().grab(true, false).applyTo(geometryGroup);
+		
+		euclideanButton = new Button(geometryGroup, RADIO);
+		euclideanButton.setText("Eucliean Unwrap");
+		euclideanButton.setSelection(!hyperbolic);
+		fillDefaults().grab(true, false).applyTo(euclideanButton);
+		
+		hyperbolicButton = new Button(geometryGroup, RADIO);
+		hyperbolicButton.setText("Hyperbolic Unwrap");
+		hyperbolicButton.setSelection(hyperbolic);
+		fillDefaults().grab(true, false).applyTo(hyperbolicButton);
 		
 		numericsCombo = new Combo(this, SWT.NONE);
 		numericsCombo.setItems(new String[] {"Java/MTJ Numerics", "Petsc/Tao Numerics"});
@@ -124,6 +147,12 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 		if (numericsCombo == s) {
 			usePetsc = numericsCombo.getSelectionIndex() != 0;
 		}
+		if (euclideanButton == s) {
+			hyperbolic = !euclideanButton.getSelection();
+		}
+		if (hyperbolicButton == s) {
+			hyperbolic = hyperbolicButton.getSelection();
+		}
 	}
 	
 	
@@ -136,21 +165,25 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 			// topology
 			int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
 			CUnwrapper unwrapper = null;
-			switch (X) {
-				case 1:
-					if(usePetsc) {
-						unwrapper = new CDiskUnwrapperPETSc(numCones, quantizeCones);
-					} else {
-						unwrapper = new CDiskUnwrapper(numCones, quantizeCones);
-					}
-					break;
-				case 2:
-					unwrapper = new CSphereUnwrapper(numCones, quantizeCones);
-					break;
-				default:
-					errorMessage("Error", "Unsupported topology");
-					mon.setCanceled(true);
-					return;
+			if (hyperbolic) {
+				unwrapper = new CHyperbolicUnwrapper();
+			} else {
+				switch (X) {
+					case 1:
+						if(usePetsc) {
+							unwrapper = new CDiskUnwrapperPETSc(numCones, quantizeCones);
+						} else {
+							unwrapper = new CDiskUnwrapper(numCones, quantizeCones);
+						}
+						break;
+					case 2:
+						unwrapper = new CSphereUnwrapper(numCones, quantizeCones);
+						break;
+					default:
+						errorMessage("Error", "Unsupported topology");
+						mon.setCanceled(true);
+						return;
+				}
 			}
 			
 			// unwrap

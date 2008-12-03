@@ -23,7 +23,7 @@ import de.jreality.util.Input;
 import de.jtem.halfedge.jreality.ConverterHeds2JR;
 import de.jtem.halfedge.jreality.ConverterJR2Heds;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
-import de.varylab.discreteconformal.unwrapper.CDiskLayout;
+import de.varylab.discreteconformal.unwrapper.CEuclideanLayout;
 
 public class CLayoutTest {
 
@@ -70,7 +70,7 @@ public class CLayoutTest {
 		System.out.println("CLayoutTest.testDoLayout()");
 		int n = hds.prepareInvariantDataEuclidean();
 		Vector u = new SparseVector(n);
-		CDiskLayout.doLayout(hds, u);
+		CEuclideanLayout.doLayout(hds, u);
 		
 		for (CoEdge e : hds.getPositiveEdges()) {
 			CoVertex s = e.getStartVertex();
