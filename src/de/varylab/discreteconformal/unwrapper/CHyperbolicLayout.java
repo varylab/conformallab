@@ -16,6 +16,8 @@ import java.util.Queue;
 import java.util.Set;
 
 import no.uib.cipr.matrix.Vector;
+import de.jreality.math.Matrix;
+import de.jreality.math.MatrixBuilder;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
@@ -49,9 +51,14 @@ public class CHyperbolicLayout {
 
 		// vertices
 		Double l = getNewLength(e0, u);
-		v1.setTextureCoord(new Point(0, 0, 0));
-		//TODO: make this the real point in the hyperbolic plane 
-		v2.setTextureCoord(new Point(l, 0, 0));
+		
+		Point p0 = new Point(0, 0, 1);
+		v1.setTextureCoord(p0);
+		Matrix T0 = MatrixBuilder.hyperbolic().translate(l, 0, 0).getMatrix();
+		Point p1 = new Point(p0.get());
+		T0.transformVector(p1.get());
+		v2.setTextureCoord(p1);
+		
 		visited.add(v1);
 		visited.add(v2);
 		
@@ -82,6 +89,8 @@ public class CHyperbolicLayout {
 					Qa.offer(globalAngle);
 
 					l = getNewLength(e, u);
+					
+					
 					geom3d.Vector dif = new geom3d.Vector(cos(globalAngle), sin(globalAngle), 0.0).times(l);
 					nearVertex.getTextureCoord().set(tp).add(dif);
 				} 
