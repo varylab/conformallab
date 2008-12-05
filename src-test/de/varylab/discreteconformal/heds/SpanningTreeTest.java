@@ -15,7 +15,7 @@ import java.util.Set;
 
 import org.junit.BeforeClass;
 
-import de.jreality.geometry.GeometryUtility;
+import de.jreality.geometry.IndexedFaceSetUtility;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
@@ -118,7 +118,7 @@ public class SpanningTreeTest {
 		
 		SceneGraphComponent c = new SceneGraphComponent();
 		c.setGeometry(ifs);
-		GeometryUtility.calculateAndSetFaceNormals(ifs);
+		IndexedFaceSetUtility.calculateAndSetFaceNormals(ifs);
 		Appearance app = new Appearance();
 		app.setAttribute(TUBE_RADIUS, TUBE_RADIUS_DEFAULT / 10.0);
 		app.setAttribute(VERTEX_DRAW, false);

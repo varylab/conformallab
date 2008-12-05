@@ -3,9 +3,11 @@ package de.varylab.discreteconformal.unwrapper;
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static java.lang.Math.PI;
 import static java.lang.Math.cos;
+import static java.lang.Math.cosh;
 import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.sin;
+import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 import geom3d.Point;
 
@@ -16,8 +18,6 @@ import java.util.Queue;
 import java.util.Set;
 
 import no.uib.cipr.matrix.Vector;
-import de.jreality.math.Matrix;
-import de.jreality.math.MatrixBuilder;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
@@ -35,7 +35,6 @@ public class CHyperbolicLayout {
 		Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
 		Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		Queue<CoEdge> Qe = new LinkedList<CoEdge>();
-		Queue<Double> Qa = new LinkedList<Double>();
 		// start
 		CoEdge e0 = hds.getEdge(0);
 		CoEdge e1 = e0.getOppositeEdge();
@@ -46,17 +45,13 @@ public class CHyperbolicLayout {
 		Qv.offer(v2);
 		Qe.offer(e1);
 		Qe.offer(e0);
-		Qa.offer(PI);
-		Qa.offer(0.0);
 
 		// vertices
-		Double l = getNewLength(e0, u);
+		Double d = getNewLength(e0, u);
 		
 		Point p0 = new Point(0, 0, 1);
 		v1.setTextureCoord(p0);
-		Matrix T0 = MatrixBuilder.hyperbolic().translate(l, 0, 0).getMatrix();
-		Point p1 = new Point(p0.get());
-		T0.transformVector(p1.get());
+		Point p1 = new Point(sinh(d), 0, cosh(d)).normalize().asPoint();
 		v2.setTextureCoord(p1);
 		
 		visited.add(v1);
@@ -65,12 +60,11 @@ public class CHyperbolicLayout {
 		while (!Qv.isEmpty() && hds.numVertices() > visited.size()) {
 			CoVertex v = Qv.poll();
 			CoEdge inE = Qe.poll();
-			Double a = Qa.poll();
 			CoEdge outE = inE.getOppositeEdge();
-			Point tp = v.getTextureCoord();
+			Point B = v.getTextureCoord();
+			Point A = outE.getTargetVertex().getTextureCoord();
 			
 			CoEdge e = inE.getNextEdge();
-			Double globalAngle = a + PI;
 			while (e != outE) {
 				CoVertex nearVertex = e.getTargetVertex();
 				
@@ -80,30 +74,28 @@ public class CHyperbolicLayout {
 					alpha = 2*PI - getAngleSum(v);
 				}
 				
-				globalAngle -= alpha;
-				
 				if (!visited.contains(nearVertex)) {
 					visited.add(nearVertex);
 					Qv.offer(nearVertex);
 					Qe.offer(e);	
-					Qa.offer(globalAngle);
-
-					l = getNewLength(e, u);
+					d = getNewLength(e, u);
 					
-					
-					geom3d.Vector dif = new geom3d.Vector(cos(globalAngle), sin(globalAngle), 0.0).times(l);
-					nearVertex.getTextureCoord().set(tp).add(dif);
+					Point BHat = new Point(B.x(), B.y(), -B.z());
+					Point lAB = new Point(A).cross(B).normalize().asPoint();
+					Point At = new Point(lAB).cross(BHat).normalize().asPoint();
+					Point AtPerp = new Point(lAB.x(), lAB.y(), -lAB.z());
+					Point Ct = new Point(At).times(cos(alpha)).add(new Point(AtPerp).times(sin(alpha))).normalize().asPoint();
+					Point C = new Point(B).times(Math.cosh(d)).add(new Point(Ct).times(Math.sinh(d))).normalize().asPoint();
+					nearVertex.setTextureCoord(C); 
 				} 
 				e = e.getOppositeEdge().getNextEdge();
 			}
 		}
-		
-		// projective texture coordinates
+
+		// dehomogenize
 		for (CoVertex v : hds.getVertices()) {
-			double uv = v.getSolverIndex() < 0 ? 0.0 : u.get(v.getSolverIndex());
 			Point t = v.getTextureCoord();
-			double e = exp( -uv );
-			t.set(e * t.x(), e * t.y(), e);
+			t.times(1 / t.z());
 		}
 		
 		assert (visited.size() == hds.numVertices());

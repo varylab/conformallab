@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.frontend.controller;
 
-import static de.jreality.geometry.GeometryUtility.calculateAndSetNormals;
+import static de.jreality.geometry.IndexedFaceSetUtility.calculateAndSetNormals;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.SMOOTH_SHADING;
