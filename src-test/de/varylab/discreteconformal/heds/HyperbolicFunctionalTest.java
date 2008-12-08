@@ -30,7 +30,7 @@ public class HyperbolicFunctionalTest {
 		SceneGraphComponent c = null;
 		IndexedFaceSet ifs = null;
 		try {
-			Input in = new Input("Obj File", CLayoutTest.class.getResourceAsStream("tetrahedron.obj"));
+			Input in = new Input("Obj File", EuclideanLayoutTest.class.getResourceAsStream("tetrahedron.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds<CoVertex, CoEdge, CoFace> converter = new ConverterJR2Heds<CoVertex, CoEdge, CoFace>(CoVertex.class, CoEdge.class, CoFace.class);

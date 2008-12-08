@@ -18,6 +18,7 @@ import java.util.Queue;
 import java.util.Set;
 
 import no.uib.cipr.matrix.Vector;
+import de.jreality.math.Pn;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
@@ -46,12 +47,17 @@ public class CHyperbolicLayout {
 		Qe.offer(e1);
 		Qe.offer(e0);
 
+		for (CoEdge e : hds.getPositiveEdges()) {
+			System.out.println(e + ": " + getNewLength(e, u));
+		}
+		
+		
 		// vertices
 		Double d = getNewLength(e0, u);
 		
 		Point p0 = new Point(0, 0, 1);
 		v1.setTextureCoord(p0);
-		Point p1 = new Point(sinh(d), 0, cosh(d)).normalize().asPoint();
+		Point p1 = normalize(new Point(sinh(d), 0, cosh(d)).asPoint());
 		v2.setTextureCoord(p1);
 		
 		visited.add(v1);
@@ -81,11 +87,16 @@ public class CHyperbolicLayout {
 					d = getNewLength(e, u);
 					
 					Point BHat = new Point(B.x(), B.y(), -B.z());
-					Point lAB = new Point(A).cross(B).normalize().asPoint();
-					Point At = new Point(lAB).cross(BHat).normalize().asPoint();
-					Point AtPerp = new Point(lAB.x(), lAB.y(), -lAB.z());
-					Point Ct = new Point(At).times(cos(alpha)).add(new Point(AtPerp).times(sin(alpha))).normalize().asPoint();
-					Point C = new Point(B).times(Math.cosh(d)).add(new Point(Ct).times(Math.sinh(d))).normalize().asPoint();
+					Point AHat = new Point(A.x(), A.y(), -A.z());
+					Point lAB = normalize(new Point(A).cross(B).asPoint());
+					Point At = normalize(new Point(lAB).cross(BHat).asPoint());
+					Point AtPerp = normalize(new Point(AHat).cross(BHat).asPoint());
+					Point Ct = normalize(new Point(At).times(cos(alpha)).add(new Point(AtPerp).times(sin(alpha))).asPoint());
+					Point C1 = normalize(new Point(B).times(Math.cosh(d)).add(new Point(Ct).times(Math.sinh(d))).asPoint());
+					Point C2 = normalize(new Point(B).times(Math.cosh(d)).subtract(new Point(Ct).times(Math.sinh(d))).asPoint());
+					double d1 = Pn.distanceBetween(C1.get(), A.get(), Pn.HYPERBOLIC);
+					double d2 = Pn.distanceBetween(C2.get(), A.get(), Pn.HYPERBOLIC);
+					Point C = d1 > d2 ? C2 : C1; 
 					nearVertex.setTextureCoord(C); 
 				} 
 				e = e.getOppositeEdge().getNextEdge();
@@ -101,6 +112,11 @@ public class CHyperbolicLayout {
 		assert (visited.size() == hds.numVertices());
 	}
 	
+	
+	private static Point normalize(Point p) {
+		Pn.normalize(p.get(), p.get(), Pn.HYPERBOLIC);
+		return p;
+	}
 	
 	
 	/**

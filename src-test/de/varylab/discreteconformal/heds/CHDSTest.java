@@ -48,7 +48,7 @@ public class CHDSTest {
 		ReaderOBJ reader = new ReaderOBJ();
 		SceneGraphComponent c = null;
 		try {
-			Input in = new Input("Obj File", CLayoutTest.class.getResourceAsStream("cathead.obj"));
+			Input in = new Input("Obj File", EuclideanLayoutTest.class.getResourceAsStream("cathead.obj"));
 			c =reader.read(in);
 			IndexedFaceSet ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds<CoVertex, CoEdge, CoFace> converter = new ConverterJR2Heds<CoVertex, CoEdge, CoFace>(CoVertex.class, CoEdge.class, CoFace.class);
