@@ -35,6 +35,7 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapper;
+import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.CSphereUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CUnwrapper;
 import de.varylab.discreteconformal.unwrapper.UnwrapException;
@@ -60,7 +61,7 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 	private boolean
 		quantizeCones = true,
 		usePetsc = false,
-		hyperbolic = false;
+		hyperbolic = true;
 	
 	
 	public UnwrapShrinker(ShrinkPanelContainer parent) {
@@ -166,7 +167,11 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 			int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
 			CUnwrapper unwrapper = null;
 			if (hyperbolic) {
-				unwrapper = new CHyperbolicUnwrapper();
+				if(usePetsc) {
+					unwrapper = new CHyperbolicUnwrapperPETSc();
+				} else {
+					unwrapper = new CHyperbolicUnwrapper();
+				}
 			} else {
 				switch (X) {
 					case 1:

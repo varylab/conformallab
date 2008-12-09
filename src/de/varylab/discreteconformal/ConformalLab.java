@@ -24,7 +24,7 @@ public class ConformalLab {
 	
 	public static void main(String[] args) {
 		try {
-			InputStream in = MainWindow.class.getResourceAsStream("mann.obj");
+			InputStream in = MainWindow.class.getResourceAsStream("cathead.obj");
 			OpenMeshAction.openOBJMesh(in);
 		} catch (Exception e) {
 			handleException(e);

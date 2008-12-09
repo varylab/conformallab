@@ -10,7 +10,7 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.util.GraphUtility;
+import de.varylab.discreteconformal.heds.util.CuttingUtility;
 
 public class CSphereUnwrapper implements CUnwrapper{
 
@@ -35,7 +35,7 @@ public class CSphereUnwrapper implements CUnwrapper{
 		// punch out vertex 0 and reorder solver indices
 		CoVertex v0 = hds.getVertex(0);
 		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
-			Map<CoVertex, CoVertex> vMap = GraphUtility.cutAtEdge(e);
+			Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);
 			for (CoVertex vOld : vMap.keySet()) {
 				CoVertex vNew = vMap.get(vOld);
 				vNew.setPosition(vOld.getPosition());

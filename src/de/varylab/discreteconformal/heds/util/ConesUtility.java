@@ -45,7 +45,7 @@ public class ConesUtility {
 			List<CoEdge> path = Search.getShortestPath(c, bSet, new EdgeLengthAdapter(u));
 			for (CoEdge e : path) {
 				CoEdge eOpp = e.getOppositeEdge();
-				Map<CoVertex, CoVertex> vMap = GraphUtility.cutAtEdge(e);
+				Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);
 				for (CoVertex v : vMap.keySet()) {
 					CoVertex nV = vMap.get(v);
 					nV.setSolverIndex(v.getSolverIndex());

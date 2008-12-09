@@ -19,6 +19,7 @@ import java.util.Set;
 
 import no.uib.cipr.matrix.Vector;
 import de.jreality.math.Pn;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
@@ -38,6 +39,11 @@ public class CHyperbolicLayout {
 		Queue<CoEdge> Qe = new LinkedList<CoEdge>();
 		// start
 		CoEdge e0 = hds.getEdge(0);
+		for (CoEdge e : hds.getEdges()) { // find an inner vertex
+			if (HalfEdgeUtils.isInteriorEdge(e)) {
+				e0 = e;
+			}
+		}
 		CoEdge e1 = e0.getOppositeEdge();
 		CoVertex v1 = e0.getStartVertex();
 		CoVertex v2 = e0.getTargetVertex();
@@ -47,11 +53,6 @@ public class CHyperbolicLayout {
 		Qe.offer(e1);
 		Qe.offer(e0);
 
-		for (CoEdge e : hds.getPositiveEdges()) {
-			System.out.println(e + ": " + getNewLength(e, u));
-		}
-		
-		
 		// vertices
 		Double d = getNewLength(e0, u);
 		
@@ -67,24 +68,31 @@ public class CHyperbolicLayout {
 			CoVertex v = Qv.poll();
 			CoEdge inE = Qe.poll();
 			CoEdge outE = inE.getOppositeEdge();
-			Point B = v.getTextureCoord();
-			Point A = outE.getTargetVertex().getTextureCoord();
 			
 			CoEdge e = inE.getNextEdge();
 			while (e != outE) {
-				CoVertex nearVertex = e.getTargetVertex();
-				
 				CoEdge next = e.getNextEdge();
+				CoEdge prev = e.getPreviousEdge();
+				CoVertex aVertex = next.getTargetVertex();
+				CoVertex bVertex = prev.getTargetVertex();
+				CoVertex cVertex = e.getTargetVertex();
+
 				Double alpha = next.getAlpha();
 				if (e.getLeftFace() == null) { // a boundary edge
 					alpha = 2*PI - getAngleSum(v);
+					System.err.println("Border: angle sum is " + alpha);
+					e = e.getOppositeEdge().getNextEdge();
+					continue;
 				}
-				
-				if (!visited.contains(nearVertex)) {
-					visited.add(nearVertex);
-					Qv.offer(nearVertex);
+
+				if (!visited.contains(cVertex)) {
+					visited.add(cVertex);
+					Qv.offer(cVertex);
 					Qe.offer(e);	
 					d = getNewLength(e, u);
+					
+					Point A = aVertex.getTextureCoord();
+					Point B = bVertex.getTextureCoord();
 					
 					Point BHat = new Point(B.x(), B.y(), -B.z());
 					Point AHat = new Point(A.x(), A.y(), -A.z());
@@ -94,15 +102,41 @@ public class CHyperbolicLayout {
 					Point Ct = normalize(new Point(At).times(cos(alpha)).add(new Point(AtPerp).times(sin(alpha))).asPoint());
 					Point C1 = normalize(new Point(B).times(Math.cosh(d)).add(new Point(Ct).times(Math.sinh(d))).asPoint());
 					Point C2 = normalize(new Point(B).times(Math.cosh(d)).subtract(new Point(Ct).times(Math.sinh(d))).asPoint());
-					double d1 = Pn.distanceBetween(C1.get(), A.get(), Pn.HYPERBOLIC);
-					double d2 = Pn.distanceBetween(C2.get(), A.get(), Pn.HYPERBOLIC);
-					Point C = d1 > d2 ? C2 : C1; 
-					nearVertex.setTextureCoord(C); 
+					double d1 = Double.MAX_VALUE;
+					double d2 = Double.MAX_VALUE;
+					try {
+						d1 = Pn.distanceBetween(C1.get(), A.get(), Pn.HYPERBOLIC);
+					} catch (IllegalArgumentException iae) {}
+					try {
+						d2 = Pn.distanceBetween(C2.get(), A.get(), Pn.HYPERBOLIC);
+					} catch (IllegalArgumentException iae) {}
+					double distACCalc = getNewLength(next, u);
+					double dif1 = Math.abs(d1 - distACCalc);
+					double dif2 = Math.abs(d2 - distACCalc);
+					Point C = dif1 < dif2 ? C1 : C2; 
+					cVertex.setTextureCoord(C);
+					
+					try {
+						double distAB = Pn.distanceBetween(A.get(), B.get(), Pn.HYPERBOLIC);
+						double distBC = Pn.distanceBetween(B.get(), C.get(), Pn.HYPERBOLIC);
+						double distAC = Pn.distanceBetween(C.get(), A.get(), Pn.HYPERBOLIC);
+						double distAB2 = getNewLength(e.getPreviousEdge(), u);
+						double distBC2 = getNewLength(e, u);
+						
+						System.err.println(e.getLeftFace() + " - (" + aVertex.getIndex() + "," + bVertex.getIndex() + "," + cVertex.getIndex() + ") ------------------------");
+						System.err.println("AB: (" + prev.getIndex() + "," + prev.getOppositeEdge().getIndex() + ")\t" + distAB + "\t" + distAB2);
+						System.err.println("BC: (" + e.getIndex() + "," + e.getOppositeEdge().getIndex() + ")\t" + distBC + "\t" + distBC2);
+						System.err.println("AC: (" + next.getIndex() + "," + next.getOppositeEdge().getIndex() + ")\t" + distAC + "\t" + distACCalc);
+						System.err.println("AC1: (" + next.getIndex() + "," + next.getOppositeEdge().getIndex() + ")\t" + d1 + "\t" + distACCalc);
+						System.err.println("AC2: (" + next.getIndex() + "," + next.getOppositeEdge().getIndex() + ")\t" + d2 + "\t" + distACCalc);
+					} catch (IllegalArgumentException iae) {
+						iae.printStackTrace();
+					}
 				} 
 				e = e.getOppositeEdge().getNextEdge();
 			}
 		}
-
+		
 		// dehomogenize
 		for (CoVertex v : hds.getVertices()) {
 			Point t = v.getTextureCoord();

@@ -13,10 +13,11 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 
-public class GraphUtility {
 
-		
-	
+
+
+public class CuttingUtility {
+
 	/**
 	 * Cuts an edge and returns the mapping oldVertex <-> newVertex for split vertices
 	 * @param <V>
@@ -38,7 +39,7 @@ public class GraphUtility {
 		V v2 = edge.getTargetVertex();
 		
 		E opp = edge.getOppositeEdge();
-
+	
 		boolean splitV1 = isBoundaryVertex(v1);
 		boolean splitV2 = isBoundaryVertex(v2);
 		
