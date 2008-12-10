@@ -27,18 +27,33 @@ public class CHyperbolicUnwrapper implements CUnwrapper{
 	
 	public void unwrap(CoHDS hds, IProgressMonitor mon) throws UnwrapException {
 		mon.beginTask("Unwrapping", 3);
-		int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
-		if (X >= 3) {
-			mon.subTask("Cut to disk");
-			List<Set<CoEdge>> paths = HomologyUtility.getGeneratorPaths(hds.getVertex(0));
-			Set<CoEdge> masterPath = new HashSet<CoEdge>();
-			for (Set<CoEdge> path : paths) {
-				masterPath.addAll(path);
-			}
-			for (CoEdge e : masterPath) {
-				CuttingUtility.cutAtEdge(e);
-			}
-		}
+		//TODO maybe we dont need to cut
+//		int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
+//		int g = (2 - X) / 2;
+//		System.err.println("genus of the surface is " + g);
+//		if (g >= 2) {
+//			System.err.println("Cut to disk...");
+//			mon.subTask("Cut to disk");
+//			List<Set<CoEdge>> paths = HomologyUtility.getGeneratorPaths(hds.getVertex(0));
+//			System.err.println("Found " + paths.size() + " paths");
+//			Set<CoEdge> masterPath = new HashSet<CoEdge>();
+//			for (Set<CoEdge> path : paths) {
+//				masterPath.addAll(path);
+//			}
+//			Set<CoEdge> oppEdges = new HashSet<CoEdge>();
+//			for (CoEdge e : masterPath) {
+//				if (masterPath.contains(e.getOppositeEdge())) {
+//					oppEdges.add(e.getOppositeEdge());
+//				}
+//			}
+//			masterPath.removeAll(oppEdges);
+//			for (CoEdge e : masterPath) {
+//				CuttingUtility.cutAtEdge(e);
+//			}
+//			X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
+//			g = (2 - X) / 2;
+//			System.err.println("genus of the surface after cutting is " + g);
+//		}
 		
 		mon.subTask("Minimizing");
 		hds.prepareInvariantDataHyperbolic();
@@ -60,6 +75,8 @@ public class CHyperbolicUnwrapper implements CUnwrapper{
 			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
 		}
 		mon.worked(1);
+		
+		System.err.println("U: " + u);
 		
 		// layout
 		mon.subTask("Layout");

@@ -34,6 +34,13 @@ public class CHyperbolicLayout {
 	 * @param angleMapParam may be null
 	 */
 	public static void doLayout(CoHDS hds, Vector u) {
+		for (CoEdge e : hds.getPositiveEdges()) {
+			System.err.println(e + ": L=" + e.getLambda() + ", a=" + e.getAlpha() + ", L=" + getNewLength(e, u));
+		}
+//		for (CoVertex v : hds.getVertices()) {
+//			v.setTextureCoord(new Point());
+//		}
+		
 		Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
 		Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		Queue<CoEdge> Qe = new LinkedList<CoEdge>();
@@ -80,15 +87,14 @@ public class CHyperbolicLayout {
 				Double alpha = next.getAlpha();
 				if (e.getLeftFace() == null) { // a boundary edge
 					alpha = 2*PI - getAngleSum(v);
-					System.err.println("Border: angle sum is " + alpha);
+					System.err.println("We are at the border, skipping...");
 					e = e.getOppositeEdge().getNextEdge();
 					continue;
 				}
 
+				System.err.println("Visited: " + visited.contains(aVertex) + ", " + visited.contains(bVertex));
+				
 				if (!visited.contains(cVertex)) {
-					visited.add(cVertex);
-					Qv.offer(cVertex);
-					Qe.offer(e);	
 					d = getNewLength(e, u);
 					
 					Point A = aVertex.getTextureCoord();
@@ -114,8 +120,17 @@ public class CHyperbolicLayout {
 					double dif1 = Math.abs(d1 - distACCalc);
 					double dif2 = Math.abs(d2 - distACCalc);
 					Point C = dif1 < dif2 ? C1 : C2; 
-					cVertex.setTextureCoord(C);
-					
+					double dif = dif1 < dif2 ? dif1 : dif2;
+					if (dif < 1E-5) {
+						cVertex.setTextureCoord(C);
+						visited.add(cVertex);
+						Qv.offer(cVertex);
+						Qe.offer(e);	
+						System.err.println("Point is valid");
+					} else {
+						System.err.println("Point is invalid");
+					}
+						
 					try {
 						double distAB = Pn.distanceBetween(A.get(), B.get(), Pn.HYPERBOLIC);
 						double distBC = Pn.distanceBetween(B.get(), C.get(), Pn.HYPERBOLIC);
@@ -137,13 +152,14 @@ public class CHyperbolicLayout {
 			}
 		}
 		
-		// dehomogenize
+		// to poincare
 		for (CoVertex v : hds.getVertices()) {
 			Point t = v.getTextureCoord();
-			t.times(1 / t.z());
+			t.times(1 / (t.z() + 1));
+			t.setZ(1.0);
 		}
 		
-		assert (visited.size() == hds.numVertices());
+		System.err.println("Visited points: " + visited.size() + "/" + hds.numVertices());
 	}
 	
 	

@@ -8,6 +8,7 @@ import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
+import de.jreality.scene.SceneGraphNode;
 import de.varylab.discreteconformal.frontend.MainWindow;
 import de.varylab.discreteconformal.frontend.action.OpenMeshAction;
 import de.varylab.discreteconformal.frontend.controller.GeometryController;
@@ -22,7 +23,9 @@ public class ConformalLab {
 	private static UIController
 		uiController = new UIController();
 	
+	@SuppressWarnings("deprecation")
 	public static void main(String[] args) {
+		SceneGraphNode.setThreadSafe(false);
 		try {
 			InputStream in = MainWindow.class.getResourceAsStream("cathead.obj");
 			OpenMeshAction.openOBJMesh(in);
