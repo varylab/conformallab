@@ -1,10 +1,7 @@
 package de.varylab.discreteconformal.heds;
 
-import geom3d.Point;
-
 import java.io.IOException;
 
-import junit.framework.Assert;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.SparseVector;
 
@@ -14,7 +11,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import de.jreality.math.Pn;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
@@ -74,7 +70,7 @@ public class HyperbolicLayoutTest {
 		Vector u = new SparseVector(n);
 		CHyperbolicLayout.doLayout(hds, u);
 		
-		for (CoEdge e : hds.getPositiveEdges()) {
+//		for (CoEdge e : hds.getPositiveEdges()) {
 			//TODO figure out how a reasonable test looks like
 //			Point s = e.getStartVertex().getTextureCoord();
 //			Point t = e.getTargetVertex().getTextureCoord();
@@ -82,7 +78,7 @@ public class HyperbolicLayoutTest {
 //			double l1 = Pn.distanceBetween(null, null, n)
 //			double l2 = s.getTextureCoord().distanceTo(t.getTextureCoord());
 //			Assert.assertEquals(l1, l2, 1E-3);
-		}
+//		}
 	}
 
 	public static void main(String[] args) throws Exception{

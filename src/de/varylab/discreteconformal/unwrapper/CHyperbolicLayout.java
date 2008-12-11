@@ -14,6 +14,7 @@ import geom3d.Point;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -23,6 +24,8 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.util.CuttingUtility;
+import de.varylab.discreteconformal.heds.util.HomologyUtility;
 
 public class CHyperbolicLayout {
 
@@ -34,9 +37,38 @@ public class CHyperbolicLayout {
 	 * @param angleMapParam may be null
 	 */
 	public static void doLayout(CoHDS hds, Vector u) {
-		for (CoEdge e : hds.getPositiveEdges()) {
-			System.err.println(e + ": L=" + e.getLambda() + ", a=" + e.getAlpha() + ", L=" + getNewLength(e, u));
+		
+		//TODO maybe we dont need to cut
+		int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
+		int g = (2 - X) / 2;
+		System.err.println("genus of the surface is " + g);
+		if (g >= 2) {
+			System.err.println("Cut to disk...");
+			List<Set<CoEdge>> paths = HomologyUtility.getGeneratorPaths(hds.getVertex(0));
+			System.err.println("Found " + paths.size() + " paths");
+			Set<CoEdge> masterPath = new HashSet<CoEdge>();
+			for (Set<CoEdge> path : paths) {
+				masterPath.addAll(path);
+			}
+			for (CoEdge e : masterPath) {
+				if (HalfEdgeUtils.isInteriorEdge(e)) {
+					Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);
+					for (CoVertex v : vMap.keySet()) {
+						CoVertex newV = vMap.get(v);
+						newV.setPosition(v.getPosition());
+						newV.setSolverIndex(v.getSolverIndex());
+					}
+				}
+			}
+			X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
+			g = (2 - X) / 2;
+			System.err.println("genus of the surface after cutting is " + g);
 		}
+		
+		
+//		for (CoEdge e : hds.getPositiveEdges()) {
+//			System.err.println(e + ": L=" + e.getLambda() + ", a=" + e.getAlpha() + ", L=" + getNewLength(e, u));
+//		}
 //		for (CoVertex v : hds.getVertices()) {
 //			v.setTextureCoord(new Point());
 //		}
@@ -46,7 +78,7 @@ public class CHyperbolicLayout {
 		Queue<CoEdge> Qe = new LinkedList<CoEdge>();
 		// start
 		CoEdge e0 = hds.getEdge(0);
-		for (CoEdge e : hds.getEdges()) { // find an inner vertex
+		for (CoEdge e : hds.getEdges()) { // find an inner edge
 			if (HalfEdgeUtils.isInteriorEdge(e)) {
 				e0 = e;
 			}
@@ -87,12 +119,11 @@ public class CHyperbolicLayout {
 				Double alpha = next.getAlpha();
 				if (e.getLeftFace() == null) { // a boundary edge
 					alpha = 2*PI - getAngleSum(v);
-					System.err.println("We are at the border, skipping...");
 					e = e.getOppositeEdge().getNextEdge();
 					continue;
 				}
 
-				System.err.println("Visited: " + visited.contains(aVertex) + ", " + visited.contains(bVertex));
+//				System.err.println("Visited: " + visited.contains(aVertex) + ", " + visited.contains(bVertex));
 				
 				if (!visited.contains(cVertex)) {
 					d = getNewLength(e, u);
@@ -126,33 +157,59 @@ public class CHyperbolicLayout {
 						visited.add(cVertex);
 						Qv.offer(cVertex);
 						Qe.offer(e);	
-						System.err.println("Point is valid");
+//						System.err.println("Point is valid");
 					} else {
-						System.err.println("Point is invalid");
+//						System.err.println("Point is invalid");
 					}
 						
-					try {
-						double distAB = Pn.distanceBetween(A.get(), B.get(), Pn.HYPERBOLIC);
-						double distBC = Pn.distanceBetween(B.get(), C.get(), Pn.HYPERBOLIC);
-						double distAC = Pn.distanceBetween(C.get(), A.get(), Pn.HYPERBOLIC);
-						double distAB2 = getNewLength(e.getPreviousEdge(), u);
-						double distBC2 = getNewLength(e, u);
-						
-						System.err.println(e.getLeftFace() + " - (" + aVertex.getIndex() + "," + bVertex.getIndex() + "," + cVertex.getIndex() + ") ------------------------");
-						System.err.println("AB: (" + prev.getIndex() + "," + prev.getOppositeEdge().getIndex() + ")\t" + distAB + "\t" + distAB2);
-						System.err.println("BC: (" + e.getIndex() + "," + e.getOppositeEdge().getIndex() + ")\t" + distBC + "\t" + distBC2);
-						System.err.println("AC: (" + next.getIndex() + "," + next.getOppositeEdge().getIndex() + ")\t" + distAC + "\t" + distACCalc);
-						System.err.println("AC1: (" + next.getIndex() + "," + next.getOppositeEdge().getIndex() + ")\t" + d1 + "\t" + distACCalc);
-						System.err.println("AC2: (" + next.getIndex() + "," + next.getOppositeEdge().getIndex() + ")\t" + d2 + "\t" + distACCalc);
-					} catch (IllegalArgumentException iae) {
-						iae.printStackTrace();
-					}
+//					try {
+//						double distAB = Pn.distanceBetween(A.get(), B.get(), Pn.HYPERBOLIC);
+//						double distBC = Pn.distanceBetween(B.get(), C.get(), Pn.HYPERBOLIC);
+//						double distAC = Pn.distanceBetween(C.get(), A.get(), Pn.HYPERBOLIC);
+//						double distAB2 = getNewLength(e.getPreviousEdge(), u);
+//						double distBC2 = getNewLength(e, u);
+//						
+//						System.err.println(e.getLeftFace() + " - (" + aVertex.getIndex() + "," + bVertex.getIndex() + "," + cVertex.getIndex() + ") ------------------------");
+//						System.err.println("AB: (" + prev.getIndex() + "," + prev.getOppositeEdge().getIndex() + ")\t" + distAB + "\t" + distAB2);
+//						System.err.println("BC: (" + e.getIndex() + "," + e.getOppositeEdge().getIndex() + ")\t" + distBC + "\t" + distBC2);
+//						System.err.println("AC: (" + next.getIndex() + "," + next.getOppositeEdge().getIndex() + ")\t" + distAC + "\t" + distACCalc);
+//						System.err.println("AC1: (" + next.getIndex() + "," + next.getOppositeEdge().getIndex() + ")\t" + d1 + "\t" + distACCalc);
+//						System.err.println("AC2: (" + next.getIndex() + "," + next.getOppositeEdge().getIndex() + ")\t" + d2 + "\t" + distACCalc);
+//					} catch (IllegalArgumentException iae) {
+//						iae.printStackTrace();
+//					}
 				} 
 				e = e.getOppositeEdge().getNextEdge();
 			}
 		}
 		
-		// to poincare
+//		
+//		List<CoEdge> eList = new LinkedList<CoEdge>(hds.getEdges());
+//		for (CoEdge e : eList) {
+//			if (e.isPositive()) {
+//				continue;
+//			}
+//			Point s = e.getStartVertex().getTextureCoord();
+//			Point t = e.getTargetVertex().getTextureCoord();
+//			double d1 = Pn.distanceBetween(s.get(), t.get(), Pn.HYPERBOLIC);
+//			double d2 = getNewLength(e, u);
+//			if (Math.abs(d1 - d2) < 1E-3) {
+//				continue;
+//			}
+//			
+//			
+//			if (e.getLeftFace() != null) {
+//				hds.removeFace(e.getLeftFace());
+//			}
+//			if (e.getRightFace() != null) {
+//				hds.removeFace(e.getRightFace());
+//			}
+//			hds.removeEdge(e.getOppositeEdge());
+//			hds.removeEdge(e);
+//		}
+		
+		
+		// to poincaré
 		for (CoVertex v : hds.getVertices()) {
 			Point t = v.getTextureCoord();
 			t.times(1 / (t.z() + 1));

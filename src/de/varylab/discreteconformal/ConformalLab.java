@@ -27,7 +27,7 @@ public class ConformalLab {
 	public static void main(String[] args) {
 		SceneGraphNode.setThreadSafe(false);
 		try {
-			InputStream in = MainWindow.class.getResourceAsStream("cathead.obj");
+			InputStream in = MainWindow.class.getResourceAsStream("brezel.obj");
 			OpenMeshAction.openOBJMesh(in);
 		} catch (Exception e) {
 			handleException(e);
