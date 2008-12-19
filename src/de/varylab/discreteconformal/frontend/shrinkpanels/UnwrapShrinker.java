@@ -36,7 +36,6 @@ import de.varylab.discreteconformal.unwrapper.CDiskUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapperPETSc;
-import de.varylab.discreteconformal.unwrapper.CSphereUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CUnwrapper;
 import de.varylab.discreteconformal.unwrapper.UnwrapException;
 
@@ -163,8 +162,6 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 			final CoHDS hds = getGeometryController().getCHDS();
 			hds.setTexCoordinatesValid(false);
 			
-			// topology
-			int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
 			CUnwrapper unwrapper = null;
 			if (hyperbolic) {
 				if(usePetsc) {
@@ -173,21 +170,10 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 					unwrapper = new CHyperbolicUnwrapper();
 				}
 			} else {
-				switch (X) {
-					case 1:
-						if(usePetsc) {
-							unwrapper = new CDiskUnwrapperPETSc(numCones, quantizeCones);
-						} else {
-							unwrapper = new CDiskUnwrapper(numCones, quantizeCones);
-						}
-						break;
-					case 2:
-						unwrapper = new CSphereUnwrapper(numCones, quantizeCones);
-						break;
-					default:
-						errorMessage("Error", "Unsupported topology");
-						mon.setCanceled(true);
-						return;
+				if(usePetsc) {
+					unwrapper = new CDiskUnwrapperPETSc(numCones, quantizeCones);
+				} else {
+					unwrapper = new CDiskUnwrapper(numCones, quantizeCones);
 				}
 			}
 			
