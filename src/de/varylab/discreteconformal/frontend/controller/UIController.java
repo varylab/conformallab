@@ -1,11 +1,11 @@
 package de.varylab.discreteconformal.frontend.controller;
 
-import static de.jreality.geometry.IndexedFaceSetUtility.calculateAndSetNormals;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.SMOOTH_SHADING;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static java.awt.Color.WHITE;
+import de.jreality.geometry.GeometryUtility;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
@@ -59,9 +59,11 @@ public class UIController implements GeometryChangedListener{
 			root.removeChild(root.getChildComponent(0));
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void updateGeometry() {
 		IndexedFaceSet ifs = ConformalLab.getGeometryController().getIndexedFaceSet();
-		calculateAndSetNormals(ifs);
+		// jreality webstart extension needs this
+		GeometryUtility.calculateAndSetNormals(ifs);
 		meshRoot.setGeometry(ifs);
 	}
 	

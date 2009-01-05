@@ -10,8 +10,10 @@ copy:
 	cp ../lib/junit.jar /tmp/webstart/
 	cp -rf ../bin/* /tmp/webstart/
 	cp -rf ../../CurvatureGeometry/bin/* /tmp/webstart/
-	cp -rf ../../Halfedge/bin/* /tmp/webstart/
+	cp -rf ../../halfedge/bin/* /tmp/webstart/
+	cp -rf ../../halfedge_functional/bin/* /tmp/webstart/
 	cp -rf ../../jreality_halfedge/bin/* /tmp/webstart/
+	cp -rf ../../MTJOptimization/bin/* /tmp/webstart/
 	
 unzip:	
 	for jar in /tmp/webstart/*.jar;do unzip -o $$jar -d /tmp/webstart; chmod -R +rwx /tmp/webstart/org; done
