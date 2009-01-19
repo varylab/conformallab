@@ -37,7 +37,9 @@ public class CHyperbolicUnwrapper implements CUnwrapper{
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
-			mon.setCanceled(true);
+			if (mon != null) {
+				mon.setCanceled(true);
+			}
 			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
 		}
 		if (mon != null) {
