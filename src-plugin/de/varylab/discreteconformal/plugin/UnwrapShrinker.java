@@ -9,11 +9,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.ProgressMonitor;
 import javax.swing.SpinnerNumberModel;
@@ -39,21 +41,20 @@ public class UnwrapShrinker extends ShrinkPanel implements ActionListener, Chang
 
 	private static final long 
 		serialVersionUID = 1L;
-	private ComputationThread 
-		computationThread = new ComputationThread();
 	private JButton
 		unwrapBtn = new JButton("Unwrap");
 	private JPanel
-		coneConfigGroup = new JPanel(),
-		geometryGroup = new JPanel();
+		coneConfigPanel = new JPanel(),
+		geometryPanel = new JPanel();
 	private SpinnerNumberModel
 		numConesModel = new SpinnerNumberModel(0, 0, 100, 1);
 	private JSpinner
 		numConesSpinner = new JSpinner(numConesModel);
 	private JCheckBox
-		quantizeChecker = new JCheckBox("Quantize Cone Angles"),
-		euclideanButton = new JCheckBox("Eucliean"),
-		hyperbolicButton = new JCheckBox("Hyperbolic");
+		quantizeChecker = new JCheckBox("Quantize Cone Angles");
+	private JRadioButton
+		euclideanButton = new JRadioButton("Eucliean"),
+		hyperbolicButton = new JRadioButton("Hyperbolic");
 	private JComboBox
 		numericsCombo = new JComboBox(new String[] {"Java/MTJ Numerics", "Petsc/Tao Numerics"});
 	
@@ -78,6 +79,10 @@ public class UnwrapShrinker extends ShrinkPanel implements ActionListener, Chang
 		numericsCombo.addActionListener(this);
 		euclideanButton.addActionListener(this);
 		hyperbolicButton.addActionListener(this);
+		
+		ButtonGroup geometryGroup = new ButtonGroup();
+		geometryGroup.add(euclideanButton);
+		geometryGroup.add(hyperbolicButton);
 	}
 
 	
@@ -91,27 +96,27 @@ public class UnwrapShrinker extends ShrinkPanel implements ActionListener, Chang
 		c.weightx = 1.0;
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		
-		coneConfigGroup.setBorder(BorderFactory.createTitledBorder("Cone Singularities"));
-		coneConfigGroup.setLayout(new GridBagLayout());
-		add(coneConfigGroup, c);
+		coneConfigPanel.setBorder(BorderFactory.createTitledBorder("Cone Singularities"));
+		coneConfigPanel.setLayout(new GridBagLayout());
+		add(coneConfigPanel, c);
 		
 		JLabel numConesLabel = new JLabel("Cones");
 		c.weightx = 0.0;
 		c.gridwidth = GridBagConstraints.RELATIVE;
-		coneConfigGroup.add(numConesLabel, c);
+		coneConfigPanel.add(numConesLabel, c);
 		c.weightx = 1.0;
 		c.gridwidth = GridBagConstraints.REMAINDER;
-		coneConfigGroup.add(numConesSpinner, c);
+		coneConfigPanel.add(numConesSpinner, c);
 		quantizeChecker.setSelected(true);
-		coneConfigGroup.add(quantizeChecker, c);
+		coneConfigPanel.add(quantizeChecker, c);
 		
-		geometryGroup.setBorder(BorderFactory.createTitledBorder("Geometry"));
-		geometryGroup.setLayout(new GridLayout(1, 2));
-		add(geometryGroup, c);
+		geometryPanel.setBorder(BorderFactory.createTitledBorder("Geometry"));
+		geometryPanel.setLayout(new GridLayout(1, 2));
+		add(geometryPanel, c);
 		euclideanButton.setSelected(!hyperbolic);
-		geometryGroup.add(euclideanButton);
+		geometryPanel.add(euclideanButton);
 		hyperbolicButton.setSelected(hyperbolic);
-		geometryGroup.add(hyperbolicButton);
+		geometryPanel.add(hyperbolicButton);
 		
 		numericsCombo.setLightWeightPopupEnabled(true);
 		numericsCombo.setSelectedIndex(0);
@@ -125,7 +130,7 @@ public class UnwrapShrinker extends ShrinkPanel implements ActionListener, Chang
 	public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
 		if (unwrapBtn == s) {
-			computationThread.execute();
+			new ComputationThread().execute();
 		}
 		if (quantizeChecker == s) {
 			quantizeCones = quantizeChecker.isSelected();
@@ -162,6 +167,7 @@ public class UnwrapShrinker extends ShrinkPanel implements ActionListener, Chang
 		}
 		
 		
+		@Override
 		public Object doInBackground() {
 			System.out.println("Unwrapping...");
 			CoHDS hds = new CoHDS();
@@ -195,7 +201,7 @@ public class UnwrapShrinker extends ShrinkPanel implements ActionListener, Chang
 			
 			hds.setTexCoordinatesValid(true);			
 			TexCoordAdapter tca = new TexCoordAdapter();
-			halfedgeConnectorPlugin.updateHalfedgeContent(hds, ca, tca);
+			halfedgeConnectorPlugin.updateHalfedgeContent(hds, true, ca, tca);
 			return null;
 		}
 		

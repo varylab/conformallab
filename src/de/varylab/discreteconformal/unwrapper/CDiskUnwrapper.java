@@ -34,22 +34,30 @@ public class CDiskUnwrapper implements CUnwrapper{
 	
 	
 	public void unwrap(CoHDS hds, IProgressMonitor mon) throws UnwrapException {
-		mon.beginTask("Unwrapping", 2 + (quantizeCones ? 2 : 0));
+		if (mon != null) {
+			mon.beginTask("Unwrapping", 2 + (quantizeCones ? 2 : 0));
+		}
 		hds.prepareInvariantDataEuclidean();
 		
 		// cones
 		Collection<CoVertex> cones = null;
 		if (numCones > 0) {
-			mon.subTask("Processing " + numCones + " cones");
+			if (mon != null) {
+				mon.subTask("Processing " + numCones + " cones");
+			}
 			cones = ConesUtility.setUpMesh(hds, numCones);
-			mon.worked(1);
+			if (mon != null) {
+				mon.worked(1);
+			}
 		}
 		
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
 		int n = opt.getDomainDimension();
 		
 		// optimization
-		mon.subTask("Minimizing");
+		if (mon != null) {
+			mon.subTask("Minimizing");
+		}
 		DenseVector u = new DenseVector(n);
 		Matrix H = new CompRowMatrix(n,n,makeNonZeros(hds));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
@@ -59,13 +67,19 @@ public class CDiskUnwrapper implements CUnwrapper{
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
-			mon.setCanceled(true);
+			if (mon != null) {
+				mon.setCanceled(true);
+			}
 			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
 		}
-		mon.worked(1);
+		if (mon != null) {
+			mon.worked(1);
+		}
 		
 		if (quantizeCones && numCones > 0) {
-			mon.subTask("Quantizing Cone Singularities");
+			if (mon != null) {
+				mon.subTask("Quantizing Cone Singularities");
+			}
 			cones = ConesUtility.quantizeCones(hds, cones);
 			n = opt.getDomainDimension();
 			u = new DenseVector(n);
@@ -74,20 +88,28 @@ public class CDiskUnwrapper implements CUnwrapper{
 			try {
 				optimizer.minimize(u, opt);
 			} catch (NotConvergentException e) {
-				mon.setCanceled(true);
+				if (mon != null) {
+					mon.setCanceled(true);
+				}
 				throw new UnwrapException("Cone quantization did not succeed: " + e.getMessage());
 			}
-			mon.worked(1);
+			if (mon != null) {
+				mon.worked(1);
+			}
 		}
 		
 		// layout
-		mon.subTask("Layout");
+		if (mon != null) {
+			mon.subTask("Layout");
+		}
 		if (numCones > 0) {
 			ConesUtility.cutMesh(hds, cones, u);
 		}
 		CEuclideanLayout.doLayout(hds, u);
-		mon.worked(1);
-		mon.done();
+		if (mon != null) {
+			mon.worked(1);
+			mon.done();
+		}
 	}
 
 	
