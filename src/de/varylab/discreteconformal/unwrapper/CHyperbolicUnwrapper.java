@@ -18,9 +18,10 @@ public class CHyperbolicUnwrapper implements CUnwrapper{
 
 	
 	public void unwrap(CoHDS hds, IProgressMonitor mon) throws UnwrapException {
-		mon.beginTask("Unwrapping", 2);
-		
-		mon.subTask("Minimizing");
+		if (mon != null) {
+			mon.beginTask("Unwrapping", 2);
+			mon.subTask("Minimizing");
+		}
 		hds.prepareInvariantDataHyperbolic();
 		
 		CHyperbolicOptimizable opt = new CHyperbolicOptimizable(hds);
@@ -39,13 +40,15 @@ public class CHyperbolicUnwrapper implements CUnwrapper{
 			mon.setCanceled(true);
 			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
 		}
-		mon.worked(1);
-		
-		// layout
-		mon.subTask("Layout");
-		CHyperbolicLayout.doLayout(hds, u); 
-		mon.worked(1);
-		mon.done();
+		if (mon != null) {
+			mon.worked(1);
+			mon.subTask("Layout");
+		}
+		CHyperbolicLayout.doLayout(hds, u);
+		if (mon != null) {
+			mon.worked(1);
+			mon.done();
+		}
 	}
 
 }
