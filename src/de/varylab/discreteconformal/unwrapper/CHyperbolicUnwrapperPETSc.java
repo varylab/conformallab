@@ -24,8 +24,10 @@ public class CHyperbolicUnwrapperPETSc implements CUnwrapper{
 
 	
 	public void unwrap(CoHDS hds, IProgressMonitor mon) throws UnwrapException {
-		mon.beginTask("Unwrapping", 3);
-		mon.subTask("Cut to disk");
+		if (mon != null) {
+			mon.beginTask("Unwrapping", 3);
+			mon.subTask("Cut to disk");
+		}
 		int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
 		if (X >= 3) {
 			List<Set<CoEdge>> paths = HomologyUtility.getGeneratorPaths(hds.getVertex(0));
@@ -37,8 +39,9 @@ public class CHyperbolicUnwrapperPETSc implements CUnwrapper{
 				CuttingUtility.cutAtEdge(e);
 			}
 		}
-		
-		mon.subTask("Minimizing");
+		if (mon != null){
+			mon.subTask("Minimizing");
+		}
 		hds.prepareInvariantDataHyperbolic();
 		
 		Tao.Initialize();
@@ -56,14 +59,20 @@ public class CHyperbolicUnwrapperPETSc implements CUnwrapper{
 		optimizer.setApplication(app);
 		optimizer.setGradientTolerances(1E-5, 0, 0);
 		optimizer.solve();
-		mon.worked(1);
+		if (mon != null) {
+			mon.worked(1);
+		}
 		
 		double [] uValues = u.getArray();
 		// layout
-		mon.subTask("Layout");
-		CHyperbolicLayout.doLayout(hds, new DenseVector(uValues)); 
-		mon.worked(1);
-		mon.done();
+		if (mon != null) {
+			mon.subTask("Layout");			
+		}
+		CHyperbolicLayout.doLayout(hds, new DenseVector(uValues));
+		if (mon != null) {
+			mon.worked(1);
+			mon.done();
+		}
 	}
 
 }

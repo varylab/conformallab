@@ -1,0 +1,9 @@
+<project default="Update">
+
+	<target name="all" depends="Update"/>
+	
+	<target name="Update">
+		<touch file="trigger.dat"/>
+	</target>
+
+</project>

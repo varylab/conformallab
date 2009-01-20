@@ -14,6 +14,7 @@ import geom3d.Point;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -23,6 +24,9 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.util.CuttingUtility;
+import de.varylab.discreteconformal.heds.util.HomologyUtility;
+import de.varylab.discreteconformal.heds.util.PathUtility;
 
 public class CHyperbolicLayout {
 
@@ -33,35 +37,53 @@ public class CHyperbolicLayout {
 	 * @param u new metric
 	 * @param angleMapParam may be null
 	 */
-	public static void doLayout(CoHDS hds, Vector u) {
+	public static Set<CoVertex> doLayout(CoHDS hds, Vector u) {
 		
-		//TODO maybe we dont need to cut
-//		int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
-//		int g = (2 - X) / 2;
-//		System.err.println("genus of the surface is " + g);
-//		if (g >= 2) {
-//			System.err.println("Cut to disk...");
-//			List<Set<CoEdge>> paths = HomologyUtility.getGeneratorPaths(hds.getVertex(0));
-//			System.err.println("Found " + paths.size() + " paths");
-//			Set<CoEdge> masterPath = new HashSet<CoEdge>();
-//			for (Set<CoEdge> path : paths) {
-//				masterPath.addAll(path);
-//			}
-//			for (CoEdge e : masterPath) {
-//				if (HalfEdgeUtils.isInteriorEdge(e)) {
-//					Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);
-//					for (CoVertex v : vMap.keySet()) {
-//						CoVertex newV = vMap.get(v);
-//						newV.setPosition(v.getPosition());
-//						newV.setSolverIndex(v.getSolverIndex());
-//					}
-//				}
-//			}
-//			X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
-//			g = (2 - X) / 2;
-//			System.err.println("genus of the surface after cutting is " + g);
-//		}
-		
+		Set<CoVertex> bifurcationPoints = new HashSet<CoVertex>();
+		int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
+		int g = (2 - X) / 2;
+		System.err.println("genus of the surface is " + g);
+		if (g >= 2) {
+			System.err.println("Cut to disk...");
+			List<Set<CoEdge>> paths = HomologyUtility.getGeneratorPaths(hds.getVertex(0));
+			System.err.println("Found " + paths.size() + " paths");
+			Set<CoEdge> masterPath = new HashSet<CoEdge>();
+			for (Set<CoEdge> path : paths) {
+				masterPath.addAll(path);
+			}
+			for (CoEdge e : masterPath) {
+				if (HalfEdgeUtils.isInteriorEdge(e)) {
+					Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);
+					for (CoVertex v : vMap.keySet()) {
+						CoVertex newV = vMap.get(v);
+						newV.setPosition(v.getPosition());
+						newV.setSolverIndex(v.getSolverIndex());
+					}
+				}
+			}
+			X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
+			g = (2 - X) / 2;
+			System.err.println("genus of the surface after cutting is " + g);
+			
+			// get bifurcation points
+			List<Set<CoVertex>> vPathSet = new LinkedList<Set<CoVertex>>();
+			for (Set<CoEdge> path : paths) {
+				Set<CoVertex> vPath = PathUtility.getVerticesOnPath(path);
+				vPathSet.add(vPath);
+			}
+			for (Set<CoVertex> vPath : vPathSet) {
+				Set<CoVertex> testSet = new HashSet<CoVertex>(vPath);
+				for (Set<CoVertex> testPath : vPathSet) {
+					if (vPath == testPath) {
+						continue;
+					}
+					testSet.retainAll(testPath);
+				}
+				System.out.println("Bifurcation testset: " + testSet);
+				bifurcationPoints.addAll(testSet);
+			}
+		}
+		System.out.println("BifurcationPoints: " + bifurcationPoints);
 		
 //		for (CoEdge e : hds.getPositiveEdges()) {
 //			System.err.println(e + ": L=" + e.getLambda() + ", a=" + e.getAlpha() + ", L=" + getNewLength(e, u));
@@ -181,39 +203,40 @@ public class CHyperbolicLayout {
 		}
 		
 		
-		List<CoEdge> eList = new LinkedList<CoEdge>(hds.getEdges());
-		for (CoEdge e : eList) {
-			if (e.isPositive()) {
-				continue;
-			}
-			Point s = e.getStartVertex().getTextureCoord();
-			Point t = e.getTargetVertex().getTextureCoord();
-			double d1 = Pn.distanceBetween(s.get(), t.get(), Pn.HYPERBOLIC);
-			double d2 = getNewLength(e, u);
-			if (Math.abs(d1 - d2) < 1E-3) {
-				continue;
-			}
-			
-			
-			if (e.getLeftFace() != null) {
-				hds.removeFace(e.getLeftFace());
-			}
-			if (e.getRightFace() != null) {
-				hds.removeFace(e.getRightFace());
-			}
-			hds.removeEdge(e.getOppositeEdge());
-			hds.removeEdge(e);
-		}
+//		List<CoEdge> eList = new LinkedList<CoEdge>(hds.getEdges());
+//		for (CoEdge e : eList) {
+//			if (e.isPositive()) {
+//				continue;
+//			}
+//			Point s = e.getStartVertex().getTextureCoord();
+//			Point t = e.getTargetVertex().getTextureCoord();
+//			double d1 = Pn.distanceBetween(s.get(), t.get(), Pn.HYPERBOLIC);
+//			double d2 = getNewLength(e, u);
+//			if (Math.abs(d1 - d2) < 1E-3) {
+//				continue;
+//			}
+//			
+//			
+//			if (e.getLeftFace() != null) {
+//				hds.removeFace(e.getLeftFace());
+//			}
+//			if (e.getRightFace() != null) {
+//				hds.removeFace(e.getRightFace());
+//			}
+//			hds.removeEdge(e.getOppositeEdge());
+//			hds.removeEdge(e);
+//		}
 		
 		
 		// to poincaré
-//		for (CoVertex v : hds.getVertices()) {
-//			Point t = v.getTextureCoord();
-//			t.times(1 / (t.z() + 1));
-//			t.setZ(1.0);
-//		}
+		for (CoVertex v : hds.getVertices()) {
+			Point t = v.getTextureCoord();
+			t.times(1 / (t.z() + 1));
+			t.setZ(1.0);
+		}
 		
 		System.err.println("Visited points: " + visited.size() + "/" + hds.numVertices());
+		return bifurcationPoints;
 	}
 	
 	
