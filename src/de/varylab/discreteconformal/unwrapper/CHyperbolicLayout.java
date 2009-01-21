@@ -11,6 +11,8 @@ import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 import geom3d.Point;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,10 +28,22 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.util.CuttingUtility;
 import de.varylab.discreteconformal.heds.util.HomologyUtility;
-import de.varylab.discreteconformal.heds.util.PathUtility;
 
 public class CHyperbolicLayout {
 
+	
+	public static class HyperbolicLayoutContext {
+		
+		public Map<CoEdge, CoEdge>
+			cutMap = new HashMap<CoEdge, CoEdge>();
+		public List<Set<CoEdge>>
+			paths = new ArrayList<Set<CoEdge>>();
+		public Map<Set<CoEdge>, Set<CoEdge>>
+			pathCutMap = new HashMap<Set<CoEdge>, Set<CoEdge>>();
+		
+	}
+	
+	
 	
 	/**
 	 * Do flat layout for a HDS and a metric vector u
@@ -37,22 +51,21 @@ public class CHyperbolicLayout {
 	 * @param u new metric
 	 * @param angleMapParam may be null
 	 */
-	public static Set<CoVertex> doLayout(CoHDS hds, Vector u) {
+	public static HyperbolicLayoutContext doLayout(CoHDS hds, Vector u) {
 		
-		Set<CoVertex> bifurcationPoints = new HashSet<CoVertex>();
+		HyperbolicLayoutContext context = new HyperbolicLayoutContext();
 		int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
 		int g = (2 - X) / 2;
 		System.err.println("genus of the surface is " + g);
 		if (g >= 2) {
-			System.err.println("Cut to disk...");
-			List<Set<CoEdge>> paths = HomologyUtility.getGeneratorPaths(hds.getVertex(0));
-			System.err.println("Found " + paths.size() + " paths");
+			context.paths = HomologyUtility.getGeneratorPaths(hds.getVertex(0));
 			Set<CoEdge> masterPath = new HashSet<CoEdge>();
-			for (Set<CoEdge> path : paths) {
+			for (Set<CoEdge> path : context.paths) {
 				masterPath.addAll(path);
 			}
 			for (CoEdge e : masterPath) {
 				if (HalfEdgeUtils.isInteriorEdge(e)) {
+					context.cutMap.put(e, e.getOppositeEdge());
 					Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);
 					for (CoVertex v : vMap.keySet()) {
 						CoVertex newV = vMap.get(v);
@@ -65,32 +78,15 @@ public class CHyperbolicLayout {
 			g = (2 - X) / 2;
 			System.err.println("genus of the surface after cutting is " + g);
 			
-			// get bifurcation points
-			List<Set<CoVertex>> vPathSet = new LinkedList<Set<CoVertex>>();
-			for (Set<CoEdge> path : paths) {
-				Set<CoVertex> vPath = PathUtility.getVerticesOnPath(path);
-				vPathSet.add(vPath);
-			}
-			for (Set<CoVertex> vPath : vPathSet) {
-				Set<CoVertex> testSet = new HashSet<CoVertex>(vPath);
-				for (Set<CoVertex> testPath : vPathSet) {
-					if (vPath == testPath) {
-						continue;
-					}
-					testSet.retainAll(testPath);
+			for (Set<CoEdge> path : context.paths) {
+				Set<CoEdge> coPath = new HashSet<CoEdge>();
+				context.pathCutMap.put(path, coPath);
+				for (CoEdge e : path) {
+					coPath.add(context.cutMap.get(e));
 				}
-				System.out.println("Bifurcation testset: " + testSet);
-				bifurcationPoints.addAll(testSet);
 			}
+
 		}
-		System.out.println("BifurcationPoints: " + bifurcationPoints);
-		
-//		for (CoEdge e : hds.getPositiveEdges()) {
-//			System.err.println(e + ": L=" + e.getLambda() + ", a=" + e.getAlpha() + ", L=" + getNewLength(e, u));
-//		}
-//		for (CoVertex v : hds.getVertices()) {
-//			v.setTextureCoord(new Point());
-//		}
 		
 		Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
 		Queue<CoVertex> Qv = new LinkedList<CoVertex>();
@@ -229,14 +225,14 @@ public class CHyperbolicLayout {
 		
 		
 		// to poincaré
-		for (CoVertex v : hds.getVertices()) {
-			Point t = v.getTextureCoord();
-			t.times(1 / (t.z() + 1));
-			t.setZ(1.0);
-		}
+//		for (CoVertex v : hds.getVertices()) {
+//			Point t = v.getTextureCoord();
+//			t.times(1 / (t.z() + 1));
+//			t.setZ(1.0);
+//		}
 		
 		System.err.println("Visited points: " + visited.size() + "/" + hds.numVertices());
-		return bifurcationPoints;
+		return context;
 	}
 	
 	

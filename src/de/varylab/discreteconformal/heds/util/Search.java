@@ -183,7 +183,7 @@ public class Search {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	>  List<E> getShortestPath(V start, V end, WeightAdapter<E> w) {
-		return getShortestPath(start, singleton(end), w);
+		return getShortestPaths(start, singleton(end), w);
 	}
 	
 	
@@ -202,7 +202,7 @@ public class Search {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	>  List<E> getShortestPath(V start, Set<V> ends, WeightAdapter<E> w) {
+	>  List<E> getShortestPaths(V start, Set<V> ends, WeightAdapter<E> w) {
 		// init
 		HalfEdgeDataStructure<V, E, F> hds = start.getHalfEdgeDataStructure();
 		double[] d = new double[hds.numVertices()];

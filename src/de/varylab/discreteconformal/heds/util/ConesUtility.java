@@ -42,7 +42,7 @@ public class ConesUtility {
 				bSet.add(v);
 		}
 		for (CoVertex c : cones) {
-			List<CoEdge> path = Search.getShortestPath(c, bSet, new EdgeLengthAdapter(u));
+			List<CoEdge> path = Search.getShortestPaths(c, bSet, new EdgeLengthAdapter(u));
 			for (CoEdge e : path) {
 				CoEdge eOpp = e.getOppositeEdge();
 				Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);

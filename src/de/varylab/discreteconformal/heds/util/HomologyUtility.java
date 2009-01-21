@@ -1,7 +1,7 @@
 package de.varylab.discreteconformal.heds.util;
 
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -32,7 +32,7 @@ public class HomologyUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> List<Set<E>> getGeneratorPaths(V root) {
-		List<Set<E>> result = new LinkedList<Set<E>>();
+		List<Set<E>> result = new ArrayList<Set<E>>();
 		
 		HalfEdgeDataStructure<V, E, F> hds = root.getHalfEdgeDataStructure();
 		Set<E> edgeSet = new HashSet<E>(hds.getEdges());

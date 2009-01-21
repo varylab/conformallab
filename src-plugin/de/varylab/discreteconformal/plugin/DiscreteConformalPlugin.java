@@ -1,6 +1,10 @@
 package de.varylab.discreteconformal.plugin;
 
+import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
+import static de.jreality.shader.CommonAttributes.FACE_DRAW;
+import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
+import static java.lang.Math.PI;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
 
 import java.awt.GridBagConstraints;
@@ -10,7 +14,6 @@ import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -30,8 +33,12 @@ import javax.swing.event.ChangeListener;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
+import de.jreality.geometry.Primitives;
+import de.jreality.math.MatrixBuilder;
 import de.jreality.plugin.AlignedContent;
 import de.jreality.plugin.View;
+import de.jreality.scene.Appearance;
+import de.jreality.scene.proxy.scene.SceneGraphComponent;
 import de.jtem.halfedge.jreality.adapter.Adapter;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -42,6 +49,7 @@ import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.UnwrapException;
+import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout.HyperbolicLayoutContext;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicOptimizable;
 import de.varylab.jrworkspace.plugin.Controller;
 import de.varylab.jrworkspace.plugin.PluginInfo;
@@ -61,6 +69,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private CoHDS
 		activeGeometry = null,
 		unwrappedGeometry = null;
+	private MarkedEdgesAdapter
+		pointColorAdapter = new MarkedEdgesAdapter();
+	private SceneGraphComponent
+		auxGeometry = new SceneGraphComponent(),
+		unitCircle = new SceneGraphComponent();
 
 	private JLabel
 		geometryLabel = new JLabel();
@@ -76,7 +89,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		numConesSpinner = new JSpinner(numConesModel);
 	private JCheckBox
 		quantizeChecker = new JCheckBox("Quantize Cone Angles"),
-		showUnwrapped = new JCheckBox("Show Unwrapped Geometry");
+		showUnwrapped = new JCheckBox("Show Unwrapped Geometry"),
+		showUnitCircle = new JCheckBox("Show Unit Cirlce");
 	private JRadioButton
 		euclideanButton = new JRadioButton("Eucliean"),
 		hyperbolicButton = new JRadioButton("Hyperbolic");
@@ -101,10 +115,21 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		hyperbolicButton.addActionListener(this);
 		getGeometryBtn.addActionListener(this);
 		showUnwrapped.addActionListener(this);
+		showUnitCircle.addActionListener(this);
 		
 		ButtonGroup geometryGroup = new ButtonGroup();
 		geometryGroup.add(euclideanButton);
 		geometryGroup.add(hyperbolicButton);
+		
+		Appearance circleApp = new Appearance();
+		circleApp.setAttribute(EDGE_DRAW, false);
+		circleApp.setAttribute(VERTEX_DRAW, false); 
+		circleApp.setAttribute(FACE_DRAW, true);
+		unitCircle.setAppearance(circleApp);
+		unitCircle.setVisible(false);
+		MatrixBuilder.euclidean().rotate(PI / 2, 1, 0, 0).assignTo(unitCircle);
+		unitCircle.setGeometry(Primitives.torus(1.0, 0.005, 200, 5));
+		auxGeometry.addChild(unitCircle);
 	}
 
 	
@@ -147,6 +172,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		shrinkPanel.add(unwrapBtn, c);
 		
 		shrinkPanel.add(showUnwrapped, c);
+		shrinkPanel.add(showUnitCircle, c);
 	}
 	
 	
@@ -184,6 +210,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		if (showUnwrapped == s) {
 			updateViewer();
 		}
+		if (showUnitCircle == s) {
+			unitCircle.setVisible(showUnitCircle.isSelected());
+		}
 	}
 	
 	private void getGeometry() {
@@ -206,7 +235,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		} else {
 			posAdapter = new PositionAdapter();
 		}
-		hcp.updateHalfedgeContent(unwrappedGeometry, true, posAdapter, texAdapter); 
+		hcp.updateHalfedgeContent(unwrappedGeometry, true, posAdapter, texAdapter, pointColorAdapter); 
 	}
 	
 	
@@ -233,8 +262,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			} catch (NotConvergentException e) {
 				throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
 			}
-			Set<CoVertex> bifurcationPoints = CHyperbolicLayout.doLayout(unwrappedGeometry, u);
-			
+			HyperbolicLayoutContext context = CHyperbolicLayout.doLayout(unwrappedGeometry, u);
+			pointColorAdapter.setContext(context);
 		} else {
 			CDiskUnwrapper unwrapper = new CDiskUnwrapper(numCones, quantizeCones);
 			unwrapper.unwrap(unwrappedGeometry, null);
@@ -255,7 +284,17 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	public void install(Controller c) throws Exception {
 		hcp = c.getPlugin(HalfedgeConnectorPlugin.class);
 		getGeometry();
+		content = c.getPlugin(AlignedContent.class);
+//		content.getScalingComponent().addChild(auxGeometry);
 		super.install(c); 
+	}
+	
+	@Override
+	public void uninstall(Controller c) throws Exception {
+		super.uninstall(c);
+		if (content.getScalingComponent().isDirectAncestor(auxGeometry)) {
+			content.getScalingComponent().removeChild(auxGeometry);
+		} 
 	}
 	
 	
