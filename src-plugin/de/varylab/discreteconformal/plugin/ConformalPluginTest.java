@@ -13,6 +13,7 @@ import de.jreality.plugin.ContentLoader;
 import de.jreality.plugin.ContentTools;
 import de.jreality.plugin.Export;
 import de.jreality.plugin.HeadUpDisplay;
+import de.jreality.plugin.Inspector;
 import de.jreality.plugin.Lights;
 import de.jreality.plugin.View;
 import de.jreality.plugin.ViewMenuBar;
@@ -71,6 +72,7 @@ public class ConformalPluginTest {
 		c.registerPlugin(new ContentTools());
 		c.registerPlugin(new Export());
 		c.registerPlugin(new ZoomTool());
+		c.registerPlugin(new Inspector());
 		
 		// look and feel switch
 		c.registerPlugin(new LookAndFeelSwitch());

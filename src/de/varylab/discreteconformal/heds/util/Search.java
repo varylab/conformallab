@@ -127,11 +127,12 @@ public class Search {
 		Stack<E> path = new Stack<E>();
 		HashSet<V> visited = new HashSet<V>();
 		visited.add(start);
-		if (!dFS_R(start, end, path, visited))
+		if (!dFS_R(start, end, path, visited)) {
 			throw new NoSuchElementException();
-		else 
+		} else {
 			return path;
-	}
+		}
+	} 
 
 
 	protected static 
@@ -146,8 +147,9 @@ public class Search {
 			if (!visited.contains(e.getTargetVertex())){
 				visited.add(e.getTargetVertex());
 				path.push(e);
-				if (dFS_R(e.getTargetVertex(), end, path, visited))
+				if (dFS_R(e.getTargetVertex(), end, path, visited)) {
 					return true;
+				}
 				path.pop();
 			}
 		}
