@@ -224,13 +224,6 @@ public class CHyperbolicLayout {
 //		}
 		
 		
-		// to poincaré
-//		for (CoVertex v : hds.getVertices()) {
-//			Point t = v.getTextureCoord();
-//			t.times(1 / (t.z() + 1));
-//			t.setZ(1.0);
-//		}
-		
 		System.err.println("Visited points: " + visited.size() + "/" + hds.numVertices());
 		return context;
 	}

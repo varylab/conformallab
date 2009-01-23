@@ -4,6 +4,8 @@ import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
+import static java.awt.GridBagConstraints.RELATIVE;
+import static java.awt.GridBagConstraints.REMAINDER;
 import static java.lang.Math.PI;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
 
@@ -82,7 +84,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		getGeometryBtn = new JButton("Retrieve Geometry");
 	private JPanel
 		coneConfigPanel = new JPanel(),
-		geometryPanel = new JPanel();
+		geometryPanel = new JPanel(),
+		visualizationPanel = new JPanel();
 	private SpinnerNumberModel
 		numConesModel = new SpinnerNumberModel(0, 0, 100, 1);
 	private JSpinner
@@ -93,7 +96,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		showUnitCircle = new JCheckBox("Show Unit Cirlce");
 	private JRadioButton
 		euclideanButton = new JRadioButton("Eucliean"),
-		hyperbolicButton = new JRadioButton("Hyperbolic");
+		hyperbolicButton = new JRadioButton("Hyperbolic"),
+		kleinButton = new JRadioButton("Klein"),
+		poincareButton = new JRadioButton("Poincaré");
 	private JComboBox
 		numericsCombo = new JComboBox(new String[] {"Java/MTJ Numerics", "Petsc/Tao Numerics"});
 
@@ -102,7 +107,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private boolean
 		quantizeCones = true,
 		usePetsc = false,
-		hyperbolic = true;
+		hyperbolic = true,
+		klein = true;
 	
 	
 	public DiscreteConformalPlugin() {
@@ -116,10 +122,16 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		getGeometryBtn.addActionListener(this);
 		showUnwrapped.addActionListener(this);
 		showUnitCircle.addActionListener(this);
+		kleinButton.addActionListener(this);
+		poincareButton.addActionListener(this);
 		
 		ButtonGroup geometryGroup = new ButtonGroup();
 		geometryGroup.add(euclideanButton);
 		geometryGroup.add(hyperbolicButton);
+		
+		ButtonGroup modelGroup = new ButtonGroup();
+		modelGroup.add(kleinButton);
+		modelGroup.add(poincareButton);
 		
 		Appearance circleApp = new Appearance();
 		circleApp.setAttribute(EDGE_DRAW, false);
@@ -152,10 +164,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		
 		JLabel numConesLabel = new JLabel("Cones");
 		c.weightx = 0.0;
-		c.gridwidth = GridBagConstraints.RELATIVE;
+		c.gridwidth = RELATIVE;
 		coneConfigPanel.add(numConesLabel, c);
 		c.weightx = 1.0;
-		c.gridwidth = GridBagConstraints.REMAINDER;
+		c.gridwidth = REMAINDER;
 		coneConfigPanel.add(numConesSpinner, c);
 		quantizeChecker.setSelected(true);
 		coneConfigPanel.add(quantizeChecker, c);
@@ -171,8 +183,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		shrinkPanel.add(numericsCombo, c);
 		shrinkPanel.add(unwrapBtn, c);
 		
-		shrinkPanel.add(showUnwrapped, c);
-		shrinkPanel.add(showUnitCircle, c);
+		visualizationPanel.setBorder(BorderFactory.createTitledBorder("Visualization"));
+		visualizationPanel.setLayout(new GridBagLayout());
+		visualizationPanel.add(showUnitCircle, c);
+		visualizationPanel.add(showUnwrapped, c);
+		c.gridwidth = RELATIVE;
+		visualizationPanel.add(kleinButton, c);
+		c.gridwidth = REMAINDER;
+		visualizationPanel.add(poincareButton, c);
+		shrinkPanel.add(visualizationPanel, c);
 	}
 	
 	
@@ -207,7 +226,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		if (getGeometryBtn == s) {
 			getGeometry();
 		}
-		if (showUnwrapped == s) {
+		if (showUnwrapped == s || kleinButton == s || poincareButton == s) {
+			klein = kleinButton.isSelected();
 			updateViewer();
 		}
 		if (showUnitCircle == s) {
@@ -228,10 +248,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		if (unwrappedGeometry == null) {
 			return;
 		}
-		Adapter texAdapter = new TexCoordAdapter();
+		Adapter texAdapter = new TexCoordAdapter(false, !klein);
 		Adapter posAdapter = null;
 		if (showUnwrapped.isSelected()) {
-			posAdapter = new PositionTexCoordAdapter();
+			posAdapter = new PositionTexCoordAdapter(!klein);
 		} else {
 			posAdapter = new PositionAdapter();
 		}
@@ -285,7 +305,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		hcp = c.getPlugin(HalfedgeConnectorPlugin.class);
 		getGeometry();
 		content = c.getPlugin(AlignedContent.class);
-//		content.getScalingComponent().addChild(auxGeometry);
+		content.getScalingComponent().addChild(auxGeometry);
 		super.install(c); 
 	}
 	
@@ -305,6 +325,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		c.storeProperty(getClass(), "quantizeCones", quantizeCones);
 		c.storeProperty(getClass(), "hyperbolic", hyperbolic);
 		c.storeProperty(getClass(), "usePetsc", usePetsc);
+		c.storeProperty(getClass(), "klein", klein);
 	}
 	
 
@@ -315,12 +336,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		quantizeChecker.setSelected(c.getProperty(getClass(), "quantizeCones", quantizeCones));
 		hyperbolic = c.getProperty(getClass(), "hyperbolic", hyperbolic);
 		usePetsc = c.getProperty(getClass(), "usePetsc", usePetsc);
+		klein = c.getProperty(getClass(), "klein", klein);
 		
 		numericsCombo.setSelectedIndex(usePetsc ? 1 : 0);
 		quantizeCones = quantizeChecker.isSelected();
 		numCones = numConesModel.getNumber().intValue();
 		euclideanButton.setSelected(!hyperbolic);
 		hyperbolicButton.setSelected(hyperbolic);
+		kleinButton.setSelected(klein);
+		poincareButton.setSelected(!klein);
 	}
 	
 	

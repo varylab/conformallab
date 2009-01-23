@@ -7,9 +7,10 @@ import geom3d.Vector;
 
 import java.util.List;
 
+import de.jtem.halfedge.functional.conformal.node.ConformalFace;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 
-public class CoFace extends de.jtem.halfedge.functional.conformal.node.ConformalFace<CoVertex, CoEdge, CoFace> {
+public class CoFace extends ConformalFace<CoVertex, CoEdge, CoFace> {
 
     private Vector
     	normal = null;

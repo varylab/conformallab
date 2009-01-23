@@ -2,9 +2,10 @@ package de.varylab.discreteconformal.heds;
 
 import geom3d.Point;
 import geom3d.Vector;
+import de.jtem.halfedge.functional.conformal.node.ConformalEdge;
 import de.varylab.discreteconformal.heds.util.MeshUtility;
 
-public class CoEdge extends de.jtem.halfedge.functional.conformal.node.ConformalEdge<CoVertex, CoEdge, CoFace> {
+public class CoEdge extends ConformalEdge<CoVertex, CoEdge, CoFace> {
 
     private Double
     	curvature = null;

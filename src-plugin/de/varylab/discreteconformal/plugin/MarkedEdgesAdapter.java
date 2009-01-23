@@ -9,7 +9,6 @@ import java.util.Set;
 
 import de.jtem.halfedge.jreality.adapter.ColorAdapter2Ifs;
 import de.jtem.halfedge.jreality.adapter.RelRadiusAdapter2Ifs;
-import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout.HyperbolicLayoutContext;
 
@@ -60,11 +59,7 @@ public class MarkedEdgesAdapter implements ColorAdapter2Ifs<CoEdge>, RelRadiusAd
 				return pathColors.get(path);
 			}
 		}
-		if (!HalfEdgeUtils.isInteriorEdge(e)) {
-			return new double[]{0, 0, 0};
-		} else {
-			return normalColor;
-		}
+		return normalColor;
 	}
 	
 	@Override
@@ -78,11 +73,7 @@ public class MarkedEdgesAdapter implements ColorAdapter2Ifs<CoEdge>, RelRadiusAd
 				return 1.0;
 			}
 		}
-		if (!HalfEdgeUtils.isInteriorEdge(e)) {
-			return 0.3;
-		} else {
-			return 0.1;
-		}
+		return 0.0;
 	}
 	
 	
