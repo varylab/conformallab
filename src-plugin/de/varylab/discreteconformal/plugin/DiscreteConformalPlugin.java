@@ -81,7 +81,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		geometryLabel = new JLabel();
 	private JButton
 		unwrapBtn = new JButton("Unwrap"),
-		getGeometryBtn = new JButton("Retrieve Geometry");
+		getGeometryBtn = new JButton("Retrieve Geometry"),
+		reduceBtn = new JButton("To Fundamental Polygon");
 	private JPanel
 		coneConfigPanel = new JPanel(),
 		geometryPanel = new JPanel(),
@@ -124,6 +125,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		showUnitCircle.addActionListener(this);
 		kleinButton.addActionListener(this);
 		poincareButton.addActionListener(this);
+		reduceBtn.addActionListener(this);
 		
 		ButtonGroup geometryGroup = new ButtonGroup();
 		geometryGroup.add(euclideanButton);
@@ -192,6 +194,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		c.gridwidth = REMAINDER;
 		visualizationPanel.add(poincareButton, c);
 		shrinkPanel.add(visualizationPanel, c);
+		
+		shrinkPanel.add(reduceBtn, c);
 	}
 	
 	
@@ -232,6 +236,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		}
 		if (showUnitCircle == s) {
 			unitCircle.setVisible(showUnitCircle.isSelected());
+		}
+		if (reduceBtn == s) {
+			System.out.println("DiscreteConformalPlugin.Reduce()");
 		}
 	}
 	

@@ -35,6 +35,10 @@ public abstract class Adapters {
 		public double getLambda(CoEdge e) {
 			return e.getLambda();
 		}
+		@Override
+		public void setLambda(CoEdge e, double lambda) {
+			e.setLambda(lambda);
+		}
 	}
 	
 	public static class CTheta implements Theta<CoVertex> {
