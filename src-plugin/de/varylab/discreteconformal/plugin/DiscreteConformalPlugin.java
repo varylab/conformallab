@@ -16,6 +16,7 @@ import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -34,6 +35,7 @@ import javax.swing.event.ChangeListener;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
+import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.MatrixBuilder;
@@ -43,13 +45,17 @@ import de.jreality.scene.Appearance;
 import de.jreality.scene.proxy.scene.SceneGraphComponent;
 import de.jtem.halfedge.jreality.adapter.Adapter;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
+import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.PositionTexCoordAdapter;
 import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
+import de.varylab.discreteconformal.heds.util.UniformizationUtility;
+import de.varylab.discreteconformal.heds.util.UniformizationUtility.UAdapter;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout;
+import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.UnwrapException;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout.HyperbolicLayoutContext;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicOptimizable;
@@ -238,7 +244,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			unitCircle.setVisible(showUnitCircle.isSelected());
 		}
 		if (reduceBtn == s) {
-			System.out.println("DiscreteConformalPlugin.Reduce()");
+			try {
+				reduceToFundamentalPolygon();
+			} catch (Exception e1) {
+//				Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
+//				JOptionPane.showMessageDialog(w, e1.getMessage(), "Reduce Error", ERROR_MESSAGE);
+				e1.printStackTrace(); 
+				return;
+			}
+			updateViewer();
 		}
 	}
 	
@@ -263,6 +277,22 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			posAdapter = new PositionAdapter();
 		}
 		hcp.updateHalfedgeContent(unwrappedGeometry, true, posAdapter, texAdapter, pointColorAdapter); 
+	}
+	
+	
+	private void reduceToFundamentalPolygon() throws Exception {
+		unwrappedGeometry = activeGeometry.createCombinatoriallyEquivalentCopy(new CoHDS());
+		for (CoVertex v : activeGeometry.getVertices()) {
+			unwrappedGeometry.getVertex(v.getIndex()).setPosition(v.getPosition());
+		}
+		CHyperbolicUnwrapper unwrapper = new CHyperbolicUnwrapper();
+		Vector u = unwrapper.getConformalFactors(unwrappedGeometry);
+		UAdapter uAdapter = new UAdapter(u);
+//		Map<CoEdge, Double> lMap = UniformizationUtility.getLengthMap(unwrappedGeometry, uAdapter);
+//		CoEdge e = unwrappedGeometry.getEdge(0);
+//		UniformizationUtility.flipLengthAndAlphas(e, lMap);
+		CoVertex root = unwrappedGeometry.getVertex(0);
+		UniformizationUtility.reduceToFundamentalPolygon(unwrappedGeometry, root, uAdapter);
 	}
 	
 	
@@ -310,7 +340,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	@Override
 	public void install(Controller c) throws Exception {
 		hcp = c.getPlugin(HalfedgeConnectorPlugin.class);
-		getGeometry();
 		content = c.getPlugin(AlignedContent.class);
 		content.getScalingComponent().addChild(auxGeometry);
 		super.install(c); 

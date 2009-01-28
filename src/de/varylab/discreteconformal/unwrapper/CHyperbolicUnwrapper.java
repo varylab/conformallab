@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.unwrapper;
 import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
+import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -18,12 +19,13 @@ public class CHyperbolicUnwrapper implements CUnwrapper{
 
 	
 	public void unwrap(CoHDS hds, IProgressMonitor mon) throws UnwrapException {
-		if (mon != null) {
-			mon.beginTask("Unwrapping", 2);
-			mon.subTask("Minimizing");
-		}
+		Vector u = getConformalFactors(hds);
+		CHyperbolicLayout.doLayout(hds, u);
+	}
+	
+	
+	public Vector getConformalFactors(CoHDS hds) throws UnwrapException {
 		hds.prepareInvariantDataHyperbolic();
-		
 		CHyperbolicOptimizable opt = new CHyperbolicOptimizable(hds);
 		int n = opt.getDomainDimension();
 		
@@ -37,20 +39,10 @@ public class CHyperbolicUnwrapper implements CUnwrapper{
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
-			if (mon != null) {
-				mon.setCanceled(true);
-			}
 			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
 		}
-		if (mon != null) {
-			mon.worked(1);
-			mon.subTask("Layout");
-		}
-		CHyperbolicLayout.doLayout(hds, u);
-		if (mon != null) {
-			mon.worked(1);
-			mon.done();
-		}
+		return u;
 	}
+	
 
 }
