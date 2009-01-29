@@ -16,7 +16,6 @@ import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -43,9 +42,11 @@ import de.jreality.plugin.AlignedContent;
 import de.jreality.plugin.View;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.proxy.scene.SceneGraphComponent;
+import de.jtem.halfedge.algorithm.triangulation.Triangulator;
 import de.jtem.halfedge.jreality.adapter.Adapter;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
@@ -74,6 +75,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		content = null;
 	private HalfedgeConnectorPlugin
 		hcp = null;
+	private Triangulator<CoVertex, CoEdge, CoFace>
+		triangulator = new Triangulator<CoVertex, CoEdge, CoFace>();
 	private CoHDS
 		activeGeometry = null,
 		unwrappedGeometry = null;
@@ -217,6 +220,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			} catch (Exception e1) {
 				Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
 				JOptionPane.showMessageDialog(w, e1.getMessage(), "Unwrap Error", ERROR_MESSAGE);
+				e1.printStackTrace();
 				return;
 			}
 			updateViewer();
@@ -261,6 +265,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		unwrappedGeometry = null;
 		activeGeometry.setTexCoordinatesValid(false);
 		hcp.getHalfedgeContent(activeGeometry, new PositionAdapter());
+		triangulator.triangulate(activeGeometry);
 		geometryLabel.setText("Geometry: " + hcp.getHalfedgeContentName());
 	} 
 	

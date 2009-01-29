@@ -82,7 +82,10 @@ public class UniformizationUtility {
 				}
 				List<CoEdge> star = incomingEdges(v);
 				int degree = star.size();
-				if (degree == 3) {
+				if (degree == 3
+						&& star.get(0).getLeftFace() != star.get(1).getLeftFace()
+						&& star.get(1).getLeftFace() != star.get(2).getLeftFace()
+						&& star.get(2).getLeftFace() != star.get(1).getLeftFace()) {
 					removeTrivalentVertex(v);
 				} else if (degree > 3) {
 					int newDegree = degree;
@@ -134,7 +137,7 @@ public class UniformizationUtility {
 		double alphaSum = alpha + alphaP;
 		double cP = arcosh(cosh(a)*cosh(aP) - sinh(a)*sinh(aP)*Math.cos(betaSum));
 		double cPCheck = arcosh(cosh(b)*cosh(bP) - sinh(b)*sinh(bP)*Math.cos(alphaSum));
-//		System.out.println("l: " + cP + " - " + cPCheck);
+		System.out.println("l: " + cP + " - " + cPCheck);
 		double l = (cP + cPCheck) / 2;
 		lMap.put(e, l);
 		lMap.put(e.getOppositeEdge(), l);
@@ -153,8 +156,8 @@ public class UniformizationUtility {
 		double gammaAP = e.getPreviousEdge().getAlpha();
 		double gammaB = e.getOppositeEdge().getPreviousEdge().getAlpha();
 		double gammaBP = e.getOppositeEdge().getNextEdge().getAlpha();
-//		System.out.println("gamma: " + (gammaA + gammaB) + " - " + gamma);
-//		System.out.println("gammaP: " + (gammaAP + gammaBP) + " - " + gammaP);
+		System.out.println("gamma: " + (gammaA + gammaB) + " - " + gamma);
+		System.out.println("gammaP: " + (gammaAP + gammaBP) + " - " + gammaP);
 	}
 	
 	

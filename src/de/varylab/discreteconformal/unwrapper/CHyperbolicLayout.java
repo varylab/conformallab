@@ -63,7 +63,7 @@ public class CHyperbolicLayout {
 			for (Set<CoEdge> path : context.paths) {
 				masterPath.addAll(path);
 			}
-			for (CoEdge e : masterPath) {
+			for (CoEdge e : masterPath) { 
 				if (HalfEdgeUtils.isInteriorEdge(e)) {
 					context.cutMap.put(e, e.getOppositeEdge());
 					Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);
@@ -92,7 +92,7 @@ public class CHyperbolicLayout {
 		Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		Queue<CoEdge> Qe = new LinkedList<CoEdge>();
 		// start
-		CoEdge e0 = hds.getEdge(0);
+		CoEdge e0 = hds.getEdge(0); 
 		for (CoEdge e : hds.getEdges()) { // find an inner edge
 			if (HalfEdgeUtils.isInteriorEdge(e)) {
 				e0 = e;
@@ -206,7 +206,12 @@ public class CHyperbolicLayout {
 //			}
 //			Point s = e.getStartVertex().getTextureCoord();
 //			Point t = e.getTargetVertex().getTextureCoord();
-//			double d1 = Pn.distanceBetween(s.get(), t.get(), Pn.HYPERBOLIC);
+//			double d1 = Double.MAX_VALUE;
+//			try {
+//				Pn.distanceBetween(s.get(), t.get(), Pn.HYPERBOLIC);
+//			} catch (IllegalArgumentException iae) {
+//				System.out.println(iae.getMessage());
+//			}
 //			double d2 = getNewLength(e, u);
 //			if (Math.abs(d1 - d2) < 1E-3) {
 //				continue;
