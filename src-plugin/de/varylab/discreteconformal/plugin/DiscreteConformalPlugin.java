@@ -57,6 +57,7 @@ import de.varylab.discreteconformal.heds.util.UniformizationUtility.UAdapter;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapper;
+import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.UnwrapException;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout.HyperbolicLayoutContext;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicOptimizable;
@@ -290,12 +291,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		for (CoVertex v : activeGeometry.getVertices()) {
 			unwrappedGeometry.getVertex(v.getIndex()).setPosition(v.getPosition());
 		}
-		CHyperbolicUnwrapper unwrapper = new CHyperbolicUnwrapper();
-		Vector u = unwrapper.getConformalFactors(unwrappedGeometry);
+		Vector u = null;
+		if (usePetsc) {
+			CHyperbolicUnwrapperPETSc unwrapper = new CHyperbolicUnwrapperPETSc();
+			u = unwrapper.getConformalFactors(unwrappedGeometry);
+		} else {
+			CHyperbolicUnwrapper unwrapper = new CHyperbolicUnwrapper();
+			u = unwrapper.getConformalFactors(unwrappedGeometry);
+		}
 		UAdapter uAdapter = new UAdapter(u);
-//		Map<CoEdge, Double> lMap = UniformizationUtility.getLengthMap(unwrappedGeometry, uAdapter);
-//		CoEdge e = unwrappedGeometry.getEdge(0);
-//		UniformizationUtility.flipLengthAndAlphas(e, lMap);
 		CoVertex root = unwrappedGeometry.getVertex(0);
 		UniformizationUtility.reduceToFundamentalPolygon(unwrappedGeometry, root, uAdapter);
 	}

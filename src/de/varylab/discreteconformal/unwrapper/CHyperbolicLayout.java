@@ -57,7 +57,7 @@ public class CHyperbolicLayout {
 		int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
 		int g = (2 - X) / 2;
 		System.err.println("genus of the surface is " + g);
-		if (g >= 2) {
+		if (g >= 1) {
 			context.paths = HomologyUtility.getGeneratorPaths(hds.getVertex(0));
 			Set<CoEdge> masterPath = new HashSet<CoEdge>();
 			for (Set<CoEdge> path : context.paths) {
