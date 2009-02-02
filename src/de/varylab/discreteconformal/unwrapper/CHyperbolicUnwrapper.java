@@ -5,9 +5,6 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
-
-import org.eclipse.core.runtime.IProgressMonitor;
-
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicOptimizable;
 import de.varylab.mtjoptimization.NotConvergentException;
@@ -18,7 +15,7 @@ import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 public class CHyperbolicUnwrapper implements CUnwrapper{
 
 	
-	public void unwrap(CoHDS hds, IProgressMonitor mon) throws UnwrapException {
+	public void unwrap(CoHDS hds) throws UnwrapException {
 		Vector u = getConformalFactors(hds);
 		CHyperbolicLayout.doLayout(hds, u);
 	}

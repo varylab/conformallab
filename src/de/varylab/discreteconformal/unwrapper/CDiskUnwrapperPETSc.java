@@ -5,9 +5,6 @@ import static de.varylab.discreteconformal.heds.util.SparseUtility.getPETScNonZe
 import java.util.Collection;
 
 import no.uib.cipr.matrix.DenseVector;
-
-import org.eclipse.core.runtime.IProgressMonitor;
-
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.util.ConesUtility;
@@ -31,20 +28,14 @@ public class CDiskUnwrapperPETSc implements CUnwrapper{
 	}
 	
 	
-	public void unwrap(CoHDS hds, IProgressMonitor mon) throws UnwrapException {
-		mon.beginTask("Unwrapping", 2 + (quantizeCones ? 2 : 0));
-		hds.prepareInvariantDataEuclidean();
-		
+	public void unwrap(CoHDS hds) throws UnwrapException {
 		// cones
 		Collection<CoVertex> cones = null;
 		if (numCones > 0) {
-			mon.subTask("Processing " + numCones + " cones");
 			cones = ConesUtility.setUpMesh(hds, numCones);
-			mon.worked(1);
 		}
 
 		// optimization
-		mon.subTask("Minimizing");
 		Vec u;
 		Mat H;
 		Tao optimizer;
@@ -67,13 +58,10 @@ public class CDiskUnwrapperPETSc implements CUnwrapper{
 		GetSolutionStatusResult status = optimizer.getSolutionStatus();
 		System.out.println("Minimization: " + status);
 		if (status.reason.cvalue() < 0) {
-			mon.setCanceled(true);
 			throw new UnwrapException("Optimization did not succeed: " + status);
 		}
-		mon.worked(1);
 
 		if (quantizeCones && numCones > 0) {
-			mon.subTask("Quantizing Cone Singularities");
 			// calculating cones
 			cones = ConesUtility.quantizeCones(hds, cones);
 			
@@ -95,22 +83,17 @@ public class CDiskUnwrapperPETSc implements CUnwrapper{
 			status = optimizer.getSolutionStatus();
 			System.out.println("Cone Quantization: " + status);
 			if (status.reason.cvalue() < 0) {
-				mon.setCanceled(true);
 				throw new UnwrapException("Cone quantization did not succeed: " + status);
 			}
-			mon.worked(1);
 		}
 		
 		// layout
-		mon.subTask("Layout");
 		double [] uValues = u.getArray();
 		if (numCones > 0) {
 			ConesUtility.cutMesh(hds, cones, new DenseVector(uValues));
 		}
 		CEuclideanLayout.doLayout(hds,  new DenseVector(uValues));
 		u.restoreArray();
-		mon.worked(1);
-		mon.done();
 	}
 
 

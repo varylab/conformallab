@@ -179,7 +179,7 @@ public class UnwrapShrinker extends ShrinkPanel implements SelectionListener{
 			
 			// unwrap
 			try {
-				unwrapper.unwrap(hds, mon);
+				unwrapper.unwrap(hds);
 			} catch (UnwrapException ue) {
 				errorMessage("Error", ue.getMessage());
 				mon.setCanceled(true);

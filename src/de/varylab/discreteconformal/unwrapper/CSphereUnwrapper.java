@@ -4,8 +4,6 @@ import geom3d.Point;
 
 import java.util.Map;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -29,9 +27,7 @@ public class CSphereUnwrapper implements CUnwrapper{
 	}
 	
 
-	public void unwrap(CoHDS hds, IProgressMonitor mon) throws UnwrapException {
-		mon.beginTask("Unwrapping", 3);
-		
+	public void unwrap(CoHDS hds) throws UnwrapException {
 		// punch out vertex 0 and reorder solver indices
 		CoVertex v0 = hds.getVertex(0);
 		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
@@ -45,7 +41,7 @@ public class CSphereUnwrapper implements CUnwrapper{
 			}				
 		}
 		
-		diskUnwrapper.unwrap(hds, mon);
+		diskUnwrapper.unwrap(hds);
 		
 //		HashSet<CVertex> boundary = new HashSet<CVertex>();
 //		boundary.add(v0);
@@ -101,8 +97,6 @@ public class CSphereUnwrapper implements CUnwrapper{
 //			t.setZ(1.0);
 //		}
 //		mon.worked(1);
-		
-		mon.done();
 	}
 
 	

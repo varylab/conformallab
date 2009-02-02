@@ -3,7 +3,6 @@ package de.varylab.discreteconformal.plugin;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
-import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
 import static java.awt.GridBagConstraints.RELATIVE;
 import static java.awt.GridBagConstraints.REMAINDER;
 import static java.lang.Math.PI;
@@ -32,10 +31,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
-import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.MatrixBuilder;
 import de.jreality.scene.Appearance;
@@ -55,20 +51,16 @@ import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
 import de.varylab.discreteconformal.heds.util.UniformizationUtility;
 import de.varylab.discreteconformal.heds.util.UniformizationUtility.UAdapter;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapper;
+import de.varylab.discreteconformal.unwrapper.CDiskUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapperPETSc;
-import de.varylab.discreteconformal.unwrapper.UnwrapException;
+import de.varylab.discreteconformal.unwrapper.CUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout.HyperbolicLayoutContext;
-import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicOptimizable;
 import de.varylab.jrworkspace.plugin.Controller;
 import de.varylab.jrworkspace.plugin.PluginInfo;
 import de.varylab.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.varylab.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
-import de.varylab.mtjoptimization.NotConvergentException;
-import de.varylab.mtjoptimization.newton.NewtonOptimizer;
-import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
-import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ActionListener, ChangeListener {
 
@@ -313,26 +305,24 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		}
 		if (hyperbolic) {
 			unwrappedGeometry.prepareInvariantDataHyperbolic();
-			CHyperbolicOptimizable opt = new CHyperbolicOptimizable(unwrappedGeometry);
-			int n = opt.getDomainDimension();
-			
-			// optimization
-			DenseVector u = new DenseVector(n);
-			Matrix H = new CompRowMatrix(n,n,makeNonZeros(unwrappedGeometry));
-			NewtonOptimizer optimizer = new NewtonOptimizer(H);
-			optimizer.setStepController(new ArmijoStepController());
-			optimizer.setSolver(Solver.CG);
-			optimizer.setError(1E-5);
-			try {
-				optimizer.minimize(u, opt);
-			} catch (NotConvergentException e) {
-				throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
+			Vector u = null;
+			if (usePetsc) {
+				CHyperbolicUnwrapperPETSc unwrapper = new CHyperbolicUnwrapperPETSc();
+				u = unwrapper.getConformalFactors(unwrappedGeometry);
+			} else {
+				CHyperbolicUnwrapper unwrapper = new CHyperbolicUnwrapper();
+				u = unwrapper.getConformalFactors(unwrappedGeometry);
 			}
 			HyperbolicLayoutContext context = CHyperbolicLayout.doLayout(unwrappedGeometry, u);
 			pointColorAdapter.setContext(context);
 		} else {
-			CDiskUnwrapper unwrapper = new CDiskUnwrapper(numCones, quantizeCones);
-			unwrapper.unwrap(unwrappedGeometry, null);
+			CUnwrapper unwrapper = null;
+			if (usePetsc) {
+				unwrapper = new CDiskUnwrapperPETSc(numCones, quantizeCones);
+			} else {
+				unwrapper = new CDiskUnwrapper(numCones, quantizeCones);
+			}
+			unwrapper.unwrap(unwrappedGeometry);
 		}
 	}
 	
