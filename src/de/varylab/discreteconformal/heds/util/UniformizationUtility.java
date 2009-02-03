@@ -93,8 +93,8 @@ public class UniformizationUtility {
 					removeTrivalentVertex(v);
 				} else if (degree > 3) {
 					int newDegree = degree;
-					int flipTries = 0;
-					CoEdge flipEdge = star.get(0);
+					int flipTries = 0; 
+					CoEdge flipEdge = v.getIncomingEdge();
 					while (newDegree > 3 && flipTries++ < 30) {
 						CoEdge nextFlipEdge = flipEdge.getNextEdge().getOppositeEdge();
 						System.out.println("trying to flip edge " + flipEdge);
@@ -110,6 +110,7 @@ public class UniformizationUtility {
 						System.out.println("new vertex degree is " + newDegree);
 					}
 					if (newDegree == 3) {
+						star = incomingEdges(v);
 						assert (star.get(0).getLeftFace() != star.get(1).getLeftFace()
 							&& star.get(1).getLeftFace() != star.get(2).getLeftFace()
 							&& star.get(2).getLeftFace() != star.get(1).getLeftFace());

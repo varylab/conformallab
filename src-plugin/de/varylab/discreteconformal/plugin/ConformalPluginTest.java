@@ -20,14 +20,6 @@ import de.jreality.ui.plugin.ViewPreferences;
 import de.jreality.ui.plugin.ZoomTool;
 import de.jreality.vr.plugin.HeadUpDisplay;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
-import de.varylab.jrworkspace.plugin.lookandfeelswitch.LookAndFeelSwitch;
-import de.varylab.jrworkspace.plugin.lookandfeelswitch.plugin.CrossPlatformLnF;
-import de.varylab.jrworkspace.plugin.lookandfeelswitch.plugin.FHLookAndFeel;
-import de.varylab.jrworkspace.plugin.lookandfeelswitch.plugin.JGoodiesPlasticLnF;
-import de.varylab.jrworkspace.plugin.lookandfeelswitch.plugin.NimbusLnF;
-import de.varylab.jrworkspace.plugin.lookandfeelswitch.plugin.SubstanceLnF;
-import de.varylab.jrworkspace.plugin.lookandfeelswitch.plugin.SyntheticaStandardLnf;
-import de.varylab.jrworkspace.plugin.lookandfeelswitch.plugin.SystemLookAndFeel;
 import de.varylab.jrworkspace.plugin.simplecontroller.SimpleController;
 
 public class ConformalPluginTest {
@@ -73,26 +65,6 @@ public class ConformalPluginTest {
 		c.registerPlugin(new Export());
 		c.registerPlugin(new ZoomTool());
 		c.registerPlugin(new Inspector());
-		
-		// look and feel switch
-		c.registerPlugin(new LookAndFeelSwitch());
-		c.registerPlugin(new CrossPlatformLnF());
-		c.registerPlugin(new JGoodiesPlasticLnF());
-		c.registerPlugin(new NimbusLnF());
-		c.registerPlugin(new SystemLookAndFeel());
-		c.registerPlugin(new FHLookAndFeel());
-		c.registerPlugin(new SyntheticaStandardLnf());
-		c.registerPlugin(new SubstanceLnF());
-		
-//		Avatar avatarPlugin = new Avatar();
-//		avatarPlugin.setShowPanel(false);
-//		c.registerPlugin(avatarPlugin);
-//		c.registerPlugin(new Terrain());
-//		c.registerPlugin(new Audio());
-//		c.registerPlugin(new Physics());
-//		c.registerPlugin(new ContentPhysics());
-//		c.registerPlugin(new ProbeBodies());
-//		c.registerPlugin(new ApplyImpulse());
 		
 		c.startup();
 	}
