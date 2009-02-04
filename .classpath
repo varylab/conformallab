@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="DiscreteConformalLab/native"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="src-image"/>
+	<classpathentry kind="src" path="src-test"/>
+	<classpathentry kind="src" path="src-plugin"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/halfedge"/>
+	<classpathentry kind="lib" path="lib/swingintegration0.0.2.jar"/>
+	<classpathentry kind="lib" path="lib/mtj.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jreality"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jreality_halfedge"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/CurvatureGeometry"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/halfedge_functional"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/MTJOptimization"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/SWT"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/halfedge_plugin"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/halfedge_algorithm"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jRWorkspaceSDK"/>
+	<classpathentry kind="lib" path="lib/jPETScTaoV1.5jPETScTao.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
