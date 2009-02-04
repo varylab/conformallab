@@ -8,6 +8,9 @@ import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINEST;
+import static java.util.logging.Level.OFF;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,6 +18,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedge.Edge;
@@ -28,6 +33,13 @@ import de.varylab.discreteconformal.heds.CoVertex;
 
 public class UniformizationUtility {
 
+	private static Logger 
+		log = Logger.getLogger(UniformizationUtility.class.getName());
+	
+	static {
+		log.setLevel(FINE);
+	}
+	
 	
 	public static class UAdapter {
 		
@@ -73,19 +85,20 @@ public class UniformizationUtility {
 		while (hds.numVertices() > 1 && tries++ < 50) {
 			int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
 			int g = (2 - X) / 2;
-			System.out.println("genus of the surface is " + g);
-			System.out.println("try " + tries + " - vertices: " + hds.numVertices());
+			
+			log.log(FINE, "genus of the surface is " + g);
+			log.log(FINE, "try " + tries + " - vertices: " + hds.numVertices());
 			List<CoVertex> vSet = new ArrayList<CoVertex>(hds.getVertices());
 			Collections.sort(vSet, new ValenceComparator());
 			for (CoVertex v : vSet) {
-				System.out.println("try to remove vertex " + v + " ---------------------");
+				log.log(FINEST, "try to remove vertex " + v + " ---------------------");
 				if (v == root) {
-					System.out.println("is root, can't remove");
-					continue;
+					log.log(FINEST, "is root, can't remove");
+					continue; 
 				}
 				List<CoEdge> star = incomingEdges(v);
 				int degree = star.size();
-				System.out.println("vertex degree is " + degree);
+				log.log(FINEST, "vertex degree is " + degree);
 				if (degree == 3) {
 					assert (star.get(0).getLeftFace() != star.get(1).getLeftFace()
 						&& star.get(1).getLeftFace() != star.get(2).getLeftFace()
@@ -97,9 +110,9 @@ public class UniformizationUtility {
 					CoEdge flipEdge = v.getIncomingEdge();
 					while (newDegree > 3 && flipTries++ < 30) {
 						CoEdge nextFlipEdge = flipEdge.getNextEdge().getOppositeEdge();
-						System.out.println("trying to flip edge " + flipEdge);
+						log.log(FINEST, "trying to flip edge " + flipEdge);
 						if (!isFlippable(flipEdge)) {
-							System.out.println("cannot flip: angle condition");
+							log.log(FINEST, "cannot flip: angle condition");
 							flipEdge = nextFlipEdge;
 							continue;
 						}
@@ -107,7 +120,7 @@ public class UniformizationUtility {
 						flipLengthAndAlphas(flipEdge, lMap);
 						newDegree = incomingEdges(v).size();
 						flipEdge = nextFlipEdge;
-						System.out.println("new vertex degree is " + newDegree);
+						log.log(FINEST, "new vertex degree is " + newDegree);
 					}
 					if (newDegree == 3) {
 						star = incomingEdges(v);
@@ -116,18 +129,18 @@ public class UniformizationUtility {
 							&& star.get(2).getLeftFace() != star.get(1).getLeftFace());
 						removeTrivalentVertex(v);
 					} else {
-						System.out.println("could not reduce vertex degree " + degree + " - " + newDegree);
+						log.log(FINEST, "could not reduce vertex degree " + degree + " - " + newDegree);
 					}
 				}
 			}
 		}
-		System.out.println("tries: " + tries);
+		log.log(FINE, "tries: " + tries);
 		for (CoVertex v : hds.getVertices()) {
 			double alpha = 0.0;
 			for (CoEdge e : incomingEdges(v)) {
 				alpha += e.getPreviousEdge().getAlpha();
 			}
-			System.out.println("alpha at " + v + ": " + alpha);
+			log.log(FINEST, "alpha at " + v + ": " + alpha);
 		}
 	}
 	
@@ -178,12 +191,12 @@ public class UniformizationUtility {
 		double alphaSum = alpha + alphaP;
 		double cP = arcosh(cosh(a)*cosh(aP) - sinh(a)*sinh(aP)*Math.cos(betaSum));
 		double cPCheck = arcosh(cosh(b)*cosh(bP) - sinh(b)*sinh(bP)*Math.cos(alphaSum));
-//		System.out.println("l: " + cP + " - " + cPCheck);
+//		log.log(FINEST, "l: " + cP + " - " + cPCheck);
 		double l = (cP + cPCheck) / 2;
 		lMap.put(e, l);
 		lMap.put(e.getOppositeEdge(), l);
 		
-		System.out.println("flip edge " + e);
+		log.log(FINEST, "flip edge " + e);
 		flip(e);
 		
 		e.setAlpha(betaSum);
@@ -198,8 +211,8 @@ public class UniformizationUtility {
 		double gammaAP = e.getPreviousEdge().getAlpha();
 		double gammaB = e.getOppositeEdge().getPreviousEdge().getAlpha();
 		double gammaBP = e.getOppositeEdge().getNextEdge().getAlpha();
-//		System.out.println("gamma: " + (gammaA + gammaB) + " - " + gamma);
-//		System.out.println("gammaP: " + (gammaAP + gammaBP) + " - " + gammaP);
+//		log.log(FINEST, "gamma: " + (gammaA + gammaB) + " - " + gamma);
+//		log.log(FINEST, "gammaP: " + (gammaAP + gammaBP) + " - " + gammaP);
 	}
 	
 	
@@ -235,7 +248,7 @@ public class UniformizationUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> void removeTrivalentVertex(V v) {
-		System.out.println("remove vertex " + v);
+		log.log(FINEST, "remove vertex " + v);
 		HalfEdgeDataStructure<V, E, F> hds = v.getHalfEdgeDataStructure();
 		E in1 = v.getIncomingEdge();
 		E out1 = in1.getOppositeEdge();

@@ -50,7 +50,7 @@ public class CDiskUnwrapperPETSc implements CUnwrapper{
 		app.setInitialSolutionVec(u);
 		app.setHessianMat(H, H);	
 		
-		optimizer = new Tao(Tao.Method.NLS);
+		optimizer = new Tao(Tao.Method.NTR);
 		optimizer.setApplication(app);
 		optimizer.setGradientTolerances(1E-5, 0, 0);
 		optimizer.solve();

@@ -244,8 +244,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			try {
 				reduceToFundamentalPolygon();
 			} catch (Exception e1) {
-//				Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
-//				JOptionPane.showMessageDialog(w, e1.getMessage(), "Reduce Error", ERROR_MESSAGE);
 				e1.printStackTrace(); 
 				return;
 			}
@@ -294,6 +292,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		UAdapter uAdapter = new UAdapter(u);
 		CoVertex root = unwrappedGeometry.getVertex(0);
 		UniformizationUtility.reduceToFundamentalPolygon(unwrappedGeometry, root, uAdapter);
+		HyperbolicLayoutContext context = CHyperbolicLayout.doLayout(unwrappedGeometry, u);
+		pointColorAdapter.setContext(context);
 	}
 	
 	

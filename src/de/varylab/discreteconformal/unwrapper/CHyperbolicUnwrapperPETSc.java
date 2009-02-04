@@ -32,7 +32,7 @@ public class CHyperbolicUnwrapperPETSc implements CUnwrapper{
 		app.setInitialSolutionVec(u);
 		app.setHessianMat(H, H);	
 		
-		Tao optimizer = new Tao(Tao.Method.CG);
+		Tao optimizer = new Tao(Tao.Method.NTR);
 		optimizer.setApplication(app);
 		optimizer.setGradientTolerances(1E-5, 0, 0);
 		
