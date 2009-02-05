@@ -2,15 +2,12 @@ package de.varylab.discreteconformal.heds.util;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static java.lang.Math.PI;
+import static java.lang.Math.abs;
 import static java.lang.Math.acos;
 import static java.lang.Math.cosh;
 import static java.lang.Math.exp;
-import static java.lang.Math.log;
 import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
-import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.FINEST;
-import static java.util.logging.Level.OFF;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,8 +15,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedge.Edge;
@@ -28,16 +23,18 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 
 public class UniformizationUtility {
 
-	private static Logger 
-		log = Logger.getLogger(UniformizationUtility.class.getName());
+	private static int log = 4;
 	
-	static {
-		log.setLevel(FINE);
+	private static void log(int log, String msg) {
+		if (UniformizationUtility.log >= log) {
+			System.out.println(msg);
+		}
 	}
 	
 	
@@ -80,25 +77,31 @@ public class UniformizationUtility {
 		CoVertex root,
 		UAdapter u
 	) {
+		log(4, "angle sums check -------------------------");
+		for (CoVertex v : hds.getVertices()) {
+			log(4, "angle sum " + v + ": " + (2*PI - getAngleSum(v)));
+		}
+		
+		
 		Map<CoEdge, Double> lMap = getLengthMap(hds, u);
 		int tries = 0;
 		while (hds.numVertices() > 1 && tries++ < 50) {
 			int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
 			int g = (2 - X) / 2;
 			
-			log.log(FINE, "genus of the surface is " + g);
-			log.log(FINE, "try " + tries + " - vertices: " + hds.numVertices());
+			log(4, "genus of the surface is " + g);
+			log(3, "try " + tries + " - vertices: " + hds.numVertices());
 			List<CoVertex> vSet = new ArrayList<CoVertex>(hds.getVertices());
 			Collections.sort(vSet, new ValenceComparator());
 			for (CoVertex v : vSet) {
-				log.log(FINEST, "try to remove vertex " + v + " ---------------------");
+				log(4, "try to remove vertex " + v + " ---------------------");
 				if (v == root) {
-					log.log(FINEST, "is root, can't remove");
+					log(4, "is root, can't remove");
 					continue; 
 				}
 				List<CoEdge> star = incomingEdges(v);
 				int degree = star.size();
-				log.log(FINEST, "vertex degree is " + degree);
+				log(4, "vertex degree is " + degree);
 				if (degree == 3) {
 					assert (star.get(0).getLeftFace() != star.get(1).getLeftFace()
 						&& star.get(1).getLeftFace() != star.get(2).getLeftFace()
@@ -110,9 +113,9 @@ public class UniformizationUtility {
 					CoEdge flipEdge = v.getIncomingEdge();
 					while (newDegree > 3 && flipTries++ < 30) {
 						CoEdge nextFlipEdge = flipEdge.getNextEdge().getOppositeEdge();
-						log.log(FINEST, "trying to flip edge " + flipEdge);
+						log(4, "trying to flip edge " + flipEdge);
 						if (!isFlippable(flipEdge)) {
-							log.log(FINEST, "cannot flip: angle condition");
+							log(4, "cannot flip: angle condition");
 							flipEdge = nextFlipEdge;
 							continue;
 						}
@@ -120,7 +123,7 @@ public class UniformizationUtility {
 						flipLengthAndAlphas(flipEdge, lMap);
 						newDegree = incomingEdges(v).size();
 						flipEdge = nextFlipEdge;
-						log.log(FINEST, "new vertex degree is " + newDegree);
+						log(4, "new vertex degree is " + newDegree);
 					}
 					if (newDegree == 3) {
 						star = incomingEdges(v);
@@ -129,19 +132,20 @@ public class UniformizationUtility {
 							&& star.get(2).getLeftFace() != star.get(1).getLeftFace());
 						removeTrivalentVertex(v);
 					} else {
-						log.log(FINEST, "could not reduce vertex degree " + degree + " - " + newDegree);
+						log(4, "could not reduce vertex degree " + degree + " - " + newDegree);
 					}
 				}
 			}
 		}
-		log.log(FINE, "tries: " + tries);
+		log(3, "tries: " + tries);
 		for (CoVertex v : hds.getVertices()) {
 			double alpha = 0.0;
 			for (CoEdge e : incomingEdges(v)) {
 				alpha += e.getPreviousEdge().getAlpha();
 			}
-			log.log(FINEST, "alpha at " + v + ": " + alpha);
+			log(4, "alpha at " + v + ": " + alpha);
 		}
+		log(3, hds.toString());
 	}
 	
 	
@@ -177,6 +181,7 @@ public class UniformizationUtility {
 		CoEdge e, 
 		Map<CoEdge, Double> lMap
 	) {
+		double oldLength = lMap.get(e);
 		double a = lMap.get(e.getNextEdge());
 		double aP = lMap.get(e.getOppositeEdge().getPreviousEdge());
 		double b = lMap.get(e.getPreviousEdge());
@@ -191,12 +196,16 @@ public class UniformizationUtility {
 		double alphaSum = alpha + alphaP;
 		double cP = arcosh(cosh(a)*cosh(aP) - sinh(a)*sinh(aP)*Math.cos(betaSum));
 		double cPCheck = arcosh(cosh(b)*cosh(bP) - sinh(b)*sinh(bP)*Math.cos(alphaSum));
-//		log.log(FINEST, "l: " + cP + " - " + cPCheck);
+		if (abs(cP - cPCheck) > 1E-5) {
+			System.out.println("possible error!");
+		} 
+		log(4, "oldLength: " + oldLength);
+		log(4, "l: " + cP + " - " + cPCheck);
 		double l = (cP + cPCheck) / 2;
 		lMap.put(e, l);
 		lMap.put(e.getOppositeEdge(), l);
 		
-		log.log(FINEST, "flip edge " + e);
+		log(4, "flip edge " + e);
 		flip(e);
 		
 		e.setAlpha(betaSum);
@@ -211,9 +220,50 @@ public class UniformizationUtility {
 		double gammaAP = e.getPreviousEdge().getAlpha();
 		double gammaB = e.getOppositeEdge().getPreviousEdge().getAlpha();
 		double gammaBP = e.getOppositeEdge().getNextEdge().getAlpha();
-//		log.log(FINEST, "gamma: " + (gammaA + gammaB) + " - " + gamma);
-//		log.log(FINEST, "gammaP: " + (gammaAP + gammaBP) + " - " + gammaP);
+		log(4, "gamma: " + (gammaA + gammaB) + " - " + gamma);
+		log(4, "gammaP: " + (gammaAP + gammaBP) + " - " + gammaP);
+		 
+		double sum1 = Math.abs(2*Math.PI - getAngleSum(e.getTargetVertex()));
+		double sum2 = Math.abs(2*Math.PI - getAngleSum(e.getStartVertex()));
+		double sum3 = Math.abs(2*Math.PI - getAngleSum(e.getNextEdge().getTargetVertex()));
+		double sum4 = Math.abs(2*Math.PI - getAngleSum(e.getOppositeEdge().getNextEdge().getTargetVertex()));
+		if (sum1 > 1E-5 || sum2 > 1E-5 || sum3 > 1E-5 || sum4 > 1E-5) {
+			System.out.println("wrong vertex angle sum");
+		}
+		double sum5 = Math.abs(getAngleSum(e.getLeftFace()) - PI);
+		double sum6 = Math.abs(getAngleSum(e.getRightFace()) - PI);
+		if (sum5 > 1E-5 || sum6 > 1E-5) {
+			System.out.println("wrong face angle sum");
+		}
+		log(4, "angle sum " + e.getTargetVertex() + ": " + sum1);
+		log(4, "angle sum " + e.getStartVertex() + ": " + sum2);
+		log(4, "angle sum " + e.getNextEdge().getTargetVertex() + ": " + sum3);
+		log(4, "angle sum " + e.getOppositeEdge().getNextEdge().getTargetVertex() + ": " + sum4);
+		log(4, "angle sum " + e.getLeftFace() + ": " + sum5);
+		log(4, "angle sum " + e.getRightFace() + ": " + sum6);
 	}
+	
+	
+	private static double getAngleSum(CoVertex v) {
+		double sum = 0.0;
+		for (CoEdge e : incomingEdges(v)) {
+			sum += e.getPreviousEdge().getAlpha();
+		}
+		return sum;
+	}
+	
+	
+	private static double getAngleSum(CoFace f) {
+		double sum = 0.0;
+		CoEdge e = f.getBoundaryEdge();
+		sum += e.getAlpha();
+		e = e.getNextEdge();
+		sum += e.getAlpha();
+		e = e.getNextEdge();
+		sum += e.getAlpha();
+		return sum;
+	}
+	
 	
 	
 	private static void calculateAlpha(
@@ -248,7 +298,7 @@ public class UniformizationUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> void removeTrivalentVertex(V v) {
-		log.log(FINEST, "remove vertex " + v);
+		log(4, "remove vertex " + v);
 		HalfEdgeDataStructure<V, E, F> hds = v.getHalfEdgeDataStructure();
 		E in1 = v.getIncomingEdge();
 		E out1 = in1.getOppositeEdge();
@@ -328,12 +378,12 @@ public class UniformizationUtility {
 	
 	private static double arsinh(double x) {
 		double r = x + sqrt(x*x + 1);
-		return log(r);
+		return Math.log(r);
 	}
 	
 	private static double arcosh(double x) {
 		double r = x + sqrt(x*x - 1);
-		return log(r);
+		return Math.log(r);
 	}
 	
 }

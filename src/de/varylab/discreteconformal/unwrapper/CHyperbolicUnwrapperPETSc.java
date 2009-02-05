@@ -9,6 +9,7 @@ import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.PETSc;
 import de.varylab.jpetsc.Vec;
 import de.varylab.jtao.Tao;
+import de.varylab.jtao.Tao.GetSolutionStatusResult;
 
 public class CHyperbolicUnwrapperPETSc implements CUnwrapper{
 
@@ -32,11 +33,13 @@ public class CHyperbolicUnwrapperPETSc implements CUnwrapper{
 		app.setInitialSolutionVec(u);
 		app.setHessianMat(H, H);	
 		
-		Tao optimizer = new Tao(Tao.Method.NTR);
+		Tao optimizer = new Tao(Tao.Method.LMVM);
 		optimizer.setApplication(app);
-		optimizer.setGradientTolerances(1E-5, 0, 0);
-		
+		optimizer.setTolerances(1E-10, 0, 0, 0); 
+		 
 		optimizer.solve();
+		GetSolutionStatusResult status = optimizer.getSolutionStatus();
+		System.out.println("Minimization: " + status);
 		return new DenseVector(u.getArray());
 	}
 	

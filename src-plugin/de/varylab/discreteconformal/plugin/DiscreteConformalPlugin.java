@@ -247,7 +247,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 				e1.printStackTrace(); 
 				return;
 			}
-			updateViewer();
+//			updateViewer();
 		}
 	}
 	
