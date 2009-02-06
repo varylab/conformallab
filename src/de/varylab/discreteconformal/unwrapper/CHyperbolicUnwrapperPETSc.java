@@ -35,7 +35,7 @@ public class CHyperbolicUnwrapperPETSc implements CUnwrapper{
 		
 		Tao optimizer = new Tao(Tao.Method.LMVM);
 		optimizer.setApplication(app);
-		optimizer.setTolerances(1E-10, 0, 0, 0); 
+		optimizer.setTolerances(1E-15, 0, 0, 0); 
 		 
 		optimizer.solve();
 		GetSolutionStatusResult status = optimizer.getSolutionStatus();

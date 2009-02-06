@@ -31,9 +31,9 @@ public class CHyperbolicUnwrapper implements CUnwrapper{
 		Matrix H = new CompRowMatrix(n,n,makeNonZeros(hds));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
-		optimizer.setSolver(Solver.GMRES); 
-		optimizer.setError(1E-5);
-		optimizer.setMaxIterations(20);
+		optimizer.setSolver(Solver.BiCGstab); 
+		optimizer.setError(1E-7);
+		optimizer.setMaxIterations(50);
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
