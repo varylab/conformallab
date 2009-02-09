@@ -8,7 +8,6 @@ import static java.awt.GridBagConstraints.REMAINDER;
 import static java.lang.Double.MAX_VALUE;
 import static java.lang.Math.PI;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
-
 import geom3d.Point;
 
 import java.awt.GridBagConstraints;
@@ -44,6 +43,7 @@ import de.jreality.ui.plugin.View;
 import de.jtem.halfedge.algorithm.triangulation.Triangulator;
 import de.jtem.halfedge.jreality.adapter.Adapter;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
+import de.jtem.halfedge.plugin.HalfedgeDebuggerPlugin;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -69,6 +69,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 
 	private AlignedContent
 		content = null;
+	private HalfedgeDebuggerPlugin<CoVertex, CoEdge, CoFace>
+		halfedgeDebugger = null;
 	private HalfedgeConnectorPlugin
 		hcp = null;
 	private Triangulator<CoVertex, CoEdge, CoFace>
@@ -220,6 +222,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 				return;
 			}
 			updateViewer();
+			halfedgeDebugger.setData(unwrappedGeometry);
+			halfedgeDebugger.makeTutte(0);
 		}
 		if (quantizeChecker == s) {
 			quantizeCones = quantizeChecker.isSelected();
@@ -251,6 +255,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 				return;
 			}
 //			updateViewer();
+			halfedgeDebugger.setData(unwrappedGeometry);
+			halfedgeDebugger.makeTutte(0);
 		}
 	}
 	
@@ -261,10 +267,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		hcp.getHalfedgeContent(activeGeometry, new PositionAdapter());
 		triangulator.triangulate(activeGeometry);
 		geometryLabel.setText("Geometry: " + hcp.getHalfedgeContentName());
-		
-		
-		double[][] bounds = new double[][]{{-MAX_VALUE, MAX_VALUE},{-MAX_VALUE, MAX_VALUE},{-MAX_VALUE, MAX_VALUE}};
-		for (CoVertex v : unwrappedGeometry.getVertices()) {
+		double[][] bounds = new double[][]{{MAX_VALUE, -MAX_VALUE},{MAX_VALUE, -MAX_VALUE},{MAX_VALUE, -MAX_VALUE}};
+		for (CoVertex v : activeGeometry.getVertices()) {
 			Point p = v.getPosition();
 			bounds[0][0] = p.x() < bounds[0][0] ? p.x() : bounds[0][0];
 			bounds[0][1] = p.x() > bounds[0][1] ? p.x() : bounds[0][1];
@@ -280,7 +284,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		double xCenter = (bounds[0][1] + bounds[0][0]) / 2 / max;
 		double yCenter = (bounds[1][1] + bounds[1][0]) / 2 / max;
 		double zCenter = (bounds[2][1] + bounds[2][0]) / 2 / max;
-		for (CoVertex v : unwrappedGeometry.getVertices()) {
+		for (CoVertex v : activeGeometry.getVertices()) {
 			Point p = v.getPosition();
 			p.times(1 / max);
 			p.move(new geom3d.Vector(-xCenter, -yCenter, -zCenter));
@@ -363,9 +367,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void install(Controller c) throws Exception {
 		hcp = c.getPlugin(HalfedgeConnectorPlugin.class);
+		halfedgeDebugger = c.getPlugin(HalfedgeDebuggerPlugin.class);
 		content = c.getPlugin(AlignedContent.class);
 		content.getScalingComponent().addChild(auxGeometry);
 		super.install(c); 
