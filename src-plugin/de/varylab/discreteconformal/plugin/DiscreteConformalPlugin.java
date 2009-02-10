@@ -69,7 +69,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 
 	private AlignedContent
 		content = null;
-	private HalfedgeDebuggerPlugin<CoVertex, CoEdge, CoFace>
+	public static HalfedgeDebuggerPlugin<CoVertex, CoEdge, CoFace>
 		halfedgeDebugger = null;
 	private HalfedgeConnectorPlugin
 		hcp = null;
@@ -213,17 +213,22 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			if (activeGeometry == null) {
 				getGeometry();
 			}
-			try {
-				unwrapActiveGeometry();
-			} catch (Exception e1) {
-				Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
-				JOptionPane.showMessageDialog(w, e1.getMessage(), "Unwrap Error", ERROR_MESSAGE);
-				e1.printStackTrace();
-				return;
-			}
-			updateViewer();
-			halfedgeDebugger.setData(unwrappedGeometry);
-			halfedgeDebugger.makeTutte(0);
+			new Thread("Reduce To Fundamental Thread") {
+				@Override
+				public void run() {
+					try {
+						unwrapActiveGeometry();
+					} catch (Exception e1) {
+						Window w = SwingUtilities
+								.getWindowAncestor(shrinkPanel);
+						JOptionPane.showMessageDialog(w, e1.getMessage(),
+								"Unwrap Error", ERROR_MESSAGE);
+						e1.printStackTrace();
+						return;
+					}
+					updateViewer();
+				}
+			}.start();
 		}
 		if (quantizeChecker == s) {
 			quantizeCones = quantizeChecker.isSelected();
@@ -248,15 +253,20 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			unitCircle.setVisible(showUnitCircle.isSelected());
 		}
 		if (reduceBtn == s) {
-			try {
-				reduceToFundamentalPolygon();
-			} catch (Exception e1) {
-				e1.printStackTrace(); 
-				return;
+			if (activeGeometry == null) {
+				getGeometry();
 			}
-//			updateViewer();
-			halfedgeDebugger.setData(unwrappedGeometry);
-			halfedgeDebugger.makeTutte(0);
+			new Thread("Reduce To Fundamental Thread") {
+				@Override
+				public void run() {
+					try {
+						reduceToFundamentalPolygon();
+					} catch (Exception e1) {
+						e1.printStackTrace(); 
+						return;
+					}
+				}
+			}.start();
 		}
 	}
 	
@@ -309,6 +319,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	
 	private void reduceToFundamentalPolygon() throws Exception {
 		unwrappedGeometry = activeGeometry.createCombinatoriallyEquivalentCopy(new CoHDS());
+		halfedgeDebugger.setData(unwrappedGeometry);
 		for (CoVertex v : activeGeometry.getVertices()) {
 			unwrappedGeometry.getVertex(v.getIndex()).setPosition(v.getPosition());
 		}
@@ -331,6 +342,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	
 	private void unwrapActiveGeometry() throws Exception {
 		unwrappedGeometry = activeGeometry.createCombinatoriallyEquivalentCopy(new CoHDS());
+		halfedgeDebugger.setData(unwrappedGeometry);
 		for (CoVertex v : activeGeometry.getVertices()) {
 			unwrappedGeometry.getVertex(v.getIndex()).setPosition(v.getPosition());
 		}

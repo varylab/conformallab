@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.heds.util;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
+import static de.varylab.discreteconformal.plugin.DiscreteConformalPlugin.halfedgeDebugger;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.acos;
@@ -9,6 +10,7 @@ import static java.lang.Math.exp;
 import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -21,6 +23,8 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
+import de.jtem.halfedge.plugin.AnnotationAdapter.EdgeAnnotation;
+import de.jtem.halfedge.plugin.AnnotationAdapter.VertexAnnotation;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -76,7 +80,7 @@ public class UniformizationUtility {
 		CoHDS hds, 
 		CoVertex root,
 		UAdapter u
-	) {
+	) {  
 		log(4, "angle sums check -------------------------");
 		for (CoVertex v : hds.getVertices()) {
 			log(4, "angle sum " + v + ": " + (2*PI - getAngleSum(v)));
@@ -175,12 +179,38 @@ public class UniformizationUtility {
 	}
 	
 	
+	public static class AngleSumAdapter extends VertexAnnotation<CoVertex> {
+
+		private DecimalFormat
+			df = new DecimalFormat("#.####");
+		
+		@Override
+		public String getText(CoVertex n) {
+			return n.getIndex() + " Σ" + df.format(getAngleSum(n));
+		}
+		
+	}
+	
+	
+	public static class AlphaAdapter extends EdgeAnnotation<CoEdge> {
+
+		private DecimalFormat
+			df = new DecimalFormat("#.####");
+			
+		
+		@Override
+		public String getText(CoEdge n) {
+			return n.getIndex() + " α" + df.format(n.getAlpha());
+		}
+		
+	}
+	
 	
 	
 	public static void flipLengthAndAlphas(
 		CoEdge e, 
 		Map<CoEdge, Double> lMap
-	) {
+	) {  
 		double oldLength = lMap.get(e);
 		double a = lMap.get(e.getNextEdge());
 		double aP = lMap.get(e.getOppositeEdge().getPreviousEdge());
@@ -197,8 +227,9 @@ public class UniformizationUtility {
 		double cP = arcosh(cosh(a)*cosh(aP) - sinh(a)*sinh(aP)*Math.cos(betaSum));
 		double cPCheck = arcosh(cosh(b)*cosh(bP) - sinh(b)*sinh(bP)*Math.cos(alphaSum));
 		if (abs(cP - cPCheck) > 1E-5) {
-			System.out.println("possible error!");
-		} 
+			halfedgeDebugger.makeEdgeCloseUp(e.getIndex(), true, new AngleSumAdapter(), new AlphaAdapter());
+			System.out.println("lengths differ too much");
+		}  
 		log(4, "oldLength: " + oldLength);
 		log(4, "l: " + cP + " - " + cPCheck);
 		double l = (cP + cPCheck) / 2;
@@ -209,7 +240,7 @@ public class UniformizationUtility {
 		flip(e);
 		
 		e.setAlpha(betaSum);
-		e.getOppositeEdge().setAlpha(alphaSum);
+		e.getOppositeEdge().setAlpha(alphaSum); 
 		
 		calculateAlpha(e.getNextEdge(), lMap);
 		calculateAlpha(e.getPreviousEdge(), lMap);
@@ -228,11 +259,13 @@ public class UniformizationUtility {
 		double sum3 = Math.abs(2*Math.PI - getAngleSum(e.getNextEdge().getTargetVertex()));
 		double sum4 = Math.abs(2*Math.PI - getAngleSum(e.getOppositeEdge().getNextEdge().getTargetVertex()));
 		if (sum1 > 1E-5 || sum2 > 1E-5 || sum3 > 1E-5 || sum4 > 1E-5) {
+			halfedgeDebugger.makeEdgeCloseUp(e.getIndex(), true, new AngleSumAdapter(), new AlphaAdapter());
 			System.out.println("wrong vertex angle sum");
 		}
 		double sum5 = Math.abs(getAngleSum(e.getLeftFace()) - PI);
 		double sum6 = Math.abs(getAngleSum(e.getRightFace()) - PI);
 		if (sum5 > 1E-5 || sum6 > 1E-5) {
+			halfedgeDebugger.makeEdgeCloseUp(e.getIndex(), true, new AngleSumAdapter(), new AlphaAdapter());
 			System.out.println("wrong face angle sum");
 		}
 		log(4, "angle sum " + e.getTargetVertex() + ": " + sum1);
