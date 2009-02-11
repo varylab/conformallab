@@ -23,7 +23,6 @@ public class ConformalLab {
 	private static UIController
 		uiController = new UIController();
 	
-	@SuppressWarnings("deprecation")
 	public static void main(String[] args) {
 		SceneGraphNode.setThreadSafe(false);
 		try {

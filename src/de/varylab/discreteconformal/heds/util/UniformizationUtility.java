@@ -10,6 +10,8 @@ import static java.lang.Math.exp;
 import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,10 +36,23 @@ import de.varylab.discreteconformal.heds.CoVertex;
 public class UniformizationUtility {
 
 	private static int log = 4;
+	private static FileWriter logWriter = null;
+	
+	static {
+		try {
+			logWriter = new FileWriter("logFile.txt");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	private static void log(int log, String msg) {
 		if (UniformizationUtility.log >= log) {
-			System.out.println(msg);
+			try {
+				logWriter.append(msg + "\n");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -89,7 +104,7 @@ public class UniformizationUtility {
 		
 		Map<CoEdge, Double> lMap = getLengthMap(hds, u);
 		int tries = 0;
-		while (hds.numVertices() > 1 && tries++ < 50) {
+		while (hds.numVertices() > 1 && tries++ < 500) {
 			int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
 			int g = (2 - X) / 2;
 			
@@ -147,7 +162,7 @@ public class UniformizationUtility {
 			for (CoEdge e : incomingEdges(v)) {
 				alpha += e.getPreviousEdge().getAlpha();
 			}
-			log(4, "alpha at " + v + ": " + alpha);
+			log(4, "alpha at " + v + ": " + alpha + " degree: " + incomingEdges(v).size());
 		}
 		log(3, hds.toString());
 	}
@@ -175,7 +190,8 @@ public class UniformizationUtility {
 		double beta = 0.0;
 		beta += e.getPreviousEdge().getAlpha();
 		beta += e.getOppositeEdge().getNextEdge().getAlpha();
-		return alpha < PI && beta < PI;
+		log(4, "check flippable: alpha:" + (alpha - PI) + " beta:" + (beta - PI));
+		return alpha < PI - 1E-1 && beta < PI - 1E-1;
 	}
 	
 	
@@ -211,6 +227,8 @@ public class UniformizationUtility {
 		CoEdge e, 
 		Map<CoEdge, Double> lMap
 	) {  
+		log(4, "Will flip edge " + e);
+		halfedgeDebugger.makeEdgeCloseUp(e.getIndex(), true, new AngleSumAdapter(), new AlphaAdapter());
 		double oldLength = lMap.get(e);
 		double a = lMap.get(e.getNextEdge());
 		double aP = lMap.get(e.getOppositeEdge().getPreviousEdge());
@@ -227,8 +245,7 @@ public class UniformizationUtility {
 		double cP = arcosh(cosh(a)*cosh(aP) - sinh(a)*sinh(aP)*Math.cos(betaSum));
 		double cPCheck = arcosh(cosh(b)*cosh(bP) - sinh(b)*sinh(bP)*Math.cos(alphaSum));
 		if (abs(cP - cPCheck) > 1E-5) {
-			halfedgeDebugger.makeEdgeCloseUp(e.getIndex(), true, new AngleSumAdapter(), new AlphaAdapter());
-			System.out.println("lengths differ too much");
+			log(4, "lengths differ too much");
 		}  
 		log(4, "oldLength: " + oldLength);
 		log(4, "l: " + cP + " - " + cPCheck);
@@ -259,14 +276,12 @@ public class UniformizationUtility {
 		double sum3 = Math.abs(2*Math.PI - getAngleSum(e.getNextEdge().getTargetVertex()));
 		double sum4 = Math.abs(2*Math.PI - getAngleSum(e.getOppositeEdge().getNextEdge().getTargetVertex()));
 		if (sum1 > 1E-5 || sum2 > 1E-5 || sum3 > 1E-5 || sum4 > 1E-5) {
-			halfedgeDebugger.makeEdgeCloseUp(e.getIndex(), true, new AngleSumAdapter(), new AlphaAdapter());
-			System.out.println("wrong vertex angle sum");
+			log(4, "wrong vertex angle sum");
 		}
 		double sum5 = Math.abs(getAngleSum(e.getLeftFace()) - PI);
 		double sum6 = Math.abs(getAngleSum(e.getRightFace()) - PI);
 		if (sum5 > 1E-5 || sum6 > 1E-5) {
-			halfedgeDebugger.makeEdgeCloseUp(e.getIndex(), true, new AngleSumAdapter(), new AlphaAdapter());
-			System.out.println("wrong face angle sum");
+			log(4, "wrong face angle sum");
 		}
 		log(4, "angle sum " + e.getTargetVertex() + ": " + sum1);
 		log(4, "angle sum " + e.getStartVertex() + ": " + sum2);
@@ -274,6 +289,7 @@ public class UniformizationUtility {
 		log(4, "angle sum " + e.getOppositeEdge().getNextEdge().getTargetVertex() + ": " + sum4);
 		log(4, "angle sum " + e.getLeftFace() + ": " + sum5);
 		log(4, "angle sum " + e.getRightFace() + ": " + sum6);
+		halfedgeDebugger.makeEdgeCloseUp(e.getIndex(), true, new AngleSumAdapter(), new AlphaAdapter());
 	}
 	
 	
@@ -326,26 +342,26 @@ public class UniformizationUtility {
 	}
 	
 	
-	private static <
-		V extends Vertex<V, E, F>,
-		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>
-	> void removeTrivalentVertex(V v) {
+	private static void removeTrivalentVertex(CoVertex v) {
 		log(4, "remove vertex " + v);
-		HalfEdgeDataStructure<V, E, F> hds = v.getHalfEdgeDataStructure();
-		E in1 = v.getIncomingEdge();
-		E out1 = in1.getOppositeEdge();
-		E outer1 = in1.getPreviousEdge();
-		E in2 = out1.getPreviousEdge();
-		E out2 = in2.getOppositeEdge();
-		E outer2 = in2.getPreviousEdge();
-		E in3 = out2.getPreviousEdge();
-		E out3 = in3.getOppositeEdge();
-		E outer3 = in3.getPreviousEdge();
+		HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> hds = v.getHalfEdgeDataStructure();
+		CoEdge in1 = v.getIncomingEdge();
+		CoEdge out1 = in1.getOppositeEdge();
+		CoEdge outer1 = in1.getPreviousEdge();
+		CoEdge in2 = out1.getPreviousEdge();
+		CoEdge out2 = in2.getOppositeEdge();
+		CoEdge outer2 = in2.getPreviousEdge();
+		CoEdge in3 = out2.getPreviousEdge();
+		CoEdge out3 = in3.getOppositeEdge();
+		CoEdge outer3 = in3.getPreviousEdge();
 		
-		F f1 = in1.getLeftFace();
-		F f2 = in2.getLeftFace();
-		F f3 = in3.getLeftFace();
+		outer1.setAlpha(out1.getAlpha() + in3.getAlpha());
+		outer2.setAlpha(out2.getAlpha() + in1.getAlpha());
+		outer3.setAlpha(out3.getAlpha() + in2.getAlpha());
+		
+		CoFace f1 = in1.getLeftFace();
+		CoFace f2 = in2.getLeftFace();
+		CoFace f3 = in3.getLeftFace();
 
 		hds.removeVertex(v);
 		hds.removeEdge(in1);
