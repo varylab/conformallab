@@ -17,6 +17,7 @@ import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.InputStream;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -36,10 +37,12 @@ import javax.swing.event.ChangeListener;
 import no.uib.cipr.matrix.Vector;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.MatrixBuilder;
+import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.Appearance;
-import de.jreality.scene.proxy.scene.SceneGraphComponent;
+import de.jreality.scene.SceneGraphComponent;
 import de.jreality.ui.plugin.AlignedContent;
 import de.jreality.ui.plugin.View;
+import de.jreality.util.Input;
 import de.jtem.halfedge.algorithm.triangulation.Triangulator;
 import de.jtem.halfedge.jreality.adapter.Adapter;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
@@ -265,8 +268,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 						e1.printStackTrace(); 
 						return;
 					}
+					System.out.println(".run() end");
 				}
 			}.start();
+			System.out.println("DiscreteConformalPlugin.actionPerformed()");
 		}
 	}
 	
@@ -386,6 +391,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		halfedgeDebugger = c.getPlugin(HalfedgeDebuggerPlugin.class);
 		content = c.getPlugin(AlignedContent.class);
 		content.getScalingComponent().addChild(auxGeometry);
+		ReaderOBJ reader = new ReaderOBJ();
+		InputStream in = getClass().getResourceAsStream("brezelCoarse.obj");
+		Input input = Input.getInput("Default OBJ Object", in);
+		SceneGraphComponent brezelOBJ = reader.read(input);
+		content.setContent(brezelOBJ);
 		super.install(c); 
 	}
 	

@@ -70,6 +70,7 @@ public class CuttingUtility {
 			List<E> newTargetEdges = new LinkedList<E>();
 			E actEdge = opp;
 			do {
+				System.err.println("do1");
 				newTargetEdges.add(actEdge);
 				actEdge = actEdge.getNextEdge().getOppositeEdge();
 			} while (actEdge != b);
@@ -97,6 +98,7 @@ public class CuttingUtility {
 			List<E> newTargetEdges = new LinkedList<E>();
 			E actEdge = edge;
 			do {
+				System.err.println("do2");
 				newTargetEdges.add(actEdge);
 				actEdge = actEdge.getNextEdge().getOppositeEdge();
 			} while (actEdge != b);

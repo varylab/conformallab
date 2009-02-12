@@ -10,8 +10,6 @@ import static java.lang.Math.exp;
 import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,24 +33,25 @@ import de.varylab.discreteconformal.heds.CoVertex;
 
 public class UniformizationUtility {
 
-	private static int log = 4;
-	private static FileWriter logWriter = null;
+	private static int log = 3;
+//	private static FileWriter logWriter = null;
 	
-	static {
-		try {
-			logWriter = new FileWriter("logFile.txt");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+//	static {
+//		try {
+//			logWriter = new FileWriter("logFile.txt");
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
 	
 	private static void log(int log, String msg) {
 		if (UniformizationUtility.log >= log) {
-			try {
-				logWriter.append(msg + "\n");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+//			try {
+//				logWriter.append(msg + "\n");
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+			System.out.println(msg); 
 		}
 	}
 	
@@ -100,7 +99,6 @@ public class UniformizationUtility {
 		for (CoVertex v : hds.getVertices()) {
 			log(4, "angle sum " + v + ": " + (2*PI - getAngleSum(v)));
 		}
-		
 		
 		Map<CoEdge, Double> lMap = getLengthMap(hds, u);
 		int tries = 0;
@@ -162,9 +160,9 @@ public class UniformizationUtility {
 			for (CoEdge e : incomingEdges(v)) {
 				alpha += e.getPreviousEdge().getAlpha();
 			}
-			log(4, "alpha at " + v + ": " + alpha + " degree: " + incomingEdges(v).size());
+			log(3, "alpha at " + v + ": " + alpha + " degree: " + incomingEdges(v).size());
 		}
-		log(3, hds.toString());
+		log(3, hds.toString()); 
 	}
 	
 	
