@@ -5,20 +5,20 @@ import java.io.File;
 
 import javax.swing.AbstractAction;
 
-import de.jreality.ui.plugin.view.AlignedContent;
-import de.jreality.ui.plugin.view.Background;
-import de.jreality.ui.plugin.view.CameraStand;
-import de.jreality.ui.plugin.view.ContentAppearance;
-import de.jreality.ui.plugin.view.ContentLoader;
-import de.jreality.ui.plugin.view.ContentTools;
-import de.jreality.ui.plugin.view.Export;
-import de.jreality.ui.plugin.view.Inspector;
-import de.jreality.ui.plugin.view.Lights;
-import de.jreality.ui.plugin.view.View;
-import de.jreality.ui.plugin.view.ViewMenuBar;
-import de.jreality.ui.plugin.view.ViewPreferences;
-import de.jreality.ui.plugin.view.ZoomTool;
-import de.jreality.vr.plugin.HeadUpDisplay;
+import de.jreality.plugin.view.AlignedContent;
+import de.jreality.plugin.view.Background;
+import de.jreality.plugin.view.CameraStand;
+import de.jreality.plugin.view.ContentAppearance;
+import de.jreality.plugin.view.ContentLoader;
+import de.jreality.plugin.view.ContentTools;
+import de.jreality.plugin.view.Export;
+import de.jreality.plugin.view.Inspector;
+import de.jreality.plugin.view.Lights;
+import de.jreality.plugin.view.View;
+import de.jreality.plugin.view.ViewMenuBar;
+import de.jreality.plugin.view.ViewPreferences;
+import de.jreality.plugin.view.ZoomTool;
+import de.jreality.plugin.vr.HeadUpDisplay;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
 import de.varylab.jrworkspace.plugin.simplecontroller.SimpleController;
 
