@@ -41,7 +41,7 @@ public class CuttingUtility {
 		E opp = edge.getOppositeEdge();
 	
 		boolean splitV1 = isBoundaryVertex(v1);
-		boolean splitV2 = isBoundaryVertex(v2);
+		boolean splitV2 = v1 != v2 && isBoundaryVertex(v2);
 		
 		List<E> v1Star = incomingEdges(v1);
 		List<E> v2Star = incomingEdges(v2);
@@ -70,7 +70,6 @@ public class CuttingUtility {
 			List<E> newTargetEdges = new LinkedList<E>();
 			E actEdge = opp;
 			do {
-				System.err.println("do1");
 				newTargetEdges.add(actEdge);
 				actEdge = actEdge.getNextEdge().getOppositeEdge();
 			} while (actEdge != b);
@@ -98,7 +97,6 @@ public class CuttingUtility {
 			List<E> newTargetEdges = new LinkedList<E>();
 			E actEdge = edge;
 			do {
-				System.err.println("do2");
 				newTargetEdges.add(actEdge);
 				actEdge = actEdge.getNextEdge().getOppositeEdge();
 			} while (actEdge != b);

@@ -23,6 +23,11 @@ public class CHyperbolicUnwrapper implements CUnwrapper{
 	
 	public Vector getConformalFactors(CoHDS hds) throws UnwrapException {
 		hds.prepareInvariantDataHyperbolic();
+		return getConformalFactorsUnprepared(hds);
+	}
+	
+	
+	public Vector getConformalFactorsUnprepared(CoHDS hds) throws UnwrapException {
 		CHyperbolicOptimizable opt = new CHyperbolicOptimizable(hds);
 		int n = opt.getDomainDimension();
 		
@@ -33,7 +38,7 @@ public class CHyperbolicUnwrapper implements CUnwrapper{
 		optimizer.setStepController(new ArmijoStepController());
 		optimizer.setSolver(Solver.BiCGstab); 
 		optimizer.setError(1E-7);
-		optimizer.setMaxIterations(50);
+		optimizer.setMaxIterations(100);
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
@@ -41,6 +46,5 @@ public class CHyperbolicUnwrapper implements CUnwrapper{
 		}
 		return u;
 	}
-	
 
 }

@@ -38,6 +38,7 @@ import no.uib.cipr.matrix.Vector;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.MatrixBuilder;
 import de.jreality.plugin.view.AlignedContent;
+import de.jreality.plugin.view.ContentAppearance;
 import de.jreality.plugin.view.View;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.Appearance;
@@ -268,10 +269,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 						e1.printStackTrace(); 
 						return;
 					}
-					System.out.println(".run() end");
 				}
 			}.start();
-			System.out.println("DiscreteConformalPlugin.actionPerformed()");
 		}
 	}
 	
@@ -339,8 +338,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		UAdapter uAdapter = new UAdapter(u);
 		CoVertex root = unwrappedGeometry.getVertex(0);
 		UniformizationUtility.reduceToFundamentalPolygon(unwrappedGeometry, root, uAdapter);
-		HyperbolicLayoutContext context = CHyperbolicLayout.doLayout(unwrappedGeometry, u);
-		pointColorAdapter.setContext(context);
+//		HyperbolicLayoutContext context = CHyperbolicLayout.doLayout(unwrappedGeometry, u);
+//		pointColorAdapter.setContext(context);
 	}
 	
 	
@@ -391,6 +390,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		halfedgeDebugger = c.getPlugin(HalfedgeDebuggerPlugin.class);
 		content = c.getPlugin(AlignedContent.class);
 		content.getScalingComponent().addChild(auxGeometry);
+		c.getPlugin(ContentAppearance.class);
 		ReaderOBJ reader = new ReaderOBJ();
 		InputStream in = getClass().getResourceAsStream("brezelCoarse.obj");
 		Input input = Input.getInput("Default OBJ Object", in);

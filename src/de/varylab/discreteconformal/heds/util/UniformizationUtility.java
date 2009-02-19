@@ -5,18 +5,24 @@ import static de.varylab.discreteconformal.plugin.DiscreteConformalPlugin.halfed
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.acos;
+import static java.lang.Math.cos;
 import static java.lang.Math.cosh;
 import static java.lang.Math.exp;
 import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
+import static java.util.Collections.sort;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedge.Edge;
@@ -24,6 +30,7 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.plugin.AnnotationAdapter.EdgeAnnotation;
+import de.jtem.halfedge.plugin.AnnotationAdapter.FaceIndexAnnotation;
 import de.jtem.halfedge.plugin.AnnotationAdapter.VertexAnnotation;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -34,23 +41,10 @@ import de.varylab.discreteconformal.heds.CoVertex;
 public class UniformizationUtility {
 
 	private static int log = 3;
-//	private static FileWriter logWriter = null;
-	
-//	static {
-//		try {
-//			logWriter = new FileWriter("logFile.txt");
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//	}
+
 	
 	private static void log(int log, String msg) {
 		if (UniformizationUtility.log >= log) {
-//			try {
-//				logWriter.append(msg + "\n");
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
 			System.out.println(msg); 
 		}
 	}
@@ -71,6 +65,10 @@ public class UniformizationUtility {
 			} else {
 				return u.get(v.getSolverIndex());
 			}
+		}
+		
+		public void setU(Vector u) {
+			this.u = u;
 		}
 		
 	}
@@ -95,74 +93,76 @@ public class UniformizationUtility {
 		CoVertex root,
 		UAdapter u
 	) {  
-		log(4, "angle sums check -------------------------");
-		for (CoVertex v : hds.getVertices()) {
-			log(4, "angle sum " + v + ": " + (2*PI - getAngleSum(v)));
-		}
-		
 		Map<CoEdge, Double> lMap = getLengthMap(hds, u);
 		int tries = 0;
-		while (hds.numVertices() > 1 && tries++ < 500) {
-			int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
-			int g = (2 - X) / 2;
+		while (hds.numVertices() > 1 && tries++ < 5) {
+			int flipSuccess = 0;
+			int flipFailed = 0;
 			
-			log(4, "genus of the surface is " + g);
-			log(3, "try " + tries + " - vertices: " + hds.numVertices());
-			List<CoVertex> vSet = new ArrayList<CoVertex>(hds.getVertices());
-			Collections.sort(vSet, new ValenceComparator());
-			for (CoVertex v : vSet) {
-				log(4, "try to remove vertex " + v + " ---------------------");
-				if (v == root) {
-					log(4, "is root, can't remove");
-					continue; 
+			List<CoVertex> vList = new ArrayList<CoVertex>(hds.getVertices());
+//			Collections.sort(vList, new ValenceComparator());
+			Collections.shuffle(vList);
+			
+			for (CoVertex v : vList) {
+				if (hds.numVertices() == 1) {
+					break;
 				}
-				List<CoEdge> star = incomingEdges(v);
+				Set<CoEdge> starUnique = new HashSet<CoEdge>(incomingEdges(v));
+				List<CoEdge> star = new LinkedList<CoEdge>(starUnique);
+				sort(star, new EdgeAngleDivideComparator());
+				
 				int degree = star.size();
-				log(4, "vertex degree is " + degree);
-				if (degree == 3) {
-					assert (star.get(0).getLeftFace() != star.get(1).getLeftFace()
-						&& star.get(1).getLeftFace() != star.get(2).getLeftFace()
-						&& star.get(2).getLeftFace() != star.get(1).getLeftFace());
-					removeTrivalentVertex(v);
-				} else if (degree > 3) {
-					int newDegree = degree;
-					int flipTries = 0; 
-					CoEdge flipEdge = v.getIncomingEdge();
-					while (newDegree > 3 && flipTries++ < 30) {
-						CoEdge nextFlipEdge = flipEdge.getNextEdge().getOppositeEdge();
-						log(4, "trying to flip edge " + flipEdge);
-						if (!isFlippable(flipEdge)) {
-							log(4, "cannot flip: angle condition");
-							flipEdge = nextFlipEdge;
-							continue;
-						}
-						assert flipEdge.getLeftFace() != flipEdge.getRightFace();
-						flipLengthAndAlphas(flipEdge, lMap);
-						newDegree = incomingEdges(v).size();
-						flipEdge = nextFlipEdge;
-						log(4, "new vertex degree is " + newDegree);
-					}
-					if (newDegree == 3) {
-						star = incomingEdges(v);
-						assert (star.get(0).getLeftFace() != star.get(1).getLeftFace()
-							&& star.get(1).getLeftFace() != star.get(2).getLeftFace()
-							&& star.get(2).getLeftFace() != star.get(1).getLeftFace());
-						removeTrivalentVertex(v);
+				for (int flips = 0; flips < degree * 10; flips++) {
+					CoEdge flipEdge = star.get(flips % degree);
+					boolean flipped = flipLengthAndAlphas(flipEdge, lMap);
+					if (flipped) {
+						flipSuccess++;
 					} else {
-						log(4, "could not reduce vertex degree " + degree + " - " + newDegree);
+						flipFailed++;
+					}
+					starUnique = new HashSet<CoEdge>(incomingEdges(v));
+					star = new LinkedList<CoEdge>(starUnique);
+					sort(star, new EdgeAngleDivideComparator());
+					degree = star.size();
+					if (degree == 3) {
+						break;
+					}
+				}
+				if (degree == 3) {
+					removeTrivalentVertex(v);
+				} else {
+					System.out.println("could not remove vertex " + v + " degree " + degree);
+					if (degree > 4) {
+						halfedgeDebugger.makeVertexCloseUp(v.getIndex(), true, new AngleSumAdapter(), new AlphaAdapter(), new FaceIndexAnnotation<CoFace>());
 					}
 				}
 			}
+			System.out.println("try " + tries + ": vertices " + hds.numVertices() + ", successfull flips " + flipSuccess + ", flips failed " + flipFailed);
 		}
 		log(3, "tries: " + tries);
 		for (CoVertex v : hds.getVertices()) {
-			double alpha = 0.0;
-			for (CoEdge e : incomingEdges(v)) {
-				alpha += e.getPreviousEdge().getAlpha();
-			}
-			log(3, "alpha at " + v + ": " + alpha + " degree: " + incomingEdges(v).size());
+			log(3, "vertex angle sum " + v + ": " + (2*PI - getAngleSum(v)));
+		}
+		for (CoFace f : hds.getFaces()) {
+			log(3, "face angle sum " + f + ": " + (PI - getAngleSum(f)));
 		}
 		log(3, hds.toString()); 
+		halfedgeDebugger.makeVertexCloseUp(0, false, new AngleSumAdapter(), new AlphaAdapter(), new FaceIndexAnnotation<CoFace>());
+	}
+	
+	
+	
+	private static class EdgeAngleDivideComparator implements Comparator<CoEdge> {
+
+		@Override
+		public int compare(CoEdge o1, CoEdge o2) {
+			double left1 = o1.getPreviousEdge().getAlpha();
+			double right1 = o1.getOppositeEdge().getNextEdge().getAlpha();
+			double left2 = o2.getPreviousEdge().getAlpha();
+			double right2 = o2.getOppositeEdge().getNextEdge().getAlpha();
+			return (left1 + right1) - (left2 + right2) < 0 ? -1 : 1;
+		}
+		
 	}
 	
 	
@@ -181,7 +181,7 @@ public class UniformizationUtility {
 	
 	
 	
-	public static boolean isFlippable(CoEdge e) {
+	private static boolean isFlippable(CoEdge e) {
 		double alpha = 0.0;
 		alpha += e.getNextEdge().getAlpha();
 		alpha += e.getOppositeEdge().getPreviousEdge().getAlpha();
@@ -189,8 +189,9 @@ public class UniformizationUtility {
 		beta += e.getPreviousEdge().getAlpha();
 		beta += e.getOppositeEdge().getNextEdge().getAlpha();
 		log(4, "check flippable: alpha:" + (alpha - PI) + " beta:" + (beta - PI));
-		return alpha < PI - 1E-1 && beta < PI - 1E-1;
+		return alpha < PI && beta < PI;
 	}
+	
 	
 	
 	public static class AngleSumAdapter extends VertexAnnotation<CoVertex> {
@@ -200,7 +201,7 @@ public class UniformizationUtility {
 		
 		@Override
 		public String getText(CoVertex n) {
-			return n.getIndex() + " Σ" + df.format(getAngleSum(n));
+			return "" + n.getIndex();// + " Σ" + df.format(getAngleSum(n));
 		}
 		
 	}
@@ -214,80 +215,93 @@ public class UniformizationUtility {
 		
 		@Override
 		public String getText(CoEdge n) {
-			return n.getIndex() + " α" + df.format(n.getAlpha());
+			return n.getIndex() + " α:" + df.format(n.getAlpha());
 		}
 		
 	}
 	
 	
-	
-	public static void flipLengthAndAlphas(
+	public static boolean flipLengthAndAlphas(
 		CoEdge e, 
 		Map<CoEdge, Double> lMap
 	) {  
-		log(4, "Will flip edge " + e);
-		halfedgeDebugger.makeEdgeCloseUp(e.getIndex(), true, new AngleSumAdapter(), new AlphaAdapter());
-		double oldLength = lMap.get(e);
-		double a = lMap.get(e.getNextEdge());
-		double aP = lMap.get(e.getOppositeEdge().getPreviousEdge());
-		double b = lMap.get(e.getPreviousEdge());
-		double bP = lMap.get(e.getOppositeEdge().getNextEdge());
-		double alpha = e.getNextEdge().getAlpha();
-		double alphaP = e.getOppositeEdge().getPreviousEdge().getAlpha();
-		double beta = e.getPreviousEdge().getAlpha();
-		double betaP = e.getOppositeEdge().getNextEdge().getAlpha();
-		double gamma = e.getAlpha();
-		double gammaP = e.getOppositeEdge().getAlpha();
+		CoEdge cEdge = e;
+		CoEdge cPEdge = e.getOppositeEdge();
+		CoEdge aEdge = cEdge.getNextEdge();
+		CoEdge aPEdge = cPEdge.getPreviousEdge();
+		CoEdge bEdge = cEdge.getPreviousEdge();
+		CoEdge bPEdge = cPEdge.getNextEdge();
+
+		double a = lMap.get(aEdge);
+		double aP = lMap.get(aPEdge);
+		double b = lMap.get(bEdge);
+		double bP = lMap.get(bPEdge);
+		double alpha = aEdge.getAlpha();
+		double alphaP = aPEdge.getAlpha();
+		double beta = bEdge.getAlpha();
+		double betaP = bPEdge.getAlpha();
+		double gamma = cEdge.getAlpha();
+		double gammaP = cPEdge.getAlpha();
 		double betaSum = beta + betaP;
 		double alphaSum = alpha + alphaP;
-		double cP = arcosh(cosh(a)*cosh(aP) - sinh(a)*sinh(aP)*Math.cos(betaSum));
-		double cPCheck = arcosh(cosh(b)*cosh(bP) - sinh(b)*sinh(bP)*Math.cos(alphaSum));
+		double cP = arcosh(cosh(a)*cosh(aP) - sinh(a)*sinh(aP)*cos(betaSum));
+		double cPCheck = arcosh(cosh(b)*cosh(bP) - sinh(b)*sinh(bP)*cos(alphaSum));
+		
+		// check compatibility of both ways of calculation
 		if (abs(cP - cPCheck) > 1E-5) {
 			log(4, "lengths differ too much");
+			return false;
 		}  
-		log(4, "oldLength: " + oldLength);
-		log(4, "l: " + cP + " - " + cPCheck);
-		double l = (cP + cPCheck) / 2;
-		lMap.put(e, l);
-		lMap.put(e.getOppositeEdge(), l);
 		
-		log(4, "flip edge " + e);
+		// take the mean
+		double l = (cP + cPCheck) / 2;
+		if (Double.isNaN(l) || Double.isInfinite(l)) {
+			log(4, "We have a NaN/Inf length here -> will not flip");
+			return false;
+		}
+		
+		// new angles
+		double alphaNew = calculateAlpha(a, aP, l);
+		double betaNew = calculateAlpha(b, bP, l);
+		double alphaPNew = calculateAlpha(aP, a, l);
+		double betaPNew = calculateAlpha(bP, b, l);
+		if (Double.isNaN(alphaNew) || Double.isNaN(alphaPNew)
+				|| Double.isNaN(betaNew) || Double.isNaN(betaPNew)) {
+			log(4, "We have a new NaN/0.0 angle -> no flip possible");
+			return false;
+		}
+
+		// check angle calculations by comparison with the known sums
+		double checkGammaP = alphaNew + betaNew;
+		double checkGamma = alphaPNew + betaPNew;
+		if (abs(checkGamma - gamma) > 1E-5 || abs(checkGammaP - gammaP) > 1E-5) {
+			log(4, "Error calculating new angles -> no flip");
+			return false;
+		}
+		
+		// check if the triangles are hyperbolic 
+		double checkTop = betaSum + alphaNew + alphaPNew;
+		double checkBottom = alphaSum + betaNew + betaPNew;
+		if (checkTop >= PI || checkBottom >= PI) {
+			log(4, "no hyperbolic triangle after flip -> no flip");
+			return false;
+		}
+
+
+		// flip the edge
 		flip(e);
 		
-		e.setAlpha(betaSum);
-		e.getOppositeEdge().setAlpha(alphaSum); 
-		
-		calculateAlpha(e.getNextEdge(), lMap);
-		calculateAlpha(e.getPreviousEdge(), lMap);
-		calculateAlpha(e.getOppositeEdge().getNextEdge(), lMap);
-		calculateAlpha(e.getOppositeEdge().getPreviousEdge(), lMap);
-		
-		double gammaA = e.getNextEdge().getAlpha();
-		double gammaAP = e.getPreviousEdge().getAlpha();
-		double gammaB = e.getOppositeEdge().getPreviousEdge().getAlpha();
-		double gammaBP = e.getOppositeEdge().getNextEdge().getAlpha();
-		log(4, "gamma: " + (gammaA + gammaB) + " - " + gamma);
-		log(4, "gammaP: " + (gammaAP + gammaBP) + " - " + gammaP);
-		 
-		double sum1 = Math.abs(2*Math.PI - getAngleSum(e.getTargetVertex()));
-		double sum2 = Math.abs(2*Math.PI - getAngleSum(e.getStartVertex()));
-		double sum3 = Math.abs(2*Math.PI - getAngleSum(e.getNextEdge().getTargetVertex()));
-		double sum4 = Math.abs(2*Math.PI - getAngleSum(e.getOppositeEdge().getNextEdge().getTargetVertex()));
-		if (sum1 > 1E-5 || sum2 > 1E-5 || sum3 > 1E-5 || sum4 > 1E-5) {
-			log(4, "wrong vertex angle sum");
-		}
-		double sum5 = Math.abs(getAngleSum(e.getLeftFace()) - PI);
-		double sum6 = Math.abs(getAngleSum(e.getRightFace()) - PI);
-		if (sum5 > 1E-5 || sum6 > 1E-5) {
-			log(4, "wrong face angle sum");
-		}
-		log(4, "angle sum " + e.getTargetVertex() + ": " + sum1);
-		log(4, "angle sum " + e.getStartVertex() + ": " + sum2);
-		log(4, "angle sum " + e.getNextEdge().getTargetVertex() + ": " + sum3);
-		log(4, "angle sum " + e.getOppositeEdge().getNextEdge().getTargetVertex() + ": " + sum4);
-		log(4, "angle sum " + e.getLeftFace() + ": " + sum5);
-		log(4, "angle sum " + e.getRightFace() + ": " + sum6);
-		halfedgeDebugger.makeEdgeCloseUp(e.getIndex(), true, new AngleSumAdapter(), new AlphaAdapter());
+		// insert new angles and lengths
+		aEdge.setAlpha(alphaNew);
+		bEdge.setAlpha(betaNew);
+		aPEdge.setAlpha(alphaPNew);
+		bPEdge.setAlpha(betaPNew);
+		cEdge.setAlpha(betaSum);
+		cPEdge.setAlpha(alphaSum); 
+		lMap.put(e, l);
+		lMap.put(e.getOppositeEdge(), l);
+
+		return true;
 	}
 	
 	
@@ -313,17 +327,9 @@ public class UniformizationUtility {
 	
 	
 	
-	private static void calculateAlpha(
-		CoEdge e, 
-		Map<CoEdge, Double> lMap
-	) {
-		double a = lMap.get(e);
-		double b = lMap.get(e.getNextEdge());
-		double c = lMap.get(e.getPreviousEdge());
-		double alpha = acos((cosh(b)*cosh(c) - cosh(a)) / (sinh(b)*sinh(c)));
-		e.setAlpha(alpha);
+	private static double calculateAlpha(double a, double b, double c) {
+		return acos((cosh(b)*cosh(c) - cosh(a)) / (sinh(b)*sinh(c)));
 	}
-	
 	
 	
 	private static double getNewLength(
@@ -338,6 +344,7 @@ public class UniformizationUtility {
 		Double lambdaNew = la + u1 + u2;
 		return 2 * arsinh( exp(lambdaNew / 2) );
 	}
+	
 	
 	
 	private static void removeTrivalentVertex(CoVertex v) {
@@ -432,5 +439,79 @@ public class UniformizationUtility {
 		double r = x + sqrt(x*x - 1);
 		return Math.log(r);
 	}
+	
+	
+	/**
+	 * Checks whether this edge is locally delaunay
+	 * @param edge the edge to check
+	 * @return the check result
+	 */
+	public static  boolean isDelaunay(CoEdge edge) {
+		Double gamma = edge.getNextEdge().getAlpha();
+		Double delta = edge.getOppositeEdge().getNextEdge().getAlpha();
+		return gamma + delta <= Math.PI - 1E-1;
+	}
+	
+	
+	/**
+	 * Returns the positive edges belonging to the kite of the edge 
+	 */
+	public static List<CoEdge> getPositiveKiteBorder(CoEdge edge){
+		LinkedList<CoEdge> result = new LinkedList<CoEdge>();
+		CoEdge e1 = edge.getNextEdge();
+		CoEdge e2 = edge.getPreviousEdge();
+		CoEdge e3 = edge.getOppositeEdge().getNextEdge();
+		CoEdge e4 = edge.getOppositeEdge().getPreviousEdge();
+		if (!e1.isPositive())
+			e1 = e1.getOppositeEdge();
+		if (!e2.isPositive())
+			e2 = e2.getOppositeEdge();
+		if (!e3.isPositive())
+			e3 = e3.getOppositeEdge();
+		if (!e4.isPositive())
+			e4 = e4.getOppositeEdge();
+		result.add(e1);
+		result.add(e2);
+		result.add(e3);
+		result.add(e4);
+		return result;
+	}
+	
+	
+	/**
+	 * Constructs the delaunay triangulation of the given structure.
+	 * @param graph must be a triangulation
+	 * @throws TriangulationException if the given graph is no triangulation or 
+	 * if the triangle inequality doesn't hold for some triangle
+	 * @return the number of flips performed
+	 */
+	public static int constructDelaunay(
+		CoHDS graph,
+		Map<CoEdge, Double> lMap
+	) {
+		int result = 0;
+		Set<CoEdge> markSet = new HashSet<CoEdge>();
+		Stack<CoEdge> stack = new Stack<CoEdge>();
+		for (CoEdge positiveEdge : graph.getPositiveEdges()){
+			markSet.add(positiveEdge);
+			stack.push(positiveEdge);
+		}
+		while (!stack.isEmpty()){
+			CoEdge ab = stack.pop();
+			markSet.remove(ab);
+			if (!isDelaunay(ab) && isFlippable(ab)){
+				flipLengthAndAlphas(ab, lMap);
+				for (CoEdge xy : getPositiveKiteBorder(ab)){
+					if (!markSet.contains(xy)){
+						markSet.add(xy);
+						stack.push(xy);
+					}
+				}
+				result++;
+			}
+		}
+		return result;
+	}	
+	
 	
 }
