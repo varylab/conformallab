@@ -33,6 +33,7 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.functional.circlepattern.hds.CPEdge;
+import de.jtem.halfedge.plugin.AnnotationAdapter;
 import de.jtem.halfedge.plugin.AnnotationAdapter.EdgeAnnotation;
 import de.jtem.halfedge.plugin.AnnotationAdapter.FaceIndexAnnotation;
 import de.jtem.halfedge.plugin.AnnotationAdapter.VertexAnnotation;
@@ -45,7 +46,7 @@ import de.varylab.discreteconformal.heds.CoVertex;
 public class UniformizationUtility {
 
 	private static int log = 3;
-
+	private static AnnotationAdapter<?>[] adapters = {new AngleSumAdapter(), new AlphaAdapter(), new FaceIndexAnnotation<CoFace>()};
 	
 	private static void log(int log, String msg) {
 		if (UniformizationUtility.log >= log) {
@@ -136,9 +137,6 @@ public class UniformizationUtility {
 					removeTrivalentVertex(v);
 				} else {
 					System.out.println("could not remove vertex " + v + " degree " + degree);
-					if (degree > 4) {
-						halfedgeDebugger.makeVertexCloseUp(v.getIndex(), true, new AngleSumAdapter(), new AlphaAdapter(), new FaceIndexAnnotation<CoFace>());
-					}
 				}
 			}
 			System.out.println("try " + tries + ": vertices " + hds.numVertices() + ", successfull flips " + flipSuccess + ", flips failed " + flipFailed);
@@ -151,7 +149,6 @@ public class UniformizationUtility {
 			log(3, "face angle sum " + f + ": " + (PI - getAngleSum(f)));
 		}
 		log(3, hds.toString());
-		halfedgeDebugger.makeVertexCloseUp(0, false, new AngleSumAdapter(), new AlphaAdapter(), new FaceIndexAnnotation<CoFace>());
 		if (hds.numVertices() == 1) {
 			cutToDisk(hds);
 		}
@@ -163,35 +160,52 @@ public class UniformizationUtility {
 	public static void cutToDisk(CoHDS hds) {
 		int g = getGenus(hds);
 		System.out.println("Genus before cutting: " + g);
-		Map<CoVertex, CoVertex> vMap = CuttingUtility.cutLoopEdge(hds.getEdge(0));
-		for (CoVertex v : vMap.keySet()) {
-			CoVertex newV = vMap.get(v);
-			newV.setPosition(v.getPosition());
-			newV.setSolverIndex(v.getSolverIndex());
+//		Map<CoVertex, CoVertex> vMap = CuttingUtility.cutLoopEdge(hds.getEdge(0));
+//		for (CoVertex v : vMap.keySet()) {
+//			CoVertex newV = vMap.get(v);
+//			newV.setPosition(v.getPosition());
+//			newV.setSolverIndex(v.getSolverIndex());
+//		}
+//		
+//		for (int i = 0; i < 2 * g; i++) {
+//			CoEdge cutEdge = null;  
+//			for (CoEdge e : hds.getPositiveEdges()) {
+//				CoVertex s = e.getStartVertex();
+//				CoVertex t = e.getTargetVertex();
+//				if (s != t && HalfEdgeUtils.isInteriorEdge(e)) {
+//					cutEdge = e;
+//					break;
+//				}
+//			}
+//			if (cutEdge == null) {
+//				System.out.println("alarm!");
+//			}
+//			assert cutEdge != null;
+//			vMap = CuttingUtility.cutAtEdge(cutEdge);
+//			for (CoVertex v : vMap.keySet()) {
+//				CoVertex newV = vMap.get(v);
+//				newV.setPosition(v.getPosition());
+//				newV.setSolverIndex(v.getSolverIndex());
+//			}
+//		}
+		Set<CoEdge> edges = new HashSet<CoEdge>(hds.getEdges());
+		Set<CoEdge> tree = SpanningTreeUtility.getDualSpanningTree(edges, hds.getEdge(0));
+		edges.removeAll(tree);
+		Set<CoEdge> cutCycles = new HashSet<CoEdge>();
+		for (CoEdge e : edges) {
+			if (!cutCycles.contains(e.getOppositeEdge())) {
+				cutCycles.add(e);
+			}
 		}
-		
-		for (int i = 0; i < 2 * g; i++) {
-			CoEdge cutEdge = null;  
-			for (CoEdge e : hds.getPositiveEdges()) {
-				CoVertex s = e.getStartVertex();
-				CoVertex t = e.getTargetVertex();
-				if (s != t && HalfEdgeUtils.isInteriorEdge(e)) {
-					cutEdge = e;
-					break;
-				}
-			}
-			if (cutEdge == null) {
-				System.out.println("alarm!");
-			}
-			assert cutEdge != null;
-			vMap = CuttingUtility.cutAtEdge(cutEdge);
+		System.out.println("Cuts will be made at: " + cutCycles);
+		for (CoEdge e : cutCycles) {
+			Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);
 			for (CoVertex v : vMap.keySet()) {
 				CoVertex newV = vMap.get(v);
 				newV.setPosition(v.getPosition());
 				newV.setSolverIndex(v.getSolverIndex());
 			}
 		}
-		
 		System.out.println("Genus after cutting: " + getGenus(hds));
 	}
 	

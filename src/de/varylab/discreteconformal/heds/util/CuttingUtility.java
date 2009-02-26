@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.heds.util;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
+import static de.jtem.halfedge.util.HalfEdgeUtils.isManifoldVertex;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -12,6 +13,7 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 
 
 
@@ -134,11 +136,15 @@ public class CuttingUtility {
 	> Map<V, V> cutLoopEdge(E edge) throws IllegalArgumentException{
 		Map<V, V> result = new HashMap<V, V>();
 		HalfEdgeDataStructure<V, E, F> hds = edge.getHalfEdgeDataStructure();
+		System.out.println("CutLoop 1: " + HalfEdgeUtils.isValidSurface(hds, true));
 		V oldVertex = edge.getStartVertex();
 		V v2 = edge.getTargetVertex();
 		if (oldVertex != v2) {
 			throw new IllegalArgumentException("Start vertex != target vertex in cutLootEdge()");
 		}
+		
+		boolean repairNonManifold = isBoundaryVertex(oldVertex);
+		
 		E opp = edge.getOppositeEdge();
 		V newVertex = hds.addNewVertex();
 		result.put(oldVertex, newVertex);
@@ -168,6 +174,46 @@ public class CuttingUtility {
 		// link boundary loops
 		new1.linkNextEdge(new1);
 		new2.linkNextEdge(new2);
+
+		System.out.println("CutLoop 2: " + HalfEdgeUtils.isValidSurface(hds, true));
+		
+		// repair the created non manifold vertex
+		if (repairNonManifold) {
+			System.out.println("repairing non manifold vertex...");
+			V nmv = null;
+			if (isManifoldVertex(oldVertex)) {
+				nmv = newVertex;
+			} else {
+				nmv = oldVertex;
+			}
+			assert isManifoldVertex(nmv == oldVertex ? newVertex : oldVertex);
+			
+			V v = hds.addNewVertex();
+			
+			E be1 = null;
+			List<E> star = incomingEdges(nmv);
+			for (E e : star) {
+				if (e.getLeftFace() == null) {
+					be1 = e;
+					break;
+				}
+			}
+			assert be1 != null;
+			
+			E be2 = be1.getNextEdge();
+			actEdge = be1;
+			while (actEdge.getLeftFace() != null) {
+				actEdge.setTargetVertex(v);
+				actEdge = actEdge.getOppositeEdge().getPreviousEdge();
+			}
+			E be4 = actEdge;
+			E be3 = be4.getNextEdge();
+			
+			be1.linkNextEdge(be3);
+			be4.linkNextEdge(be2);
+		}
+		
+		System.out.println("CutLoop 3: " + HalfEdgeUtils.isValidSurface(hds, true));
 		
 		return result;
 	}
