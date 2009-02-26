@@ -19,10 +19,8 @@ import de.jtem.halfedge.Vertex;
 public class CuttingUtility {
 
 	/**
-	 * Cuts an edge and returns the mapping oldVertex <-> newVertex for split vertices
-	 * @param <V>
-	 * @param <E>
-	 * @param <F>
+	 * Cuts an edge and returns the mapping 
+	 * oldVertex -> newVertex for split vertices
 	 * @param edge
 	 * @return
 	 * @throws IllegalArgumentException
@@ -34,20 +32,22 @@ public class CuttingUtility {
 		F extends Face<V, E, F>
 	> Map<V, V> cutAtEdge(E edge) throws IllegalArgumentException{
 		Map<V, V> result = new HashMap<V, V>();
-		HalfEdgeDataStructure<V, E, F> graph = edge.getHalfEdgeDataStructure();
+		HalfEdgeDataStructure<V, E, F> hds = edge.getHalfEdgeDataStructure();
 		V v1 = edge.getStartVertex();
 		V v2 = edge.getTargetVertex();
-		
 		E opp = edge.getOppositeEdge();
-	
+		if (v1 == v2) {
+			return cutLoopEdge(edge);
+		}
+		
 		boolean splitV1 = isBoundaryVertex(v1);
-		boolean splitV2 = v1 != v2 && isBoundaryVertex(v2);
+		boolean splitV2 = isBoundaryVertex(v2);
 		
 		List<E> v1Star = incomingEdges(v1);
 		List<E> v2Star = incomingEdges(v2);
 		
-		E new1 = graph.addNewEdge();
-		E new2 = graph.addNewEdge();
+		E new1 = hds.addNewEdge();
+		E new2 = hds.addNewEdge();
 		
 		new1.linkOppositeEdge(opp);
 		new2.linkOppositeEdge(edge);
@@ -75,14 +75,15 @@ public class CuttingUtility {
 			} while (actEdge != b);
 			newTargetEdges.add(b);
 			
-			V newV = graph.addNewVertex();
+			V newV = hds.addNewVertex();
 			result.put(v1, newV);
 			
 			b.linkNextEdge(new1);
 			new2.linkNextEdge(b2);
 			
-			for (E e : newTargetEdges)
+			for (E e : newTargetEdges) {
 				e.setTargetVertex(newV);
+			}
 		}
 		if (splitV2){
 			E b = null;
@@ -102,18 +103,74 @@ public class CuttingUtility {
 			} while (actEdge != b);
 			newTargetEdges.add(b);
 			
-			V newV = graph.addNewVertex();
+			V newV = hds.addNewVertex();
 			result.put(v2, newV);
 			
 			b.linkNextEdge(new2);
 			new1.linkNextEdge(b2);
 			
-			for (E e : newTargetEdges)
+			for (E e : newTargetEdges) {
 				e.setTargetVertex(newV);
+			}
 		}
 		return result;
 		
 	}
 	
+	
+	
+	/**
+	 * Cuts an edge which is a loop and returns the mapping 
+	 * oldVertex -> newVertex for split vertices
+	 * @param edge
+	 * @return
+	 * @throws IllegalArgumentException
+	 */
+	public static 
+	<
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> Map<V, V> cutLoopEdge(E edge) throws IllegalArgumentException{
+		Map<V, V> result = new HashMap<V, V>();
+		HalfEdgeDataStructure<V, E, F> hds = edge.getHalfEdgeDataStructure();
+		V oldVertex = edge.getStartVertex();
+		V v2 = edge.getTargetVertex();
+		if (oldVertex != v2) {
+			throw new IllegalArgumentException("Start vertex != target vertex in cutLootEdge()");
+		}
+		E opp = edge.getOppositeEdge();
+		V newVertex = hds.addNewVertex();
+		result.put(oldVertex, newVertex);
+		
+		// get edges of the new vertex 
+		List<E> newTargetEdges = new LinkedList<E>();
+		E actEdge = edge;
+		do {
+			newTargetEdges.add(actEdge);
+			actEdge = actEdge.getNextEdge().getOppositeEdge();
+			// if this is no loop we have a dead lock here
+		} while (actEdge != edge.getOppositeEdge()); 
+		
+		// create new edges
+		E new1 = hds.addNewEdge();
+		E new2 = hds.addNewEdge();
+		
+		new1.linkOppositeEdge(opp);
+		new2.linkOppositeEdge(edge);
+		new1.setTargetVertex(oldVertex);
+		new2.setTargetVertex(newVertex);
+		
+		for (E e : newTargetEdges) {
+			e.setTargetVertex(newVertex);
+		}
+		
+		// link boundary loops
+		new1.linkNextEdge(new1);
+		new2.linkNextEdge(new2);
+		
+		return result;
+	}
+
 	
 }

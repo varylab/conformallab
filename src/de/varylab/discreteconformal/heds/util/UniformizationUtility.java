@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.heds.util;
 
+import static de.jtem.halfedge.util.HalfEdgeUtils.getGenus;
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.varylab.discreteconformal.plugin.DiscreteConformalPlugin.halfedgeDebugger;
 import static java.lang.Math.PI;
@@ -24,11 +25,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import javax.swing.text.DefaultEditorKit.CutAction;
+
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
+import de.jtem.halfedge.functional.circlepattern.hds.CPEdge;
 import de.jtem.halfedge.plugin.AnnotationAdapter.EdgeAnnotation;
 import de.jtem.halfedge.plugin.AnnotationAdapter.FaceIndexAnnotation;
 import de.jtem.halfedge.plugin.AnnotationAdapter.VertexAnnotation;
@@ -146,9 +150,51 @@ public class UniformizationUtility {
 		for (CoFace f : hds.getFaces()) {
 			log(3, "face angle sum " + f + ": " + (PI - getAngleSum(f)));
 		}
-		log(3, hds.toString()); 
+		log(3, hds.toString());
 		halfedgeDebugger.makeVertexCloseUp(0, false, new AngleSumAdapter(), new AlphaAdapter(), new FaceIndexAnnotation<CoFace>());
+		if (hds.numVertices() == 1) {
+			cutToDisk(hds);
+		}
 	}
+	
+	
+	
+	
+	public static void cutToDisk(CoHDS hds) {
+		int g = getGenus(hds);
+		System.out.println("Genus before cutting: " + g);
+		Map<CoVertex, CoVertex> vMap = CuttingUtility.cutLoopEdge(hds.getEdge(0));
+		for (CoVertex v : vMap.keySet()) {
+			CoVertex newV = vMap.get(v);
+			newV.setPosition(v.getPosition());
+			newV.setSolverIndex(v.getSolverIndex());
+		}
+		
+		for (int i = 0; i < 2 * g; i++) {
+			CoEdge cutEdge = null;  
+			for (CoEdge e : hds.getPositiveEdges()) {
+				CoVertex s = e.getStartVertex();
+				CoVertex t = e.getTargetVertex();
+				if (s != t && HalfEdgeUtils.isInteriorEdge(e)) {
+					cutEdge = e;
+					break;
+				}
+			}
+			if (cutEdge == null) {
+				System.out.println("alarm!");
+			}
+			assert cutEdge != null;
+			vMap = CuttingUtility.cutAtEdge(cutEdge);
+			for (CoVertex v : vMap.keySet()) {
+				CoVertex newV = vMap.get(v);
+				newV.setPosition(v.getPosition());
+				newV.setSolverIndex(v.getSolverIndex());
+			}
+		}
+		
+		System.out.println("Genus after cutting: " + getGenus(hds));
+	}
+	
 	
 	
 	

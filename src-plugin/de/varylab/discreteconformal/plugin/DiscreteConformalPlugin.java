@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.plugin;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
+import static de.jtem.halfedge.util.HalfEdgeUtils.getGenus;
 import static java.awt.GridBagConstraints.RELATIVE;
 import static java.awt.GridBagConstraints.REMAINDER;
 import static java.lang.Double.MAX_VALUE;
@@ -48,6 +49,7 @@ import de.jtem.halfedge.algorithm.triangulation.Triangulator;
 import de.jtem.halfedge.jreality.adapter.Adapter;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
 import de.jtem.halfedge.plugin.HalfedgeDebuggerPlugin;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -338,8 +340,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		UAdapter uAdapter = new UAdapter(u);
 		CoVertex root = unwrappedGeometry.getVertex(0);
 		UniformizationUtility.reduceToFundamentalPolygon(unwrappedGeometry, root, uAdapter);
-		HyperbolicLayoutContext context = CHyperbolicLayout.doLayout(unwrappedGeometry, u);
-		pointColorAdapter.setContext(context);
+		boolean validSurface = HalfEdgeUtils.isValidSurface(unwrappedGeometry, true);
+		System.out.println("Check Valid Surface: " + validSurface);
+		if (getGenus(unwrappedGeometry) == 0) {
+			HyperbolicLayoutContext context = CHyperbolicLayout.doLayout(unwrappedGeometry, u);
+			pointColorAdapter.setContext(context);
+		}
 	}
 	
 	
