@@ -11,12 +11,9 @@ import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 import geom3d.Point;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -26,24 +23,9 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.util.CuttingUtility;
-import de.varylab.discreteconformal.heds.util.HomologyUtility;
 
 public class CHyperbolicLayout {
 
-	
-	public static class HyperbolicLayoutContext {
-		
-		public Map<CoEdge, CoEdge>
-			cutMap = new HashMap<CoEdge, CoEdge>();
-		public List<Set<CoEdge>>
-			paths = new ArrayList<Set<CoEdge>>();
-		public Map<Set<CoEdge>, Set<CoEdge>>
-			pathCutMap = new HashMap<Set<CoEdge>, Set<CoEdge>>();
-		
-	}
-	
-	
 	
 	/**
 	 * Do flat layout for a HDS and a metric vector u
@@ -51,43 +33,7 @@ public class CHyperbolicLayout {
 	 * @param u new metric
 	 * @param angleMapParam may be null
 	 */
-	public static HyperbolicLayoutContext doLayout(CoHDS hds, Vector u) {
-		
-		HyperbolicLayoutContext context = new HyperbolicLayoutContext();
-		int X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
-		int g = (2 - X) / 2;
-		System.err.println("genus of the surface is " + g);
-		if (g >= 2) {
-			context.paths = HomologyUtility.getGeneratorPaths(hds.getVertex(0));
-			Set<CoEdge> masterPath = new HashSet<CoEdge>();
-			for (Set<CoEdge> path : context.paths) {
-				masterPath.addAll(path);
-			}
-			for (CoEdge e : masterPath) { 
-				if (HalfEdgeUtils.isInteriorEdge(e)) {
-					context.cutMap.put(e, e.getOppositeEdge());
-					Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);
-					for (CoVertex v : vMap.keySet()) {
-						CoVertex newV = vMap.get(v);
-						newV.setPosition(v.getPosition());
-						newV.setSolverIndex(v.getSolverIndex());
-					}
-				}
-			}
-			X = hds.numVertices() - hds.numEdges() / 2 + hds.numFaces();
-			g = (2 - X) / 2;
-			System.err.println("genus of the surface after cutting is " + g);
-			
-			for (Set<CoEdge> path : context.paths) {
-				Set<CoEdge> coPath = new HashSet<CoEdge>();
-				context.pathCutMap.put(path, coPath);
-				for (CoEdge e : path) {
-					coPath.add(context.cutMap.get(e));
-				}
-			}
-
-		}
-		
+	public static void doLayout(CoHDS hds, Vector u) {
 		Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
 		Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		Queue<CoEdge> Qe = new LinkedList<CoEdge>();
@@ -148,45 +94,17 @@ public class CHyperbolicLayout {
 						cVertex.setTextureCoord(C);
 						visited.add(cVertex);
 						Qv.offer(cVertex);
-						Qe.offer(e);	
+						Qe.offer(e);
+					} else {
+						System.out.println("Vertex layout skipped for " + v);
+						break;
 					}
 				} 
 				e = e.getOppositeEdge().getNextEdge();
 			}
 		}
 		
-		
-//		List<CoEdge> eList = new LinkedList<CoEdge>(hds.getEdges());
-//		for (CoEdge e : eList) {
-//			if (e.isPositive()) {
-//				continue;
-//			}
-//			Point s = e.getStartVertex().getTextureCoord();
-//			Point t = e.getTargetVertex().getTextureCoord();
-//			double d1 = Double.MAX_VALUE;
-//			try {
-//				d1 = Pn.distanceBetween(s.get(), t.get(), Pn.HYPERBOLIC);
-//			} catch (IllegalArgumentException iae) {
-//				System.out.println(iae.getMessage());
-//			}
-//			double d2 = getNewLength(e, u);
-//			if (Math.abs(d1 - d2) < 1E-3) {
-//				continue;
-//			}
-//			
-//			if (e.getLeftFace() != null) {
-//				hds.removeFace(e.getLeftFace());
-//			}
-//			if (e.getRightFace() != null) {
-//				hds.removeFace(e.getRightFace());
-//			}
-//			hds.removeEdge(e.getOppositeEdge());
-//			hds.removeEdge(e);
-//		}
-		
-		
-		System.err.println("Visited points: " + visited.size() + "/" + hds.numVertices());
-		return context;
+		System.out.println("Layout: Visited points: " + visited.size() + "/" + hds.numVertices());
 	}
 	
 	

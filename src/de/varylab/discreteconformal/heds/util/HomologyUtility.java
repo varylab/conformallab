@@ -1,5 +1,7 @@
 package de.varylab.discreteconformal.heds.util;
 
+import static java.util.Collections.singleton;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -44,7 +46,11 @@ public class HomologyUtility {
 		
 		for (E bridge : edgeSet) {
 			if (bridge.isPositive()) {
-				result.add(findCycle(tree1, bridge));
+				if (bridge.getStartVertex() == bridge.getTargetVertex()) {
+					result.add(singleton(bridge));
+				} else {
+					result.add(findCycle(tree1, bridge));
+				}
 			}
 		}
 		return result;

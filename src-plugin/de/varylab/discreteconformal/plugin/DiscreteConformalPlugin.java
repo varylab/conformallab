@@ -3,7 +3,8 @@ package de.varylab.discreteconformal.plugin;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
-import static de.jtem.halfedge.util.HalfEdgeUtils.getGenus;
+import static de.varylab.discreteconformal.heds.util.CuttingUtility.cutManifoldToDisk;
+import static de.varylab.discreteconformal.heds.util.UniformizationUtility.toFundamentalPolygon;
 import static java.awt.GridBagConstraints.RELATIVE;
 import static java.awt.GridBagConstraints.REMAINDER;
 import static java.lang.Double.MAX_VALUE;
@@ -49,7 +50,6 @@ import de.jtem.halfedge.algorithm.triangulation.Triangulator;
 import de.jtem.halfedge.jreality.adapter.Adapter;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
 import de.jtem.halfedge.plugin.HalfedgeDebuggerPlugin;
-import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -57,7 +57,7 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.PositionTexCoordAdapter;
 import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
-import de.varylab.discreteconformal.heds.util.UniformizationUtility;
+import de.varylab.discreteconformal.heds.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.heds.util.UniformizationUtility.UAdapter;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapperPETSc;
@@ -65,7 +65,6 @@ import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.CUnwrapper;
-import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout.HyperbolicLayoutContext;
 import de.varylab.jrworkspace.plugin.Controller;
 import de.varylab.jrworkspace.plugin.PluginInfo;
 import de.varylab.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
@@ -271,6 +270,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 						e1.printStackTrace(); 
 						return;
 					}
+					updateViewer();
 				}
 			}.start();
 		}
@@ -339,13 +339,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		}
 		UAdapter uAdapter = new UAdapter(u);
 		CoVertex root = unwrappedGeometry.getVertex(0);
-		UniformizationUtility.reduceToFundamentalPolygon(unwrappedGeometry, root, uAdapter);
-		boolean validSurface = HalfEdgeUtils.isValidSurface(unwrappedGeometry, true);
-		System.out.println("Check Valid Surface: " + validSurface);
-		if (getGenus(unwrappedGeometry) == 0) {
-			HyperbolicLayoutContext context = CHyperbolicLayout.doLayout(unwrappedGeometry, u);
-			pointColorAdapter.setContext(context);
-		}
+		toFundamentalPolygon(unwrappedGeometry, root, uAdapter);
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(unwrappedGeometry);
+		CHyperbolicLayout.doLayout(unwrappedGeometry, u);
+		pointColorAdapter.setContext(cutInfo);
 	}
 	
 	
@@ -366,8 +363,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 				CHyperbolicUnwrapper unwrapper = new CHyperbolicUnwrapper();
 				u = unwrapper.getConformalFactors(unwrappedGeometry);
 			}
-			HyperbolicLayoutContext context = CHyperbolicLayout.doLayout(unwrappedGeometry, u);
-			pointColorAdapter.setContext(context);
+			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(unwrappedGeometry);
+			CHyperbolicLayout.doLayout(unwrappedGeometry, u);
+			pointColorAdapter.setContext(cutInfo);
 		} else {
 			CUnwrapper unwrapper = null;
 			if (usePetsc) {

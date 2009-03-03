@@ -22,6 +22,9 @@ public class SpanningTreeUtility {
 		F extends Face<V, E, F>
 	> Set<E> getSpanningTree(Set<E> edges, E root) {
 		Set<E> r = new HashSet<E>();
+		if (root.getHalfEdgeDataStructure().numVertices() <= 1) {
+			return r;
+		}
 		r.add(root);
 		r.add(root.getOppositeEdge());
 		Queue<E> growQ = new LinkedList<E>();
@@ -101,6 +104,9 @@ public class SpanningTreeUtility {
 		F extends Face<V, E, F>
 	> Set<E> getDualSpanningTree(Set<E> edges, E root) {
 		Set<E> r = new HashSet<E>();
+		if (root.getHalfEdgeDataStructure().numFaces() <= 1) {
+			return r;
+		}
 		r.add(root);
 		r.add(root.getOppositeEdge());
 		Queue<E> growQ = new LinkedList<E>();

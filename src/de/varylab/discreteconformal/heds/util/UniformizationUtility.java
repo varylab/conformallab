@@ -1,14 +1,13 @@
 package de.varylab.discreteconformal.heds.util;
 
-import static de.jtem.halfedge.util.HalfEdgeUtils.getGenus;
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
-import static de.varylab.discreteconformal.plugin.DiscreteConformalPlugin.halfedgeDebugger;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.acos;
 import static java.lang.Math.cos;
 import static java.lang.Math.cosh;
 import static java.lang.Math.exp;
+import static java.lang.Math.sin;
 import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 import static java.util.Collections.sort;
@@ -25,14 +24,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import javax.swing.text.DefaultEditorKit.CutAction;
-
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
-import de.jtem.halfedge.functional.circlepattern.hds.CPEdge;
 import de.jtem.halfedge.plugin.AnnotationAdapter;
 import de.jtem.halfedge.plugin.AnnotationAdapter.EdgeAnnotation;
 import de.jtem.halfedge.plugin.AnnotationAdapter.FaceIndexAnnotation;
@@ -93,11 +89,11 @@ public class UniformizationUtility {
 	}
 	
 
-	public static void reduceToFundamentalPolygon(
+	public static void toFundamentalPolygon(
 		CoHDS hds, 
 		CoVertex root,
 		UAdapter u
-	) {  
+	) {
 		Map<CoEdge, Double> lMap = getLengthMap(hds, u);
 		int tries = 0;
 		while (hds.numVertices() > 1 && tries++ < 5) {
@@ -149,69 +145,10 @@ public class UniformizationUtility {
 			log(3, "face angle sum " + f + ": " + (PI - getAngleSum(f)));
 		}
 		log(3, hds.toString());
-		if (hds.numVertices() == 1) {
-			cutToDisk(hds);
-		}
 	}
 	
 	
-	
-	
-	public static void cutToDisk(CoHDS hds) {
-		int g = getGenus(hds);
-		System.out.println("Genus before cutting: " + g);
-//		Map<CoVertex, CoVertex> vMap = CuttingUtility.cutLoopEdge(hds.getEdge(0));
-//		for (CoVertex v : vMap.keySet()) {
-//			CoVertex newV = vMap.get(v);
-//			newV.setPosition(v.getPosition());
-//			newV.setSolverIndex(v.getSolverIndex());
-//		}
-//		
-//		for (int i = 0; i < 2 * g; i++) {
-//			CoEdge cutEdge = null;  
-//			for (CoEdge e : hds.getPositiveEdges()) {
-//				CoVertex s = e.getStartVertex();
-//				CoVertex t = e.getTargetVertex();
-//				if (s != t && HalfEdgeUtils.isInteriorEdge(e)) {
-//					cutEdge = e;
-//					break;
-//				}
-//			}
-//			if (cutEdge == null) {
-//				System.out.println("alarm!");
-//			}
-//			assert cutEdge != null;
-//			vMap = CuttingUtility.cutAtEdge(cutEdge);
-//			for (CoVertex v : vMap.keySet()) {
-//				CoVertex newV = vMap.get(v);
-//				newV.setPosition(v.getPosition());
-//				newV.setSolverIndex(v.getSolverIndex());
-//			}
-//		}
-		Set<CoEdge> edges = new HashSet<CoEdge>(hds.getEdges());
-		Set<CoEdge> tree = SpanningTreeUtility.getDualSpanningTree(edges, hds.getEdge(0));
-		edges.removeAll(tree);
-		Set<CoEdge> cutCycles = new HashSet<CoEdge>();
-		for (CoEdge e : edges) {
-			if (!cutCycles.contains(e.getOppositeEdge())) {
-				cutCycles.add(e);
-			}
-		}
-		System.out.println("Cuts will be made at: " + cutCycles);
-		for (CoEdge e : cutCycles) {
-			Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);
-			for (CoVertex v : vMap.keySet()) {
-				CoVertex newV = vMap.get(v);
-				newV.setPosition(v.getPosition());
-				newV.setSolverIndex(v.getSolverIndex());
-			}
-		}
-		System.out.println("Genus after cutting: " + getGenus(hds));
-	}
-	
-	
-	
-	
+
 	private static class EdgeAngleDivideComparator implements Comparator<CoEdge> {
 
 		@Override
@@ -224,8 +161,6 @@ public class UniformizationUtility {
 		}
 		
 	}
-	
-	
 	
 	
 	private static class ValenceComparator implements Comparator<CoVertex> {
@@ -361,8 +296,47 @@ public class UniformizationUtility {
 		lMap.put(e, l);
 		lMap.put(e.getOppositeEdge(), l);
 
+		if (!checkTriangle(e.getLeftFace(), lMap)) {
+			System.err.println("triangle check failed");
+		}
+		if (!checkTriangle(e.getRightFace(), lMap)) {
+			System.err.println("triangle check failed");
+		}
+		
 		return true;
 	}
+	
+	
+	
+	private static boolean checkTriangle(CoFace f, Map<CoEdge, Double> lMap) {
+		CoEdge aEdge = f.getBoundaryEdge();
+		CoEdge bEdge = aEdge.getNextEdge();
+		CoEdge cEdge = bEdge.getNextEdge();
+		double alpha = aEdge.getAlpha();
+		double beta = bEdge.getAlpha();
+		double gamma = cEdge.getAlpha();
+		double a = lMap.get(aEdge);
+		double b = lMap.get(bEdge);
+		double c = lMap.get(cEdge);
+		
+		// check law of cosines
+		double checkA = cosh(a) - cosh(b)*cosh(c) + sinh(b)*sinh(c)*cos(alpha);
+		double checkB = cosh(b) - cosh(a)*cosh(c) + sinh(a)*sinh(c)*cos(beta);
+		double checkC = cosh(c) - cosh(a)*cosh(b) + sinh(a)*sinh(b)*cos(gamma);
+		if (abs(checkA) > 1E-5 || abs(checkB) > 1E-5 || abs(checkC) > 1E-5) {
+			return false;
+		}
+		// check law of cosines II
+		checkA = cos(alpha) + cos(beta)*cos(gamma) - sin(beta)*sin(gamma)*cosh(a);
+		checkB = cos(beta) + cos(alpha)*cos(gamma) - sin(alpha)*sin(gamma)*cosh(b);
+		checkC = cos(gamma) + cos(alpha)*cos(beta) - sin(alpha)*sin(beta)*cosh(c);
+		if (abs(checkA) > 1E-5 || abs(checkB) > 1E-5 || abs(checkC) > 1E-5) {
+			return false;
+		}
+		return true;
+	}
+	
+	
 	
 	
 	private static double getAngleSum(CoVertex v) {
@@ -398,8 +372,8 @@ public class UniformizationUtility {
 	) {
 		CoVertex v1 = e.getStartVertex();
 		CoVertex v2 = e.getTargetVertex();
-		Double u1 = u.getU(v1); 
-		Double u2 = u.getU(v2);
+		Double u1 = v1.getSolverIndex() >= 0 ? u.getU(v1) : 0.0; 
+		Double u2 = v2.getSolverIndex() >= 0 ? u.getU(v2) : 0.0;
 		Double la = e.getLambda();
 		Double lambdaNew = la + u1 + u2;
 		return 2 * arsinh( exp(lambdaNew / 2) );

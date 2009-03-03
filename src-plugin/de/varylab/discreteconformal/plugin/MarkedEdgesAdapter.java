@@ -10,12 +10,14 @@ import java.util.Set;
 import de.jtem.halfedge.jreality.adapter.ColorAdapter2Ifs;
 import de.jtem.halfedge.jreality.adapter.RelRadiusAdapter2Ifs;
 import de.varylab.discreteconformal.heds.CoEdge;
-import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout.HyperbolicLayoutContext;
+import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.util.CuttingUtility.CuttingInfo;
 
 public class MarkedEdgesAdapter implements ColorAdapter2Ifs<CoEdge>, RelRadiusAdapter2Ifs<CoEdge> {
 
-	private HyperbolicLayoutContext
-		context = new HyperbolicLayoutContext();
+	private CuttingInfo<CoVertex, CoEdge, CoFace>
+		context = new CuttingInfo<CoVertex, CoEdge, CoFace>();
 	private Random
 		rnd = new Random();
 	private double[]
@@ -27,12 +29,12 @@ public class MarkedEdgesAdapter implements ColorAdapter2Ifs<CoEdge>, RelRadiusAd
 	public MarkedEdgesAdapter() {
 	}
 	
-	public MarkedEdgesAdapter(HyperbolicLayoutContext context) {
+	public MarkedEdgesAdapter(CuttingInfo<CoVertex, CoEdge, CoFace> context) {
 		this.context = context;
 		updatePathColors();
 	}
 	
-	public void setContext(HyperbolicLayoutContext context) {
+	public void setContext(CuttingInfo<CoVertex, CoEdge, CoFace> context) {
 		this.context = context;
 		updatePathColors();
 	}	

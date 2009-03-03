@@ -2,24 +2,73 @@ package de.varylab.discreteconformal.heds.util;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
+import static de.jtem.halfedge.util.HalfEdgeUtils.isInteriorEdge;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isManifoldVertex;
+import static de.varylab.discreteconformal.heds.util.HomologyUtility.getGeneratorPaths;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
-import de.jtem.halfedge.util.HalfEdgeUtils;
-
-
-
 
 public class CuttingUtility {
 
+	
+	public static class CuttingInfo <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> {
+		
+		public Map<E, E>
+			cutMap = new HashMap<E, E>();
+		public List<Set<E>>
+			paths = new ArrayList<Set<E>>();
+		public Map<Set<E>, Set<E>>
+			pathCutMap = new HashMap<Set<E>, Set<E>>();
+		
+	}
+	
+	
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> CuttingInfo<V, E, F> cutManifoldToDisk(HDS hds) {
+		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
+		context.paths = getGeneratorPaths(hds.getVertex(0));
+		Set<E> masterPath = new HashSet<E>();
+		for (Set<E> path : context.paths) {
+			masterPath.addAll(path);
+		}
+		for (E e : masterPath) { 
+			if (isInteriorEdge(e)) {
+				context.cutMap.put(e, e.getOppositeEdge());
+				cutAtEdge(e);
+			}
+		}
+		for (Set<E> path : context.paths) {
+			Set<E> coPath = new HashSet<E>();
+			context.pathCutMap.put(path, coPath);
+			for (E e : path) {
+				coPath.add(context.cutMap.get(e));
+			}
+		}
+		return context;
+	}
+	
+	
+	
 	/**
 	 * Cuts an edge and returns the mapping 
 	 * oldVertex -> newVertex for split vertices
@@ -78,7 +127,8 @@ public class CuttingUtility {
 			newTargetEdges.add(b);
 			
 			V newV = hds.addNewVertex();
-			result.put(v1, newV);
+			newV.copyData(v1);
+			result.put(newV, v1);
 			
 			b.linkNextEdge(new1);
 			new2.linkNextEdge(b2);
@@ -106,7 +156,8 @@ public class CuttingUtility {
 			newTargetEdges.add(b);
 			
 			V newV = hds.addNewVertex();
-			result.put(v2, newV);
+			newV.copyData(v2);
+			result.put(newV, v2);
 			
 			b.linkNextEdge(new2);
 			new1.linkNextEdge(b2);
@@ -136,7 +187,6 @@ public class CuttingUtility {
 	> Map<V, V> cutLoopEdge(E edge) throws IllegalArgumentException{
 		Map<V, V> result = new HashMap<V, V>();
 		HalfEdgeDataStructure<V, E, F> hds = edge.getHalfEdgeDataStructure();
-		System.out.println("CutLoop 1: " + HalfEdgeUtils.isValidSurface(hds, true));
 		V oldVertex = edge.getStartVertex();
 		V v2 = edge.getTargetVertex();
 		if (oldVertex != v2) {
@@ -147,7 +197,8 @@ public class CuttingUtility {
 		
 		E opp = edge.getOppositeEdge();
 		V newVertex = hds.addNewVertex();
-		result.put(oldVertex, newVertex);
+		newVertex.copyData(oldVertex);
+		result.put(newVertex, oldVertex);
 		
 		// get edges of the new vertex 
 		List<E> newTargetEdges = new LinkedList<E>();
@@ -175,11 +226,8 @@ public class CuttingUtility {
 		new1.linkNextEdge(new1);
 		new2.linkNextEdge(new2);
 
-		System.out.println("CutLoop 2: " + HalfEdgeUtils.isValidSurface(hds, true));
-		
 		// repair the created non manifold vertex
 		if (repairNonManifold) {
-			System.out.println("repairing non manifold vertex...");
 			V nmv = null;
 			if (isManifoldVertex(oldVertex)) {
 				nmv = newVertex;
@@ -189,6 +237,8 @@ public class CuttingUtility {
 			assert isManifoldVertex(nmv == oldVertex ? newVertex : oldVertex);
 			
 			V v = hds.addNewVertex();
+			v.copyData(oldVertex);
+			result.put(v, oldVertex);
 			
 			E be1 = null;
 			List<E> star = incomingEdges(nmv);
@@ -202,19 +252,16 @@ public class CuttingUtility {
 			
 			E be2 = be1.getNextEdge();
 			actEdge = be1;
-			while (actEdge.getLeftFace() != null) {
+			do {
 				actEdge.setTargetVertex(v);
 				actEdge = actEdge.getOppositeEdge().getPreviousEdge();
-			}
+			} while (actEdge.getLeftFace() != null);
 			E be4 = actEdge;
 			E be3 = be4.getNextEdge();
 			
 			be1.linkNextEdge(be3);
 			be4.linkNextEdge(be2);
 		}
-		
-		System.out.println("CutLoop 3: " + HalfEdgeUtils.isValidSurface(hds, true));
-		
 		return result;
 	}
 

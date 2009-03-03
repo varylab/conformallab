@@ -37,4 +37,11 @@ public class CoVertex extends ConformalVertex<CoVertex, CoEdge, CoFace> implemen
 		N.set(normal);
 	}
 
+	@Override
+	public void copyData(CoVertex v) {
+		super.copyData(v);
+		setPosition(v.getPosition());
+		setTextureCoord(v.getTextureCoord());
+	}
+	
 }
