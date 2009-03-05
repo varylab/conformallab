@@ -11,8 +11,10 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
+import de.varylab.discreteconformal.heds.util.Search.WeightAdapter;
 
 public class HomologyUtility {
+
 
 	
 	private static <
@@ -33,13 +35,15 @@ public class HomologyUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> List<Set<E>> getGeneratorPaths(V root) {
+	> List<Set<E>> getGeneratorPaths(V root, WeightAdapter<E> wa) {
 		List<Set<E>> result = new ArrayList<Set<E>>();
 		
 		HalfEdgeDataStructure<V, E, F> hds = root.getHalfEdgeDataStructure();
 		Set<E> edgeSet = new HashSet<E>(hds.getEdges());
+		Set<V> vSet = new HashSet<V>(hds.getVertices());
 		
-		Set<E> tree1 = SpanningTreeUtility.getSpanningTree(edgeSet, root.getIncomingEdge());
+//		Set<E> tree1 = SpanningTreeUtility.getSpanningTree(edgeSet, root.getIncomingEdge());
+		Set<E> tree1 = Search.getAllShortestPathsTree(root, vSet, wa, new HashSet<V>());
 		edgeSet.removeAll(tree1);
 		Set<E> tree2 = SpanningTreeUtility.getDualSpanningTree(edgeSet, edgeSet.iterator().next());
 		edgeSet.removeAll(tree2);
@@ -55,5 +59,6 @@ public class HomologyUtility {
 		}
 		return result;
 	}
+	
 	
 }

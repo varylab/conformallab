@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -169,23 +170,13 @@ public class Search {
 	}
 	
 	
-	
-	/**
-	 * Dijkstra's Algorithm
-	 * @param <V>
-	 * @param <E>
-	 * @param <F>
-	 * @param start
-	 * @param end
-	 * @param w
-	 * @return
-	 */
-	public static <
-		V extends Vertex<V, E, F>,
-		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>
-	>  List<E> getShortestPath(V start, V end, WeightAdapter<E> w) {
-		return getShortestPaths(start, singleton(end), w);
+	public static class DefaultWeightAdapter <E extends Edge<?, ?, ?>>
+		implements WeightAdapter<E> {
+		
+		public double getWeight(E e) {
+			return 1;
+		};
+		
 	}
 	
 	
@@ -204,7 +195,129 @@ public class Search {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	>  List<E> getShortestPaths(V start, Set<V> ends, WeightAdapter<E> w) {
+	>  Set<E> getAllShortestPathsTree(V start, Set<V> ends, WeightAdapter<E> w, Set<V> avoid) {
+		Map<V, List<E>> paths = getAllShortestPaths(start, ends, w, avoid);
+		Set<E> tree = new HashSet<E>();
+		for (V v : ends) {
+			List<E> path = paths.get(v);
+			for (E e : path) {
+				tree.add(e);
+				tree.add(e.getOppositeEdge());
+			}
+		}
+		return tree;
+	}
+	
+	
+	
+	
+	/**
+	 * Dijkstra's Algorithm
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param start
+	 * @param ends
+	 * @param w
+	 * @return
+	 */
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	>  Map<V, List<E>> getAllShortestPaths(V start, Set<V> ends, WeightAdapter<E> w, Set<V> avoid) {
+		HashMap<V, List<E>> result = new HashMap<V, List<E>>();
+		// init
+		HalfEdgeDataStructure<V, E, F> hds = start.getHalfEdgeDataStructure();
+		double[] d = new double[hds.numVertices()];
+		int[] p = new int[hds.numVertices()];
+		
+		// run Dijkstra's Algorithm
+		initializeSingleSource(hds, start, d, p);
+		Set<V> S = new HashSet<V>();
+		PriorityQueue<V> Q = new PriorityQueue<V>(hds.numVertices(), new DComparator<V>(d));
+		Q.addAll(hds.getVertices());
+		while (!Q.isEmpty()) {
+			V u = Q.poll();
+			S.add(u);
+			for (E e : incomingEdges(u)) {
+				if (avoid.contains(e.getStartVertex())) {
+					continue;
+				}
+				relax(e.getOppositeEdge(), d, p, w, Q);
+			}
+		}
+		
+		// assemble the vertex path
+		for (V v : ends) {
+			V end = v;
+			Stack<V> vPath = new Stack<V>();
+			while (v != start) {
+				assert !vPath.contains(v);
+				vPath.push(v);
+				if (p[v.getIndex()] < 0)
+					break;
+				v = hds.getVertex(p[v.getIndex()]);
+			}
+			vPath.push(start);
+
+			Stack<E> ePath = new Stack<E>();
+			V lastVertex = vPath.pop();
+			V pathVertex = lastVertex;
+			while (!vPath.isEmpty()) {
+				lastVertex = pathVertex;
+				pathVertex = vPath.pop();
+				for (E e : HalfEdgeUtils.incomingEdges(lastVertex)) {
+					if (e.getStartVertex() == pathVertex) {
+						ePath.push(e.getOppositeEdge());
+						break;
+					}
+				}
+			}
+			result.put(end, ePath);
+		}
+		
+		return result;
+	}
+	
+	
+	
+	
+	/**
+	 * Dijkstra's Algorithm
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param start
+	 * @param end
+	 * @param w
+	 * @return
+	 */
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	>  List<E> getShortestPath(V start, V end, WeightAdapter<E> w) {
+		return getShortestPath(start, singleton(end), w);
+	}
+	
+	
+	
+	/**
+	 * Dijkstra's Algorithm
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param start
+	 * @param ends
+	 * @param w
+	 * @return
+	 */
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	>  List<E> getShortestPath(V start, Set<V> ends, WeightAdapter<E> w) {
 		// init
 		HalfEdgeDataStructure<V, E, F> hds = start.getHalfEdgeDataStructure();
 		double[] d = new double[hds.numVertices()];

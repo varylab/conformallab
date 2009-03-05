@@ -18,6 +18,7 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
+import de.varylab.discreteconformal.heds.util.Search.WeightAdapter;
 
 public class CuttingUtility {
 
@@ -44,9 +45,9 @@ public class CuttingUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,
 		HDS extends HalfEdgeDataStructure<V, E, F>
-	> CuttingInfo<V, E, F> cutManifoldToDisk(HDS hds) {
+	> CuttingInfo<V, E, F> cutManifoldToDisk(HDS hds, V root, WeightAdapter<E> wa) {
 		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
-		context.paths = getGeneratorPaths(hds.getVertex(0));
+		context.paths = getGeneratorPaths(root, wa);
 		Set<E> masterPath = new HashSet<E>();
 		for (Set<E> path : context.paths) {
 			masterPath.addAll(path);

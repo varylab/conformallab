@@ -4,6 +4,8 @@ import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.varylab.discreteconformal.heds.util.CuttingUtility.cutManifoldToDisk;
+import static de.varylab.discreteconformal.heds.util.UniformizationUtility.checkLengthsAndAngles;
+import static de.varylab.discreteconformal.heds.util.UniformizationUtility.getLengthMap;
 import static de.varylab.discreteconformal.heds.util.UniformizationUtility.toFundamentalPolygon;
 import static java.awt.GridBagConstraints.RELATIVE;
 import static java.awt.GridBagConstraints.REMAINDER;
@@ -340,7 +342,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		UAdapter uAdapter = new UAdapter(u);
 		CoVertex root = unwrappedGeometry.getVertex(0);
 		toFundamentalPolygon(unwrappedGeometry, root, uAdapter);
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(unwrappedGeometry);
+		checkLengthsAndAngles(unwrappedGeometry, getLengthMap(unwrappedGeometry, uAdapter));
+		HyperbolicLengthWeightAdapter wa = new HyperbolicLengthWeightAdapter(u);
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(unwrappedGeometry, root, wa);
+		checkLengthsAndAngles(unwrappedGeometry, getLengthMap(unwrappedGeometry, uAdapter));
 		CHyperbolicLayout.doLayout(unwrappedGeometry, u);
 		pointColorAdapter.setContext(cutInfo);
 	}
@@ -363,7 +368,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 				CHyperbolicUnwrapper unwrapper = new CHyperbolicUnwrapper();
 				u = unwrapper.getConformalFactors(unwrappedGeometry);
 			}
-			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(unwrappedGeometry);
+			HyperbolicLengthWeightAdapter wa = new HyperbolicLengthWeightAdapter(u);
+			CoVertex root = unwrappedGeometry.getVertex(getMinUIndex(u));
+			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(unwrappedGeometry, root, wa);
 			CHyperbolicLayout.doLayout(unwrappedGeometry, u);
 			pointColorAdapter.setContext(cutInfo);
 		} else {
@@ -375,6 +382,20 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			}
 			unwrapper.unwrap(unwrappedGeometry);
 		}
+	}
+	
+	
+	private int getMinUIndex(Vector u) {
+		int index = 0;
+		double iVal = u.get(0);
+		for (int i = 1; i < u.size(); i++) {
+			double val = u.get(i);
+			if (iVal > val) {
+				index = i;
+				iVal = i;
+			}
+		}
+		return index;
 	}
 	
 	

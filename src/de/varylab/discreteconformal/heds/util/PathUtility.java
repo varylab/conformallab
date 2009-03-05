@@ -88,8 +88,8 @@ public class PathUtility {
 		Set<V> rightVisited = new HashSet<V>();
 		Stack<V> leftPath = new Stack<V>();
 		Stack<V> rightPath = new Stack<V>();
-		leftPath.add(startLeft);
-		rightPath.add(startRight);
+		leftPath.push(startLeft);
+		rightPath.push(startRight);
 		leftVisited.add(startLeft);
 		rightVisited.add(startRight);
 		
@@ -102,6 +102,5 @@ public class PathUtility {
 		return false;
 	}
 	
-
 
 }
