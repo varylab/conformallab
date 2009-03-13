@@ -38,6 +38,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import charlesgunn.jreality.tools.TranslateShapeTool;
+
 import no.uib.cipr.matrix.Vector;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.MatrixBuilder;
@@ -47,6 +49,7 @@ import de.jreality.plugin.view.View;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.SceneGraphComponent;
+import de.jreality.scene.Transformation;
 import de.jreality.util.Input;
 import de.jtem.halfedge.algorithm.triangulation.Triangulator;
 import de.jtem.halfedge.jreality.adapter.Adapter;
@@ -76,6 +79,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 
 	private AlignedContent
 		content = null;
+	private TranslateShapeTool
+		translateShapeTool = new TranslateShapeTool();
 	public static HalfedgeDebuggerPlugin<CoVertex, CoEdge, CoFace>
 		halfedgeDebugger = null;
 	private HalfedgeConnectorPlugin
@@ -254,6 +259,19 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		}
 		if (showUnwrapped == s || kleinButton == s || poincareButton == s) {
 			klein = kleinButton.isSelected();
+			if (klein) {
+				if (!content.getContent().getTools().contains(translateShapeTool)) {
+					content.getContent().addTool(translateShapeTool);
+				}
+				content.getContent().setTransformation(new Transformation());
+				content.getContent().getAppearance().setAttribute("metric", -1);
+			} else {
+				if (content.getContent().getTools().contains(translateShapeTool)) {
+					content.getContent().removeTool(translateShapeTool);					
+				}
+				content.getContent().setTransformation(new Transformation());
+				content.getContent().getAppearance().setAttribute("metric", 0);
+			}
 			updateViewer();
 		}
 		if (showUnitCircle == s) {
