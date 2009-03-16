@@ -81,6 +81,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		content = null;
 	private TranslateShapeTool
 		translateShapeTool = new TranslateShapeTool();
+	private HyperbolicCopyTool
+		hyperbolicCopyTool = new HyperbolicCopyTool(this);
 	public static HalfedgeDebuggerPlugin<CoVertex, CoEdge, CoFace>
 		halfedgeDebugger = null;
 	private HalfedgeConnectorPlugin
@@ -260,17 +262,23 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		if (showUnwrapped == s || kleinButton == s || poincareButton == s) {
 			klein = kleinButton.isSelected();
 			if (klein) {
-				if (!content.getContent().getTools().contains(translateShapeTool)) {
-					content.getContent().addTool(translateShapeTool);
+//				if (!content.getContent().getTools().contains(translateShapeTool)) {
+//					content.getContent().addTool(translateShapeTool);
+//				}
+				if (!content.getContent().getTools().contains(hyperbolicCopyTool)) {
+					content.getContent().addTool(hyperbolicCopyTool);
 				}
-				content.getContent().setTransformation(new Transformation());
-				content.getContent().getAppearance().setAttribute("metric", -1);
+//				content.getContent().setTransformation(new Transformation());
+//				content.getContent().getAppearance().setAttribute("metric", -1);
 			} else {
-				if (content.getContent().getTools().contains(translateShapeTool)) {
-					content.getContent().removeTool(translateShapeTool);					
+//				if (content.getContent().getTools().contains(translateShapeTool)) {
+//					content.getContent().removeTool(translateShapeTool);					
+//				}
+				if (content.getContent().getTools().contains(hyperbolicCopyTool)) {
+					content.getContent().removeTool(hyperbolicCopyTool);
 				}
-				content.getContent().setTransformation(new Transformation());
-				content.getContent().getAppearance().setAttribute("metric", 0);
+//				content.getContent().setTransformation(new Transformation());
+//				content.getContent().getAppearance().setAttribute("metric", 0);
 			}
 			updateViewer();
 		}
@@ -401,6 +409,17 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			unwrapper.unwrap(unwrappedGeometry);
 		}
 	}
+	
+	
+	
+	public void copyAtEdge(int edgeIndex) {
+		if (unwrappedGeometry == null) {
+			return;
+		}
+		System.out.println("Copy at edge " + edgeIndex);
+	}
+	
+	
 	
 	
 	private int getMinUIndex(Vector u) {
