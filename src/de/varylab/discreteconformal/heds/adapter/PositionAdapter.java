@@ -15,7 +15,6 @@ public class PositionAdapter implements CoordinateAdapter2Heds<CoVertex>,
 
 	public double[] getCoordinate(CoVertex v) {
 		Point p = v.getPosition();
-		System.out.println(p);
 		return new double[] {p.x(), p.y(), p.z(), 1.0};
 	}
 
