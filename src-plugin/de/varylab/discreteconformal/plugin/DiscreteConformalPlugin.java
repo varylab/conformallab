@@ -38,9 +38,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import charlesgunn.jreality.tools.TranslateShapeTool;
-
 import no.uib.cipr.matrix.Vector;
+import charlesgunn.jreality.tools.TranslateShapeTool;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.MatrixBuilder;
 import de.jreality.plugin.view.AlignedContent;
@@ -49,7 +48,6 @@ import de.jreality.plugin.view.View;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.SceneGraphComponent;
-import de.jreality.scene.Transformation;
 import de.jreality.util.Input;
 import de.jtem.halfedge.algorithm.triangulation.Triangulator;
 import de.jtem.halfedge.jreality.adapter.Adapter;
@@ -416,6 +414,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		if (unwrappedGeometry == null) {
 			return;
 		}
+		
 		System.out.println("Copy at edge " + edgeIndex);
 	}
 	
