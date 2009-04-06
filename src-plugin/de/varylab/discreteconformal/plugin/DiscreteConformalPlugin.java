@@ -91,7 +91,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		activeGeometry = null,
 		unwrappedGeometry = null;
 	private MarkedEdgesAdapter
-		pointColorAdapter = new MarkedEdgesAdapter();
+		cutColorAdapter = new MarkedEdgesAdapter();
+	private PointAdapter
+		pointAdapter = new PointAdapter();
 	private SceneGraphComponent
 		auxGeometry = new SceneGraphComponent(),
 		unitCircle = new SceneGraphComponent();
@@ -238,7 +240,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 						e1.printStackTrace();
 						return;
 					}
-					updateViewer();
+					updateViewer();							
 				}
 			}.start();
 		}
@@ -335,17 +337,22 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	
 	
 	private void updateViewer() {
-		if (unwrappedGeometry == null) {
-			return;
-		}
-		Adapter texAdapter = new TexCoordAdapter(false, !klein);
-		Adapter posAdapter = null;
-		if (showUnwrapped.isSelected()) {
-			posAdapter = new PositionTexCoordAdapter(!klein);
-		} else {
-			posAdapter = new PositionAdapter();
-		}
-		hcp.updateHalfedgeContent(unwrappedGeometry, true, posAdapter, texAdapter, pointColorAdapter); 
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				if (unwrappedGeometry == null) {
+					return;
+				}
+				Adapter texAdapter = new TexCoordAdapter(false, !klein);
+				Adapter posAdapter = null;
+				if (showUnwrapped.isSelected()) {
+					posAdapter = new PositionTexCoordAdapter(!klein);
+				} else {
+					posAdapter = new PositionAdapter();
+				}
+				hcp.updateHalfedgeContent(unwrappedGeometry, true, posAdapter, texAdapter, cutColorAdapter, pointAdapter);
+			}
+		});
 	}
 	
 	
@@ -371,7 +378,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(unwrappedGeometry, root, wa);
 		checkLengthsAndAngles(unwrappedGeometry, getLengthMap(unwrappedGeometry, uAdapter));
 		CHyperbolicLayout.doLayout(unwrappedGeometry, u);
-		pointColorAdapter.setContext(cutInfo);
+		cutColorAdapter.setContext(cutInfo);
 	}
 	
 	
@@ -396,7 +403,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			CoVertex root = unwrappedGeometry.getVertex(getMinUIndex(u));
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(unwrappedGeometry, root, wa);
 			CHyperbolicLayout.doLayout(unwrappedGeometry, u);
-			pointColorAdapter.setContext(cutInfo);
+			cutColorAdapter.setContext(cutInfo);
+			pointAdapter.setContext(cutInfo);
 		} else {
 			CUnwrapper unwrapper = null;
 			if (usePetsc) {

@@ -17,6 +17,7 @@ import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -195,9 +196,15 @@ public class Search {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	>  Set<E> getAllShortestPathsTree(V start, Set<V> ends, WeightAdapter<E> w, Set<V> avoid) {
+	>  TreeSet<E> getAllShortestPathsTree(V start, Set<V> ends, WeightAdapter<E> w, Set<V> avoid) {
 		Map<V, List<E>> paths = getAllShortestPaths(start, ends, w, avoid);
-		Set<E> tree = new HashSet<E>();
+		TreeSet<E> tree = new TreeSet<E>(new Comparator<E>() {
+			@Override
+			public int compare(E o1, E o2) {
+				return o1.getIndex() - o2.getIndex();
+			}
+			
+		});
 		for (V v : ends) {
 			List<E> path = paths.get(v);
 			for (E e : path) {
@@ -234,7 +241,12 @@ public class Search {
 		
 		// run Dijkstra's Algorithm
 		initializeSingleSource(hds, start, d, p);
-		Set<V> S = new HashSet<V>();
+		Set<V> S = new TreeSet<V>(new Comparator<V>() {
+			@Override
+			public int compare(V o1, V o2) {
+				return o1.getIndex() - o2.getIndex();
+			}
+		});
 		PriorityQueue<V> Q = new PriorityQueue<V>(hds.numVertices(), new DComparator<V>(d));
 		Q.addAll(hds.getVertices());
 		while (!Q.isEmpty()) {
@@ -325,7 +337,12 @@ public class Search {
 		
 		// run Dijkstra's Algorithm
 		initializeSingleSource(hds, start, d, p);
-		Set<V> S = new HashSet<V>();
+		Set<V> S = new TreeSet<V>(new Comparator<V>() {
+			@Override
+			public int compare(V o1, V o2) {
+				return o1.getIndex() - o2.getIndex();
+			}
+		});
 		PriorityQueue<V> Q = new PriorityQueue<V>(hds.numVertices(), new DComparator<V>(d));
 		Q.addAll(hds.getVertices());
 		while (!Q.isEmpty()) {

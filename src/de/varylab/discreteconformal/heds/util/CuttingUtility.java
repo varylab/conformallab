@@ -7,12 +7,14 @@ import static de.jtem.halfedge.util.HalfEdgeUtils.isManifoldVertex;
 import static de.varylab.discreteconformal.heds.util.HomologyUtility.getGeneratorPaths;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -29,13 +31,27 @@ public class CuttingUtility {
 		F extends Face<V, E, F>
 	> {
 		
+		public V
+			cutRoot = null;
 		public Map<E, E>
 			cutMap = new HashMap<E, E>();
 		public List<Set<E>>
 			paths = new ArrayList<Set<E>>();
 		public Map<Set<E>, Set<E>>
 			pathCutMap = new HashMap<Set<E>, Set<E>>();
+		public Map<V, V>
+			vertexCopyMap = new HashMap<V, V>();
 		
+		public Set<V> getCopies(V v) {
+			Set<V> copies = new HashSet<V>();
+			V tmpV = vertexCopyMap.get(v);
+			while (tmpV != null) {
+				copies.add(tmpV);
+				tmpV = vertexCopyMap.get(tmpV);
+			}
+			return copies;
+		}
+	
 	}
 	
 	
@@ -47,19 +63,28 @@ public class CuttingUtility {
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> CuttingInfo<V, E, F> cutManifoldToDisk(HDS hds, V root, WeightAdapter<E> wa) {
 		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
+		context.cutRoot = root;
 		context.paths = getGeneratorPaths(root, wa);
-		Set<E> masterPath = new HashSet<E>();
+		Set<E> masterPath = new TreeSet<E>(new Comparator<E>() {
+			public int compare(E o1, E o2) {
+				return o1.getIndex() - o2.getIndex();
+			};
+		});
 		for (Set<E> path : context.paths) {
 			masterPath.addAll(path);
 		}
 		for (E e : masterPath) { 
 			if (isInteriorEdge(e)) {
 				context.cutMap.put(e, e.getOppositeEdge());
-				cutAtEdge(e);
+				context.vertexCopyMap.putAll(cutAtEdge(e));
 			}
 		}
 		for (Set<E> path : context.paths) {
-			Set<E> coPath = new HashSet<E>();
+			Set<E> coPath = new TreeSet<E>(new Comparator<E>() {
+				public int compare(E o1, E o2) {
+					return o1.getIndex() - o2.getIndex();
+				};
+			});
 			context.pathCutMap.put(path, coPath);
 			for (E e : path) {
 				coPath.add(context.cutMap.get(e));
@@ -129,7 +154,7 @@ public class CuttingUtility {
 			
 			V newV = hds.addNewVertex();
 			newV.copyData(v1);
-			result.put(newV, v1);
+			result.put(v1, newV);
 			
 			b.linkNextEdge(new1);
 			new2.linkNextEdge(b2);
@@ -158,7 +183,7 @@ public class CuttingUtility {
 			
 			V newV = hds.addNewVertex();
 			newV.copyData(v2);
-			result.put(newV, v2);
+			result.put(v2, newV);
 			
 			b.linkNextEdge(new2);
 			new1.linkNextEdge(b2);
@@ -199,7 +224,7 @@ public class CuttingUtility {
 		E opp = edge.getOppositeEdge();
 		V newVertex = hds.addNewVertex();
 		newVertex.copyData(oldVertex);
-		result.put(newVertex, oldVertex);
+		result.put(oldVertex, newVertex);
 		
 		// get edges of the new vertex 
 		List<E> newTargetEdges = new LinkedList<E>();
@@ -239,7 +264,7 @@ public class CuttingUtility {
 			
 			V v = hds.addNewVertex();
 			v.copyData(oldVertex);
-			result.put(v, oldVertex);
+			result.put(oldVertex, v);
 			
 			E be1 = null;
 			List<E> star = incomingEdges(nmv);

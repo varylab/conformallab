@@ -2,11 +2,12 @@ package de.varylab.discreteconformal.heds.util;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 
-import java.util.HashSet;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.TreeSet;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -21,7 +22,11 @@ public class SpanningTreeUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> Set<E> getSpanningTree(Set<E> edges, E root) {
-		Set<E> r = new HashSet<E>();
+		Set<E> r = new TreeSet<E>(new Comparator<E>() {
+			public int compare(E o1, E o2) {
+				return o1.getIndex() - o2.getIndex();
+			};
+		});
 		if (root.getHalfEdgeDataStructure().numVertices() <= 1) {
 			return r;
 		}
@@ -46,14 +51,23 @@ public class SpanningTreeUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	>  Set<E> growTree(Set<E> edges, Set<E> tree, E branch) {
-		Set<E> r = new HashSet<E>();
+		Set<E> r = new TreeSet<E>(new Comparator<E>() {
+			public int compare(E o1, E o2) {
+				return o1.getIndex() - o2.getIndex();
+			};
+		});
 		V t = branch.getTargetVertex();
 		List<E> star = incomingEdges(t);
 		for (E e : star) {
 			if (!edges.contains(e)) {
 				continue;
 			}
-			Set<E> nextStar = new HashSet<E>(incomingEdges(e.getStartVertex()));
+			Set<E> nextStar = new TreeSet<E>(new Comparator<E>() {
+				public int compare(E o1, E o2) {
+					return o1.getIndex() - o2.getIndex();
+				};
+			});
+			nextStar.addAll(incomingEdges(e.getStartVertex()));
 			nextStar.retainAll(tree);
 			if (nextStar.size() != 0) {
 				continue;
@@ -72,7 +86,11 @@ public class SpanningTreeUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	>  Set<E> growTreeDual(Set<E> edges, Set<E> tree, E branch) {
-		Set<E> r = new HashSet<E>();
+		Set<E> r = new TreeSet<E>(new Comparator<E>() {
+			public int compare(E o1, E o2) {
+				return o1.getIndex() - o2.getIndex();
+			};
+		});
 		F t = branch.getLeftFace();
 		List<E> star = HalfEdgeUtils.boundaryEdges(t);
 		for (E e : star) {
@@ -83,7 +101,12 @@ public class SpanningTreeUtility {
 			if (next == null) {
 				continue;
 			}
-			Set<E> nextStar = new HashSet<E>(HalfEdgeUtils.boundaryEdges(next));
+			Set<E> nextStar = new TreeSet<E>(new Comparator<E>() {
+				public int compare(E o1, E o2) {
+					return o1.getIndex() - o2.getIndex();
+				};
+			});
+			nextStar.addAll(HalfEdgeUtils.boundaryEdges(next));
 			nextStar.retainAll(tree);
 			if (nextStar.size() != 0) {
 				continue;
@@ -103,7 +126,11 @@ public class SpanningTreeUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> Set<E> getDualSpanningTree(Set<E> edges, E root) {
-		Set<E> r = new HashSet<E>();
+		Set<E> r = new TreeSet<E>(new Comparator<E>() {
+			public int compare(E o1, E o2) {
+				return o1.getIndex() - o2.getIndex();
+			};
+		});
 		if (root.getHalfEdgeDataStructure().numFaces() <= 1) {
 			return r;
 		}

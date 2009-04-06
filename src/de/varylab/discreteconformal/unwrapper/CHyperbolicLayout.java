@@ -107,9 +107,9 @@ public class CHyperbolicLayout {
 						Qv.offer(cVertex);
 						Qe.offer(e);
 					} else {
-						System.out.println("Vertex layout skipped for " + v + " checking triangle...");
-						boolean check = UniformizationUtility.checkTriangle(e.getLeftFace(), lMap);
-						System.out.println("triangle is valid: " + check);
+//						System.out.println("Vertex layout skipped for " + v + " checking triangle...");
+//						boolean check = UniformizationUtility.checkTriangle(e.getLeftFace(), lMap);
+//						System.out.println("triangle is valid: " + check);
 						break;
 					}
 				} else {
@@ -119,7 +119,7 @@ public class CHyperbolicLayout {
 			}
 		}
 		
-		System.out.println("Layout: Visited points: " + visited.size() + "/" + hds.numVertices());
+//		System.out.println("Layout: Visited points: " + visited.size() + "/" + hds.numVertices());
 		return cutSet;
 	}
 	
