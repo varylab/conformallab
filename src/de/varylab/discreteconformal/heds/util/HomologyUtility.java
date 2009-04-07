@@ -3,7 +3,6 @@ package de.varylab.discreteconformal.heds.util;
 import static java.util.Collections.singleton;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,11 +24,7 @@ public class HomologyUtility {
 		F extends Face<V, E, F>
 	> Set<E> findCycle(Set<E> set, E bridge) {
 		List<E> path = Search.bFS(set, bridge.getStartVertex(), bridge.getTargetVertex());
-		Set<E> r = new TreeSet<E>(new Comparator<E>() {
-			public int compare(E o1, E o2) {
-				return o1.getIndex() - o2.getIndex();
-			};
-		});
+		Set<E> r = new TreeSet<E>(new NodeComparator<E>());
 		r.addAll(path);
 		r.add(bridge);
 		return r;
@@ -45,17 +40,9 @@ public class HomologyUtility {
 		List<Set<E>> result = new ArrayList<Set<E>>();
 		
 		HalfEdgeDataStructure<V, E, F> hds = root.getHalfEdgeDataStructure();
-		Set<E> edgeSet = new TreeSet<E>(new Comparator<E>() {
-			public int compare(E o1, E o2) {
-				return o1.getIndex() - o2.getIndex();
-			};
-		});
+		Set<E> edgeSet = new TreeSet<E>(new NodeComparator<E>());
 		edgeSet.addAll(hds.getEdges());
-		Set<V> vSet = new TreeSet<V>(new Comparator<V>() {
-			public int compare(V o1, V o2) {
-				return o1.getIndex() - o2.getIndex();
-			};
-		});
+		Set<V> vSet = new TreeSet<V>(new NodeComparator<V>());
 		vSet.addAll(hds.getVertices());
 		Set<E> tree1 = Search.getAllShortestPathsTree(root, vSet, wa, new HashSet<V>());
 		edgeSet.removeAll(tree1);

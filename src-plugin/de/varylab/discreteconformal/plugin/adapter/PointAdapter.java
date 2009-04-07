@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.plugin;
+package de.varylab.discreteconformal.plugin.adapter;
 
 import static de.jtem.halfedge.jreality.adapter.Adapter.AdapterType.VERTEX_ADAPTER;
 
@@ -16,9 +16,12 @@ public class PointAdapter implements ColorAdapter2Ifs<CoVertex>, RelRadiusAdapte
 
 	private Set<CoVertex>
 		rootCopySet = new HashSet<CoVertex>();
+	private Set<CoVertex>
+		branchSet = new HashSet<CoVertex>();
 	private double[]
 	    colorNormal = {1.0, 1.0, 1.0},
-		colorMarked = {1.0, 0.0, 0.0};
+	    colorMarked = {1.0, 0.0, 0.0},
+		colorMarked2 = {0.0, 1.0, 0.0};
 	
 	public PointAdapter() {
 
@@ -26,13 +29,15 @@ public class PointAdapter implements ColorAdapter2Ifs<CoVertex>, RelRadiusAdapte
 	
 	public void setContext(CuttingInfo<CoVertex, CoEdge, CoFace> context) {
 		rootCopySet = context.getCopies(context.cutRoot);
-		rootCopySet.add(context.cutRoot);
+		branchSet = context.getBranchSet();
+		System.out.println("rootCopySet: " + rootCopySet.size() + ": " + rootCopySet);
+		System.out.println("branchSet: " + branchSet.size() + ": " + branchSet);
 	}
 	
 
 	@Override
 	public double getReelRadius(CoVertex node) {
-		if (rootCopySet.contains(node)) {
+		if (rootCopySet.contains(node) || branchSet.contains(node)) {
 			return 1.0;
 		} else {
 			return 0;
@@ -44,6 +49,8 @@ public class PointAdapter implements ColorAdapter2Ifs<CoVertex>, RelRadiusAdapte
 	public double[] getColor(CoVertex node) {
 		if (rootCopySet.contains(node)) {
 			return colorMarked;
+		} else if (branchSet.contains(node)) {
+			return colorMarked2;
 		} else {
 			return colorNormal;
 		}

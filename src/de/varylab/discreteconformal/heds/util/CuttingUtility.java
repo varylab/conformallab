@@ -7,7 +7,6 @@ import static de.jtem.halfedge.util.HalfEdgeUtils.isManifoldVertex;
 import static de.varylab.discreteconformal.heds.util.HomologyUtility.getGeneratorPaths;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -49,7 +48,22 @@ public class CuttingUtility {
 				copies.add(tmpV);
 				tmpV = vertexCopyMap.get(tmpV);
 			}
+			copies.add(v);
 			return copies;
+		}
+		
+		public Set<V> getBranchSet() {
+			Set<V> branches = new HashSet<V>();
+			for (V v : vertexCopyMap.keySet()) {
+				V copy = vertexCopyMap.get(v);
+				V branchCopy = vertexCopyMap.get(copy);
+				if (branchCopy != null) {
+					branches.add(v);
+					branches.add(copy);
+					branches.add(branchCopy);
+				}
+			}
+			return branches;
 		}
 	
 	}
@@ -65,29 +79,32 @@ public class CuttingUtility {
 		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
 		context.cutRoot = root;
 		context.paths = getGeneratorPaths(root, wa);
-		Set<E> masterPath = new TreeSet<E>(new Comparator<E>() {
-			public int compare(E o1, E o2) {
-				return o1.getIndex() - o2.getIndex();
-			};
-		});
+		Set<E> masterPath = new TreeSet<E>(new NodeComparator<E>());
 		for (Set<E> path : context.paths) {
 			masterPath.addAll(path);
 		}
 		for (E e : masterPath) { 
 			if (isInteriorEdge(e)) {
 				context.cutMap.put(e, e.getOppositeEdge());
-				context.vertexCopyMap.putAll(cutAtEdge(e));
+				Map<V, V> vMap = cutAtEdge(e);
+				for (V v : vMap.keySet()) {
+					V copy = vMap.get(v);
+					if (context.vertexCopyMap.keySet().contains(v)) {
+						V oldCopy = context.vertexCopyMap.get(v);
+						context.vertexCopyMap.put(copy, oldCopy);
+					}
+					context.vertexCopyMap.put(v, copy);
+				}
 			}
 		}
 		for (Set<E> path : context.paths) {
-			Set<E> coPath = new TreeSet<E>(new Comparator<E>() {
-				public int compare(E o1, E o2) {
-					return o1.getIndex() - o2.getIndex();
-				};
-			});
+			Set<E> coPath = new TreeSet<E>(new NodeComparator<E>());
 			context.pathCutMap.put(path, coPath);
 			for (E e : path) {
-				coPath.add(context.cutMap.get(e));
+				E coE = context.cutMap.get(e);
+				if (coE != null) {
+					coPath.add(coE);
+				}
 			}
 		}
 		return context;

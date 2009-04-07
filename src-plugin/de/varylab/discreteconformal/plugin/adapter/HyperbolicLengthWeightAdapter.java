@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.plugin;
+package de.varylab.discreteconformal.plugin.adapter;
 
 import static java.lang.Math.exp;
 import static java.lang.Math.log;

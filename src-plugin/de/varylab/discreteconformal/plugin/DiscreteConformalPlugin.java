@@ -62,6 +62,9 @@ import de.varylab.discreteconformal.heds.adapter.PositionTexCoordAdapter;
 import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
 import de.varylab.discreteconformal.heds.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.heds.util.UniformizationUtility.UAdapter;
+import de.varylab.discreteconformal.plugin.adapter.HyperbolicLengthWeightAdapter;
+import de.varylab.discreteconformal.plugin.adapter.MarkedEdgesAdapter;
+import de.varylab.discreteconformal.plugin.adapter.PointAdapter;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CDiskUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout;
@@ -399,9 +402,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 				CHyperbolicUnwrapper unwrapper = new CHyperbolicUnwrapper();
 				u = unwrapper.getConformalFactors(unwrappedGeometry);
 			}
-			HyperbolicLengthWeightAdapter wa = new HyperbolicLengthWeightAdapter(u);
+			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
+//			EuclideanLengthWeightAdapter eucWa = new EuclideanLengthWeightAdapter();
 			CoVertex root = unwrappedGeometry.getVertex(getMinUIndex(u));
-			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(unwrappedGeometry, root, wa);
+			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(unwrappedGeometry, root, hypWa);
 			CHyperbolicLayout.doLayout(unwrappedGeometry, u);
 			cutColorAdapter.setContext(cutInfo);
 			pointAdapter.setContext(cutInfo);
@@ -434,7 +438,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		double iVal = u.get(0);
 		for (int i = 1; i < u.size(); i++) {
 			double val = u.get(i);
-			if (iVal > val) {
+			if (iVal < val) {
 				index = i;
 				iVal = i;
 			}
