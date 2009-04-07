@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
-import static de.varylab.jpetsc.Vec.InsertMode.INSERT_VALUES;
+import static de.varylab.jpetsc.InsertMode.INSERT_VALUES;
 import static de.varylab.jtao.TaoAppAddHess.PreconditionerType.SAME_NONZERO_PATTERN;
 import de.jtem.halfedge.functional.DomainValue;
 import de.jtem.halfedge.functional.Gradient;
@@ -18,7 +18,6 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.ConformalEnergy;
 import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.Vec;
-import de.varylab.jpetsc.Mat.InsertMode;
 import de.varylab.jtao.TaoAppAddCombinedObjectiveAndGrad;
 import de.varylab.jtao.TaoAppAddHess;
 import de.varylab.jtao.TaoApplication;
@@ -127,7 +126,7 @@ public class CEuclideanApplication extends TaoApplication implements
 
 		@Override
 		public void set(int i, int j, double value) {
-			H.setValue(i, j, value, InsertMode.INSERT_VALUES);
+			H.setValue(i, j, value, INSERT_VALUES);
 		}
 		
 	}

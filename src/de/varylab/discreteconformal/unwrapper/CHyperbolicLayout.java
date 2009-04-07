@@ -24,7 +24,6 @@ import de.jreality.math.Pn;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.util.UniformizationUtility;
 
 public class CHyperbolicLayout {
 
