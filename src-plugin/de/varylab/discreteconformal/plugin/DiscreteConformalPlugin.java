@@ -39,7 +39,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import no.uib.cipr.matrix.Vector;
-import charlesgunn.jreality.tools.TranslateShapeTool;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.MatrixBuilder;
 import de.jreality.plugin.view.AlignedContent;
@@ -80,10 +79,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 
 	private AlignedContent
 		content = null;
-	private TranslateShapeTool
-		translateShapeTool = new TranslateShapeTool();
-	private HyperbolicCopyTool
-		hyperbolicCopyTool = new HyperbolicCopyTool(this);
+//	private TranslateShapeTool
+//		translateShapeTool = new TranslateShapeTool();
+//	private HyperbolicCopyTool
+//		hyperbolicCopyTool = new HyperbolicCopyTool(this);
 	public static HalfedgeDebuggerPlugin<CoVertex, CoEdge, CoFace>
 		halfedgeDebugger = null;
 	private HalfedgeConnectorPlugin
@@ -264,25 +263,25 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		}
 		if (showUnwrapped == s || kleinButton == s || poincareButton == s) {
 			klein = kleinButton.isSelected();
-			if (klein) {
-//				if (!content.getContent().getTools().contains(translateShapeTool)) {
-//					content.getContent().addTool(translateShapeTool);
+//			if (klein) {
+////				if (!content.getContent().getTools().contains(translateShapeTool)) {
+////					content.getContent().addTool(translateShapeTool);
+////				}
+//				if (!content.getContent().getTools().contains(hyperbolicCopyTool)) {
+//					content.getContent().addTool(hyperbolicCopyTool);
 //				}
-				if (!content.getContent().getTools().contains(hyperbolicCopyTool)) {
-					content.getContent().addTool(hyperbolicCopyTool);
-				}
-//				content.getContent().setTransformation(new Transformation());
-//				content.getContent().getAppearance().setAttribute("metric", -1);
-			} else {
-//				if (content.getContent().getTools().contains(translateShapeTool)) {
-//					content.getContent().removeTool(translateShapeTool);					
+////				content.getContent().setTransformation(new Transformation());
+////				content.getContent().getAppearance().setAttribute("metric", -1);
+//			} else {
+////				if (content.getContent().getTools().contains(translateShapeTool)) {
+////					content.getContent().removeTool(translateShapeTool);					
+////				}
+//				if (content.getContent().getTools().contains(hyperbolicCopyTool)) {
+//					content.getContent().removeTool(hyperbolicCopyTool);
 //				}
-				if (content.getContent().getTools().contains(hyperbolicCopyTool)) {
-					content.getContent().removeTool(hyperbolicCopyTool);
-				}
-//				content.getContent().setTransformation(new Transformation());
-//				content.getContent().getAppearance().setAttribute("metric", 0);
-			}
+////				content.getContent().setTransformation(new Transformation());
+////				content.getContent().getAppearance().setAttribute("metric", 0);
+//			}
 			updateViewer();
 		}
 		if (showUnitCircle == s) {
@@ -406,6 +405,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 //			EuclideanLengthWeightAdapter eucWa = new EuclideanLengthWeightAdapter();
 			CoVertex root = unwrappedGeometry.getVertex(getMinUIndex(u));
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(unwrappedGeometry, root, hypWa);
+			
 			CHyperbolicLayout.doLayout(unwrappedGeometry, u);
 			cutColorAdapter.setContext(cutInfo);
 			pointAdapter.setContext(cutInfo);

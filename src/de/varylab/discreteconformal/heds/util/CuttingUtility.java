@@ -4,7 +4,6 @@ import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isInteriorEdge;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isManifoldVertex;
-import static de.varylab.discreteconformal.heds.util.HomologyUtility.getGeneratorPaths;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,7 +77,7 @@ public class CuttingUtility {
 	> CuttingInfo<V, E, F> cutManifoldToDisk(HDS hds, V root, WeightAdapter<E> wa) {
 		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
 		context.cutRoot = root;
-		context.paths = getGeneratorPaths(root, wa);
+		context.paths = HomologyUtility.getGeneratorPaths(root, wa);
 		Set<E> masterPath = new TreeSet<E>(new NodeComparator<E>());
 		for (Set<E> path : context.paths) {
 			masterPath.addAll(path);

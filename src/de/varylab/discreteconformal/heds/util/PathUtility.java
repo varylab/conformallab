@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.heds.util;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -25,10 +26,32 @@ public class PathUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> Set<V> getVerticesOnPath(Set<E> path) {
-		HashSet<V> result = new HashSet<V>();
+		Set<V> result = new TreeSet<V>(new NodeComparator<V>());
 		for (E e : path) {
 			result.add(e.getStartVertex());
 			result.add(e.getTargetVertex());
+		}
+		return result;
+	}
+	
+	
+	/**
+	 * Returns a path which includes the opposite edges of each edge
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param path
+	 * @return
+	 */
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> Set<E> getFullPath(Set<E> path) {
+		Set<E> result = new TreeSet<E>(new NodeComparator<E>());
+		for (E e : path) {
+			result.add(e);
+			result.add(e.getOppositeEdge());
 		}
 		return result;
 	}
