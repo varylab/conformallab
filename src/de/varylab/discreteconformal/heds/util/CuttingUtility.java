@@ -32,7 +32,7 @@ public class CuttingUtility {
 		public V
 			cutRoot = null;
 		public Map<E, E>
-			cutMap = new HashMap<E, E>();
+			edgeCutMap = new HashMap<E, E>();
 		public List<Set<E>>
 			paths = new ArrayList<Set<E>>();
 		public Map<Set<E>, Set<E>>
@@ -84,7 +84,8 @@ public class CuttingUtility {
 		}
 		for (E e : masterPath) { 
 			if (isInteriorEdge(e)) {
-				context.cutMap.put(e, e.getOppositeEdge());
+				context.edgeCutMap.put(e, e.getOppositeEdge());
+				context.edgeCutMap.put(e.getOppositeEdge(), e);
 				Map<V, V> vMap = cutAtEdge(e);
 				for (V v : vMap.keySet()) {
 					V copy = vMap.get(v);
@@ -100,7 +101,7 @@ public class CuttingUtility {
 			Set<E> coPath = new TreeSet<E>(new NodeComparator<E>());
 			context.pathCutMap.put(path, coPath);
 			for (E e : path) {
-				E coE = context.cutMap.get(e);
+				E coE = context.edgeCutMap.get(e);
 				if (coE != null) {
 					coPath.add(coE);
 				}

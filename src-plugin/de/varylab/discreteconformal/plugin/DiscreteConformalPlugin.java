@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.plugin;
 
+import static de.jreality.math.Pn.HYPERBOLIC;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
@@ -22,6 +23,7 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.InputStream;
+import java.util.Arrays;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -40,7 +42,9 @@ import javax.swing.event.ChangeListener;
 
 import no.uib.cipr.matrix.Vector;
 import de.jreality.geometry.Primitives;
+import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
+import de.jreality.math.Pn;
 import de.jreality.plugin.view.AlignedContent;
 import de.jreality.plugin.view.ContentAppearance;
 import de.jreality.plugin.view.View;
@@ -81,8 +85,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		content = null;
 //	private TranslateShapeTool
 //		translateShapeTool = new TranslateShapeTool();
-//	private HyperbolicCopyTool
-//		hyperbolicCopyTool = new HyperbolicCopyTool(this);
+	private HyperbolicCopyTool
+		hyperbolicCopyTool = new HyperbolicCopyTool(this);
 	public static HalfedgeDebuggerPlugin<CoVertex, CoEdge, CoFace>
 		halfedgeDebugger = null;
 	private HalfedgeConnectorPlugin
@@ -92,6 +96,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private CoHDS
 		activeGeometry = null,
 		unwrappedGeometry = null;
+	private CuttingInfo<CoVertex, CoEdge, CoFace> 
+		cutInfo = null;
 	private MarkedEdgesAdapter
 		cutColorAdapter = new MarkedEdgesAdapter();
 	private PointAdapter
@@ -100,11 +106,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		auxGeometry = new SceneGraphComponent(),
 		unitCircle = new SceneGraphComponent();
 
-	private JLabel
-		geometryLabel = new JLabel();
 	private JButton
 		unwrapBtn = new JButton("Unwrap"),
-		getGeometryBtn = new JButton("Retrieve Geometry"),
 		reduceBtn = new JButton("To Fundamental Polygon");
 	private JPanel
 		coneConfigPanel = new JPanel(),
@@ -143,7 +146,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		numericsCombo.addActionListener(this);
 		euclideanButton.addActionListener(this);
 		hyperbolicButton.addActionListener(this);
-		getGeometryBtn.addActionListener(this);
 		showUnwrapped.addActionListener(this);
 		showUnitCircle.addActionListener(this);
 		kleinButton.addActionListener(this);
@@ -179,9 +181,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		c.fill = GridBagConstraints.BOTH;
 		c.weightx = 1.0;
 		c.gridwidth = GridBagConstraints.REMAINDER;
-		
-		shrinkPanel.add(getGeometryBtn, c);
-		shrinkPanel.add(geometryLabel, c);
 		
 		coneConfigPanel.setBorder(BorderFactory.createTitledBorder("Cone Singularities"));
 		coneConfigPanel.setLayout(new GridBagLayout());
@@ -226,9 +225,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
 		if (unwrapBtn == s) {
-			if (activeGeometry == null) {
-				getGeometry();
-			}
+			getGeometry();
 			new Thread("Reduce To Fundamental Thread") {
 				@Override
 				public void run() {
@@ -258,9 +255,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		if (hyperbolicButton == s) {
 			hyperbolic = hyperbolicButton.isSelected();
 		}
-		if (getGeometryBtn == s) {
-			getGeometry();
-		}
 		if (showUnwrapped == s || kleinButton == s || poincareButton == s) {
 			klein = kleinButton.isSelected();
 //			if (klein) {
@@ -268,7 +262,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 ////					content.getContent().addTool(translateShapeTool);
 ////				}
 //				if (!content.getContent().getTools().contains(hyperbolicCopyTool)) {
-//					content.getContent().addTool(hyperbolicCopyTool);
+//					
 //				}
 ////				content.getContent().setTransformation(new Transformation());
 ////				content.getContent().getAppearance().setAttribute("metric", -1);
@@ -288,9 +282,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			unitCircle.setVisible(showUnitCircle.isSelected());
 		}
 		if (reduceBtn == s) {
-			if (activeGeometry == null) {
-				getGeometry();
-			}
+			getGeometry();
 			new Thread("Reduce To Fundamental Thread") {
 				@Override
 				public void run() {
@@ -312,7 +304,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		activeGeometry.setTexCoordinatesValid(false);
 		hcp.getHalfedgeContent(activeGeometry, new PositionAdapter());
 		triangulator.triangulate(activeGeometry);
-		geometryLabel.setText("Geometry: " + hcp.getHalfedgeContentName());
 		double[][] bounds = new double[][]{{MAX_VALUE, -MAX_VALUE},{MAX_VALUE, -MAX_VALUE},{MAX_VALUE, -MAX_VALUE}};
 		for (CoVertex v : activeGeometry.getVertices()) {
 			Point p = v.getPosition();
@@ -404,7 +395,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
 //			EuclideanLengthWeightAdapter eucWa = new EuclideanLengthWeightAdapter();
 			CoVertex root = unwrappedGeometry.getVertex(getMinUIndex(u));
-			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(unwrappedGeometry, root, hypWa);
+			cutInfo = cutManifoldToDisk(unwrappedGeometry, root, hypWa);
 			
 			CHyperbolicLayout.doLayout(unwrappedGeometry, u);
 			cutColorAdapter.setContext(cutInfo);
@@ -426,8 +417,121 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		if (unwrappedGeometry == null) {
 			return;
 		}
+		CoEdge edge = null;
+		int i = 0;
+		for (CoEdge e : unwrappedGeometry.getEdges()) {
+			if (e.isPositive()) {
+				if (i == edgeIndex) {
+					if (e.getLeftFace() != null) {
+						edge = e;
+					} else {
+						edge = e.getOppositeEdge();
+					}
+					break;
+				}
+				i++;
+			}
+		}
 		
-		System.out.println("Copy at edge " + edgeIndex);
+		if (edge == null) {
+			System.err.println("Edge corresponding to index " + edgeIndex + " not found");
+			return;
+		}
+		CoEdge coEdge = cutInfo.edgeCutMap.get(edge);
+		if (coEdge == null) {
+			System.err.println("CoEdge not found");
+			return;
+		}
+		if (edge.getOppositeEdge().getLeftFace() != null) {
+			System.err.println("Picked no boundary edge!");
+			return;
+		}
+		System.out.println("hyperbolic motion: " + edge + " -> " + coEdge);
+		
+		Point s1 = edge.getTargetVertex().getTextureCoord();
+		Point s2 = edge.getStartVertex().getTextureCoord();
+		Point t1 = coEdge.getTargetVertex().getTextureCoord();
+		Point t2 = coEdge.getStartVertex().getTextureCoord();
+		System.out.println("s1: " + s1);
+		System.out.println("s2: " + s2);
+		System.out.println("t1: " + t1);
+		System.out.println("t2: " + t2);
+		double ds = Pn.distanceBetween(s1.get(), s2.get(), HYPERBOLIC);
+		double dt = Pn.distanceBetween(t1.get(), t2.get(), HYPERBOLIC);
+		System.out.println("dist: " + ds + ", " + dt);
+		
+		geom3d.Vector ns = new geom3d.Vector(s1).cross(s2);
+		geom3d.Vector nt = new geom3d.Vector(t1).cross(t2);
+		
+		double s1s1 = Pn.innerProduct(s1.get(), s1.get(), HYPERBOLIC);
+		double t1t1 = Pn.innerProduct(t1.get(), t1.get(), HYPERBOLIC);
+		double s1s2 = Pn.innerProduct(s1.get(), s2.get(), HYPERBOLIC);
+		double t1t2 = Pn.innerProduct(t1.get(), t2.get(), HYPERBOLIC);
+		geom3d.Vector ws = new geom3d.Vector(s2).add(new Point(s1).times(s1s2 / s1s1).times(-1));
+		geom3d.Vector wt = new geom3d.Vector(t2).add(new Point(t1).times(t1t2 / t1t1).times(-1));
+		System.out.println("Orthogonal check ws: " + Pn.innerProduct(ws.get(), s1.get(), HYPERBOLIC));
+		System.out.println("Orthogonal check wt: " + Pn.innerProduct(wt.get(), t1.get(), HYPERBOLIC));
+		
+		double nss1 = Pn.innerProduct(ns.get(), s1.get(), HYPERBOLIC);
+		double ntt1 = Pn.innerProduct(nt.get(), t1.get(), HYPERBOLIC);
+		ns.add(new Point(s1).times(nss1 / s1s1).times(-1));
+		nt.add(new Point(t1).times(ntt1 / t1t1).times(-1));
+		System.out.println("Orthogonal check ns1: " + Pn.innerProduct(ns.get(), s1.get(), HYPERBOLIC));
+		System.out.println("Orthogonal check nt1: " + Pn.innerProduct(nt.get(), t1.get(), HYPERBOLIC));
+		
+		double nsws = Pn.innerProduct(ns.get(), ws.get(), HYPERBOLIC);
+		double ntwt = Pn.innerProduct(nt.get(), wt.get(), HYPERBOLIC);	
+		double wsws = Pn.innerProduct(ws.get(), ws.get(), HYPERBOLIC);
+		double wtwt = Pn.innerProduct(wt.get(), wt.get(), HYPERBOLIC);
+		ns.add(new Point(ws).times(nsws / wsws).times(-1));
+		nt.add(new Point(wt).times(ntwt / wtwt).times(-1));
+		Pn.normalize(ns.get(), ns.get(), HYPERBOLIC);
+		Pn.normalize(nt.get(), nt.get(), HYPERBOLIC);
+		
+		System.out.println("ns: " + ns);
+		System.out.println("nt: " + nt);
+		System.out.println("Orthogonal check ns1: " + Pn.innerProduct(ns.get(), s1.get(), HYPERBOLIC));
+		System.out.println("Orthogonal check ns2: " + Pn.innerProduct(ns.get(), s2.get(), HYPERBOLIC));
+		System.out.println("Orthogonal check nt1: " + Pn.innerProduct(nt.get(), t1.get(), HYPERBOLIC));
+		System.out.println("Orthogonal check nt2: " + Pn.innerProduct(nt.get(), t2.get(), HYPERBOLIC));
+		double[] sa1 = s1.get();
+		double[] sa2 = s2.get();
+		double[] nsa = ns.get();
+		double[] ta1 = t1.get();
+		double[] ta2 = t2.get();
+		double[] nta = nt.get();
+		Matrix E = new Matrix(
+			1,		0,		0,		0,
+			0,		1, 		0,		0,
+			0,		0,		-1,		0,
+			0,		0, 		0, 		1
+		);
+		Matrix S = new Matrix(
+			sa1[0], sa2[0], nsa[0], 0,
+			sa1[1], sa2[1], nsa[1], 0,
+			sa1[2], sa2[2], nsa[2], 0,
+			0,		0, 		0, 		1
+		);
+		Matrix T = new Matrix(
+			ta1[0], ta2[0], nta[0], 0,
+			ta1[1], ta2[1], nta[1], 0,
+			ta1[2], ta2[2], nta[2], 0,
+			0,		0, 		0, 		1
+		);
+		Matrix A = Matrix.times(T, S.getInverse());
+		System.out.println("A*s1: " + Arrays.toString(A.multiplyVector(sa1)));
+		System.out.println("A*s2: " + Arrays.toString(A.multiplyVector(sa2)));
+		System.out.println("A*ns: " + Arrays.toString(A.multiplyVector(nsa)));
+		System.out.println(A);
+		
+		System.out.println("t1 * t1: " + Pn.innerProduct(ta1, ta1, HYPERBOLIC));
+		System.out.println("t2 * t2: " + Pn.innerProduct(ta2, ta2, HYPERBOLIC));
+		double[] At1 = A.multiplyVector(ta1);
+		double[] At2 = A.multiplyVector(ta2);
+		System.out.println("At1 * At1: " + Pn.innerProduct(At1, At1, HYPERBOLIC));
+		System.out.println("At2 * At2: " + Pn.innerProduct(At2, At2, HYPERBOLIC));
+		
+		System.out.println(Matrix.times(A.getTranspose(), Matrix.times(E, A)));
 	}
 	
 	
@@ -463,13 +567,14 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		halfedgeDebugger = c.getPlugin(HalfedgeDebuggerPlugin.class);
 		content = c.getPlugin(AlignedContent.class);
 		content.getScalingComponent().addChild(auxGeometry);
+		content.getScalingComponent().addTool(hyperbolicCopyTool);
 		c.getPlugin(ContentAppearance.class);
 		ReaderOBJ reader = new ReaderOBJ();
 		InputStream in = getClass().getResourceAsStream("brezelCoarse.obj");
 		Input input = Input.getInput("Default OBJ Object", in);
 		SceneGraphComponent brezelOBJ = reader.read(input);
 		content.setContent(brezelOBJ);
-		super.install(c); 
+		super.install(c);  
 	}
 	
 	@Override
@@ -478,6 +583,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		if (content.getScalingComponent().isDirectAncestor(auxGeometry)) {
 			content.getScalingComponent().removeChild(auxGeometry);
 		} 
+		if (content.getScalingComponent().getTools().contains(hyperbolicCopyTool)) {
+			content.getScalingComponent().removeTool(hyperbolicCopyTool);
+		}
 	}
 	
 	
@@ -488,8 +596,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		c.storeProperty(getClass(), "quantizeCones", quantizeCones);
 		c.storeProperty(getClass(), "hyperbolic", hyperbolic);
 		c.storeProperty(getClass(), "usePetsc", usePetsc);
-		c.storeProperty(getClass(), "klein", klein);
-	}
+		c.storeProperty(getClass(), "klein", klein); 
+		c.storeProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected());
+		c.storeProperty(getClass(), "showUnitCircle", showUnitCircle.isSelected());
+	} 
 	
 
 	@Override
@@ -500,6 +610,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		hyperbolic = c.getProperty(getClass(), "hyperbolic", hyperbolic);
 		usePetsc = c.getProperty(getClass(), "usePetsc", usePetsc);
 		klein = c.getProperty(getClass(), "klein", klein);
+		showUnwrapped.setSelected(c.getProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected()));
+		showUnitCircle.setSelected(c.getProperty(getClass(), "showUnitCircle", showUnitCircle.isSelected()));
 		
 		numericsCombo.setSelectedIndex(usePetsc ? 1 : 0);
 		quantizeCones = quantizeChecker.isSelected();
