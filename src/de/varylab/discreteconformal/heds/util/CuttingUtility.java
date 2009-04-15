@@ -41,18 +41,27 @@ public class CuttingUtility {
 			vertexCopyMap = new HashMap<V, V>();
 		
 		public Set<V> getCopies(V v) {
-			Set<V> copies = new HashSet<V>();
+			Set<V> copies = new TreeSet<V>(new NodeComparator<V>());
+			for (V cV : vertexCopyMap.keySet()) {
+				V tmpV = vertexCopyMap.get(cV);
+				while (tmpV != null) {
+					if (tmpV == v) {
+						copies.add(cV);
+					}
+					tmpV = vertexCopyMap.get(tmpV);
+				}
+			}
 			V tmpV = vertexCopyMap.get(v);
 			while (tmpV != null) {
 				copies.add(tmpV);
 				tmpV = vertexCopyMap.get(tmpV);
-			}
+			}		
 			copies.add(v);
 			return copies;
 		}
 		
 		public Set<V> getBranchSet() {
-			Set<V> branches = new HashSet<V>();
+			Set<V> branches = new TreeSet<V>(new NodeComparator<V>());
 			for (V v : vertexCopyMap.keySet()) {
 				V copy = vertexCopyMap.get(v);
 				V branchCopy = vertexCopyMap.get(copy);

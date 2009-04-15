@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.heds.util;
 
+import static de.jreality.math.Pn.HYPERBOLIC;
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static java.lang.Double.isNaN;
 import static java.lang.Math.PI;
@@ -12,6 +13,7 @@ import static java.lang.Math.sin;
 import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 import static java.util.Collections.sort;
+import geom3d.Point;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -24,8 +26,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import no.uib.cipr.matrix.Vector;
+import de.jreality.math.Matrix;
+import de.jreality.math.Pn;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -37,6 +42,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.util.CuttingUtility.CuttingInfo;
 
 public class UniformizationUtility {
 
@@ -48,6 +54,273 @@ public class UniformizationUtility {
 			System.out.println(msg); 
 		}
 	}
+	
+	
+	
+	public static Matrix makeHyperbolicMotion(Point s1, Point s2, Point t1, Point t2) {
+//		System.out.println("s1: " + s1);
+//		System.out.println("s2: " + s2);
+//		System.out.println("t1: " + t1);
+//		System.out.println("t2: " + t2);
+//		double ds = Pn.distanceBetween(s1.get(), s2.get(), HYPERBOLIC);
+//		double dt = Pn.distanceBetween(t1.get(), t2.get(), HYPERBOLIC);
+//		System.out.println("dist: " + ds + ", " + dt);
+		
+		geom3d.Vector ns = new geom3d.Vector(s1).cross(s2);
+		geom3d.Vector nt = new geom3d.Vector(t1).cross(t2);
+		
+		double s1s1 = Pn.innerProduct(s1.get(), s1.get(), HYPERBOLIC);
+		double t1t1 = Pn.innerProduct(t1.get(), t1.get(), HYPERBOLIC);
+		double s1s2 = Pn.innerProduct(s1.get(), s2.get(), HYPERBOLIC);
+		double t1t2 = Pn.innerProduct(t1.get(), t2.get(), HYPERBOLIC);
+		geom3d.Vector ws = new geom3d.Vector(s2).add(new Point(s1).times(s1s2 / s1s1).times(-1));
+		geom3d.Vector wt = new geom3d.Vector(t2).add(new Point(t1).times(t1t2 / t1t1).times(-1));
+//		System.out.println("Orthogonal check ws: " + Pn.innerProduct(ws.get(), s1.get(), HYPERBOLIC));
+//		System.out.println("Orthogonal check wt: " + Pn.innerProduct(wt.get(), t1.get(), HYPERBOLIC));
+		
+		double nss1 = Pn.innerProduct(ns.get(), s1.get(), HYPERBOLIC);
+		double ntt1 = Pn.innerProduct(nt.get(), t1.get(), HYPERBOLIC);
+		ns.add(new Point(s1).times(nss1 / s1s1).times(-1));
+		nt.add(new Point(t1).times(ntt1 / t1t1).times(-1));
+//		System.out.println("Orthogonal check ns1: " + Pn.innerProduct(ns.get(), s1.get(), HYPERBOLIC));
+//		System.out.println("Orthogonal check nt1: " + Pn.innerProduct(nt.get(), t1.get(), HYPERBOLIC));
+		
+		double nsws = Pn.innerProduct(ns.get(), ws.get(), HYPERBOLIC);
+		double ntwt = Pn.innerProduct(nt.get(), wt.get(), HYPERBOLIC);	
+		double wsws = Pn.innerProduct(ws.get(), ws.get(), HYPERBOLIC);
+		double wtwt = Pn.innerProduct(wt.get(), wt.get(), HYPERBOLIC);
+		ns.add(new Point(ws).times(nsws / wsws).times(-1));
+		nt.add(new Point(wt).times(ntwt / wtwt).times(-1));
+		Pn.normalize(ns.get(), ns.get(), HYPERBOLIC);
+		Pn.normalize(nt.get(), nt.get(), HYPERBOLIC);
+		
+//		System.out.println("ns: " + ns);
+//		System.out.println("nt: " + nt);
+//		System.out.println("Orthogonal check ns1: " + Pn.innerProduct(ns.get(), s1.get(), HYPERBOLIC));
+//		System.out.println("Orthogonal check ns2: " + Pn.innerProduct(ns.get(), s2.get(), HYPERBOLIC));
+//		System.out.println("Orthogonal check nt1: " + Pn.innerProduct(nt.get(), t1.get(), HYPERBOLIC));
+//		System.out.println("Orthogonal check nt2: " + Pn.innerProduct(nt.get(), t2.get(), HYPERBOLIC));
+		double[] sa1 = s1.get();
+		double[] sa2 = s2.get();
+		double[] nsa = ns.get();
+		double[] ta1 = t1.get();
+		double[] ta2 = t2.get();
+		double[] nta = nt.get();
+		Matrix S = new Matrix(
+			sa1[0], sa2[0], nsa[0], 0,
+			sa1[1], sa2[1], nsa[1], 0,
+			sa1[2], sa2[2], nsa[2], 0,
+			0,		0, 		0, 		1
+		);
+		Matrix T = new Matrix(
+			ta1[0], ta2[0], nta[0], 0,
+			ta1[1], ta2[1], nta[1], 0,
+			ta1[2], ta2[2], nta[2], 0,
+			0,		0, 		0, 		1
+		);
+		return Matrix.times(T, S.getInverse());
+	}
+	
+	
+	
+	public static class FundamentalVertex {
+		
+		public int 
+			index = 0;
+		
+		public FundamentalVertex(int index) {
+			this.index = index;
+		}
+
+		@Override
+		public String toString() {
+			return "FunVertex " + index;
+		}
+		
+	}
+	
+	
+	public static class FundamentalEdge implements Comparable<FundamentalEdge> {
+		
+		public int 
+			index = 0;
+		public FundamentalVertex 
+			start = new FundamentalVertex(0),
+			end = new FundamentalVertex(0);
+		public Matrix
+			motion = new Matrix();
+		public FundamentalEdge
+			prevEdge = null,
+			nextEdge = null;
+		public FundamentalEdge
+			partner = null;
+
+		public FundamentalEdge(int index) {
+			this.index = index;
+		}
+
+		public FundamentalEdge(
+			int index,
+			FundamentalVertex start, 
+			FundamentalVertex end,
+			Matrix motion
+		) {
+			this(index);
+			this.start = start;
+			this.end = end;
+			this.motion = motion;
+		}
+		
+		@Override
+		public String toString() {
+			return "FunEdge " + index;
+		}
+
+		@Override
+		public int compareTo(FundamentalEdge o) {
+			return index - o.index;
+		}
+
+	}
+	
+	
+	public static class FundamentalPolygon {
+		
+		public List<FundamentalEdge>
+			edgeList = new LinkedList<FundamentalEdge>();
+		
+		
+		@Override
+		public String toString() {
+			StringBuffer sb = new StringBuffer();
+			sb.append("Fundamental Polygon edges: " + edgeList.size() + "\n");
+			for (FundamentalEdge fe : edgeList) {
+				sb.append(fe + ": " + fe.start.index + " <-> " + fe.end.index + " -> " + fe.partner + "\n");
+			}
+			sb.append("---------------------------------");
+			return sb.toString();
+		}
+		
+	}
+	
+	
+	
+	
+	public static FundamentalPolygon constructFundamentalPolygon(
+		CoVertex root, 
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo
+	) {
+		FundamentalPolygon poly = new FundamentalPolygon();
+		CoEdge rootEdge = null;
+		for (CoEdge e : incomingEdges(root)) {
+			if (e.getOppositeEdge().getLeftFace() == null) {
+				rootEdge = e.getOppositeEdge();
+				break;
+			}
+		}
+		assert rootEdge != null;
+		
+		
+		// create fundamental vertices
+		Set<CoVertex> branchSet = cutInfo.getBranchSet();
+		Map<CoVertex, FundamentalVertex> bMap = new HashMap<CoVertex, FundamentalVertex>();
+		
+		Set<CoVertex> tmpSet = new HashSet<CoVertex>(branchSet);
+		int index = 0;
+		for (CoVertex v : branchSet) {
+			if (!tmpSet.contains(v)) {
+				continue;
+			}
+			Set<CoVertex> copies = cutInfo.getCopies(v);
+			System.out.println("copies for " + index + ": " + copies);
+			FundamentalVertex fv = new FundamentalVertex(index++);
+			for (CoVertex copy : copies) {
+				bMap.put(copy, fv);
+			}
+			tmpSet.removeAll(copies);
+		}
+		System.out.println("bMap: " + bMap.values());
+		
+		Set<CoVertex> visited = new HashSet<CoVertex>();
+		CoEdge edge = rootEdge;
+		CoVertex next = edge.getTargetVertex();
+		List<CoVertex> branchList = new LinkedList<CoVertex>();
+		List<Matrix> AList = new LinkedList<Matrix>();
+		Map<CoEdge, FundamentalEdge> fuEdgeMap = new HashMap<CoEdge, FundamentalEdge>();
+		branchList.add(root);
+		FundamentalVertex lastFunV = bMap.get(root);
+		FundamentalEdge lastFunE = null;
+		FundamentalEdge firstFunE = null;
+		index = 0;
+		// circle around the polygon
+		while (!visited.contains(next)) {
+			if (branchSet.contains(next)) {
+				FundamentalVertex start = lastFunV;
+				FundamentalVertex end = bMap.get(next);
+				// hyperbolic motion
+				Point s1 = edge.getStartVertex().getTextureCoord();
+				Point s2 = edge.getTargetVertex().getTextureCoord();
+				CoEdge coEdge = cutInfo.edgeCutMap.get(edge.getOppositeEdge());
+				Point t1 = coEdge.getStartVertex().getTextureCoord();
+				Point t2 = coEdge.getTargetVertex().getTextureCoord();
+				Matrix A = makeHyperbolicMotion(s1, s2, t1, t2);
+				FundamentalEdge fEdge = new FundamentalEdge(index++, start, end, A);
+				// identification
+//				fuEdgeMap.put(edge, fEdge);
+				
+				// linkage
+				fEdge.prevEdge = lastFunE;
+				if (lastFunE != null) {
+					lastFunE.nextEdge = fEdge;
+				}
+				poly.edgeList.add(fEdge);
+				branchList.add(next);
+				lastFunE = fEdge;
+				lastFunV = end;
+				if (firstFunE == null) {
+					firstFunE = fEdge;
+				}
+			}
+			// next
+			edge = edge.getNextEdge();
+			visited.add(next);
+			next = edge.getTargetVertex();
+		}
+		assert lastFunE != null;
+		assert firstFunE != null;
+		lastFunE.nextEdge = firstFunE;
+		firstFunE.prevEdge = firstFunE;
+		
+		System.out.println("branchList: " + branchList);
+		System.out.println("AList: \n" + AList);
+		
+		Matrix check = new Matrix();
+		for (Matrix A : AList) {
+			check.multiplyOnRight(A);
+		}
+		System.out.println("AList check: \n" + check);
+		System.out.println(poly);
+		
+		return poly;
+	}
+	
+	
+	
+	public static void constructCanonicalPolygon(FundamentalPolygon poly) {
+		FundamentalVertex root = poly.edgeList.get(0).start;
+		List<FundamentalEdge> newPoly = new LinkedList<FundamentalEdge>();
+		Set<FundamentalEdge> deleted = new TreeSet<FundamentalEdge>();
+		for (FundamentalEdge e : poly.edgeList) {
+			FundamentalVertex badVertex = e.end;
+			if (badVertex != root) {
+				
+			}
+		}
+		System.out.println("Canonical Polygon:\n" + poly);
+	}
+	
+	
+	
 	
 	
 	public static class UAdapter {

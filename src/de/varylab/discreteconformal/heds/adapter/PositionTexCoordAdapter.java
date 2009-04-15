@@ -26,7 +26,7 @@ public class PositionTexCoordAdapter implements CoordinateAdapter2Ifs<CoVertex> 
 		if (poincare) {
 			return new double[] {t.x() / (t.z() + 1), t.y() / (t.z() + 1), 0.0};
 		} else {
-			return new double[] {t.x() / t.z(), t.y() / t.z(), 0.0};
+			return new double[] {t.x(), t.y(), 0.0, t.z()};
 		}
 	}
 

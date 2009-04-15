@@ -41,6 +41,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import no.uib.cipr.matrix.Vector;
+import de.jreality.geometry.IndexedFaceSetUtility;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
@@ -50,10 +51,14 @@ import de.jreality.plugin.view.ContentAppearance;
 import de.jreality.plugin.view.View;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.Appearance;
+import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.util.Input;
 import de.jtem.halfedge.algorithm.triangulation.Triangulator;
+import de.jtem.halfedge.jreality.ConverterHeds2JR;
 import de.jtem.halfedge.jreality.adapter.Adapter;
+import de.jtem.halfedge.jreality.adapter.CoordinateAdapter2Ifs;
+import de.jtem.halfedge.jreality.adapter.TextCoordsAdapter2Ifs;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
 import de.jtem.halfedge.plugin.HalfedgeDebuggerPlugin;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -63,7 +68,9 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.PositionTexCoordAdapter;
 import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
+import de.varylab.discreteconformal.heds.util.UniformizationUtility;
 import de.varylab.discreteconformal.heds.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.heds.util.UniformizationUtility.FundamentalPolygon;
 import de.varylab.discreteconformal.heds.util.UniformizationUtility.UAdapter;
 import de.varylab.discreteconformal.plugin.adapter.HyperbolicLengthWeightAdapter;
 import de.varylab.discreteconformal.plugin.adapter.MarkedEdgesAdapter;
@@ -104,6 +111,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		pointAdapter = new PointAdapter();
 	private SceneGraphComponent
 		auxGeometry = new SceneGraphComponent(),
+		copiedGeometry = new SceneGraphComponent(),
 		unitCircle = new SceneGraphComponent();
 
 	private JButton
@@ -234,7 +242,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 					} catch (Exception e1) {
 						Window w = SwingUtilities
 								.getWindowAncestor(shrinkPanel);
-						JOptionPane.showMessageDialog(w, e1.getMessage(),
+						JOptionPane.showMessageDialog(w, e1 + ": " + e1.getMessage(),
 								"Unwrap Error", ERROR_MESSAGE);
 						e1.printStackTrace();
 						return;
@@ -396,8 +404,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 //			EuclideanLengthWeightAdapter eucWa = new EuclideanLengthWeightAdapter();
 			CoVertex root = unwrappedGeometry.getVertex(getMinUIndex(u));
 			cutInfo = cutManifoldToDisk(unwrappedGeometry, root, hypWa);
-			
 			CHyperbolicLayout.doLayout(unwrappedGeometry, u);
+			FundamentalPolygon poly = UniformizationUtility.constructFundamentalPolygon(root, cutInfo);
+			UniformizationUtility.constructCanonicalPolygon(poly);
 			cutColorAdapter.setContext(cutInfo);
 			pointAdapter.setContext(cutInfo);
 		} else {
@@ -448,90 +457,67 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		}
 		System.out.println("hyperbolic motion: " + edge + " -> " + coEdge);
 		
-		Point s1 = edge.getTargetVertex().getTextureCoord();
-		Point s2 = edge.getStartVertex().getTextureCoord();
-		Point t1 = coEdge.getTargetVertex().getTextureCoord();
-		Point t2 = coEdge.getStartVertex().getTextureCoord();
-		System.out.println("s1: " + s1);
-		System.out.println("s2: " + s2);
-		System.out.println("t1: " + t1);
-		System.out.println("t2: " + t2);
-		double ds = Pn.distanceBetween(s1.get(), s2.get(), HYPERBOLIC);
-		double dt = Pn.distanceBetween(t1.get(), t2.get(), HYPERBOLIC);
-		System.out.println("dist: " + ds + ", " + dt);
-		
-		geom3d.Vector ns = new geom3d.Vector(s1).cross(s2);
-		geom3d.Vector nt = new geom3d.Vector(t1).cross(t2);
-		
-		double s1s1 = Pn.innerProduct(s1.get(), s1.get(), HYPERBOLIC);
-		double t1t1 = Pn.innerProduct(t1.get(), t1.get(), HYPERBOLIC);
-		double s1s2 = Pn.innerProduct(s1.get(), s2.get(), HYPERBOLIC);
-		double t1t2 = Pn.innerProduct(t1.get(), t2.get(), HYPERBOLIC);
-		geom3d.Vector ws = new geom3d.Vector(s2).add(new Point(s1).times(s1s2 / s1s1).times(-1));
-		geom3d.Vector wt = new geom3d.Vector(t2).add(new Point(t1).times(t1t2 / t1t1).times(-1));
-		System.out.println("Orthogonal check ws: " + Pn.innerProduct(ws.get(), s1.get(), HYPERBOLIC));
-		System.out.println("Orthogonal check wt: " + Pn.innerProduct(wt.get(), t1.get(), HYPERBOLIC));
-		
-		double nss1 = Pn.innerProduct(ns.get(), s1.get(), HYPERBOLIC);
-		double ntt1 = Pn.innerProduct(nt.get(), t1.get(), HYPERBOLIC);
-		ns.add(new Point(s1).times(nss1 / s1s1).times(-1));
-		nt.add(new Point(t1).times(ntt1 / t1t1).times(-1));
-		System.out.println("Orthogonal check ns1: " + Pn.innerProduct(ns.get(), s1.get(), HYPERBOLIC));
-		System.out.println("Orthogonal check nt1: " + Pn.innerProduct(nt.get(), t1.get(), HYPERBOLIC));
-		
-		double nsws = Pn.innerProduct(ns.get(), ws.get(), HYPERBOLIC);
-		double ntwt = Pn.innerProduct(nt.get(), wt.get(), HYPERBOLIC);	
-		double wsws = Pn.innerProduct(ws.get(), ws.get(), HYPERBOLIC);
-		double wtwt = Pn.innerProduct(wt.get(), wt.get(), HYPERBOLIC);
-		ns.add(new Point(ws).times(nsws / wsws).times(-1));
-		nt.add(new Point(wt).times(ntwt / wtwt).times(-1));
-		Pn.normalize(ns.get(), ns.get(), HYPERBOLIC);
-		Pn.normalize(nt.get(), nt.get(), HYPERBOLIC);
-		
-		System.out.println("ns: " + ns);
-		System.out.println("nt: " + nt);
-		System.out.println("Orthogonal check ns1: " + Pn.innerProduct(ns.get(), s1.get(), HYPERBOLIC));
-		System.out.println("Orthogonal check ns2: " + Pn.innerProduct(ns.get(), s2.get(), HYPERBOLIC));
-		System.out.println("Orthogonal check nt1: " + Pn.innerProduct(nt.get(), t1.get(), HYPERBOLIC));
-		System.out.println("Orthogonal check nt2: " + Pn.innerProduct(nt.get(), t2.get(), HYPERBOLIC));
-		double[] sa1 = s1.get();
-		double[] sa2 = s2.get();
-		double[] nsa = ns.get();
-		double[] ta1 = t1.get();
-		double[] ta2 = t2.get();
-		double[] nta = nt.get();
-		Matrix E = new Matrix(
-			1,		0,		0,		0,
-			0,		1, 		0,		0,
-			0,		0,		-1,		0,
-			0,		0, 		0, 		1
+		Point s1 = coEdge.getTargetVertex().getTextureCoord();
+		Point s2 = coEdge.getStartVertex().getTextureCoord();
+		Point t1 = edge.getStartVertex().getTextureCoord();
+		Point t2 = edge.getTargetVertex().getTextureCoord();
+
+		final Matrix A = UniformizationUtility.makeHyperbolicMotion(s1, s2, t1, t2);
+
+		ConverterHeds2JR<CoVertex, CoEdge, CoFace>
+			converter = new ConverterHeds2JR<CoVertex, CoEdge, CoFace>();
+		Adapter texAdapter = new TextCoordsAdapter2Ifs<CoVertex> () {
+
+			@Override
+			public double[] getTextCoordinate(CoVertex v) {
+				Point t = v.getTextureCoord();
+				double[] raw = new double[] {t.x(), t.y(), t.z(), 0.0};
+				A.transformVector(raw);
+				if (klein) {
+					return new double[] {raw[0], raw[1], 0.0, raw[2]};
+				} else {
+					return new double[] {raw[0] / (raw[2] + 1), raw[1] / (raw[2] + 1)};
+				}
+			}
+
+			@Override
+			public AdapterType getAdapterType() {
+				return AdapterType.VERTEX_ADAPTER;
+			}
+			
+		};
+		Adapter texPosAdapter = new CoordinateAdapter2Ifs<CoVertex> () {
+
+			@Override
+			public AdapterType getAdapterType() {
+				return AdapterType.VERTEX_ADAPTER;
+			}
+
+			@Override
+			public double[] getCoordinate(CoVertex v) {
+				Point t = v.getTextureCoord();
+				double[] raw = new double[] {t.x(), t.y(), t.z(), 0.0};
+				A.transformVector(raw);
+				if (klein) {
+					return new double[] {raw[0], raw[1], 0.0, raw[2]};
+				} else {
+					return new double[] {raw[0] / (raw[2] + 1), raw[1] / (raw[2] + 1), 0.0, 1.0};
+				}
+			}
+			
+		};
+		IndexedFaceSet ifs = converter.heds2ifs(
+			unwrappedGeometry, 
+			texPosAdapter, 
+			texAdapter, 
+			cutColorAdapter, 
+			pointAdapter
 		);
-		Matrix S = new Matrix(
-			sa1[0], sa2[0], nsa[0], 0,
-			sa1[1], sa2[1], nsa[1], 0,
-			sa1[2], sa2[2], nsa[2], 0,
-			0,		0, 		0, 		1
-		);
-		Matrix T = new Matrix(
-			ta1[0], ta2[0], nta[0], 0,
-			ta1[1], ta2[1], nta[1], 0,
-			ta1[2], ta2[2], nta[2], 0,
-			0,		0, 		0, 		1
-		);
-		Matrix A = Matrix.times(T, S.getInverse());
-		System.out.println("A*s1: " + Arrays.toString(A.multiplyVector(sa1)));
-		System.out.println("A*s2: " + Arrays.toString(A.multiplyVector(sa2)));
-		System.out.println("A*ns: " + Arrays.toString(A.multiplyVector(nsa)));
-		System.out.println(A);
-		
-		System.out.println("t1 * t1: " + Pn.innerProduct(ta1, ta1, HYPERBOLIC));
-		System.out.println("t2 * t2: " + Pn.innerProduct(ta2, ta2, HYPERBOLIC));
-		double[] At1 = A.multiplyVector(ta1);
-		double[] At2 = A.multiplyVector(ta2);
-		System.out.println("At1 * At1: " + Pn.innerProduct(At1, At1, HYPERBOLIC));
-		System.out.println("At2 * At2: " + Pn.innerProduct(At2, At2, HYPERBOLIC));
-		
-		System.out.println(Matrix.times(A.getTranspose(), Matrix.times(E, A)));
+		IndexedFaceSetUtility.calculateAndSetNormals(ifs);
+		copiedGeometry.setGeometry(ifs);
+		if (!content.getContent().getChildComponents().contains(copiedGeometry)) {
+			content.getContent().addChild(copiedGeometry);
+		}
 	}
 	
 	

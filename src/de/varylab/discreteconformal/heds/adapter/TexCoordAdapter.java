@@ -32,7 +32,7 @@ public class TexCoordAdapter implements TextCoordsAdapter2Ifs<CoVertex> {
 			if (useProjectiveMap) {
 				return new double[] {t.x(), t.y(), 0.0, t.z()};
 			} else {
-				return new double[] {t.x() / t.z(), t.y() / t.z()};
+				return new double[] {t.x(), t.y(), 0.0, t.z()};
 			}
 		}
 	}
