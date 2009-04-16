@@ -1,6 +1,5 @@
 package de.varylab.discreteconformal.plugin;
 
-import static de.jreality.math.Pn.HYPERBOLIC;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
@@ -23,7 +22,6 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.InputStream;
-import java.util.Arrays;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -45,7 +43,6 @@ import de.jreality.geometry.IndexedFaceSetUtility;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
-import de.jreality.math.Pn;
 import de.jreality.plugin.view.AlignedContent;
 import de.jreality.plugin.view.ContentAppearance;
 import de.jreality.plugin.view.View;
@@ -457,12 +454,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		}
 		System.out.println("hyperbolic motion: " + edge + " -> " + coEdge);
 		
-		Point s1 = coEdge.getTargetVertex().getTextureCoord();
-		Point s2 = coEdge.getStartVertex().getTextureCoord();
-		Point t1 = edge.getStartVertex().getTextureCoord();
-		Point t2 = edge.getTargetVertex().getTextureCoord();
-
-		final Matrix A = UniformizationUtility.makeHyperbolicMotion(s1, s2, t1, t2);
+		final Matrix A = UniformizationUtility.makeHyperbolicMotion(coEdge, edge.getOppositeEdge());
 
 		ConverterHeds2JR<CoVertex, CoEdge, CoFace>
 			converter = new ConverterHeds2JR<CoVertex, CoEdge, CoFace>();

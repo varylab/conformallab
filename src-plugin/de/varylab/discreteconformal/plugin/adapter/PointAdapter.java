@@ -30,8 +30,6 @@ public class PointAdapter implements ColorAdapter2Ifs<CoVertex>, RelRadiusAdapte
 	public void setContext(CuttingInfo<CoVertex, CoEdge, CoFace> context) {
 		rootCopySet = context.getCopies(context.cutRoot);
 		branchSet = context.getBranchSet();
-		System.out.println("rootCopySet: " + rootCopySet.size() + ": " + rootCopySet);
-		System.out.println("branchSet: " + branchSet.size() + ": " + branchSet);
 	}
 	
 
