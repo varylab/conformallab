@@ -22,6 +22,7 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.InputStream;
+import java.util.Arrays;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -40,6 +41,7 @@ import javax.swing.event.ChangeListener;
 
 import no.uib.cipr.matrix.Vector;
 import de.jreality.geometry.IndexedFaceSetUtility;
+import de.jreality.geometry.IndexedLineSetFactory;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
@@ -67,6 +69,7 @@ import de.varylab.discreteconformal.heds.adapter.PositionTexCoordAdapter;
 import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
 import de.varylab.discreteconformal.heds.util.UniformizationUtility;
 import de.varylab.discreteconformal.heds.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.heds.util.UniformizationUtility.FundamentalEdge;
 import de.varylab.discreteconformal.heds.util.UniformizationUtility.FundamentalPolygon;
 import de.varylab.discreteconformal.heds.util.UniformizationUtility.UAdapter;
 import de.varylab.discreteconformal.plugin.adapter.HyperbolicLengthWeightAdapter;
@@ -109,6 +112,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private SceneGraphComponent
 		auxGeometry = new SceneGraphComponent(),
 		copiedGeometry = new SceneGraphComponent(),
+		fundamentalPolygon = new SceneGraphComponent(), 
 		unitCircle = new SceneGraphComponent();
 
 	private JButton
@@ -174,6 +178,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		MatrixBuilder.euclidean().rotate(PI / 2, 1, 0, 0).assignTo(unitCircle);
 		unitCircle.setGeometry(Primitives.torus(1.0, 0.005, 200, 5));
 		auxGeometry.addChild(unitCircle);
+		
+		auxGeometry.addChild(fundamentalPolygon);
 	}
 
 	
@@ -404,6 +410,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			CHyperbolicLayout.doLayout(unwrappedGeometry, u);
 			FundamentalPolygon poly = UniformizationUtility.constructFundamentalPolygon(root, cutInfo);
 			UniformizationUtility.constructCanonicalPolygon(poly);
+			showFundamentalPolygon(poly, unwrappedGeometry.getVertex(unwrappedGeometry.numVertices() / 2));
 			cutColorAdapter.setContext(cutInfo);
 			pointAdapter.setContext(cutInfo);
 		} else {
@@ -416,6 +423,43 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			unwrapper.unwrap(unwrappedGeometry);
 		}
 	}
+	
+	
+	
+	public void showFundamentalPolygon(FundamentalPolygon poly, CoVertex root) {
+		IndexedLineSetFactory ilsf = new IndexedLineSetFactory();
+		int n = poly.edgeList.size();
+		ilsf.setVertexCount(n);
+		ilsf.setEdgeCount(n);
+		double[][] verts = new double[n][];
+		int[][] edges = new int[n][];
+		Point pRoot = root.getTextureCoord();
+		
+		double[] rootPos = new double[] {pRoot.x(), pRoot.y(), pRoot.z(), 1.0};
+		Matrix T = new Matrix();
+		for (int i = 0; i < n; i++) {
+			double[] pos = T.multiplyVector(rootPos);
+			System.out.println(Arrays.toString(pos));
+			if (klein) {
+				verts[i] = new double[] {pos[0], pos[1], 0.0, pos[2]};
+			} else {
+				verts[i] = new double[] {pos[0] / (pos[2] + 1), pos[1] / (pos[2] + 1), 0.0};
+			}
+			edges[i] = new int[] {i, (i + 1) % n};
+			FundamentalEdge edge = poly.edgeList.get((i + 5) % n);
+			Matrix A = edge.motion;
+			System.out.println(edge.index);
+			T.multiplyOnRight(A);
+		}
+		double[] pos = T.getTranspose().multiplyVector(rootPos);
+		System.out.println(Arrays.toString(pos));
+		System.out.println(T);
+		ilsf.setVertexCoordinates(verts);
+		ilsf.setEdgeIndices(edges);
+		ilsf.update();
+		fundamentalPolygon.setGeometry(ilsf.getGeometry());
+	}
+	
 	
 	
 	

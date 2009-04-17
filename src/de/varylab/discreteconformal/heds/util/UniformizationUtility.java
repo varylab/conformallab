@@ -250,7 +250,7 @@ public class UniformizationUtility {
 				FundamentalVertex end = branchMap.get(vTarget);
 				// hyperbolic motion
 				CoEdge coEdge = cutInfo.edgeCutMap.get(eActive.getOppositeEdge());
-				Matrix A = makeHyperbolicMotion(eActive, coEdge);
+				Matrix A = makeHyperbolicMotion(coEdge, eActive);
 				
 				FundamentalEdge fEdge = new FundamentalEdge(index++, start, end, A);
 				funEdgeMap.put(firstOfSegment, fEdge);
@@ -318,14 +318,20 @@ public class UniformizationUtility {
 		poly.edgeList = newPoly;
 		System.out.println("Canonical Polygon:\n" + poly);
 		
+		
+		List<FundamentalEdge> dualPoly = new LinkedList<FundamentalEdge>();
+		
 		Matrix T = new Matrix();
 		FundamentalEdge start = newPoly.get(0);
 		FundamentalEdge active = start;
 		do {
-			T.multiplyOnLeft(active.motion);
+			dualPoly.add(active);
+			T.multiplyOnRight(active.motion);
 			int index = (newPoly.indexOf(active.partner) + 1) % newPoly.size();
 			active = newPoly.get(index);
 		} while (active != start);
+		poly.edgeList = dualPoly;
+		System.out.println("Dual Polygon:\n" + poly);
 		System.out.println("Check: \n" + T);
 	}
 
