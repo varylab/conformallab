@@ -446,7 +446,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 				verts[i] = new double[] {pos[0] / (pos[2] + 1), pos[1] / (pos[2] + 1), 0.0};
 			}
 			edges[i] = new int[] {i, (i + 1) % n};
-			FundamentalEdge edge = poly.edgeList.get((i + 5) % n);
+			FundamentalEdge edge = poly.edgeList.get((i + 7) % n);
 			Matrix A = edge.motion;
 			System.out.println(edge.index);
 			T.multiplyOnRight(A);
