@@ -47,6 +47,7 @@ import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
 import de.jreality.plugin.view.AlignedContent;
 import de.jreality.plugin.view.ContentAppearance;
+import de.jreality.plugin.view.ManagedContent;
 import de.jreality.plugin.view.View;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.Appearance;
@@ -88,8 +89,8 @@ import de.varylab.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ActionListener, ChangeListener {
 
-	private AlignedContent
-		content = null;
+	private ManagedContent
+		managedContent = null;
 //	private TranslateShapeTool
 //		translateShapeTool = new TranslateShapeTool();
 	private HyperbolicCopyTool
@@ -551,9 +552,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		);
 		IndexedFaceSetUtility.calculateAndSetNormals(ifs);
 		copiedGeometry.setGeometry(ifs);
-		if (!content.getContent().getChildComponents().contains(copiedGeometry)) {
-			content.getContent().addChild(copiedGeometry);
-		}
+		managedContent.addContent(getClass(), copiedGeometry);
 	}
 	
 	
@@ -587,27 +586,23 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	public void install(Controller c) throws Exception {
 		hcp = c.getPlugin(HalfedgeConnectorPlugin.class);
 		halfedgeDebugger = c.getPlugin(HalfedgeDebuggerPlugin.class);
-		content = c.getPlugin(AlignedContent.class);
-		content.getScalingComponent().addChild(auxGeometry);
-		content.getScalingComponent().addTool(hyperbolicCopyTool);
+		managedContent = c.getPlugin(ManagedContent.class);
+		managedContent.addContent(getClass(), auxGeometry);
+		managedContent.addTool(getClass(), hyperbolicCopyTool);
+		
 		c.getPlugin(ContentAppearance.class);
 		ReaderOBJ reader = new ReaderOBJ();
 		InputStream in = getClass().getResourceAsStream("brezelCoarse.obj");
 		Input input = Input.getInput("Default OBJ Object", in);
 		SceneGraphComponent brezelOBJ = reader.read(input);
-		content.setContent(brezelOBJ);
+		managedContent.addContent(getClass(), brezelOBJ);
 		super.install(c);  
 	}
 	
 	@Override
 	public void uninstall(Controller c) throws Exception {
 		super.uninstall(c);
-		if (content.getScalingComponent().isDirectAncestor(auxGeometry)) {
-			content.getScalingComponent().removeChild(auxGeometry);
-		} 
-		if (content.getScalingComponent().getTools().contains(hyperbolicCopyTool)) {
-			content.getScalingComponent().removeTool(hyperbolicCopyTool);
-		}
+		managedContent.removeAll(getClass());
 	}
 	
 	
