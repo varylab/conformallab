@@ -62,7 +62,10 @@ public class UniformizationUtility {
 		Point s2 = s.getTargetVertex().getTextureCoord();
 		Point t1 = t.getStartVertex().getTextureCoord();
 		Point t2 = t.getTargetVertex().getTextureCoord();
+		return makeHyperbolicMotion(s1, s2, t1, t2);
+	}
 		
+	public static Matrix makeHyperbolicMotion(Point s1, Point s2, Point t1, Point t2) {
 		geom3d.Vector ns = new geom3d.Vector(s1).cross(s2);
 		geom3d.Vector nt = new geom3d.Vector(t1).cross(t2);
 		
@@ -96,14 +99,14 @@ public class UniformizationUtility {
 		Matrix S = new Matrix(
 			sa1[0], sa2[0], nsa[0], 0,
 			sa1[1], sa2[1], nsa[1], 0,
-			sa1[2], sa2[2], nsa[2], 0,
-			0,		0, 		0, 		1
+			0,		0, 		0, 		1,
+			sa1[2], sa2[2], nsa[2], 0
 		);
 		Matrix T = new Matrix(
 			ta1[0], ta2[0], nta[0], 0,
 			ta1[1], ta2[1], nta[1], 0,
-			ta1[2], ta2[2], nta[2], 0,
-			0,		0, 		0, 		1
+			0,		0, 		0, 		1,
+			ta1[2], ta2[2], nta[2], 0
 		);
 		return Matrix.times(T, S.getInverse());
 	}

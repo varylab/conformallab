@@ -435,15 +435,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		int[][] edges = new int[n][];
 		Point pRoot = root.getTextureCoord();
 		
-		double[] rootPos = new double[] {pRoot.x(), pRoot.y(), pRoot.z(), 1.0};
+		double[] rootPos = new double[] {pRoot.x(), pRoot.y(), 0.0, pRoot.z()};
 		Matrix T = new Matrix();
 		for (int i = 0; i < n; i++) {
 			double[] pos = T.multiplyVector(rootPos);
 			System.out.println(Arrays.toString(pos));
 			if (klein) {
-				verts[i] = new double[] {pos[0], pos[1], 0.0, pos[2]};
+				verts[i] = new double[] {pos[0], pos[1], 0.0, pos[3]};
 			} else {
-				verts[i] = new double[] {pos[0] / (pos[2] + 1), pos[1] / (pos[2] + 1), 0.0};
+				verts[i] = new double[] {pos[0], pos[1], 0.0, pos[3] + 1};
 			}
 			edges[i] = new int[] {i, (i + 1) % n};
 			FundamentalEdge edge = poly.edgeList.get((i + 7) % n);
@@ -507,12 +507,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			@Override
 			public double[] getTextCoordinate(CoVertex v) {
 				Point t = v.getTextureCoord();
-				double[] raw = new double[] {t.x(), t.y(), t.z(), 0.0};
+				double[] raw = new double[] {t.x(), t.y(), 0.0, t.z()};
 				A.transformVector(raw);
 				if (klein) {
-					return new double[] {raw[0], raw[1], 0.0, raw[2]};
+					return new double[] {raw[0], raw[1], 0.0, raw[3]};
 				} else {
-					return new double[] {raw[0] / (raw[2] + 1), raw[1] / (raw[2] + 1)};
+					return new double[] {raw[0], raw[1], 0.0, raw[3] + 1};
 				}
 			}
 
@@ -532,12 +532,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			@Override
 			public double[] getCoordinate(CoVertex v) {
 				Point t = v.getTextureCoord();
-				double[] raw = new double[] {t.x(), t.y(), t.z(), 0.0};
+				double[] raw = new double[] {t.x(), t.y(), 0.0, t.z()};
 				A.transformVector(raw);
 				if (klein) {
-					return new double[] {raw[0], raw[1], 0.0, raw[2]};
+					return new double[] {raw[0], raw[1], 0.0, raw[3]};
 				} else {
-					return new double[] {raw[0] / (raw[2] + 1), raw[1] / (raw[2] + 1), 0.0, 1.0};
+					return new double[] {raw[0], raw[1], 0.0, raw[3] + 1};
 				}
 			}
 			

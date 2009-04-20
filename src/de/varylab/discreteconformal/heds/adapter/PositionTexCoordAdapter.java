@@ -24,7 +24,7 @@ public class PositionTexCoordAdapter implements CoordinateAdapter2Ifs<CoVertex> 
 	public double[] getCoordinate(CoVertex v) {
 		Point t = v.getTextureCoord();
 		if (poincare) {
-			return new double[] {t.x() / (t.z() + 1), t.y() / (t.z() + 1), 0.0};
+			return new double[] {t.x(), t.y(), 0.0, t.z() + 1};
 		} else {
 			return new double[] {t.x(), t.y(), 0.0, t.z()};
 		}

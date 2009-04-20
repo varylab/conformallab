@@ -27,7 +27,7 @@ public class TexCoordAdapter implements TextCoordsAdapter2Ifs<CoVertex> {
 	public double[] getTextCoordinate(CoVertex v) {
 		Point t = v.getTextureCoord();
 		if (poincare) {
-			return new double[] {t.x() / (t.z() + 1), t.y() / (t.z() + 1)};
+			return new double[] {t.x(), t.y(), 0.0, t.z() + 1.0};
 		} else {
 			if (useProjectiveMap) {
 				return new double[] {t.x(), t.y(), 0.0, t.z()};
