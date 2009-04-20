@@ -45,18 +45,18 @@ public class CHyperbolicLayout {
 	 * @param u new metric
 	 * @param angleMapParam may be null
 	 */
-	public static Set<CoVertex> doLayout(CoHDS hds, Vector u) {
-		Set<CoVertex> cutSet = new HashSet<CoVertex>();
-		Map<CoEdge, Double> lMap = getLengthMap(hds, u);
+	public static CoVertex doLayout(CoHDS hds, Vector u) {
+		final Set<CoVertex> cutSet = new HashSet<CoVertex>();
+		final Map<CoEdge, Double> lMap = getLengthMap(hds, u);
 		
-		Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
-		Queue<CoVertex> Qv = new LinkedList<CoVertex>();
-		Queue<CoEdge> Qe = new LinkedList<CoEdge>();
+		final Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
+		final Queue<CoVertex> Qv = new LinkedList<CoVertex>();
+		final Queue<CoEdge> Qe = new LinkedList<CoEdge>();
 		// start
-		CoEdge e0 = hds.getEdge(hds.numEdges() / 2);
-		CoEdge e1 = e0.getOppositeEdge();
-		CoVertex v1 = e0.getStartVertex();
-		CoVertex v2 = e0.getTargetVertex();
+		final CoEdge e0 = hds.getEdge(hds.numEdges() / 2);
+		final CoEdge e1 = e0.getOppositeEdge();
+		final CoVertex v1 = e0.getStartVertex();
+		final CoVertex v2 = e0.getTargetVertex();
 		// queued data
 		Qv.offer(v1);
 		Qv.offer(v2);
@@ -66,26 +66,26 @@ public class CHyperbolicLayout {
 		// vertices
 		Double d = lMap.get(e0);
 		
-		Point p0 = new Point(0, 0, 1);
+		final Point p0 = new Point(0, 0, 1);
 		v1.setTextureCoord(p0);
-		Point p1 = normalize(new Point(sinh(d), 0, cosh(d)).asPoint());
+		final Point p1 = normalize(new Point(sinh(d), 0, cosh(d)).asPoint());
 		v2.setTextureCoord(p1);
 		
 		visited.add(v1);
 		visited.add(v2);
 		
 		while (!Qv.isEmpty() && hds.numVertices() > visited.size()) {
-			CoVertex v = Qv.poll();
-			CoEdge inE = Qe.poll();
-			CoEdge outE = inE.getOppositeEdge();
+			final CoVertex v = Qv.poll();
+			final CoEdge inE = Qe.poll();
+			final CoEdge outE = inE.getOppositeEdge();
 			
 			CoEdge e = inE.getNextEdge();
 			while (e != outE) {
-				CoEdge next = e.getNextEdge();
-				CoEdge prev = e.getPreviousEdge();
-				CoVertex aVertex = next.getTargetVertex();
-				CoVertex bVertex = prev.getTargetVertex();
-				CoVertex cVertex = e.getTargetVertex();
+				final CoEdge next = e.getNextEdge();
+				final CoEdge prev = e.getPreviousEdge();
+				final CoVertex aVertex = next.getTargetVertex();
+				final CoVertex bVertex = prev.getTargetVertex();
+				final CoVertex cVertex = e.getTargetVertex();
 
 				Double alpha = next.getAlpha();
 				if (e.getLeftFace() == null) { // a boundary edge
@@ -119,7 +119,7 @@ public class CHyperbolicLayout {
 		}
 		
 //		System.out.println("Layout: Visited points: " + visited.size() + "/" + hds.numVertices());
-		return cutSet;
+		return v1;
 	}
 	
 	

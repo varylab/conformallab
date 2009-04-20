@@ -4,9 +4,6 @@ import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.varylab.discreteconformal.heds.util.CuttingUtility.cutManifoldToDisk;
-import static de.varylab.discreteconformal.heds.util.UniformizationUtility.checkLengthsAndAngles;
-import static de.varylab.discreteconformal.heds.util.UniformizationUtility.getLengthMap;
-import static de.varylab.discreteconformal.heds.util.UniformizationUtility.toFundamentalPolygon;
 import static java.awt.GridBagConstraints.RELATIVE;
 import static java.awt.GridBagConstraints.REMAINDER;
 import static java.lang.Double.MAX_VALUE;
@@ -45,10 +42,11 @@ import de.jreality.geometry.IndexedLineSetFactory;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
-import de.jreality.plugin.view.AlignedContent;
 import de.jreality.plugin.view.ContentAppearance;
+import de.jreality.plugin.view.ContentLoader;
 import de.jreality.plugin.view.ManagedContent;
 import de.jreality.plugin.view.View;
+import de.jreality.plugin.view.ManagedContent.ContentAdapter;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
@@ -72,7 +70,6 @@ import de.varylab.discreteconformal.heds.util.UniformizationUtility;
 import de.varylab.discreteconformal.heds.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.heds.util.UniformizationUtility.FundamentalEdge;
 import de.varylab.discreteconformal.heds.util.UniformizationUtility.FundamentalPolygon;
-import de.varylab.discreteconformal.heds.util.UniformizationUtility.UAdapter;
 import de.varylab.discreteconformal.plugin.adapter.HyperbolicLengthWeightAdapter;
 import de.varylab.discreteconformal.plugin.adapter.MarkedEdgesAdapter;
 import de.varylab.discreteconformal.plugin.adapter.PointAdapter;
@@ -111,10 +108,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private PointAdapter
 		pointAdapter = new PointAdapter();
 	private SceneGraphComponent
-		auxGeometry = new SceneGraphComponent(),
-		copiedGeometry = new SceneGraphComponent(),
-		fundamentalPolygon = new SceneGraphComponent(), 
-		unitCircle = new SceneGraphComponent();
+		unwrappedRoot = new SceneGraphComponent("Unwrapped Geometry"),
+		auxGeometry = new SceneGraphComponent("Aux Geometry"),
+		copiedGeometry = new SceneGraphComponent("Click Copy Geometry"),
+		fundamentalPolygon = new SceneGraphComponent("Fundamental Polygon"), 
+		unitCircle = new SceneGraphComponent("Hyperbolic Boundary");
 
 	private JButton
 		unwrapBtn = new JButton("Unwrap"),
@@ -179,8 +177,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		MatrixBuilder.euclidean().rotate(PI / 2, 1, 0, 0).assignTo(unitCircle);
 		unitCircle.setGeometry(Primitives.torus(1.0, 0.005, 200, 5));
 		auxGeometry.addChild(unitCircle);
-		
-		auxGeometry.addChild(fundamentalPolygon);
 	}
 
 	
@@ -229,7 +225,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		visualizationPanel.add(poincareButton, c);
 		shrinkPanel.add(visualizationPanel, c);
 		
-		shrinkPanel.add(reduceBtn, c);
+//		shrinkPanel.add(reduceBtn, c);
 	}
 	
 	
@@ -293,27 +289,28 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		if (showUnitCircle == s) {
 			unitCircle.setVisible(showUnitCircle.isSelected());
 		}
-		if (reduceBtn == s) {
-			getGeometry();
-			new Thread("Reduce To Fundamental Thread") {
-				@Override
-				public void run() {
-					try {
-						reduceToFundamentalPolygon();
-					} catch (Exception e1) {
-						e1.printStackTrace(); 
-						return;
-					}
-					updateViewer();
-				}
-			}.start();
-		}
+//		if (reduceBtn == s) {
+//			getGeometry();
+//			new Thread("Reduce To Fundamental Thread") {
+//				@Override
+//				public void run() {
+//					try {
+//						reduceToFundamentalPolygon();
+//					} catch (Exception e1) {
+//						e1.printStackTrace(); 
+//						return;
+//					}
+//					updateViewer();
+//				}
+//			}.start();
+//		}
 	}
 	
 	private void getGeometry() {
 		activeGeometry = new CoHDS();
 		unwrappedGeometry = null;
 		activeGeometry.setTexCoordinatesValid(false);
+		hcp.setContentParseRoot(managedContent.getContextRoot(ContentLoader.class));
 		hcp.getHalfedgeContent(activeGeometry, new PositionAdapter());
 		triangulator.triangulate(activeGeometry);
 		double[][] bounds = new double[][]{{MAX_VALUE, -MAX_VALUE},{MAX_VALUE, -MAX_VALUE},{MAX_VALUE, -MAX_VALUE}};
@@ -355,40 +352,47 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 				} else {
 					posAdapter = new PositionAdapter();
 				}
-				hcp.updateHalfedgeContent(unwrappedGeometry, true, posAdapter, texAdapter, cutColorAdapter, pointAdapter);
+				IndexedFaceSet ifs = hcp.toIndexedFaceSet(unwrappedGeometry, true, posAdapter, texAdapter, cutColorAdapter, pointAdapter);
+				unwrappedRoot.setGeometry(ifs);
+				unwrappedRoot.setVisible(true);
+				managedContent.removeAll(ContentLoader.class);
+				managedContent.alignContent();
 			}
 		});
 	}
 	
 	
-	private void reduceToFundamentalPolygon() throws Exception {
-		unwrappedGeometry = activeGeometry.createCombinatoriallyEquivalentCopy(new CoHDS());
-		halfedgeDebugger.setData(unwrappedGeometry);
-		for (CoVertex v : activeGeometry.getVertices()) {
-			unwrappedGeometry.getVertex(v.getIndex()).setPosition(v.getPosition());
-		}
-		Vector u = null;
-		if (usePetsc) {
-			CHyperbolicUnwrapperPETSc unwrapper = new CHyperbolicUnwrapperPETSc();
-			u = unwrapper.getConformalFactors(unwrappedGeometry);
-		} else {
-			CHyperbolicUnwrapper unwrapper = new CHyperbolicUnwrapper();
-			u = unwrapper.getConformalFactors(unwrappedGeometry);
-		}
-		UAdapter uAdapter = new UAdapter(u);
-		CoVertex root = unwrappedGeometry.getVertex(0);
-		toFundamentalPolygon(unwrappedGeometry, root, uAdapter);
-		checkLengthsAndAngles(unwrappedGeometry, getLengthMap(unwrappedGeometry, uAdapter));
-		HyperbolicLengthWeightAdapter wa = new HyperbolicLengthWeightAdapter(u);
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(unwrappedGeometry, root, wa);
-		checkLengthsAndAngles(unwrappedGeometry, getLengthMap(unwrappedGeometry, uAdapter));
-		CHyperbolicLayout.doLayout(unwrappedGeometry, u);
-		cutColorAdapter.setContext(cutInfo);
-	}
+//	private void reduceToFundamentalPolygon() throws Exception {
+//		unwrappedGeometry = activeGeometry.createCombinatoriallyEquivalentCopy(new CoHDS());
+//		halfedgeDebugger.setData(unwrappedGeometry);
+//		for (CoVertex v : activeGeometry.getVertices()) {
+//			unwrappedGeometry.getVertex(v.getIndex()).setPosition(v.getPosition());
+//		}
+//		Vector u = null;
+//		if (usePetsc) {
+//			CHyperbolicUnwrapperPETSc unwrapper = new CHyperbolicUnwrapperPETSc();
+//			u = unwrapper.getConformalFactors(unwrappedGeometry);
+//		} else {
+//			CHyperbolicUnwrapper unwrapper = new CHyperbolicUnwrapper();
+//			u = unwrapper.getConformalFactors(unwrappedGeometry);
+//		}
+//		UAdapter uAdapter = new UAdapter(u);
+//		CoVertex root = unwrappedGeometry.getVertex(0);
+//		toFundamentalPolygon(unwrappedGeometry, root, uAdapter);
+//		checkLengthsAndAngles(unwrappedGeometry, getLengthMap(unwrappedGeometry, uAdapter));
+//		HyperbolicLengthWeightAdapter wa = new HyperbolicLengthWeightAdapter(u);
+//		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(unwrappedGeometry, root, wa);
+//		checkLengthsAndAngles(unwrappedGeometry, getLengthMap(unwrappedGeometry, uAdapter));
+//		CHyperbolicLayout.doLayout(unwrappedGeometry, u);
+//		cutColorAdapter.setContext(cutInfo);
+//	}
 	
 	
 	
 	private void unwrapActiveGeometry() throws Exception {
+		if (activeGeometry.numVertices() == 0) {
+			return;
+		}
 		unwrappedGeometry = activeGeometry.createCombinatoriallyEquivalentCopy(new CoHDS());
 		halfedgeDebugger.setData(unwrappedGeometry);
 		for (CoVertex v : activeGeometry.getVertices()) {
@@ -405,13 +409,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 				u = unwrapper.getConformalFactors(unwrappedGeometry);
 			}
 			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
-//			EuclideanLengthWeightAdapter eucWa = new EuclideanLengthWeightAdapter();
 			CoVertex root = unwrappedGeometry.getVertex(getMinUIndex(u));
 			cutInfo = cutManifoldToDisk(unwrappedGeometry, root, hypWa);
-			CHyperbolicLayout.doLayout(unwrappedGeometry, u);
+			CoVertex layoutRoot = CHyperbolicLayout.doLayout(unwrappedGeometry, u);
 			FundamentalPolygon poly = UniformizationUtility.constructFundamentalPolygon(root, cutInfo);
 			UniformizationUtility.constructCanonicalPolygon(poly);
-			showFundamentalPolygon(poly, unwrappedGeometry.getVertex(unwrappedGeometry.numVertices() / 2));
+			showFundamentalPolygon(poly, layoutRoot);
 			cutColorAdapter.setContext(cutInfo);
 			pointAdapter.setContext(cutInfo);
 		} else {
@@ -428,7 +431,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	
 	
 	public void showFundamentalPolygon(FundamentalPolygon poly, CoVertex root) {
-		IndexedLineSetFactory ilsf = new IndexedLineSetFactory();
+		final IndexedLineSetFactory ilsf = new IndexedLineSetFactory();
 		int n = poly.edgeList.size();
 		ilsf.setVertexCount(n);
 		ilsf.setEdgeCount(n);
@@ -447,7 +450,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 				verts[i] = new double[] {pos[0], pos[1], 0.0, pos[3] + 1};
 			}
 			edges[i] = new int[] {i, (i + 1) % n};
-			FundamentalEdge edge = poly.edgeList.get((i + 7) % n);
+			FundamentalEdge edge = poly.edgeList.get(i);
 			Matrix A = edge.motion;
 			System.out.println(edge.index);
 			T.multiplyOnRight(A);
@@ -458,7 +461,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		ilsf.setVertexCoordinates(verts);
 		ilsf.setEdgeIndices(edges);
 		ilsf.update();
-		fundamentalPolygon.setGeometry(ilsf.getGeometry());
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				fundamentalPolygon.setGeometry(ilsf.getGeometry());
+				fundamentalPolygon.setVisible(true);
+			}
+		});
 	}
 	
 	
@@ -552,7 +561,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		);
 		IndexedFaceSetUtility.calculateAndSetNormals(ifs);
 		copiedGeometry.setGeometry(ifs);
-		managedContent.addContent(getClass(), copiedGeometry);
+		copiedGeometry.setVisible(true);
 	}
 	
 	
@@ -584,18 +593,24 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	@SuppressWarnings("unchecked")
 	@Override
 	public void install(Controller c) throws Exception {
+		c.getPlugin(ContentAppearance.class);
 		hcp = c.getPlugin(HalfedgeConnectorPlugin.class);
 		halfedgeDebugger = c.getPlugin(HalfedgeDebuggerPlugin.class);
 		managedContent = c.getPlugin(ManagedContent.class);
 		managedContent.addContent(getClass(), auxGeometry);
+		managedContent.addContent(getClass(), unwrappedRoot);
+		managedContent.addContent(getClass(), copiedGeometry);
+		managedContent.addContent(getClass(), fundamentalPolygon);
 		managedContent.addTool(getClass(), hyperbolicCopyTool);
+		managedContent.addContentListener(new MyContentListener());
 		
-		c.getPlugin(ContentAppearance.class);
+		// read default scene
 		ReaderOBJ reader = new ReaderOBJ();
 		InputStream in = getClass().getResourceAsStream("brezelCoarse.obj");
 		Input input = Input.getInput("Default OBJ Object", in);
 		SceneGraphComponent brezelOBJ = reader.read(input);
-		managedContent.addContent(getClass(), brezelOBJ);
+		managedContent.setContent(ContentLoader.class, brezelOBJ);
+		managedContent.alignContent();
 		super.install(c);  
 	}
 	
@@ -637,6 +652,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		hyperbolicButton.setSelected(hyperbolic);
 		kleinButton.setSelected(klein);
 		poincareButton.setSelected(!klein);
+		unitCircle.setVisible(showUnitCircle.isSelected());
 	}
 	
 	
@@ -652,6 +668,21 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	@Override
 	public Class<? extends SideContainerPerspective> getPerspectivePluginClass() {
 		return View.class;
+	}
+	
+	
+	private class MyContentListener extends ContentAdapter {
+		
+		@Override
+		public void contentAdded(Class<?> context, SceneGraphComponent c) {
+			if (context != ContentLoader.class) {
+				return;
+			}
+			unwrappedRoot.setVisible(false);
+			copiedGeometry.setVisible(false);
+			fundamentalPolygon.setVisible(false);
+		}
+		
 	}
 
 }

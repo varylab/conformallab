@@ -146,6 +146,7 @@ public class CHyperbolicApplication extends TaoApplication implements
 	public PreconditionerType evaluateHessian(Vec x, Mat H, Mat Hpre) {
 		TaoU u = new TaoU(x);
 		TaoHessian taoHess = new TaoHessian(H);
+		
 		functional.evaluate(hds, u, null, null, taoHess);
 		H.assemble();
 		return SAME_NONZERO_PATTERN;
