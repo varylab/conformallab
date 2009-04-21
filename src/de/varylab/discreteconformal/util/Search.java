@@ -168,30 +168,15 @@ public class Search {
 		
 		public double getWeight(E e);
 		
-		public void setInfiniteWeightPaths(Set<E> paths);
-		
 	}
 	
 	
 	public static class DefaultWeightAdapter <E extends Edge<?, ?, ?>>
 		implements WeightAdapter<E> {
 		
-		private Set<E>
-			forbidden = new HashSet<E>();
-		
 		public double getWeight(E e) {
-			if (forbidden.contains(e)) {
-				return Double.POSITIVE_INFINITY;
-			} else {
-				return 1;
-			}
+			return 1;
 		};
-		
-		@Override
-		public void setInfiniteWeightPaths(Set<E> arg0) {
-			forbidden = arg0;
-		}
-		
 	}
 	
 	

@@ -28,7 +28,7 @@ import de.jtem.halfedge.jreality.ConverterHeds2JR;
 import de.jtem.halfedge.jreality.ConverterJR2Heds;
 import de.jtem.halfedge.jreality.adapter.ColorAdapter2Ifs;
 import de.jtem.halfedge.jreality.adapter.RelRadiusAdapter2Ifs;
-import de.varylab.discreteconformal.plugin.adapter.PositionAdapter;
+import de.varylab.discreteconformal.adapter.PositionAdapter;
 import de.varylab.discreteconformal.util.HomologyUtility;
 import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
 

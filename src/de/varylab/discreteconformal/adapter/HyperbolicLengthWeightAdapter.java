@@ -1,12 +1,8 @@
-package de.varylab.discreteconformal.plugin.adapter;
+package de.varylab.discreteconformal.adapter;
 
 import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
-
-import java.util.HashSet;
-import java.util.Set;
-
 import no.uib.cipr.matrix.Vector;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoVertex;
@@ -16,8 +12,6 @@ public class HyperbolicLengthWeightAdapter implements WeightAdapter<CoEdge> {
 
 	private Vector
 		u = null;
-	private Set<CoEdge> 
-		infiniteWeightSet = new HashSet<CoEdge>();
 	
 	public HyperbolicLengthWeightAdapter(Vector u) {
 		this.u = u;
@@ -26,11 +20,7 @@ public class HyperbolicLengthWeightAdapter implements WeightAdapter<CoEdge> {
 	
 	@Override
 	public double getWeight(CoEdge e) {
-		if (infiniteWeightSet.contains(e)) {
-			return Double.POSITIVE_INFINITY;
-		} else {
-			return getNewLength(e);
-		}
+		return getNewLength(e);
 	}
 
 	/**
@@ -54,12 +44,6 @@ public class HyperbolicLengthWeightAdapter implements WeightAdapter<CoEdge> {
 	private double arsinh(double x) {
 		double r = x + sqrt(x*x + 1);
 		return log(r);
-	}
-	
-	
-	@Override
-	public void setInfiniteWeightPaths(Set<CoEdge> paths) {
-		infiniteWeightSet = paths;
 	}
 	
 }

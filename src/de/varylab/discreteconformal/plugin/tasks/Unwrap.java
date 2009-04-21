@@ -6,11 +6,11 @@ import javax.swing.SwingWorker;
 
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.varylab.discreteconformal.adapter.HyperbolicLengthWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.plugin.adapter.HyperbolicLengthWeightAdapter;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapperPETSc;

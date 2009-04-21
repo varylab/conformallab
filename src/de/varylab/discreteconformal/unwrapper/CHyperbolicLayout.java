@@ -11,6 +11,7 @@ import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 import geom3d.Point;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -18,12 +19,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.TreeSet;
 
 import no.uib.cipr.matrix.Vector;
 import de.jreality.math.Pn;
+import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.varylab.discreteconformal.adapter.LengthMapWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.util.NodeComparator;
+import de.varylab.discreteconformal.util.Search;
+import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class CHyperbolicLayout {
 
@@ -33,12 +40,21 @@ public class CHyperbolicLayout {
 		Map<CoEdge, Double> lMap
 	) {
 		CoVertex root = hds.getVertex(0);
+		Set<CoVertex> boundary = new TreeSet<CoVertex>(new NodeComparator<CoVertex>());
+		boundary.addAll(HalfEdgeUtils.boundaryVertices(hds));
 		
+		LengthMapWeightAdapter wa = new LengthMapWeightAdapter(lMap);
+		for (CoVertex v : hds.getVertices()) {
+			double mean = 0;
+			Map<CoVertex, Double> distMap = new HashMap<CoVertex, Double>();
+			for (CoVertex bv : boundary) {
+				Search.getAllShortestPaths(v, boundary, wa, new HashSet<CoVertex>());
+			}
+			
+		}
 		
 		return root;
 	}
-	
-	
 	
 	
 	public static Map<CoEdge, Double> getLengthMap(CoHDS hds, Vector u) {
@@ -118,9 +134,6 @@ public class CHyperbolicLayout {
 						Qv.offer(cVertex);
 						Qe.offer(e);
 					} else {
-//						System.out.println("Vertex layout skipped for " + v + " checking triangle...");
-//						boolean check = UniformizationUtility.checkTriangle(e.getLeftFace(), lMap);
-//						System.out.println("triangle is valid: " + check);
 						break;
 					}
 				}
@@ -128,37 +141,8 @@ public class CHyperbolicLayout {
 			}
 		}
 		
-//		System.out.println("Layout: Visited points: " + visited.size() + "/" + hds.numVertices());
 		return v1;
 	}
-	
-	
-	
-//	public static Set<CoEdge> makeCutGraph(Set<CoVertex> cutSet) {
-//		Set<CoEdge> cutGraph = new HashSet<CoEdge>();
-//		for (CoVertex v : cutSet) {
-//			CoEdge e1 = null;
-//			CoEdge e2 = null;
-//			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
-//				if (cutSet.contains(e.getStartVertex())) {
-//					if (e1 == null) {
-//						e1 = e;
-//					} else {
-//						e2 = e;
-//						break;
-//					}
-//				}
-//			}
-//			if (e1 == null || e2 == null) {
-//				throw new IllegalArgumentException("Invalid CutSet in makeCutGraph");
-//			}
-//			cutGraph.add(e1);
-//			cutGraph.add(e1.getOppositeEdge());
-//			cutGraph.add(e2);
-//			cutGraph.add(e2.getOppositeEdge());
-//		}
-//		return cutGraph;
-//	}
 	
 	
 	

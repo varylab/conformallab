@@ -64,28 +64,18 @@ public class ConesUtility {
 
 		private Vector
 			u = null;
-		private Set<CoEdge> 
-			infiniteWeightSet = new HashSet<CoEdge>();
 		
 		public EdgeLengthAdapter(Vector u) {
 			this.u = u;
 		}
 		
 		public double getWeight(CoEdge e) {
-			if (infiniteWeightSet.contains(e)) {
-				return Double.POSITIVE_INFINITY;
-			}
 			CoVertex v1 = e.getStartVertex();
 			CoVertex v2 = e.getTargetVertex();
 			Double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
 			Double u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0;
 			Double lambda = e.getLambda();
 			return exp(lambda + u1 + u2);
-		}
-		
-		@Override
-		public void setInfiniteWeightPaths(Set<CoEdge> paths) {
-			infiniteWeightSet = paths;
 		}
 		
 	}
