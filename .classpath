@@ -7,7 +7,6 @@
 	</classpathentry>
 	<classpathentry kind="src" path="src-test"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedge"/>
-	<classpathentry kind="lib" path="lib/swingintegration0.0.2.jar"/>
 	<classpathentry kind="lib" path="lib/mtj.jar"/>
 	<classpathentry kind="lib" path="lib/charlesgunn.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jreality"/>
