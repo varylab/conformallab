@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.plugin.tasks;
 
-import static de.varylab.discreteconformal.heds.util.CuttingUtility.cutManifoldToDisk;
+import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 
 import javax.swing.SwingWorker;
 
@@ -10,7 +10,6 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.plugin.adapter.HyperbolicLengthWeightAdapter;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapper;
@@ -19,6 +18,7 @@ import de.varylab.discreteconformal.unwrapper.Genus0Layout;
 import de.varylab.discreteconformal.unwrapper.Genus0Unwrapper;
 import de.varylab.discreteconformal.unwrapper.Genus0UnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class Unwrap extends SwingWorker<CoHDS, Object> {
 

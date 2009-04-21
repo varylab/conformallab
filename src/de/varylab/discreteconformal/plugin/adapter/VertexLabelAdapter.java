@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds.adapter;
+package de.varylab.discreteconformal.plugin.adapter;
 
 import static de.jtem.halfedge.jreality.adapter.Adapter.AdapterType.VERTEX_ADAPTER;
 import de.jtem.halfedge.jreality.adapter.LabelAdapter2Ifs;

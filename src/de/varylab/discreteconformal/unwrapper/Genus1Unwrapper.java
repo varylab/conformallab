@@ -10,7 +10,7 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.util.CuttingUtility;
+import de.varylab.discreteconformal.util.CuttingUtility;
 
 public class Genus1Unwrapper implements Unwrapper{
 

@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds.util;
+package de.varylab.discreteconformal.util;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isInteriorEdge;

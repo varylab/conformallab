@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds.util;
+package de.varylab.discreteconformal.util;
 
 import java.util.Comparator;
 

@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds.util;
+package de.varylab.discreteconformal.util;
 
 import static java.lang.Math.abs;
 import geom3d.Basis;

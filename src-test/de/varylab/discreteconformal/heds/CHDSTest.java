@@ -22,7 +22,7 @@ import de.jreality.scene.SceneGraphComponent;
 import de.jreality.util.Input;
 import de.jtem.halfedge.jreality.ConverterJR2Heds;
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.plugin.adapter.PositionAdapter;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;

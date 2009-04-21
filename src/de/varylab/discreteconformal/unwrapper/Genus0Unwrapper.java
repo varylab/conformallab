@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
+import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 
 import java.util.Collection;
 
@@ -10,8 +10,8 @@ import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.util.ConesUtility;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
+import de.varylab.discreteconformal.util.ConesUtility;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;

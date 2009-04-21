@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds.adapter;
+package de.varylab.discreteconformal.plugin.adapter;
 
 import geom3d.Point;
 import de.jtem.halfedge.jreality.adapter.CoordinateAdapter2Ifs;

@@ -12,7 +12,7 @@ import de.jtem.halfedge.jreality.adapter.RelRadiusAdapter2Ifs;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class MarkedEdgesAdapter implements ColorAdapter2Ifs<CoEdge>, RelRadiusAdapter2Ifs<CoEdge> {
 

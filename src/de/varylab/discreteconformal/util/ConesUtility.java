@@ -1,8 +1,8 @@
-package de.varylab.discreteconformal.heds.util;
+package de.varylab.discreteconformal.util;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
-import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
 import static de.varylab.discreteconformal.unwrapper.Genus0Layout.getAngleSum;
+import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.exp;
@@ -24,8 +24,8 @@ import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.util.Search.WeightAdapter;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
+import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class ConesUtility {
 

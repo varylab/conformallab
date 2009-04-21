@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds.util;
+package de.varylab.discreteconformal.util;
 
 import static java.util.Collections.singleton;
 
@@ -13,7 +13,7 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.varylab.discreteconformal.heds.util.Search.WeightAdapter;
+import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class HomologyUtility {
 

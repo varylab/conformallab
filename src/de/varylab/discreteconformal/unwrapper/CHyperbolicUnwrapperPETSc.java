@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.varylab.discreteconformal.heds.util.SparseUtility.getPETScNonZeros;
+import static de.varylab.discreteconformal.util.SparseUtility.getPETScNonZeros;
 import static de.varylab.jpetsc.PETSc.PETSC_DEFAULT;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;

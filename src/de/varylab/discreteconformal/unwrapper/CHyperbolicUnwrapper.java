@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.varylab.discreteconformal.heds.util.SparseUtility.makeNonZeros;
+import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;

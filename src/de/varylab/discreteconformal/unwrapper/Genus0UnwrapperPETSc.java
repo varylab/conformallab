@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.varylab.discreteconformal.heds.util.SparseUtility.getPETScNonZeros;
+import static de.varylab.discreteconformal.util.SparseUtility.getPETScNonZeros;
 
 import java.util.Collection;
 
@@ -8,8 +8,8 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.util.ConesUtility;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
+import de.varylab.discreteconformal.util.ConesUtility;
 import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.PETSc;
 import de.varylab.jpetsc.Vec;

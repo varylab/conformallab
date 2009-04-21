@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import de.varylab.discreteconformal.heds.CoEdge;
-import de.varylab.discreteconformal.heds.util.Search.WeightAdapter;
+import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class EuclideanLengthWeightAdapter implements WeightAdapter<CoEdge> {
 

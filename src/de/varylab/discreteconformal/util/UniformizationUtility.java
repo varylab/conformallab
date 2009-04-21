@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds.util;
+package de.varylab.discreteconformal.util;
 
 import static de.jreality.math.Pn.HYPERBOLIC;
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
@@ -42,7 +42,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class UniformizationUtility {
 

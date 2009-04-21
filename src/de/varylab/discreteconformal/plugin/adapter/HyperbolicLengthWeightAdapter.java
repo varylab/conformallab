@@ -10,7 +10,7 @@ import java.util.Set;
 import no.uib.cipr.matrix.Vector;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.util.Search.WeightAdapter;
+import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class HyperbolicLengthWeightAdapter implements WeightAdapter<CoEdge> {
 

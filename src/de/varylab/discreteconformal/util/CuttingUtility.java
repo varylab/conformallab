@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.heds.util;
+package de.varylab.discreteconformal.util;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
@@ -17,7 +17,7 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
-import de.varylab.discreteconformal.heds.util.Search.WeightAdapter;
+import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class CuttingUtility {
 
