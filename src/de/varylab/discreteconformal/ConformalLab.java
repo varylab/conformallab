@@ -13,7 +13,7 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 
-public class ConformalLabPlugins {
+public class ConformalLab {
 
 	public static void main(String[] args) {
 		ContentViewer viewer = new ContentViewer();
