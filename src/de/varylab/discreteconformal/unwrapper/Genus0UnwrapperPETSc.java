@@ -5,6 +5,7 @@ import static de.varylab.discreteconformal.heds.util.SparseUtility.getPETScNonZe
 import java.util.Collection;
 
 import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.Vector;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.util.ConesUtility;
@@ -15,24 +16,15 @@ import de.varylab.jpetsc.Vec;
 import de.varylab.jtao.Tao;
 import de.varylab.jtao.Tao.GetSolutionStatusResult;
 
-public class CDiskUnwrapperPETSc implements CUnwrapper{
+public class Genus0UnwrapperPETSc implements Unwrapper{
 
-	private int
-		numCones = 0;
-	private boolean
-		quantizeCones = true;
 	
-	public CDiskUnwrapperPETSc(int numCones, boolean quantizeCones) {
-		this.numCones = numCones;
-		this.quantizeCones = quantizeCones;
-	}
-	
-	
-	public void unwrap(CoHDS hds) throws UnwrapException {
+	public Vector unwrap(CoHDS surface, int numCones, boolean quantizeCones) throws Exception {
+		surface.prepareInvariantDataEuclidean();
 		// cones
 		Collection<CoVertex> cones = null;
 		if (numCones > 0) {
-			cones = ConesUtility.setUpMesh(hds, numCones);
+			cones = ConesUtility.setUpMesh(surface, numCones);
 		}
 
 		// optimization
@@ -40,11 +32,11 @@ public class CDiskUnwrapperPETSc implements CUnwrapper{
 		Mat H;
 		Tao optimizer;
 		Tao.Initialize();
-		CEuclideanApplication app = new CEuclideanApplication(hds);
+		CEuclideanApplication app = new CEuclideanApplication(surface);
 		int n = app.getDomainDimension();
 		
 		u = new Vec(n);
-		H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(hds));
+		H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(surface));
 		H.assemble();
 		
 		app.setInitialSolutionVec(u);
@@ -63,14 +55,14 @@ public class CDiskUnwrapperPETSc implements CUnwrapper{
 
 		if (quantizeCones && numCones > 0) {
 			// calculating cones
-			cones = ConesUtility.quantizeCones(hds, cones);
+			cones = ConesUtility.quantizeCones(surface, cones);
 			
 			// optimizing conformal structure
-			CEuclideanApplication app2 = new CEuclideanApplication(hds);
+			CEuclideanApplication app2 = new CEuclideanApplication(surface);
 			n = app2.getDomainDimension();
 
 			u = new Vec(n);
-			H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(hds));
+			H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(surface));
 			H.assemble();
 			
 			app2.setInitialSolutionVec(u);
@@ -90,35 +82,12 @@ public class CDiskUnwrapperPETSc implements CUnwrapper{
 		// layout
 		double [] uValues = u.getArray();
 		if (numCones > 0) {
-			ConesUtility.cutMesh(hds, cones, new DenseVector(uValues));
+			ConesUtility.cutMesh(surface, cones, new DenseVector(uValues));
 		}
-		CEuclideanLayout.doLayout(hds,  new DenseVector(uValues));
+		DenseVector result = new DenseVector(uValues);
 		u.restoreArray();
+		return result; 
 	}
 
-
-
-
-	public int getNumCones() {
-		return numCones;
-	}
-
-
-
-	public void setNumCones(int numCones) {
-		this.numCones = numCones;
-	}
-
-
-
-	public boolean isQuantizeCones() {
-		return quantizeCones;
-	}
-
-
-
-	public void setQuantizeCones(boolean quantizeCones) {
-		this.quantizeCones = quantizeCones;
-	}
 	
 }

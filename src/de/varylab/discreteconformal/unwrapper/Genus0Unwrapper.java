@@ -6,6 +6,7 @@ import java.util.Collection;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
+import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
@@ -16,35 +17,24 @@ import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
 import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
-public class CDiskUnwrapper implements CUnwrapper{
+public class Genus0Unwrapper implements Unwrapper{
 
 	
-	private int
-		numCones = 0;
-	private boolean
-		quantizeCones = true;
-	
-	public CDiskUnwrapper(int numCones, boolean quantizeCones) {
-		this.numCones = numCones;
-		this.quantizeCones = quantizeCones;
-	}
-	
-	
-	public void unwrap(CoHDS hds) throws UnwrapException {
-		hds.prepareInvariantDataEuclidean();
+	public Vector unwrap(CoHDS surface, int numCones, boolean quantizeCones) throws Exception {
+		surface.prepareInvariantDataEuclidean();
 		
 		// cones
 		Collection<CoVertex> cones = null;
 		if (numCones > 0) {
-			cones = ConesUtility.setUpMesh(hds, numCones);
+			cones = ConesUtility.setUpMesh(surface, numCones);
 		}
 		
-		CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
+		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
 		int n = opt.getDomainDimension();
 		
 		// optimization
 		DenseVector u = new DenseVector(n);
-		Matrix H = new CompRowMatrix(n,n,makeNonZeros(hds));
+		Matrix H = new CompRowMatrix(n,n,makeNonZeros(surface));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
 		optimizer.setSolver(Solver.CG);
@@ -56,10 +46,10 @@ public class CDiskUnwrapper implements CUnwrapper{
 		}
 		
 		if (quantizeCones && numCones > 0) {
-			cones = ConesUtility.quantizeCones(hds, cones);
+			cones = ConesUtility.quantizeCones(surface, cones);
 			n = opt.getDomainDimension();
 			u = new DenseVector(n);
-			H = new CompRowMatrix(n,n,makeNonZeros(hds));
+			H = new CompRowMatrix(n,n,makeNonZeros(surface));
 			optimizer.setHessianTemplate(H);
 			try {
 				optimizer.minimize(u, opt);
@@ -67,37 +57,12 @@ public class CDiskUnwrapper implements CUnwrapper{
 				throw new UnwrapException("Cone quantization did not succeed: " + e.getMessage());
 			}
 		}
-		
 		// layout
 		if (numCones > 0) {
-			ConesUtility.cutMesh(hds, cones, u);
+			ConesUtility.cutMesh(surface, cones, u);
 		}
-		CEuclideanLayout.doLayout(hds, u);
+		return u;
 	}
 
-	
-	
-	
-	public int getNumCones() {
-		return numCones;
-	}
-
-
-
-	public void setNumCones(int numCones) {
-		this.numCones = numCones;
-	}
-
-
-
-	public boolean isQuantizeCones() {
-		return quantizeCones;
-	}
-
-
-
-	public void setQuantizeCones(boolean quantizeCones) {
-		this.quantizeCones = quantizeCones;
-	}
 	
 }

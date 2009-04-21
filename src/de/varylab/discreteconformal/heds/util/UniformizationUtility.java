@@ -187,7 +187,7 @@ public class UniformizationUtility {
 			sb.append("\n");
 			for (FundamentalEdge fe : edgeList) {
 				sb.append(fe + ": ");
-				sb.append(fe.start.index + " <-> " + fe.end.index);
+				//sb.append(fe.start.index + " <-> " + fe.end.index);
 				sb.append(" -> " + fe.partner);
 				sb.append("\n");
 			}
@@ -201,10 +201,10 @@ public class UniformizationUtility {
 	
 	
 	public static FundamentalPolygon constructFundamentalPolygon(
-		CoVertex root, 
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo
 	) {
 		FundamentalPolygon poly = new FundamentalPolygon();
+		CoVertex root = cutInfo.cutRoot;
 		CoEdge rootEdge = null;
 		for (CoEdge e : incomingEdges(root)) {
 			if (e.getOppositeEdge().getLeftFace() == null) {

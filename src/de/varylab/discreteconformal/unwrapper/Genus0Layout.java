@@ -18,7 +18,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 
-public class CEuclideanLayout {
+public class Genus0Layout {
 
 	
 	/**
@@ -27,7 +27,7 @@ public class CEuclideanLayout {
 	 * @param u new metric
 	 * @param angleMapParam may be null
 	 */
-	public static void doLayout(CoHDS hds, Vector u) {
+	public static CoVertex doLayout(CoHDS hds, Vector u) {
 		Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
 		Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		Queue<CoEdge> Qe = new LinkedList<CoEdge>();
@@ -95,6 +95,7 @@ public class CEuclideanLayout {
 		}
 		
 		assert (visited.size() == hds.numVertices());
+		return v1;
 	}
 	
 	

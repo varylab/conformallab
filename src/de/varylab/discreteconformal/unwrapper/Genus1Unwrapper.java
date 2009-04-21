@@ -4,32 +4,21 @@ import geom3d.Point;
 
 import java.util.Map;
 
+import no.uib.cipr.matrix.Vector;
+
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.util.CuttingUtility;
 
-public class CSphereUnwrapper implements CUnwrapper{
+public class Genus1Unwrapper implements Unwrapper{
 
-	private int
-		numCones = 0;
-//	private boolean
-//		quantizeCones = true;
-	private CDiskUnwrapper
-		diskUnwrapper = null;
-	
-	
-	public CSphereUnwrapper(int numCones, boolean quantizeCones) {
-		this.numCones = numCones;
-//		this.quantizeCones = quantizeCones;
-		diskUnwrapper = new CDiskUnwrapper(numCones, quantizeCones);
-	}
-	
 
-	public void unwrap(CoHDS hds) throws UnwrapException {
+
+	public Vector unwrap(CoHDS surface, int numCones, boolean quantizeCones) throws Exception {
 		// punch out vertex 0 and reorder solver indices
-		CoVertex v0 = hds.getVertex(0);
+		CoVertex v0 = surface.getVertex(0);
 		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
 			Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);
 			for (CoVertex vOld : vMap.keySet()) {
@@ -41,7 +30,7 @@ public class CSphereUnwrapper implements CUnwrapper{
 			}				
 		}
 		
-		diskUnwrapper.unwrap(hds);
+//		diskUnwrapper.unwrap(hds);
 		
 //		HashSet<CVertex> boundary = new HashSet<CVertex>();
 //		boundary.add(v0);
@@ -97,6 +86,7 @@ public class CSphereUnwrapper implements CUnwrapper{
 //			t.setZ(1.0);
 //		}
 //		mon.worked(1);
+		return null;
 	}
 
 	

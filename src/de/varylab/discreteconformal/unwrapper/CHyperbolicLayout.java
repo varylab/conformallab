@@ -28,6 +28,19 @@ import de.varylab.discreteconformal.heds.CoVertex;
 public class CHyperbolicLayout {
 
 	
+	public static CoVertex guessRootVertex(
+		CoHDS hds, 
+		Map<CoEdge, Double> lMap
+	) {
+		CoVertex root = hds.getVertex(0);
+		
+		
+		return root;
+	}
+	
+	
+	
+	
 	public static Map<CoEdge, Double> getLengthMap(CoHDS hds, Vector u) {
 		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
 		for (CoEdge e : hds.getPositiveEdges()) {
@@ -46,16 +59,15 @@ public class CHyperbolicLayout {
 	 * @param angleMapParam may be null
 	 */
 	public static CoVertex doLayout(CoHDS hds, Vector u) {
-		final Set<CoVertex> cutSet = new HashSet<CoVertex>();
 		final Map<CoEdge, Double> lMap = getLengthMap(hds, u);
 		
 		final Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
 		final Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		final Queue<CoEdge> Qe = new LinkedList<CoEdge>();
 		// start
-		final CoEdge e0 = hds.getEdge(hds.numEdges() / 2);
-		final CoEdge e1 = e0.getOppositeEdge();
-		final CoVertex v1 = e0.getStartVertex();
+		final CoVertex v1 = guessRootVertex(hds, lMap);
+		final CoEdge e1 = v1.getIncomingEdge();
+		final CoEdge e0 = e1.getOppositeEdge();
 		final CoVertex v2 = e0.getTargetVertex();
 		// queued data
 		Qv.offer(v1);
@@ -111,8 +123,6 @@ public class CHyperbolicLayout {
 //						System.out.println("triangle is valid: " + check);
 						break;
 					}
-				} else {
-					cutSet.add(cVertex);
 				}
 				e = e.getOppositeEdge().getNextEdge();
 			}

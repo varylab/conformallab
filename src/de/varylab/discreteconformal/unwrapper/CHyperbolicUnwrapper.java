@@ -12,28 +12,18 @@ import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
 import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
-public class CHyperbolicUnwrapper implements CUnwrapper{
+public class CHyperbolicUnwrapper implements Unwrapper{
 
 	
-	public void unwrap(CoHDS hds) throws UnwrapException {
-		Vector u = getConformalFactors(hds);
-		CHyperbolicLayout.doLayout(hds, u);
-	}
 	
-	
-	public Vector getConformalFactors(CoHDS hds) throws UnwrapException {
-		hds.prepareInvariantDataHyperbolic();
-		return getConformalFactorsUnprepared(hds);
-	}
-	
-	
-	public Vector getConformalFactorsUnprepared(CoHDS hds) throws UnwrapException {
-		CHyperbolicOptimizable opt = new CHyperbolicOptimizable(hds);
+	public Vector unwrap(CoHDS surface, int numCones, boolean quantizeCones) throws Exception {
+		surface.prepareInvariantDataHyperbolic();
+		CHyperbolicOptimizable opt = new CHyperbolicOptimizable(surface);
 		int n = opt.getDomainDimension();
 		
 		// optimization
 		DenseVector u = new DenseVector(n);
-		Matrix H = new CompRowMatrix(n,n,makeNonZeros(hds));
+		Matrix H = new CompRowMatrix(n,n,makeNonZeros(surface));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
 		optimizer.setSolver(Solver.BiCGstab); 
@@ -46,5 +36,6 @@ public class CHyperbolicUnwrapper implements CUnwrapper{
 		}
 		return u;
 	}
+	
 
 }
