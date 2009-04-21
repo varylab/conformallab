@@ -9,6 +9,7 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
+import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class PathUtility {
 
@@ -56,6 +57,28 @@ public class PathUtility {
 		return result;
 	}
 	
+	
+	
+	/**
+	 * The path must not contain opposite edges!
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param path
+	 * @param wa
+	 * @return
+	 */
+	public static  <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double getTotalPathWeight(Set<E> path, WeightAdapter<E> wa) {
+		double result = 0.0;
+		for (E e : path) {
+			result += wa.getWeight(e);
+		}
+		return result;
+	}
 	
 	
 	/**

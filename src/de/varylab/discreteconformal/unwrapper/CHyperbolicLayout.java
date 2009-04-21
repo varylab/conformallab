@@ -11,13 +11,13 @@ import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 import geom3d.Point;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -29,28 +29,58 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.util.NodeComparator;
+import de.varylab.discreteconformal.util.PathUtility;
 import de.varylab.discreteconformal.util.Search;
-import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class CHyperbolicLayout {
 
 	
 	public static CoVertex guessRootVertex(
 		CoHDS hds, 
-		Map<CoEdge, Double> lMap
+		Map<CoEdge, Double> lMap,
+		int mcSamples
 	) {
-		CoVertex root = hds.getVertex(0);
 		Set<CoVertex> boundary = new TreeSet<CoVertex>(new NodeComparator<CoVertex>());
 		boundary.addAll(HalfEdgeUtils.boundaryVertices(hds));
 		
 		LengthMapWeightAdapter wa = new LengthMapWeightAdapter(lMap);
-		for (CoVertex v : hds.getVertices()) {
+		Map<CoVertex, Double> sMap = new HashMap<CoVertex, Double>();
+		
+		Random rnd = new Random();
+		Set<CoVertex> mcSet = new HashSet<CoVertex>();
+		for (int i = 0; i < mcSamples; i++) {
+			int sampleIndex = rnd.nextInt(hds.numVertices());
+			CoVertex sampleVertex = hds.getVertex(sampleIndex);
+			mcSet.add(sampleVertex);
+		}
+		
+		for (CoVertex v : mcSet) {
 			double mean = 0;
 			Map<CoVertex, Double> distMap = new HashMap<CoVertex, Double>();
+			Map<CoVertex, List<CoEdge>> pathMap = Search.getAllShortestPaths(v, boundary, wa, new HashSet<CoVertex>());
 			for (CoVertex bv : boundary) {
-				Search.getAllShortestPaths(v, boundary, wa, new HashSet<CoVertex>());
+				List<CoEdge> path = pathMap.get(bv);
+				double length = PathUtility.getTotalPathWeight(new HashSet<CoEdge>(path), wa);
+				mean += length;
+				distMap.put(bv, length);
 			}
-			
+			mean /= boundary.size();
+			double s = 0.0;
+			for (CoVertex bv : distMap.keySet()) {
+				double dist = distMap.get(bv);
+				s += (mean - dist) * (mean - dist);
+			}
+			s /= boundary.size();
+			sMap.put(v, s);
+		}
+		CoVertex root = mcSet.iterator().next();
+		double minS = sMap.get(root); 
+		for (CoVertex v : sMap.keySet()) {
+			double s = sMap.get(v);
+			if (s < minS) {
+				minS = s;
+				root = v;
+			}
 		}
 		
 		return root;
@@ -81,7 +111,8 @@ public class CHyperbolicLayout {
 		final Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		final Queue<CoEdge> Qe = new LinkedList<CoEdge>();
 		// start
-		final CoVertex v1 = guessRootVertex(hds, lMap);
+		final CoVertex v1 = guessRootVertex(hds, lMap, 100);
+		System.out.println("layout root is " + v1);
 		final CoEdge e1 = v1.getIncomingEdge();
 		final CoEdge e0 = e1.getOppositeEdge();
 		final CoVertex v2 = e0.getTargetVertex();

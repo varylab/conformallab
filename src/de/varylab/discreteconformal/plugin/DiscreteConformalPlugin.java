@@ -89,6 +89,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		cutInfo = null;
 	private FundamentalPolygon 
 		fundamentalPolygon = null;
+	private CoVertex
+		layoutRoot = null;
 	private int
 		genus = -1;
 	
@@ -200,8 +202,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	public void propertyChange(PropertyChangeEvent evt) {
 		if (SwingWorker.StateValue.DONE == evt.getNewValue()) {
 			Unwrap unwrapper = (Unwrap)evt.getSource();
+			if (unwrapper.isCancelled()) {
+				System.out.println("Unwrap jop cancelled: " + unwrapper.getState());
+				return;
+			}
 			surface = unwrapper.getSurface();
 			genus = unwrapper.genus;
+			layoutRoot = unwrapper.layoutRoot;
 			if (unwrapper.genus > 1) {
 				cutInfo = unwrapper.cutInfo;
 				fundamentalPolygon = constructFundamentalPolygon(cutInfo);
@@ -306,13 +313,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		}
 		final IndexedLineSetFactory ilsf = new IndexedLineSetFactory();
 		final boolean klein = kleinButton.isSelected(); 
-		CoVertex root = cutInfo.cutRoot;
 		int n = fundamentalPolygon.edgeList.size();
 		ilsf.setVertexCount(n);
 		ilsf.setEdgeCount(n);
 		double[][] verts = new double[n][];
 		int[][] edges = new int[n][];
-		Point pRoot = root.getTextureCoord();
+		Point pRoot = layoutRoot.getTextureCoord();
 		
 		double[] rootPos = new double[] {pRoot.x(), pRoot.y(), 0.0, pRoot.z()};
 		Matrix T = new Matrix();
