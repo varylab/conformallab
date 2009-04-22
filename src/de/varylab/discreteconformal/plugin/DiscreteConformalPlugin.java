@@ -3,7 +3,6 @@ package de.varylab.discreteconformal.plugin;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
-import static de.varylab.discreteconformal.util.UniformizationUtility.constructCanonicalPolygon;
 import static de.varylab.discreteconformal.util.UniformizationUtility.constructFundamentalPolygon;
 import static java.awt.GridBagConstraints.RELATIVE;
 import static java.awt.GridBagConstraints.REMAINDER;
@@ -18,7 +17,7 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.InputStream;
-import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -38,6 +37,8 @@ import de.jreality.geometry.IndexedLineSetFactory;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
+import de.jreality.math.Pn;
+import de.jreality.math.Rn;
 import de.jreality.plugin.view.ContentAppearance;
 import de.jreality.plugin.view.ContentLoader;
 import de.jreality.plugin.view.ManagedContent;
@@ -67,7 +68,6 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
 import de.varylab.discreteconformal.util.UniformizationUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
-import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalEdge;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;
 import de.varylab.jrworkspace.plugin.Controller;
 import de.varylab.jrworkspace.plugin.PluginInfo;
@@ -89,8 +89,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		cutInfo = null;
 	private FundamentalPolygon 
 		fundamentalPolygon = null;
-	private CoVertex
-		layoutRoot = null;
 	private int
 		genus = -1;
 	
@@ -208,11 +206,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			}
 			surface = unwrapper.getSurface();
 			genus = unwrapper.genus;
-			layoutRoot = unwrapper.layoutRoot;
 			if (unwrapper.genus > 1) {
 				cutInfo = unwrapper.cutInfo;
 				fundamentalPolygon = constructFundamentalPolygon(cutInfo);
-				constructCanonicalPolygon(fundamentalPolygon);
 				cutColorAdapter.setContext(cutInfo);
 				pointAdapter.setContext(cutInfo);
 			} else {
@@ -254,7 +250,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		managedContent.addContentUnique(getClass(), fundamentalPolygonRoot);
 		managedContent.addToolUnique(getClass(), hyperbolicCopyTool);
 		managedContent.addToolUnique(getClass(), translateShapeTool);
-		
 		if (genus > 1) {
 			unitCircle.setVisible(showUnitCircle.isSelected() && showUnwrapped.isSelected());
 			fundamentalPolygonRoot.setVisible(showUnwrapped.isSelected());
@@ -291,12 +286,17 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		} else {
 			posAdapter = new PositionAdapter();
 		}
-		IndexedFaceSet ifs = hcp.toIndexedFaceSet(surface, true, posAdapter, texAdapter, cutColorAdapter, pointAdapter);
+		IndexedFaceSet ifs = null;
+		if (genus > 1) {
+			ifs = hcp.toIndexedFaceSet(surface, true, posAdapter, texAdapter, cutColorAdapter, pointAdapter);
+		} else {
+			ifs = hcp.toIndexedFaceSet(surface, true, posAdapter, texAdapter);
+		}
 		surfaceRoot.setGeometry(ifs);
 		surfaceRoot.setVisible(true);
 		
 		if (genus > 1) {
-			updateFundamentalPolygon();
+			updateFundamentalPolygon(100);
 		}
 		
 		managedContent.removeAll(ContentLoader.class);
@@ -307,38 +307,50 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	
 	
 
-	public void updateFundamentalPolygon() {
+	public void updateFundamentalPolygon(int resolution) {
 		if (fundamentalPolygon == null || cutInfo == null) {
 			return;
 		}
 		final IndexedLineSetFactory ilsf = new IndexedLineSetFactory();
 		final boolean klein = kleinButton.isSelected(); 
-		int n = fundamentalPolygon.edgeList.size();
-		ilsf.setVertexCount(n);
-		ilsf.setEdgeCount(n);
-		double[][] verts = new double[n][];
-		int[][] edges = new int[n][];
-		Point pRoot = layoutRoot.getTextureCoord();
+		int n = fundamentalPolygon.getLength();
+		if (klein) {
+			ilsf.setVertexCount(n);
+			ilsf.setEdgeCount(n);		
+		} else {
+			ilsf.setVertexCount(n * resolution);
+			ilsf.setEdgeCount(n * resolution);
+		}
+		double[][] verts = null;
+		int[][] edges = null;
+		if (klein) {
+			verts = new double[n][];
+			edges = new int[n][];
+		} else {
+			verts = new double[n * resolution][];
+			edges = new int[n * resolution][];	
+		}
+		Point pRoot = cutInfo.cutRoot.getTextureCoord();
 		
-		double[] rootPos = new double[] {pRoot.x(), pRoot.y(), 0.0, pRoot.z()};
-		Matrix T = new Matrix();
+		double[] root = new double[] {pRoot.x(), pRoot.y(), 0.0, pRoot.z()};
+		List<double[]> orbit = fundamentalPolygon.getOrbit(root);
 		for (int i = 0; i < n; i++) {
-			double[] pos = T.multiplyVector(rootPos);
-			System.out.println(Arrays.toString(pos));
+			double[] pos = orbit.get(i);
+			double[] posNext = orbit.get((i + 1) % n);
 			if (klein) {
 				verts[i] = new double[] {pos[0], pos[1], 0.0, pos[3]};
+				edges[i] = new int[] {i, (i + 1) % (n)};
 			} else {
-				verts[i] = new double[] {pos[0], pos[1], 0.0, pos[3] + 1};
+				for (int j = 0; j < resolution; j++) {
+					int index = i * resolution + j;
+					double t = j / (resolution - 1.0);
+					double[] p = Rn.linearCombination(null, t, posNext, 1-t, pos);
+					Pn.normalize(p, p, Pn.HYPERBOLIC);
+					verts[index] = new double[] {p[0], p[1], 0.0, p[3] + 1};
+					edges[index] = new int[] {index, (index + 1) % (n * resolution)};
+				}
 			}
-			edges[i] = new int[] {i, (i + 1) % n};
-			FundamentalEdge edge = fundamentalPolygon.edgeList.get(i);
-			Matrix A = edge.motion;
-			System.out.println(edge.index);
-			T.multiplyOnRight(A);
 		}
-		double[] pos = T.getTranspose().multiplyVector(rootPos);
-		System.out.println(Arrays.toString(pos));
-		System.out.println(T);
 		ilsf.setVertexCoordinates(verts);
 		ilsf.setEdgeIndices(edges);
 		ilsf.update();
@@ -512,6 +524,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			if (context != ContentLoader.class) {
 				return;
 			}
+			unitCircle.setVisible(false);
 			surfaceRoot.setVisible(false);
 			copiedGeometry.setVisible(false);
 			fundamentalPolygonRoot.setVisible(false);

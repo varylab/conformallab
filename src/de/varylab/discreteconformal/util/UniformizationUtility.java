@@ -179,6 +179,47 @@ public class UniformizationUtility {
 		public List<FundamentalEdge>
 			edgeList = new LinkedList<FundamentalEdge>();
 		
+		public int getLength() {
+			return edgeList.size();
+		}
+		
+		
+		public List<double[]> getOrbit(double[] root) {
+			double[] pos = root.clone();
+			List<double[]> result = new LinkedList<double[]>();
+			Matrix A = new Matrix();
+			for (FundamentalEdge e : edgeList) {
+				Matrix T = new Matrix();
+				FundamentalEdge active = e;
+				do {
+					T.multiplyOnLeft(active.partner.motion);
+					active = active.partner.nextEdge;
+				} while (active.partner != e);
+				T.multiplyOnLeft(active.partner.motion);
+				result.add(pos.clone());
+				T.transformVector(pos);
+				A.multiplyOnLeft(T);
+			}
+			System.out.println("Polygon Cycle check: \n" + A);
+			return result;
+		}
+		
+		
+		
+		public List<double[]> getDualOrbit(double[] root) {
+			List<double[]> result = new LinkedList<double[]>();
+			FundamentalEdge start = edgeList.get(0);
+			FundamentalEdge active = start;
+			Matrix T = new Matrix();
+			do {
+				double[] pos = T.multiplyVector(root);
+				result.add(pos);
+				T.multiplyOnRight(active.motion);
+				active = active.partner.nextEdge;
+			} while (active != start);
+			return result;
+		}
+		
 		
 		@Override
 		public String toString() {
@@ -196,8 +237,6 @@ public class UniformizationUtility {
 		}
 		
 	}
-	
-	
 	
 	
 	public static FundamentalPolygon constructFundamentalPolygon(
@@ -263,8 +302,6 @@ public class UniformizationUtility {
 				if (partner != null) {
 					fEdge.partner = partner;
 					partner.partner = fEdge;
-					Matrix T = Matrix.times(fEdge.motion, partner.motion);
-					System.out.println("Check: \n" + T);
 				}
 				
 				// linkage
@@ -288,14 +325,10 @@ public class UniformizationUtility {
 		lastFunE.nextEdge = firstFunE;
 		firstFunE.prevEdge = firstFunE;
 		
-		return poly;
-	}
-	
-	
-	
-	public static void constructCanonicalPolygon(FundamentalPolygon poly) {
-		System.out.println("Canonical Polygon before:\n" + poly);
-		FundamentalVertex root = poly.edgeList.get(0).start;
+		System.out.println("Cutted Polygon:\n" + poly);
+		
+		// canonical polygon construction --------------
+		FundamentalVertex fRoot = poly.edgeList.get(0).start;
 		List<FundamentalEdge> newPoly = new LinkedList<FundamentalEdge>();
 		Set<FundamentalEdge> deleted = new TreeSet<FundamentalEdge>();
 		for (FundamentalEdge e : poly.edgeList) {
@@ -303,15 +336,15 @@ public class UniformizationUtility {
 				continue;
 			}
 			FundamentalVertex badVertex = e.end;
-			if (badVertex != root) {
+			if (badVertex != fRoot) {
 				deleted.add(e);
 				deleted.add(e.partner);
 				for (FundamentalEdge fe : poly.edgeList) {
 					if (fe.start == badVertex) {
-						fe.start = root;
+						fe.start = fRoot;
 					}
 					if (fe.end == badVertex) {
-						fe.end = root;
+						fe.end = fRoot;
 					}
 				}
 			} else {
@@ -319,25 +352,26 @@ public class UniformizationUtility {
 			}
 		}
 		poly.edgeList = newPoly;
+		
+		// linkage
+		for (int i = 0; i < newPoly.size(); i++) {
+			FundamentalEdge prev = newPoly.get(i - 1 < 0 ? newPoly.size() - 1 : i - 1);
+			FundamentalEdge next = newPoly.get((i + 1) % newPoly.size());
+			FundamentalEdge act = newPoly.get(i);
+			prev.nextEdge = act;
+			act.prevEdge = prev;
+			act.nextEdge = next;
+			next.prevEdge = act;
+		}
 		System.out.println("Canonical Polygon:\n" + poly);
-		
-		
-		List<FundamentalEdge> dualPoly = new LinkedList<FundamentalEdge>();
-		
-		Matrix T = new Matrix();
-		FundamentalEdge start = newPoly.get(0);
-		FundamentalEdge active = start;
-		do {
-			dualPoly.add(active);
-			T.multiplyOnRight(active.motion);
-			int index = (newPoly.indexOf(active.partner) + 1) % newPoly.size();
-			active = newPoly.get(index);
-		} while (active != start);
-		poly.edgeList = dualPoly;
-		System.out.println("Dual Polygon:\n" + poly);
-		System.out.println("Check: \n" + T);
+		return poly;
 	}
-
+	
+	
+	
+	
+	
+	
 	
 	public static class UAdapter {
 		
