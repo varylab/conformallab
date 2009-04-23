@@ -228,7 +228,7 @@ public class UniformizationUtility {
 			sb.append("\n");
 			for (FundamentalEdge fe : edgeList) {
 				sb.append(fe + ": ");
-				//sb.append(fe.start.index + " <-> " + fe.end.index);
+				sb.append(fe.start.index + " <-> " + fe.end.index);
 				sb.append(" -> " + fe.partner);
 				sb.append("\n");
 			}
@@ -243,7 +243,20 @@ public class UniformizationUtility {
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo
 	) {
 		FundamentalPolygon poly = new FundamentalPolygon();
-		CoVertex root = cutInfo.cutRoot;
+		
+		// find max valence branch
+		Set<CoVertex> branchSet = cutInfo.getBranchSet();
+		int maxBranch = 0;
+		CoVertex root = branchSet.iterator().next();
+		for (CoVertex branch : branchSet) {
+			int branchNumber = cutInfo.getCopies(branch).size();
+			if (branchNumber > maxBranch) {
+				maxBranch = branchNumber;
+				root = branch;
+			}
+		}
+		
+		// find the start boundary edge
 		CoEdge rootEdge = null;
 		for (CoEdge e : incomingEdges(root)) {
 			if (e.getOppositeEdge().getLeftFace() == null) {
@@ -254,10 +267,8 @@ public class UniformizationUtility {
 		assert rootEdge != null;
 		
 		
-		// create fundamental vertices
-		Set<CoVertex> branchSet = cutInfo.getBranchSet();
+		// create fundamental vertices and partition the branch set
 		Map<CoVertex, FundamentalVertex> branchMap = new HashMap<CoVertex, FundamentalVertex>();
-		
 		Set<CoVertex> tmpSet = new HashSet<CoVertex>(branchSet);
 		int index = 0;
 		System.out.println("brachSet: " + branchSet);
