@@ -15,7 +15,6 @@ import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 public class CHyperbolicUnwrapper implements Unwrapper{
 
 	
-	
 	public Vector unwrap(CoHDS surface, int numCones, boolean quantizeCones) throws Exception {
 		surface.prepareInvariantDataHyperbolic();
 		CHyperbolicOptimizable opt = new CHyperbolicOptimizable(surface);
