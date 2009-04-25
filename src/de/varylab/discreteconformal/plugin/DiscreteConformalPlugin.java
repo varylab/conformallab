@@ -169,6 +169,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		auxGeometry.addChild(unitCircle);
 		
 		surfaceRoot.setAppearance(surfaceAppearance);
+		
+		Appearance funPolyApp = new Appearance();
+		funPolyApp.setAttribute(VERTEX_DRAW, false);
+		fundamentalPolygonRoot.setAppearance(funPolyApp);
 	}
 
 	

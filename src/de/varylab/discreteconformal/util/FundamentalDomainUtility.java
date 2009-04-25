@@ -4,8 +4,9 @@ import static de.jreality.math.Pn.HYPERBOLIC;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.WHITE;
 import static java.awt.RenderingHints.KEY_ANTIALIASING;
-import static java.awt.RenderingHints.VALUE_ANTIALIAS_OFF;
+import static java.awt.RenderingHints.KEY_RENDERING;
 import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
+import static java.awt.RenderingHints.VALUE_RENDER_QUALITY;
 import static java.awt.geom.Arc2D.OPEN;
 import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 import static java.lang.Math.cos;
@@ -43,7 +44,8 @@ public class FundamentalDomainUtility {
 		int res = 1000;
 		BufferedImage image = new BufferedImage(res, res, TYPE_INT_ARGB);
 		Graphics2D g = (Graphics2D)image.getGraphics();
-		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_OFF);
+		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
+		g.setRenderingHint(KEY_RENDERING, VALUE_RENDER_QUALITY);
 		g.setColor(new Color(0, 0, 0, 0));
 		g.fillRect(0, 0, res, res);
 		g.setColor(WHITE);
@@ -87,7 +89,9 @@ public class FundamentalDomainUtility {
 				Pn.normalize(p2a, p2a, HYPERBOLIC);
 				Pn.normalize(p3a, p3a, HYPERBOLIC);
 				boolean drawArc = true;
-				if (getDistToUnitCircle(p1a) < 0.001 && getDistToUnitCircle(p2a) < 0.001) {
+				if (getDistToUnitCircle(p1a) < 0.001 && 
+					getDistToUnitCircle(p2a) < 0.001 &&
+					getDistToUnitCircle(p3a) < 0.001) {
 					proceed = drawArc = false;
 				}
 				if (drawArc) {
