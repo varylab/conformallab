@@ -72,7 +72,7 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
-import de.varylab.discreteconformal.util.TextureUtility;
+import de.varylab.discreteconformal.util.FundamentalDomainUtility;
 import de.varylab.discreteconformal.util.UniformizationUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;
@@ -383,7 +383,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	public void updatePolygonTexture(int depth, int resolution) {
 		Point pRoot = cutInfo.cutRoot.getTextureCoord();
 		double[] root = new double[] {pRoot.x(), pRoot.y(), 0.0, pRoot.z()};
-		polygonImage = TextureUtility.createCoverTexture(root, fundamentalPolygon, depth);
+		polygonImage = FundamentalDomainUtility.createCoverTexture(root, fundamentalPolygon, depth);
 		updateStates();
 	}
 	

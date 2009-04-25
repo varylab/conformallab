@@ -33,7 +33,7 @@ import de.jreality.math.Rn;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalEdge;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;
 
-public class TextureUtility {
+public class FundamentalDomainUtility {
 
 	public static Image createCoverTexture(
 		double[] root,
