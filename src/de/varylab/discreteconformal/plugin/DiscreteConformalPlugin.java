@@ -1,7 +1,10 @@
 package de.varylab.discreteconformal.plugin;
 
+import static de.jreality.scene.Appearance.INHERITED;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
+import static de.jreality.shader.CommonAttributes.POLYGON_SHADER;
+import static de.jreality.shader.CommonAttributes.TEXTURE_2D;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.varylab.discreteconformal.util.UniformizationUtility.constructFundamentalPolygon;
 import static java.awt.GridBagConstraints.RELATIVE;
@@ -11,6 +14,7 @@ import geom3d.Point;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -49,6 +53,8 @@ import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.tool.Tool;
+import de.jreality.shader.ImageData;
+import de.jreality.shader.Texture2D;
 import de.jreality.util.Input;
 import de.jtem.halfedge.algorithm.triangulation.Triangulator;
 import de.jtem.halfedge.jreality.ConverterHeds2JR;
@@ -66,6 +72,7 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
+import de.varylab.discreteconformal.util.TextureUtility;
 import de.varylab.discreteconformal.util.UniformizationUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;
@@ -89,6 +96,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		cutInfo = null;
 	private FundamentalPolygon 
 		fundamentalPolygon = null;
+	private Matrix 
+	polygonTextureMatrix = MatrixBuilder.euclidean().translate(-0.5, -0.5, 0).scale(0.5).scale(1, -1, 1).getMatrix();
+	private Image
+		polygonImage = null;
 	private int
 		genus = -1;
 	
@@ -103,6 +114,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private Tool
 		translateShapeTool = new TranslateShapeTool(),
 		hyperbolicCopyTool = new HyperbolicCopyTool(this);
+	private Appearance
+		surfaceAppearance = new Appearance();
 	private SceneGraphComponent
 		surfaceRoot = new SceneGraphComponent("Surface Geometry"),
 		auxGeometry = new SceneGraphComponent("Aux Geometry"),
@@ -121,6 +134,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private JSpinner
 		numConesSpinner = new JSpinner(numConesModel);
 	private JCheckBox
+		showPoygonTexture = new JCheckBox("Polygon Texture", true),
 		quantizeChecker = new JCheckBox("Quantize Cone Angles"),
 		showUnwrapped = new JCheckBox("Show Unwrapped Geometry"),
 		showUnitCircle = new JCheckBox("Show Unit Cirlce");
@@ -133,6 +147,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	
 	public DiscreteConformalPlugin() {
 		createLayout();
+		showPoygonTexture.addActionListener(this);
 		unwrapBtn.addActionListener(this);
 		showUnwrapped.addActionListener(this);
 		showUnitCircle.addActionListener(this);
@@ -152,6 +167,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		MatrixBuilder.euclidean().rotate(PI / 2, 1, 0, 0).assignTo(unitCircle);
 		unitCircle.setGeometry(Primitives.torus(1.0, 0.005, 200, 5));
 		auxGeometry.addChild(unitCircle);
+		
+		surfaceRoot.setAppearance(surfaceAppearance);
 	}
 
 	
@@ -188,6 +205,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		visualizationPanel.setLayout(new GridBagLayout());
 		visualizationPanel.add(showUnitCircle, c);
 		visualizationPanel.add(showUnwrapped, c);
+		visualizationPanel.add(showPoygonTexture, c);
 		c.gridwidth = RELATIVE;
 		visualizationPanel.add(kleinButton, c);
 		c.gridwidth = REMAINDER;
@@ -211,11 +229,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 				fundamentalPolygon = constructFundamentalPolygon(cutInfo);
 				cutColorAdapter.setContext(cutInfo);
 				pointAdapter.setContext(cutInfo);
+				updateFundamentalPolygon(100);
+				updatePolygonTexture(4, 1000);
 			} else {
 				cutInfo = null;
 				fundamentalPolygon = null;
 			}
-			updateViewer(true);
+			updateSurface(true);
 			updateStates();
 		}
 	}
@@ -235,7 +255,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		}
 		if (showUnwrapped == s || kleinButton == s || poincareButton == s) {
 			copiedGeometry.setGeometry(null);
-			updateViewer(showUnwrapped == s);
+			updateSurface(showUnwrapped == s);
 		}
 		updateStates();
 	}
@@ -257,6 +277,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			unitCircle.setVisible(false);
 			fundamentalPolygonRoot.setVisible(false);
 		}
+		if (polygonImage != null && showPoygonTexture.isSelected()) {
+			ImageData imgData = new ImageData(polygonImage);
+			Texture2D tex2d = de.jreality.shader.TextureUtility.createTexture(surfaceAppearance, POLYGON_SHADER, imgData);
+			tex2d.setTextureMatrix(polygonTextureMatrix);
+		} else {
+			surfaceAppearance.setAttribute(POLYGON_SHADER + "." + TEXTURE_2D, INHERITED);
+		}
 	}
 	
 	
@@ -274,7 +301,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	}
 	
 	
-	private void updateViewer(final boolean align) {
+	private void updateSurface(final boolean align) {
 		if (surface == null) {
 			return;
 		}
@@ -294,10 +321,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		}
 		surfaceRoot.setGeometry(ifs);
 		surfaceRoot.setVisible(true);
-		
-		if (genus > 1) {
-			updateFundamentalPolygon(100);
-		}
 		
 		managedContent.removeAll(ContentLoader.class);
 		if (align) {
@@ -357,7 +380,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		fundamentalPolygonRoot.setGeometry(ilsf.getGeometry());
 	}
 	
-	
+	public void updatePolygonTexture(int depth, int resolution) {
+		Point pRoot = cutInfo.cutRoot.getTextureCoord();
+		double[] root = new double[] {pRoot.x(), pRoot.y(), 0.0, pRoot.z()};
+		polygonImage = TextureUtility.createCoverTexture(root, fundamentalPolygon, depth);
+		updateStates();
+	}
 	
 	
 	public void copyAtEdge(int edgeIndex) {
@@ -486,6 +514,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		c.storeProperty(getClass(), "klein", kleinButton.isSelected()); 
 		c.storeProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected());
 		c.storeProperty(getClass(), "showUnitCircle", showUnitCircle.isSelected());
+		c.storeProperty(getClass(), "showPoygonTexture", showPoygonTexture.isSelected());
 	} 
 	
 
@@ -499,6 +528,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		poincareButton.setSelected(!kleinButton.isSelected());
 		showUnwrapped.setSelected(c.getProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected()));
 		showUnitCircle.setSelected(c.getProperty(getClass(), "showUnitCircle", showUnitCircle.isSelected()));
+		showPoygonTexture.setSelected(c.getProperty(getClass(), "showPoygonTexture", showPoygonTexture.isSelected()));
 	}
 	
 	
