@@ -2,6 +2,8 @@ package de.varylab.discreteconformal;
 
 import de.jreality.plugin.ContentViewer;
 import de.jreality.plugin.view.ContentLoader;
+import de.jreality.plugin.view.InfoOverlayPlugin;
+import de.jreality.plugin.view.ViewerKeyListenerPlugin;
 import de.jreality.plugin.view.ZoomTool;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
 import de.jtem.halfedge.plugin.HalfedgeDebuggerPlugin;
@@ -25,6 +27,8 @@ public class ConformalLab {
 		viewer.registerPlugin(new CatmullClarkPlugin());
 		viewer.registerPlugin(new TriangulatePlugin());
 		viewer.registerPlugin(new DiscreteConformalPlugin());
+		viewer.registerPlugin(new ViewerKeyListenerPlugin());
+		viewer.registerPlugin(new InfoOverlayPlugin());
 		viewer.startup();
 	}
 

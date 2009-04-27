@@ -2,6 +2,9 @@ package de.varylab.discreteconformal.plugin.tasks;
 
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+
 import javax.swing.SwingWorker;
 
 import no.uib.cipr.matrix.Vector;
@@ -46,6 +49,9 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 	
 	@Override
 	protected CoHDS doInBackground() throws Exception {
+		long startTime = System.currentTimeMillis();
+		long unwrapTime = -1;
+		long layoutTime = -1;
 		setProgress(0);
 		genus = HalfEdgeUtils.getGenus(surface);
 		Vector u = null;
@@ -59,13 +65,15 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 				unwrapper = new Genus0Unwrapper();
 			}
 			u = unwrapper.unwrap(surface, numCones, quantizeCones);
+			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
 			layoutRoot = Genus0Layout.doLayout(surface, u);
+			layoutTime = System.currentTimeMillis();
 			setProgress(100);
-			return surface;
+			break;
 		// sphere ----------------------------
 		case 1:
-			return null;
+			break;
 		// genus > 1 -------------------------
 		default:
 			if (usePetsc) {
@@ -74,14 +82,20 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 				unwrapper = new CHyperbolicUnwrapper();
 			}
 			u = unwrapper.unwrap(surface, 0, false);
+			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
 			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
 			CoVertex root = surface.getVertex(getMinUIndex(u));
 			cutInfo = cutManifoldToDisk(surface, root, hypWa);
 			layoutRoot = CHyperbolicLayout.doLayout(surface, u);
+			layoutTime = System.currentTimeMillis();
 			setProgress(100);
-			return surface;
+			break;
 		}
+		NumberFormat nf = new DecimalFormat("0.00");
+		System.out.println("minimization took " + nf.format((unwrapTime - startTime) / 1000.0) + "sec.");
+		System.out.println("layout took " + nf.format((layoutTime - unwrapTime) / 1000.0) + "sec.");
+		return surface;
 	}
 	
 	

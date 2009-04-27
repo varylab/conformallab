@@ -3,10 +3,6 @@ package de.varylab.discreteconformal.util;
 import static de.jreality.math.Pn.HYPERBOLIC;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.WHITE;
-import static java.awt.RenderingHints.KEY_ANTIALIASING;
-import static java.awt.RenderingHints.KEY_RENDERING;
-import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
-import static java.awt.RenderingHints.VALUE_RENDER_QUALITY;
 import static java.awt.geom.Arc2D.OPEN;
 import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 import static java.lang.Math.cos;
@@ -17,10 +13,10 @@ import geom3d.Point;
 import geom3d.Triangle;
 import geom3d.Vector;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.geom.Arc2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -44,14 +40,15 @@ public class FundamentalDomainUtility {
 		int res = 1000;
 		BufferedImage image = new BufferedImage(res, res, TYPE_INT_ARGB);
 		Graphics2D g = (Graphics2D)image.getGraphics();
-		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
-		g.setRenderingHint(KEY_RENDERING, VALUE_RENDER_QUALITY);
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+//		g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 		g.setColor(new Color(0, 0, 0, 0));
 		g.fillRect(0, 0, res, res);
 		g.setColor(WHITE);
 		g.fillArc(0, 0, res, res, 0, 360);
-		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
 		List<double[]> orbit = poly.getOrbit(root);
+		g.setColor(BLACK);
+//		g.setStroke(new BasicStroke(1.0f));
 		drawArc(poly, orbit, new Matrix(), g, res, 0, depth);
 		try {
 			ImageIO.write(image, "png", new File("test.png"));
@@ -135,8 +132,6 @@ public class FundamentalDomainUtility {
 			double centerX = (center.x() / 2 + 0.5) * res;
 			double centerY = (-center.y() / 2 + 0.5) * res;
 			double radius = (c.getRadius() / 2) * 1000;
-			g.setColor(BLACK);
-			g.setStroke(new BasicStroke(3.0f));
 			Arc2D arc = new Arc2D.Double(centerX - radius, centerY - radius, radius * 2, radius * 2, degStartAngle, degAngle, OPEN);
 			g.draw(arc);
 			

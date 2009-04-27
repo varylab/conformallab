@@ -26,12 +26,12 @@ public class CHyperbolicUnwrapper implements Unwrapper{
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
 		optimizer.setSolver(Solver.BiCGstab); 
-		optimizer.setError(1E-7);
-		optimizer.setMaxIterations(100);
+		optimizer.setError(1E-8);
+		optimizer.setMaxIterations(150);
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
-			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
+//			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
 		}
 		return u;
 	}

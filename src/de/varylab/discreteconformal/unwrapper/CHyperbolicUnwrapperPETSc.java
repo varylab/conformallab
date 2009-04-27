@@ -28,8 +28,8 @@ public class CHyperbolicUnwrapperPETSc implements Unwrapper{
 		
 		Tao optimizer = new Tao(Tao.Method.NTR);
 		optimizer.setApplication(app);
-		optimizer.setGradientTolerances(1E-13, 0, 0); 
-		 
+		optimizer.setGradientTolerances(1E-8, 0, 0); 
+		optimizer.setMaximumIterates(150);
 		optimizer.solve();
 		return new DenseVector(u.getArray());
 	}

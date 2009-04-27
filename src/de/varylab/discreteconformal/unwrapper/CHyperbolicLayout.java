@@ -6,6 +6,7 @@ import static java.lang.Math.cos;
 import static java.lang.Math.cosh;
 import static java.lang.Math.exp;
 import static java.lang.Math.log;
+import static java.lang.Math.max;
 import static java.lang.Math.sin;
 import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
@@ -13,6 +14,7 @@ import geom3d.Point;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -40,25 +42,33 @@ public class CHyperbolicLayout {
 		Map<CoEdge, Double> lMap,
 		int mcSamples
 	) {
+		Random rnd = new Random();
+		
 		Set<CoVertex> boundary = new TreeSet<CoVertex>(new NodeComparator<CoVertex>());
 		boundary.addAll(HalfEdgeUtils.boundaryVertices(hds));
+		Set<CoVertex> mcBoundarySet = new HashSet<CoVertex>();
+		Iterator<CoVertex> boundaryIterator = boundary.iterator();
+		for (int i = 0; i < max(boundary.size() / 10, 10); i++) {
+			mcBoundarySet.add(boundaryIterator.next());
+		}
 		
 		LengthMapWeightAdapter wa = new LengthMapWeightAdapter(lMap);
 		Map<CoVertex, Double> sMap = new HashMap<CoVertex, Double>();
 		
-		Random rnd = new Random();
 		Set<CoVertex> mcSet = new HashSet<CoVertex>();
 		for (int i = 0; i < mcSamples; i++) {
 			int sampleIndex = rnd.nextInt(hds.numVertices());
 			CoVertex sampleVertex = hds.getVertex(sampleIndex);
-			mcSet.add(sampleVertex);
+			if (!HalfEdgeUtils.isBoundaryVertex(sampleVertex)) {
+				mcSet.add(sampleVertex);				
+			}
 		}
 		
 		for (CoVertex v : mcSet) {
 			double mean = 0;
 			Map<CoVertex, Double> distMap = new HashMap<CoVertex, Double>();
 			Map<CoVertex, List<CoEdge>> pathMap = Search.getAllShortestPaths(v, boundary, wa, new HashSet<CoVertex>());
-			for (CoVertex bv : boundary) {
+			for (CoVertex bv : mcBoundarySet) {
 				List<CoEdge> path = pathMap.get(bv);
 				double length = PathUtility.getTotalPathWeight(new HashSet<CoEdge>(path), wa);
 				mean += length;
@@ -111,8 +121,7 @@ public class CHyperbolicLayout {
 		final Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		final Queue<CoEdge> Qe = new LinkedList<CoEdge>();
 		// start
-		final CoVertex v1 = guessRootVertex(hds, lMap, 100);
-		System.out.println("layout root is " + v1);
+		final CoVertex v1 = guessRootVertex(hds, lMap, 150);
 		final CoEdge e1 = v1.getIncomingEdge();
 		final CoEdge e0 = e1.getOppositeEdge();
 		final CoVertex v2 = e0.getTargetVertex();

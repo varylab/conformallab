@@ -1,12 +1,15 @@
 package de.varylab.discreteconformal.plugin;
 
-import static de.jreality.scene.Appearance.INHERITED;
+import static de.jreality.math.MatrixBuilder.euclidean;
+import static de.jreality.shader.CommonAttributes.DIFFUSE_COLOR;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
+import static de.jreality.shader.CommonAttributes.LIGHTING_ENABLED;
 import static de.jreality.shader.CommonAttributes.POLYGON_SHADER;
-import static de.jreality.shader.CommonAttributes.TEXTURE_2D;
+import static de.jreality.shader.CommonAttributes.VERTEX_COLORS_ENABLED;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.varylab.discreteconformal.util.UniformizationUtility.constructFundamentalPolygon;
+import static java.awt.Color.WHITE;
 import static java.awt.GridBagConstraints.RELATIVE;
 import static java.awt.GridBagConstraints.REMAINDER;
 import static java.lang.Math.PI;
@@ -36,11 +39,11 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingWorker;
 
 import charlesgunn.jreality.tools.TranslateShapeTool;
+import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.IndexedFaceSetUtility;
 import de.jreality.geometry.IndexedLineSetFactory;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
-import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jreality.plugin.view.ContentAppearance;
@@ -55,6 +58,7 @@ import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.tool.Tool;
 import de.jreality.shader.ImageData;
 import de.jreality.shader.Texture2D;
+import de.jreality.shader.TextureUtility;
 import de.jreality.util.Input;
 import de.jtem.halfedge.algorithm.triangulation.Triangulator;
 import de.jtem.halfedge.jreality.ConverterHeds2JR;
@@ -97,7 +101,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private FundamentalPolygon 
 		fundamentalPolygon = null;
 	private Matrix 
-	polygonTextureMatrix = MatrixBuilder.euclidean().translate(-0.5, -0.5, 0).scale(0.5).scale(1, -1, 1).getMatrix();
+		polygonTextureMatrix = euclidean().translate(-0.5, -0.5, 0).scale(0.5).scale(1, -1, 1).getMatrix();
 	private Image
 		polygonImage = null;
 	private int
@@ -115,13 +119,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		translateShapeTool = new TranslateShapeTool(),
 		hyperbolicCopyTool = new HyperbolicCopyTool(this);
 	private Appearance
+		universalCoverAppearance = new Appearance(),
 		surfaceAppearance = new Appearance();
 	private SceneGraphComponent
 		surfaceRoot = new SceneGraphComponent("Surface Geometry"),
 		auxGeometry = new SceneGraphComponent("Aux Geometry"),
 		copiedGeometry = new SceneGraphComponent("Click Copy Geometry"),
 		fundamentalPolygonRoot = new SceneGraphComponent("Fundamental Polygon"), 
-		unitCircle = new SceneGraphComponent("Hyperbolic Boundary");
+		unitCircle = new SceneGraphComponent("Hyperbolic Boundary"),
+		universalCoverRoot = new SceneGraphComponent("Universal Cover");
 
 	// user interface section ------------
 	private JButton
@@ -134,13 +140,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private JSpinner
 		numConesSpinner = new JSpinner(numConesModel);
 	private JCheckBox
-		showPoygonTexture = new JCheckBox("Polygon Texture", true),
+		showFundamentalPolygon = new JCheckBox("Fundamental Polygon"),
+		showPoygonTexture = new JCheckBox("Polygon Texture"),
 		quantizeChecker = new JCheckBox("Quantize Cone Angles"),
 		showUnwrapped = new JCheckBox("Show Unwrapped Geometry"),
+		showUniversalCover = new JCheckBox("Universal Cover"),
 		showUnitCircle = new JCheckBox("Show Unit Cirlce");
 	private JRadioButton
 		kleinButton = new JRadioButton("Klein"),
-		poincareButton = new JRadioButton("Poincaré");
+		poincareButton = new JRadioButton("Poincaré", true);
 	private JComboBox
 		numericsCombo = new JComboBox(new String[] {"Java/MTJ Numerics", "Petsc/Tao Numerics"});
 	
@@ -153,6 +161,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		showUnitCircle.addActionListener(this);
 		kleinButton.addActionListener(this);
 		poincareButton.addActionListener(this);
+		showUniversalCover.addActionListener(this);
+		showFundamentalPolygon.addActionListener(this);
 		
 		ButtonGroup modelGroup = new ButtonGroup();
 		modelGroup.add(kleinButton);
@@ -164,15 +174,34 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		circleApp.setAttribute(FACE_DRAW, true);
 		unitCircle.setAppearance(circleApp);
 		unitCircle.setVisible(false);
-		MatrixBuilder.euclidean().rotate(PI / 2, 1, 0, 0).assignTo(unitCircle);
+		euclidean().rotate(PI / 2, 1, 0, 0).assignTo(unitCircle);
 		unitCircle.setGeometry(Primitives.torus(1.0, 0.005, 200, 5));
 		auxGeometry.addChild(unitCircle);
 		
+		surfaceAppearance.setAttribute(POLYGON_SHADER + "." + VERTEX_COLORS_ENABLED, false);
 		surfaceRoot.setAppearance(surfaceAppearance);
 		
 		Appearance funPolyApp = new Appearance();
 		funPolyApp.setAttribute(VERTEX_DRAW, false);
+		funPolyApp.setAttribute(EDGE_DRAW, true);
 		fundamentalPolygonRoot.setAppearance(funPolyApp);
+		
+		IndexedFaceSetFactory ifsf = new IndexedFaceSetFactory();
+		ifsf.setVertexCount(4);
+		ifsf.setFaceCount(1);
+		ifsf.setFaceIndices(new int[][] {{0,1,2,3}});
+		ifsf.setVertexTextureCoordinates(new double[] {-1,-1,1,-1,1,1,-1,1});
+		ifsf.setVertexCoordinates(new double[]{-1,-1,-0.01, 1,-1,-0.01,  1,1,-0.001,  -1,1,-0.01});
+		ifsf.setGenerateFaceNormals(true);
+		ifsf.update();
+		universalCoverRoot.setGeometry(ifsf.getGeometry());
+		universalCoverRoot.setAppearance(surfaceAppearance);
+		universalCoverRoot.setAppearance(universalCoverAppearance);
+		universalCoverAppearance.setAttribute(VERTEX_DRAW, false);
+		universalCoverAppearance.setAttribute(EDGE_DRAW, false);
+		universalCoverAppearance.setAttribute(FACE_DRAW, true);
+		universalCoverAppearance.setAttribute(LIGHTING_ENABLED, false);
+		universalCoverAppearance.setAttribute(DIFFUSE_COLOR, WHITE);
 	}
 
 	
@@ -209,7 +238,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		visualizationPanel.setLayout(new GridBagLayout());
 		visualizationPanel.add(showUnitCircle, c);
 		visualizationPanel.add(showUnwrapped, c);
+		visualizationPanel.add(showFundamentalPolygon, c);
 		visualizationPanel.add(showPoygonTexture, c);
+		visualizationPanel.add(showUniversalCover, c);
 		c.gridwidth = RELATIVE;
 		visualizationPanel.add(kleinButton, c);
 		c.gridwidth = REMAINDER;
@@ -272,21 +303,33 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		managedContent.addContentUnique(getClass(), surfaceRoot);
 		managedContent.addContentUnique(getClass(), copiedGeometry);
 		managedContent.addContentUnique(getClass(), fundamentalPolygonRoot);
+		managedContent.addContentUnique(getClass(), universalCoverRoot);
 		managedContent.addToolUnique(getClass(), hyperbolicCopyTool);
 		managedContent.addToolUnique(getClass(), translateShapeTool);
 		if (genus > 1) {
 			unitCircle.setVisible(showUnitCircle.isSelected() && showUnwrapped.isSelected());
-			fundamentalPolygonRoot.setVisible(showUnwrapped.isSelected());
+			fundamentalPolygonRoot.setVisible(showUnwrapped.isSelected() && showFundamentalPolygon.isSelected());
+			universalCoverRoot.setVisible(showUniversalCover.isSelected() && showUnwrapped.isSelected());
 		} else {
 			unitCircle.setVisible(false);
 			fundamentalPolygonRoot.setVisible(false);
+			universalCoverRoot.setVisible(false);
+		}
+		ImageData imgData = null;
+		if (polygonImage != null && (showPoygonTexture.isSelected() || showUniversalCover.isSelected())) {
+			imgData = new ImageData(polygonImage);
 		}
 		if (polygonImage != null && showPoygonTexture.isSelected()) {
-			ImageData imgData = new ImageData(polygonImage);
-			Texture2D tex2d = de.jreality.shader.TextureUtility.createTexture(surfaceAppearance, POLYGON_SHADER, imgData);
+			Texture2D tex2d = TextureUtility.createTexture(surfaceAppearance, POLYGON_SHADER, imgData);
 			tex2d.setTextureMatrix(polygonTextureMatrix);
 		} else {
-			surfaceAppearance.setAttribute(POLYGON_SHADER + "." + TEXTURE_2D, INHERITED);
+			TextureUtility.removeTexture(surfaceAppearance, POLYGON_SHADER);
+		}
+		if (polygonImage != null && showUniversalCover.isSelected()) {
+			Texture2D tex2d = TextureUtility.createTexture(universalCoverAppearance, POLYGON_SHADER, imgData);
+			tex2d.setTextureMatrix(polygonTextureMatrix);
+		} else {
+			TextureUtility.removeTexture(universalCoverAppearance, POLYGON_SHADER);
 		}
 	}
 	
@@ -519,6 +562,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		c.storeProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected());
 		c.storeProperty(getClass(), "showUnitCircle", showUnitCircle.isSelected());
 		c.storeProperty(getClass(), "showPoygonTexture", showPoygonTexture.isSelected());
+		c.storeProperty(getClass(), "showUniversalCover", showUniversalCover.isSelected());
 	} 
 	
 
@@ -533,6 +577,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		showUnwrapped.setSelected(c.getProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected()));
 		showUnitCircle.setSelected(c.getProperty(getClass(), "showUnitCircle", showUnitCircle.isSelected()));
 		showPoygonTexture.setSelected(c.getProperty(getClass(), "showPoygonTexture", showPoygonTexture.isSelected()));
+		showUniversalCover.setSelected(c.getProperty(getClass(), "showUniversalCover", showUniversalCover.isSelected()));
 	}
 	
 	
@@ -561,6 +606,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			unitCircle.setVisible(false);
 			surfaceRoot.setVisible(false);
 			copiedGeometry.setVisible(false);
+			fundamentalPolygonRoot.setVisible(false);
+			universalCoverRoot.setVisible(false);
 			fundamentalPolygonRoot.setVisible(false);
 		}
 		
