@@ -48,6 +48,14 @@ public class UniformizationUtility {
 
 	private static int log = 3;
 //	private static AnnotationAdapter<?>[] adapters = {new AngleSumAdapter(), new AlphaAdapter(), new FaceIndexAnnotation<CoFace>()};
+	private static Matrix 
+		E = new Matrix(
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, -1
+		);
+	
 	
 	private static void log(int log, String msg) {
 		if (UniformizationUtility.log >= log) {
@@ -75,6 +83,8 @@ public class UniformizationUtility {
 		double t1t2 = Pn.innerProduct(t1.get(), t2.get(), HYPERBOLIC);
 		geom3d.Vector ws = new geom3d.Vector(s2).add(new Point(s1).times(s1s2 / s1s1).times(-1));
 		geom3d.Vector wt = new geom3d.Vector(t2).add(new Point(t1).times(t1t2 / t1t1).times(-1));
+		Pn.normalize(ws.get(), ws.get(), HYPERBOLIC);
+		Pn.normalize(wt.get(), wt.get(), HYPERBOLIC);
 		
 		double nss1 = Pn.innerProduct(ns.get(), s1.get(), HYPERBOLIC);
 		double ntt1 = Pn.innerProduct(nt.get(), t1.get(), HYPERBOLIC);
@@ -91,23 +101,27 @@ public class UniformizationUtility {
 		Pn.normalize(nt.get(), nt.get(), HYPERBOLIC);
 		
 		double[] sa1 = s1.get();
-		double[] sa2 = s2.get();
-		double[] nsa = ns.get();
+		double[] wsa = ws.get();
+		double[] wta = wt.get();
 		double[] ta1 = t1.get();
-		double[] ta2 = t2.get();
+		double[] nsa = ns.get();
 		double[] nta = nt.get();
 		Matrix S = new Matrix(
-			sa1[0], sa2[0], nsa[0], 0,
-			sa1[1], sa2[1], nsa[1], 0,
-			0,		0, 		0, 		1,
-			sa1[2], sa2[2], nsa[2], 0
+			sa1[0], wsa[0], 0, nsa[0],
+			sa1[1], wsa[1], 0, nsa[1],
+			0,		0, 		1, 		0,
+			sa1[2], wsa[2], 0, nsa[2]
 		);
+		Matrix SInv = S.getTranspose(); SInv.multiplyOnRight(E);
+		System.out.println("S check:\n" + Matrix.times(S, SInv));
 		Matrix T = new Matrix(
-			ta1[0], ta2[0], nta[0], 0,
-			ta1[1], ta2[1], nta[1], 0,
-			0,		0, 		0, 		1,
-			ta1[2], ta2[2], nta[2], 0
+			ta1[0], wta[0], 0, nta[0],
+			ta1[1], wta[1], 0, nta[1],
+			0,		0, 		1, 		0,
+			ta1[2], wta[2], 0, nta[2]
 		);
+		Matrix TInv = T.getTranspose(); TInv.multiplyOnRight(E);
+		System.out.println("T check:\n" + Matrix.times(T, TInv));
 		return Matrix.times(T, S.getInverse());
 	}
 	
