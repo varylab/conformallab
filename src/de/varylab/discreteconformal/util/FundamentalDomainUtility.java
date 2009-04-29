@@ -49,7 +49,7 @@ public class FundamentalDomainUtility {
 		List<double[]> orbit = poly.getOrbit(root);
 		g.setColor(BLACK);
 //		g.setStroke(new BasicStroke(1.0f));
-		drawArc(poly, orbit, new Matrix(), g, res, 0, depth);
+		drawPolygon(poly, orbit, new Matrix(), g, res, 0, depth);
 		try {
 			ImageIO.write(image, "png", new File("test.png"));
 		} catch (Exception e) {
@@ -59,7 +59,7 @@ public class FundamentalDomainUtility {
 	}
 	
 	
-	private static void drawArc(
+	private static void drawPolygon(
 		FundamentalPolygon poly,
 		List<double[]> orbit,
 		Matrix domain,
@@ -96,7 +96,7 @@ public class FundamentalDomainUtility {
 				}
 			}
 			if (proceed) {
-				drawArc(poly, orbit, T, g, res, depth + 1, maxDepth);
+				drawPolygon(poly, orbit, T, g, res, depth + 1, maxDepth);
 			}
 		}
 	}

@@ -265,7 +265,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 				cutColorAdapter.setContext(cutInfo);
 				pointAdapter.setContext(cutInfo);
 				updateFundamentalPolygon(100);
-				updatePolygonTexture(4, 1000);
+				updatePolygonTexture(0, 1000);
 			} else {
 				cutInfo = null;
 				fundamentalPolygon = null;

@@ -46,8 +46,8 @@ import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class UniformizationUtility {
 
-	private static int log = 3;
-//	private static AnnotationAdapter<?>[] adapters = {new AngleSumAdapter(), new AlphaAdapter(), new FaceIndexAnnotation<CoFace>()};
+	private static int 
+		log = 3;
 	private static Matrix 
 		E = new Matrix(
 			1, 0, 0, 0,
@@ -106,23 +106,24 @@ public class UniformizationUtility {
 		double[] ta1 = t1.get();
 		double[] nsa = ns.get();
 		double[] nta = nt.get();
+		
 		Matrix S = new Matrix(
-			sa1[0], wsa[0], 0, nsa[0],
-			sa1[1], wsa[1], 0, nsa[1],
+			nsa[0], wsa[0], 0, sa1[0],
+			nsa[1], wsa[1], 0, sa1[1],
 			0,		0, 		1, 		0,
-			sa1[2], wsa[2], 0, nsa[2]
+			nsa[2], wsa[2], 0, sa1[2]
 		);
-		Matrix SInv = S.getTranspose(); SInv.multiplyOnRight(E);
-		System.out.println("S check:\n" + Matrix.times(S, SInv));
+		Matrix SInv = S.getTranspose();
+		SInv.multiplyOnLeft(E);
+		SInv.multiplyOnRight(E);
 		Matrix T = new Matrix(
-			ta1[0], wta[0], 0, nta[0],
-			ta1[1], wta[1], 0, nta[1],
+			nta[0], wta[0], 0, ta1[0],
+			nta[1], wta[1], 0, ta1[1],
 			0,		0, 		1, 		0,
-			ta1[2], wta[2], 0, nta[2]
+			nta[2], wta[2], 0, ta1[2]
 		);
-		Matrix TInv = T.getTranspose(); TInv.multiplyOnRight(E);
-		System.out.println("T check:\n" + Matrix.times(T, TInv));
-		return Matrix.times(T, S.getInverse());
+		Matrix R = Matrix.times(T, SInv);
+		return R;
 	}
 	
 	
@@ -152,7 +153,7 @@ public class UniformizationUtility {
 			start = new FundamentalVertex(0),
 			end = new FundamentalVertex(0);
 		public Matrix
-			motion = new Matrix();
+			motion = new Matrix(); // identification motion
 		public FundamentalEdge
 			prevEdge = null,
 			nextEdge = null;
@@ -199,24 +200,27 @@ public class UniformizationUtility {
 		
 		
 		public List<double[]> getOrbit(double[] root) {
-			double[] pos = root.clone();
+			double[] pos1 = root.clone();
+			double[] pos2 = root.clone();
 			List<double[]> result = new LinkedList<double[]>();
-			Matrix Check = new Matrix();
+			Map<FundamentalEdge, double[]> posMap = new HashMap<FundamentalEdge, double[]>();
+			FundamentalEdge start1 = edgeList.get(0);
+			FundamentalEdge active1 = start1;
+			FundamentalEdge start2 = edgeList.get(edgeList.size() - 1);
+			FundamentalEdge active2 = start2; 
+			while (posMap.keySet().size() < edgeList.size()) {
+				posMap.put(active2.nextEdge, pos2.clone());
+				posMap.put(active1, pos1.clone());
+				active1.partner.motion.transformVector(pos1);
+				active2.partner.motion.transformVector(pos2);
+				Pn.normalize(pos1, pos1, HYPERBOLIC);
+				Pn.normalize(pos2, pos2, HYPERBOLIC);
+				active1 = active1.partner.nextEdge;
+				active2 = active2.partner.prevEdge;
+			};
 			for (FundamentalEdge e : edgeList) {
-				Matrix T = new Matrix();
-				FundamentalEdge active = e;
-				do {
-					T.multiplyOnLeft(active.partner.motion);
-					active = active.partner.nextEdge;
-				} while (active.partner != e);
-				T.multiplyOnLeft(active.partner.motion);
-				result.add(pos.clone());
-				T.transformVector(pos);
-				Pn.normalize(pos, pos, HYPERBOLIC);
-				System.out.println("Norm: " + Pn.norm(pos, HYPERBOLIC));
-				Check.multiplyOnLeft(T);
+				result.add(posMap.get(e));
 			}
-			System.out.println("Polygon Cycle check: \n" + Check);
 			return result;
 		}
 		
