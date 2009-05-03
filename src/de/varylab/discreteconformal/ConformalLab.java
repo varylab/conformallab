@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal;
 
 import de.jreality.plugin.ContentViewer;
-import de.jreality.plugin.view.ContentGUI;
 import de.jreality.plugin.view.ContentLoader;
 import de.jreality.plugin.view.InfoOverlayPlugin;
 import de.jreality.plugin.view.ViewerKeyListenerPlugin;
@@ -30,7 +29,6 @@ public class ConformalLab {
 		viewer.registerPlugin(new DiscreteConformalPlugin());
 		viewer.registerPlugin(new ViewerKeyListenerPlugin());
 		viewer.registerPlugin(new InfoOverlayPlugin());
-		viewer.registerPlugin(new ContentGUI());
 		viewer.startup();
 	}
 
