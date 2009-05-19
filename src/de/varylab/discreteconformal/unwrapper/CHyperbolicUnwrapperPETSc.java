@@ -31,7 +31,9 @@ public class CHyperbolicUnwrapperPETSc implements Unwrapper{
 		optimizer.setGradientTolerances(1E-8, 0, 0); 
 		optimizer.setMaximumIterates(150);
 		optimizer.solve();
-		return new DenseVector(u.getArray());
+		DenseVector result = new DenseVector(u.getArray());
+		u.restoreArray();
+		return result;
 	}
 
 }
