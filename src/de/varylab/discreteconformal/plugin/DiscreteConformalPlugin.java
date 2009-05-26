@@ -8,6 +8,7 @@ import static de.jreality.shader.CommonAttributes.LIGHTING_ENABLED;
 import static de.jreality.shader.CommonAttributes.POLYGON_SHADER;
 import static de.jreality.shader.CommonAttributes.VERTEX_COLORS_ENABLED;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
+import static de.varylab.discreteconformal.util.FundamentalDomainUtility.createFundamentalPolygon;
 import static de.varylab.discreteconformal.util.UniformizationUtility.constructFundamentalPolygon;
 import static java.awt.Color.WHITE;
 import static java.awt.GridBagConstraints.RELATIVE;
@@ -17,6 +18,7 @@ import geom3d.Point;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -24,7 +26,6 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.InputStream;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -41,11 +42,8 @@ import javax.swing.SwingWorker;
 import charlesgunn.jreality.tools.TranslateShapeTool;
 import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.IndexedFaceSetUtility;
-import de.jreality.geometry.IndexedLineSetFactory;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
-import de.jreality.math.Pn;
-import de.jreality.math.Rn;
 import de.jreality.plugin.view.ContentAppearance;
 import de.jreality.plugin.view.ContentLoader;
 import de.jreality.plugin.view.ManagedContent;
@@ -66,6 +64,7 @@ import de.jtem.halfedge.jreality.adapter.Adapter;
 import de.jtem.halfedge.jreality.adapter.CoordinateAdapter2Ifs;
 import de.jtem.halfedge.jreality.adapter.TextCoordsAdapter2Ifs;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
+import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.adapter.MarkedEdgesAdapter;
 import de.varylab.discreteconformal.adapter.PointAdapter;
 import de.varylab.discreteconformal.adapter.PositionAdapter;
@@ -87,6 +86,11 @@ import de.varylab.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ActionListener, PropertyChangeListener {
 
+	private static int
+		polyResolution = 1000,
+		coverRecursion = 2,
+		coverResolution = 1000;
+	
 	// plug-in section ------------------ 
 	private ManagedContent
 		managedContent = null;
@@ -134,39 +138,45 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		unwrapBtn = new JButton("Unwrap");
 	private JPanel
 		coneConfigPanel = new JPanel(),
+		modelPanel = new JPanel(),
 		visualizationPanel = new JPanel();
 	private SpinnerNumberModel
 		numConesModel = new SpinnerNumberModel(0, 0, 100, 1);
 	private JSpinner
 		numConesSpinner = new JSpinner(numConesModel);
 	private JCheckBox
+		showGeometry = new JCheckBox("Geometry", true),
 		showFundamentalPolygon = new JCheckBox("Fundamental Polygon"),
 		showPoygonTexture = new JCheckBox("Polygon Texture"),
 		quantizeChecker = new JCheckBox("Quantize Cone Angles"),
-		showUnwrapped = new JCheckBox("Show Unwrapped Geometry"),
+		showUnwrapped = new JCheckBox("Show Unwrapped"),
 		showUniversalCover = new JCheckBox("Universal Cover"),
 		showUnitCircle = new JCheckBox("Show Unit Cirlce");
 	private JRadioButton
 		kleinButton = new JRadioButton("Klein"),
-		poincareButton = new JRadioButton("Poincaré", true);
+		poincareButton = new JRadioButton("Poincaré", true),
+		halfplaneButton = new JRadioButton("Half-Plane"); 
 	private JComboBox
 		numericsCombo = new JComboBox(new String[] {"Java/MTJ Numerics", "Petsc/Tao Numerics"});
 	
 	
 	public DiscreteConformalPlugin() {
 		createLayout();
+		showGeometry.addActionListener(this);
 		showPoygonTexture.addActionListener(this);
 		unwrapBtn.addActionListener(this);
 		showUnwrapped.addActionListener(this);
 		showUnitCircle.addActionListener(this);
 		kleinButton.addActionListener(this);
 		poincareButton.addActionListener(this);
+		halfplaneButton.addActionListener(this);
 		showUniversalCover.addActionListener(this);
 		showFundamentalPolygon.addActionListener(this);
 		
 		ButtonGroup modelGroup = new ButtonGroup();
 		modelGroup.add(kleinButton);
 		modelGroup.add(poincareButton);
+		modelGroup.add(halfplaneButton);
 		
 		Appearance circleApp = new Appearance();
 		circleApp.setAttribute(EDGE_DRAW, false);
@@ -236,16 +246,20 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		
 		visualizationPanel.setBorder(BorderFactory.createTitledBorder("Visualization"));
 		visualizationPanel.setLayout(new GridBagLayout());
+		visualizationPanel.add(showGeometry, c);
 		visualizationPanel.add(showUnitCircle, c);
 		visualizationPanel.add(showUnwrapped, c);
 		visualizationPanel.add(showFundamentalPolygon, c);
 		visualizationPanel.add(showPoygonTexture, c);
 		visualizationPanel.add(showUniversalCover, c);
-		c.gridwidth = RELATIVE;
-		visualizationPanel.add(kleinButton, c);
-		c.gridwidth = REMAINDER;
-		visualizationPanel.add(poincareButton, c);
 		shrinkPanel.add(visualizationPanel, c);
+		
+		modelPanel.setBorder(BorderFactory.createTitledBorder("Model"));
+		modelPanel.setLayout(new GridLayout(3, 1, 2, 2));
+		modelPanel.add(kleinButton);
+		modelPanel.add(poincareButton);
+		modelPanel.add(halfplaneButton);
+		shrinkPanel.add(modelPanel, c);
 	}
 	
 	
@@ -264,8 +278,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 				fundamentalPolygon = constructFundamentalPolygon(cutInfo);
 				cutColorAdapter.setContext(cutInfo);
 				pointAdapter.setContext(cutInfo);
-				updateFundamentalPolygon(100);
-				updatePolygonTexture(0, 1000);
+				updateFundamentalPolygon(polyResolution);
+				updatePolygonTexture(coverRecursion, coverResolution);
 			} else {
 				cutInfo = null;
 				fundamentalPolygon = null;
@@ -288,11 +302,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			unwrapper.addPropertyChangeListener(this);
 			unwrapper.execute();
 		}
-		if (showUnwrapped == s || kleinButton == s || poincareButton == s) {
+		if (showUnwrapped == s || kleinButton == s || poincareButton == s || halfplaneButton == s) {
 			copiedGeometry.setGeometry(null);
 			updateSurface(showUnwrapped == s);
+			updateFundamentalPolygon(polyResolution);
+			updatePolygonTexture(coverRecursion, coverResolution);
 		}
-		updateStates();
+		if (unwrapBtn != s) {
+			updateStates();
+		}
 	}
 	
 	/*
@@ -306,10 +324,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		managedContent.addContentUnique(getClass(), universalCoverRoot);
 		managedContent.addToolUnique(getClass(), hyperbolicCopyTool);
 		managedContent.addToolUnique(getClass(), translateShapeTool);
+		surfaceRoot.setVisible(showGeometry.isSelected());
 		if (genus > 1) {
-			unitCircle.setVisible(showUnitCircle.isSelected() && showUnwrapped.isSelected());
 			fundamentalPolygonRoot.setVisible(showUnwrapped.isSelected() && showFundamentalPolygon.isSelected());
 			universalCoverRoot.setVisible(showUniversalCover.isSelected() && showUnwrapped.isSelected());
+			unitCircle.setVisible(showUnitCircle.isSelected() && showUnwrapped.isSelected() && (getSelectedModel() != HyperbolicModel.Halfplane));
 		} else {
 			unitCircle.setVisible(false);
 			fundamentalPolygonRoot.setVisible(false);
@@ -352,11 +371,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		if (surface == null) {
 			return;
 		}
-		boolean klein = kleinButton.isSelected();
-		Adapter texAdapter = new TexCoordAdapter(false, !klein);
+		Adapter texAdapter = new TexCoordAdapter(getSelectedModel());
 		Adapter posAdapter = null;
 		if (showUnwrapped.isSelected()) {
-			posAdapter = new PositionTexCoordAdapter(!klein);
+			posAdapter = new PositionTexCoordAdapter(getSelectedModel());
 		} else {
 			posAdapter = new PositionAdapter();
 		}
@@ -375,62 +393,18 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		}
 	}
 	
-	
 
 	public void updateFundamentalPolygon(int resolution) {
-		if (fundamentalPolygon == null || cutInfo == null) {
-			return;
-		}
-		final IndexedLineSetFactory ilsf = new IndexedLineSetFactory();
-		final boolean klein = kleinButton.isSelected(); 
-		int n = fundamentalPolygon.getLength();
-		if (klein) {
-			ilsf.setVertexCount(n);
-			ilsf.setEdgeCount(n);		
-		} else {
-			ilsf.setVertexCount(n * resolution);
-			ilsf.setEdgeCount(n * resolution);
-		}
-		double[][] verts = null;
-		int[][] edges = null;
-		if (klein) {
-			verts = new double[n][];
-			edges = new int[n][];
-		} else {
-			verts = new double[n * resolution][];
-			edges = new int[n * resolution][];	
-		}
-		Point pRoot = cutInfo.cutRoot.getTextureCoord();
-		
-		double[] root = new double[] {pRoot.x(), pRoot.y(), 0.0, pRoot.z()};
-		List<double[]> orbit = fundamentalPolygon.getOrbit(root);
-		for (int i = 0; i < n; i++) {
-			double[] pos = orbit.get(i);
-			double[] posNext = orbit.get((i + 1) % n);
-			if (klein) {
-				verts[i] = new double[] {pos[0], pos[1], 0.0, pos[3]};
-				edges[i] = new int[] {i, (i + 1) % (n)};
-			} else {
-				for (int j = 0; j < resolution; j++) {
-					int index = i * resolution + j;
-					double t = j / (resolution - 1.0);
-					double[] p = Rn.linearCombination(null, t, posNext, 1-t, pos);
-					Pn.normalize(p, p, Pn.HYPERBOLIC);
-					verts[index] = new double[] {p[0], p[1], 0.0, p[3] + 1};
-					edges[index] = new int[] {index, (index + 1) % (n * resolution)};
-				}
-			}
-		}
-		ilsf.setVertexCoordinates(verts);
-		ilsf.setEdgeIndices(edges);
-		ilsf.update();
-		fundamentalPolygonRoot.setGeometry(ilsf.getGeometry());
+		createFundamentalPolygon(fundamentalPolygon, cutInfo, fundamentalPolygonRoot, resolution, getSelectedModel());
 	}
+	
+	
 	
 	public void updatePolygonTexture(int depth, int resolution) {
 		Point pRoot = cutInfo.cutRoot.getTextureCoord();
 		double[] root = new double[] {pRoot.x(), pRoot.y(), 0.0, pRoot.z()};
-		polygonImage = FundamentalDomainUtility.createCoverTexture(root, fundamentalPolygon, depth);
+		HyperbolicModel model = getSelectedModel();
+		polygonImage = FundamentalDomainUtility.createCoverTexture(root, fundamentalPolygon, depth, model, resolution);
 		updateStates();
 	}
 	
@@ -559,6 +533,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		c.storeProperty(getClass(), "quantizeCones", quantizeChecker.isSelected());
 		c.storeProperty(getClass(), "numericsMethod", numericsCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "klein", kleinButton.isSelected()); 
+		c.storeProperty(getClass(), "showGeometry", showGeometry.isSelected());
 		c.storeProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected());
 		c.storeProperty(getClass(), "showUnitCircle", showUnitCircle.isSelected());
 		c.storeProperty(getClass(), "showPoygonTexture", showPoygonTexture.isSelected());
@@ -574,6 +549,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		numericsCombo.setSelectedIndex(c.getProperty(getClass(), "numericsMethod", numericsCombo.getSelectedIndex()));
 		kleinButton.setSelected(c.getProperty(getClass(), "klein", kleinButton.isSelected()));
 		poincareButton.setSelected(!kleinButton.isSelected());
+		showGeometry.setSelected(c.getProperty(getClass(), "showGeometry", showGeometry.isSelected()));
 		showUnwrapped.setSelected(c.getProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected()));
 		showUnitCircle.setSelected(c.getProperty(getClass(), "showUnitCircle", showUnitCircle.isSelected()));
 		showPoygonTexture.setSelected(c.getProperty(getClass(), "showPoygonTexture", showPoygonTexture.isSelected()));
@@ -613,4 +589,18 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		
 	}
 
+	
+	protected HyperbolicModel getSelectedModel() {
+		if (kleinButton.isSelected()) {
+			return HyperbolicModel.Klein;
+		}
+		if (poincareButton.isSelected()) {
+			return HyperbolicModel.Poincaré;
+		}
+		if (halfplaneButton.isSelected()) {
+			return HyperbolicModel.Halfplane;
+		}
+		return HyperbolicModel.Klein;
+	}
+	
 }

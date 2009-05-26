@@ -6,27 +6,27 @@ import de.varylab.discreteconformal.heds.CoVertex;
 
 public class PositionTexCoordAdapter implements CoordinateAdapter2Ifs<CoVertex> {
 
-	private boolean
-		poincare = false;
+	private HyperbolicModel
+		model = HyperbolicModel.Klein;
 	
 	public PositionTexCoordAdapter() {
 	}
 
-	public PositionTexCoordAdapter(boolean poincare) {
-		this.poincare = poincare;
+	public PositionTexCoordAdapter(HyperbolicModel model) {
+		this.model = model;
 	}
 	
-	
-	public void setPoincare(boolean poincare) {
-		this.poincare = poincare;
-	}
 	
 	public double[] getCoordinate(CoVertex v) {
 		Point t = v.getTextureCoord();
-		if (poincare) {
-			return new double[] {t.x(), t.y(), 0.0, t.z() + 1};
-		} else {
-			return new double[] {t.x(), t.y(), 0.0, t.z()};
+		switch (model) {
+			case Klein:
+				return new double[] {t.x(), t.y(), 0.0, t.z()};
+			case Poincaré: 
+			default:
+				return new double[] {t.x(), t.y(), 0.0, t.z() + 1};
+			case Halfplane:
+				return new double[] {t.y(), 1, 0.0, t.z() - t.x()};
 		}
 	}
 
@@ -34,4 +34,9 @@ public class PositionTexCoordAdapter implements CoordinateAdapter2Ifs<CoVertex> 
 		return AdapterType.VERTEX_ADAPTER;
 	}
 
+	
+	public void setModel(HyperbolicModel model) {
+		this.model = model;
+	}
+	
 }

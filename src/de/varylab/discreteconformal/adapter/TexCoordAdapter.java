@@ -6,47 +6,37 @@ import de.varylab.discreteconformal.heds.CoVertex;
 
 public class TexCoordAdapter implements TextCoordsAdapter2Ifs<CoVertex> {
 
-	private boolean
-		useProjectiveMap = true,
-		poincare = false;
-	
+	private HyperbolicModel
+		model = HyperbolicModel.Klein;
 	
 	public TexCoordAdapter() {
-
 	}
 	
-	public TexCoordAdapter(boolean useProjective, boolean poincare) {
-		this.useProjectiveMap = useProjective;
-		this.poincare = poincare;
+	public TexCoordAdapter(HyperbolicModel model) {
+		this.model = model;
 	}
 	
-	public TexCoordAdapter(boolean useProjective) {
-		this.useProjectiveMap = useProjective;
-	}
 	
 	public double[] getTextCoordinate(CoVertex v) {
 		Point t = v.getTextureCoord();
-		if (poincare) {
-			return new double[] {t.x(), t.y(), 0.0, t.z() + 1.0};
-		} else {
-			if (useProjectiveMap) {
+		switch (model) {
+			case Klein:
 				return new double[] {t.x(), t.y(), 0.0, t.z()};
-			} else {
-				return new double[] {t.x(), t.y(), 0.0, t.z()};
-			}
+			case Poincaré: 
+			default:
+				return new double[] {t.x(), t.y(), 0.0, t.z() + 1};
+			case Halfplane:
+				return new double[] {t.y(), 1, 0.0, t.z() - t.x()};
 		}
 	}
-
+	
 	public AdapterType getAdapterType() {
 		return AdapterType.VERTEX_ADAPTER;
 	}
-
-	public boolean isUseProjectiveMap() {
-		return useProjectiveMap;
-	}
-
-	public void setUseProjectiveMap(boolean useProjectiveMap) {
-		this.useProjectiveMap = useProjectiveMap;
+	
+	
+	public void setModel(HyperbolicModel model) {
+		this.model = model;
 	}
 
 }
