@@ -25,7 +25,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.InputStream;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -44,20 +43,20 @@ import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.IndexedFaceSetUtility;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
+import de.jreality.plugin.basic.Scene;
 import de.jreality.plugin.basic.View;
 import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.plugin.content.ContentLoader;
 import de.jreality.plugin.experimental.ManagedContent;
-import de.jreality.plugin.experimental.ManagedContent.ContentAdapter;
-import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
+import de.jreality.scene.event.SceneGraphComponentEvent;
+import de.jreality.scene.event.SceneGraphComponentListener;
 import de.jreality.scene.tool.Tool;
 import de.jreality.shader.ImageData;
 import de.jreality.shader.Texture2D;
 import de.jreality.shader.TextureUtility;
-import de.jreality.util.Input;
 import de.jtem.halfedge.algorithm.triangulation.Triangulator;
 import de.jtem.halfedge.jreality.ConverterHeds2JR;
 import de.jtem.halfedge.jreality.adapter.Adapter;
@@ -507,15 +506,16 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		c.getPlugin(ContentAppearance.class);
 		hcp = c.getPlugin(HalfedgeConnectorPlugin.class);
 		managedContent = c.getPlugin(ManagedContent.class);
-		managedContent.addContentListener(new MyContentListener());
+		Scene scene = c.getPlugin(Scene.class);
+		scene.getContentComponent().addSceneGraphComponentListener(new MyContentListener());
 		
 		// read default scene
-		ReaderOBJ reader = new ReaderOBJ();
-		InputStream in = getClass().getResourceAsStream("brezelCoarse.obj");
-		Input input = Input.getInput("Default OBJ Object", in);
-		SceneGraphComponent brezelOBJ = reader.read(input);
-		managedContent.setContent(ContentLoader.class, brezelOBJ);
-		managedContent.alignContent();
+//		ReaderOBJ reader = new ReaderOBJ();
+//		InputStream in = getClass().getResourceAsStream("brezelCoarse.obj");
+//		Input input = Input.getInput("Default OBJ Object", in);
+//		SceneGraphComponent brezelOBJ = reader.read(input);
+//		Content content = PluginUtility.getPlugin(c, Content.class);
+//		content.setContent(brezelOBJ);
 		super.install(c);  
 	}
 	
@@ -572,13 +572,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	}
 	
 	
-	private class MyContentListener extends ContentAdapter {
+	private class MyContentListener implements SceneGraphComponentListener {
 		
 		@Override
-		public void contentAdded(Class<?> context, SceneGraphComponent c) {
-			if (context != ContentLoader.class) {
-				return;
-			}
+		public void childAdded(SceneGraphComponentEvent ev) {
+			System.out.println("MyContentListener.stateChanged()");
 			unitCircle.setVisible(false);
 			surfaceRoot.setVisible(false);
 			copiedGeometry.setVisible(false);
@@ -586,6 +584,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			universalCoverRoot.setVisible(false);
 			fundamentalPolygonRoot.setVisible(false);
 		}
+
+		@Override
+		public void childRemoved(SceneGraphComponentEvent ev) { }
+
+		@Override
+		public void childReplaced(SceneGraphComponentEvent ev) { }
+
+		@Override
+		public void visibilityChanged(SceneGraphComponentEvent ev) { }
 		
 	}
 
