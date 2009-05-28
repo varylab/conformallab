@@ -43,16 +43,16 @@ import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.IndexedFaceSetUtility;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
-import de.jreality.plugin.basic.Scene;
+import de.jreality.plugin.PluginUtility;
+import de.jreality.plugin.basic.Content;
 import de.jreality.plugin.basic.View;
+import de.jreality.plugin.basic.Content.ContentChangedEvent;
 import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.plugin.content.ContentLoader;
 import de.jreality.plugin.experimental.ManagedContent;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
-import de.jreality.scene.event.SceneGraphComponentEvent;
-import de.jreality.scene.event.SceneGraphComponentListener;
 import de.jreality.scene.tool.Tool;
 import de.jreality.shader.ImageData;
 import de.jreality.shader.Texture2D;
@@ -355,7 +355,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private CoHDS getLoaderGeometry() {
 		CoHDS surface = new CoHDS();
 		surface.setTexCoordinatesValid(false);
-		hcp.setContentParseRoot(managedContent.getContextRoot(ContentLoader.class));
 		hcp.getHalfedgeContent(surface, new PositionAdapter());
 		if (surface.numVertices() == 0) {
 			return null;
@@ -506,8 +505,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		c.getPlugin(ContentAppearance.class);
 		hcp = c.getPlugin(HalfedgeConnectorPlugin.class);
 		managedContent = c.getPlugin(ManagedContent.class);
-		Scene scene = c.getPlugin(Scene.class);
-		scene.getContentComponent().addSceneGraphComponentListener(new MyContentListener());
 		
 		// read default scene
 //		ReaderOBJ reader = new ReaderOBJ();
@@ -516,6 +513,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 //		SceneGraphComponent brezelOBJ = reader.read(input);
 //		Content content = PluginUtility.getPlugin(c, Content.class);
 //		content.setContent(brezelOBJ);
+		final Content content = PluginUtility.getContentPlugin(c);
+		content.addContentChangedListener(new Content.ContentChangedListener() {
+			public void contentChanged(ContentChangedEvent cce) {
+				content.encompassEuclidean();
+			}
+		});
 		super.install(c);  
 	}
 	
@@ -571,32 +574,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		return View.class;
 	}
 	
-	
-	private class MyContentListener implements SceneGraphComponentListener {
-		
-		@Override
-		public void childAdded(SceneGraphComponentEvent ev) {
-			System.out.println("MyContentListener.stateChanged()");
-			unitCircle.setVisible(false);
-			surfaceRoot.setVisible(false);
-			copiedGeometry.setVisible(false);
-			fundamentalPolygonRoot.setVisible(false);
-			universalCoverRoot.setVisible(false);
-			fundamentalPolygonRoot.setVisible(false);
-		}
 
-		@Override
-		public void childRemoved(SceneGraphComponentEvent ev) { }
-
-		@Override
-		public void childReplaced(SceneGraphComponentEvent ev) { }
-
-		@Override
-		public void visibilityChanged(SceneGraphComponentEvent ev) { }
-		
-	}
-
-	
 	protected HyperbolicModel getSelectedModel() {
 		if (kleinButton.isSelected()) {
 			return HyperbolicModel.Klein;

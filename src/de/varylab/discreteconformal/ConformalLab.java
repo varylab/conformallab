@@ -20,6 +20,7 @@ public class ConformalLab {
 	public static void main(String[] args) {
 		JRViewer viewer = new JRViewer();
 		viewer.addBasicUI();
+		viewer.addLookAndFeelSupport();
 		viewer.addContentSupport(ContentType.CenteredAndScaled);
 		viewer.setPropertiesFile("ConformalLab.jrw");
 		viewer.registerPlugin(new DiscreteConformalPlugin());
