@@ -25,7 +25,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.InputStream;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -44,13 +43,9 @@ import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.IndexedFaceSetUtility;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
-import de.jreality.plugin.PluginUtility;
-import de.jreality.plugin.basic.Content;
 import de.jreality.plugin.basic.View;
-import de.jreality.plugin.basic.Content.ContentChangedEvent;
 import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.plugin.experimental.ManagedContent;
-import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
@@ -58,7 +53,6 @@ import de.jreality.scene.tool.Tool;
 import de.jreality.shader.ImageData;
 import de.jreality.shader.Texture2D;
 import de.jreality.shader.TextureUtility;
-import de.jreality.util.Input;
 import de.jtem.halfedge.algorithm.triangulation.Triangulator;
 import de.jtem.halfedge.jreality.ConverterHeds2JR;
 import de.jtem.halfedge.jreality.adapter.Adapter;
@@ -503,19 +497,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		c.getPlugin(ContentAppearance.class);
 		hcp = c.getPlugin(HalfedgeConnectorPlugin.class);
 		managedContent = c.getPlugin(ManagedContent.class);
-		final Content content = PluginUtility.getContentPlugin(c);
-		
-		// read default scene
-		ReaderOBJ reader = new ReaderOBJ();
-		InputStream in = getClass().getResourceAsStream("brezelCoarse.obj");
-		Input input = Input.getInput("Default OBJ Object", in);
-		SceneGraphComponent brezelOBJ = reader.read(input);
-		content.setContent(brezelOBJ);
-		content.addContentChangedListener(new Content.ContentChangedListener() {
-			public void contentChanged(ContentChangedEvent cce) {
-				content.encompassEuclidean();
-			}
-		});
 	}
 	
 	@Override
