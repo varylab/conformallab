@@ -49,7 +49,6 @@ import de.jreality.plugin.basic.Content;
 import de.jreality.plugin.basic.View;
 import de.jreality.plugin.basic.Content.ContentChangedEvent;
 import de.jreality.plugin.content.ContentAppearance;
-import de.jreality.plugin.content.ContentLoader;
 import de.jreality.plugin.experimental.ManagedContent;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.Appearance;
@@ -387,11 +386,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		}
 		surfaceRoot.setGeometry(ifs);
 		surfaceRoot.setVisible(true);
-		
-		managedContent.removeAll(ContentLoader.class);
-		if (align) {
-			managedContent.alignContent();
-		}
 	}
 	
 
