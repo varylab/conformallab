@@ -15,7 +15,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedge_functional"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/MTJOptimization"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/SWT"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedge_plugin"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedge_algorithm"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jRWorkspaceSDK"/>
