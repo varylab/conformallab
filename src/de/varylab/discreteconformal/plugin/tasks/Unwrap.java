@@ -65,6 +65,7 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 				unwrapper = new Genus0Unwrapper();
 			}
 			u = unwrapper.unwrap(surface, numCones, quantizeCones);
+			System.err.println("---minimzation redady---");
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
 			layoutRoot = Genus0Layout.doLayout(surface, u);
@@ -82,12 +83,14 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 				unwrapper = new CHyperbolicUnwrapper();
 			}
 			u = unwrapper.unwrap(surface, 0, false);
+			System.err.println("---minimization ready---");
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
 			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
 			CoVertex root = surface.getVertex(getMinUIndex(u));
 			cutInfo = cutManifoldToDisk(surface, root, hypWa);
-			layoutRoot = CHyperbolicLayout.doLayout(surface, u);
+			CoVertex layoutRoot = surface.getVertex(getMaxUIndex(u));
+			layoutRoot = CHyperbolicLayout.doLayout(surface, layoutRoot, u);
 			layoutTime = System.currentTimeMillis();
 			setProgress(100);
 			break;
@@ -105,6 +108,19 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 		for (int i = 1; i < u.size(); i++) {
 			double val = u.get(i);
 			if (iVal < val) {
+				index = i;
+				iVal = i;
+			}
+		}
+		return index;
+	}
+	
+	private int getMaxUIndex(Vector u) {
+		int index = 0;
+		double iVal = u.get(0);
+		for (int i = 1; i < u.size(); i++) {
+			double val = u.get(i);
+			if (iVal > val) {
 				index = i;
 				iVal = i;
 			}

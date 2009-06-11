@@ -42,9 +42,10 @@ public class Genus0UnwrapperPETSc implements Unwrapper{
 		app.setInitialSolutionVec(u);
 		app.setHessianMat(H, H);	
 		
-		optimizer = new Tao(Tao.Method.LMVM);
+		optimizer = new Tao(Tao.Method.NTR);
 		optimizer.setApplication(app);
-		optimizer.setGradientTolerances(1E-5, 0, 0);
+		optimizer.setGradientTolerances(1E-8, 0, 0);
+		optimizer.setMaximumIterates(150);
 		optimizer.solve();
 		
 		GetSolutionStatusResult status = optimizer.getSolutionStatus();

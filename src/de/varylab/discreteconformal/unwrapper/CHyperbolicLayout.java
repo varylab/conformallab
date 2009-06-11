@@ -114,14 +114,14 @@ public class CHyperbolicLayout {
 	 * @param u new metric
 	 * @param angleMapParam may be null
 	 */
-	public static CoVertex doLayout(CoHDS hds, Vector u) {
+	public static CoVertex doLayout(CoHDS hds, CoVertex root, Vector u) {
 		final Map<CoEdge, Double> lMap = getLengthMap(hds, u);
 		
 		final Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
 		final Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		final Queue<CoEdge> Qe = new LinkedList<CoEdge>();
 		// start
-		final CoVertex v1 = guessRootVertex(hds, lMap, 150);
+		final CoVertex v1 = root;//guessRootVertex(hds, lMap, 10);
 		final CoEdge e1 = v1.getIncomingEdge();
 		final CoEdge e0 = e1.getOppositeEdge();
 		final CoVertex v2 = e0.getTargetVertex();

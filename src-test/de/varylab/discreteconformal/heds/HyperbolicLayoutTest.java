@@ -68,7 +68,7 @@ public class HyperbolicLayoutTest {
 		System.out.println("CLayoutTest.testDoLayout()");
 		int n = hds.prepareInvariantDataHyperbolic();
 		Vector u = new SparseVector(n);
-		CHyperbolicLayout.doLayout(hds, u);
+		CHyperbolicLayout.doLayout(hds, hds.getVertex(0), u);
 		
 //		for (CoEdge e : hds.getPositiveEdges()) {
 			//TODO figure out how a reasonable test looks like

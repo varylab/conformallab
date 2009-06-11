@@ -38,7 +38,8 @@ public class Genus0Unwrapper implements Unwrapper{
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
 		optimizer.setSolver(Solver.CG);
-		optimizer.setError(1E-5);
+		optimizer.setError(1E-8);
+		optimizer.setMaxIterations(150);
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {

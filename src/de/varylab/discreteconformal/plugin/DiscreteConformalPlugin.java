@@ -276,6 +276,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 				updateFundamentalPolygon(polyResolution);
 				updatePolygonTexture(coverRecursion, coverResolution);
 			} else {
+				kleinButton.setSelected(true);
 				cutInfo = null;
 				fundamentalPolygon = null;
 			}
@@ -300,8 +301,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		if (showUnwrapped == s || kleinButton == s || poincareButton == s || halfplaneButton == s) {
 			copiedGeometry.setGeometry(null);
 			updateSurface(showUnwrapped == s);
-			updateFundamentalPolygon(polyResolution);
-			updatePolygonTexture(coverRecursion, coverResolution);
+			if (genus > 1) {
+				updateFundamentalPolygon(polyResolution);
+				updatePolygonTexture(coverRecursion, coverResolution);
+			}
 		}
 		if (unwrapBtn != s) {
 			updateStates();
