@@ -4,11 +4,13 @@ import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Collection;
 
 import javax.swing.SwingWorker;
 
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.varylab.discreteconformal.adapter.EuclideanLengthWeightAdapter;
 import de.varylab.discreteconformal.adapter.HyperbolicLengthWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -17,9 +19,9 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapperPETSc;
-import de.varylab.discreteconformal.unwrapper.Genus0Layout;
-import de.varylab.discreteconformal.unwrapper.Genus0Unwrapper;
-import de.varylab.discreteconformal.unwrapper.Genus0UnwrapperPETSc;
+import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
+import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapper;
+import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
@@ -56,27 +58,50 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 		genus = HalfEdgeUtils.getGenus(surface);
 		Vector u = null;
 		switch (genus) {
-		// disk or torus ---------------------
+		// disk or sphere---------------------
 		case 0: 
+			Collection<CoEdge> bList = HalfEdgeUtils.boundaryEdges(surface);
+			boolean isSphere = bList.size() == 0;
+			if (isSphere) {
+				System.out.println("unwrapping a sphere...");
+			} else {
+				System.out.println("unwrapping a disk...");
+			}
 			Unwrapper unwrapper = null;
 			if (usePetsc) {
-				unwrapper = new Genus0UnwrapperPETSc();
+				unwrapper = new EuclideanUnwrapperPETSc();
 			} else {
-				unwrapper = new Genus0Unwrapper();
+				unwrapper = new EuclideanUnwrapper();
 			}
 			u = unwrapper.unwrap(surface, numCones, quantizeCones);
 			System.err.println("---minimzation redady---");
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
-			layoutRoot = Genus0Layout.doLayout(surface, u);
+			layoutRoot = EuclideanLayout.doLayout(surface, u);
 			layoutTime = System.currentTimeMillis();
 			setProgress(100);
 			break;
-		// sphere ----------------------------
+		// torus ----------------------------
 		case 1:
+			System.out.println("unwrapping a torus...");
+			if (usePetsc) {
+				unwrapper = new EuclideanUnwrapperPETSc();
+			} else {
+				unwrapper = new EuclideanUnwrapper();
+			}
+			u = unwrapper.unwrap(surface, numCones, quantizeCones);
+			unwrapTime = System.currentTimeMillis();
+			setProgress(50);
+			EuclideanLengthWeightAdapter eucWa = new EuclideanLengthWeightAdapter(u); 
+			CoVertex cutRoot = surface.getVertex(getMinUIndex(u));
+			cutInfo = cutManifoldToDisk(surface, cutRoot, eucWa);
+			layoutRoot = EuclideanLayout.doLayout(surface, u);
+			layoutTime = System.currentTimeMillis();
+			setProgress(100);
 			break;
 		// genus > 1 -------------------------
 		default:
+			System.out.println("unwrapping surface of genus " + genus + "...");
 			if (usePetsc) {
 				unwrapper = new CHyperbolicUnwrapperPETSc();
 			} else {
@@ -87,8 +112,8 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
 			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
-			CoVertex root = surface.getVertex(getMinUIndex(u));
-			cutInfo = cutManifoldToDisk(surface, root, hypWa);
+			cutRoot = surface.getVertex(getMinUIndex(u));
+			cutInfo = cutManifoldToDisk(surface, cutRoot, hypWa);
 			CoVertex layoutRoot = surface.getVertex(getMaxUIndex(u));
 			layoutRoot = CHyperbolicLayout.doLayout(surface, layoutRoot, u);
 			layoutTime = System.currentTimeMillis();

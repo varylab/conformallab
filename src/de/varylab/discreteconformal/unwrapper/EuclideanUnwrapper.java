@@ -17,7 +17,7 @@ import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
 import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
-public class Genus0Unwrapper implements Unwrapper{
+public class EuclideanUnwrapper implements Unwrapper{
 
 	
 	public Vector unwrap(CoHDS surface, int numCones, boolean quantizeCones) throws Exception {

@@ -153,6 +153,8 @@ public class CuttingUtility {
 		
 		new1.linkOppositeEdge(opp);
 		new2.linkOppositeEdge(edge);
+		new1.copyData(edge);
+		new2.copyData(opp);
 		new1.setTargetVertex(v2);
 		new2.setTargetVertex(v1);
 		

@@ -16,7 +16,7 @@ import de.varylab.jpetsc.Vec;
 import de.varylab.jtao.Tao;
 import de.varylab.jtao.Tao.GetSolutionStatusResult;
 
-public class Genus0UnwrapperPETSc implements Unwrapper{
+public class EuclideanUnwrapperPETSc implements Unwrapper{
 
 	
 	public Vector unwrap(CoHDS surface, int numCones, boolean quantizeCones) throws Exception {

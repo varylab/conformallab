@@ -18,7 +18,7 @@ import de.varylab.mtjoptimization.Optimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
-public class Genus1Normalizer {
+public class SphericalNormalizer {
 
 	
 	public static void normalize(CoHDS hds) throws NotConvergentException{

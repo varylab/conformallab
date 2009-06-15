@@ -38,7 +38,6 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingWorker;
 
-import charlesgunn.jreality.tools.TranslateShapeTool;
 import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.IndexedFaceSetUtility;
 import de.jreality.geometry.Primitives;
@@ -115,7 +114,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		pointAdapter = new PointAdapter();
 	
 	private Tool
-		translateShapeTool = new TranslateShapeTool(),
+//		translateShapeTool = new TranslateShapeTool(),
 		hyperbolicCopyTool = new HyperbolicCopyTool(this);
 	private Appearance
 		universalCoverAppearance = new Appearance(),
@@ -268,14 +267,17 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			}
 			surface = unwrapper.getSurface();
 			genus = unwrapper.genus;
-			if (unwrapper.genus > 1) {
+			if (genus > 0) {
 				cutInfo = unwrapper.cutInfo;
-				fundamentalPolygon = constructFundamentalPolygon(cutInfo);
 				cutColorAdapter.setContext(cutInfo);
 				pointAdapter.setContext(cutInfo);
+			}
+			if (unwrapper.genus > 1) {
+				fundamentalPolygon = constructFundamentalPolygon(cutInfo);
 				updateFundamentalPolygon(polyResolution);
 				updatePolygonTexture(coverRecursion, coverResolution);
-			} else {
+			}
+			if (genus == 0) {
 				kleinButton.setSelected(true);
 				cutInfo = null;
 				fundamentalPolygon = null;
@@ -321,7 +323,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		managedContent.addContentUnique(getClass(), fundamentalPolygonRoot);
 		managedContent.addContentUnique(getClass(), universalCoverRoot);
 		managedContent.addToolUnique(getClass(), hyperbolicCopyTool);
-		managedContent.addToolUnique(getClass(), translateShapeTool);
+//		managedContent.addToolUnique(getClass(), translateShapeTool);
 		surfaceRoot.setVisible(showGeometry.isSelected());
 		if (genus > 1) {
 			fundamentalPolygonRoot.setVisible(showUnwrapped.isSelected() && showFundamentalPolygon.isSelected());
@@ -376,7 +378,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			posAdapter = new PositionAdapter();
 		}
 		IndexedFaceSet ifs = null;
-		if (genus > 1) {
+		if (genus >= 1) {
 			ifs = hcp.toIndexedFaceSet(surface, true, posAdapter, texAdapter, cutColorAdapter, pointAdapter);
 		} else {
 			ifs = hcp.toIndexedFaceSet(surface, true, posAdapter, texAdapter);

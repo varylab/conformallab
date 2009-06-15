@@ -1,7 +1,7 @@
 package de.varylab.discreteconformal.util;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
-import static de.varylab.discreteconformal.unwrapper.Genus0Layout.getAngleSum;
+import static de.varylab.discreteconformal.unwrapper.EuclideanLayout.getAngleSum;
 import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
