@@ -16,6 +16,8 @@ import de.jreality.plugin.JRViewerUtility;
 import de.jreality.plugin.basic.Scene;
 import de.jreality.plugin.basic.View;
 import de.jreality.plugin.basic.ViewMenuBar;
+import de.jtem.halfedge.algorithm.Coord3DAdapter;
+import de.jtem.halfedge.algorithm.catmullclark.CatmullClarkSubdivision;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.adapter.PositionAdapter;
@@ -71,11 +73,11 @@ public class AlgebraicCurveGenerator extends Plugin {
 			case 0:
 				e1.setTargetVertex(v0a);
 				e2.setTargetVertex(v1a);
-				e3.setTargetVertex(v3a);
+				e3.setTargetVertex(v2a);
 				break;
 			case 1:
-				e1.setTargetVertex(v0a);
-				e2.setTargetVertex(v1a);
+				e1.setTargetVertex(v1a);
+				e2.setTargetVertex(v3a);
 				e3.setTargetVertex(v2a);
 				break;
 			case 2:
@@ -84,18 +86,51 @@ public class AlgebraicCurveGenerator extends Plugin {
 				e3.setTargetVertex(v0a);
 				break;
 			case 3:
-				e1.setTargetVertex(v2a);
-				e2.setTargetVertex(v3a);
-				e3.setTargetVertex(v1a);		
+				e1.setTargetVertex(v3a);
+				e2.setTargetVertex(v1a);
+				e3.setTargetVertex(v0a);		
 				break;
 			}
 		}
-
 		
-		if (HalfEdgeUtils.isValidSurface(hds, true)) {
-			halfedgeConnectorPlugin.updateHalfedgeContent(hds, true, new PositionAdapter());
+		hds.getEdge(0).linkOppositeEdge(hds.getEdge(6));
+		hds.getEdge(1).linkOppositeEdge(hds.getEdge(23));
+		hds.getEdge(2).linkOppositeEdge(hds.getEdge(3));
+		hds.getEdge(4).linkOppositeEdge(hds.getEdge(10));
+		hds.getEdge(5).linkOppositeEdge(hds.getEdge(19));
+		hds.getEdge(8).linkOppositeEdge(hds.getEdge(9));
+		
+		
+		hds.getEdge(12).linkOppositeEdge(hds.getEdge(18));
+		hds.getEdge(13).linkOppositeEdge(hds.getEdge(11));
+		hds.getEdge(14).linkOppositeEdge(hds.getEdge(15));
+		hds.getEdge(16).linkOppositeEdge(hds.getEdge(22));
+		hds.getEdge(17).linkOppositeEdge(hds.getEdge(7));
+		hds.getEdge(20).linkOppositeEdge(hds.getEdge(21));
+		
+		CatmullClarkSubdivision<CoVertex, CoEdge, CoFace>
+			subD = new CatmullClarkSubdivision<CoVertex, CoEdge, CoFace>();
+		CoHDS hds2 = new CoHDS();
+		subD.subdivide(hds, hds2, new MyPositionAdapter());
+		
+		if (HalfEdgeUtils.isValidSurface(hds2, true)) {
+			halfedgeConnectorPlugin.setHalfedgeContent(hds2, true, new PositionAdapter());
 			JRViewerUtility.encompassEuclidean(scene);
 		}
+	}
+	
+	private class MyPositionAdapter implements Coord3DAdapter<CoVertex> {
+
+		@Override
+		public double[] getCoord(CoVertex v) {
+			return v.getPosition().get();
+		}
+
+		@Override
+		public void setCoord(CoVertex v, double[] c) {
+			v.getPosition().set(c);
+		}
+		
 	}
 	
 	
