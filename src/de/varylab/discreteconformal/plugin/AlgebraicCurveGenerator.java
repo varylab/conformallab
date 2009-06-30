@@ -12,6 +12,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewerUtility;
 import de.jreality.plugin.basic.Scene;
 import de.jreality.plugin.basic.View;
@@ -110,8 +111,18 @@ public class AlgebraicCurveGenerator extends Plugin {
 		
 		CatmullClarkSubdivision<CoVertex, CoEdge, CoFace>
 			subD = new CatmullClarkSubdivision<CoVertex, CoEdge, CoFace>();
-		CoHDS hds2 = new CoHDS();
-		subD.subdivide(hds, hds2, new MyPositionAdapter());
+		CoHDS hds2 = hds;
+		for (int i = 0; i < genus; i++) {
+			hds2 = new CoHDS();
+			subD.subdivide(hds, hds2, new MyPositionAdapter());
+			hds = hds2;
+		}
+		
+		for (CoVertex v : hds2.getVertices()) {
+			double[] pos = v.getPosition().get();
+			double l = Rn.euclideanNorm(pos);
+			Rn.times(pos, 1 / l, pos);
+		}
 		
 		if (HalfEdgeUtils.isValidSurface(hds2, true)) {
 			halfedgeConnectorPlugin.setHalfedgeContent(hds2, true, new PositionAdapter());
@@ -146,7 +157,7 @@ public class AlgebraicCurveGenerator extends Plugin {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			Window w = SwingUtilities.getWindowAncestor(view.getCenterComponent());
-			String genusString = JOptionPane.showInputDialog(w, "Which genus?", 1);
+			String genusString = JOptionPane.showInputDialog(w, "Subdivision Depth?", 1);
 			int genus = Integer.parseInt(genusString);
 			generateCurve(genus);
 		}
