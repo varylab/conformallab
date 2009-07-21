@@ -5,6 +5,6 @@ import de.varylab.discreteconformal.heds.CoHDS;
 
 public interface Unwrapper {
 
-	public Vector unwrap(CoHDS surface, int numCones, boolean quantizeCones) throws Exception;
+	public Vector unwrap(CoHDS surface) throws Exception;
 	
 }

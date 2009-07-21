@@ -16,7 +16,7 @@ public class SphericalUnwrapper implements Unwrapper{
 
 
 
-	public Vector unwrap(CoHDS surface, int numCones, boolean quantizeCones) throws Exception {
+	public Vector unwrap(CoHDS surface) throws Exception {
 		// punch out vertex 0 and reorder solver indices
 		CoVertex v0 = surface.getVertex(0);
 		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
@@ -24,10 +24,7 @@ public class SphericalUnwrapper implements Unwrapper{
 			for (CoVertex vOld : vMap.keySet()) {
 				CoVertex vNew = vMap.get(vOld);
 				vNew.setPosition(vOld.getPosition());
-			}
-			if (numCones != 0) {
-				break;
-			}				
+			}			
 		}
 		
 //		diskUnwrapper.unwrap(hds);

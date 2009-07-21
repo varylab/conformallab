@@ -13,7 +13,7 @@ import de.varylab.jtao.Tao;
 public class CHyperbolicUnwrapperPETSc implements Unwrapper{
 
 	
-	public Vector unwrap(CoHDS surface, int numCones, boolean quantizeCones) throws Exception {
+	public Vector unwrap(CoHDS surface) throws Exception {
 		surface.prepareInvariantDataHyperbolic();
 		Tao.Initialize();
 		CHyperbolicApplication app = new CHyperbolicApplication(surface);

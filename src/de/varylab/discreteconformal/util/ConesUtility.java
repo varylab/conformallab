@@ -24,6 +24,7 @@ import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.plugin.tasks.Unwrap.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
@@ -172,23 +173,52 @@ public class ConesUtility {
 	}
 	
 	
-	public static Collection<CoVertex> quantizeCones(CoHDS hds, Collection<CoVertex> cones) {
+	public static Collection<CoVertex> quantizeCones(CoHDS hds, Collection<CoVertex> cones, QuantizationMode qm) {
 		List<CoVertex> result = new LinkedList<CoVertex>(cones);
-		for (CoVertex v : cones) {
-			double a = abs(getAngleSum(v) % (2*PI));
-			if (a < PI / 4) {
-				v.setSolverIndex(0); // reinsert cone
-				result.remove(v);
-			} else if (PI / 4 < a && a < PI * 3 / 4) {
-				v.setTheta(PI / 2);
-				v.setSolverIndex(0);
-			} else if (PI * 3 / 4 < a && a < PI * 5 / 4) {
-				v.setTheta(PI);
-				v.setSolverIndex(0);
-			} else if (PI * 5 / 4 < a) {
-				v.setTheta(PI * 3 / 2);
-				v.setSolverIndex(0);
+		switch (qm) {
+		case Hexagons:
+			for (CoVertex v : cones) {
+				double a = abs(getAngleSum(v) % (2*PI));
+				System.out.println("a: " + a);
+				if (a < PI / 6) {
+					v.setSolverIndex(0); // reinsert cone
+					result.remove(v);
+				} else if (PI / 6 < a && a < PI * 3 / 6) {
+					v.setTheta(PI * 2 / 6);
+					v.setSolverIndex(0);
+				} else if (PI * 3 / 6 < a && a < PI * 5 / 6) {
+					v.setTheta(PI * 4 / 6);
+					v.setSolverIndex(0);
+				} else if (PI * 5 / 6 < a && a < PI * 7 / 6) {
+					v.setTheta(PI);
+					v.setSolverIndex(0);
+				} else if (PI * 7 / 6 < a && a < PI * 9 / 6) {
+					v.setTheta(PI * 8 / 6);
+					v.setSolverIndex(0);
+				} else if (PI * 9 / 6 < a) {
+					v.setTheta(PI * 10 / 6);
+					v.setSolverIndex(0);
+				}
+			}		
+			break;
+		case Quads:	
+			for (CoVertex v : cones) {
+				double a = abs(getAngleSum(v) % (2*PI));
+				if (a < PI / 4) {
+					v.setSolverIndex(0); // reinsert cone
+					result.remove(v);
+				} else if (PI / 4 < a && a < PI * 3 / 4) {
+					v.setTheta(PI / 2);
+					v.setSolverIndex(0);
+				} else if (PI * 3 / 4 < a && a < PI * 5 / 4) {
+					v.setTheta(PI);
+					v.setSolverIndex(0);
+				} else if (PI * 5 / 4 < a) {
+					v.setTheta(PI * 3 / 2);
+					v.setSolverIndex(0);
+				}
 			}
+			break;
 		}
 		reorderSolverIndices(hds);
 		return result;

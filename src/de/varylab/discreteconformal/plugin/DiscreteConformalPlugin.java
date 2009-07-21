@@ -69,6 +69,7 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
+import de.varylab.discreteconformal.plugin.tasks.Unwrap.QuantizationMode;
 import de.varylab.discreteconformal.util.FundamentalDomainUtility;
 import de.varylab.discreteconformal.util.UniformizationUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
@@ -114,7 +115,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		pointAdapter = new PointAdapter();
 	
 	private Tool
-//		translateShapeTool = new TranslateShapeTool(),
 		hyperbolicCopyTool = new HyperbolicCopyTool(this);
 	private Appearance
 		universalCoverAppearance = new Appearance(),
@@ -143,9 +143,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		showFundamentalPolygon = new JCheckBox("Fundamental Polygon"),
 		showPoygonTexture = new JCheckBox("Polygon Texture"),
 		quantizeChecker = new JCheckBox("Quantize Cone Angles"),
+		useProjectiveTexture = new JCheckBox("Projective Texture", true),
 		showUnwrapped = new JCheckBox("Show Unwrapped"),
 		showUniversalCover = new JCheckBox("Universal Cover"),
 		showUnitCircle = new JCheckBox("Show Unit Cirlce");
+	private JComboBox
+		quantizationModeCombo = new JComboBox(QuantizationMode.values());
 	private JRadioButton
 		kleinButton = new JRadioButton("Klein"),
 		poincareButton = new JRadioButton("Poincaré", true),
@@ -166,6 +169,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		halfplaneButton.addActionListener(this);
 		showUniversalCover.addActionListener(this);
 		showFundamentalPolygon.addActionListener(this);
+		useProjectiveTexture.addActionListener(this);
 		
 		ButtonGroup modelGroup = new ButtonGroup();
 		modelGroup.add(kleinButton);
@@ -232,6 +236,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		coneConfigPanel.add(numConesSpinner, c);
 		quantizeChecker.setSelected(true);
 		coneConfigPanel.add(quantizeChecker, c);
+		quantizationModeCombo.setSelectedIndex(0);
+		coneConfigPanel.add(quantizationModeCombo, c);
 		
 		numericsCombo.setLightWeightPopupEnabled(true);
 		numericsCombo.setSelectedIndex(0);
@@ -246,6 +252,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		visualizationPanel.add(showFundamentalPolygon, c);
 		visualizationPanel.add(showPoygonTexture, c);
 		visualizationPanel.add(showUniversalCover, c);
+		visualizationPanel.add(useProjectiveTexture, c);
 		shrinkPanel.add(visualizationPanel, c);
 		
 		modelPanel.setBorder(BorderFactory.createTitledBorder("Model"));
@@ -291,11 +298,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
+		if (useProjectiveTexture == s) {
+			
+		}
 		if (unwrapBtn == s) {
 			CoHDS surface = getLoaderGeometry();
 			Unwrap unwrapper = new Unwrap(surface);
 			unwrapper.setNumCones(numConesModel.getNumber().intValue());
 			unwrapper.setQuantizeCones(quantizeChecker.isSelected());
+			unwrapper.setQuantizationMode((QuantizationMode)quantizationModeCombo.getSelectedItem());
 			unwrapper.setUsePetsc(numericsCombo.getSelectedIndex() == 1);
 			unwrapper.addPropertyChangeListener(this);
 			unwrapper.execute();
@@ -323,7 +334,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		managedContent.addContentUnique(getClass(), fundamentalPolygonRoot);
 		managedContent.addContentUnique(getClass(), universalCoverRoot);
 		managedContent.addToolUnique(getClass(), hyperbolicCopyTool);
-//		managedContent.addToolUnique(getClass(), translateShapeTool);
 		surfaceRoot.setVisible(showGeometry.isSelected());
 		if (genus > 1) {
 			fundamentalPolygonRoot.setVisible(showUnwrapped.isSelected() && showFundamentalPolygon.isSelected());
@@ -370,10 +380,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		if (surface == null) {
 			return;
 		}
-		Adapter texAdapter = new TexCoordAdapter(getSelectedModel());
+		boolean projective = useProjectiveTexture.isSelected();
+		Adapter texAdapter = new TexCoordAdapter(getSelectedModel(), projective);
 		Adapter posAdapter = null;
 		if (showUnwrapped.isSelected()) {
-			posAdapter = new PositionTexCoordAdapter(getSelectedModel());
+			posAdapter = new PositionTexCoordAdapter(getSelectedModel(), projective);
 		} else {
 			posAdapter = new PositionAdapter();
 		}
@@ -523,6 +534,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		c.storeProperty(getClass(), "showUnitCircle", showUnitCircle.isSelected());
 		c.storeProperty(getClass(), "showPoygonTexture", showPoygonTexture.isSelected());
 		c.storeProperty(getClass(), "showUniversalCover", showUniversalCover.isSelected());
+		c.storeProperty(getClass(), "quantizationMode", quantizationModeCombo.getSelectedIndex());
+		c.storeProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected());
 	} 
 	
 
@@ -539,6 +552,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		showUnitCircle.setSelected(c.getProperty(getClass(), "showUnitCircle", showUnitCircle.isSelected()));
 		showPoygonTexture.setSelected(c.getProperty(getClass(), "showPoygonTexture", showPoygonTexture.isSelected()));
 		showUniversalCover.setSelected(c.getProperty(getClass(), "showUniversalCover", showUniversalCover.isSelected()));
+		quantizationModeCombo.setSelectedIndex(c.getProperty(getClass(), "quantizationMode", quantizationModeCombo.getSelectedIndex()));
+		useProjectiveTexture.setSelected(c.getProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected()));
 	}
 	
 	

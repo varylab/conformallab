@@ -8,6 +8,7 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.plugin.tasks.Unwrap.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
 import de.varylab.discreteconformal.util.ConesUtility;
 import de.varylab.jpetsc.Mat;
@@ -16,10 +17,17 @@ import de.varylab.jpetsc.Vec;
 import de.varylab.jtao.Tao;
 import de.varylab.jtao.Tao.GetSolutionStatusResult;
 
-public class EuclideanUnwrapperPETSc implements Unwrapper{
+public class EuclideanUnwrapperPETSc implements Unwrapper {
 
+	private QuantizationMode
+		quantizationMode = QuantizationMode.Quads;
+	private int 
+		numCones = 0;
+	private boolean
+		quantizeCones = false;
 	
-	public Vector unwrap(CoHDS surface, int numCones, boolean quantizeCones) throws Exception {
+	
+	public Vector unwrap(CoHDS surface) throws Exception {
 		surface.prepareInvariantDataEuclidean();
 		// cones
 		Collection<CoVertex> cones = null;
@@ -56,7 +64,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper{
 
 		if (quantizeCones && numCones > 0) {
 			// calculating cones
-			cones = ConesUtility.quantizeCones(surface, cones);
+			cones = ConesUtility.quantizeCones(surface, cones, quantizationMode);
 			
 			// optimizing conformal structure
 			CEuclideanApplication app2 = new CEuclideanApplication(surface);
@@ -88,6 +96,18 @@ public class EuclideanUnwrapperPETSc implements Unwrapper{
 		DenseVector result = new DenseVector(uValues);
 		u.restoreArray();
 		return result; 
+	}
+	
+	public void setNumCones(int numCones) {
+		this.numCones = numCones;
+	}
+	
+	public void setQuantizeCones(boolean quantizeCones) {
+		this.quantizeCones = quantizeCones;
+	}
+	
+	public void setQuantizationMode(QuantizationMode quantizationMode) {
+		this.quantizationMode = quantizationMode;
 	}
 
 	

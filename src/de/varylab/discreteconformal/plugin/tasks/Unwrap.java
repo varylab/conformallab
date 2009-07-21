@@ -32,6 +32,8 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 	private boolean
 		usePetsc = false,
 		quantizeCones = false;
+	private QuantizationMode
+		quantizationMode = QuantizationMode.Quads;
 	private int
 		numCones = 0;
 	
@@ -42,6 +44,12 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 		layoutRoot = null;
 	public CuttingInfo<CoVertex, CoEdge, CoFace> 
 		cutInfo = null;
+	
+	
+	public static enum QuantizationMode {
+		Quads,
+		Hexagons
+	}
 	
 	
 	public Unwrap(CoHDS surface) {
@@ -69,11 +77,19 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 			}
 			Unwrapper unwrapper = null;
 			if (usePetsc) {
-				unwrapper = new EuclideanUnwrapperPETSc();
+				EuclideanUnwrapperPETSc uw = new EuclideanUnwrapperPETSc();
+				uw.setNumCones(numCones);
+				uw.setQuantizeCones(quantizeCones);
+				uw.setQuantizationMode(quantizationMode);
+				unwrapper = uw;
 			} else {
-				unwrapper = new EuclideanUnwrapper();
+				EuclideanUnwrapper uw = new EuclideanUnwrapper();
+				uw.setNumCones(numCones);
+				uw.setQuantizeCones(quantizeCones);
+				uw.setQuantizationMode(quantizationMode);
+				unwrapper = uw;
 			}
-			u = unwrapper.unwrap(surface, numCones, quantizeCones);
+			u = unwrapper.unwrap(surface);
 			System.err.println("---minimzation redady---");
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
@@ -89,7 +105,7 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 			} else {
 				unwrapper = new EuclideanUnwrapper();
 			}
-			u = unwrapper.unwrap(surface, numCones, quantizeCones);
+			u = unwrapper.unwrap(surface);
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
 			EuclideanLengthWeightAdapter eucWa = new EuclideanLengthWeightAdapter(u); 
@@ -107,7 +123,7 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 			} else {
 				unwrapper = new CHyperbolicUnwrapper();
 			}
-			u = unwrapper.unwrap(surface, 0, false);
+			u = unwrapper.unwrap(surface);
 			System.err.println("---minimization ready---");
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
@@ -191,6 +207,14 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 
 	public void setNumCones(int numCones) {
 		this.numCones = numCones;
+	}
+	
+	public void setQuantizationMode(QuantizationMode quantizationMode) {
+		this.quantizationMode = quantizationMode;
+	}
+	
+	public QuantizationMode getQuantizationMode() {
+		return quantizationMode;
 	}
 	
 
