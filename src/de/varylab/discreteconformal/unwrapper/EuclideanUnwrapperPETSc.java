@@ -22,10 +22,13 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 	private QuantizationMode
 		quantizationMode = QuantizationMode.Quads;
 	private int 
+		maxIterations = 150,
 		numCones = 0;
 	private boolean
 		quantizeCones = false;
-	
+	private double
+		gradTolerance = 1E-8;
+
 	
 	public Vector unwrap(CoHDS surface) throws Exception {
 		surface.prepareInvariantDataEuclidean();
@@ -52,8 +55,8 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		
 		optimizer = new Tao(Tao.Method.NTR);
 		optimizer.setApplication(app);
-		optimizer.setGradientTolerances(1E-8, 0, 0);
-		optimizer.setMaximumIterates(150);
+		optimizer.setGradientTolerances(gradTolerance, 0, 0);
+		optimizer.setMaximumIterates(maxIterations);
 		optimizer.solve();
 		
 		GetSolutionStatusResult status = optimizer.getSolutionStatus();
@@ -110,5 +113,15 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		this.quantizationMode = quantizationMode;
 	}
 
+	
+	@Override
+	public void setGradientTolerance(double tol) {
+		gradTolerance = tol;
+	}
+	
+	@Override
+	public void setMaxIterations(int maxIterations) {
+		this.maxIterations = maxIterations;
+	}
 	
 }

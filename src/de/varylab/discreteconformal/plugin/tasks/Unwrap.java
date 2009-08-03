@@ -35,7 +35,10 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 	private QuantizationMode
 		quantizationMode = QuantizationMode.Quads;
 	private int
-		numCones = 0;
+		numCones = 0,
+		maxIterations = 150;
+	private double
+		toleranceExp = -8;
 	
 	// result values -------
 	public int 
@@ -65,6 +68,7 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 		setProgress(0);
 		genus = HalfEdgeUtils.getGenus(surface);
 		Vector u = null;
+		double gradTolerance = Math.pow(10, toleranceExp);
 		switch (genus) {
 		// disk or sphere---------------------
 		case 0: 
@@ -89,6 +93,8 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 				uw.setQuantizationMode(quantizationMode);
 				unwrapper = uw;
 			}
+			unwrapper.setGradientTolerance(gradTolerance);
+			unwrapper.setMaxIterations(maxIterations);
 			u = unwrapper.unwrap(surface);
 			System.err.println("---minimzation redady---");
 			unwrapTime = System.currentTimeMillis();
@@ -105,6 +111,8 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 			} else {
 				unwrapper = new EuclideanUnwrapper();
 			}
+			unwrapper.setGradientTolerance(gradTolerance);
+			unwrapper.setMaxIterations(maxIterations);
 			u = unwrapper.unwrap(surface);
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
@@ -123,6 +131,8 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 			} else {
 				unwrapper = new CHyperbolicUnwrapper();
 			}
+			unwrapper.setGradientTolerance(gradTolerance);
+			unwrapper.setMaxIterations(maxIterations);
 			u = unwrapper.unwrap(surface);
 			System.err.println("---minimization ready---");
 			unwrapTime = System.currentTimeMillis();
@@ -217,5 +227,12 @@ public class Unwrap extends SwingWorker<CoHDS, Object> {
 		return quantizationMode;
 	}
 	
+	public void setToleranceExponent(double toleranceExp) {
+		this.toleranceExp = toleranceExp;
+	}
+	
+	public void setMaxIterations(int maxIterations) {
+		this.maxIterations = maxIterations;
+	}
 
 }

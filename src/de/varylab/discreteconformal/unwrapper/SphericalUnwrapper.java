@@ -4,18 +4,32 @@ import geom3d.Point;
 
 import java.util.Map;
 
+import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
-
+import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.discreteconformal.util.CuttingUtility;
+import de.varylab.discreteconformal.util.SparseUtility;
+import de.varylab.mtjoptimization.NotConvergentException;
+import de.varylab.mtjoptimization.newton.NewtonOptimizer;
+import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
+import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
 public class SphericalUnwrapper implements Unwrapper{
 
+	private double
+		gradTolerance = 1E-8;
+	private int
+		maxIterations = 150;
 
-
+	/**
+	 * This is completely untested and probably rubbish
+	 */
 	public Vector unwrap(CoHDS surface) throws Exception {
 		// punch out vertex 0 and reorder solver indices
 		CoVertex v0 = surface.getVertex(0);
@@ -29,60 +43,54 @@ public class SphericalUnwrapper implements Unwrapper{
 		
 //		diskUnwrapper.unwrap(hds);
 		
-//		HashSet<CVertex> boundary = new HashSet<CVertex>();
+//		HashSet<CoVertex> boundary = new HashSet<CoVertex>();
 //		boundary.add(v0);
 //		boundary.addAll(neighboringVertices(v0));
-//		int n = hds.prepareInvariantData();
-//		
-//		// optimization
-//		mon.subTask("Minimizing");
-//		DenseVector u = new DenseVector(n);
-//		Matrix H = new CompRowMatrix(n,n,makeNonZeros(hds));
-//		NewtonOptimizer optimizer = new NewtonOptimizer(H);
-//		optimizer.setStepController(new ArmijoStepController());
-//		optimizer.setSolver(Solver.CG);
-//		optimizer.setError(1E-5);
-//		try {
-//			optimizer.minimize(u, hds);
-//		} catch (NotConvergentException e) {
-//			mon.setCanceled(true);
-//			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
-//		}
-//		mon.worked(1);
-//		
-//		// layout Euclidean
-//		mon.subTask("Layout");
-//		CDiskLayout.doLayout(hds, u, hds.calculateAlphas(u));
-//		mon.worked(1);
-//		
-//		// spherical mapping
-//		mon.subTask("Sphere mapping");
-//		for (CVertex v : hds.getVertices()) {
-//			Point t = v.getPosition();
-//			t.setX(t.x() / t.z());
-//			t.setY(t.y() / t.z());
-//			t.setZ(1.0);
-//		}
-//		normalizeBeforeProjection(hds, 10.0);
-//		inverseStereographicProjection(hds, 1.0);
-//		v0.setTextureCoord(new Point(0.0, 0.0, 1.0));
-//		try {
-//			CSphereNormalizer.normalize(hds);
-//		} catch (NotConvergentException e) {
-//			mon.setCanceled(true);
-//			throw new UnwrapException("Sphere normalization did not succeed: " + e.getMessage());
-//		}
-//		for (CVertex v : hds.getVertices()) {
-//			v.setPosition(v.getTextureCoord());
-//			Point p = v.getPosition();
-//			Point t = v.getTextureCoord();
-//			double U = Math.acos(p.z());
-//			double V = Math.acos(p.x() / Math.sin(U));
-//			t.setX(U);
-//			t.setY(V);
-//			t.setZ(1.0);
-//		}
-//		mon.worked(1);
+		int n = surface.prepareInvariantDataEuclidean();
+		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
+		
+		// optimization
+		DenseVector u = new DenseVector(n);
+		Matrix H = new CompRowMatrix(n,n, SparseUtility.makeNonZeros(surface));
+		NewtonOptimizer optimizer = new NewtonOptimizer(H);
+		optimizer.setStepController(new ArmijoStepController());
+		optimizer.setSolver(Solver.CG);
+		optimizer.setError(gradTolerance);
+		optimizer.setMaxIterations(maxIterations);
+		try {
+			optimizer.minimize(u, opt);
+		} catch (NotConvergentException e) {
+			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
+		}
+		
+		// layout Euclidean
+		EuclideanLayout.doLayout(surface, u);
+		
+		// spherical mapping
+		for (CoVertex v : surface.getVertices()) {
+			Point t = v.getPosition();
+			t.setX(t.x() / t.z());
+			t.setY(t.y() / t.z());
+			t.setZ(1.0);
+		}
+		normalizeBeforeProjection(surface, 10.0);
+		inverseStereographicProjection(surface, 1.0);
+		v0.setTextureCoord(new Point(0.0, 0.0, 1.0));
+		try {
+			SphericalNormalizer.normalize(surface);
+		} catch (NotConvergentException e) {
+			throw new UnwrapException("Sphere normalization did not succeed: " + e.getMessage());
+		}
+		for (CoVertex v : surface.getVertices()) {
+			v.setPosition(v.getTextureCoord());
+			Point p = v.getPosition();
+			Point t = v.getTextureCoord();
+			double U = Math.acos(p.z());
+			double V = Math.acos(p.x() / Math.sin(U));
+			t.setX(U);
+			t.setY(V);
+			t.setZ(1.0);
+		}
 		return null;
 	}
 
@@ -136,6 +144,17 @@ public class SphericalUnwrapper implements Unwrapper{
 	
 	}
 	
+
+	
+	@Override
+	public void setGradientTolerance(double tol) {
+		gradTolerance = tol;
+	}
+	
+	@Override
+	public void setMaxIterations(int maxIterations) {
+		this.maxIterations = maxIterations;
+	}
 	
 	
 	

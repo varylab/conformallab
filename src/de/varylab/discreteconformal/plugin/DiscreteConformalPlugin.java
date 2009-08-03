@@ -135,9 +135,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		modelPanel = new JPanel(),
 		visualizationPanel = new JPanel();
 	private SpinnerNumberModel
-		numConesModel = new SpinnerNumberModel(0, 0, 100, 1);
+		numConesModel = new SpinnerNumberModel(0, 0, 100, 1),
+		toleranceExpModel = new SpinnerNumberModel(-8, -30, -1, 1),
+		maxIterationsModel = new SpinnerNumberModel(150, 1, 10000, 1);
 	private JSpinner
-		numConesSpinner = new JSpinner(numConesModel);
+		numConesSpinner = new JSpinner(numConesModel),
+		toleranceExpSpinner = new JSpinner(toleranceExpModel),
+		maxIterationsSpinner = new JSpinner(maxIterationsModel);
 	private JCheckBox
 		showGeometry = new JCheckBox("Geometry", true),
 		showFundamentalPolygon = new JCheckBox("Fundamental Polygon"),
@@ -242,6 +246,18 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		numericsCombo.setLightWeightPopupEnabled(true);
 		numericsCombo.setSelectedIndex(0);
 		shrinkPanel.add(numericsCombo, c);
+		c.gridwidth = RELATIVE;
+		c.weightx = 0.0;
+		shrinkPanel.add(new JLabel("Tolerance Exp"), c);
+		c.gridwidth = REMAINDER;
+		c.weightx = 1.0;
+		shrinkPanel.add(toleranceExpSpinner, c);
+		c.gridwidth = RELATIVE;
+		c.weightx = 0.0;
+		shrinkPanel.add(new JLabel("Max Iterations"), c);
+		c.gridwidth = REMAINDER;
+		c.weightx = 1.0;
+		shrinkPanel.add(maxIterationsSpinner, c);
 		shrinkPanel.add(unwrapBtn, c);
 		
 		visualizationPanel.setBorder(BorderFactory.createTitledBorder("Visualization"));
@@ -304,6 +320,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		if (unwrapBtn == s) {
 			CoHDS surface = getLoaderGeometry();
 			Unwrap unwrapper = new Unwrap(surface);
+			unwrapper.setToleranceExponent(toleranceExpModel.getNumber().intValue());
+			unwrapper.setMaxIterations(maxIterationsModel.getNumber().intValue());
 			unwrapper.setNumCones(numConesModel.getNumber().intValue());
 			unwrapper.setQuantizeCones(quantizeChecker.isSelected());
 			unwrapper.setQuantizationMode((QuantizationMode)quantizationModeCombo.getSelectedItem());

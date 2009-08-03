@@ -14,6 +14,10 @@ import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
 public class CHyperbolicUnwrapper implements Unwrapper{
 
+	private double
+		gradTolerance = 1E-8;
+	private int
+		maxIterations = 150;
 	
 	public Vector unwrap(CoHDS surface) throws Exception {
 		surface.prepareInvariantDataHyperbolic();
@@ -26,14 +30,24 @@ public class CHyperbolicUnwrapper implements Unwrapper{
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
 		optimizer.setSolver(Solver.BiCGstab); 
-		optimizer.setError(1E-8);
-		optimizer.setMaxIterations(150);
+		optimizer.setError(gradTolerance);
+		optimizer.setMaxIterations(maxIterations);
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
 //			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
 		}
 		return u;
+	}
+	
+	@Override
+	public void setGradientTolerance(double tol) {
+		gradTolerance = tol;
+	}
+	
+	@Override
+	public void setMaxIterations(int maxIterations) {
+		this.maxIterations = maxIterations;
 	}
 	
 

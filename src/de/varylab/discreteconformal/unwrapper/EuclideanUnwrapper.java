@@ -23,9 +23,13 @@ public class EuclideanUnwrapper implements Unwrapper{
 	private QuantizationMode
 		quantizationMode = QuantizationMode.Quads;
 	private int 
+		maxIterations = 150,
 		numCones = 0;
 	private boolean
 		quantizeCones = false;
+	private double
+		gradTolerance = 1E-8;
+	
 	
 	
 	public Vector unwrap(CoHDS surface) throws Exception {
@@ -46,8 +50,8 @@ public class EuclideanUnwrapper implements Unwrapper{
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
 		optimizer.setSolver(Solver.CG);
-		optimizer.setError(1E-8);
-		optimizer.setMaxIterations(150);
+		optimizer.setError(gradTolerance);
+		optimizer.setMaxIterations(maxIterations);
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
@@ -86,5 +90,14 @@ public class EuclideanUnwrapper implements Unwrapper{
 		this.quantizationMode = quantizationMode;
 	}
 
+	@Override
+	public void setGradientTolerance(double tol) {
+		gradTolerance = tol;
+	}
+	
+	@Override
+	public void setMaxIterations(int maxIterations) {
+		this.maxIterations = maxIterations;
+	}
 	
 }
