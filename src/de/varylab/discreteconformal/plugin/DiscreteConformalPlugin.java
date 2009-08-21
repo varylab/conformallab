@@ -14,6 +14,7 @@ import static java.awt.Color.WHITE;
 import static java.awt.GridBagConstraints.RELATIVE;
 import static java.awt.GridBagConstraints.REMAINDER;
 import static java.lang.Math.PI;
+import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import geom3d.Point;
 
 import java.awt.GridBagConstraints;
@@ -21,10 +22,12 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -32,10 +35,12 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 import de.jreality.geometry.IndexedFaceSetFactory;
@@ -43,7 +48,6 @@ import de.jreality.geometry.IndexedFaceSetUtility;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
 import de.jreality.plugin.basic.View;
-import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.plugin.experimental.ManagedContent;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
@@ -282,13 +286,23 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
+		Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
 		if (SwingWorker.StateValue.DONE == evt.getNewValue()) {
 			Unwrap unwrapper = (Unwrap)evt.getSource();
 			if (unwrapper.isCancelled()) {
 				System.out.println("Unwrap jop cancelled: " + unwrapper.getState());
 				return;
 			}
-			surface = unwrapper.getSurface();
+			try {
+				surface = unwrapper.get();
+			} catch (InterruptedException e) {
+				return;
+			} catch (ExecutionException e) {
+				String name = e.getCause().getClass().getSimpleName();
+				String msg = e.getCause().getLocalizedMessage();
+				JOptionPane.showMessageDialog(w, msg, name, ERROR_MESSAGE);
+				return;
+			}
 			genus = unwrapper.genus;
 			if (genus > 0) {
 				cutInfo = unwrapper.cutInfo;
@@ -352,6 +366,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		managedContent.addContentUnique(getClass(), fundamentalPolygonRoot);
 		managedContent.addContentUnique(getClass(), universalCoverRoot);
 		managedContent.addToolUnique(getClass(), hyperbolicCopyTool);
+		managedContent.update();
 		surfaceRoot.setVisible(showGeometry.isSelected());
 		if (genus > 1) {
 			fundamentalPolygonRoot.setVisible(showUnwrapped.isSelected() && showFundamentalPolygon.isSelected());
@@ -528,7 +543,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	@Override
 	public void install(Controller c) throws Exception {
 		super.install(c);
-		c.getPlugin(ContentAppearance.class);
 		hcp = c.getPlugin(HalfedgeConnectorPlugin.class);
 		managedContent = c.getPlugin(ManagedContent.class);
 	}
@@ -545,6 +559,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		super.storeStates(c);
 		c.storeProperty(getClass(), "numCones", numConesModel.getNumber().intValue());
 		c.storeProperty(getClass(), "quantizeCones", quantizeChecker.isSelected());
+		c.storeProperty(getClass(), "quantizeMode", quantizationModeCombo.getSelectedItem());
 		c.storeProperty(getClass(), "numericsMethod", numericsCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "klein", kleinButton.isSelected()); 
 		c.storeProperty(getClass(), "showGeometry", showGeometry.isSelected());
@@ -554,9 +569,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		c.storeProperty(getClass(), "showUniversalCover", showUniversalCover.isSelected());
 		c.storeProperty(getClass(), "quantizationMode", quantizationModeCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected());
+		c.storeProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber());
+		c.storeProperty(getClass(), "maxIterations", maxIterationsModel.getNumber());
 	} 
 	
-
+ 
 	@Override
 	public void restoreStates(Controller c) throws Exception { 
 		super.restoreStates(c);
@@ -572,6 +589,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		showUniversalCover.setSelected(c.getProperty(getClass(), "showUniversalCover", showUniversalCover.isSelected()));
 		quantizationModeCombo.setSelectedIndex(c.getProperty(getClass(), "quantizationMode", quantizationModeCombo.getSelectedIndex()));
 		useProjectiveTexture.setSelected(c.getProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected()));
+		toleranceExpModel.setValue(c.getProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber()));
+		maxIterationsModel.setValue(c.getProperty(getClass(), "maxIterations", maxIterationsModel.getNumber()));
+		quantizationModeCombo.setSelectedItem(c.getProperty(getClass(), "quantizeMode", quantizationModeCombo.getSelectedItem()));
 	}
 	
 	

@@ -25,7 +25,7 @@ import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
-public class Unwrap extends SwingWorker<CoHDS, Object> {
+public class Unwrap extends SwingWorker<CoHDS, Void> {
 
 	private CoHDS
 		surface = null;
