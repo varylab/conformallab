@@ -20,6 +20,10 @@ import de.jtem.halfedge.jreality.standard.MyCoordinateAdapter;
 import de.jtem.halfedge.jreality.standard.MyTextCoordAdapter;
 import de.jtem.halfedge.jreality.standard.node.MyHDS;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.jrworkspace.plugin.Controller;
 import de.varylab.jrworkspace.plugin.PluginInfo;
 import de.varylab.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
@@ -33,11 +37,10 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 		
 	}
 	
-	
 	// plug-in connection
 	private ManagedContent
 		managedContent = null;
-	private HalfedgeConnectorPlugin
+	private HalfedgeConnectorPlugin<CoVertex, CoEdge, CoFace, CoHDS>
 		hcp = null;
 	
 	// ui components
@@ -85,6 +88,7 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 	
 	
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void install(Controller c) throws Exception {
 		super.install(c);

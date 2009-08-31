@@ -11,6 +11,7 @@ import de.jtem.halfedge.plugin.buildin.CatmullClarkPlugin;
 import de.jtem.halfedge.plugin.buildin.TriangulatePlugin;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.SurfaceRemeshingPlugin;
@@ -29,7 +30,7 @@ public class ConformalLab {
 		viewer.registerPlugin(new ManagedContentGUI());
 		viewer.registerPlugin(new SurfaceRemeshingPlugin());
 		viewer.registerPlugin(new DiscreteConformalPlugin());
-		viewer.registerPlugin(new HalfedgeConnectorPlugin());
+		viewer.registerPlugin(new HalfedgeConnectorPlugin<CoVertex, CoEdge, CoFace, CoHDS>());
 		viewer.registerPlugin(new HalfedgeDebuggerPlugin<CoVertex, CoEdge, CoFace>());
 		viewer.registerPlugin(new HalfedgeToolBar());
 		viewer.registerPlugin(new CatmullClarkPlugin());
