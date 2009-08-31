@@ -39,9 +39,9 @@ public class TexCoordAdapter implements TextCoordsAdapter2Ifs<CoVertex> {
 					return new double[] {t.x() / t.z(), t.y() / t.z()};
 				case Poincaré: 
 				default:
-					return new double[] {t.x() / t.z() + 1, t.y() / t.z() + 1};
+					return new double[] {t.x() / (t.z() + 1), t.y() / (t.z() + 1)};
 				case Halfplane:
-					return new double[] {t.y() / t.z() - t.x(), 1 / t.z() - t.x()};
+					return new double[] {t.y() / (t.z() - t.x()), 1 / (t.z() - t.x())};
 			}
 		}
 	}
