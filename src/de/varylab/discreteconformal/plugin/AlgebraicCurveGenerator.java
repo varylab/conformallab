@@ -125,7 +125,7 @@ public class AlgebraicCurveGenerator extends Plugin {
 		}
 		
 		if (HalfEdgeUtils.isValidSurface(hds2, true)) {
-			halfedgeConnectorPlugin.setHalfedgeContent(hds2, true, new PositionAdapter());
+			halfedgeConnectorPlugin.updateHalfedgeContent(hds2, true, new PositionAdapter());
 			JRViewerUtility.encompassEuclidean(scene);
 		}
 	}
