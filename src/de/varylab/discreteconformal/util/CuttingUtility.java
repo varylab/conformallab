@@ -7,6 +7,7 @@ import static de.jtem.halfedge.util.HalfEdgeUtils.isManifoldVertex;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,28 @@ public class CuttingUtility {
 			pathCutMap = new HashMap<Set<E>, Set<E>>();
 		public Map<V, V>
 			vertexCopyMap = new HashMap<V, V>();
+		
+		
+		public 
+		<VV extends Vertex<VV,EE,FF>,
+		 EE extends Edge<VV,EE,FF>,
+		 FF extends Face<VV,EE,FF>>
+		CuttingInfo<VV,EE,FF> copyToCombinatorialCopy(HalfEdgeDataStructure<VV,EE,FF> heds) {
+			CuttingInfo<VV,EE,FF> c = new CuttingInfo<VV,EE,FF>();
+			
+			List<Set<EE>> pp = new LinkedList<Set<EE>>();
+			for(Set<E> path : paths) {
+				Set<EE> np = new HashSet<EE>();
+				for(E e : path) {
+					np.add(heds.getEdge(e.getIndex()));
+				}
+				pp.add(np);
+			}
+			
+			c.paths = pp;
+			
+			return c;
+		}
 		
 		public Set<V> getCopies(V v) {
 			Set<V> copies = new TreeSet<V>(new NodeComparator<V>());

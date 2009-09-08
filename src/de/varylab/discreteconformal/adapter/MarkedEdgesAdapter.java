@@ -48,10 +48,18 @@ F extends Face<V,E,F>>  implements ColorAdapter2Ifs<Edge<?,?,?>>, RelRadiusAdapt
 	
 	private void updatePathColors() {
 		pathColors.clear();
+		if(context == null){
+			System.err.println("context not set in MarkedEdgesAdapter");
+		} else if (context.paths == null) {
+			System.err.println("invalid context in MarkedEdgesAdapter");
+		}
+		
+		int i = 0;
 		for (Set<E> path : context.paths) {
-			rnd.setSeed(path.size());
+			rnd.setSeed(i);
 			double[] color = new double[] {rnd.nextDouble(), rnd.nextDouble(), rnd.nextDouble()};
 			pathColors.put(path, color);
+			i++;
 		}
 	}
 	
@@ -63,8 +71,10 @@ F extends Face<V,E,F>>  implements ColorAdapter2Ifs<Edge<?,?,?>>, RelRadiusAdapt
 			if (path.contains(e) || path.contains(e.getOppositeEdge())) {
 				return pathColors.get(path);
 			}
-			if (coPath.contains(e) || coPath.contains(e.getOppositeEdge())) {
-				return pathColors.get(path);
+			if(coPath != null) {
+				if (coPath.contains(e) || coPath.contains(e.getOppositeEdge())) {
+					return pathColors.get(path);
+				}
 			}
 		}
 		return normalColor;
@@ -75,13 +85,15 @@ F extends Face<V,E,F>>  implements ColorAdapter2Ifs<Edge<?,?,?>>, RelRadiusAdapt
 		for (Set<E> path : context.paths) {
 			Set<E> coPath = context.pathCutMap.get(path);
 			if (path.contains(e) || path.contains(e.getOppositeEdge())) {
-				return 1.0;
+				return 3.0;
 			}
-			if (coPath.contains(e) || coPath.contains(e.getOppositeEdge())) {
-				return 1.0;
+			if(coPath != null) {
+				if (coPath.contains(e) || coPath.contains(e.getOppositeEdge())) {
+					return 3.0;
+				}
 			}
 		}
-		return 0.0;
+		return 0.5;
 	}
 	
 	
