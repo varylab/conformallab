@@ -5,7 +5,7 @@ import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isInteriorEdge;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isManifoldVertex;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -33,13 +33,14 @@ public class CuttingUtility {
 			cutRoot = null;
 		public Map<E, E>
 			edgeCutMap = new HashMap<E, E>();
-		public List<Set<E>>
-			paths = new ArrayList<Set<E>>();
+		public Map<Set<E>,Object>
+			paths = new HashMap<Set<E>, Object>();
 		public Map<Set<E>, Set<E>>
 			pathCutMap = new HashMap<Set<E>, Set<E>>();
 		public Map<V, V>
 			vertexCopyMap = new HashMap<V, V>();
-		
+		public Map<Set<E>, Object>
+			pathMap = new HashMap<Set<E>, Object>();
 		
 		public 
 		<VV extends Vertex<VV,EE,FF>,
@@ -48,16 +49,19 @@ public class CuttingUtility {
 		CuttingInfo<VV,EE,FF> copyToCombinatorialCopy(HalfEdgeDataStructure<VV,EE,FF> heds) {
 			CuttingInfo<VV,EE,FF> c = new CuttingInfo<VV,EE,FF>();
 			
-			List<Set<EE>> pp = new LinkedList<Set<EE>>();
-			for(Set<E> path : paths) {
+			Map<Set<EE>,Object> pp = new HashMap<Set<EE>,Object>();
+			for(Set<E> path : paths.keySet()) {
 				Set<EE> np = new HashSet<EE>();
+				Object a = paths.get(path);
 				for(E e : path) {
 					np.add(heds.getEdge(e.getIndex()));
 				}
-				pp.add(np);
+				pp.put(np,a);
 			}
 			
 			c.paths = pp;
+			
+				
 			
 			return c;
 		}
@@ -95,10 +99,69 @@ public class CuttingUtility {
 			}
 			return branches;
 		}
+		
+		public Object isRightIncomingOnCycle(E e) {
+
+			Object g = null;
+			
+			V targetV = e.getTargetVertex();
+			
+			for(Set<E> cycle : paths.keySet()) {
+				
+				Object toCompose = null;
+				
+				Set<V> verts = PathUtility.getUnorderedVerticesOnPath(cycle);
+				
+				if(cycle.contains(e.getOppositeEdge()) || cycle.contains(e)) {
+					toCompose = null;
+				} else 	if(verts.contains(targetV)) {
+					
+					E incomingCycle = null;
+					E outgoingCycle = null;
+					for(E c : cycle) {
+						if(c.getTargetVertex() == targetV)
+							incomingCycle = c;
+						if(c.getStartVertex() == targetV)
+							outgoingCycle = c;
+					}
+					if(incomingCycle == null || outgoingCycle == null){
+						System.err.println("cycle is defect: iC = " + incomingCycle + " oC = " + outgoingCycle);
+					} 
+					
+					if(incomingCycle == e) {
+						toCompose =  null;
+					}
+					
+					E nextOut = e.getNextEdge();
+					E nextIn = nextOut.getOppositeEdge();
+					
+					do {
+
+						if(nextOut == outgoingCycle) {
+							toCompose =  null;
+						}
+						
+						if(nextIn == incomingCycle) {
+							toCompose = paths.get(cycle);
+						}
+						
+						nextOut = nextIn.getNextEdge();
+						nextIn = nextOut.getOppositeEdge();
+						
+					} while(nextIn != e);
+				}  
+				
+				if(toCompose != null)
+					g = toCompose;
+				
+			}
+
+			return g;
+		}
 	
 	}
 	
-	
+
 	
 	public static <
 		V extends Vertex<V, E, F>,
@@ -108,9 +171,12 @@ public class CuttingUtility {
 	> CuttingInfo<V, E, F> cutManifoldToDisk(HDS hds, V root, WeightAdapter<E> wa) {
 		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
 		context.cutRoot = root;
-		context.paths = HomologyUtility.getGeneratorPaths(root, wa);
+		for(Set<E> path : HomologyUtility.getGeneratorPaths(root, wa)) {
+			// TODO what should we put here?
+			context.paths.put(path, null) ;
+		}
 		Set<E> masterPath = new TreeSet<E>(new NodeComparator<E>());
-		for (Set<E> path : context.paths) {
+		for (Set<E> path : context.paths.keySet()) {
 			masterPath.addAll(path);
 		}
 		for (E e : masterPath) { 
@@ -128,7 +194,7 @@ public class CuttingUtility {
 				}
 			}
 		}
-		for (Set<E> path : context.paths) {
+		for (Set<E> path : context.paths.keySet()) {
 			Set<E> coPath = new TreeSet<E>(new NodeComparator<E>());
 			context.pathCutMap.put(path, coPath);
 			for (E e : path) {

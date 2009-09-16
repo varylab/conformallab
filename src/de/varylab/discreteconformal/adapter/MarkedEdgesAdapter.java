@@ -55,7 +55,7 @@ F extends Face<V,E,F>>  implements ColorAdapter2Ifs<Edge<?,?,?>>, RelRadiusAdapt
 		}
 		
 		int i = 0;
-		for (Set<E> path : context.paths) {
+		for (Set<E> path : context.paths.keySet()) {
 			rnd.setSeed(i);
 			double[] color = new double[] {rnd.nextDouble(), rnd.nextDouble(), rnd.nextDouble()};
 			pathColors.put(path, color);
@@ -66,7 +66,7 @@ F extends Face<V,E,F>>  implements ColorAdapter2Ifs<Edge<?,?,?>>, RelRadiusAdapt
 	
 	@Override
 	public double[] getColor(Edge<?,?,?> e) {
-		for (Set<E> path : context.paths) {
+		for (Set<E> path : context.paths.keySet()) {
 			Set<E> coPath = context.pathCutMap.get(path);
 			if (path.contains(e) || path.contains(e.getOppositeEdge())) {
 				return pathColors.get(path);
@@ -77,19 +77,22 @@ F extends Face<V,E,F>>  implements ColorAdapter2Ifs<Edge<?,?,?>>, RelRadiusAdapt
 				}
 			}
 		}
+		if(context.isRightIncomingOnCycle((E)e)!=null || context.isRightIncomingOnCycle((E)e.getOppositeEdge()) != null) {
+			return new double[] {1,1,1,0};
+		}
 		return normalColor;
 	}
 	
 	@Override
 	public double getReelRadius(Edge<?,?,?> e) {
-		for (Set<E> path : context.paths) {
+		for (Set<E> path : context.paths.keySet()) {
 			Set<E> coPath = context.pathCutMap.get(path);
 			if (path.contains(e) || path.contains(e.getOppositeEdge())) {
-				return 3.0;
+				return 4.0;
 			}
 			if(coPath != null) {
 				if (coPath.contains(e) || coPath.contains(e.getOppositeEdge())) {
-					return 3.0;
+					return 4.0;
 				}
 			}
 		}

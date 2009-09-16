@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="DiscreteConformalLab/native"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="DiscreteConformalLab/native/linux64"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="src-test"/>
@@ -19,5 +19,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/jRWorkspaceSDK"/>
 	<classpathentry kind="lib" path="lib/jPETScTaoV1.6jPETScTao.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jreality"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/halfedge_utils"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
