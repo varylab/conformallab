@@ -21,14 +21,14 @@ import de.jtem.halfedge.algorithm.Coord3DAdapter;
 import de.jtem.halfedge.algorithm.catmullclark.CatmullClarkSubdivision;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.jrworkspace.plugin.Controller;
+import de.jtem.jrworkspace.plugin.Plugin;
+import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.varylab.discreteconformal.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.jrworkspace.plugin.Controller;
-import de.varylab.jrworkspace.plugin.Plugin;
-import de.varylab.jrworkspace.plugin.PluginInfo;
 
 public class AlgebraicCurveGenerator extends Plugin {
 

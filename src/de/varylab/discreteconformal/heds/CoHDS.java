@@ -3,7 +3,6 @@ package de.varylab.discreteconformal.heds;
 import static java.lang.Double.MAX_VALUE;
 import static java.lang.Math.PI;
 import static java.lang.Math.log;
-
 import geom3d.Point;
 
 import java.util.Collection;

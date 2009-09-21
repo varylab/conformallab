@@ -5,7 +5,6 @@ import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isInteriorEdge;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isManifoldVertex;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;

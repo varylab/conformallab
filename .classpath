@@ -16,7 +16,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/MTJOptimization"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedge_plugin"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedge_algorithm"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/jRWorkspaceSDK"/>
 	<classpathentry kind="lib" path="lib/jPETScTaoV1.6jPETScTao.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jreality"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedge_utils"/>

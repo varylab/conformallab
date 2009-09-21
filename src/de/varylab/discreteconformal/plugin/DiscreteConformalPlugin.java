@@ -52,7 +52,6 @@ import de.jreality.plugin.experimental.ManagedContent;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
-import de.jreality.scene.tool.Tool;
 import de.jreality.shader.ImageData;
 import de.jreality.shader.Texture2D;
 import de.jreality.shader.TextureUtility;
@@ -62,6 +61,10 @@ import de.jtem.halfedge.jreality.adapter.Adapter;
 import de.jtem.halfedge.jreality.adapter.CoordinateAdapter2Ifs;
 import de.jtem.halfedge.jreality.adapter.TextCoordsAdapter2Ifs;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
+import de.jtem.jrworkspace.plugin.Controller;
+import de.jtem.jrworkspace.plugin.PluginInfo;
+import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
+import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.adapter.MarkedEdgesAdapter;
 import de.varylab.discreteconformal.adapter.PointAdapter;
@@ -78,10 +81,6 @@ import de.varylab.discreteconformal.util.FundamentalDomainUtility;
 import de.varylab.discreteconformal.util.UniformizationUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;
-import de.varylab.jrworkspace.plugin.Controller;
-import de.varylab.jrworkspace.plugin.PluginInfo;
-import de.varylab.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
-import de.varylab.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ActionListener, PropertyChangeListener {
 
@@ -113,13 +112,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private Triangulator<CoVertex, CoEdge, CoFace>
 		triangulator = new Triangulator<CoVertex, CoEdge, CoFace>();
 
-	private MarkedEdgesAdapter
-		cutColorAdapter = new MarkedEdgesAdapter();
+	private MarkedEdgesAdapter<CoVertex, CoEdge, CoFace>
+		cutColorAdapter = new MarkedEdgesAdapter<CoVertex, CoEdge, CoFace>();
 	private PointAdapter
 		pointAdapter = new PointAdapter();
 	
-	private Tool
-		hyperbolicCopyTool = new HyperbolicCopyTool(this);
+//	private Tool
+//		hyperbolicCopyTool = new HyperbolicCopyTool(this);
 	private Appearance
 		universalCoverAppearance = new Appearance(),
 		surfaceAppearance = new Appearance();
@@ -365,7 +364,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		managedContent.addContentUnique(getClass(), copiedGeometry);
 		managedContent.addContentUnique(getClass(), fundamentalPolygonRoot);
 		managedContent.addContentUnique(getClass(), universalCoverRoot);
-		managedContent.addToolUnique(getClass(), hyperbolicCopyTool);
+//		managedContent.addToolUnique(getClass(), hyperbolicCopyTool);
 		managedContent.update();
 		surfaceRoot.setVisible(showGeometry.isSelected());
 		if (genus > 1) {

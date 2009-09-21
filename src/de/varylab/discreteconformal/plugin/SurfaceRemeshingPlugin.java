@@ -20,14 +20,14 @@ import de.jtem.halfedge.jreality.standard.MyCoordinateAdapter;
 import de.jtem.halfedge.jreality.standard.MyTextCoordAdapter;
 import de.jtem.halfedge.jreality.standard.node.MyHDS;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
+import de.jtem.jrworkspace.plugin.Controller;
+import de.jtem.jrworkspace.plugin.PluginInfo;
+import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
+import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.jrworkspace.plugin.Controller;
-import de.varylab.jrworkspace.plugin.PluginInfo;
-import de.varylab.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
-import de.varylab.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 
 public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionListener {
 

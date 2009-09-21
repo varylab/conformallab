@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import no.uib.cipr.matrix.Vector;
+import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Pn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.adapter.LengthMapWeightAdapter;
@@ -115,6 +116,10 @@ public class CHyperbolicLayout {
 	 * @param angleMapParam may be null
 	 */
 	public static CoVertex doLayout(CoHDS hds, CoVertex root, Vector u) {
+		System.out.println("Layout --------------------");
+		for (CoVertex v : hds.getVertices()) {
+			System.out.println("sum " + v.getIndex() + ": " + getAngleSum(v));
+		}
 		final Map<CoEdge, Double> lMap = getLengthMap(hds, u);
 		
 		final Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
@@ -187,6 +192,10 @@ public class CHyperbolicLayout {
 	
 	
 	private static Point layoutTriangle(Point A, Point B, double alpha, double d, double dP) {
+		
+		MatrixBuilder.hyperbolic().translate(B.x(), B.y(), -B.z());
+		
+		
 		Point BHat = new Point(B.x(), B.y(), -B.z());
 		Point AHat = new Point(A.x(), A.y(), -A.z());
 		Point lAB = normalize(new Point(A).cross(B).asPoint());

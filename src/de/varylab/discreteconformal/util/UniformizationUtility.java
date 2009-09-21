@@ -14,6 +14,7 @@ import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 import static java.util.Collections.sort;
 import geom3d.Point;
+import halfedge.triangulationutilities.TriangulationException;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;

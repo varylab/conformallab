@@ -12,15 +12,12 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.jreality.adapter.ColorAdapter2Ifs;
 import de.jtem.halfedge.jreality.adapter.RelRadiusAdapter2Ifs;
-import de.varylab.discreteconformal.heds.CoEdge;
-import de.varylab.discreteconformal.heds.CoFace;
-import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class MarkedEdgesAdapter
 <V extends Vertex<V,E,F>,
 E extends Edge<V,E,F>,
-F extends Face<V,E,F>>  implements ColorAdapter2Ifs<Edge<?,?,?>>, RelRadiusAdapter2Ifs<Edge<?,?,?>> {
+F extends Face<V,E,F>>  implements ColorAdapter2Ifs<E>, RelRadiusAdapter2Ifs<E> {
 
 	private CuttingInfo<V, E, F>
 		context = new CuttingInfo<V, E, F>();
@@ -65,7 +62,7 @@ F extends Face<V,E,F>>  implements ColorAdapter2Ifs<Edge<?,?,?>>, RelRadiusAdapt
 	
 	
 	@Override
-	public double[] getColor(Edge<?,?,?> e) {
+	public double[] getColor(E e) {
 		for (Set<E> path : context.paths.keySet()) {
 			Set<E> coPath = context.pathCutMap.get(path);
 			if (path.contains(e) || path.contains(e.getOppositeEdge())) {
@@ -84,7 +81,7 @@ F extends Face<V,E,F>>  implements ColorAdapter2Ifs<Edge<?,?,?>>, RelRadiusAdapt
 	}
 	
 	@Override
-	public double getReelRadius(Edge<?,?,?> e) {
+	public double getReelRadius(E e) {
 		for (Set<E> path : context.paths.keySet()) {
 			Set<E> coPath = context.pathCutMap.get(path);
 			if (path.contains(e) || path.contains(e.getOppositeEdge())) {
