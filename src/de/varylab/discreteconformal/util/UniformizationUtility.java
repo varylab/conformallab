@@ -14,7 +14,6 @@ import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 import static java.util.Collections.sort;
 import geom3d.Point;
-import halfedge.triangulationutilities.TriangulationException;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -39,6 +38,7 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.plugin.AnnotationAdapter.EdgeAnnotation;
 import de.jtem.halfedge.plugin.AnnotationAdapter.VertexAnnotation;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedge.util.triangulationutilities.TriangulationException;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;

@@ -8,16 +8,12 @@
 	<classpathentry kind="src" path="src-test"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedge"/>
 	<classpathentry kind="lib" path="lib/mtj.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/jreality_halfedge"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/CurvatureGeometry"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/halfedge_functional"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/MTJOptimization"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/halfedge_plugin"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/halfedge_algorithm"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/halfedgeExtensions"/>
 	<classpathentry kind="lib" path="lib/jPETScTaoV1.6jPETScTao.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jreality"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/halfedge_utils"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

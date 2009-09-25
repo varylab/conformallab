@@ -16,9 +16,9 @@ import de.jreality.plugin.basic.View;
 import de.jreality.plugin.experimental.ManagedContent;
 import de.jtem.halfedge.jreality.adapter.Adapter;
 import de.jtem.halfedge.jreality.adapter.Adapter.AdapterType;
-import de.jtem.halfedge.jreality.standard.MyCoordinateAdapter;
-import de.jtem.halfedge.jreality.standard.MyTextCoordAdapter;
-import de.jtem.halfedge.jreality.standard.node.MyHDS;
+import de.jtem.halfedge.jreality.adapter.standard.StandardCoordinateAdapter;
+import de.jtem.halfedge.jreality.adapter.standard.StandardTextCoordAdapter;
+import de.jtem.halfedge.jreality.node.standard.StandardHDS;
 import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
@@ -72,9 +72,9 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 	
 	
 	private void remeshSurface() {
-		Adapter a1 = new MyCoordinateAdapter(AdapterType.VERTEX_ADAPTER);
-		Adapter a2 = new MyTextCoordAdapter(AdapterType.VERTEX_ADAPTER);
-		MyHDS hds = hcp.getHalfedgeContent(a1, a2);
+		Adapter a1 = new StandardCoordinateAdapter(AdapterType.VERTEX_ADAPTER);
+		Adapter a2 = new StandardTextCoordAdapter(AdapterType.VERTEX_ADAPTER);
+		StandardHDS hds = hcp.getHalfedgeContent(a1, a2);
 		if (hds == null) {
 			return;
 		}
