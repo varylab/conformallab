@@ -12,7 +12,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/MTJOptimization"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/halfedgeExtensions"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/halfedgeTools"/>
 	<classpathentry kind="lib" path="lib/jPETScTaoV1.6jPETScTao.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jreality"/>
 	<classpathentry kind="output" path="bin"/>
