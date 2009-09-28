@@ -22,9 +22,9 @@ import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.ui.viewerapp.ViewerApp;
 import de.jreality.util.Input;
-import de.jtem.halfedge.jreality.ConverterHeds2JR;
-import de.jtem.halfedge.jreality.ConverterJR2Heds;
-import de.jtem.halfedge.jreality.adapter.ColorAdapter2Ifs;
+import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
+import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
+import de.jtem.halfedgetools.jreality.adapter.ColorAdapter2Ifs;
 import de.varylab.discreteconformal.adapter.PositionAdapter;
 import de.varylab.discreteconformal.util.SpanningTreeUtility;
 

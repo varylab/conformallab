@@ -1,9 +1,9 @@
 package de.varylab.discreteconformal.adapter;
 
-import static de.jtem.halfedge.jreality.adapter.Adapter.AdapterType.VERTEX_ADAPTER;
+import static de.jtem.halfedgetools.jreality.adapter.Adapter.AdapterType.VERTEX_ADAPTER;
 import geom3d.Point;
-import de.jtem.halfedge.jreality.adapter.CoordinateAdapter2Heds;
-import de.jtem.halfedge.jreality.adapter.CoordinateAdapter2Ifs;
+import de.jtem.halfedgetools.jreality.adapter.CoordinateAdapter2Heds;
+import de.jtem.halfedgetools.jreality.adapter.CoordinateAdapter2Ifs;
 import de.varylab.discreteconformal.heds.CoVertex;
 
 public class PositionAdapter implements CoordinateAdapter2Heds<CoVertex>,

@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.adapter;
 
-import static de.jtem.halfedge.jreality.adapter.Adapter.AdapterType.EDGE_ADAPTER;
+import static de.jtem.halfedgetools.jreality.adapter.Adapter.AdapterType.EDGE_ADAPTER;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,8 +10,8 @@ import java.util.Set;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.Vertex;
-import de.jtem.halfedge.jreality.adapter.ColorAdapter2Ifs;
-import de.jtem.halfedge.jreality.adapter.RelRadiusAdapter2Ifs;
+import de.jtem.halfedgetools.jreality.adapter.ColorAdapter2Ifs;
+import de.jtem.halfedgetools.jreality.adapter.RelRadiusAdapter2Ifs;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class MarkedEdgesAdapter

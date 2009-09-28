@@ -1,12 +1,12 @@
 package de.varylab.discreteconformal.adapter;
 
-import static de.jtem.halfedge.jreality.adapter.Adapter.AdapterType.VERTEX_ADAPTER;
+import static de.jtem.halfedgetools.jreality.adapter.Adapter.AdapterType.VERTEX_ADAPTER;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import de.jtem.halfedge.jreality.adapter.ColorAdapter2Ifs;
-import de.jtem.halfedge.jreality.adapter.RelRadiusAdapter2Ifs;
+import de.jtem.halfedgetools.jreality.adapter.ColorAdapter2Ifs;
+import de.jtem.halfedgetools.jreality.adapter.RelRadiusAdapter2Ifs;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoVertex;

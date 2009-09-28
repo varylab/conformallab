@@ -18,8 +18,8 @@ import de.jreality.scene.data.Attribute;
 import de.jreality.scene.data.StringArray;
 import de.jreality.ui.viewerapp.ViewerApp;
 import de.jreality.util.Input;
-import de.jtem.halfedge.jreality.ConverterHeds2JR;
-import de.jtem.halfedge.jreality.ConverterJR2Heds;
+import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
+import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.varylab.discreteconformal.adapter.PositionAdapter;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout;
 

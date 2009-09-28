@@ -1,7 +1,7 @@
 package de.varylab.discreteconformal.adapter;
 
 import geom3d.Point;
-import de.jtem.halfedge.jreality.adapter.TextCoordsAdapter2Ifs;
+import de.jtem.halfedgetools.jreality.adapter.TextCoordsAdapter2Ifs;
 import de.varylab.discreteconformal.heds.CoVertex;
 
 public class TexCoordAdapter implements TextCoordsAdapter2Ifs<CoVertex> {

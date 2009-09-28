@@ -9,12 +9,12 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import de.jtem.halfedge.HalfEdgeDataStructure;
-import de.jtem.halfedge.functional.DomainValue;
 import de.jtem.halfedge.functional.MyEnergy;
 import de.jtem.halfedge.functional.conformal.ConformalEuclideanFunctional;
 import de.jtem.halfedge.functional.conformal.ConformalHyperbolicFunctional;
 import de.jtem.halfedge.functional.conformal.ConformalAdapters.InitialEnergy;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.functional.DomainValue;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;

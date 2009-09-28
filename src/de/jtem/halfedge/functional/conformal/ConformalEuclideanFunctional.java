@@ -14,16 +14,16 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
-import de.jtem.halfedge.functional.DomainValue;
-import de.jtem.halfedge.functional.Energy;
-import de.jtem.halfedge.functional.Functional;
-import de.jtem.halfedge.functional.Gradient;
-import de.jtem.halfedge.functional.Hessian;
 import de.jtem.halfedge.functional.conformal.ConformalAdapters.Alpha;
 import de.jtem.halfedge.functional.conformal.ConformalAdapters.InitialEnergy;
 import de.jtem.halfedge.functional.conformal.ConformalAdapters.Lambda;
 import de.jtem.halfedge.functional.conformal.ConformalAdapters.Theta;
 import de.jtem.halfedge.functional.conformal.ConformalAdapters.Variable;
+import de.jtem.halfedgetools.functional.DomainValue;
+import de.jtem.halfedgetools.functional.Energy;
+import de.jtem.halfedgetools.functional.Functional;
+import de.jtem.halfedgetools.functional.Gradient;
+import de.jtem.halfedgetools.functional.Hessian;
 
 public class ConformalEuclideanFunctional <
 	V extends Vertex<V, E, F>,

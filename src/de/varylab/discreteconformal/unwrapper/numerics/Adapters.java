@@ -1,11 +1,11 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
-import de.jtem.halfedge.functional.Energy;
 import de.jtem.halfedge.functional.conformal.ConformalAdapters.Alpha;
 import de.jtem.halfedge.functional.conformal.ConformalAdapters.InitialEnergy;
 import de.jtem.halfedge.functional.conformal.ConformalAdapters.Lambda;
 import de.jtem.halfedge.functional.conformal.ConformalAdapters.Theta;
 import de.jtem.halfedge.functional.conformal.ConformalAdapters.Variable;
+import de.jtem.halfedgetools.functional.Energy;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoVertex;

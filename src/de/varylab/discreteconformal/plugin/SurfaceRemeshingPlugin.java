@@ -14,12 +14,12 @@ import javax.swing.SwingUtilities;
 
 import de.jreality.plugin.basic.View;
 import de.jreality.plugin.experimental.ManagedContent;
-import de.jtem.halfedge.jreality.adapter.Adapter;
-import de.jtem.halfedge.jreality.adapter.Adapter.AdapterType;
-import de.jtem.halfedge.jreality.adapter.standard.StandardCoordinateAdapter;
-import de.jtem.halfedge.jreality.adapter.standard.StandardTextCoordAdapter;
-import de.jtem.halfedge.jreality.node.standard.StandardHDS;
-import de.jtem.halfedge.plugin.HalfedgeConnectorPlugin;
+import de.jtem.halfedgetools.jreality.adapter.Adapter;
+import de.jtem.halfedgetools.jreality.adapter.Adapter.AdapterType;
+import de.jtem.halfedgetools.jreality.adapter.standard.StandardCoordinateAdapter;
+import de.jtem.halfedgetools.jreality.adapter.standard.StandardTextCoordAdapter;
+import de.jtem.halfedgetools.jreality.node.standard.StandardHDS;
+import de.jtem.halfedgetools.plugin.HalfedgeConnectorPlugin;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
