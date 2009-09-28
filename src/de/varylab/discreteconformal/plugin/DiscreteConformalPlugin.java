@@ -15,6 +15,7 @@ import static java.awt.GridBagConstraints.RELATIVE;
 import static java.awt.GridBagConstraints.REMAINDER;
 import static java.lang.Math.PI;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
+import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
 import geom3d.Point;
 
 import java.awt.GridBagConstraints;
@@ -299,7 +300,14 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			} catch (ExecutionException e) {
 				String name = e.getCause().getClass().getSimpleName();
 				String msg = e.getCause().getLocalizedMessage();
-				JOptionPane.showMessageDialog(w, msg, name, ERROR_MESSAGE);
+				StringBuffer stackBuffer = new StringBuffer(name + ": " + msg + "\n");
+				for (StackTraceElement ste : e.getCause().getStackTrace()) {
+					stackBuffer.append(ste.toString() + "\n");
+				}
+				int result = JOptionPane.showConfirmDialog(w, msg + "\nShow stack trace?", name, OK_CANCEL_OPTION, ERROR_MESSAGE);
+				if (result == JOptionPane.OK_OPTION) {
+					JOptionPane.showMessageDialog(w, stackBuffer.toString(), name, ERROR_MESSAGE);
+				}
 				return;
 			}
 			genus = unwrapper.genus;

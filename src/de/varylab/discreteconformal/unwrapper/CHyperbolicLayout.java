@@ -156,7 +156,7 @@ public class CHyperbolicLayout {
 			while (e != outE) {
 				final CoEdge next = e.getNextEdge();
 				final CoEdge prev = e.getPreviousEdge();
-				final CoVertex aVertex = next.getTargetVertex();
+				final CoVertex aVertex = prev.getStartVertex();
 				final CoVertex bVertex = prev.getTargetVertex();
 				final CoVertex cVertex = e.getTargetVertex();
 
@@ -193,9 +193,21 @@ public class CHyperbolicLayout {
 	
 	private static Point layoutTriangle(Point A, Point B, double alpha, double d, double dP) {
 		
-		MatrixBuilder.hyperbolic().translate(B.x(), B.y(), -B.z());
+		double distAB = Pn.distanceBetween(A.get(), B.get(), Pn.HYPERBOLIC);
+		MatrixBuilder T = MatrixBuilder.hyperbolic();
+		T.translateFromTo(B.get(), new double[] {0,0,1});
+		T.scale(d / distAB);
+		T.rotate(alpha, new double[] {0,0,1});
+		T.translateFromTo(new double[] {0,0,1}, B.get());
+		double[] cArr = T.getMatrix().multiplyVector(A.get());
+		Point C = new Point(cArr);
+		double dist = Pn.distanceBetween(C.get(), A.get(), Pn.HYPERBOLIC);
+		if (Math.abs(dist - dP) > 1E-5) {
+			return null;
+		}
+		return C;
 		
-		
+		/*
 		Point BHat = new Point(B.x(), B.y(), -B.z());
 		Point AHat = new Point(A.x(), A.y(), -A.z());
 		Point lAB = normalize(new Point(A).cross(B).asPoint());
@@ -221,6 +233,7 @@ public class CHyperbolicLayout {
 		} else {
 			return null;
 		}
+		*/
 	}
 	
 	
