@@ -1,9 +1,7 @@
-package de.varylab.discreteconformal.heds;
+package de.jtem.halfedgetools.functional.conformal.hds;
 
-import static java.lang.Double.MAX_VALUE;
 import static java.lang.Math.PI;
 import static java.lang.Math.log;
-import geom3d.Point;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -15,19 +13,18 @@ import de.jtem.halfedgetools.functional.MyEnergy;
 import de.jtem.halfedgetools.functional.conformal.ConformalEuclideanFunctional;
 import de.jtem.halfedgetools.functional.conformal.ConformalHyperbolicFunctional;
 import de.jtem.halfedgetools.functional.conformal.ConformalAdapters.InitialEnergy;
-import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
-import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
-import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
-import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
-import de.varylab.discreteconformal.unwrapper.numerics.Adapters.ConformalEnergy;
+import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CAlpha;
+import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CLambda;
+import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CTheta;
+import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CVariable;
 
-public class CoHDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> {
+public class ConformalHDS extends HalfEdgeDataStructure<MyConformalVertex, MyConformalEdge, MyConformalFace> {
 
 	private boolean
 		texCoordinatesValid = false;
 	
-	public CoHDS() {
-		super(CoVertex.class, CoEdge.class, CoFace.class);
+	public ConformalHDS() {
+		super(MyConformalVertex.class, MyConformalEdge.class, MyConformalFace.class);
 	}
 
 	
@@ -36,7 +33,7 @@ public class CoHDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> {
 	 * @return the dimension of the parameter space
 	 */
 	public int prepareInvariantDataEuclidean() {
-		HashSet<CoVertex> b = new HashSet<CoVertex>();
+		HashSet<MyConformalVertex> b = new HashSet<MyConformalVertex>();
 		b.addAll(HalfEdgeUtils.boundaryVertices(this));
 		return prepareInvariantDataEuclidean(b);
 	}
@@ -47,7 +44,7 @@ public class CoHDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> {
 	 * @return the dimension of the parameter space
 	 */
 	public int prepareInvariantDataHyperbolic() {
-		HashSet<CoVertex> b = new HashSet<CoVertex>();
+		HashSet<MyConformalVertex> b = new HashSet<MyConformalVertex>();
 		b.addAll(HalfEdgeUtils.boundaryVertices(this));
 		return prepareInvariantDataHyperbolic(b);
 	}
@@ -58,16 +55,16 @@ public class CoHDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> {
 	 * @param boundary the boundary vertices which do not belong to the solver system
 	 * @return the dimension of the parameter space
 	 */
-	public int prepareInvariantDataEuclidean(Collection<CoVertex> boundary) {
+	public int prepareInvariantDataEuclidean(Collection<MyConformalVertex> boundary) {
 		// set initial lambdas
-		for (final CoEdge e : getPositiveEdges()) {
+		for (final MyConformalEdge e : getPositiveEdges()) {
 			final double l = e.getLength();
 			e.setLambda(log(l));
 			e.getOppositeEdge().setLambda(e.getLambda());
 		}
 		// set thetas and solver indices
 		int dim = 0;
-		for (final CoVertex v : getVertices()) {
+		for (final MyConformalVertex v : getVertices()) {
 			if (boundary.contains(v)) {
 				v.setTheta(0.0);
 				v.setSolverIndex(-1);
@@ -84,8 +81,8 @@ public class CoHDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> {
 		CTheta theta = new CTheta();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		MyEnergy E = new MyEnergy();
-		ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace, ZeroU> func = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace, ZeroU>(var, theta, lambda, alpha, zeroEnergy);
-		for (final CoFace f : getFaces()) {
+		ConformalEuclideanFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace, ZeroU> func = new ConformalEuclideanFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace, ZeroU>(var, theta, lambda, alpha, zeroEnergy);
+		for (final MyConformalFace f : getFaces()) {
 			E.setZero();
 			func.triangleEnergyAndAlphas(this, zeroU, f, E);
 			f.setInitialEnergy(E.get());
@@ -98,16 +95,16 @@ public class CoHDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> {
 	 * @param boundary the boundary vertices which do not belong to the solver system
 	 * @return the dimension of the parameter space
 	 */
-	public int prepareInvariantDataHyperbolic(Collection<CoVertex> boundary) {
+	public int prepareInvariantDataHyperbolic(Collection<MyConformalVertex> boundary) {
 		// set initial lambdas
-		for (final CoEdge e : getPositiveEdges()) {
+		for (final MyConformalEdge e : getPositiveEdges()) {
 			final double l = e.getLength();
-			e.setLambda(2*log(l));
+			e.setLambda(2 * log(l));
 			e.getOppositeEdge().setLambda(e.getLambda());
 		}
 		// set thetas and solver indices
 		int dim = 0;
-		for (final CoVertex v : getVertices()) {
+		for (final MyConformalVertex v : getVertices()) {
 			if (boundary.contains(v)) {
 				v.setTheta(0.0);
 				v.setSolverIndex(-1);
@@ -123,9 +120,9 @@ public class CoHDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> {
 		CTheta theta = new CTheta();
 		CAlpha alpha = new CAlpha();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
-		ConformalEnergy E = new ConformalEnergy();
-		ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace, ZeroU> func = new ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace, ZeroU>(var, theta, lambda, alpha, zeroEnergy);
-		for (final CoFace f : getFaces()) {
+		MyEnergy E = new MyEnergy();
+		ConformalHyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace, ZeroU> func = new ConformalHyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace, ZeroU>(var, theta, lambda, alpha, zeroEnergy);
+		for (final MyConformalFace f : getFaces()) {
 			E.setZero();
 			func.triangleEnergyAndAlphas(zeroU, f, E);
 			f.setInitialEnergy(E.get());
@@ -135,9 +132,9 @@ public class CoHDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> {
 	
 	
 	
-	private class ZeroInitialEnergy implements InitialEnergy<CoFace> {
+	private class ZeroInitialEnergy implements InitialEnergy<MyConformalFace> {
 		@Override
-		public double getInitialEnergy(CoFace f) {
+		public double getInitialEnergy(MyConformalFace f) {
 			return 0.0;
 		}
 	}
@@ -167,32 +164,5 @@ public class CoHDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> {
 	public void setTexCoordinatesValid(boolean texCoordinatesValid) {
 		this.texCoordinatesValid = texCoordinatesValid;
 	}
-	
-	
-	public void normalizeCoordinates() {
-		double[][] bounds = new double[][]{{MAX_VALUE, -MAX_VALUE},{MAX_VALUE, -MAX_VALUE},{MAX_VALUE, -MAX_VALUE}};
-		for (CoVertex v : getVertices()) {
-			Point p = v.getPosition();
-			bounds[0][0] = p.x() < bounds[0][0] ? p.x() : bounds[0][0];
-			bounds[0][1] = p.x() > bounds[0][1] ? p.x() : bounds[0][1];
-			bounds[1][0] = p.y() < bounds[1][0] ? p.y() : bounds[1][0];
-			bounds[1][1] = p.y() > bounds[1][1] ? p.y() : bounds[1][1];
-			bounds[2][0] = p.z() < bounds[2][0] ? p.z() : bounds[2][0];
-			bounds[2][1] = p.z() > bounds[2][1] ? p.z() : bounds[2][1];
-		}
-		double xExtend = Math.abs(bounds[0][1] - bounds[0][0]);
-		double yExtend = Math.abs(bounds[1][1] - bounds[1][0]);
-		double zExtend = Math.abs(bounds[2][1] - bounds[2][0]);
-		double max = Math.max(xExtend, Math.max(yExtend, zExtend));
-		double xCenter = (bounds[0][1] + bounds[0][0]) / 2 / max;
-		double yCenter = (bounds[1][1] + bounds[1][0]) / 2 / max;
-		double zCenter = (bounds[2][1] + bounds[2][0]) / 2 / max;
-		for (CoVertex v : getVertices()) {
-			Point p = v.getPosition();
-			p.times(1 / max);
-			p.move(new geom3d.Vector(-xCenter, -yCenter, -zCenter));
-		}
-	}
-	
 	
 }

@@ -7,8 +7,8 @@ import geom3d.Vector;
 
 import java.util.List;
 
-import de.jtem.halfedge.functional.conformal.node.ConformalFace;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.functional.conformal.node.ConformalFace;
 
 public class CoFace extends ConformalFace<CoVertex, CoEdge, CoFace> {
 

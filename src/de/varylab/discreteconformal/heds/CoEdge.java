@@ -2,7 +2,7 @@ package de.varylab.discreteconformal.heds;
 
 import geom3d.Point;
 import geom3d.Vector;
-import de.jtem.halfedge.functional.conformal.node.ConformalEdge;
+import de.jtem.halfedgetools.functional.conformal.node.ConformalEdge;
 import de.varylab.discreteconformal.util.MeshUtility;
 
 public class CoEdge extends ConformalEdge<CoVertex, CoEdge, CoFace> {

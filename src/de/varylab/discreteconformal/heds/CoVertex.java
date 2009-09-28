@@ -2,7 +2,7 @@ package de.varylab.discreteconformal.heds;
 
 import geom3d.Point;
 import geom3d.Vector;
-import de.jtem.halfedge.functional.conformal.node.ConformalVertex;
+import de.jtem.halfedgetools.functional.conformal.node.ConformalVertex;
 import de.varylab.discreteconformal.heds.bsp.HasPosition;
 
 public class CoVertex extends ConformalVertex<CoVertex, CoEdge, CoFace> implements HasPosition {

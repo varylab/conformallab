@@ -1,4 +1,4 @@
-package de.jtem.halfedge.functional.conformal;
+package de.jtem.halfedgetools.functional.conformal;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;

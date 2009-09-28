@@ -2,10 +2,10 @@ package de.varylab.discreteconformal.unwrapper.numerics;
 
 import static de.varylab.jpetsc.InsertMode.INSERT_VALUES;
 import static de.varylab.jtao.TaoAppAddHess.PreconditionerType.SAME_NONZERO_PATTERN;
-import de.jtem.halfedge.functional.conformal.ConformalEuclideanFunctional;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
+import de.jtem.halfedgetools.functional.conformal.ConformalEuclideanFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
