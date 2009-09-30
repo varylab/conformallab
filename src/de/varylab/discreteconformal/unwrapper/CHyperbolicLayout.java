@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import no.uib.cipr.matrix.Vector;
-import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Pn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.adapter.LengthMapWeightAdapter;
@@ -172,14 +171,18 @@ public class CHyperbolicLayout {
 					Point A = aVertex.getTextureCoord();
 					Point B = bVertex.getTextureCoord();
 					
-					Point C = layoutTriangle(A, B, alpha, d, dCheck);
+					Point C = null;
+					try {
+						C = layoutTriangle(A, B, alpha, d, dCheck);
+					} catch (Exception e2) {
+						System.out.print(".");
+						//e2.printStackTrace();
+					}
 					if (C != null) {
 						cVertex.setTextureCoord(C);
 						visited.add(cVertex);
 						Qv.offer(cVertex);
 						Qe.offer(e);
-					} else {
-						break;
 					}
 				}
 				e = e.getOppositeEdge().getNextEdge();
@@ -191,8 +194,8 @@ public class CHyperbolicLayout {
 	
 	
 	
-	private static Point layoutTriangle(Point A, Point B, double alpha, double d, double dP) {
-		
+	private static Point layoutTriangle(Point A, Point B, double alpha, double d, double dP) throws Exception {
+		/*
 		double distAB = Pn.distanceBetween(A.get(), B.get(), Pn.HYPERBOLIC);
 		MatrixBuilder T = MatrixBuilder.hyperbolic();
 		T.translateFromTo(B.get(), new double[] {0,0,1});
@@ -200,14 +203,15 @@ public class CHyperbolicLayout {
 		T.rotate(alpha, new double[] {0,0,1});
 		T.translateFromTo(new double[] {0,0,1}, B.get());
 		double[] cArr = T.getMatrix().multiplyVector(A.get());
+		Pn.normalize(cArr, cArr, Pn.HYPERBOLIC);
 		Point C = new Point(cArr);
 		double dist = Pn.distanceBetween(C.get(), A.get(), Pn.HYPERBOLIC);
 		if (Math.abs(dist - dP) > 1E-5) {
 			return null;
 		}
 		return C;
-		
-		/*
+		*/
+//		/*
 		Point BHat = new Point(B.x(), B.y(), -B.z());
 		Point AHat = new Point(A.x(), A.y(), -A.z());
 		Point lAB = normalize(new Point(A).cross(B).asPoint());
@@ -233,7 +237,7 @@ public class CHyperbolicLayout {
 		} else {
 			return null;
 		}
-		*/
+//		*/
 	}
 	
 	

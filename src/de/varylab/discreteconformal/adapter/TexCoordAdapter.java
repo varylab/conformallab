@@ -1,10 +1,11 @@
 package de.varylab.discreteconformal.adapter;
 
 import geom3d.Point;
+import de.jtem.halfedgetools.jreality.adapter.TextCoordsAdapter2Heds;
 import de.jtem.halfedgetools.jreality.adapter.TextCoordsAdapter2Ifs;
 import de.varylab.discreteconformal.heds.CoVertex;
 
-public class TexCoordAdapter implements TextCoordsAdapter2Ifs<CoVertex> {
+public class TexCoordAdapter implements TextCoordsAdapter2Ifs<CoVertex>, TextCoordsAdapter2Heds<CoVertex> {
 
 	private HyperbolicModel
 		model = HyperbolicModel.Klein;
@@ -57,6 +58,16 @@ public class TexCoordAdapter implements TextCoordsAdapter2Ifs<CoVertex> {
 	
 	public void setProjective(boolean projective) {
 		this.projective = projective;
+	}
+
+	@Override
+	public void setTextCoordinate(CoVertex node, double[] textCoords) {
+		if (textCoords.length == 2) {
+			node.getTextureCoord().get()[0] = textCoords[0];
+			node.getTextureCoord().get()[1] = textCoords[1];
+			return;
+		}
+		node.getTextureCoord().set(textCoords);
 	}
 
 }
