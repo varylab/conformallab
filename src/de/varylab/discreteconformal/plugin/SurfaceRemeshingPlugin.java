@@ -9,7 +9,9 @@ import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
@@ -110,8 +112,8 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 		System.out.println("x[" + minX + ":" + maxX + "], y[" + minY + ":" + maxY + "]");
 		double xSpan = maxX - minX;
 		double ySpan = maxY - minY;
-		int xRes = 200;
-		int yRes = 200;
+		int xRes = 100;
+		int yRes = 100;
 		double xStep = xSpan / xRes;
 		double yStep = ySpan / yRes;
 		CoHDS r = new CoHDS();
@@ -140,25 +142,28 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 			vArr[index++] = pt;
 		}
 		
-		KdTree<PositionTexcoord> kdTree = new KdTree<PositionTexcoord>(vArr, 20, true);
+		KdTree<PositionTexcoord> kdTree = new KdTree<PositionTexcoord>(vArr, 20, false);
+		Set<CoVertex> cutted = new HashSet<CoVertex>(r.getVertices());
 		for (CoVertex v : r.getVertices()) {
-			PositionTexcoord ref = kdTree.collectKNearest(v, 1).firstElement();
-			CoVertex refV = ref.getVertex();
-//			v.setPosition(refV.getPosition());
-			v.setTextureCoord(refV.getTextureCoord());
-			for (CoFace f : HalfEdgeUtils.facesIncidentWithVertex(refV)) {
-				List<CoVertex> b = HalfEdgeUtils.boundaryVertices(f);
-				Triangle tTex = new Triangle(b.get(0).getTextureCoord(), b.get(1).getTextureCoord(), b.get(2).getTextureCoord());
-				Triangle tPos = new Triangle(b.get(0).getPosition(), b.get(1).getPosition(), b.get(2).getPosition());
-//				System.out.println("check: " + tTex + ", " + v.getPosition());
-				if (isInTriangle(v.getPosition(), tTex, 1E-10)) {
-					Point bary = getBarycentic(v.getPosition(), tTex);
-					Point newPos = getCoordinate(bary, tPos);
-					v.setPosition(newPos);
-					break;
+			for (PositionTexcoord ref : kdTree.collectKNearest(v, 15)) {
+				Point patternPoint = v.getPosition();
+				CoVertex refV = ref.getVertex();
+				v.setTextureCoord(refV.getTextureCoord());
+				for (CoFace f : HalfEdgeUtils.facesIncidentWithVertex(refV)) {
+					List<CoVertex> b = HalfEdgeUtils.boundaryVertices(f);
+					Triangle tTex = new Triangle(b.get(0).getTextureCoord(), b.get(1).getTextureCoord(), b.get(2).getTextureCoord());
+					Triangle tPos = new Triangle(b.get(0).getPosition(), b.get(1).getPosition(), b.get(2).getPosition());
+					if (isInTriangle(patternPoint, tTex, 0)) {
+						Point bary = getBarycentic(patternPoint, tTex);
+						Point newPos = getCoordinate(bary, tPos);
+						v.setPosition(newPos);
+						cutted.remove(v);
+						break;
+					}
 				}
 			}
 		}
+		
 		
 		hcp.updateHalfedgeContent(r, true, new PositionAdapter());
 	}
