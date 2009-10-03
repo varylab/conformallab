@@ -9,8 +9,10 @@ import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
@@ -22,7 +24,9 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 
+import de.jreality.math.FactoredMatrix;
 import de.jreality.math.Matrix;
+import de.jreality.math.Pn;
 import de.jreality.plugin.basic.View;
 import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.plugin.experimental.ManagedContent;
@@ -30,6 +34,7 @@ import de.jreality.ui.AppearanceInspector;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.jreality.adapter.Adapter;
 import de.jtem.halfedgetools.plugin.HalfedgeConnectorPlugin;
+import de.jtem.halfedgetools.util.HalfEdgeUtilsExtra;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
@@ -123,6 +128,9 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 		Matrix texMatrix = ai.getTextureMatrix();
 		Matrix texInvMatrix = texMatrix.getInverse();
 		
+		FactoredMatrix fm = new FactoredMatrix(texMatrix, Pn.EUCLIDEAN);
+		double[] translation = fm.getTranslation();
+		
 		for (CoVertex v : hds.getVertices()) {
 			v.setTextureCoord(transformTexCoord(v.getTextureCoord(), texMatrix));
 		}
@@ -146,6 +154,11 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 			}			
 		}
 
+		minX = Math.floor(minX) - 1;
+		maxX = Math.ceil(maxX) + 1;
+		minY = Math.floor(minY) - 1;
+		maxY = Math.ceil(maxY) + 1;
+		
 		double xSpan = maxX - minX;
 		double ySpan = maxY - minY;
 
@@ -157,6 +170,8 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 			double xStep = 0.5;
 			int yRes = (int)Math.ceil(ySpan * 2); 
 			double yStep = 0.5;
+			double xOffset = translation[0] % 1.0;
+			double yOffset = translation[1] % 1.0;
 			for (int i = 0; i < xRes; i++) {
 				for (int j = 0; j < yRes; j++) {
 					CoVertex v = r.addNewVertex();
@@ -179,22 +194,18 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 			}
 			break;
 		case Hexagons:
-			//TODO: Fix pattern
-			xRes = (int)Math.ceil(xSpan) * 2;
-			xStep = xSpan / xRes;
-			double radius = xStep * 0.75;
-			double h = Math.sqrt(radius*radius - radius*radius/4);
-			double patternAspect = (3*radius)/(2*h);
-			yRes = (int)Math.ceil(ySpan / h / patternAspect);
-			
-			double offsetX = 3*radius/4;
-			double offsetY = h;
-			
+			xRes = (int)Math.ceil(xSpan * 6/3.0);
+			xStep = 3/6.0;
+			yRes = (int)Math.ceil(ySpan * 2);
+			yStep = 0.5;
+			double radius = 1.0/3.0;
+			xOffset = translation[0] + 0.75*radius;
+			yOffset = translation[1];
 			for (int i = 0; i < xRes; i++) {
 				for (int j = 0; j < yRes; j++) {
 					CoVertex v = r.addNewVertex();
-					double xPos = minX + i * xStep + offsetX; 
-					double yPos = minY + j * h * patternAspect + offsetY;
+					double xPos = minX + i * xStep + xOffset;
+					double yPos = minY + j * yStep + yOffset;
 					double move = (j % 2 == 0) ? 1 : -1;
 					move *= (i % 2 == 0) ? 1 : -1;
 					xPos += move*radius/4;
@@ -230,15 +241,10 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 			PositionTexcoord pt = new PositionTexcoord(v.getTextureCoord(), v.getPosition(), v);
 			vArr[index++] = pt;
 		}
-		BaryFace[] bfArr = new BaryFace[hds.numFaces()];
-		index = 0;
-		for (CoFace f : hds.getFaces()) {
-			bfArr[index++] = new BaryFace(f);
-		}
 		
 		int lookUp = lookUpHeuristicModel.getNumber().intValue();
+		Map<CoVertex, CoFace> texFaceMap = new HashMap<CoVertex, CoFace>();
 		KdTree<PositionTexcoord> kdTree = new KdTree<PositionTexcoord>(vArr, 20, false);
-//		KdTree<BaryFace> kdTreeBary = new KdTree<BaryFace>(bfArr, 20, false);
 		Set<CoVertex> cutted = new HashSet<CoVertex>(r.getVertices());
 		for (CoVertex v : r.getVertices()) {
 			Point patternPoint = v.getPosition();
@@ -256,36 +262,47 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 					Point newPos = getCoordinate(bary, tPos);
 					v.setPosition(newPos);
 					cutted.remove(v);
+					texFaceMap.put(v, f);
 					break;
 				}
 			}
 		}
 		
-//		
-//		Set<CoVertex> overlap = new HashSet<CoVertex>();
-//		for (CoVertex v : r.getVertices()) {
-//			if (cutted.contains(v)) {
-//				continue;
-//			}
-//			List<CoVertex> incident = HalfEdgeUtilsExtra.getVertexStar(v);
-//			for (CoVertex iv : incident) {
-//				if (cutted.contains(iv)) {
-//					overlap.add(iv);
-//					break;
-//				}
-//			}
-//		}
-//		cutted.removeAll(overlap);
-//		for (CoVertex v : overlap) {
-//			BaryFace bf = kdTreeBary.collectKNearest(v, 1).firstElement();
-//			CoFace f = bf.getFace();
-//			List<CoVertex> b = HalfEdgeUtils.boundaryVertices(f);
-//			Triangle tTex = new Triangle(b.get(0).getTextureCoord(), b.get(1).getTextureCoord(), b.get(2).getTextureCoord());
-//			Triangle tPos = new Triangle(b.get(0).getPosition(), b.get(1).getPosition(), b.get(2).getPosition());
-//			Point bary = getBarycentic(v.getPosition(), tTex);
-//			Point newPos = getCoordinate(bary, tPos);
-//			v.setPosition(newPos);
-//		}
+		
+		Set<CoVertex> overlap = new HashSet<CoVertex>();
+		for (CoVertex v : r.getVertices()) {
+			if (cutted.contains(v)) {
+				continue;
+			}
+			CoFace mapFace = texFaceMap.get(v);
+			List<CoEdge> star = HalfEdgeUtilsExtra.getEdgeStar(v);
+			for (CoEdge e : star) {
+				CoVertex incident = e.getStartVertex();
+				if (cutted.contains(incident)) {
+					CoFace overlapFace = e.getLeftFace();
+					if (overlapFace == null) {
+						continue;
+					}
+					List<CoVertex> b = HalfEdgeUtils.boundaryVertices(overlapFace);
+					for (CoVertex bv : b) {
+						if (cutted.contains(bv)) {
+							overlap.add(bv);
+							texFaceMap.put(bv, mapFace);
+						}
+					}
+				}
+			}
+		}
+		cutted.removeAll(overlap);
+		for (CoVertex v : overlap) {
+			CoFace f = texFaceMap.get(v);
+			List<CoVertex> b = HalfEdgeUtils.boundaryVertices(f);
+			Triangle tTex = new Triangle(b.get(0).getTextureCoord(), b.get(1).getTextureCoord(), b.get(2).getTextureCoord());
+			Triangle tPos = new Triangle(b.get(0).getPosition(), b.get(1).getPosition(), b.get(2).getPosition());
+			Point bary = getBarycentic(v.getPosition(), tTex);
+			Point newPos = getCoordinate(bary, tPos);
+			v.setPosition(newPos);
+		}
 		
 		
 		Set<CoFace> deleteFaces = new HashSet<CoFace>();

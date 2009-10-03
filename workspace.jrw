@@ -292,7 +292,7 @@
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/UI%20AggregatorsV1.0Aggregators.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/UI%20AggregatorsV1.0Aggregators.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -595,7 +595,7 @@
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/UI%20Side%20PanelsV1.0SideContainerPerspective.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/UI%20Side%20PanelsV1.0SideContainerPerspective.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -898,7 +898,310 @@
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/ANTLR%20Parser%20GeneratorV1.0antlr.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/ANTLR%20Parser%20GeneratorV1.0antlr.jar</string>
+              </default>
+            </java.net.URI>
+          </uri>
+          <type reference="../../../../de.varylab.jrworkspace.packages.remote.PackageRemote/localJarMirrors/de.varylab.jrworkspace.packages.local.PackageDownloaded/type"/>
+          <osName></osName>
+          <osArch></osArch>
+          <loadNatives>false</loadNatives>
+        </de.varylab.jrworkspace.packages.local.PackageDownloaded>
+      </localJarMirrors>
+      <fetchingDependencies>false</fetchingDependencies>
+    </de.varylab.jrworkspace.packages.remote.PackageRemote>
+    <de.varylab.jrworkspace.packages.remote.PackageRemote>
+      <name>Google Collections</name>
+      <packageDescription>The Google Collections Library 1.0 (RC2) is a set of new collection types, implementations and related goodness for Java 5 and higher, brought to you by Google. It is a natural extension of the Java Collections Framework you already know and love.</packageDescription>
+      <versionDescription>The Google Collections Library 1.0 (RC2) is a set of new collection types, implementations and related goodness for Java 5 and higher, brought to you by Google. It is a natural extension of the Java Collections Framework you already know and love.</versionDescription>
+      <vendor>http://code.google.com/p/google-collections/</vendor>
+      <vendorEmail>bduff@google.com</vendorEmail>
+      <type reference="../../de.varylab.jrworkspace.packages.remote.PackageRemote/type"/>
+      <version>
+        <major>1</major>
+        <minor>0</minor>
+      </version>
+      <idPackage>132</idPackage>
+      <idVersion>363</idVersion>
+      <date>2009-09-25</date>
+      <icon class="javax.swing.ImageIcon" serialization="custom">
+        <javax.swing.ImageIcon>
+          <default>
+            <height>16</height>
+            <width>16</width>
+            <description>D:\Users\sechelmann\Pictures\GoogleIcon.png</description>
+          </default>
+          <int>16</int>
+          <int>16</int>
+          <int-array>
+            <int>-1644307</int>
+            <int>-262913</int>
+            <int>-3351582</int>
+            <int>-14655578</int>
+            <int>-16495455</int>
+            <int>-7951151</int>
+            <int>-131076</int>
+            <int>-396817</int>
+            <int>-3981510</int>
+            <int>-2817792</int>
+            <int>-392702</int>
+            <int>-196608</int>
+            <int>-196606</int>
+            <int>-655104</int>
+            <int>-1179648</int>
+            <int>-1644307</int>
+            <int>-197633</int>
+            <int>-65537</int>
+            <int>-11500616</int>
+            <int>-16754759</int>
+            <int>-16620596</int>
+            <int>-15834436</int>
+            <int>-2300174</int>
+            <int>-260</int>
+            <int>-600875</int>
+            <int>-1635318</int>
+            <int>-196608</int>
+            <int>-130813</int>
+            <int>-196352</int>
+            <int>-655104</int>
+            <int>-1310716</int>
+            <int>-2096640</int>
+            <int>-1</int>
+            <int>-263173</int>
+            <int>-14390090</int>
+            <int>-16751672</int>
+            <int>-16750897</int>
+            <int>-16754239</int>
+            <int>-8146990</int>
+            <int>-257</int>
+            <int>-66305</int>
+            <int>-2079162</int>
+            <int>-458751</int>
+            <int>-261376</int>
+            <int>-458495</int>
+            <int>-1048573</int>
+            <int>-1376000</int>
+            <int>-2162688</int>
+            <int>-66049</int>
+            <int>-769</int>
+            <int>-12878658</int>
+            <int>-16622138</int>
+            <int>-16619832</int>
+            <int>-16622908</int>
+            <int>-11039026</int>
+            <int>-5</int>
+            <int>-1</int>
+            <int>-2272432</int>
+            <int>-786428</int>
+            <int>-65280</int>
+            <int>-196605</int>
+            <int>-851712</int>
+            <int>-1769472</int>
+            <int>-2489853</int>
+            <int>-3</int>
+            <int>-3</int>
+            <int>-8214062</int>
+            <int>-16755783</int>
+            <int>-16489270</int>
+            <int>-16623427</int>
+            <int>-10907448</int>
+            <int>-131074</int>
+            <int>-1793</int>
+            <int>-3725016</int>
+            <int>-4056826</int>
+            <int>-5167599</int>
+            <int>-4841455</int>
+            <int>-3403771</int>
+            <int>-2031104</int>
+            <int>-2817792</int>
+            <int>-2366995</int>
+            <int>-65537</int>
+            <int>-1510922</int>
+            <int>-14127947</int>
+            <int>-16755525</int>
+            <int>-15835719</int>
+            <int>-4599836</int>
+            <int>-65537</int>
+            <int>-6704741</int>
+            <int>-14847968</int>
+            <int>-16739017</int>
+            <int>-16542147</int>
+            <int>-16739525</int>
+            <int>-16152266</int>
+            <int>-12950227</int>
+            <int>-7722225</int>
+            <int>-14197089</int>
+            <int>-5456170</int>
+            <int>-514</int>
+            <int>-1051911</int>
+            <int>-6242338</int>
+            <int>-2432275</int>
+            <int>-131074</int>
+            <int>-8013671</int>
+            <int>-16743892</int>
+            <int>-16541125</int>
+            <int>-16541638</int>
+            <int>-16738761</int>
+            <int>-16738759</int>
+            <int>-16674502</int>
+            <int>-16739521</int>
+            <int>-16677054</int>
+            <int>-15378776</int>
+            <int>-15708260</int>
+            <int>-12423258</int>
+            <int>-8084802</int>
+            <int>-260</int>
+            <int>-5</int>
+            <int>-4203831</int>
+            <int>-16615649</int>
+            <int>-16737483</int>
+            <int>-16737993</int>
+            <int>-16737737</int>
+            <int>-16673732</int>
+            <int>-16673732</int>
+            <int>-16740552</int>
+            <int>-16676035</int>
+            <int>-16677058</int>
+            <int>-14198366</int>
+            <int>-14920284</int>
+            <int>-16233826</int>
+            <int>-15644520</int>
+            <int>-2103055</int>
+            <int>-65794</int>
+            <int>-1970972</int>
+            <int>-14247343</int>
+            <int>-16739283</int>
+            <int>-16607431</int>
+            <int>-16607429</int>
+            <int>-16739272</int>
+            <int>-16608709</int>
+            <int>-16675011</int>
+            <int>-16610499</int>
+            <int>-16742088</int>
+            <int>-14530162</int>
+            <int>-13082979</int>
+            <int>-11108686</int>
+            <int>-9531200</int>
+            <int>-3155218</int>
+            <int>-131074</int>
+            <int>-65539</int>
+            <int>-1314069</int>
+            <int>-12146581</int>
+            <int>-16675539</int>
+            <int>-16738756</int>
+            <int>-16739525</int>
+            <int>-16739525</int>
+            <int>-16740547</int>
+            <int>-16741827</int>
+            <int>-16743363</int>
+            <int>-5850160</int>
+            <int>-1315075</int>
+            <int>-65537</int>
+            <int>-331563</int>
+            <int>-1516112</int>
+            <int>-2175082</int>
+            <int>-527382</int>
+            <int>-1</int>
+            <int>-328453</int>
+            <int>-11950483</int>
+            <int>-16675542</int>
+            <int>-16739528</int>
+            <int>-16740293</int>
+            <int>-16610503</int>
+            <int>-16742340</int>
+            <int>-16743108</int>
+            <int>-513</int>
+            <int>-792112</int>
+            <int>-3231688</int>
+            <int>-2117622</int>
+            <int>-1854208</int>
+            <int>-1921534</int>
+            <int>-2709206</int>
+            <int>-922407</int>
+            <int>-260</int>
+            <int>-2627360</int>
+            <int>-15890881</int>
+            <int>-16740295</int>
+            <int>-16544708</int>
+            <int>-16611011</int>
+            <int>-16743106</int>
+            <int>-16744130</int>
+            <int>-459788</int>
+            <int>-3365321</int>
+            <int>-1068032</int>
+            <int>-80638</int>
+            <int>-277750</int>
+            <int>-606711</int>
+            <int>-1398272</int>
+            <int>-2379702</int>
+            <int>-65794</int>
+            <int>-66305</int>
+            <int>-14315179</int>
+            <int>-16742092</int>
+            <int>-16741061</int>
+            <int>-16742851</int>
+            <int>-16416445</int>
+            <int>-16679618</int>
+            <int>-856866</int>
+            <int>-2579941</int>
+            <int>-542448</int>
+            <int>-935668</int>
+            <int>-871153</int>
+            <int>-1002993</int>
+            <int>-740581</int>
+            <int>-1594577</int>
+            <int>-1549</int>
+            <int>-590850</int>
+            <int>-14842550</int>
+            <int>-16742855</int>
+            <int>-16612031</int>
+            <int>-16742852</int>
+            <int>-16613312</int>
+            <int>-16745667</int>
+            <int>-262914</int>
+            <int>-2115745</int>
+            <int>-1267956</int>
+            <int>-1003242</int>
+            <int>-937451</int>
+            <int>-740581</int>
+            <int>-939490</int>
+            <int>-1129348</int>
+            <int>-65537</int>
+            <int>-5649737</int>
+            <int>-16550351</int>
+            <int>-16678085</int>
+            <int>-16547265</int>
+            <int>-16745154</int>
+            <int>-16745922</int>
+            <int>-16746173</int>
+            <int>-2433300</int>
+            <int>-264980</int>
+            <int>-1325700</int>
+            <int>-1067441</int>
+            <int>-937659</int>
+            <int>-1067443</int>
+            <int>-602477</int>
+            <int>-394250</int>
+            <int>-3022370</int>
+            <int>-14911415</int>
+            <int>-16745932</int>
+            <int>-16614337</int>
+            <int>-16745408</int>
+            <int>-16745668</int>
+            <int>-16745919</int>
+            <int>-2433300</int>
+          </int-array>
+        </javax.swing.ImageIcon>
+      </icon>
+      <dependencies class="linked-list"/>
+      <localJarMirrors class="linked-list">
+        <de.varylab.jrworkspace.packages.local.PackageDownloaded>
+          <idJardata>739</idJardata>
+          <name>GoogleCollections.jar</name>
+          <uri serialization="custom">
+            <java.net.URI>
+              <default>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/Google%20CollectionsV1.0GoogleCollections.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -1489,310 +1792,7 @@
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/MTJ%20OptimizationV1.0MTJOptimization.jar</string>
-              </default>
-            </java.net.URI>
-          </uri>
-          <type reference="../../../../de.varylab.jrworkspace.packages.remote.PackageRemote/localJarMirrors/de.varylab.jrworkspace.packages.local.PackageDownloaded/type"/>
-          <osName></osName>
-          <osArch></osArch>
-          <loadNatives>false</loadNatives>
-        </de.varylab.jrworkspace.packages.local.PackageDownloaded>
-      </localJarMirrors>
-      <fetchingDependencies>false</fetchingDependencies>
-    </de.varylab.jrworkspace.packages.remote.PackageRemote>
-    <de.varylab.jrworkspace.packages.remote.PackageRemote>
-      <name>Google Collections</name>
-      <packageDescription>The Google Collections Library 1.0 (RC2) is a set of new collection types, implementations and related goodness for Java 5 and higher, brought to you by Google. It is a natural extension of the Java Collections Framework you already know and love.</packageDescription>
-      <versionDescription>The Google Collections Library 1.0 (RC2) is a set of new collection types, implementations and related goodness for Java 5 and higher, brought to you by Google. It is a natural extension of the Java Collections Framework you already know and love.</versionDescription>
-      <vendor>http://code.google.com/p/google-collections/</vendor>
-      <vendorEmail>bduff@google.com</vendorEmail>
-      <type reference="../../de.varylab.jrworkspace.packages.remote.PackageRemote/type"/>
-      <version>
-        <major>1</major>
-        <minor>0</minor>
-      </version>
-      <idPackage>132</idPackage>
-      <idVersion>363</idVersion>
-      <date>2009-09-25</date>
-      <icon class="javax.swing.ImageIcon" serialization="custom">
-        <javax.swing.ImageIcon>
-          <default>
-            <height>16</height>
-            <width>16</width>
-            <description>D:\Users\sechelmann\Pictures\GoogleIcon.png</description>
-          </default>
-          <int>16</int>
-          <int>16</int>
-          <int-array>
-            <int>-1644307</int>
-            <int>-262913</int>
-            <int>-3351582</int>
-            <int>-14655578</int>
-            <int>-16495455</int>
-            <int>-7951151</int>
-            <int>-131076</int>
-            <int>-396817</int>
-            <int>-3981510</int>
-            <int>-2817792</int>
-            <int>-392702</int>
-            <int>-196608</int>
-            <int>-196606</int>
-            <int>-655104</int>
-            <int>-1179648</int>
-            <int>-1644307</int>
-            <int>-197633</int>
-            <int>-65537</int>
-            <int>-11500616</int>
-            <int>-16754759</int>
-            <int>-16620596</int>
-            <int>-15834436</int>
-            <int>-2300174</int>
-            <int>-260</int>
-            <int>-600875</int>
-            <int>-1635318</int>
-            <int>-196608</int>
-            <int>-130813</int>
-            <int>-196352</int>
-            <int>-655104</int>
-            <int>-1310716</int>
-            <int>-2096640</int>
-            <int>-1</int>
-            <int>-263173</int>
-            <int>-14390090</int>
-            <int>-16751672</int>
-            <int>-16750897</int>
-            <int>-16754239</int>
-            <int>-8146990</int>
-            <int>-257</int>
-            <int>-66305</int>
-            <int>-2079162</int>
-            <int>-458751</int>
-            <int>-261376</int>
-            <int>-458495</int>
-            <int>-1048573</int>
-            <int>-1376000</int>
-            <int>-2162688</int>
-            <int>-66049</int>
-            <int>-769</int>
-            <int>-12878658</int>
-            <int>-16622138</int>
-            <int>-16619832</int>
-            <int>-16622908</int>
-            <int>-11039026</int>
-            <int>-5</int>
-            <int>-1</int>
-            <int>-2272432</int>
-            <int>-786428</int>
-            <int>-65280</int>
-            <int>-196605</int>
-            <int>-851712</int>
-            <int>-1769472</int>
-            <int>-2489853</int>
-            <int>-3</int>
-            <int>-3</int>
-            <int>-8214062</int>
-            <int>-16755783</int>
-            <int>-16489270</int>
-            <int>-16623427</int>
-            <int>-10907448</int>
-            <int>-131074</int>
-            <int>-1793</int>
-            <int>-3725016</int>
-            <int>-4056826</int>
-            <int>-5167599</int>
-            <int>-4841455</int>
-            <int>-3403771</int>
-            <int>-2031104</int>
-            <int>-2817792</int>
-            <int>-2366995</int>
-            <int>-65537</int>
-            <int>-1510922</int>
-            <int>-14127947</int>
-            <int>-16755525</int>
-            <int>-15835719</int>
-            <int>-4599836</int>
-            <int>-65537</int>
-            <int>-6704741</int>
-            <int>-14847968</int>
-            <int>-16739017</int>
-            <int>-16542147</int>
-            <int>-16739525</int>
-            <int>-16152266</int>
-            <int>-12950227</int>
-            <int>-7722225</int>
-            <int>-14197089</int>
-            <int>-5456170</int>
-            <int>-514</int>
-            <int>-1051911</int>
-            <int>-6242338</int>
-            <int>-2432275</int>
-            <int>-131074</int>
-            <int>-8013671</int>
-            <int>-16743892</int>
-            <int>-16541125</int>
-            <int>-16541638</int>
-            <int>-16738761</int>
-            <int>-16738759</int>
-            <int>-16674502</int>
-            <int>-16739521</int>
-            <int>-16677054</int>
-            <int>-15378776</int>
-            <int>-15708260</int>
-            <int>-12423258</int>
-            <int>-8084802</int>
-            <int>-260</int>
-            <int>-5</int>
-            <int>-4203831</int>
-            <int>-16615649</int>
-            <int>-16737483</int>
-            <int>-16737993</int>
-            <int>-16737737</int>
-            <int>-16673732</int>
-            <int>-16673732</int>
-            <int>-16740552</int>
-            <int>-16676035</int>
-            <int>-16677058</int>
-            <int>-14198366</int>
-            <int>-14920284</int>
-            <int>-16233826</int>
-            <int>-15644520</int>
-            <int>-2103055</int>
-            <int>-65794</int>
-            <int>-1970972</int>
-            <int>-14247343</int>
-            <int>-16739283</int>
-            <int>-16607431</int>
-            <int>-16607429</int>
-            <int>-16739272</int>
-            <int>-16608709</int>
-            <int>-16675011</int>
-            <int>-16610499</int>
-            <int>-16742088</int>
-            <int>-14530162</int>
-            <int>-13082979</int>
-            <int>-11108686</int>
-            <int>-9531200</int>
-            <int>-3155218</int>
-            <int>-131074</int>
-            <int>-65539</int>
-            <int>-1314069</int>
-            <int>-12146581</int>
-            <int>-16675539</int>
-            <int>-16738756</int>
-            <int>-16739525</int>
-            <int>-16739525</int>
-            <int>-16740547</int>
-            <int>-16741827</int>
-            <int>-16743363</int>
-            <int>-5850160</int>
-            <int>-1315075</int>
-            <int>-65537</int>
-            <int>-331563</int>
-            <int>-1516112</int>
-            <int>-2175082</int>
-            <int>-527382</int>
-            <int>-1</int>
-            <int>-328453</int>
-            <int>-11950483</int>
-            <int>-16675542</int>
-            <int>-16739528</int>
-            <int>-16740293</int>
-            <int>-16610503</int>
-            <int>-16742340</int>
-            <int>-16743108</int>
-            <int>-513</int>
-            <int>-792112</int>
-            <int>-3231688</int>
-            <int>-2117622</int>
-            <int>-1854208</int>
-            <int>-1921534</int>
-            <int>-2709206</int>
-            <int>-922407</int>
-            <int>-260</int>
-            <int>-2627360</int>
-            <int>-15890881</int>
-            <int>-16740295</int>
-            <int>-16544708</int>
-            <int>-16611011</int>
-            <int>-16743106</int>
-            <int>-16744130</int>
-            <int>-459788</int>
-            <int>-3365321</int>
-            <int>-1068032</int>
-            <int>-80638</int>
-            <int>-277750</int>
-            <int>-606711</int>
-            <int>-1398272</int>
-            <int>-2379702</int>
-            <int>-65794</int>
-            <int>-66305</int>
-            <int>-14315179</int>
-            <int>-16742092</int>
-            <int>-16741061</int>
-            <int>-16742851</int>
-            <int>-16416445</int>
-            <int>-16679618</int>
-            <int>-856866</int>
-            <int>-2579941</int>
-            <int>-542448</int>
-            <int>-935668</int>
-            <int>-871153</int>
-            <int>-1002993</int>
-            <int>-740581</int>
-            <int>-1594577</int>
-            <int>-1549</int>
-            <int>-590850</int>
-            <int>-14842550</int>
-            <int>-16742855</int>
-            <int>-16612031</int>
-            <int>-16742852</int>
-            <int>-16613312</int>
-            <int>-16745667</int>
-            <int>-262914</int>
-            <int>-2115745</int>
-            <int>-1267956</int>
-            <int>-1003242</int>
-            <int>-937451</int>
-            <int>-740581</int>
-            <int>-939490</int>
-            <int>-1129348</int>
-            <int>-65537</int>
-            <int>-5649737</int>
-            <int>-16550351</int>
-            <int>-16678085</int>
-            <int>-16547265</int>
-            <int>-16745154</int>
-            <int>-16745922</int>
-            <int>-16746173</int>
-            <int>-2433300</int>
-            <int>-264980</int>
-            <int>-1325700</int>
-            <int>-1067441</int>
-            <int>-937659</int>
-            <int>-1067443</int>
-            <int>-602477</int>
-            <int>-394250</int>
-            <int>-3022370</int>
-            <int>-14911415</int>
-            <int>-16745932</int>
-            <int>-16614337</int>
-            <int>-16745408</int>
-            <int>-16745668</int>
-            <int>-16745919</int>
-            <int>-2433300</int>
-          </int-array>
-        </javax.swing.ImageIcon>
-      </icon>
-      <dependencies class="linked-list"/>
-      <localJarMirrors class="linked-list">
-        <de.varylab.jrworkspace.packages.local.PackageDownloaded>
-          <idJardata>739</idJardata>
-          <name>GoogleCollections.jar</name>
-          <uri serialization="custom">
-            <java.net.URI>
-              <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/Google%20CollectionsV1.0GoogleCollections.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/MTJ%20OptimizationV1.0MTJOptimization.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -1827,7 +1827,7 @@
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/ColorChooserV1.1colorpicker.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/ColorChooserV1.1colorpicker.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -2417,56 +2417,7 @@
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/SunFlow%20Render%20SystemV1.0sunflow.jar</string>
-              </default>
-            </java.net.URI>
-          </uri>
-          <type reference="../../../../de.varylab.jrworkspace.packages.remote.PackageRemote/localJarMirrors/de.varylab.jrworkspace.packages.local.PackageDownloaded/type"/>
-          <osName></osName>
-          <osArch></osArch>
-          <loadNatives>false</loadNatives>
-        </de.varylab.jrworkspace.packages.local.PackageDownloaded>
-      </localJarMirrors>
-      <fetchingDependencies>false</fetchingDependencies>
-    </de.varylab.jrworkspace.packages.remote.PackageRemote>
-    <de.varylab.jrworkspace.packages.remote.PackageRemote>
-      <name>jPETScTao</name>
-      <packageDescription></packageDescription>
-      <versionDescription>1.7 - Linux i386, x86 binaries</versionDescription>
-      <vendor>Hannes Sommer</vendor>
-      <vendorEmail>hsommer@math.tu-berlin.de</vendorEmail>
-      <type reference="../../de.varylab.jrworkspace.packages.remote.PackageRemote/type"/>
-      <version>
-        <major>1</major>
-        <minor>7</minor>
-      </version>
-      <idPackage>45</idPackage>
-      <idVersion>290</idVersion>
-      <date>2009-04-07</date>
-      <dependencies class="linked-list"/>
-      <localJarMirrors class="linked-list">
-        <de.varylab.jrworkspace.packages.local.PackageDownloaded>
-          <idJardata>583</idJardata>
-          <name>jPETScTao-native-windows-x86.jar</name>
-          <uri serialization="custom">
-            <java.net.URI>
-              <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/jPETScTaoV1.7jPETScTao-native-windows-x86.jar</string>
-              </default>
-            </java.net.URI>
-          </uri>
-          <type reference="../../../../de.varylab.jrworkspace.packages.remote.PackageRemote/localJarMirrors/de.varylab.jrworkspace.packages.local.PackageDownloaded/type"/>
-          <osName>Windows</osName>
-          <osArch>x86</osArch>
-          <loadNatives>true</loadNatives>
-        </de.varylab.jrworkspace.packages.local.PackageDownloaded>
-        <de.varylab.jrworkspace.packages.local.PackageDownloaded>
-          <idJardata>584</idJardata>
-          <name>jPETScTao.jar</name>
-          <uri serialization="custom">
-            <java.net.URI>
-              <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/jPETScTaoV1.7jPETScTao.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/SunFlow%20Render%20SystemV1.0sunflow.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -2769,7 +2720,56 @@
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/MTJ%20Matrix%20Toolkits%20for%20JavaV1.1mtj.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/MTJ%20Matrix%20Toolkits%20for%20JavaV1.1mtj.jar</string>
+              </default>
+            </java.net.URI>
+          </uri>
+          <type reference="../../../../de.varylab.jrworkspace.packages.remote.PackageRemote/localJarMirrors/de.varylab.jrworkspace.packages.local.PackageDownloaded/type"/>
+          <osName></osName>
+          <osArch></osArch>
+          <loadNatives>false</loadNatives>
+        </de.varylab.jrworkspace.packages.local.PackageDownloaded>
+      </localJarMirrors>
+      <fetchingDependencies>false</fetchingDependencies>
+    </de.varylab.jrworkspace.packages.remote.PackageRemote>
+    <de.varylab.jrworkspace.packages.remote.PackageRemote>
+      <name>jPETScTao</name>
+      <packageDescription></packageDescription>
+      <versionDescription>1.7 - Linux i386, x86 binaries</versionDescription>
+      <vendor>Hannes Sommer</vendor>
+      <vendorEmail>hsommer@math.tu-berlin.de</vendorEmail>
+      <type reference="../../de.varylab.jrworkspace.packages.remote.PackageRemote/type"/>
+      <version>
+        <major>1</major>
+        <minor>7</minor>
+      </version>
+      <idPackage>45</idPackage>
+      <idVersion>290</idVersion>
+      <date>2009-04-07</date>
+      <dependencies class="linked-list"/>
+      <localJarMirrors class="linked-list">
+        <de.varylab.jrworkspace.packages.local.PackageDownloaded>
+          <idJardata>583</idJardata>
+          <name>jPETScTao-native-windows-x86.jar</name>
+          <uri serialization="custom">
+            <java.net.URI>
+              <default>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/jPETScTaoV1.7jPETScTao-native-windows-x86.jar</string>
+              </default>
+            </java.net.URI>
+          </uri>
+          <type reference="../../../../de.varylab.jrworkspace.packages.remote.PackageRemote/localJarMirrors/de.varylab.jrworkspace.packages.local.PackageDownloaded/type"/>
+          <osName>Windows</osName>
+          <osArch>x86</osArch>
+          <loadNatives>true</loadNatives>
+        </de.varylab.jrworkspace.packages.local.PackageDownloaded>
+        <de.varylab.jrworkspace.packages.local.PackageDownloaded>
+          <idJardata>584</idJardata>
+          <name>jPETScTao.jar</name>
+          <uri serialization="custom">
+            <java.net.URI>
+              <default>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/jPETScTaoV1.7jPETScTao.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -5958,7 +5958,7 @@ The libraries include a wide range from complex numbers to theta-functions, basi
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/jRealityV1.2jReality.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/jRealityV1.2jReality.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -6261,7 +6261,7 @@ The libraries include a wide range from complex numbers to theta-functions, basi
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/Java3D%20VecmathV1.0vecmath.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/Java3D%20VecmathV1.0vecmath.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -6580,7 +6580,7 @@ iText is an ideal library for developers looking to enhance web- and other appli
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/iTextV1.0iText-2.1.3.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/iTextV1.0iText-2.1.3.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -8609,7 +8609,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/jReality%20HalfedgeV1.0halfedgetools.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/jReality%20HalfedgeV1.0halfedgetools.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -8643,7 +8643,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/P5V1.0P5.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/P5V1.0P5.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -8948,7 +8948,7 @@ http://download.java.net/media/jogl/builds/archive/jsr-231-webstart-current/</ve
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/JOGL%20LibraryV1.0gluegen-rt.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/JOGL%20LibraryV1.0gluegen-rt.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -8963,7 +8963,7 @@ http://download.java.net/media/jogl/builds/archive/jsr-231-webstart-current/</ve
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/JOGL%20LibraryV1.0jogl-native-windows-i586.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/JOGL%20LibraryV1.0jogl-native-windows-i586.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -8978,7 +8978,7 @@ http://download.java.net/media/jogl/builds/archive/jsr-231-webstart-current/</ve
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/JOGL%20LibraryV1.0jogl.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/JOGL%20LibraryV1.0jogl.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -9281,7 +9281,7 @@ http://download.java.net/media/jogl/builds/archive/jsr-231-webstart-current/</ve
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/JUnit4V1.0junit.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/JUnit4V1.0junit.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -9587,7 +9587,7 @@ The libraries include a wide range from complex numbers to theta-functions, basi
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/jtemV1.1blas.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/jtemV1.1blas.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -9602,7 +9602,7 @@ The libraries include a wide range from complex numbers to theta-functions, basi
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/jtemV1.1jtemJava2dx.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/jtemV1.1jtemJava2dx.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -9617,7 +9617,7 @@ The libraries include a wide range from complex numbers to theta-functions, basi
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/jtemV1.1jterm.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/jtemV1.1jterm.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -9632,7 +9632,7 @@ The libraries include a wide range from complex numbers to theta-functions, basi
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/jtemV1.1mfc.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/jtemV1.1mfc.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -9647,7 +9647,7 @@ The libraries include a wide range from complex numbers to theta-functions, basi
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/jtemV1.1moebiusViewer.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/jtemV1.1moebiusViewer.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -9662,7 +9662,7 @@ The libraries include a wide range from complex numbers to theta-functions, basi
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/jtemV1.1numericalMethods.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/jtemV1.1numericalMethods.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -9677,7 +9677,7 @@ The libraries include a wide range from complex numbers to theta-functions, basi
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/jtemV1.1riemann.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/jtemV1.1riemann.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -9980,7 +9980,7 @@ The libraries include a wide range from complex numbers to theta-functions, basi
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/Viewer%20VR%20DataV1.0vrData.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/Viewer%20VR%20DataV1.0vrData.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -9995,7 +9995,7 @@ The libraries include a wide range from complex numbers to theta-functions, basi
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/Viewer%20VR%20DataV1.0vrExamples.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/Viewer%20VR%20DataV1.0vrExamples.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -10298,7 +10298,7 @@ The libraries include a wide range from complex numbers to theta-functions, basi
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/Janino%20Embedded%20Java%20CompilerV1.0janino.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/Janino%20Embedded%20Java%20CompilerV1.0janino.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -10332,7 +10332,7 @@ The libraries include a wide range from complex numbers to theta-functions, basi
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/JBulletV1.1jbullet-all.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/JBulletV1.1jbullet-all.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -10635,7 +10635,7 @@ The libraries include a wide range from complex numbers to theta-functions, basi
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/BeanShellV1.0bsh.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/BeanShellV1.0bsh.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -11231,7 +11231,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/HalfedgeV1.3Halfedge.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/HalfedgeV1.3Halfedge.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -12107,7 +12107,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/Simple%20Geometry%203DV1.0SimpleGeometry3D.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/Simple%20Geometry%203DV1.0SimpleGeometry3D.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -13565,7 +13565,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/Halfedge%20Algorithms%20And%20FunctionalsV1.4halfedgeAlgorithm.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/Halfedge%20Algorithms%20And%20FunctionalsV1.4halfedgeAlgorithm.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -13580,7 +13580,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/Halfedge%20Algorithms%20And%20FunctionalsV1.4halfedgeFunctional.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/Halfedge%20Algorithms%20And%20FunctionalsV1.4halfedgeFunctional.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -13883,7 +13883,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/jinputV1.0jinput-native-windows.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/jinputV1.0jinput-native-windows.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -13898,7 +13898,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/jinputV1.0jinput-test.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/jinputV1.0jinput-test.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -13913,7 +13913,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
           <uri serialization="custom">
             <java.net.URI>
               <default>
-                <string>file:/D:/Users/sechelmann/.jrworkspace/plugin/jinputV1.0jinput.jar</string>
+                <string>file:/C:/Users/sechel/.jrworkspace/plugin/jinputV1.0jinput.jar</string>
               </default>
             </java.net.URI>
           </uri>
@@ -13929,7 +13929,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
   <map>
     <entry>
       <string>de.jreality.plugin.content.ContentLoader:currentDirectory</string>
-      <string>D:\Users\sechelmann\workspace\BildRepository\Gengnagel</string>
+      <string>D:\Workspace\BildRepository\Gengnagel</string>
     </entry>
     <entry>
       <string>de.jtem.halfedgetools.plugin.HalfedgeConnectorPlugin:showPanel</string>
@@ -13987,7 +13987,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
     </entry>
     <entry>
       <string>de.jreality.plugin.experimental.WebContentLoader:preferredPosition</string>
-      <int>1</int>
+      <int>0</int>
     </entry>
     <entry>
       <string>de.jreality.plugin.basic.MainPanel:showPanel</string>
@@ -14002,12 +14002,12 @@ Half-edge data structures are used primarily to represent cell decompositions of
       <boolean>true</boolean>
     </entry>
     <entry>
-      <string>de.varylab.discreteconformal.plugin.SurfaceRemeshingPlugin:initPosition</string>
-      <int>1</int>
-    </entry>
-    <entry>
       <string>de.jreality.plugin.menu.CameraMenu:active</string>
       <boolean>true</boolean>
+    </entry>
+    <entry>
+      <string>de.varylab.discreteconformal.plugin.SurfaceRemeshingPlugin:initPosition</string>
+      <int>1</int>
     </entry>
     <entry>
       <string>de.jreality.plugin.scene.VRPanel:shrinked</string>
@@ -14064,7 +14064,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
     </entry>
     <entry>
       <string>de.jreality.plugin.content.ContentAppearance:texture</string>
-      <string>4 checker.jpg</string>
+      <string>5 Kreise und Sechsecke_pattern.png</string>
     </entry>
     <entry>
       <string>de.jreality.plugin.menu.DisplayOptions:active</string>
@@ -14092,7 +14092,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
     </entry>
     <entry>
       <string>de.jreality.plugin.content.ContentAppearance:tubeRadius</string>
-      <double>0.25</double>
+      <double>0.12</double>
     </entry>
     <entry>
       <string>de.jreality.plugin.audio.AudioOptions:volumeGain</string>
@@ -14163,16 +14163,16 @@ Half-edge data structures are used primarily to represent cell decompositions of
       <double>0.1</double>
     </entry>
     <entry>
-      <string>de.jreality.plugin.basic.Scene:active</string>
-      <boolean>true</boolean>
-    </entry>
-    <entry>
       <string>de.jtem.halfedgetools.plugin.buildin.topology.FaceSplitterPlugin:active</string>
       <boolean>false</boolean>
     </entry>
     <entry>
+      <string>de.jreality.plugin.basic.Scene:active</string>
+      <boolean>true</boolean>
+    </entry>
+    <entry>
       <string>de.jreality.plugin.content.ContentAppearance:preferredPosition</string>
-      <int>0</int>
+      <int>1</int>
     </entry>
     <entry>
       <string>de.jreality.plugin.content.DirectContent:active</string>
@@ -14183,15 +14183,15 @@ Half-edge data structures are used primarily to represent cell decompositions of
       <int>5</int>
     </entry>
     <entry>
+      <string>de.jreality.plugin.content.ContentTools:dragEnabled</string>
+      <boolean>true</boolean>
+    </entry>
+    <entry>
       <string>de.varylab.jrworkspace.controller.WorkspaceController:repositoryLocation</string>
       <de.varylab.jrworkspace.packages.remote.Repository>
         <host>arnold.math.tu-berlin.de</host>
         <port>3306</port>
       </de.varylab.jrworkspace.packages.remote.Repository>
-    </entry>
-    <entry>
-      <string>de.jreality.plugin.content.ContentTools:dragEnabled</string>
-      <boolean>true</boolean>
     </entry>
     <entry>
       <string>de.jreality.plugin.basic.MainPanel:preferredPosition</string>
@@ -14214,20 +14214,20 @@ Half-edge data structures are used primarily to represent cell decompositions of
       <boolean>true</boolean>
     </entry>
     <entry>
-      <string>de.jreality.plugin.content.ContentAppearance:pointReflection</string>
-      <double>0.3</double>
-    </entry>
-    <entry>
       <string>de.jreality.plugin.menu.ExportMenu:active</string>
       <boolean>true</boolean>
     </entry>
     <entry>
-      <string>de.jreality.plugin.content.ContentTools:pickEdges</string>
-      <boolean>true</boolean>
+      <string>de.jreality.plugin.content.ContentAppearance:pointReflection</string>
+      <double>0.3</double>
     </entry>
     <entry>
       <string>de.jtem.halfedgetools.plugin.buildin.topology.FaceCollapserPlugin:active</string>
       <boolean>false</boolean>
+    </entry>
+    <entry>
+      <string>de.jreality.plugin.content.ContentTools:pickEdges</string>
+      <boolean>true</boolean>
     </entry>
     <entry>
       <string>de.jreality.plugin.audio.AudioOptions:showPanel</string>
@@ -14238,23 +14238,19 @@ Half-edge data structures are used primarily to represent cell decompositions of
       <boolean>false</boolean>
     </entry>
     <entry>
-      <string>de.jreality.plugin.experimental.WebContentLoader:initPosition</string>
-      <int>2</int>
-    </entry>
-    <entry>
       <string>de.varylab.discreteconformal.plugin.DiscreteConformalPlugin:showUnitCircle</string>
       <boolean>false</boolean>
+    </entry>
+    <entry>
+      <string>de.jreality.plugin.experimental.WebContentLoader:initPosition</string>
+      <int>2</int>
     </entry>
     <entry>
       <string>de.jreality.plugin.scene.Avatar:navigationSpeed</string>
       <double>4.0</double>
     </entry>
     <entry>
-      <string>de.jreality.plugin.audio.AudioOptions:preprocessorKey</string>
-      <int-array/>
-    </entry>
-    <entry>
-      <string>de.jreality.plugin.scene.Terrain:reflectSceneContent</string>
+      <string>de.jtem.halfedgetools.plugin.buildin.topology.EdgeRemoverPlugin:active</string>
       <boolean>false</boolean>
     </entry>
     <entry>
@@ -14262,8 +14258,12 @@ Half-edge data structures are used primarily to represent cell decompositions of
       <int>1</int>
     </entry>
     <entry>
-      <string>de.jtem.halfedgetools.plugin.buildin.topology.EdgeRemoverPlugin:active</string>
+      <string>de.jreality.plugin.scene.Terrain:reflectSceneContent</string>
       <boolean>false</boolean>
+    </entry>
+    <entry>
+      <string>de.jreality.plugin.audio.AudioOptions:preprocessorKey</string>
+      <int-array/>
     </entry>
     <entry>
       <string>de.jreality.plugin.scene.Sky:showSky</string>
@@ -14274,31 +14274,31 @@ Half-edge data structures are used primarily to represent cell decompositions of
       <boolean>false</boolean>
     </entry>
     <entry>
-      <string>de.jreality.plugin.content.CenteredAndScaledContent:active</string>
-      <boolean>true</boolean>
-    </entry>
-    <entry>
       <string>de.jtem.halfedgetools.plugin.buildin.topology.EdgeCollapserPlugin:active</string>
       <boolean>false</boolean>
+    </entry>
+    <entry>
+      <string>de.jreality.plugin.content.CenteredAndScaledContent:active</string>
+      <boolean>true</boolean>
     </entry>
     <entry>
       <string>de.varylab.discreteconformal.plugin.DiscreteConformalPlugin:numCones</string>
       <int>0</int>
     </entry>
     <entry>
-      <string>de.jreality.plugin.basic.Shell:showPanel</string>
-      <boolean>true</boolean>
-    </entry>
-    <entry>
       <string>de.jtem.halfedgetools.plugin.HalfedgeDebuggerPlugin:showEdges</string>
       <boolean>true</boolean>
     </entry>
     <entry>
-      <string>de.jreality.plugin.content.ContentAppearance:spheres</string>
+      <string>de.jreality.plugin.basic.Shell:showPanel</string>
       <boolean>true</boolean>
     </entry>
     <entry>
       <string>de.jreality.plugin.basic.Inspector:active</string>
+      <boolean>true</boolean>
+    </entry>
+    <entry>
+      <string>de.jreality.plugin.content.ContentAppearance:spheres</string>
       <boolean>true</boolean>
     </entry>
     <entry>
@@ -14371,7 +14371,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
     </entry>
     <entry>
       <string>de.jreality.plugin.basic.Inspector:preferredPosition</string>
-      <int>2</int>
+      <int>3</int>
     </entry>
     <entry>
       <string>de.jreality.plugin.basic.StatusBar:active</string>
@@ -14415,7 +14415,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
     </entry>
     <entry>
       <string>de.jreality.plugin.content.ContentAppearance:showLines</string>
-      <boolean>true</boolean>
+      <boolean>false</boolean>
     </entry>
     <entry>
       <string>de.varylab.discreteconformal.plugin.DiscreteConformalPlugin:useProjectiveTexture</string>
@@ -14423,7 +14423,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
     </entry>
     <entry>
       <string>de.jreality.plugin.content.ContentAppearance:transparencyEnabled</string>
-      <boolean>false</boolean>
+      <boolean>true</boolean>
     </entry>
     <entry>
       <string>de.jreality.plugin.menu.BackgroundColor:active</string>
@@ -14581,7 +14581,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
     </entry>
     <entry>
       <string>de.varylab.jrworkspace.frontend.MainWindow:extendedState</string>
-      <int>6</int>
+      <int>0</int>
     </entry>
     <entry>
       <string>de.jreality.plugin.content.ContentAppearance:pointLabelResolution</string>
@@ -14695,12 +14695,12 @@ Half-edge data structures are used primarily to represent cell decompositions of
       <string>de.jreality.plugin.content.ContentAppearance:textures</string>
       <map>
         <entry>
-          <string>1 None</string>
-          <null/>
+          <string>5 Kreise und Sechsecke_pattern.png</string>
+          <string>D:\Workspace\DiscreteConformalLab\data\texture\Kreise und Sechsecke_pattern.png</string>
         </entry>
         <entry>
-          <string>5 Kreise und Sechsecke_pattern.png</string>
-          <string>D:\Users\sechelmann\workspace\DiscreteConformalLab\data\texture\Kreise und Sechsecke_pattern.png</string>
+          <string>1 None</string>
+          <null/>
         </entry>
         <entry>
           <string>4 Chain-Link Fence</string>
@@ -14708,7 +14708,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
         </entry>
         <entry>
           <string>4 checker.jpg</string>
-          <string>D:\Users\sechelmann\workspace\DiscreteConformalLab\data\texture\checker.jpg</string>
+          <string>D:\Workspace\DiscreteConformalLab\data\texture\checker.jpg</string>
         </entry>
         <entry>
           <string>2 Metal Grid</string>
@@ -14781,6 +14781,10 @@ Half-edge data structures are used primarily to represent cell decompositions of
       <boolean>true</boolean>
     </entry>
     <entry>
+      <string>de.jtem.halfedgetools.plugin.buildin.topology.FaceScalerPlugin:active</string>
+      <boolean>false</boolean>
+    </entry>
+    <entry>
       <string>de.jreality.plugin.scene.Terrain:textures</string>
       <map>
         <entry>
@@ -14806,10 +14810,6 @@ Half-edge data structures are used primarily to represent cell decompositions of
       </map>
     </entry>
     <entry>
-      <string>de.jtem.halfedgetools.plugin.buildin.topology.FaceScalerPlugin:active</string>
-      <boolean>false</boolean>
-    </entry>
-    <entry>
       <string>de.jreality.plugin.scene.Terrain:texture</string>
       <string>3 Black Grid</string>
     </entry>
@@ -14823,7 +14823,7 @@ Half-edge data structures are used primarily to represent cell decompositions of
     </entry>
     <entry>
       <string>de.varylab.discreteconformal.plugin.SurfaceRemeshingPlugin:pattern</string>
-      <int>0</int>
+      <int>1</int>
     </entry>
     <entry>
       <string>de.jreality.plugin.content.ContentAppearance:initPosition</string>
