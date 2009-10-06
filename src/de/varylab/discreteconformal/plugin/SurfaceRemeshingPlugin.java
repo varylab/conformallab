@@ -199,8 +199,8 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 			yRes = (int)Math.ceil(ySpan * 2);
 			yStep = 0.5;
 			double radius = 1.0/3.0;
-			xOffset = translation[0] + 0.75*radius;
-			yOffset = translation[1];
+			xOffset = translation[0] + 0.75*radius % 1.0;
+			yOffset = translation[1] % 1.0;
 			for (int i = 0; i < xRes; i++) {
 				for (int j = 0; j < yRes; j++) {
 					CoVertex v = r.addNewVertex();
