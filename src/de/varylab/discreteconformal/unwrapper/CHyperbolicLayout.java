@@ -22,7 +22,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import no.uib.cipr.matrix.Vector;
-import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Pn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.adapter.LengthMapWeightAdapter;
