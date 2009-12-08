@@ -2,12 +2,10 @@ package de.varylab.discreteconformal.unwrapper;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static java.lang.Math.PI;
-import static java.lang.Math.cos;
 import static java.lang.Math.cosh;
 import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.max;
-import static java.lang.Math.sin;
 import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 import geom3d.Point;
@@ -24,6 +22,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import no.uib.cipr.matrix.Vector;
+import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Pn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.adapter.LengthMapWeightAdapter;
@@ -197,13 +196,30 @@ public class CHyperbolicLayout {
 	private static Point layoutTriangle(Point A, Point B, double alpha, double d, double dP) throws Exception {
 		/*
 		double distAB = Pn.distanceBetween(A.get(), B.get(), Pn.HYPERBOLIC);
-		MatrixBuilder T = MatrixBuilder.hyperbolic();
-		T.translateFromTo(B.get(), new double[] {0,0,1});
-		T.scale(d / distAB);
-		T.rotate(alpha, new double[] {0,0,1});
-		T.translateFromTo(new double[] {0,0,1}, B.get());
-		double[] cArr = T.getMatrix().multiplyVector(A.get());
+		MatrixBuilder Ttrans = MatrixBuilder.hyperbolic().translateFromTo(new double[] {0,0,1}, B.get());
+		MatrixBuilder Tscale = MatrixBuilder.hyperbolic().scale(d / distAB);
+		MatrixBuilder Trotate = MatrixBuilder.hyperbolic().rotateZ(alpha);
+		MatrixBuilder TtransInv = MatrixBuilder.hyperbolic().translateFromTo(B.get(), new double[] {0,0,1});
+		double[] cArr = TtransInv.getMatrix().multiplyVector(A.get());
+//		MatrixBuilder.hyperbolic().
 		Pn.normalize(cArr, cArr, Pn.HYPERBOLIC);
+		cArr = Trotate.getMatrix().multiplyVector(cArr); 
+		Pn.normalize(cArr, cArr, Pn.HYPERBOLIC);
+		cArr = Tscale.getMatrix().multiplyVector(cArr);
+		Pn.normalize(cArr, cArr, Pn.HYPERBOLIC);
+		cArr = Ttrans.getMatrix().multiplyVector(cArr);
+		Pn.normalize(cArr, cArr, Pn.HYPERBOLIC);
+
+		double[] bArr = TtransInv.getMatrix().multiplyVector(B.get());
+		Pn.normalize(bArr, bArr, Pn.HYPERBOLIC);
+		bArr = Trotate.getMatrix().multiplyVector(bArr);
+		Pn.normalize(bArr, bArr, Pn.HYPERBOLIC);
+		bArr = Tscale.getMatrix().multiplyVector(bArr);
+		Pn.normalize(bArr, bArr, Pn.HYPERBOLIC);
+		bArr = Ttrans.getMatrix().multiplyVector(bArr);
+		Pn.normalize(bArr, bArr, Pn.HYPERBOLIC);
+		
+
 		Point C = new Point(cArr);
 		double dist = Pn.distanceBetween(C.get(), A.get(), Pn.HYPERBOLIC);
 		if (Math.abs(dist - dP) > 1E-5) {
@@ -217,7 +233,7 @@ public class CHyperbolicLayout {
 		Point lAB = normalize(new Point(A).cross(B).asPoint());
 		Point At = normalize(new Point(lAB).cross(BHat).asPoint());
 		Point AtPerp = normalize(new Point(AHat).cross(BHat).asPoint());
-		Point Ct = normalize(new Point(At).times(cos(alpha)).add(new Point(AtPerp).times(sin(alpha))).asPoint());
+		Point Ct = normalize(new Point(At).times(Math.cos(alpha)).add(new Point(AtPerp).times(Math.sin(alpha))).asPoint());
 		Point C1 = normalize(new Point(B).times(Math.cosh(d)).add(new Point(Ct).times(Math.sinh(d))).asPoint());
 		Point C2 = normalize(new Point(B).times(Math.cosh(d)).subtract(new Point(Ct).times(Math.sinh(d))).asPoint());
 		double d1 = Double.MAX_VALUE;

@@ -53,6 +53,7 @@ import de.jreality.plugin.experimental.ManagedContent;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
+import de.jreality.scene.tool.Tool;
 import de.jreality.shader.ImageData;
 import de.jreality.shader.Texture2D;
 import de.jreality.shader.TextureUtility;
@@ -118,8 +119,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private PointAdapter
 		pointAdapter = new PointAdapter();
 	
-//	private Tool
-//		hyperbolicCopyTool = new HyperbolicCopyTool(this);
+	private Tool
+		hyperbolicCopyTool = new HyperbolicCopyTool(this);
 	private Appearance
 		universalCoverAppearance = new Appearance(),
 		surfaceAppearance = new Appearance();
@@ -372,7 +373,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		managedContent.addContentUnique(getClass(), copiedGeometry);
 		managedContent.addContentUnique(getClass(), fundamentalPolygonRoot);
 		managedContent.addContentUnique(getClass(), universalCoverRoot);
-//		managedContent.addToolUnique(getClass(), hyperbolicCopyTool);
+		managedContent.addToolUnique(getClass(), hyperbolicCopyTool);
 		managedContent.update();
 		surfaceRoot.setVisible(showGeometry.isSelected());
 		if (genus > 1) {
@@ -542,8 +543,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 			pointAdapter
 		);
 		IndexedFaceSetUtility.calculateAndSetNormals(ifs);
-		copiedGeometry.setGeometry(ifs);
-		copiedGeometry.setVisible(true);
+		SceneGraphComponent copy = new SceneGraphComponent();
+		copy.setGeometry(ifs);
+//		copiedGeometry.addChild(copy);
+//		copiedGeometry.setGeometry(ifs);
+//		copiedGeometry.setVisible(true);
+		surfaceRoot.addChild(copy);
 	}
 	
 	
