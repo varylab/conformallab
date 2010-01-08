@@ -1,4 +1,4 @@
-package de.jtem.halfedgetools.functional.conformal.node;
+package de.varylab.discreteconformal.functional.node;
 
 import static java.lang.Math.PI;
 import de.jtem.halfedge.Vertex;

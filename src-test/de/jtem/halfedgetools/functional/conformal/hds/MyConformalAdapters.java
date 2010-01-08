@@ -1,10 +1,10 @@
 package de.jtem.halfedgetools.functional.conformal.hds;
 
-import de.jtem.halfedgetools.functional.conformal.ConformalAdapters.Alpha;
-import de.jtem.halfedgetools.functional.conformal.ConformalAdapters.InitialEnergy;
-import de.jtem.halfedgetools.functional.conformal.ConformalAdapters.Lambda;
-import de.jtem.halfedgetools.functional.conformal.ConformalAdapters.Theta;
-import de.jtem.halfedgetools.functional.conformal.ConformalAdapters.Variable;
+import de.varylab.discreteconformal.functional.ConformalAdapters.Alpha;
+import de.varylab.discreteconformal.functional.ConformalAdapters.InitialEnergy;
+import de.varylab.discreteconformal.functional.ConformalAdapters.Lambda;
+import de.varylab.discreteconformal.functional.ConformalAdapters.Theta;
+import de.varylab.discreteconformal.functional.ConformalAdapters.Variable;
 
 
 public abstract class MyConformalAdapters {

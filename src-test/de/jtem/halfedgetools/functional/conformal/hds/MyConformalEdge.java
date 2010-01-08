@@ -2,7 +2,7 @@ package de.jtem.halfedgetools.functional.conformal.hds;
 
 import javax.vecmath.Point3d;
 
-import de.jtem.halfedgetools.functional.conformal.node.ConformalEdge;
+import de.varylab.discreteconformal.functional.node.ConformalEdge;
 
 
 public class MyConformalEdge extends ConformalEdge<MyConformalVertex, MyConformalEdge, MyConformalFace> {

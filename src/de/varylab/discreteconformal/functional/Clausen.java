@@ -1,4 +1,4 @@
-package de.jtem.halfedgetools.functional.conformal;
+package de.varylab.discreteconformal.functional;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;

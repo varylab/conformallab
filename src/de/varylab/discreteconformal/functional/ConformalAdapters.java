@@ -1,4 +1,4 @@
-package de.jtem.halfedgetools.functional.conformal;
+package de.varylab.discreteconformal.functional;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;

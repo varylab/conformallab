@@ -3,7 +3,7 @@ package de.jtem.halfedgetools.functional.conformal.hds;
 import javax.vecmath.Point3d;
 
 import de.jtem.halfedgetools.functional.HasPosition;
-import de.jtem.halfedgetools.functional.conformal.node.ConformalVertex;
+import de.varylab.discreteconformal.functional.node.ConformalVertex;
 
 
 public class MyConformalVertex extends ConformalVertex<MyConformalVertex, MyConformalEdge, MyConformalFace> implements HasPosition {

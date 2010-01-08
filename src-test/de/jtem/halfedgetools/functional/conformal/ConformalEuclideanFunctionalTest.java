@@ -15,6 +15,7 @@ import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CIniti
 import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CLambda;
 import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CTheta;
 import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CVariable;
+import de.varylab.discreteconformal.functional.ConformalEuclideanFunctional;
 
 public class ConformalEuclideanFunctionalTest extends FunctionalTest<MyConformalVertex, MyConformalEdge, MyConformalFace, MyDomainValue> {
 

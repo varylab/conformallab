@@ -1,7 +1,7 @@
-package de.jtem.halfedgetools.functional.conformal;
+package de.varylab.discreteconformal.functional;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
-import static de.jtem.halfedgetools.functional.conformal.Clausen.lob;
+import static de.varylab.discreteconformal.functional.Clausen.lob;
 import static java.lang.Math.PI;
 import static java.lang.Math.atan2;
 import static java.lang.Math.exp;
@@ -19,11 +19,11 @@ import de.jtem.halfedgetools.functional.Energy;
 import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
-import de.jtem.halfedgetools.functional.conformal.ConformalAdapters.Alpha;
-import de.jtem.halfedgetools.functional.conformal.ConformalAdapters.InitialEnergy;
-import de.jtem.halfedgetools.functional.conformal.ConformalAdapters.Lambda;
-import de.jtem.halfedgetools.functional.conformal.ConformalAdapters.Theta;
-import de.jtem.halfedgetools.functional.conformal.ConformalAdapters.Variable;
+import de.varylab.discreteconformal.functional.ConformalAdapters.Alpha;
+import de.varylab.discreteconformal.functional.ConformalAdapters.InitialEnergy;
+import de.varylab.discreteconformal.functional.ConformalAdapters.Lambda;
+import de.varylab.discreteconformal.functional.ConformalAdapters.Theta;
+import de.varylab.discreteconformal.functional.ConformalAdapters.Variable;
 
 public class ConformalEuclideanFunctional <
 	V extends Vertex<V, E, F>,

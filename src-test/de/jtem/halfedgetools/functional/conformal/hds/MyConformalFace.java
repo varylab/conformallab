@@ -1,6 +1,6 @@
 package de.jtem.halfedgetools.functional.conformal.hds;
 
-import de.jtem.halfedgetools.functional.conformal.node.ConformalFace;
+import de.varylab.discreteconformal.functional.node.ConformalFace;
 
 
 

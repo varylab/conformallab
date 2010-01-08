@@ -5,7 +5,7 @@ import static de.varylab.jtao.TaoAppAddHess.PreconditionerType.SAME_NONZERO_PATT
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
-import de.jtem.halfedgetools.functional.conformal.ConformalHyperbolicFunctional;
+import de.varylab.discreteconformal.functional.ConformalHyperbolicFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;

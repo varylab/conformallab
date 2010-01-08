@@ -10,13 +10,13 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.MyEnergy;
-import de.jtem.halfedgetools.functional.conformal.ConformalEuclideanFunctional;
-import de.jtem.halfedgetools.functional.conformal.ConformalHyperbolicFunctional;
-import de.jtem.halfedgetools.functional.conformal.ConformalAdapters.InitialEnergy;
 import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CAlpha;
 import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CLambda;
 import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CTheta;
 import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CVariable;
+import de.varylab.discreteconformal.functional.ConformalEuclideanFunctional;
+import de.varylab.discreteconformal.functional.ConformalHyperbolicFunctional;
+import de.varylab.discreteconformal.functional.ConformalAdapters.InitialEnergy;
 
 public class ConformalHDS extends HalfEdgeDataStructure<MyConformalVertex, MyConformalEdge, MyConformalFace> {
 
