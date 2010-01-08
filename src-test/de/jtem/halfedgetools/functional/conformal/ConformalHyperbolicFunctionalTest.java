@@ -6,7 +6,6 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
-import de.jtem.halfedgetools.functional.conformal.ConformalHyperbolicFunctional;
 import de.jtem.halfedgetools.functional.conformal.hds.ConformalHDS;
 import de.jtem.halfedgetools.functional.conformal.hds.MyConformalEdge;
 import de.jtem.halfedgetools.functional.conformal.hds.MyConformalFace;
