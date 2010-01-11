@@ -62,7 +62,7 @@ import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.jreality.adapter.Adapter;
 import de.jtem.halfedgetools.jreality.adapter.CoordinateAdapter2Ifs;
 import de.jtem.halfedgetools.jreality.adapter.TextCoordsAdapter2Ifs;
-import de.jtem.halfedgetools.plugin.HalfedgeInterfacePlugin;
+import de.jtem.halfedgetools.plugin.HalfedgeConnectorPlugin;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
@@ -94,7 +94,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	// plug-in section ------------------ 
 	private ManagedContent
 		managedContent = null;
-	private HalfedgeInterfacePlugin<CoVertex, CoEdge, CoFace, CoHDS>
+	private HalfedgeConnectorPlugin<CoVertex, CoEdge, CoFace, CoHDS>
 		hcp = null;
 	
 	// data section ---------------------
@@ -407,7 +407,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private CoHDS getLoaderGeometry() {
 		CoHDS surface = new CoHDS();
 		surface.setTexCoordinatesValid(false);
-		hcp.getCachedHalfEdgeDataStructureElseConvert(surface, new PositionAdapter());
+		hcp.getHalfedgeContent(surface, new PositionAdapter());
 		if (surface.numVertices() == 0) {
 			return null;
 		}
@@ -417,7 +417,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	}
 	
 	
-	@SuppressWarnings("deprecation")
 	private void updateSurface(final boolean align) {
 		if (surface == null) {
 			return;
@@ -557,7 +556,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	@Override
 	public void install(Controller c) throws Exception {
 		super.install(c);
-		hcp = c.getPlugin(HalfedgeInterfacePlugin.class);
+		hcp = c.getPlugin(HalfedgeConnectorPlugin.class);
 		managedContent = c.getPlugin(ManagedContent.class);
 	}
 	

@@ -33,7 +33,7 @@ import de.jreality.plugin.experimental.ManagedContent;
 import de.jreality.ui.AppearanceInspector;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.jreality.adapter.Adapter;
-import de.jtem.halfedgetools.plugin.HalfedgeInterfacePlugin;
+import de.jtem.halfedgetools.plugin.HalfedgeConnectorPlugin;
 import de.jtem.halfedgetools.util.HalfEdgeUtilsExtra;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
@@ -69,7 +69,7 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 	// plug-in connection
 	private ManagedContent
 		managedContent = null;
-	private HalfedgeInterfacePlugin<CoVertex, CoEdge, CoFace, CoHDS>
+	private HalfedgeConnectorPlugin<CoVertex, CoEdge, CoFace, CoHDS>
 		hcp = null;
 	
 	// ui components
@@ -114,7 +114,7 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 		Adapter a1 = new PositionAdapter();
 		Adapter a2 = new TexCoordAdapter(false);
 		CoHDS hds = new CoHDS();
-		hcp.getCachedHalfEdgeDataStructureElseConvert(hds, a1, a2);
+		hcp.getHalfedgeContent(hds, a1, a2);
 		if (hds == null) {
 			return;
 		}
@@ -322,9 +322,7 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 		for (CoFace f : deleteFaces) {
 			r.removeFace(f);
 		}
-		
-		
-		hcp.updateHalfedgeContentAndActiveGeometry(r, true, new PositionAdapter(), new TexCoordAdapter(true));
+		hcp.updateHalfedgeContent(r, true, new PositionAdapter(), new TexCoordAdapter(true));
 	}
 	
 	
@@ -467,7 +465,7 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 	@Override 
 	public void install(Controller c) throws Exception {
 		super.install(c);
-		hcp = c.getPlugin(HalfedgeInterfacePlugin.class);
+		hcp = c.getPlugin(HalfedgeConnectorPlugin.class);
 		managedContent = c.getPlugin(ManagedContent.class);
 		contentAppearance = c.getPlugin(ContentAppearance.class);
 	}
