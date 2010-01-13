@@ -38,7 +38,7 @@ public class AlgebraicCurveGenerator extends Plugin {
 		scene = null;
 	private View
 		view = null;
-	private HalfedgeConnectorPlugin<CoVertex, CoEdge, CoFace, CoHDS>
+	private HalfedgeConnectorPlugin
 		halfedgeConnectorPlugin = null;
 	private GenerateAction
 		generateAction = new GenerateAction();
@@ -164,7 +164,6 @@ public class AlgebraicCurveGenerator extends Plugin {
 		
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void install(Controller c) throws Exception {
 		super.install(c);

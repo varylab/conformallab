@@ -69,7 +69,7 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 	// plug-in connection
 	private ManagedContent
 		managedContent = null;
-	private HalfedgeConnectorPlugin<CoVertex, CoEdge, CoFace, CoHDS>
+	private HalfedgeConnectorPlugin
 		hcp = null;
 	
 	// ui components
@@ -461,7 +461,6 @@ public class SurfaceRemeshingPlugin extends ShrinkPanelPlugin implements ActionL
 	
 	
 	
-	@SuppressWarnings("unchecked")
 	@Override 
 	public void install(Controller c) throws Exception {
 		super.install(c);

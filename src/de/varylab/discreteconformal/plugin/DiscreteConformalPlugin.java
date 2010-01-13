@@ -94,7 +94,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	// plug-in section ------------------ 
 	private ManagedContent
 		managedContent = null;
-	private HalfedgeConnectorPlugin<CoVertex, CoEdge, CoFace, CoHDS>
+	private HalfedgeConnectorPlugin
 		hcp = null;
 	
 	// data section ---------------------
@@ -552,7 +552,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	}
 	
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public void install(Controller c) throws Exception {
 		super.install(c);

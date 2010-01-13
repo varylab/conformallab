@@ -30,7 +30,7 @@ public class ConformalLab {
 		viewer.registerPlugin(new ManagedContentGUI());
 		viewer.registerPlugin(new SurfaceRemeshingPlugin());
 		viewer.registerPlugin(new DiscreteConformalPlugin());
-		viewer.registerPlugin(new HalfedgeConnectorPlugin<CoVertex, CoEdge, CoFace, CoHDS>());
+		viewer.registerPlugin(new HalfedgeConnectorPlugin());
 		viewer.registerPlugin(new HalfedgeDebuggerPlugin<CoVertex, CoEdge, CoFace, CoHDS>());
 		viewer.registerPlugin(new HalfedgeToolBar());
 		viewer.registerPlugin(new TriangulatePlugin<CoVertex, CoEdge, CoFace, CoHDS>());
