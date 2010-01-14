@@ -17,7 +17,7 @@ import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CTheta
 import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CVariable;
 import de.varylab.discreteconformal.functional.ConformalEuclideanFunctional;
 
-public class ConformalEuclideanFunctionalTest extends FunctionalTest<MyConformalVertex, MyConformalEdge, MyConformalFace, MyDomainValue> {
+public class ConformalEuclideanFunctionalTest extends FunctionalTest<MyConformalVertex, MyConformalEdge, MyConformalFace> {
 
 	private CTheta
 		theta = new CTheta();
@@ -29,8 +29,8 @@ public class ConformalEuclideanFunctionalTest extends FunctionalTest<MyConformal
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	public ConformalEuclideanFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace, MyDomainValue>
-		functional = new ConformalEuclideanFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace, MyDomainValue>(variable, theta, lambda, alpha, energy);
+	public ConformalEuclideanFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace>
+		functional = new ConformalEuclideanFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace>(variable, theta, lambda, alpha, energy);
 	
 	@Override
 	public void init() {

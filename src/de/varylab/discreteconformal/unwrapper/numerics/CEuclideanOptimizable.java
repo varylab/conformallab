@@ -34,8 +34,8 @@ public class CEuclideanOptimizable implements Optimizable {
 		energy = new CInitialEnergy();
 	private CAlpha
 		alpha = new CAlpha();
-	private ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace, MTJU>
-		functional = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace, MTJU>(variable, theta, lambda, alpha, energy);
+	private ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>
+		functional = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 
 	public CEuclideanOptimizable(CoHDS hds) {
 		this.hds = hds;

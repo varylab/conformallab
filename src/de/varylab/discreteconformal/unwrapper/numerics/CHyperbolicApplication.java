@@ -37,8 +37,8 @@ public class CHyperbolicApplication extends TaoApplication implements
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	private ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace, TaoU> 
-		functional = new ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace, TaoU>(variable, theta, lambda, alpha, energy);
+	private ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace> 
+		functional = new ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 		
 
 	public CHyperbolicApplication(CoHDS hds) {

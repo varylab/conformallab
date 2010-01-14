@@ -84,7 +84,7 @@ public class CoHDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> {
 		CTheta theta = new CTheta();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		MyEnergy E = new MyEnergy();
-		ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace, ZeroU> func = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace, ZeroU>(var, theta, lambda, alpha, zeroEnergy);
+		ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace> func = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>(var, theta, lambda, alpha, zeroEnergy);
 		for (final CoFace f : getFaces()) {
 			E.setZero();
 			func.triangleEnergyAndAlphas(this, zeroU, f, E);
@@ -124,7 +124,7 @@ public class CoHDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> {
 		CAlpha alpha = new CAlpha();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		ConformalEnergy E = new ConformalEnergy();
-		ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace, ZeroU> func = new ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace, ZeroU>(var, theta, lambda, alpha, zeroEnergy);
+		ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace> func = new ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace>(var, theta, lambda, alpha, zeroEnergy);
 		for (final CoFace f : getFaces()) {
 			E.setZero();
 			func.triangleEnergyAndAlphas(zeroU, f, E);

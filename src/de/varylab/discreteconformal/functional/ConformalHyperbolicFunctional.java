@@ -32,9 +32,8 @@ import de.varylab.discreteconformal.functional.ConformalAdapters.Variable;
 public class ConformalHyperbolicFunctional <
 	V extends Vertex<V, E, F>,
 	E extends Edge<V, E, F>,
-	F extends Face<V, E, F>,
-	X extends DomainValue
-> implements Functional<V, E, F, X> {
+	F extends Face<V, E, F>
+> implements Functional<V, E, F> {
 
 	private Variable<V> 
 		var = null;
@@ -67,7 +66,7 @@ public class ConformalHyperbolicFunctional <
 		HDS extends HalfEdgeDataStructure<V,E,F>
 	> void evaluate(
 		HDS hds, 
-		X u,
+		DomainValue u,
 		Energy E, 
 		Gradient G, 
 		Hessian H
@@ -99,7 +98,7 @@ public class ConformalHyperbolicFunctional <
 		// combinatorics
 			final HalfEdgeDataStructure<V, E, F> hds,
 		// input
-			final X u,
+			final DomainValue u,
 		// output
 			final Energy E, 
 			final Gradient G
@@ -153,7 +152,7 @@ public class ConformalHyperbolicFunctional <
 		// combinatorics
 			final HalfEdgeDataStructure<V, E, F> hds,
 		// input
-			final X u,
+			final DomainValue u,
 			final Hessian H
 	) {
 		H.setZero();
@@ -222,7 +221,7 @@ public class ConformalHyperbolicFunctional <
 	
 	public boolean triangleEnergyAndAlphas(
 		// input	
-			final X u, 
+			final DomainValue u, 
 			final F f, 
 		// output
 			final Energy E
@@ -327,6 +326,11 @@ public class ConformalHyperbolicFunctional <
 			}
 		}
 		return nz;
+	}
+	
+	@Override
+	public boolean hasHessian() {
+		return true;
 	}
 	
 	

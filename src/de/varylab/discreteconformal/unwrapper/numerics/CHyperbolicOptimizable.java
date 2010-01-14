@@ -34,8 +34,8 @@ public class CHyperbolicOptimizable implements Optimizable {
 		energy = new CInitialEnergy();
 	private CAlpha
 		alpha = new CAlpha();
-	private ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace, MTJU>
-		functional = new ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace, MTJU>(variable, theta, lambda, alpha, energy);
+	private ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace>
+		functional = new ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 
 	public CHyperbolicOptimizable(CoHDS hds) {
 		this.hds = hds;

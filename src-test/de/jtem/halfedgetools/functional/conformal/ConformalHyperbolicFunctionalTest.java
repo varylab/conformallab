@@ -17,7 +17,7 @@ import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CTheta
 import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CVariable;
 import de.varylab.discreteconformal.functional.ConformalHyperbolicFunctional;
 
-public class ConformalHyperbolicFunctionalTest extends FunctionalTest<MyConformalVertex, MyConformalEdge, MyConformalFace, MyDomainValue> {
+public class ConformalHyperbolicFunctionalTest extends FunctionalTest<MyConformalVertex, MyConformalEdge, MyConformalFace> {
 
 	public static final Double
 		eps = 1E-5,
@@ -32,8 +32,8 @@ public class ConformalHyperbolicFunctionalTest extends FunctionalTest<MyConforma
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	private ConformalHyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace, MyDomainValue>
-		functional = new ConformalHyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace, MyDomainValue>(variable, theta, lambda, alpha, energy);
+	private ConformalHyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace>
+		functional = new ConformalHyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace>(variable, theta, lambda, alpha, energy);
 	
 	
 	@Override

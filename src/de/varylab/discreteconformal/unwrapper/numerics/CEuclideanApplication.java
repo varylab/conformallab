@@ -37,8 +37,8 @@ public class CEuclideanApplication extends TaoApplication implements
 		energy = new CInitialEnergy();
 	private CAlpha
 		alpha = new CAlpha();
-	private ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace, TaoU>
-		functional = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace, TaoU>(variable, theta, lambda, alpha, energy);
+	private ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>
+		functional = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 		
 
 	public CEuclideanApplication(CoHDS hds) {

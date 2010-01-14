@@ -28,9 +28,8 @@ import de.varylab.discreteconformal.functional.ConformalAdapters.Variable;
 public class ConformalEuclideanFunctional <
 	V extends Vertex<V, E, F>,
 	E extends Edge<V, E, F>,
-	F extends Face<V, E, F>,
-	X extends DomainValue
-> implements Functional<V, E, F, X> {
+	F extends Face<V, E, F>
+> implements Functional<V, E, F> {
 	
 	private Variable<V> 
 		var = null;
@@ -63,7 +62,7 @@ public class ConformalEuclideanFunctional <
 		HDS extends HalfEdgeDataStructure<V,E,F>
 	> void evaluate(
 		HDS hds, 
-		X u,
+		DomainValue u,
 		Energy E, 
 		Gradient G, 
 		Hessian H
@@ -94,7 +93,7 @@ public class ConformalEuclideanFunctional <
 		// combinatorics
 			final HalfEdgeDataStructure<V, E, F> hds,
 		// input
-			final X u,
+			final DomainValue u,
 		// output
 			final Energy E, 
 			final Gradient G
@@ -152,7 +151,7 @@ public class ConformalEuclideanFunctional <
 		// combinatorics
 			final HalfEdgeDataStructure<V, E, F> hds,
 		// input
-			final X u,
+			final DomainValue u,
 			final Hessian H
 	) {
 		H.setZero();
@@ -206,7 +205,7 @@ public class ConformalEuclideanFunctional <
 		// combinatorics	
 			final HalfEdgeDataStructure<V, E, F> hds,
 		// input	
-			final X u, 
+			final DomainValue u, 
 			final F f,
 		// output
 			final Energy E
@@ -272,7 +271,7 @@ public class ConformalEuclideanFunctional <
 		// combinatorics	
 			final HalfEdgeDataStructure<V, E, F> hds,
 		// input	
-			final X u,
+			final DomainValue u,
 			final F f,
 		// output	
 			final double[] cotE, 
@@ -351,6 +350,11 @@ public class ConformalEuclideanFunctional <
 			}
 		}
 		return nz;
+	}
+	
+	@Override
+	public boolean hasHessian() {
+		return true;
 	}
 	
 }

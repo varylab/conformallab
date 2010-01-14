@@ -81,7 +81,7 @@ public class ConformalHDS extends HalfEdgeDataStructure<MyConformalVertex, MyCon
 		CTheta theta = new CTheta();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		MyEnergy E = new MyEnergy();
-		ConformalEuclideanFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace, ZeroU> func = new ConformalEuclideanFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace, ZeroU>(var, theta, lambda, alpha, zeroEnergy);
+		ConformalEuclideanFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace> func = new ConformalEuclideanFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace>(var, theta, lambda, alpha, zeroEnergy);
 		for (final MyConformalFace f : getFaces()) {
 			E.setZero();
 			func.triangleEnergyAndAlphas(this, zeroU, f, E);
@@ -121,7 +121,7 @@ public class ConformalHDS extends HalfEdgeDataStructure<MyConformalVertex, MyCon
 		CAlpha alpha = new CAlpha();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		MyEnergy E = new MyEnergy();
-		ConformalHyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace, ZeroU> func = new ConformalHyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace, ZeroU>(var, theta, lambda, alpha, zeroEnergy);
+		ConformalHyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace> func = new ConformalHyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace>(var, theta, lambda, alpha, zeroEnergy);
 		for (final MyConformalFace f : getFaces()) {
 			E.setZero();
 			func.triangleEnergyAndAlphas(zeroU, f, E);
