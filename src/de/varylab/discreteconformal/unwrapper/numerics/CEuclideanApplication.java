@@ -101,6 +101,11 @@ public class CEuclideanApplication extends TaoApplication implements
 		public void setZero() {
 			G.zeroEntries();
 		}
+
+		@Override
+		public double get(int i) {
+			return G.getValue(i);
+		}
 		
 	}
 	
@@ -127,6 +132,11 @@ public class CEuclideanApplication extends TaoApplication implements
 		@Override
 		public void set(int i, int j, double value) {
 			H.setValue(i, j, value, INSERT_VALUES);
+		}
+		
+		@Override
+		public double get(int i, int j) {
+			return H.getValue(i, j);
 		}
 		
 	}

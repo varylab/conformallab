@@ -97,6 +97,11 @@ public class CEuclideanOptimizable implements Optimizable {
 			G.zero();
 		}
 		
+		@Override
+		public double get(int i) {
+			return G.get(i);
+		}
+		
 	}
 	
 	
@@ -122,6 +127,11 @@ public class CEuclideanOptimizable implements Optimizable {
 		@Override
 		public void setZero() {
 			H.zero();
+		}
+		
+		@Override
+		public double get(int i, int j) {
+			return H.get(i, j);
 		}
 		
 	}
