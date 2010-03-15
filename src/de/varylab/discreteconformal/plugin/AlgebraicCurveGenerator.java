@@ -18,17 +18,18 @@ import de.jreality.plugin.basic.Scene;
 import de.jreality.plugin.basic.View;
 import de.jreality.plugin.basic.ViewMenuBar;
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.jtem.halfedgetools.algorithm.Coord3DAdapter;
-import de.jtem.halfedgetools.algorithm.catmullclark.CatmullClarkSubdivision;
-import de.jtem.halfedgetools.plugin.HalfedgeConnectorPlugin;
+import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.algorithm.subdivision.CatmullClark;
+import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.Plugin;
 import de.jtem.jrworkspace.plugin.PluginInfo;
-import de.varylab.discreteconformal.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.calculator.SubdivisionCalculator;
 
 public class AlgebraicCurveGenerator extends Plugin {
 
@@ -38,7 +39,7 @@ public class AlgebraicCurveGenerator extends Plugin {
 		scene = null;
 	private View
 		view = null;
-	private HalfedgeConnectorPlugin
+	private HalfedgeInterface
 		halfedgeConnectorPlugin = null;
 	private GenerateAction
 		generateAction = new GenerateAction();
@@ -109,12 +110,13 @@ public class AlgebraicCurveGenerator extends Plugin {
 		hds.getEdge(17).linkOppositeEdge(hds.getEdge(7));
 		hds.getEdge(20).linkOppositeEdge(hds.getEdge(21));
 		
-		CatmullClarkSubdivision<CoVertex, CoEdge, CoFace>
-			subD = new CatmullClarkSubdivision<CoVertex, CoEdge, CoFace>();
+		CatmullClark
+			subD = new CatmullClark();
 		CoHDS hds2 = hds;
 		for (int i = 0; i < genus; i++) {
 			hds2 = new CoHDS();
-			subD.subdivide(hds, hds2, new MyPositionAdapter(), null, null);
+			SubdivisionCalculator s = new SubdivisionCalculator();
+			subD.subdivide(hds, hds2, s, s, s);
 			hds = hds2;
 		}
 		
@@ -125,23 +127,10 @@ public class AlgebraicCurveGenerator extends Plugin {
 		}
 		
 		if (HalfEdgeUtils.isValidSurface(hds2, true)) {
-			halfedgeConnectorPlugin.updateHalfedgeContent(hds2, true, new PositionAdapter());
+			AdapterSet adapters = new AdapterSet(new PositionAdapter());
+			halfedgeConnectorPlugin.set(hds2, adapters);
 			JRViewerUtility.encompassEuclidean(scene);
 		}
-	}
-	
-	private class MyPositionAdapter implements Coord3DAdapter<CoVertex> {
-
-		@Override
-		public double[] getCoord(CoVertex v) {
-			return v.getPosition().get();
-		}
-
-		@Override
-		public void setCoord(CoVertex v, double[] c) {
-			v.getPosition().set(c);
-		}
-		
 	}
 	
 	
@@ -171,7 +160,7 @@ public class AlgebraicCurveGenerator extends Plugin {
 		scene = c.getPlugin(Scene.class);
 		viewMenuBar = c.getPlugin(ViewMenuBar.class);
 		viewMenuBar.addMenuItem(getClass(), 0, generateAction, "Halfedge");
-		halfedgeConnectorPlugin = c.getPlugin(HalfedgeConnectorPlugin.class);
+		halfedgeConnectorPlugin = c.getPlugin(HalfedgeInterface.class);
 	}
 	
 	

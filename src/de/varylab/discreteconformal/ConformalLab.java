@@ -4,14 +4,10 @@ import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
 import de.jreality.plugin.experimental.ManagedContentGUI;
 import de.jreality.plugin.experimental.WebContentLoader;
-import de.jtem.halfedgetools.plugin.HalfedgeConnectorPlugin;
 import de.jtem.halfedgetools.plugin.HalfedgeDebuggerPlugin;
+import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeToolBar;
-import de.jtem.halfedgetools.plugin.buildin.TriangulatePlugin;
-import de.varylab.discreteconformal.heds.CoEdge;
-import de.varylab.discreteconformal.heds.CoFace;
-import de.varylab.discreteconformal.heds.CoHDS;
-import de.varylab.discreteconformal.heds.CoVertex;
+import de.jtem.halfedgetools.plugin.algorithm.subdivision.TriangulatePlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.SurfaceRemeshingPlugin;
 
@@ -30,10 +26,10 @@ public class ConformalLab {
 		viewer.registerPlugin(new ManagedContentGUI());
 		viewer.registerPlugin(new SurfaceRemeshingPlugin());
 		viewer.registerPlugin(new DiscreteConformalPlugin());
-		viewer.registerPlugin(new HalfedgeConnectorPlugin());
-		viewer.registerPlugin(new HalfedgeDebuggerPlugin<CoVertex, CoEdge, CoFace, CoHDS>());
+		viewer.registerPlugin(new HalfedgeInterface());
+		viewer.registerPlugin(new HalfedgeDebuggerPlugin());
 		viewer.registerPlugin(new HalfedgeToolBar());
-		viewer.registerPlugin(new TriangulatePlugin<CoVertex, CoEdge, CoFace, CoHDS>());
+		viewer.registerPlugin(new TriangulatePlugin());
 		viewer.registerPlugin(new WebContentLoader());
 		viewer.startup();
 	} 

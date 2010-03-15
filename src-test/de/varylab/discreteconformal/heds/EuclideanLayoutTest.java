@@ -22,7 +22,7 @@ import de.jreality.ui.viewerapp.ViewerApp;
 import de.jreality.util.Input;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
-import de.varylab.discreteconformal.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
 
 public class EuclideanLayoutTest {

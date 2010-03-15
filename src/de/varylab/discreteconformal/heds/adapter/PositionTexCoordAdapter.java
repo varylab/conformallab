@@ -1,10 +1,16 @@
-package de.varylab.discreteconformal.adapter;
+package de.varylab.discreteconformal.heds.adapter;
 
 import geom3d.Point;
-import de.jtem.halfedgetools.jreality.adapter.CoordinateAdapter2Ifs;
+import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
+import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Position;
+import de.varylab.discreteconformal.adapter.HyperbolicModel;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoVertex;
 
-public class PositionTexCoordAdapter implements CoordinateAdapter2Ifs<CoVertex> {
+@Position
+public class PositionTexCoordAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
 
 	private HyperbolicModel
 		model = HyperbolicModel.Klein;
@@ -12,16 +18,18 @@ public class PositionTexCoordAdapter implements CoordinateAdapter2Ifs<CoVertex> 
 		projective = true;
 	
 	public PositionTexCoordAdapter(boolean projective) {
+		super(CoVertex.class, null, null, double[].class, true, false);
 		this.projective = projective;
 	}
 
 	public PositionTexCoordAdapter(HyperbolicModel model, boolean projective) {
+		this(projective);
 		this.model = model;
-		this.projective = projective;
 	}
 	
 	
-	public double[] getCoordinate(CoVertex v) {
+	@Override
+	public double[] getVertexValue(CoVertex v, AdapterSet a) {
 		Point t = v.getTextureCoord();
 		if (projective) {
 			switch (model) {
@@ -46,10 +54,10 @@ public class PositionTexCoordAdapter implements CoordinateAdapter2Ifs<CoVertex> 
 		}
 	}
 
-	public AdapterType getAdapterType() {
-		return AdapterType.VERTEX_ADAPTER;
+	@Override
+	public double getPriority() {
+		return 1;
 	}
-
 	
 	public void setModel(HyperbolicModel model) {
 		this.model = model;

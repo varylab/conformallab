@@ -57,30 +57,27 @@ import de.jreality.scene.tool.Tool;
 import de.jreality.shader.ImageData;
 import de.jreality.shader.Texture2D;
 import de.jreality.shader.TextureUtility;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
-import de.jtem.halfedgetools.jreality.adapter.Adapter;
-import de.jtem.halfedgetools.jreality.adapter.CoordinateAdapter2Ifs;
-import de.jtem.halfedgetools.jreality.adapter.TextCoordsAdapter2Ifs;
-import de.jtem.halfedgetools.plugin.HalfedgeConnectorPlugin;
+import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
-import de.varylab.discreteconformal.adapter.MarkedEdgesAdapter;
-import de.varylab.discreteconformal.adapter.PointAdapter;
-import de.varylab.discreteconformal.adapter.PositionAdapter;
-import de.varylab.discreteconformal.adapter.PositionTexCoordAdapter;
-import de.varylab.discreteconformal.adapter.TexCoordAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.adapter.BranchPointColorAdapter;
+import de.varylab.discreteconformal.heds.adapter.MarkedEdgesColorAdapter;
+import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.PositionTexCoordAdapter;
+import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap.QuantizationMode;
 import de.varylab.discreteconformal.util.FundamentalDomainUtility;
-import de.varylab.discreteconformal.util.UniformizationUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;
 
@@ -94,7 +91,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	// plug-in section ------------------ 
 	private ManagedContent
 		managedContent = null;
-	private HalfedgeConnectorPlugin
+	private HalfedgeInterface
 		hcp = null;
 	
 	// data section ---------------------
@@ -111,13 +108,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private int
 		genus = -1;
 	
-	private Triangulator<CoVertex, CoEdge, CoFace>
-		triangulator = new Triangulator<CoVertex, CoEdge, CoFace>();
+	private Triangulator
+		triangulator = new Triangulator();
 
-	private MarkedEdgesAdapter<CoVertex, CoEdge, CoFace>
-		cutColorAdapter = new MarkedEdgesAdapter<CoVertex, CoEdge, CoFace>();
-	private PointAdapter
-		pointAdapter = new PointAdapter();
+	private MarkedEdgesColorAdapter
+		cutColorAdapter = new MarkedEdgesColorAdapter();
+	private BranchPointColorAdapter
+		pointAdapter = new BranchPointColorAdapter();
 	
 	private Tool
 		hyperbolicCopyTool = new HyperbolicCopyTool(this);
@@ -407,7 +404,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 	private CoHDS getLoaderGeometry() {
 		CoHDS surface = new CoHDS();
 		surface.setTexCoordinatesValid(false);
-		hcp.getHalfedgeContent(surface, new PositionAdapter());
+		surface = hcp.get(surface, new AdapterSet(new PositionAdapter()));
 		if (surface.numVertices() == 0) {
 			return null;
 		}
@@ -421,20 +418,23 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		if (surface == null) {
 			return;
 		}
+		ConverterHeds2JR converter = new ConverterHeds2JR();
 		boolean projective = useProjectiveTexture.isSelected();
-		Adapter texAdapter = new TexCoordAdapter(getSelectedModel(), projective);
-		Adapter posAdapter = null;
+		AdapterSet adapters = new AdapterSet(new TexCoordAdapter(getSelectedModel(), projective));
 		if (showUnwrapped.isSelected()) {
-			posAdapter = new PositionTexCoordAdapter(getSelectedModel(), projective);
+			adapters.add(new PositionTexCoordAdapter(getSelectedModel(), projective));
 		} else {
-			posAdapter = new PositionAdapter();
+			adapters.add(new PositionAdapter());
 		}
 		IndexedFaceSet ifs = null;
 		if (genus >= 1) {
-			ifs = hcp.toIndexedFaceSet(surface, true, posAdapter, texAdapter, cutColorAdapter, pointAdapter);
+			adapters.add(cutColorAdapter);
+			adapters.add(pointAdapter);
+			ifs = converter.heds2ifs(surface, adapters, null);
 		} else {
-			ifs = hcp.toIndexedFaceSet(surface, true, posAdapter, texAdapter);
+			ifs = converter.heds2ifs(surface, adapters, null);
 		}
+		IndexedFaceSetUtility.calculateAndSetNormals(ifs);
 		surfaceRoot.setGeometry(ifs);
 		surfaceRoot.setVisible(true);
 	}
@@ -491,71 +491,71 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements Action
 		}
 		System.out.println("hyperbolic motion: " + edge + " -> " + coEdge);
 		
-		final Matrix A = UniformizationUtility.makeHyperbolicMotion(coEdge, edge.getOppositeEdge());
+//		final Matrix A = UniformizationUtility.makeHyperbolicMotion(coEdge, edge.getOppositeEdge());
 
-		ConverterHeds2JR<CoVertex, CoEdge, CoFace>
-			converter = new ConverterHeds2JR<CoVertex, CoEdge, CoFace>();
-		Adapter texAdapter = new TextCoordsAdapter2Ifs<CoVertex> () {
-
-			@Override
-			public double[] getTextCoordinate(CoVertex v) {
-				Point t = v.getTextureCoord();
-				double[] raw = new double[] {t.x(), t.y(), 0.0, t.z()};
-				A.transformVector(raw);
-				if (klein) {
-					return new double[] {raw[0], raw[1], 0.0, raw[3]};
-				} else {
-					return new double[] {raw[0], raw[1], 0.0, raw[3] + 1};
-				}
-			}
-
-			@Override
-			public AdapterType getAdapterType() {
-				return AdapterType.VERTEX_ADAPTER;
-			}
-			
-		};
-		Adapter texPosAdapter = new CoordinateAdapter2Ifs<CoVertex> () {
-
-			@Override
-			public AdapterType getAdapterType() {
-				return AdapterType.VERTEX_ADAPTER;
-			}
-
-			@Override
-			public double[] getCoordinate(CoVertex v) {
-				Point t = v.getTextureCoord();
-				double[] raw = new double[] {t.x(), t.y(), 0.0, t.z()};
-				A.transformVector(raw);
-				if (klein) {
-					return new double[] {raw[0], raw[1], 0.0, raw[3]};
-				} else {
-					return new double[] {raw[0], raw[1], 0.0, raw[3] + 1};
-				}
-			}
-			
-		};
-		IndexedFaceSet ifs = converter.heds2ifs(
-			surface, 
-			texPosAdapter, 
-			texAdapter, 
-			cutColorAdapter, 
-			pointAdapter
-		);
-		IndexedFaceSetUtility.calculateAndSetNormals(ifs);
-		SceneGraphComponent copy = new SceneGraphComponent();
-		copy.setGeometry(ifs);
-//		copiedGeometry.addChild(copy);
-//		copiedGeometry.setGeometry(ifs);
-//		copiedGeometry.setVisible(true);
-		surfaceRoot.addChild(copy);
+//		ConverterHeds2JR converter = new ConverterHeds2JR();
+//		Adapter texAdapter = new TextCoordsAdapter2Ifs<CoVertex> () {
+//
+//			@Override
+//			public double[] getTextCoordinate(CoVertex v) {
+//				Point t = v.getTextureCoord();
+//				double[] raw = new double[] {t.x(), t.y(), 0.0, t.z()};
+//				A.transformVector(raw);
+//				if (klein) {
+//					return new double[] {raw[0], raw[1], 0.0, raw[3]};
+//				} else {
+//					return new double[] {raw[0], raw[1], 0.0, raw[3] + 1};
+//				}
+//			}
+//
+//			@Override
+//			public AdapterType getAdapterType() {
+//				return AdapterType.VERTEX_ADAPTER;
+//			}
+//			
+//		};
+//		Adapter texPosAdapter = new CoordinateAdapter2Ifs<CoVertex> () {
+//
+//			@Override
+//			public AdapterType getAdapterType() {
+//				return AdapterType.VERTEX_ADAPTER;
+//			}
+//
+//			@Override
+//			public double[] getCoordinate(CoVertex v) {
+//				Point t = v.getTextureCoord();
+//				double[] raw = new double[] {t.x(), t.y(), 0.0, t.z()};
+//				A.transformVector(raw);
+//				if (klein) {
+//					return new double[] {raw[0], raw[1], 0.0, raw[3]};
+//				} else {
+//					return new double[] {raw[0], raw[1], 0.0, raw[3] + 1};
+//				}
+//			}
+//			
+//		};
+//		IndexedFaceSet ifs = converter.heds2ifs(
+//			surface, 
+//			texPosAdapter, 
+//			texAdapter, 
+//			cutColorAdapter, 
+//			pointAdapter
+//		);
+//		IndexedFaceSetUtility.calculateAndSetNormals(ifs);
+//		SceneGraphComponent copy = new SceneGraphComponent();
+//		copy.setGeometry(ifs);
+////		copiedGeometry.addChild(copy);
+////		copiedGeometry.setGeometry(ifs);
+////		copiedGeometry.setVisible(true);
+//		surfaceRoot.addChild(copy);
 	}
 	
 	
 	@Override
 	public void install(Controller c) throws Exception {
 		super.install(c);
-		hcp = c.getPlugin(HalfedgeConnectorPlugin.class);
+		hcp = c.getPlugin(HalfedgeInterface.class);
+		hcp.addAdapter(new PositionAdapter());
 		managedContent = c.getPlugin(ManagedContent.class);
 	}
 	

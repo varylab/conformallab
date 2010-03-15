@@ -25,7 +25,7 @@ import de.jreality.util.Input;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.jtem.halfedgetools.jreality.adapter.ColorAdapter2Ifs;
-import de.varylab.discreteconformal.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.util.Search;
 import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
 

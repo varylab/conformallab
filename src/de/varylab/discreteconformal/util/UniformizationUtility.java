@@ -34,11 +34,13 @@ import de.jreality.math.Pn;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
+import de.jtem.halfedge.Node;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.jtem.halfedgetools.plugin.AnnotationAdapter.EdgeAnnotation;
-import de.jtem.halfedgetools.plugin.AnnotationAdapter.VertexAnnotation;
-import de.jtem.halfedgetools.util.triangulationutilities.TriangulationException;
+import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.impl.StringAdapter;
+import de.jtem.halfedgetools.adapter.type.Label;
+import de.jtem.halfedgetools.util.TriangulationException;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -893,34 +895,67 @@ public class UniformizationUtility {
 	
 	
 	
-	
-	public static class AngleSumAdapter extends VertexAnnotation<CoVertex> {
+	@Label
+	public static class AngleSumAdapter extends StringAdapter {
 
-//		private DecimalFormat
-//			df = new DecimalFormat("#.####");
+		public AngleSumAdapter() {
+			super(true, false);
+		}
+		
+		public <
+			V extends Vertex<V, E, F>,
+			E extends Edge<V, E, F>,
+			F extends Face<V, E, F>,
+			N extends Node<V, E, F>
+		> String get(N n, AdapterSet a) {
+			return "" + n.getIndex();
+		}
 		
 		@Override
-		public String getText(CoVertex n) {
-			return "" + n.getIndex();// + " Σ" + df.format(getAngleSum(n));
+		public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
+			return true;
+		}
+
+		@Override
+		public double getPriority() {
+			return 1;
 		}
 		
 	}
 	
-	
-	public static class AlphaAdapter extends EdgeAnnotation<CoEdge> {
+	@Label
+	public static class AlphaAdapter extends StringAdapter {
+
+		public AlphaAdapter() {
+			super(true, false);
+		}
 
 		private DecimalFormat
 			df = new DecimalFormat("#.####");
-			
 		
+		public <
+			V extends Vertex<V, E, F>,
+			E extends Edge<V, E, F>,
+			F extends Face<V, E, F>,
+			N extends Node<V, E, F>
+		> String get(N n, AdapterSet a) {
+			CoEdge ce = (CoEdge)n;
+			return n.getIndex() + " α:" + df.format(ce.getAlpha());
+		}
+
+
 		@Override
-		public String getText(CoEdge n) {
-			return n.getIndex() + " α:" + df.format(n.getAlpha());
+		public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
+			return CoEdge.class.isAssignableFrom(nodeClass);
+		}
+
+
+		@Override
+		public double getPriority() {
+			return 1;
 		}
 		
 	}
-	
-	
 	
 
 	private static class EdgeAngleDivideComparator implements Comparator<CoEdge> {
