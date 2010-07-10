@@ -18,16 +18,23 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import de.jreality.geometry.IndexedFaceSetUtility;
+import de.jreality.plugin.JRViewer;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
-import de.jreality.ui.viewerapp.ViewerApp;
 import de.jreality.util.Input;
+import de.jtem.halfedge.Edge;
+import de.jtem.halfedge.Face;
+import de.jtem.halfedge.Node;
+import de.jtem.halfedge.Vertex;
+import de.jtem.halfedgetools.adapter.AbstractAdapter;
+import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.impl.DoubleArrayAdapter;
+import de.jtem.halfedgetools.adapter.type.Color;
+import de.jtem.halfedgetools.adapter.type.Radius;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
-import de.jtem.halfedgetools.jreality.adapter.ColorAdapter2Ifs;
-import de.jtem.halfedgetools.jreality.adapter.RelRadiusAdapter2Ifs;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.util.HomologyUtility;
 import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
@@ -43,12 +50,13 @@ public class HomologyTest {
 		SceneGraphComponent c = null;
 		IndexedFaceSet ifs = null;
 		try {
-			Input in = new Input("Obj File", EuclideanLayoutTest.class.getResourceAsStream("brezel.obj"));
+			Input in = new Input("Obj File", EuclideanLayoutTest.class.getResourceAsStream("brezel2.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
-			ConverterJR2Heds<CoVertex, CoEdge, CoFace> converter = new ConverterJR2Heds<CoVertex, CoEdge, CoFace>(CoVertex.class, CoEdge.class, CoFace.class);
+			ConverterJR2Heds converter = new ConverterJR2Heds();
 			hds = new CoHDS();
-			converter.ifs2heds(ifs, hds, new PositionAdapter());
+			AdapterSet a = new AdapterSet(new PositionAdapter());
+			converter.ifs2heds(ifs, hds, a, null);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -67,7 +75,8 @@ public class HomologyTest {
 	}
 	
 	
-	private static class EdgeColorAdapter implements ColorAdapter2Ifs<CoEdge>, RelRadiusAdapter2Ifs<CoEdge> {
+	@Color
+	private static class EdgeColorAdapter extends DoubleArrayAdapter {
 
 		private double[][]
 		    colors = null;
@@ -78,6 +87,7 @@ public class HomologyTest {
 		
 		
 		public EdgeColorAdapter(List<Set<CoEdge>> paths) {
+			super(true, false);
 			this.paths = paths;
 			colors = new double[paths.size()][3];
 			Random rnd = new Random();
@@ -88,8 +98,13 @@ public class HomologyTest {
 			}
 		}
 		
+		
 		@Override
-		public double[] getColor(CoEdge edge) {
+		public <
+			V extends Vertex<V,E,F>, 
+			E extends Edge<V,E,F>, 
+			F extends Face<V,E,F>
+		> double[] getE(E edge, AdapterSet a) {
 			for (Set<CoEdge> path : paths) {
 				if (path.contains(edge) || path.contains(edge.getOppositeEdge())) {
 					return colors[paths.indexOf(path)];
@@ -98,20 +113,52 @@ public class HomologyTest {
 			return defaultColor;
 		}
 
+		@Override
+		public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
+			return Edge.class.isAssignableFrom(nodeClass);
+		}
 
 		@Override
-		public double getReelRadius(CoEdge edge) {
+		public double getPriority() {
+			return 0;
+		}
+		
+	}
+	
+	
+	@Radius
+	private static class EdgeRadiusAdapter extends AbstractAdapter<Double> {
+
+		private List<Set<CoEdge>> 
+			paths = null;
+		
+		public EdgeRadiusAdapter(List<Set<CoEdge>> paths) {
+			super(Double.class, true, false);
+			this.paths = paths;
+		}
+		
+		@Override
+		public <
+			V extends Vertex<V,E,F>, 
+			E extends Edge<V,E,F>, 
+			F extends Face<V,E,F>
+		> Double getE(E edge, AdapterSet a) {
 			for (Set<CoEdge> path : paths) {
 				if (path.contains(edge) || path.contains(edge.getOppositeEdge())) {
-					return 2.0;
+					return 10.0;
 				}
 			}
 			return 0.0;
 		}
-		
+
 		@Override
-		public AdapterType getAdapterType() {
-			return AdapterType.EDGE_ADAPTER;
+		public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
+			return Edge.class.isAssignableFrom(nodeClass);
+		}
+
+		@Override
+		public double getPriority() {
+			return 0;
 		}
 		
 	}
@@ -127,9 +174,14 @@ public class HomologyTest {
 		
 		PositionAdapter positionAdapter = new PositionAdapter();
 		EdgeColorAdapter colorAdapter = new EdgeColorAdapter(paths);
+		EdgeRadiusAdapter radiusAdapter = new EdgeRadiusAdapter(paths);
 		
-		ConverterHeds2JR<CoVertex, CoEdge, CoFace> converter = new ConverterHeds2JR<CoVertex, CoEdge, CoFace>();
-		IndexedFaceSet ifs = converter.heds2ifs(hds, colorAdapter, positionAdapter);
+		ConverterHeds2JR converter = new ConverterHeds2JR();
+		AdapterSet a = new AdapterSet();
+		a.add(positionAdapter);
+		a.add(colorAdapter);
+		a.add(radiusAdapter);
+		IndexedFaceSet ifs = converter.heds2ifs(hds,  a);
 		
 		SceneGraphComponent c = new SceneGraphComponent();
 		c.setGeometry(ifs);
@@ -140,7 +192,7 @@ public class HomologyTest {
 		app.setAttribute(FACE_DRAW, true);
 		app.setAttribute(POLYGON_SHADER + "." + DIFFUSE_COLOR, LIGHT_GRAY);
 		c.setAppearance(app);
-		ViewerApp.display(c);
+		JRViewer.display(c);
 	}
 	
 	

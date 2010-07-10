@@ -10,9 +10,9 @@ import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.plugin.tasks.Unwrap.QuantizationMode;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
-import de.varylab.discreteconformal.util.ConesUtility;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
@@ -21,30 +21,25 @@ import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 public class EuclideanUnwrapper implements Unwrapper{
 
 	private QuantizationMode
-		quantizationMode = QuantizationMode.Quads;
+		conesMode = QuantizationMode.AllAngles,
+		boundaryQuantMode = QuantizationMode.AllAngles;
+	private BoundaryMode
+		boundaryMode = BoundaryMode.Isometric;
 	private int 
 		maxIterations = 150,
 		numCones = 0;
-	private boolean
-		quantizeCones = false;
 	private double
 		gradTolerance = 1E-8;
 	
 	
-	
+	@Override
 	public Vector unwrap(CoHDS surface) throws Exception {
-		surface.prepareInvariantDataEuclidean();
-		
+		UnwrapUtility.prepareInvariantDataEuclidean(surface, boundaryMode, boundaryQuantMode);
 		// cones
-		Collection<CoVertex> cones = null;
-		if (numCones > 0) {
-			cones = ConesUtility.setUpMesh(surface, numCones);
-		}
-		
+		Collection<CoVertex> cones = ConesUtility.setUpCones(surface, numCones); 
+		// optimization
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
 		int n = opt.getDomainDimension();
-		
-		// optimization
 		DenseVector u = new DenseVector(n);
 		Matrix H = new CompRowMatrix(n,n,makeNonZeros(surface));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
@@ -57,9 +52,8 @@ public class EuclideanUnwrapper implements Unwrapper{
 		} catch (NotConvergentException e) {
 			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
 		}
-		
-		if (quantizeCones && numCones > 0) {
-			cones = ConesUtility.quantizeCones(surface, cones, quantizationMode);
+		if (!cones.isEmpty()) {
+			cones = ConesUtility.quantizeCones(surface, cones, conesMode);
 			n = opt.getDomainDimension();
 			u = new DenseVector(n);
 			H = new CompRowMatrix(n,n,makeNonZeros(surface));
@@ -69,25 +63,17 @@ public class EuclideanUnwrapper implements Unwrapper{
 			} catch (NotConvergentException e) {
 				throw new UnwrapException("Cone quantization did not succeed: " + e.getMessage());
 			}
-		}
-		// layout
-		if (numCones > 0) {
 			ConesUtility.cutMesh(surface, cones, u);
 		}
 		return u;
 	}
 	
-	
 	public void setNumCones(int numCones) {
 		this.numCones = numCones;
 	}
-	
-	public void setQuantizeCones(boolean quantizeCones) {
-		this.quantizeCones = quantizeCones;
-	}
-	
-	public void setQuantizationMode(QuantizationMode quantizationMode) {
-		this.quantizationMode = quantizationMode;
+
+	public void setConeMode(QuantizationMode quantizationMode) {
+		this.conesMode = quantizationMode;
 	}
 
 	@Override
@@ -98,6 +84,14 @@ public class EuclideanUnwrapper implements Unwrapper{
 	@Override
 	public void setMaxIterations(int maxIterations) {
 		this.maxIterations = maxIterations;
+	}
+
+	public void setBoundaryQuantMode(QuantizationMode boundaryQuantMode) {
+		this.boundaryQuantMode = boundaryQuantMode;
+	}
+	
+	public void setBoundaryMode(BoundaryMode boundaryMode) {
+		this.boundaryMode = boundaryMode;
 	}
 	
 }

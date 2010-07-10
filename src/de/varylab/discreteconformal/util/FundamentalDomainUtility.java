@@ -20,10 +20,7 @@ import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.geom.Arc2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.util.List;
-
-import javax.imageio.ImageIO;
 
 import de.jreality.geometry.IndexedLineSetFactory;
 import de.jreality.math.Matrix;
@@ -145,11 +142,11 @@ public class FundamentalDomainUtility {
 		List<double[]> orbit = poly.getOrbit(root);
 		g.setColor(BLACK);
 		drawPolygon(poly, orbit, new Matrix(), g, res, 0, depth, model);
-		try {
-			ImageIO.write(image, "png", new File("test.png"));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+//		try {
+//			ImageIO.write(image, "png", new File("test.png"));
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 		return image;
 	}
 	

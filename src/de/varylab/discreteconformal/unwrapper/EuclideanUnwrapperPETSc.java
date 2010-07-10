@@ -8,9 +8,9 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.plugin.tasks.Unwrap.QuantizationMode;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
-import de.varylab.discreteconformal.util.ConesUtility;
 import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.PETSc;
 import de.varylab.jpetsc.Vec;
@@ -20,24 +20,22 @@ import de.varylab.jtao.Tao.GetSolutionStatusResult;
 public class EuclideanUnwrapperPETSc implements Unwrapper {
 
 	private QuantizationMode
-		quantizationMode = QuantizationMode.Quads;
+		conesMode = QuantizationMode.AllAngles,
+		boundaryQuantMode = QuantizationMode.AllAngles;
+	private BoundaryMode
+		boundaryMode = BoundaryMode.Isometric;
 	private int 
 		maxIterations = 150,
 		numCones = 0;
-	private boolean
-		quantizeCones = false;
 	private double
 		gradTolerance = 1E-8;
 
 	
+	@Override
 	public Vector unwrap(CoHDS surface) throws Exception {
-		surface.prepareInvariantDataEuclidean();
+		UnwrapUtility.prepareInvariantDataEuclidean(surface, boundaryMode, boundaryQuantMode);
 		// cones
-		Collection<CoVertex> cones = null;
-		if (numCones > 0) {
-			cones = ConesUtility.setUpMesh(surface, numCones);
-		}
-
+		Collection<CoVertex> cones = ConesUtility.setUpCones(surface, numCones); 
 		// optimization
 		Vec u;
 		Mat H;
@@ -45,11 +43,9 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		Tao.Initialize();
 		CEuclideanApplication app = new CEuclideanApplication(surface);
 		int n = app.getDomainDimension();
-		
 		u = new Vec(n);
 		H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(surface));
 		H.assemble();
-		
 		app.setInitialSolutionVec(u);
 		app.setHessianMat(H, H);	
 		
@@ -60,14 +56,14 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		optimizer.solve();
 		
 		GetSolutionStatusResult status = optimizer.getSolutionStatus();
-		System.out.println("Minimization: " + status);
+		System.out.println(status);
 		if (status.reason.cvalue() < 0) {
 			throw new UnwrapException("Optimization did not succeed: " + status);
 		}
 
-		if (quantizeCones && numCones > 0) {
+		if (!cones.isEmpty()) {
 			// calculating cones
-			cones = ConesUtility.quantizeCones(surface, cones, quantizationMode);
+			cones = ConesUtility.quantizeCones(surface, cones, conesMode);
 			
 			// optimizing conformal structure
 			CEuclideanApplication app2 = new CEuclideanApplication(surface);
@@ -89,13 +85,12 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 			if (status.reason.cvalue() < 0) {
 				throw new UnwrapException("Cone quantization did not succeed: " + status);
 			}
+			double [] uValues = u.getArray();
+			ConesUtility.cutMesh(surface, cones, new DenseVector(uValues));
 		}
 		
 		// layout
 		double [] uValues = u.getArray();
-		if (numCones > 0) {
-			ConesUtility.cutMesh(surface, cones, new DenseVector(uValues));
-		}
 		DenseVector result = new DenseVector(uValues);
 		u.restoreArray();
 		return result; 
@@ -105,14 +100,9 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		this.numCones = numCones;
 	}
 	
-	public void setQuantizeCones(boolean quantizeCones) {
-		this.quantizeCones = quantizeCones;
+	public void setConeMode(QuantizationMode quantizationMode) {
+		this.conesMode = quantizationMode;
 	}
-	
-	public void setQuantizationMode(QuantizationMode quantizationMode) {
-		this.quantizationMode = quantizationMode;
-	}
-
 	
 	@Override
 	public void setGradientTolerance(double tol) {
@@ -122,6 +112,14 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 	@Override
 	public void setMaxIterations(int maxIterations) {
 		this.maxIterations = maxIterations;
+	}
+	
+	public void setBoundaryQuantMode(QuantizationMode boundaryQuantMode) {
+		this.boundaryQuantMode = boundaryQuantMode;
+	}
+	
+	public void setBoundaryMode(BoundaryMode boundaryMode) {
+		this.boundaryMode = boundaryMode;
 	}
 	
 }

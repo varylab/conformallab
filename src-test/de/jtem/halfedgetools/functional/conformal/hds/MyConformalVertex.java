@@ -11,10 +11,12 @@ public class MyConformalVertex extends ConformalVertex<MyConformalVertex, MyConf
 	private Point3d
 		pos = new Point3d();
 	
+	@Override
 	public void setPosition(Point3d p) {
 		pos.set(p);
 	}
 	
+	@Override
 	public Point3d getPosition() {
 		return pos;
 	}

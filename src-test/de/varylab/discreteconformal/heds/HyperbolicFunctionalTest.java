@@ -11,8 +11,10 @@ import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.util.Input;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicApplication;
 import de.varylab.jpetsc.Vec;
 import de.varylab.jtao.Tao;
@@ -33,9 +35,10 @@ public class HyperbolicFunctionalTest {
 			Input in = new Input("Obj File", EuclideanLayoutTest.class.getResourceAsStream("torusCoarse.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
-			ConverterJR2Heds<CoVertex, CoEdge, CoFace> converter = new ConverterJR2Heds<CoVertex, CoEdge, CoFace>(CoVertex.class, CoEdge.class, CoFace.class);
+			ConverterJR2Heds converter = new ConverterJR2Heds();
 			hds = new CoHDS();
-			converter.ifs2heds(ifs, hds, new PositionAdapter());
+			AdapterSet a = new AdapterSet(new PositionAdapter());
+			converter.ifs2heds(ifs, hds, a, null);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -44,7 +47,7 @@ public class HyperbolicFunctionalTest {
 	
 	@Test
 	public void testGradient() throws Exception {
-		hds.prepareInvariantDataHyperbolic();
+		UnwrapUtility.prepareInvariantDataHyperbolic(hds);
 		
 		Tao.Initialize();
 		Tao optimizer = new Tao(Method.CG);
@@ -60,7 +63,7 @@ public class HyperbolicFunctionalTest {
 	
 	@Test
 	public void testHessian() throws Exception {
-		hds.prepareInvariantDataHyperbolic();
+		UnwrapUtility.prepareInvariantDataHyperbolic(hds);
 		
 		Tao.Initialize();
 		Tao optimizer = new Tao(Method.CG);

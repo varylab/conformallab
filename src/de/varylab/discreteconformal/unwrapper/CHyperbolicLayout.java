@@ -113,10 +113,10 @@ public class CHyperbolicLayout {
 	 * @param angleMapParam may be null
 	 */
 	public static CoVertex doLayout(CoHDS hds, CoVertex root, Vector u) {
-		System.out.println("Layout --------------------");
-		for (CoVertex v : hds.getVertices()) {
-			System.out.println("sum " + v.getIndex() + ": " + getAngleSum(v));
-		}
+//		System.out.println("Layout --------------------");
+//		for (CoVertex v : hds.getVertices()) {
+//			System.out.println("sum " + v.getIndex() + ": " + getAngleSum(v));
+//		}
 		final Map<CoEdge, Double> lMap = getLengthMap(hds, u);
 		
 		final Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());

@@ -9,12 +9,13 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedge"/>
 	<classpathentry kind="lib" path="lib/mtj.jar"/>
 	<classpathentry kind="lib" path="lib/vecmath.jar"/>
+	<classpathentry kind="lib" path="lib/jPETScTaoV1.7jPETScTao.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/CurvatureGeometry"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/MTJOptimization"/>
-	<classpathentry kind="lib" path="lib/jPETScTaoV1.6jPETScTao.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jreality"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedgetools"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/mfc"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

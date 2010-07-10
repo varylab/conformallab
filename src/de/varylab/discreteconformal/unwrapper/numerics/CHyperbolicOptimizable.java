@@ -17,7 +17,6 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
-import de.varylab.discreteconformal.unwrapper.numerics.Adapters.ConformalEnergy;
 import de.varylab.mtjoptimization.Optimizable;
 
 public class CHyperbolicOptimizable implements Optimizable {
@@ -173,6 +172,7 @@ public class CHyperbolicOptimizable implements Optimizable {
 		return E.get();
 	}
 
+	@Override
 	public Integer getDomainDimension() {
 		return functional.getDimension(hds);
 	}

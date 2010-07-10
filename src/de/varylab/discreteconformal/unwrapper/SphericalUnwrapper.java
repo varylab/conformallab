@@ -1,5 +1,7 @@
 package de.varylab.discreteconformal.unwrapper;
 
+import static de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode.Isometric;
+import static de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode.AllAngles;
 import geom3d.Point;
 
 import java.util.Map;
@@ -30,6 +32,7 @@ public class SphericalUnwrapper implements Unwrapper{
 	/**
 	 * This is completely untested and probably rubbish
 	 */
+	@Override
 	public Vector unwrap(CoHDS surface) throws Exception {
 		// punch out vertex 0 and reorder solver indices
 		CoVertex v0 = surface.getVertex(0);
@@ -46,7 +49,7 @@ public class SphericalUnwrapper implements Unwrapper{
 //		HashSet<CoVertex> boundary = new HashSet<CoVertex>();
 //		boundary.add(v0);
 //		boundary.addAll(neighboringVertices(v0));
-		int n = surface.prepareInvariantDataEuclidean();
+		int n = UnwrapUtility.prepareInvariantDataEuclidean(surface, Isometric, AllAngles);
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
 		
 		// optimization

@@ -26,7 +26,7 @@ public class PathUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> Set<V> getVerticesOnPath(Set<E> path) {
+	> Set<V> getVerticesOnPath(Iterable<E> path) {
 		Set<V> result = new TreeSet<V>(new NodeComparator<V>());
 		for (E e : path) {
 			result.add(e.getStartVertex());
@@ -36,17 +36,17 @@ public class PathUtility {
 	}
 	
 	public static <
-	V extends Vertex<V, E, F>,
-	E extends Edge<V, E, F>,
-	F extends Face<V, E, F>
-> Set<V> getUnorderedVerticesOnPath(Set<E> path) {
-	Set<V> result = new HashSet<V>();
-	for (E e : path) {
-		result.add(e.getStartVertex());
-		result.add(e.getTargetVertex());
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> Set<V> getUnorderedVerticesOnPath(Iterable<E> path) {
+		Set<V> result = new HashSet<V>();
+		for (E e : path) {
+			result.add(e.getStartVertex());
+			result.add(e.getTargetVertex());
+		}
+		return result;
 	}
-	return result;
-}
 	
 	
 	/**
@@ -61,7 +61,7 @@ public class PathUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> Set<E> getFullPath(Set<E> path) {
+	> Set<E> getFullPath(Iterable<E> path) {
 		Set<E> result = new TreeSet<E>(new NodeComparator<E>());
 		for (E e : path) {
 			result.add(e);

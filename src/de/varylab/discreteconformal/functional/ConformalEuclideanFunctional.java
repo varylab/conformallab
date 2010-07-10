@@ -58,6 +58,7 @@ public class ConformalEuclideanFunctional <
 	}
 	
 	
+	@Override
 	public <
 		HDS extends HalfEdgeDataStructure<V,E,F>
 	> void evaluate(
@@ -76,6 +77,7 @@ public class ConformalEuclideanFunctional <
 	};
 	
 	
+	@Override
 	public <
 		HDS extends HalfEdgeDataStructure<V,E,F>
 	> int getDimension(HDS hds) {
@@ -324,6 +326,7 @@ public class ConformalEuclideanFunctional <
 	}
 	
 	
+	@Override
 	public <
 		HDS extends HalfEdgeDataStructure<V,E,F>
 	> int[][] getNonZeroPattern(HDS hds) {

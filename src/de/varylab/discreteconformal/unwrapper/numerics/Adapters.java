@@ -1,6 +1,5 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
-import de.jtem.halfedgetools.functional.Energy;
 import de.varylab.discreteconformal.functional.ConformalAdapters.Alpha;
 import de.varylab.discreteconformal.functional.ConformalAdapters.InitialEnergy;
 import de.varylab.discreteconformal.functional.ConformalAdapters.Lambda;
@@ -14,24 +13,29 @@ public abstract class Adapters {
 
 
 	public static class CVariable implements Variable<CoVertex> {
+		@Override
 		public boolean isVariable(CoVertex v) {
 			return getVarIndex(v) >= 0;
 		}
+		@Override
 		public int getVarIndex(CoVertex v) {
 			return v.getSolverIndex();
 		}
 	}
 	
 	public static class CAlpha implements Alpha<CoEdge> {
+		@Override
 		public double getAlpha(CoEdge e) {
 			return e.getAlpha();
 		}
+		@Override
 		public void setAlpha(CoEdge e, double alpha) {
 			e.setAlpha(alpha);
 		}
 	}
 	
 	public static class CLambda implements Lambda<CoEdge> {
+		@Override
 		public double getLambda(CoEdge e) {
 			return e.getLambda();
 		}
@@ -42,42 +46,17 @@ public abstract class Adapters {
 	}
 	
 	public static class CTheta implements Theta<CoVertex> {
+		@Override
 		public double getTheta(CoVertex v) {
 			return v.getTheta();
 		}
 	}
 	
 	public static class CInitialEnergy implements InitialEnergy<CoFace> {
+		@Override
 		public double getInitialEnergy(CoFace f) {
 			return f.getInitialEnergy();
 		}
-	}
-	
-	
-	public static class ConformalEnergy implements Energy {
-
-		public double 
-			E = 0.0;
-		
-		public double get() {
-			return E;
-		}
-		
-		@Override
-		public void add(double E) {
-			this.E += E;
-		}
-
-		@Override
-		public void set(double E) {
-			this.E = E;
-		}
-
-		@Override
-		public void setZero() {
-			E = 0.0;
-		}
-		
 	}
 	
 }

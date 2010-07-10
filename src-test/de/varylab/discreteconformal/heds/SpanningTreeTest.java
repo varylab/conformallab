@@ -16,15 +16,21 @@ import java.util.Set;
 import org.junit.BeforeClass;
 
 import de.jreality.geometry.IndexedFaceSetUtility;
+import de.jreality.plugin.JRViewer;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
-import de.jreality.ui.viewerapp.ViewerApp;
 import de.jreality.util.Input;
+import de.jtem.halfedge.Edge;
+import de.jtem.halfedge.Face;
+import de.jtem.halfedge.Node;
+import de.jtem.halfedge.Vertex;
+import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.impl.DoubleArrayAdapter;
+import de.jtem.halfedgetools.adapter.type.Color;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
-import de.jtem.halfedgetools.jreality.adapter.ColorAdapter2Ifs;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.util.SpanningTreeUtility;
 
@@ -42,9 +48,10 @@ public class SpanningTreeTest {
 			Input in = new Input("Obj File", EuclideanLayoutTest.class.getResourceAsStream("brezel.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
-			ConverterJR2Heds<CoVertex, CoEdge, CoFace> converter = new ConverterJR2Heds<CoVertex, CoEdge, CoFace>(CoVertex.class, CoEdge.class, CoFace.class);
+			ConverterJR2Heds converter = new ConverterJR2Heds();
 			hds = new CoHDS();
-			converter.ifs2heds(ifs, hds, new PositionAdapter());
+			AdapterSet a = new AdapterSet(new PositionAdapter());
+			converter.ifs2heds(ifs, hds, a, null);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -65,7 +72,8 @@ public class SpanningTreeTest {
 	}
 
 	
-	private static class EdgeColorAdapter implements ColorAdapter2Ifs<CoEdge> {
+	@Color
+	private static class EdgeColorAdapter extends DoubleArrayAdapter {
 
 		private double[]
 		    normalColor = {0.0, 0.0, 0.0},
@@ -78,12 +86,17 @@ public class SpanningTreeTest {
 		
 		
 		public EdgeColorAdapter(Set<CoEdge> marked, Set<CoEdge> marked2) {
+			super(true, false);
 			this.markedEdges = marked;
 			this.markedEdges2 = marked2;
 		}
 		
 		@Override
-		public double[] getColor(CoEdge edge) {
+		public <
+			V extends Vertex<V, E, F>,
+			E extends Edge<V, E, F>,
+			F extends Face<V, E, F>
+		> double[] getE(E edge, AdapterSet a) {
 			if (markedEdges.contains(edge) && markedEdges2.contains(edge)) {
 				return bothColor;
 			} else if (markedEdges.contains(edge)) {
@@ -96,10 +109,15 @@ public class SpanningTreeTest {
 		}
 
 		@Override
-		public AdapterType getAdapterType() {
-			return AdapterType.EDGE_ADAPTER;
+		public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
+			return CoEdge.class.isAssignableFrom(nodeClass);
 		}
-		
+
+		@Override
+		public double getPriority() {
+			return 0;
+		}
+
 	}
 	
 	
@@ -113,8 +131,11 @@ public class SpanningTreeTest {
 		PositionAdapter positionAdapter = new PositionAdapter();
 		EdgeColorAdapter colorAdapter = new EdgeColorAdapter(tree, treeDual);
 		
-		ConverterHeds2JR<CoVertex, CoEdge, CoFace> converter = new ConverterHeds2JR<CoVertex, CoEdge, CoFace>();
-		IndexedFaceSet ifs = converter.heds2ifs(hds, colorAdapter, positionAdapter);
+		ConverterHeds2JR converter = new ConverterHeds2JR();
+		AdapterSet a = new AdapterSet();
+		a.add(positionAdapter);
+		a.add(colorAdapter);
+		IndexedFaceSet ifs = converter.heds2ifs(hds, a);
 		
 		SceneGraphComponent c = new SceneGraphComponent();
 		c.setGeometry(ifs);
@@ -125,7 +146,7 @@ public class SpanningTreeTest {
 		app.setAttribute(FACE_DRAW, true);
 		app.setAttribute(POLYGON_SHADER + "." + DIFFUSE_COLOR, LIGHT_GRAY);
 		c.setAppearance(app);
-		ViewerApp.display(c);
+		JRViewer.display(c);
 	}
 	
 }

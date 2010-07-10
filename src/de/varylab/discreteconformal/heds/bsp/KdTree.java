@@ -3,6 +3,8 @@ package de.varylab.discreteconformal.heds.bsp;
 import geom3d.Point;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -14,7 +16,7 @@ import java.util.Vector;
  *
  */
 public class KdTree <
-	DataClass extends HasPosition
+	DataClass extends HasBspPos
 > implements Serializable{
 
 	private static final long 
@@ -32,7 +34,7 @@ public class KdTree <
 
 		int dim; // Dimension in which plane lies
 
-		HasPosition splitPos; // Position of plane in
+		HasBspPos splitPos; // Position of plane in
 
 		KdNode() {
 			children = new KdNode[2];
@@ -46,7 +48,7 @@ public class KdTree <
 			return dim;
 		}
 
-		public HasPosition getSplitPos() {
+		public HasBspPos getSplitPos() {
 			return splitPos;
 		}
 
@@ -92,10 +94,28 @@ public class KdTree <
 
 	private int maxBucketSize; // maximum size of points per cell
 
-	private  DataClass[] points; // HasPosition data
+	private  ArrayList<DataClass> points; // HasPosition data
 
 	private KdNode root; // root node
 
+	
+	/**
+	 * Constructor for a kd tree
+	 * Builds an KdTree for the given points with maxBucketSize
+	 * The order of the points in the array may change!
+	 * @param points
+	 * @param maxBucketSize
+	 */
+	public KdTree(Collection<DataClass> points, int maxBucketSize, boolean useMedian) {
+		this.points = new ArrayList<DataClass>(points);
+		this.maxBucketSize = maxBucketSize;
+        if (useMedian) {
+        	root = buildKdTree(0, points.size() - 1, 0);
+        } else {
+        	root = buildKdTree(0, points.size() - 1, getBBox());
+        }
+	}
+	
 	/**
 	 * Constructor for a kd tree
 	 * Builds an KdTree for the given points with maxBucketSize
@@ -104,12 +124,13 @@ public class KdTree <
 	 * @param maxBucketSize
 	 */
 	public KdTree(DataClass[] points, int maxBucketSize, boolean useMedian) {
-		this.points = points;
+		this.points = new ArrayList<DataClass>(Arrays.asList(points));
 		this.maxBucketSize = maxBucketSize;
-        if (useMedian)
+        if (useMedian) {
         	root = buildKdTree(0, points.length - 1, 0);
-        else
+        } else {
         	root = buildKdTree(0, points.length - 1, getBBox());
+        }
 	}
 
 	/**
@@ -127,7 +148,7 @@ public class KdTree <
 	 * @return An array containing the points or null, if there weren't any points
 	 * in that radius 
 	 */
-	final public Vector<DataClass> collectInRadius(HasPosition p, double radius) {
+	final public Vector<DataClass> collectInRadius(HasBspPos p, double radius) {
 		Vector<DataClass> result = new Vector<DataClass>();
 		// Only search in a radius greater than zero
 		if(radius <= 0) 
@@ -146,14 +167,14 @@ public class KdTree <
 	 * @return A vector with the points or null, if there weren't any points
 	 * in that radius 
 	 */
-	final protected Vector<DataClass> collectInRadius(KdNode node, HasPosition target, double radius2,
+	final protected Vector<DataClass> collectInRadius(KdNode node, HasBspPos target, double radius2,
 			Vector<DataClass> vec) {
 		// If we reached a leaf, perform a linear search
 		if (node instanceof KdLeaf) {
 			for (int i = node.getStartIndex(); i <= node.getEndIndex(); i++) {
-				double dist2 = distance2(points[i], target);
+				double dist2 = distance2(points.get(i), target);
 				if (dist2 != 0 && dist2 < radius2) {
-					vec.add(points[i]);
+					vec.add(points.get(i));
 				}
 			}
 			return vec;
@@ -163,14 +184,14 @@ public class KdTree <
 			// Traverse left child
 			vec = collectInRadius(node.children[0], target, radius2, vec);
 			// Traverse right child, if it is possible that it contains a nearer HasPosition
-			if (Math.abs(node.splitPos.getPosition().get(node.dim) - target.getPosition().get(node.dim)) < radius2) {
+			if (Math.abs(node.splitPos.getBspPos().get(node.dim) - target.getBspPos().get(node.dim)) < radius2) {
 				vec = collectInRadius(node.children[1], target, radius2, vec);
 			}
 		} else {
 			// Traverse right child
 			vec = collectInRadius(node.children[1], target, radius2, vec);
 			// Traverse left child, if it is possible that it contains a nearer HasPosition
-			if (Math.abs(node.splitPos.getPosition().get(node.dim) - target.getPosition().get(node.dim)) < radius2) {
+			if (Math.abs(node.splitPos.getBspPos().get(node.dim) - target.getBspPos().get(node.dim)) < radius2) {
 				vec = collectInRadius(node.children[0], target, radius2, vec);
 			}
 		}
@@ -183,12 +204,12 @@ public class KdTree <
 	 * @param knearest
 	 * @return An array containing the points or null
 	 */
-	final public Vector<DataClass> collectKNearest(HasPosition p, int knearest) {
+	final public Vector<DataClass> collectKNearest(HasBspPos p, int knearest) {
 		Vector<DataClass> result = new Vector<DataClass>();
 		if( knearest <= 0 ) { 
 			return result;
 		} 
-		if( points.length <= knearest ) {
+		if( points.size() <= knearest ) {
 			for (DataClass point : points)
 				result.add(point);
 			return result;
@@ -213,14 +234,14 @@ public class KdTree <
 	 * @param pq
 	 * @return
 	 */
-	private KdPQueue<DataClass> collectKNearest(KdNode node, HasPosition target, KdPQueue<DataClass> pq) {
+	private KdPQueue<DataClass> collectKNearest(KdNode node, HasBspPos target, KdPQueue<DataClass> pq) {
 		// If we reached a leaf, perform a linear search
 		if (node instanceof KdLeaf) {
             int s = node.getStartIndex(); int e = node.getEndIndex();
             for (int i = s ; i <= e; i++) {
-				double dist2 = distance2(points[i], target);
+				double dist2 = distance2(points.get(i), target);
 				if (dist2 != 0 && dist2 < pq.getMaximumDistance()) {
-					pq.add(dist2, points[i]);
+					pq.add(dist2, points.get(i));
 				}
 			}
 			return pq;
@@ -230,7 +251,7 @@ public class KdTree <
 			// Traverse left child
 			pq = collectKNearest(node.children[0], target, pq);
 			// Traverse right child, if it is possible that it contains a nearer HasPosition
-			if (Math.abs(node.splitPos.getPosition().get(node.dim)- target.getPosition().get(node.dim)) < pq
+			if (Math.abs(node.splitPos.getBspPos().get(node.dim)- target.getBspPos().get(node.dim)) < pq
 					.getMaximumDistance()) {
 				pq = collectKNearest(node.children[1], target, pq);
 			}
@@ -238,7 +259,7 @@ public class KdTree <
 			// Traverse right child
 			pq = collectKNearest(node.children[1], target, pq);
 			// Traverse left child, if it is possible that it contains a nearer HasPosition
-			if (Math.abs(node.splitPos.getPosition().get(node.dim) - target.getPosition().get(node.dim)) < pq
+			if (Math.abs(node.splitPos.getBspPos().get(node.dim) - target.getBspPos().get(node.dim)) < pq
 					.getMaximumDistance()) {
 				pq = collectKNearest(node.children[0], target, pq);
 			}
@@ -252,8 +273,8 @@ public class KdTree <
 	 * @param p2
 	 * @return
 	 */
-	final public double distance2(final HasPosition p1, final HasPosition p2) {
-        double result = p1.getPosition().distanceTo(p2.getPosition());
+	final public double distance2(final HasBspPos p1, final HasBspPos p2) {
+        double result = p1.getBspPos().distanceTo(p2.getBspPos());
 		return result;
 	}
 
@@ -285,14 +306,14 @@ public class KdTree <
 	 * @param dim
 	 * @return true if a is smaller than b, false otherwise
 	 */
-	final boolean isSmaller(HasPosition a, HasPosition b, int dim) {
-		if (a.getPosition().get(dim) < b.getPosition().get(dim))
+	final boolean isSmaller(HasBspPos a, HasBspPos b, int dim) {
+		if (a.getBspPos().get(dim) < b.getBspPos().get(dim))
 			return true;
 //		int codim = (dim + 1) % 3;
-		if (a.getPosition().get(dim) == b.getPosition().get(dim) && a.getPosition().get(dim) < b.getPosition().get(dim))
+		if (a.getBspPos().get(dim) == b.getBspPos().get(dim) && a.getBspPos().get(dim) < b.getBspPos().get(dim))
 			return true;
 //		codim = (dim + 2) % 3;
-        return a.getPosition().get(dim) == b.getPosition().get(dim) && a.getPosition().get(dim) < b.getPosition().get(dim);
+        return a.getBspPos().get(dim) == b.getBspPos().get(dim) && a.getBspPos().get(dim) < b.getBspPos().get(dim);
     }
 
 
@@ -311,20 +332,20 @@ public class KdTree <
 		DataClass x;
 		DataClass y;
 		while (start < end) {
-			x = points[mid];
+			x = points.get(mid);
 			lower = start;
 			upper = end;
 			do {
-				while (isSmaller(points[lower], x, dim))
+				while (isSmaller(points.get(lower), x, dim))
 					lower++;
-				while (isSmaller(x, points[upper], dim))
+				while (isSmaller(x, points.get(upper), dim))
 					upper--;
-				//while (x<points[upper][dim]) upper--;
+				//while (x<points.get(upper)[dim]) upper--;
 				if (lower <= upper) {
 					// swap
-					y = points[lower];
-					points[lower] = points[upper];
-					points[upper] = y;
+					y = points.get(lower);
+					points.set(lower, points.get(upper));
+					points.set(upper, y);
 					lower++;
 					upper--;
 				}
@@ -335,7 +356,7 @@ public class KdTree <
 				end = upper;
 		}
 		// shift median to the right to allow multiple points on one axis
-		// while (mid<last  && points[mid][dim] == points[mid+1][dim]) mid++;
+		// while (mid<last  && points.get(mid)[dim] == points[mid+1][dim]) mid++;
 		return mid;
 	}
 	
@@ -360,15 +381,15 @@ public class KdTree <
 		int lower = start;
 		int upper = end;
 		do {
-			while (lower < end && points[lower].getPosition().get(dim) < pos)
+			while (lower < end && points.get(lower).getBspPos().get(dim) < pos)
 				lower++;
-			while (upper >= start && pos <= points[upper].getPosition().get(dim) )
+			while (upper >= start && pos <= points.get(upper).getBspPos().get(dim) )
 				upper--;
 			if (lower <= upper) {
 				// swap
-				tmp = points[lower];
-				points[lower] = points[upper];
-				points[upper] = tmp;
+				tmp = points.get(lower);
+				points.set(lower, points.get(upper));
+				points.set(upper, tmp);
 				lower++;
 				upper--;
 			}
@@ -376,15 +397,15 @@ public class KdTree <
 		lowerMid = lower;
 		upper = end;
 		do {
-			while (lower < end && points[lower].getPosition().get(dim) <= pos)
+			while (lower < end && points.get(lower).getBspPos().get(dim) <= pos)
 				lower++;
-			while (upper >= lowerMid && pos < points[upper].getPosition().get(dim) )
+			while (upper >= lowerMid && pos < points.get(upper).getBspPos().get(dim) )
 				upper--;
 			if (lower <= upper) {
 				// swap
-				tmp = points[lower];
-				points[lower] = points[upper];
-				points[upper] = tmp;
+				tmp = points.get(lower);
+				points.set(lower, points.get(upper));
+				points.set(upper, tmp);
 				lower++;
 				upper--;
 			}
@@ -420,15 +441,15 @@ public class KdTree <
 		// And continue recursively with the two subsets
 		KdNode result = new KdNode();
 		result.dim = dim; // store dimension
-		result.splitPos = points[median]; // store the position of the plane
+		result.splitPos = points.get(median); // store the position of the plane
 		result.children[0] = buildKdTree(start, median, depth + 1); // points below or on our splitting line
 		result.children[1] = buildKdTree(median + 1, end, depth + 1); // points above our splitting line
 		return result;
 	}
 
-	int getLongestDim(HasPosition[] bbox) {
+	int getLongestDim(HasBspPos[] bbox) {
 		int dim;
-		double[] diff = new double[]{bbox[1].getPosition().get(0) - bbox[0].getPosition().get(0), bbox[1].getPosition().get(1) - bbox[0].getPosition().get(1), bbox[1].getPosition().get(2) - bbox[0].getPosition().get(2)};
+		double[] diff = new double[]{bbox[1].getBspPos().get(0) - bbox[0].getBspPos().get(0), bbox[1].getBspPos().get(1) - bbox[0].getBspPos().get(1), bbox[1].getBspPos().get(2) - bbox[0].getBspPos().get(2)};
 		if (diff[0] > diff[1]) {
 			if (diff[0] > diff[2]) {
 				dim = 0;
@@ -459,29 +480,29 @@ public class KdTree <
 	 * @param bbox
 	 * @return
 	 */
-	protected KdNode buildKdTree(int start, int end, HasPosition[] bbox) {
+	protected KdNode buildKdTree(int start, int end, HasBspPos[] bbox) {
 		if (end - start < maxBucketSize) {
 			// We are finished when there are less than maxBucketSize points in
 			// our interval
 			return new KdLeaf(start, end);
 		}
 
-		// getPosition().get the longest axis to split at
+		// getBspPos().get the longest axis to split at
 		int dim = getLongestDim(bbox);
 
 		// Caluclate the midpoint along the axis 
-		double midpoint = (bbox[0].getPosition().get(dim) + bbox[1].getPosition().get(dim)) / 2.0f;
+		double midpoint = (bbox[0].getBspPos().get(dim) + bbox[1].getBspPos().get(dim)) / 2.0f;
 
-		// getPosition().get the actual minimal and maximal position of the pointset along the axis
+		// getBspPos().get the actual minimal and maximal position of the pointset along the axis
 		double min;
 		double max;
-		min = points[start].getPosition().get(dim);
-		max = points[start].getPosition().get(dim);
+		min = points.get(start).getBspPos().get(dim);
+		max = points.get(start).getBspPos().get(dim);
 		for (int i = start; i < end; i++) {
-			if (points[i].getPosition().get(dim) < min) {
-				min = points[i].getPosition().get(dim);
-			} else if (points[i].getPosition().get(dim) > max) {
-				max = points[i].getPosition().get(dim);
+			if (points.get(i).getBspPos().get(dim) < min) {
+				min = points.get(i).getBspPos().get(dim);
+			} else if (points.get(i).getBspPos().get(dim) > max) {
+				max = points.get(i).getBspPos().get(dim);
 			}
 		}
 
@@ -492,15 +513,15 @@ public class KdTree <
 		result.splitPos = new KdPosition();
 		// If the midpoint is outside of our pointset move it to maximum/minimum
 		if (midpoint < min)
-			result.splitPos.getPosition().set(dim,min);
+			result.splitPos.getBspPos().set(dim,min);
 		else if (midpoint > max)
-			result.splitPos.getPosition().set(dim, max);
+			result.splitPos.getBspPos().set(dim, max);
 		else
-			result.splitPos.getPosition().set(dim, midpoint);
+			result.splitPos.getBspPos().set(dim, midpoint);
 
 		// Permute the points that we have two sets cut along our splitPos
 		int[] split;
-		split = posSplit(start, end, dim, result.splitPos.getPosition().get(dim));
+		split = posSplit(start, end, dim, result.splitPos.getBspPos().get(dim));
 
 		// either choose as split index
 		int mid;
@@ -508,7 +529,7 @@ public class KdTree <
 			mid = start;
 		else if (midpoint > max)  
 			mid = end;
-		// if we did not cut the getPosition().set in the mid use this as split index
+		// if we did not cut the getBspPos().set in the mid use this as split index
 		else if (split[0] > (start + end) / 2) 
 			mid = split[0];
 		else if (split[1] < (start + end) / 2) 
@@ -520,16 +541,16 @@ public class KdTree <
 		result.dim = dim; // store dimension
 
 		// resize bbox and continue recursively on one side of the plane
-		double oldMax = bbox[1].getPosition().get(dim);
-		bbox[1].getPosition().set(dim,result.splitPos.getPosition().get(dim));
+		double oldMax = bbox[1].getBspPos().get(dim);
+		bbox[1].getBspPos().set(dim,result.splitPos.getBspPos().get(dim));
 		result.children[0] = buildKdTree(start, mid, bbox);
-		bbox[1].getPosition().set(dim,oldMax);
+		bbox[1].getBspPos().set(dim,oldMax);
 
 		// accordingly to the other side of the plane
-		double oldMin = bbox[0].getPosition().get(dim);
-		bbox[0].getPosition().set(dim, result.splitPos.getPosition().get(dim));
+		double oldMin = bbox[0].getBspPos().get(dim);
+		bbox[0].getBspPos().set(dim, result.splitPos.getBspPos().get(dim));
 		result.children[1] = buildKdTree(mid + 1, end, bbox);
-		bbox[0].getPosition().set(dim, oldMin);
+		bbox[0].getBspPos().set(dim, oldMin);
 
 		return result;
 	}
@@ -538,17 +559,17 @@ public class KdTree <
 	 * Compute the bounding box of the points
 	 * @return
 	 */
-	public HasPosition[] getBBox() {
-		HasPosition [] result = new HasPosition[2];
+	public HasBspPos[] getBBox() {
+		HasBspPos [] result = new HasBspPos[2];
 		
-		result[0] = new KdPosition(points[0].getPosition());
-		result[1] = new KdPosition(points[0].getPosition());
-		for (int i = 1; i < points.length; i++) {
+		result[0] = new KdPosition(points.get(0).getBspPos());
+		result[1] = new KdPosition(points.get(0).getBspPos());
+		for (int i = 1; i < points.size(); i++) {
 			for (int d = 0; d < 3; d++) {
-				if (result[0].getPosition().get(d) > points[i].getPosition().get(d))
-					result[0].getPosition().set(d,points[i].getPosition().get(d));
-				if (result[1].getPosition().get(d) < points[i].getPosition().get(d))
-					result[1].getPosition().set(d,points[i].getPosition().get(d)) ;
+				if (result[0].getBspPos().get(d) > points.get(i).getBspPos().get(d))
+					result[0].getBspPos().set(d,points.get(i).getBspPos().get(d));
+				if (result[1].getBspPos().get(d) < points.get(i).getBspPos().get(d))
+					result[1].getBspPos().set(d,points.get(i).getBspPos().get(d)) ;
 			}
 		}
 		return result;
@@ -569,11 +590,8 @@ public class KdTree <
 		return getLeafs(getRoot());
 	}
 
-	public HasPosition[] getPoints() {
-		return points;
-	}
 
-	public static class KdPosition implements HasPosition{
+	public static class KdPosition implements HasBspPos{
 
 		private Point
 			p = new Point();
@@ -589,11 +607,13 @@ public class KdTree <
 			p = new Point(vec);
 		}
 		
-		public Point getPosition() {
+		@Override
+		public Point getBspPos() {
 			return p;
 		}
 
-		public void setPosition(Point p) {
+		@Override
+		public void setBspPos(Point p) {
 			this.p.set(p);
 		}
 		

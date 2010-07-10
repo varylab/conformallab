@@ -10,7 +10,7 @@ import java.util.PriorityQueue;
  * The point with the highest distance has the maximum priority 
  */
 public class KdPQueue <
-	DataClass extends HasPosition
+	DataClass extends HasBspPos
 >
 {
 	private PriorityQueue<PQItem> pq;
@@ -29,6 +29,7 @@ public class KdPQueue <
 			splitPos = sPos;
 		}
 		// Sorting the points descending 
+		@Override
 		public int compareTo(PQItem item) {		    
 			return Double.compare(item.distance, this.distance);
 		}
@@ -51,7 +52,7 @@ public class KdPQueue <
 	public double getMaximumDistance()
 	{
 		if(pq.size() < numKNearest) return Double.MAX_VALUE;
-		PQItem item = (PQItem) pq.peek();
+		PQItem item = pq.peek();
 		if(item != null) return item.distance;
 		else return Double.MAX_VALUE;
 	}
@@ -73,7 +74,7 @@ public class KdPQueue <
 	 * @return
 	 */
 	public DataClass pollSplitPos(){
-		PQItem item = (PQItem)pq.poll();
+		PQItem item = pq.poll();
 		if(item != null) return item.splitPos;
 		else return null;
 	}

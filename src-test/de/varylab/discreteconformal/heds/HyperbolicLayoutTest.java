@@ -11,17 +11,19 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import de.jreality.plugin.JRViewer;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.data.Attribute;
 import de.jreality.scene.data.StringArray;
-import de.jreality.ui.viewerapp.ViewerApp;
 import de.jreality.util.Input;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility;
 
 public class HyperbolicLayoutTest {
 
@@ -39,13 +41,14 @@ public class HyperbolicLayoutTest {
 			Input in = new Input("Obj File", HyperbolicLayoutTest.class.getResourceAsStream("tetraflat.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
-			ConverterJR2Heds<CoVertex, CoEdge, CoFace> converter = new ConverterJR2Heds<CoVertex, CoEdge, CoFace>(CoVertex.class, CoEdge.class, CoFace.class);
+			ConverterJR2Heds converter = new ConverterJR2Heds();
 			hds = new CoHDS();
-			converter.ifs2heds(ifs, hds, new PositionAdapter());
+			AdapterSet a = new AdapterSet(new PositionAdapter());
+			converter.ifs2heds(ifs, hds, a, null);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		hds.prepareInvariantDataEuclidean();
+		UnwrapUtility.prepareInvariantDataHyperbolic(hds);
 	}
 
 	@AfterClass
@@ -66,7 +69,7 @@ public class HyperbolicLayoutTest {
 	@Test
 	public void testDoLayout() {
 		System.out.println("CLayoutTest.testDoLayout()");
-		int n = hds.prepareInvariantDataHyperbolic();
+		int n = UnwrapUtility.prepareInvariantDataHyperbolic(hds);
 		Vector u = new SparseVector(n);
 		CHyperbolicLayout.doLayout(hds, hds.getVertex(0), u);
 		
@@ -83,8 +86,9 @@ public class HyperbolicLayoutTest {
 
 	public static void main(String[] args) throws Exception{
 		setUpBeforeClass();
-		ConverterHeds2JR<CoVertex, CoEdge, CoFace> converter = new ConverterHeds2JR<CoVertex, CoEdge, CoFace>();
-		IndexedFaceSet ifs = converter.heds2ifs(hds, new PositionAdapter());
+		ConverterHeds2JR converter = new ConverterHeds2JR();
+		AdapterSet a = new AdapterSet(new PositionAdapter());
+		IndexedFaceSet ifs = converter.heds2ifs(hds, a);
 		String[] vertexLabels = new String[hds.numVertices()];
 		for (int  i = 0; i < hds.numVertices(); i++) {
 			vertexLabels[i] = "" + i;
@@ -92,7 +96,7 @@ public class HyperbolicLayoutTest {
 		ifs.setVertexAttributes(Attribute.LABELS, new StringArray(vertexLabels));
 		SceneGraphComponent c = new SceneGraphComponent();
 		c.setGeometry(ifs);
-		ViewerApp.display(c);
+		JRViewer.display(c);
 	}
 	
 	

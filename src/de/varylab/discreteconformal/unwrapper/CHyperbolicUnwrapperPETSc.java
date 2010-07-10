@@ -18,8 +18,10 @@ public class CHyperbolicUnwrapperPETSc implements Unwrapper{
 		maxIterations = 150;
 	
 	
+	@Override
 	public Vector unwrap(CoHDS surface) throws Exception {
-		surface.prepareInvariantDataHyperbolic();
+		UnwrapUtility.prepareInvariantDataHyperbolic(surface);
+		
 		Tao.Initialize();
 		CHyperbolicApplication app = new CHyperbolicApplication(surface);
 		int n = app.getDomainDimension(); 

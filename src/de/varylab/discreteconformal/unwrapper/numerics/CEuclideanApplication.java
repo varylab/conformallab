@@ -15,7 +15,6 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
-import de.varylab.discreteconformal.unwrapper.numerics.Adapters.ConformalEnergy;
 import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.Vec;
 import de.varylab.jtao.TaoAppAddCombinedObjectiveAndGrad;

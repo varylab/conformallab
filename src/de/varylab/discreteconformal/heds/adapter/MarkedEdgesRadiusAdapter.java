@@ -16,8 +16,13 @@ public class MarkedEdgesRadiusAdapter extends AbstractTypedAdapter<CoVertex, CoE
 	private CuttingInfo<CoVertex, CoEdge, CoFace>
 		context = new CuttingInfo<CoVertex, CoEdge, CoFace>();
 	
-	public MarkedEdgesRadiusAdapter(CuttingInfo<CoVertex, CoEdge, CoFace> context) {
+	
+	public MarkedEdgesRadiusAdapter() {
 		super(null, CoEdge.class, null, Double.class, true, false);
+	}
+	
+	public MarkedEdgesRadiusAdapter(CuttingInfo<CoVertex, CoEdge, CoFace> context) {
+		this();
 		this.context = context;
 	}
 	
@@ -39,7 +44,7 @@ public class MarkedEdgesRadiusAdapter extends AbstractTypedAdapter<CoVertex, CoE
 				}
 			}
 		}
-		return 0.5;
+		return 0.0;
 	}
 
 	@Override

@@ -88,14 +88,17 @@ public class Search {
 				sort(star, comp);
 			}
 			for (E e : star){
+				E pathEdge = e.getOppositeEdge();
+				V v = pathEdge.getTargetVertex();
+				if (visited.contains(v)) {
+					continue;
+				}
 				if (!isInteriorEdge(e) && avoidBorder) {
 					continue;
 				}
 				if (!valid.contains(e)) {
 					continue;
 				}
-				E pathEdge = e.getOppositeEdge();
-				V v = pathEdge.getTargetVertex();
 				Stack<E> newPath = new Stack<E>();
 				newPath.addAll(path);
 				newPath.push(pathEdge);
@@ -112,6 +115,47 @@ public class Search {
 		throw new NoSuchElementException();
 	}
 
+	
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> List<E> bFS(V start, V end, Set<V> avoid) throws NoSuchElementException {
+		HashMap<V, Stack<E>> pathMap = new HashMap<V, Stack<E>>();
+		LinkedList<V> queue = new LinkedList<V>();
+		HashSet<V> visited = new HashSet<V>(avoid);
+		V actVertex = start;
+		queue.add(start);
+		pathMap.put(start, new Stack<E>());
+		while (!queue.isEmpty()){
+			actVertex = queue.poll();
+			Stack<E> path = pathMap.get(actVertex);
+			List<E> star = incomingEdges(actVertex);
+			for (E e : star){
+				E pathEdge = e.getOppositeEdge();
+				V v = pathEdge.getTargetVertex();
+				if (visited.contains(v)) {
+					continue;
+				}
+				Stack<E> newPath = new Stack<E>();
+				newPath.addAll(path);
+				newPath.push(pathEdge);
+				pathMap.put(v, newPath);
+				visited.add(v);
+				if (end == v) {
+					return newPath;
+				} else {
+					queue.offer(v);
+				}
+			}
+		}
+		throw new NoSuchElementException();
+	}
+	
+	
+	
+	
 	/**
 	 * Depth first search - Untested!!
 	 * @param start
@@ -174,6 +218,7 @@ public class Search {
 	public static class DefaultWeightAdapter <E extends Edge<?, ?, ?>>
 		implements WeightAdapter<E> {
 		
+		@Override
 		public double getWeight(E e) {
 			return 1;
 		};
@@ -391,6 +436,7 @@ public class Search {
 			this.d = d;
 		}
 		
+		@Override
 		public int compare(T o1, T o2) {
 			double val = d[o1.getIndex()] - d[o2.getIndex()];
 			if (val == 0.0)

@@ -76,18 +76,30 @@ public class SubdivisionCalculator implements VertexPositionCalculator, EdgeAver
 	@Override
 	public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
 		boolean result = false;
+		result |= CoVertex.class.isAssignableFrom(nodeClass);
 		result |= CoEdge.class.isAssignableFrom(nodeClass);
 		result |= CoFace.class.isAssignableFrom(nodeClass);
 		return result;
 	}
 
 	@Override
-	public void setAlpha(double alpha) {
+	public void setEdgeAlpha(double alpha) {
 		this.alpha = alpha;
 	}
 
+
 	@Override
-	public void setIgnore(boolean ignore) {
+	public void setEdgeIgnore(boolean ignore) {
+	}
+
+
+	@Override
+	public <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> double[] get(F f, E e) {
+		return get(f);
 	}
 
 }

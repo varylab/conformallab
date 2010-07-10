@@ -27,7 +27,6 @@ public class CuttingUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> {
-		
 		public V
 			cutRoot = null;
 		public Map<E, E>
@@ -41,11 +40,11 @@ public class CuttingUtility {
 		public Map<Set<E>, Object>
 			pathMap = new HashMap<Set<E>, Object>();
 		
-		public 
-		<VV extends Vertex<VV,EE,FF>,
-		 EE extends Edge<VV,EE,FF>,
-		 FF extends Face<VV,EE,FF>>
-		CuttingInfo<VV,EE,FF> copyToCombinatorialCopy(HalfEdgeDataStructure<VV,EE,FF> heds) {
+		public <
+			VV extends Vertex<VV,EE,FF>,
+			EE extends Edge<VV,EE,FF>,
+			FF extends Face<VV,EE,FF>
+		> CuttingInfo<VV,EE,FF> copyToCombinatorialCopy(HalfEdgeDataStructure<VV,EE,FF> heds) {
 			CuttingInfo<VV,EE,FF> c = new CuttingInfo<VV,EE,FF>();
 			
 			Map<Set<EE>,Object> pp = new HashMap<Set<EE>,Object>();
@@ -59,9 +58,6 @@ public class CuttingUtility {
 			}
 			
 			c.paths = pp;
-			
-				
-			
 			return c;
 		}
 		
@@ -123,9 +119,9 @@ public class CuttingUtility {
 						if(c.getStartVertex() == targetV)
 							outgoingCycle = c;
 					}
-					if(incomingCycle == null || outgoingCycle == null){
-						System.err.println("cycle is defect: iC = " + incomingCycle + " oC = " + outgoingCycle);
-					} 
+//					if(incomingCycle == null || outgoingCycle == null){
+//						System.err.println("cycle is defect: iC = " + incomingCycle + " oC = " + outgoingCycle);
+//					} 
 					
 					if(incomingCycle == e) {
 						toCompose =  null;
@@ -160,7 +156,6 @@ public class CuttingUtility {
 	
 	}
 	
-
 	
 	public static <
 		V extends Vertex<V, E, F>,
@@ -171,7 +166,6 @@ public class CuttingUtility {
 		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
 		context.cutRoot = root;
 		for(Set<E> path : HomologyUtility.getGeneratorPaths(root, wa)) {
-			// TODO what should we put here?
 			context.paths.put(path, null) ;
 		}
 		Set<E> masterPath = new TreeSet<E>(new NodeComparator<E>());
@@ -205,6 +199,10 @@ public class CuttingUtility {
 		}
 		return context;
 	}
+	
+	
+	
+	
 	
 	
 	

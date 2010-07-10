@@ -62,6 +62,7 @@ public class ConformalHyperbolicFunctional <
 	}
 	
 
+	@Override
 	public <
 		HDS extends HalfEdgeDataStructure<V,E,F>
 	> void evaluate(
@@ -80,6 +81,7 @@ public class ConformalHyperbolicFunctional <
 	};
 	
 	
+	@Override
 	public <
 		HDS extends HalfEdgeDataStructure<V,E,F>
 	> int getDimension(HDS hds) {
@@ -300,6 +302,7 @@ public class ConformalHyperbolicFunctional <
 	}
 	
 	
+	@Override
 	public <
 		HDS extends HalfEdgeDataStructure<V,E,F>
 	> int[][] getNonZeroPattern(HDS hds) {

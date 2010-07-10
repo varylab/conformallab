@@ -105,22 +105,26 @@ public class SphericalNormalizer {
 			this.hds = hds;
 		}
 		
+		@Override
 		public Double evaluate(Vector x, Vector gradient, Matrix hessian) {
 			makeGradient(x, gradient);
 			makeHessian(x, hessian);
 			return evaluate(x);
 		}
 
+		@Override
 		public Double evaluate(Vector x, Vector gradient) {
 			makeGradient(x, gradient);
 			return evaluate(x);
 		}
 
+		@Override
 		public Double evaluate(Vector x, Matrix hessian) {
 			makeHessian(x, hessian);
 			return evaluate(x);
 		}
 
+		@Override
 		public Double evaluate(Vector x) {
 			double result = 0;
 			double l = myLength(x);
@@ -188,6 +192,7 @@ public class SphericalNormalizer {
 		}
 		
 		
+		@Override
 		public Integer getDomainDimension() {
 			return 3;
 		}

@@ -7,6 +7,7 @@ import static java.lang.Math.exp;
 import static java.lang.Math.sin;
 import geom3d.Point;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.Queue;
 import java.util.Set;
 
 import no.uib.cipr.matrix.Vector;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
@@ -32,8 +34,14 @@ public class EuclideanLayout {
 		Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		Queue<CoEdge> Qe = new LinkedList<CoEdge>();
 		Queue<Double> Qa = new LinkedList<Double>();
-		// start
+		
+		// start at boundary edge if there is one
 		CoEdge e0 = hds.getEdge(0);
+		Collection<CoEdge> boundary = HalfEdgeUtils.boundaryEdges(hds);
+		if (!boundary.isEmpty()) {
+			e0 = boundary.iterator().next();
+			e0 = e0.getOppositeEdge();
+		}
 		CoEdge e1 = e0.getOppositeEdge();
 		CoVertex v1 = e0.getStartVertex();
 		CoVertex v2 = e0.getTargetVertex();
@@ -47,8 +55,8 @@ public class EuclideanLayout {
 
 		// vertices
 		Double l = getNewLength(e0, u);
-		v1.setTextureCoord(new Point(0, 0, 0));
-		v2.setTextureCoord(new Point(l, 0, 0));
+		v1.setTextureCoord(new Point(0, 0, 1.0));
+		v2.setTextureCoord(new Point(l, 0, 1.0));
 		visited.add(v1);
 		visited.add(v2);
 		
@@ -67,7 +75,7 @@ public class EuclideanLayout {
 				CoEdge next = e.getNextEdge();
 				Double alpha = next.getAlpha();
 				if (e.getLeftFace() == null) { // a boundary edge
-					alpha = 2*PI - getAngleSum(v);
+					alpha = 2*PI - calculateAngleSum(v);
 				}
 				
 				globalAngle -= alpha;
@@ -79,7 +87,7 @@ public class EuclideanLayout {
 					Qa.offer(globalAngle);
 
 					l = getNewLength(e, u);
-					geom3d.Vector dif = new geom3d.Vector(cos(globalAngle), sin(globalAngle), 0.0).times(l);
+					geom3d.Vector dif = new geom3d.Vector(cos(globalAngle), sin(globalAngle), 1.0).times(l);
 					nearVertex.getTextureCoord().set(tp).add(dif);
 				} 
 				e = e.getOppositeEdge().getNextEdge();
@@ -106,7 +114,7 @@ public class EuclideanLayout {
 	 * @param v
 	 * @return the angle sum
 	 */
-	public static Double getAngleSum(CoVertex v) {
+	public static Double calculateAngleSum(CoVertex v) {
 		Double r = 0.0;
 		List<CoEdge> star = incomingEdges(v);
 		for (CoEdge e : star) {

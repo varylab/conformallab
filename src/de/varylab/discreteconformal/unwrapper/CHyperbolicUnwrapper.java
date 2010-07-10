@@ -19,8 +19,10 @@ public class CHyperbolicUnwrapper implements Unwrapper{
 	private int
 		maxIterations = 150;
 	
+	@Override
 	public Vector unwrap(CoHDS surface) throws Exception {
-		surface.prepareInvariantDataHyperbolic();
+		UnwrapUtility.prepareInvariantDataHyperbolic(surface);
+		
 		CHyperbolicOptimizable opt = new CHyperbolicOptimizable(surface);
 		int n = opt.getDomainDimension();
 		

@@ -17,7 +17,6 @@ public class ConformalVertex <
 	public double getTheta() {
 		return theta;
 	}
-
 	public void setTheta(double theta) {
 		this.theta = theta;
 	}
@@ -25,7 +24,6 @@ public class ConformalVertex <
 	public Integer getSolverIndex() {
 		return solverIndex;
 	}
-
 	public void setSolverIndex(Integer solverIndex) {
 		this.solverIndex = solverIndex;
 	}
@@ -35,5 +33,5 @@ public class ConformalVertex <
 		setSolverIndex(v.getSolverIndex());
 		setTheta(v.getTheta());
 	};
-	
+
 }

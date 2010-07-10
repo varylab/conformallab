@@ -5,12 +5,14 @@ import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Set;
 
 import javax.swing.SwingWorker;
 
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.varylab.discreteconformal.adapter.EuclideanLengthWeightAdapter;
+import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.adapter.HyperbolicLengthWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -22,18 +24,23 @@ import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapper;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
 
 public class Unwrap extends SwingWorker<CoHDS, Void> {
 
 	private CoHDS
 		surface = null;
 	private boolean
-		usePetsc = false,
-		quantizeCones = false;
+		usePetsc = false;
 	private QuantizationMode
-		quantizationMode = QuantizationMode.Quads;
+		coneMode = QuantizationMode.AllAngles,
+		boundaryQuantMode = QuantizationMode.AllAngles;
+	private BoundaryMode
+		boundaryMode = BoundaryMode.Isometric;
 	private int
 		numCones = 0,
 		maxIterations = 150;
@@ -49,12 +56,6 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		cutInfo = null;
 	
 	
-	public static enum QuantizationMode {
-		Quads,
-		Hexagons
-	}
-	
-	
 	public Unwrap(CoHDS surface) {
 		this.surface = surface;
 	}
@@ -66,6 +67,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		long unwrapTime = -1;
 		long layoutTime = -1;
 		setProgress(0);
+		surface.normalizeCoordinates();
 		genus = HalfEdgeUtils.getGenus(surface);
 		Vector u = null;
 		double gradTolerance = Math.pow(10, toleranceExp);
@@ -83,20 +85,21 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			if (usePetsc) {
 				EuclideanUnwrapperPETSc uw = new EuclideanUnwrapperPETSc();
 				uw.setNumCones(numCones);
-				uw.setQuantizeCones(quantizeCones);
-				uw.setQuantizationMode(quantizationMode);
+				uw.setConeMode(coneMode);
+				uw.setBoundaryMode(boundaryMode);
+				uw.setBoundaryQuantMode(boundaryQuantMode);
 				unwrapper = uw;
 			} else {
 				EuclideanUnwrapper uw = new EuclideanUnwrapper();
 				uw.setNumCones(numCones);
-				uw.setQuantizeCones(quantizeCones);
-				uw.setQuantizationMode(quantizationMode);
+				uw.setConeMode(coneMode);
+				uw.setBoundaryMode(boundaryMode);
+				uw.setBoundaryQuantMode(boundaryQuantMode);
 				unwrapper = uw;
 			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
 			u = unwrapper.unwrap(surface);
-			System.err.println("---minimzation redady---");
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
 			layoutRoot = EuclideanLayout.doLayout(surface, u);
@@ -116,11 +119,42 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			u = unwrapper.unwrap(surface);
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
-			EuclideanLengthWeightAdapter eucWa = new EuclideanLengthWeightAdapter(u); 
-			CoVertex cutRoot = surface.getVertex(getMinUIndex(u));
-			cutInfo = cutManifoldToDisk(surface, cutRoot, eucWa);
+			DefaultWeightAdapter<CoEdge> constantWeight = new DefaultWeightAdapter<CoEdge>();
+			CoVertex cutRoot = surface.getVertex(0);
+			cutInfo = cutManifoldToDisk(surface, cutRoot, constantWeight);
 			layoutRoot = EuclideanLayout.doLayout(surface, u);
 			layoutTime = System.currentTimeMillis();
+			
+			Set<CoVertex> rootCopies = cutInfo.getCopies(cutRoot);
+			if (rootCopies.size() == 4) {
+				CoVertex v0 = cutRoot;
+				CoVertex v1 = cutInfo.vertexCopyMap.get(cutRoot);
+				rootCopies.remove(v0);
+				rootCopies.remove(v1);
+				Iterator<CoVertex> vIt = rootCopies.iterator();
+				CoVertex v2 = vIt.next();
+				CoVertex v3 = vIt.next();
+				if (!cutInfo.vertexCopyMap.containsKey(v2)) {
+					CoVertex tmp = v2;
+					v2 = v3;
+					v3 = tmp;
+				}
+				System.out.println("Copies: " + v0 + ", " + v1 + ", " + v2 + ", " + v3);
+				Complex z0 = new Complex(v0.getTextureCoord().x(), v0.getTextureCoord().y());
+				Complex z1 = new Complex(v1.getTextureCoord().x(), v1.getTextureCoord().y());
+				Complex z2 = new Complex(v2.getTextureCoord().x(), v2.getTextureCoord().y());
+				Complex z3 = new Complex(v3.getTextureCoord().x(), v3.getTextureCoord().y());
+				Complex p1 = z0.minus(z1);
+				Complex p2 = z0.minus(z2);
+				Complex p3 = z0.minus(z3);
+				System.out.println("lP1: " + p1 + ": " + p1.abs());
+				System.out.println("lP2: " + p2 + ": " + p2.abs());
+				System.out.println("lP3: " + p3 + ": " + p3.abs());
+				Complex tau = p1.divide(p2);
+				System.out.println("Tau: " + tau);
+				System.out.println("|Tau|: " + tau.abs());
+				System.out.println("arg(Tau): " + tau.arg());
+			}
 			setProgress(100);
 			break;
 		// genus > 1 -------------------------
@@ -134,7 +168,6 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
 			u = unwrapper.unwrap(surface);
-			System.err.println("---minimization ready---");
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
 			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
@@ -146,6 +179,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			setProgress(100);
 			break;
 		}
+		surface.revertNormalization();
 		NumberFormat nf = new DecimalFormat("0.00");
 		System.out.println("minimization took " + nf.format((unwrapTime - startTime) / 1000.0) + "sec.");
 		System.out.println("layout took " + nf.format((layoutTime - unwrapTime) / 1000.0) + "sec.");
@@ -200,16 +234,6 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 	}
 
 
-	public boolean isQuantizeCones() {
-		return quantizeCones;
-	}
-
-
-	public void setQuantizeCones(boolean quantizeCones) {
-		this.quantizeCones = quantizeCones;
-	}
-
-
 	public int getNumCones() {
 		return numCones;
 	}
@@ -220,11 +244,11 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 	}
 	
 	public void setQuantizationMode(QuantizationMode quantizationMode) {
-		this.quantizationMode = quantizationMode;
+		this.coneMode = quantizationMode;
 	}
 	
 	public QuantizationMode getQuantizationMode() {
-		return quantizationMode;
+		return coneMode;
 	}
 	
 	public void setToleranceExponent(double toleranceExp) {
@@ -233,6 +257,14 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 	
 	public void setMaxIterations(int maxIterations) {
 		this.maxIterations = maxIterations;
+	}
+	
+	public void setBoundaryMode(BoundaryMode boundaryMode) {
+		this.boundaryMode = boundaryMode;
+	}
+	
+	public void setBoundaryQuantMode(QuantizationMode boundaryQuantMode) {
+		this.boundaryQuantMode = boundaryQuantMode;
 	}
 
 }

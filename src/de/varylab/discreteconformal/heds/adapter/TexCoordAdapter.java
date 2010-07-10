@@ -16,6 +16,15 @@ public class TexCoordAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFa
 		model = HyperbolicModel.Klein;
 	private boolean
 		projective = true;
+	private int
+		priority = 1;
+	
+	
+	public TexCoordAdapter(int priority) {
+		super(CoVertex.class, null, null, double[].class, true, true);
+		this.projective = false;
+		this.priority = priority;
+	}
 	
 	public TexCoordAdapter(boolean projective) {
 		super(CoVertex.class, null, null, double[].class, true, true);
@@ -29,7 +38,7 @@ public class TexCoordAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFa
 	
 	
 	@Override
-	public double[] getVertexValue(CoVertex v, de.jtem.halfedgetools.adapter.AdapterSet a) {
+	public double[] getVertexValue(CoVertex v, AdapterSet a) {
 		Point t = v.getTextureCoord();
 		if (projective) {
 			switch (model) {
@@ -54,14 +63,16 @@ public class TexCoordAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFa
 		}
 	}
 	
+	
 	@Override
 	public void setVertexValue(CoVertex v, double[] value, AdapterSet a) {
 		if (value.length == 2) {
 			v.getTextureCoord().get()[0] = value[0];
 			v.getTextureCoord().get()[1] = value[1];
-			return;
+			v.getTextureCoord().get()[2] = 1.0;
+		} else {
+			v.getTextureCoord().set(value);
 		}
-		v.getTextureCoord().set(value);
 	}
 	
 	
@@ -75,7 +86,11 @@ public class TexCoordAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFa
 	
 	@Override
 	public double getPriority() {
-		return 1;
+		return priority;
 	}
+	public void setPriority(int priority) {
+		this.priority = priority;
+	}
+	
 
 }

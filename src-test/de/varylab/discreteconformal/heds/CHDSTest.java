@@ -10,9 +10,6 @@ import java.io.IOException;
 import junit.framework.Assert;
 import no.uib.cipr.matrix.DenseVector;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -21,8 +18,10 @@ import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.util.Input;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
@@ -51,59 +50,35 @@ public class CHDSTest {
 			Input in = new Input("Obj File", EuclideanLayoutTest.class.getResourceAsStream("cathead.obj"));
 			c =reader.read(in);
 			IndexedFaceSet ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
-			ConverterJR2Heds<CoVertex, CoEdge, CoFace> converter = new ConverterJR2Heds<CoVertex, CoEdge, CoFace>(CoVertex.class, CoEdge.class, CoFace.class);
+			ConverterJR2Heds converter = new ConverterJR2Heds();
 			hds = new CoHDS();
-			converter.ifs2heds(ifs, hds, new PositionAdapter());
+			AdapterSet a = new AdapterSet(new PositionAdapter());
+			converter.ifs2heds(ifs, hds, a, null);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		hds.prepareInvariantDataEuclidean();
+		UnwrapUtility.prepareInvariantDataEuclidean(hds);
 	}
 
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
-		System.out.println("CHDSTest.tearDownAfterClass()");
-	}
-
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@Before
-	public void setUp() throws Exception {
-		System.out.println("CHDSTest.setUp()");
-	}
-
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@After
-	public void tearDown() throws Exception {
-		System.out.println("CHDSTest.tearDown()");
-	}
 
 	/**
 	 * Test method for {@link de.varylab.discreteconformal.heds.CoHDS#conformalEnergy(no.uib.cipr.matrix.Vector, double[], no.uib.cipr.matrix.Vector, no.uib.cipr.matrix.Matrix)}.
 	 */
 	@Test
 	public void testConformalEnergy() throws Exception {
-		System.out.println("CHDSTest.testConformalEnergy()");
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
 		int n = opt.getDomainDimension();
 		DenseVector u = new DenseVector(n);
 		NewtonOptimizer optimizer = new NewtonOptimizer();
 		optimizer.setStepController(new ArmijoStepController());
-		optimizer.setSolver(Solver.CG);
-		optimizer.setError(1E-10);
+		optimizer.setSolver(Solver.CGS);
+		optimizer.setError(1E-13);
+		optimizer.setMaxIterations(20);
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
-			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
-
-		
 		for (CoVertex v : hds.getVertices()) {
 			if (v.getSolverIndex() < 0) {
 				continue;
@@ -112,9 +87,8 @@ public class CHDSTest {
 			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
 				aSum += e.getPreviousEdge().getAlpha();
 			}
-			Assert.assertEquals(2 * PI, aSum, 1E-8);
+			Assert.assertEquals(2 * PI, aSum, 1E-13);
 		}
-		
 	}
 
 	
