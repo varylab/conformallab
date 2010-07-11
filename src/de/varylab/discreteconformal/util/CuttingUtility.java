@@ -95,65 +95,6 @@ public class CuttingUtility {
 			return branches;
 		}
 		
-		public Object isRightIncomingOnCycle(E e) {
-
-			Object g = null;
-			
-			V targetV = e.getTargetVertex();
-			
-			for(Set<E> cycle : paths.keySet()) {
-				
-				Object toCompose = null;
-				
-				Set<V> verts = PathUtility.getUnorderedVerticesOnPath(cycle);
-				
-				if(cycle.contains(e.getOppositeEdge()) || cycle.contains(e)) {
-					toCompose = null;
-				} else 	if(verts.contains(targetV)) {
-					
-					E incomingCycle = null;
-					E outgoingCycle = null;
-					for(E c : cycle) {
-						if(c.getTargetVertex() == targetV)
-							incomingCycle = c;
-						if(c.getStartVertex() == targetV)
-							outgoingCycle = c;
-					}
-//					if(incomingCycle == null || outgoingCycle == null){
-//						System.err.println("cycle is defect: iC = " + incomingCycle + " oC = " + outgoingCycle);
-//					} 
-					
-					if(incomingCycle == e) {
-						toCompose =  null;
-					}
-					
-					E nextOut = e.getNextEdge();
-					E nextIn = nextOut.getOppositeEdge();
-					
-					do {
-
-						if(nextOut == outgoingCycle) {
-							toCompose =  null;
-						}
-						
-						if(nextIn == incomingCycle) {
-							toCompose = paths.get(cycle);
-						}
-						
-						nextOut = nextIn.getNextEdge();
-						nextIn = nextOut.getOppositeEdge();
-						
-					} while(nextIn != e);
-				}  
-				
-				if(toCompose != null)
-					g = toCompose;
-				
-			}
-
-			return g;
-		}
-	
 	}
 	
 	

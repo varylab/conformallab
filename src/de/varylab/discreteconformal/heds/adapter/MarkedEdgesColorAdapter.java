@@ -73,9 +73,6 @@ public class MarkedEdgesColorAdapter extends AbstractTypedAdapter<CoVertex, CoEd
 				}
 			}
 		}
-		if(context.isRightIncomingOnCycle(e) != null || context.isRightIncomingOnCycle(e.getOppositeEdge()) != null) {
-			return new double[] {1,1,1,0};
-		}
 		return normalColor;
 	}
 	
