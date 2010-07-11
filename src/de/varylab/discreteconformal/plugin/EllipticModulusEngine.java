@@ -1,5 +1,7 @@
 package de.varylab.discreteconformal.plugin;
 
+import static java.lang.Math.PI;
+import static java.lang.Math.sin;
 import geom3d.Point;
 import geom3d.Vector;
 
@@ -12,10 +14,7 @@ import java.util.Set;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
 import de.jreality.plugin.basic.Content;
-import de.jtem.halfedge.Edge;
-import de.jtem.halfedge.Face;
 import de.jtem.halfedge.Node;
-import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -30,6 +29,7 @@ import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.calculator.SubdivisionCalculator;
 import de.varylab.discreteconformal.util.PathUtility;
 import de.varylab.discreteconformal.util.Search;
+import de.varylab.discreteconformal.util.SurgeryUtility;
 
 public class EllipticModulusEngine extends GeneratorPlugin {
 
@@ -45,14 +45,19 @@ public class EllipticModulusEngine extends GeneratorPlugin {
 		CoVertex v2 = hds.addNewVertex();
 		CoVertex v3 = hds.addNewVertex();
 		CoVertex v4 = hds.addNewVertex();
-		double[] pos1 = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
-		double[] pos2 = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
-		double[] pos3 = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
-		double[] pos4 = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
-		v1.setPosition(new Point(pos1));
-		v2.setPosition(new Point(pos2));
-		v3.setPosition(new Point(pos3));
-		v4.setPosition(new Point(pos4));
+//		double[] pos1 = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
+//		double[] pos2 = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
+//		double[] pos3 = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
+//		double[] pos4 = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
+//		v1.setPosition(new Point(pos1));
+//		v2.setPosition(new Point(pos2));
+//		v3.setPosition(new Point(pos3));
+//		v4.setPosition(new Point(pos4));
+		double a = 2 * sin(PI / 4);
+		v1.getPosition().set(a, 1, 0);
+		v2.getPosition().set(-a, 1, 0);
+		v3.getPosition().set(0, -1, -a);
+		v4.getPosition().set(0, -1, a);
 		
 		// additional points
 		for (int i = 0; i < 100; i++) {
@@ -77,7 +82,6 @@ public class EllipticModulusEngine extends GeneratorPlugin {
 			CoVertex vc = hds.getVertex(vOffset + i); 
 			Point p = v.getPosition();
 			Point p2 = new Point(p);
-			p2.get()[0] += 2;
 			vc.setPosition(p2);
 		}
 		
@@ -95,8 +99,10 @@ public class EllipticModulusEngine extends GeneratorPlugin {
 			path2c.add(hds.getEdge(eOffset + e.getIndex()));
 		}
 		
-		
-		
+		System.out.println("Genus before surgery: " + HalfEdgeUtils.getGenus(hds));
+		SurgeryUtility.cutAndGluePaths(path1, path1c);
+		SurgeryUtility.cutAndGluePaths(path2, path2c);
+		System.out.println("Genus after surgery: " + HalfEdgeUtils.getGenus(hds));
 		
 		
 		PathVisualizer pathVisualizer = new PathVisualizer();
@@ -123,30 +129,6 @@ public class EllipticModulusEngine extends GeneratorPlugin {
 		set.add(new PositionAdapter());
 		hif.set(hds, set);
 	}
-	
-	
-	
-	public static <
-		V extends Vertex<V, E, F>,
-		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>
-	> void cutAndGluePaths(List<E> p1, List<E> p2) {
-		if (p1.size() != p2.size()) {
-			throw new IllegalArgumentException("Paths of different lengths in cutAndGluePaths()");
-		}
-		V start = p1.get(0).getStartVertex();
-		V end = p1.get(p1.size() - 1).getTargetVertex();
-
-		V startC = p2.get(0).getStartVertex();
-		V endC = p2.get(p2.size() - 1).getTargetVertex();
-		
-		for (int i = 0; i < p1.size(); i++) {
-			E e = p1.get(i);
-			
-		}
-	}
-	
-	
 	
 	
 	@Color
