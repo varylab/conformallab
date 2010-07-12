@@ -1,6 +1,8 @@
 package de.varylab.discreteconformal.plugin.tasks;
 
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
+import static java.lang.Math.abs;
+import static java.lang.Math.signum;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -151,6 +153,17 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 				System.out.println("lP2: " + p2 + ": " + p2.abs());
 				System.out.println("lP3: " + p3 + ": " + p3.abs());
 				Complex tau = p1.divide(p2);
+				System.out.println("Tau~: " + tau);
+				System.out.println("normalization...");
+				while (abs(tau.re) > 0.5 || tau.abs() < 1) {
+					if (abs(tau.re) > 0.5) {
+						tau.re -= signum(tau.re);
+					}
+					if (tau.abs() < 1) {
+						tau = tau.invert();
+					}
+				}
+				System.out.println("Tau: " + tau);
 				System.out.println("Tau: " + tau);
 				System.out.println("|Tau|: " + tau.abs());
 				System.out.println("arg(Tau): " + tau.arg());

@@ -98,6 +98,18 @@ public class CuttingUtility {
 	}
 	
 	
+	/**
+	 * Cuts a manifold of genus g along 2*g generator paths.
+	 * In general the paths share edges.
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param <HDS>
+	 * @param hds
+	 * @param root
+	 * @param wa
+	 * @return
+	 */
 	public static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
@@ -141,10 +153,7 @@ public class CuttingUtility {
 		return context;
 	}
 	
-	
-	
-	
-	
+
 	
 	
 	/**
