@@ -51,7 +51,7 @@ public class MarkedEdgesColorAdapter extends AbstractTypedAdapter<CoVertex, CoEd
 		}
 		
 		int i = 0;
-		for (Set<CoEdge> path : context.paths.keySet()) {
+		for (Set<CoEdge> path : context.paths) {
 			rnd.setSeed(i);
 			double[] color = new double[] {rnd.nextDouble(), rnd.nextDouble(), rnd.nextDouble()};
 			pathColors.put(path, color);
@@ -62,7 +62,7 @@ public class MarkedEdgesColorAdapter extends AbstractTypedAdapter<CoVertex, CoEd
 	
 	@Override
 	public double[] getEdgeValue(CoEdge e, AdapterSet a) {
-		for (Set<CoEdge> path : context.paths.keySet()) {
+		for (Set<CoEdge> path : context.paths) {
 			Set<CoEdge> coPath = context.pathCutMap.get(path);
 			if (path.contains(e) || path.contains(e.getOppositeEdge())) {
 				return pathColors.get(path);

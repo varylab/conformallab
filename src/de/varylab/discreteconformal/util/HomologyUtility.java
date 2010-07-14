@@ -23,7 +23,7 @@ public class HomologyUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> Set<E> findCycle(Set<E> set, E bridge) {
-		List<E> path = Search.bFS(set, bridge.getStartVertex(), bridge.getTargetVertex());
+		List<E> path = Search.bFS(set, bridge.getTargetVertex(), bridge.getStartVertex());
 		Set<E> r = new TreeSet<E>(new NodeComparator<E>());
 		r.addAll(path);
 		r.add(bridge);

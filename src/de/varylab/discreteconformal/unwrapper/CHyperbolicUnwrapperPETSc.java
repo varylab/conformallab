@@ -35,7 +35,8 @@ public class CHyperbolicUnwrapperPETSc implements Unwrapper{
 		
 		Tao optimizer = new Tao(Tao.Method.NTR);
 		optimizer.setApplication(app);
-		optimizer.setGradientTolerances(gradTolerance, 0, 0); 
+		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance); 
+		optimizer.setTolerances(0, 0, 0, 0);
 		optimizer.setMaximumIterates(maxIterations);
 		System.out.println("Using grad tolerance " + gradTolerance);
 		optimizer.solve();

@@ -1,7 +1,8 @@
 package de.varylab.discreteconformal.util;
 
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -34,7 +35,7 @@ public class SparseUtility {
 			if (v.getSolverIndex() < 0)
 				continue;
 			List<CoEdge> star = HalfEdgeUtils.incomingEdges(v);
-			List<Integer> nonZeroIndices = new LinkedList<Integer>();
+			Set<Integer> nonZeroIndices = new TreeSet<Integer>();
 			nonZeroIndices.add(v.getSolverIndex());
 			for (CoEdge e : star) {
 				CoVertex connectedVertex = e.getOppositeEdge().getTargetVertex();

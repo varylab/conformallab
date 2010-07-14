@@ -1,14 +1,10 @@
 package de.varylab.discreteconformal.plugin.tasks;
 
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
-import static java.lang.Math.abs;
-import static java.lang.Math.signum;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.Set;
 
 import javax.swing.SwingWorker;
 
@@ -29,6 +25,7 @@ import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
+import de.varylab.discreteconformal.util.AlgebraicCurveUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
 
@@ -126,48 +123,11 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			cutInfo = cutManifoldToDisk(surface, cutRoot, constantWeight);
 			layoutRoot = EuclideanLayout.doLayout(surface, u);
 			layoutTime = System.currentTimeMillis();
-			
-			Set<CoVertex> rootCopies = cutInfo.getCopies(cutRoot);
-			if (rootCopies.size() == 4) {
-				CoVertex v0 = cutRoot;
-				CoVertex v1 = cutInfo.vertexCopyMap.get(cutRoot);
-				rootCopies.remove(v0);
-				rootCopies.remove(v1);
-				Iterator<CoVertex> vIt = rootCopies.iterator();
-				CoVertex v2 = vIt.next();
-				CoVertex v3 = vIt.next();
-				if (!cutInfo.vertexCopyMap.containsKey(v2)) {
-					CoVertex tmp = v2;
-					v2 = v3;
-					v3 = tmp;
-				}
-				System.out.println("Copies: " + v0 + ", " + v1 + ", " + v2 + ", " + v3);
-				Complex z0 = new Complex(v0.getTextureCoord().x(), v0.getTextureCoord().y());
-				Complex z1 = new Complex(v1.getTextureCoord().x(), v1.getTextureCoord().y());
-				Complex z2 = new Complex(v2.getTextureCoord().x(), v2.getTextureCoord().y());
-				Complex z3 = new Complex(v3.getTextureCoord().x(), v3.getTextureCoord().y());
-				Complex p1 = z0.minus(z1);
-				Complex p2 = z0.minus(z2);
-				Complex p3 = z0.minus(z3);
-				System.out.println("lP1: " + p1 + ": " + p1.abs());
-				System.out.println("lP2: " + p2 + ": " + p2.abs());
-				System.out.println("lP3: " + p3 + ": " + p3.abs());
-				Complex tau = p1.divide(p2);
-				System.out.println("Tau~: " + tau);
-				System.out.println("normalization...");
-				while (abs(tau.re) > 0.5 || tau.abs() < 1) {
-					if (abs(tau.re) > 0.5) {
-						tau.re -= signum(tau.re);
-					}
-					if (tau.abs() < 1) {
-						tau = tau.invert();
-					}
-				}
-				System.out.println("Tau: " + tau);
-				System.out.println("Tau: " + tau);
-				System.out.println("|Tau|: " + tau.abs());
-				System.out.println("arg(Tau): " + tau.arg());
-			}
+			Complex tau = AlgebraicCurveUtility.calculateCutModulus(cutInfo);
+			System.out.println("Tau Re " + tau.re);
+			System.out.println("Tau Im " + tau.im);
+			System.out.println("Tau Abs " + tau.abs());
+			System.out.println("Tau Arg " + tau.arg());
 			setProgress(100);
 			break;
 		// genus > 1 -------------------------
@@ -198,8 +158,8 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		System.out.println("layout took " + nf.format((layoutTime - unwrapTime) / 1000.0) + "sec.");
 		return surface;
 	}
-	
-	
+
+
 	private int getMinUIndex(Vector u) {
 		int index = 0;
 		double iVal = u.get(0);

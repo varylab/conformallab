@@ -31,35 +31,12 @@ public class CuttingUtility {
 			cutRoot = null;
 		public Map<E, E>
 			edgeCutMap = new HashMap<E, E>();
-		public Map<Set<E>,Object>
-			paths = new HashMap<Set<E>, Object>();
+		public Set<Set<E>>
+			paths = new HashSet<Set<E>>();
 		public Map<Set<E>, Set<E>>
 			pathCutMap = new HashMap<Set<E>, Set<E>>();
 		public Map<V, V>
 			vertexCopyMap = new HashMap<V, V>();
-		public Map<Set<E>, Object>
-			pathMap = new HashMap<Set<E>, Object>();
-		
-		public <
-			VV extends Vertex<VV,EE,FF>,
-			EE extends Edge<VV,EE,FF>,
-			FF extends Face<VV,EE,FF>
-		> CuttingInfo<VV,EE,FF> copyToCombinatorialCopy(HalfEdgeDataStructure<VV,EE,FF> heds) {
-			CuttingInfo<VV,EE,FF> c = new CuttingInfo<VV,EE,FF>();
-			
-			Map<Set<EE>,Object> pp = new HashMap<Set<EE>,Object>();
-			for(Set<E> path : paths.keySet()) {
-				Set<EE> np = new HashSet<EE>();
-				Object a = paths.get(path);
-				for(E e : path) {
-					np.add(heds.getEdge(e.getIndex()));
-				}
-				pp.put(np,a);
-			}
-			
-			c.paths = pp;
-			return c;
-		}
 		
 		public Set<V> getCopies(V v) {
 			Set<V> copies = new TreeSet<V>(new NodeComparator<V>());
@@ -119,10 +96,10 @@ public class CuttingUtility {
 		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
 		context.cutRoot = root;
 		for(Set<E> path : HomologyUtility.getGeneratorPaths(root, wa)) {
-			context.paths.put(path, null) ;
+			context.paths.add(path) ;
 		}
 		Set<E> masterPath = new TreeSet<E>(new NodeComparator<E>());
-		for (Set<E> path : context.paths.keySet()) {
+		for (Set<E> path : context.paths) {
 			masterPath.addAll(path);
 		}
 		for (E e : masterPath) { 
@@ -140,7 +117,7 @@ public class CuttingUtility {
 				}
 			}
 		}
-		for (Set<E> path : context.paths.keySet()) {
+		for (Set<E> path : context.paths) {
 			Set<E> coPath = new TreeSet<E>(new NodeComparator<E>());
 			context.pathCutMap.put(path, coPath);
 			for (E e : path) {

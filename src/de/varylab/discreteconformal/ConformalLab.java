@@ -47,6 +47,8 @@ public class ConformalLab {
 		v.registerPlugins(HalfedgePluginFactory.createGeometryPlugins());
 		v.registerPlugins(HalfedgePluginFactory.createSubdivisionPlugins());
 		v.registerPlugins(HalfedgePluginFactory.createTopologyPlugins());
+		v.registerPlugins(HalfedgePluginFactory.createGeneratorPlugins());
+		v.registerPlugins(HalfedgePluginFactory.createVisualizerPlugins());
 		v.startup();
 	} 
 

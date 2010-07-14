@@ -51,7 +51,8 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		
 		optimizer = new Tao(Tao.Method.NTR);
 		optimizer.setApplication(app);
-		optimizer.setGradientTolerances(gradTolerance, 0, 0);
+		optimizer.setTolerances(0, 0, 0, 0);
+		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance);
 		optimizer.setMaximumIterates(maxIterations);
 		optimizer.solve();
 		
