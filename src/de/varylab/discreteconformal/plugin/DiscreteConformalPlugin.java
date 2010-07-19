@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -43,13 +44,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
-import javax.swing.ListModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -95,8 +94,8 @@ import de.varylab.discreteconformal.heds.calculator.SubdivisionCalculator;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
-import de.varylab.discreteconformal.util.FundamentalDomainUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.util.FundamentalDomainUtility;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;
 
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSelectionListener, ChangeListener, ActionListener, PropertyChangeListener, SelectionListener {
@@ -195,51 +194,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		poincareButton = new JRadioButton("Poincaré", true),
 		halfplaneButton = new JRadioButton("Half-Plane"); 
 	private JList
-		selectedVertexList = new JList(new CustomVertexModel());
+		selectedVertexList = new JList();
 	private JScrollPane
 		selectionScroller = new JScrollPane(selectedVertexList);
 	
-	
-	private class CustomVertexModel implements ListModel {
-
-		@Override
-		public Object getElementAt(int index) {
-			return customVertices.get(index);
-		}
-		@Override
-		public int getSize() {
-			return customVertices.size();
-		}
-		@Override
-		public void addListDataListener(ListDataListener l) {
-		}
-		@Override
-		public void removeListDataListener(ListDataListener l) {
-		}
-		
-	}
-		
-	@Override
-	public void selectionChanged(HalfedgeSelection s, SelectionInterface sif) {
-		Set<CoVertex> oldSelection = new HashSet<CoVertex>(customVertices);
-		customVertices.clear();
-		for (Vertex<?,?,?> v : s.getVertices()) {
-			if (v instanceof CoVertex) {
-				CoVertex cov = (CoVertex)v;
-				if (cov.getCustomInfo() == null) {
-					cov.setCustomInfo(new CustomVertexInfo());
-				}
-				customVertices.add(cov);
-			}
-		}
-		Set<CoVertex> newSelection = new HashSet<CoVertex>(customVertices);
-		newSelection.removeAll(oldSelection);
-		selectedVertexList.setModel(new CustomVertexModel());
-		if (!newSelection.isEmpty()) {
-			CoVertex v = newSelection.iterator().next();
-			selectedVertexList.setSelectedValue(v, true);
-		}
-	}
 		
 		
 	public DiscreteConformalPlugin() {
@@ -297,8 +255,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		universalCoverAppearance.setAttribute(DIFFUSE_COLOR, WHITE);
 	}
 
-	
-	
 	
 	private void createLayout() {
 		shrinkPanel.setLayout(new GridBagLayout());
@@ -376,6 +332,33 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		shrinkPanel.add(modelPanel, c2);
 	}
 	
+	
+	@Override
+	public void selectionChanged(HalfedgeSelection s, SelectionInterface sif) {
+		Set<CoVertex> oldSelection = new HashSet<CoVertex>(customVertices);
+		customVertices.clear();
+		for (Vertex<?,?,?> v : s.getVertices()) {
+			if (v instanceof CoVertex) {
+				CoVertex cov = (CoVertex)v;
+				if (cov.getCustomInfo() == null) {
+					cov.setCustomInfo(new CustomVertexInfo());
+				}
+				customVertices.add(cov);
+			}
+		}
+		Set<CoVertex> newSelection = new HashSet<CoVertex>(customVertices);
+		newSelection.removeAll(oldSelection);
+		DefaultListModel model = new DefaultListModel();
+		for (CoVertex v : customVertices) {
+			model.addElement(v);
+		}
+		selectedVertexList.setModel(model);
+		if (!newSelection.isEmpty()) {
+			CoVertex v = newSelection.iterator().next();
+			selectedVertexList.setSelectedValue(v, true);
+		}
+	}
+
 	
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
