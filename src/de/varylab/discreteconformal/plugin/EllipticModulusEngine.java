@@ -71,44 +71,20 @@ public class EllipticModulusEngine extends GeneratorPlugin {
 	
 	
 	public static void generateEllipticCurve(CoHDS hds, int numExtraPoints, Set<CoEdge> glueEdges, Set<CoEdge> cutEdges) {
-		// branch points
-		CoVertex v1 = null;
-		CoVertex v2 = null;
-		CoVertex v3 = null;
-		CoVertex v4 = null;
-		if (hds.numVertices() != 4) { // create regulat tetrahedron
-			hds.clear();
-			v1 = hds.addNewVertex();
-			v2 = hds.addNewVertex();
-			v3 = hds.addNewVertex();
-			v4 = hds.addNewVertex();
-			v1.getPosition().set(1, 0, 0);
-			v2.getPosition().set(0, 1, 0);
-			v3.getPosition().set(-1, 0, 0);
-			v4.getPosition().set(0, -1, 0);
-		} else { // use predefined vertex positions
-			v1 = hds.getVertex(0);
-			v2 = hds.getVertex(1);
-			v3 = hds.getVertex(2);
-			v4 = hds.getVertex(3);
-			for (CoEdge e : new HashSet<CoEdge>(hds.getEdges())) {
-				hds.removeEdge(e);
-			}
-			for (CoFace f : new HashSet<CoFace>(hds.getFaces())) {
-				hds.removeFace(f);
-			}
+		if (hds.numVertices() < 4) { // create regulat tetrahedron
+			throw new RuntimeException("No branch point set in generateEllipticCurve()");
+		} 
+		CoVertex v1 = hds.getVertex(0);
+		CoVertex v2 = hds.getVertex(1);
+		CoVertex v3 = hds.getVertex(2);
+		CoVertex v4 = hds.getVertex(3);
+		for (CoEdge e : new HashSet<CoEdge>(hds.getEdges())) {
+			hds.removeEdge(e);
+		}
+		for (CoFace f : new HashSet<CoFace>(hds.getFaces())) {
+			hds.removeFace(f);
 		}
 
-//		double[] pos1 = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
-//		double[] pos2 = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
-//		double[] pos3 = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
-//		double[] pos4 = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
-//		v1.setPosition(new Point(pos1));
-//		v2.setPosition(new Point(pos2));
-//		v3.setPosition(new Point(pos3));
-//		v4.setPosition(new Point(pos4));
-
-		
 		// additional points
 		for (int i = 0; i < numExtraPoints; i++) {
 			double[] pos = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
