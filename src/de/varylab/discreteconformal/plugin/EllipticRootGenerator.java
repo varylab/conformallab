@@ -2,27 +2,46 @@ package de.varylab.discreteconformal.plugin;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.sin;
-
 import geom3d.Point;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import de.jreality.math.Rn;
-import de.jreality.plugin.basic.Content;
-import de.jtem.halfedgetools.plugin.GeneratorPlugin;
+import de.jtem.halfedge.Edge;
+import de.jtem.halfedge.Face;
+import de.jtem.halfedge.HalfEdgeDataStructure;
+import de.jtem.halfedge.Vertex;
+import de.jtem.halfedgetools.adapter.CalculatorException;
+import de.jtem.halfedgetools.adapter.CalculatorSet;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.plugin.algorithm.AlgorithmCategory;
+import de.jtem.halfedgetools.plugin.algorithm.AlgorithmPlugin;
 import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 
-public class EllipticRootGenerator extends GeneratorPlugin {
+public class EllipticRootGenerator extends AlgorithmPlugin {
 
+	@Override
+	public AlgorithmCategory getAlgorithmCategory() {
+		return AlgorithmCategory.Generator;
+	}
+	
 	
 	@Override
-	protected void generate(Content content, HalfedgeInterface hif) {
+	public String getAlgorithmName() {
+		return "Simple Elliptic Curve";
+	}
+	
+	public < 
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void execute(HDS h, CalculatorSet c, HalfedgeInterface hif) throws CalculatorException {
 		CoHDS hds = new CoHDS();
 		// first copy
 		CoVertex v0a = hds.addNewVertex();
@@ -92,12 +111,6 @@ public class EllipticRootGenerator extends GeneratorPlugin {
 			v.setTextureCoord(new Point(0, 0, 1));
 		}
 		hif.set(hds);
-	}
-	
-	
-	@Override
-	protected String[] getMenuPath() {
-		return new String[] {"Algebraic Curves"};
 	}
 	
 

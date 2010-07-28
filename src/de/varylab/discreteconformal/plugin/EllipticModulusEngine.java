@@ -14,16 +14,22 @@ import java.util.Set;
 import javax.swing.JOptionPane;
 
 import no.uib.cipr.matrix.Vector;
-import de.jreality.plugin.basic.Content;
 import de.jreality.util.NativePathUtility;
+import de.jtem.halfedge.Edge;
+import de.jtem.halfedge.Face;
+import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Node;
+import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.CalculatorException;
+import de.jtem.halfedgetools.adapter.CalculatorSet;
 import de.jtem.halfedgetools.adapter.type.Color;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
-import de.jtem.halfedgetools.plugin.GeneratorPlugin;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.plugin.algorithm.AlgorithmCategory;
+import de.jtem.halfedgetools.plugin.algorithm.AlgorithmPlugin;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -43,13 +49,28 @@ import de.varylab.discreteconformal.util.Search;
 import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
 import de.varylab.discreteconformal.util.SurgeryUtility;
 
-public class EllipticModulusEngine extends GeneratorPlugin {
+public class EllipticModulusEngine extends AlgorithmPlugin {
 
 	private static Random 
 		rnd = new Random();
 	
 	@Override
-	protected void generate(Content content, HalfedgeInterface hif) {
+	public AlgorithmCategory getAlgorithmCategory() {
+		return AlgorithmCategory.Generator;
+	}
+
+	@Override
+	public String getAlgorithmName() {
+		return "Elliptic Curve";
+	}
+	
+	
+	public < 
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void execute(HDS h, CalculatorSet c, HalfedgeInterface hif) throws CalculatorException {
 		String numString = JOptionPane.showInputDialog("Number of extra points", 0);
 		if (numString == null) return;
 		int extraPoints = Integer.parseInt(numString);
@@ -67,7 +88,6 @@ public class EllipticModulusEngine extends GeneratorPlugin {
 		set.add(new PositionAdapter());
 		hif.set(hds, set);
 	}
-	
 	
 	
 	public static void generateEllipticCurve(CoHDS hds, int numExtraPoints, Set<CoEdge> glueEdges, Set<CoEdge> cutEdges) {
@@ -190,11 +210,6 @@ public class EllipticModulusEngine extends GeneratorPlugin {
 
 	}
 
-	@Override
-	protected String[] getMenuPath() {
-		return new String[] {"Algebraic Curves"};
-	}
-	
 	
 	public static Complex calculateModulus(CoHDS hds) {
 

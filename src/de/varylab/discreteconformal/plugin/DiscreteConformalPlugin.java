@@ -128,9 +128,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		polygonImage = null;
 	private int
 		genus = -1;
-	
-	private Triangulator
-		triangulator = new Triangulator();
 
 	private MarkedEdgesColorAdapter
 		cutColorAdapter = new MarkedEdgesColorAdapter();
@@ -541,7 +538,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				v.setCustomInfo(null);
 			}
 		}
-		triangulator.triangulate(surface);
+		Triangulator.triangulate(surface);
 		return surface;
 	}
 	
