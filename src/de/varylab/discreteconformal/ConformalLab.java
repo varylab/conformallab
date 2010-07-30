@@ -12,9 +12,12 @@ import de.jtem.halfedgetools.plugin.HalfedgeToolBar;
 import de.jtem.halfedgetools.plugin.algorithm.subdivision.TriangulatePlugin;
 import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
 import de.jtem.halfedgetools.plugin.visualizers.NodeIndexVisualizer;
+import de.varylab.discreteconformal.plugin.CutAtEdgePlugin;
+import de.varylab.discreteconformal.plugin.CutToDiskPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.EllipticModulusEngine;
 import de.varylab.discreteconformal.plugin.EllipticRootGenerator;
+import de.varylab.discreteconformal.plugin.FindPathPlugin;
 import de.varylab.discreteconformal.plugin.ThetaVisualizer;
 
 
@@ -43,11 +46,10 @@ public class ConformalLab {
 		v.registerPlugin(new ConsolePlugin());
 		v.registerPlugin(new VertexEditorPlugin());
 		v.registerPlugin(new NodeIndexVisualizer());
-		v.registerPlugins(HalfedgePluginFactory.createGeometryPlugins());
-		v.registerPlugins(HalfedgePluginFactory.createSubdivisionPlugins());
-		v.registerPlugins(HalfedgePluginFactory.createTopologyPlugins());
-		v.registerPlugins(HalfedgePluginFactory.createGeneratorPlugins());
-		v.registerPlugins(HalfedgePluginFactory.createVisualizerPlugins());
+		v.registerPlugin(new CutToDiskPlugin());
+		v.registerPlugin(new CutAtEdgePlugin());
+		v.registerPlugin(new FindPathPlugin());
+		v.registerPlugins(HalfedgePluginFactory.createPlugins());
 		v.startup();
 	} 
 
