@@ -72,8 +72,9 @@ public class Convergence {
 			if (c != 'y') return;
 		}
 		FileWriter fwErr = new FileWriter(errFile);
-		fwErr.write("# index, absErr, argErr, reErr, imErr\n");
+		fwErr.write("# index[1], absErr[2], argErr[3], reErr[4], imErr[5]\n");
 		for (int i = minExtraPoints; i <= maxExtraPoints; i += incExtraPoints) {
+			if (reuse) EllipticModulusEngine.setRandomSeeed(0);
 			System.out.println(i + " extra points --------------------");
 			Set<CoEdge> glueSet = new HashSet<CoEdge>();
 			Set<CoEdge> cutSet = new HashSet<CoEdge>();

@@ -40,6 +40,28 @@ public class Delaunay {
 	}
 	
 	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> double edgeLengthVariance(HDS hds, EdgeLengthCalculator el) {
+		double mean = 0.0;
+		for (E e : hds.getPositiveEdges()) {
+			mean += el.getLength(e);
+		}
+		mean /= hds.numEdges() / 2;
+		double variance = 0;
+		for (E e : hds.getPositiveEdges()) {
+			double l = el.getLength(e);
+			double dif = l - mean;
+			variance += dif * dif;
+		}
+		return variance / (hds.numEdges() / 2);
+	}
+	
+	
+	
 	
 	/**
 	 * Calculates the angle between edge and edge.getNextEdge()
