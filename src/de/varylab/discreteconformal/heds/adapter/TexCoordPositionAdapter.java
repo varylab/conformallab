@@ -56,7 +56,7 @@ public class TexCoordPositionAdapter extends AbstractTypedAdapter<CoVertex, CoEd
 
 	@Override
 	public double getPriority() {
-		return 1;
+		return 10;
 	}
 	
 	public void setModel(HyperbolicModel model) {

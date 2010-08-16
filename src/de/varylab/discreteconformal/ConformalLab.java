@@ -1,9 +1,10 @@
 package de.varylab.discreteconformal;
 
+import javax.swing.UIManager;
+
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
 import de.jreality.plugin.basic.ConsolePlugin;
-import de.jreality.plugin.experimental.ManagedContentGUI;
 import de.jreality.plugin.experimental.WebContentLoader;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -24,6 +25,8 @@ import de.varylab.discreteconformal.plugin.ThetaVisualizer;
 public class ConformalLab {
 
 	public static void main(String[] args) {
+		System.setProperty("de.jreality.scene.Viewer", "de.jreality.jogl.GLJPanelViewer");
+		UIManager.getDefaults().put("Slider.paintValue", false);
 		NativePathUtility.set("native");
 		JRViewer v = new JRViewer();
 		v.addBasicUI();
@@ -33,7 +36,6 @@ public class ConformalLab {
 		v.addContentSupport(ContentType.CenteredAndScaled);
 		v.setPropertiesFile("ConformalLab.jrw");
 		v.setPropertiesResource(ConformalLab.class, "ConformalLab.jrw");
-		v.registerPlugin(new ManagedContentGUI());
 		v.registerPlugin(new DiscreteConformalPlugin());
 		v.registerPlugin(new HalfedgeInterface());
 //		v.registerPlugin(new HalfedgeDebuggerPlugin());
