@@ -70,7 +70,6 @@ import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeSelection;
-import de.jtem.halfedgetools.plugin.SelectionInterface;
 import de.jtem.halfedgetools.plugin.SelectionListener;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
@@ -110,8 +109,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		managedContent = null;
 	private HalfedgeInterface
 		hif = null;
-	private SelectionInterface
-		sel = null;
 	
 	// data section ---------------------
 	private CoHDS
@@ -331,7 +328,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	
 	
 	@Override
-	public void selectionChanged(HalfedgeSelection s, SelectionInterface sif) {
+	public void selectionChanged(HalfedgeSelection s, HalfedgeInterface hif) {
 		Set<CoVertex> oldSelection = new HashSet<CoVertex>(customVertices);
 		customVertices.clear();
 		for (Vertex<?,?,?> v : s.getVertices()) {
@@ -521,7 +518,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		} else {
 			TextureUtility.removeTexture(universalCoverAppearance, POLYGON_SHADER);
 		}
-		hif.rescan();
 	}
 	
 	
@@ -570,7 +566,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		IndexedFaceSetUtility.calculateAndSetNormals(ifs);
 		surfaceRoot.setGeometry(ifs);
 		surfaceRoot.setVisible(true);
-		hif.rescan();
 	}
 	
 
@@ -689,12 +684,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
-		hif.setAutomaticConversion(false);
 		hif.addAdapter(new PositionAdapter());
 		hif.addAdapter(new TexCoordAdapter(0));
 		hif.addCalculator(new SubdivisionCalculator());
-		sel = c.getPlugin(SelectionInterface.class);
-		sel.addSelectionListener(this);
+		hif.addSelectionListener(this);
 		managedContent = c.getPlugin(ManagedContent.class);
 	}
 	
