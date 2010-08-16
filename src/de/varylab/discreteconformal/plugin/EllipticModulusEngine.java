@@ -274,12 +274,6 @@ public class EllipticModulusEngine extends AlgorithmPlugin {
 			v2.getPosition().set(0, 1, 0);
 			v3.getPosition().set(-1, 0, 0);
 			v4.getPosition().set(0, -1, 0);
-//			double a = 2 * sin(PI / 4);
-//			v1.getPosition().set(a, 1, 0);
-//			v2.getPosition().set(-a, 1, 0);
-//			v3.getPosition().set(0, -1, -a);
-//			v4.getPosition().set(0, -1, a);
-			
 			try {
 				generateEllipticCurve(hds, i, glueSet, cutSet);
 				Delaunay.constructDelaunay(hds, new EdgeLengthCalculator());

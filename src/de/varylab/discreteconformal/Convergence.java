@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
 
 import java.io.File;
@@ -95,11 +94,10 @@ public class Convergence {
 				CoVertex v2 = hds.addNewVertex();
 				CoVertex v3 = hds.addNewVertex();
 				CoVertex v4 = hds.addNewVertex();
-				double a = 2 * sin(Math.PI / 4);
-				v1.getPosition().set(a, 1, 0);
-				v2.getPosition().set(-a, 1, 0);
-				v3.getPosition().set(0, -1, -a);
-				v4.getPosition().set(0, -1, a);
+				v1.getPosition().set(1, 1, 1);
+				v2.getPosition().set(1, -1, -1);
+				v3.getPosition().set(-1, 1, -1);
+				v4.getPosition().set(-1, -1, 1);
 			}
 			try {
 				EllipticModulusEngine.generateEllipticCurve(hds, i, glueSet, cutSet);

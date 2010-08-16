@@ -1,7 +1,5 @@
 package de.varylab.discreteconformal.plugin;
 
-import static java.lang.Math.PI;
-import static java.lang.Math.sin;
 import geom3d.Point;
 
 import java.util.ArrayList;
@@ -48,11 +46,10 @@ public class EllipticRootGenerator extends AlgorithmPlugin {
 		CoVertex v1a = hds.addNewVertex();
 		CoVertex v2a = hds.addNewVertex();
 		CoVertex v3a = hds.addNewVertex();
-		double a = 2 * sin(PI / 4);
-		v0a.getPosition().set(a, 1, 0);
-		v1a.getPosition().set(-a, 1, 0);
-		v2a.getPosition().set(0, -1, -a);
-		v3a.getPosition().set(0, -1, a);
+		v0a.getPosition().set(1, 1, 1);
+		v1a.getPosition().set(1, -1, -1);
+		v2a.getPosition().set(-1, 1, -1);
+		v3a.getPosition().set(-1, -1, 1);
 		
 		List<CoFace> faces = new ArrayList<CoFace>();
 		for (int i = 0; i < 8; i++) {
