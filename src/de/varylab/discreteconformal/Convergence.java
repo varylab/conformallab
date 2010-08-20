@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal;
 
+import static de.jreality.scene.data.Attribute.COORDINATES;
 import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
 
@@ -12,18 +13,14 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import de.jreality.reader.ReaderOBJ;
-import de.jreality.scene.Geometry;
-import de.jreality.scene.IndexedFaceSet;
+import de.jreality.scene.PointSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.util.NativePathUtility;
 import de.jreality.util.SceneGraphUtility;
-import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.calculator.EdgeLengthCalculator;
 import de.varylab.discreteconformal.plugin.EllipticModulusEngine;
 import de.varylab.discreteconformal.util.Delaunay;
@@ -79,21 +76,24 @@ public class Convergence {
 			Set<CoEdge> cutSet = new HashSet<CoEdge>();
 			Complex tau = null;
 			CoHDS hds = new CoHDS();
+			CoVertex v1 = hds.addNewVertex();
+			CoVertex v2 = hds.addNewVertex();
+			CoVertex v3 = hds.addNewVertex();
+			CoVertex v4 = hds.addNewVertex();
 			if (opts.hasArgument(inputObj)) {
 				String objIn = opts.valueOf(inputObj);
 				ReaderOBJ objReader = new ReaderOBJ();
 				SceneGraphComponent c = objReader.read(new File(objIn));
-				ConverterJR2Heds converter = new ConverterJR2Heds();
-				Geometry g = SceneGraphUtility.getFirstGeometry(c);
-				if (g instanceof IndexedFaceSet) {
-					AdapterSet aSet = new AdapterSet(new PositionAdapter());
-					converter.ifs2heds((IndexedFaceSet)g, hds, aSet);
+				PointSet g = (PointSet)SceneGraphUtility.getFirstGeometry(c);
+				double[][] vertices = g.getVertexAttributes(COORDINATES).toDoubleArrayArray(null);
+				if (vertices.length < 4) {
+					throw new RuntimeException("Not enough vertices in file " + objIn);
 				}
+				v1.getPosition().set(vertices[0][0], vertices[0][1], vertices[0][2]);
+				v2.getPosition().set(vertices[1][0], vertices[1][1], vertices[1][2]);
+				v3.getPosition().set(vertices[2][0], vertices[2][1], vertices[2][2]);
+				v4.getPosition().set(vertices[3][0], vertices[3][1], vertices[3][2]);
 			} else {
-				CoVertex v1 = hds.addNewVertex();
-				CoVertex v2 = hds.addNewVertex();
-				CoVertex v3 = hds.addNewVertex();
-				CoVertex v4 = hds.addNewVertex();
 				v1.getPosition().set(1, 1, 1);
 				v2.getPosition().set(1, -1, -1);
 				v3.getPosition().set(-1, 1, -1);

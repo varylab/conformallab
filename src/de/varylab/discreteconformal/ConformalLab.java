@@ -33,7 +33,7 @@ public class ConformalLab {
 		v.addContentUI();
 		v.setShowToolBar(true);
 		v.setShowPanelSlots(true, true, true, true);
-		v.addContentSupport(ContentType.CenteredAndScaled);
+		v.addContentSupport(ContentType.Raw);
 		v.setPropertiesFile("ConformalLab.jrw");
 		v.setPropertiesResource(ConformalLab.class, "ConformalLab.jrw");
 		v.registerPlugin(new DiscreteConformalPlugin());
