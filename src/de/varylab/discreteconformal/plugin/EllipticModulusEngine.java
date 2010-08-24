@@ -217,7 +217,6 @@ public class EllipticModulusEngine extends AlgorithmPlugin {
 
 	
 	public static Complex calculateModulus(CoHDS hds) {
-
 		Unwrapper unwrapper = new EuclideanUnwrapperPETSc();
 		unwrapper.setGradientTolerance(1E-7);
 		unwrapper.setMaxIterations(500);

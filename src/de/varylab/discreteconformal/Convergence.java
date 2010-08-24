@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal;
 
 import static de.jreality.scene.data.Attribute.COORDINATES;
-import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
 
 import java.io.File;
@@ -21,9 +20,7 @@ import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.calculator.EdgeLengthCalculator;
 import de.varylab.discreteconformal.plugin.EllipticModulusEngine;
-import de.varylab.discreteconformal.util.Delaunay;
 
 public class Convergence {
 
@@ -101,16 +98,15 @@ public class Convergence {
 			}
 			try {
 				EllipticModulusEngine.generateEllipticCurve(hds, i, glueSet, cutSet);
-				Delaunay.constructDelaunay(hds, new EdgeLengthCalculator());
 				tau = EllipticModulusEngine.calculateModulus(hds);
 			} catch (Exception e) {
 				System.err.println(e.getLocalizedMessage());
 				continue;
 			}
-			double absErr = abs(tau.abs() - tauExp.abs());
-			double argErr = abs(tau.arg() - tauExp.arg());
-			double reErr = abs(abs(tau.re) - abs(tauExp.re));
-			double imErr = abs(tau.im - tauExp.im);
+			double absErr = tau.abs() - tauExp.abs();
+			double argErr = tau.arg() - tauExp.arg();
+			double reErr = tau.re - tauExp.re;
+			double imErr = tau.im - tauExp.im;
 			System.out.println("tau = " + tau);
 			fwErr.write(i + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\n");
 			fwErr.flush();
