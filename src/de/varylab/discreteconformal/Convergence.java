@@ -21,6 +21,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.EllipticModulusEngine;
+import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 
 public class Convergence {
 
@@ -65,7 +66,7 @@ public class Convergence {
 			if (c != 'y') return;
 		}
 		FileWriter fwErr = new FileWriter(errFile);
-		fwErr.write("# index[1], absErr[2], argErr[3], reErr[4], imErr[5]\n");
+		fwErr.write("# index[1], absErr[2], argErr[3], reErr[4], imErr[5], gradNormSq[6]\n");
 		for (int i = minExtraPoints; i <= maxExtraPoints; i += incExtraPoints) {
 			if (reuse) EllipticModulusEngine.setRandomSeeed(0);
 			System.out.println(i + " extra points --------------------");
@@ -108,7 +109,7 @@ public class Convergence {
 			double reErr = tau.re - tauExp.re;
 			double imErr = tau.im - tauExp.im;
 			System.out.println("tau = " + tau);
-			fwErr.write(i + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\n");
+			fwErr.write(i + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + EuclideanUnwrapperPETSc.lastGNorm + "\n");
 			fwErr.flush();
 		}
 		fwErr.close();

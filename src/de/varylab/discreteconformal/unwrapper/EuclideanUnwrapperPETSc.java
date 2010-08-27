@@ -30,6 +30,8 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 	private double
 		gradTolerance = 1E-8;
 
+	public static double
+		lastGNorm = 0;
 	
 	@Override
 	public Vector unwrap(CoHDS surface) throws Exception {
@@ -57,6 +59,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		optimizer.solve();
 		
 		GetSolutionStatusResult status = optimizer.getSolutionStatus();
+		lastGNorm = status.gnorm;
 		System.out.println(status);
 		if (status.reason.cvalue() < 0) {
 			throw new UnwrapException("Optimization did not succeed: " + status);

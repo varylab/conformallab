@@ -4,6 +4,7 @@ import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk
 import geom3d.Point;
 import geom3d.Triangle;
 
+import java.awt.Window;
 import java.io.FileWriter;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -12,6 +13,7 @@ import java.util.Random;
 import java.util.Set;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import no.uib.cipr.matrix.Vector;
 import de.jreality.util.NativePathUtility;
@@ -28,6 +30,7 @@ import de.jtem.halfedgetools.adapter.CalculatorSet;
 import de.jtem.halfedgetools.adapter.type.Color;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmCategory;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmPlugin;
 import de.jtem.mfc.field.Complex;
@@ -76,13 +79,23 @@ public class EllipticModulusEngine extends AlgorithmPlugin {
 		F extends Face<V, E, F>,
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> void execute(HDS h, CalculatorSet c, HalfedgeInterface hif) throws CalculatorException {
-		String numString = JOptionPane.showInputDialog("Number of extra points", 0);
+		Window w = SwingUtilities.getWindowAncestor(hif.getShrinkPanel());
+		String numString = JOptionPane.showInputDialog(w, "Number of extra points", 0);
 		if (numString == null) return;
 		int extraPoints = Integer.parseInt(numString);
+		HalfedgeSelection sel = hif.getSelection();
+		int[] branchIndices = {};
+		if (sel.getVertices().size() == 4) {
+			branchIndices = new int[4];
+			int i = 0;
+			for (V v : sel.getVertices(h)) {
+				branchIndices[i++] = v.getIndex();
+			}
+		}
 		CoHDS hds = hif.get(new CoHDS());
 		Set<CoEdge> glueSet = new HashSet<CoEdge>();
 		Set<CoEdge> cutSet = new HashSet<CoEdge>();
-		generateEllipticCurve(hds, extraPoints, glueSet, cutSet);
+		generateEllipticCurve(hds, extraPoints, glueSet, cutSet, branchIndices);
 		PathVisualizer pathVisualizer = new PathVisualizer();
 		for (CoEdge e : glueSet) {
 			pathVisualizer.add(e);
@@ -95,14 +108,22 @@ public class EllipticModulusEngine extends AlgorithmPlugin {
 	}
 	
 	
-	public static void generateEllipticCurve(CoHDS hds, int numExtraPoints, Set<CoEdge> glueEdges, Set<CoEdge> cutEdges) {
+	public static void generateEllipticCurve(CoHDS hds, int numExtraPoints, Set<CoEdge> glueEdges, Set<CoEdge> cutEdges, int... branchVertices) {
 		if (hds.numVertices() < 4) { // create regulat tetrahedron
 			throw new RuntimeException("No branch point set in generateEllipticCurve()");
 		} 
-		CoVertex v1 = hds.getVertex(0);
-		CoVertex v2 = hds.getVertex(1);
-		CoVertex v3 = hds.getVertex(2);
-		CoVertex v4 = hds.getVertex(3);
+		if (branchVertices.length < 4) {
+			branchVertices = new int[]{0, 1, 2, 3};
+		}
+		CoVertex v1 = hds.getVertex(branchVertices[0]);
+		CoVertex v2 = hds.getVertex(branchVertices[1]);
+		CoVertex v3 = hds.getVertex(branchVertices[2]);
+		CoVertex v4 = hds.getVertex(branchVertices[3]);
+		System.out.println("Using four vertices as branch points:");
+		System.out.println(v1.getPosition());
+		System.out.println(v2.getPosition());
+		System.out.println(v3.getPosition());
+		System.out.println(v4.getPosition());
 		for (CoEdge e : new HashSet<CoEdge>(hds.getEdges())) {
 			hds.removeEdge(e);
 		}

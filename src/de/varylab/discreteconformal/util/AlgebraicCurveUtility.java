@@ -3,10 +3,6 @@ package de.varylab.discreteconformal.util;
 import static java.lang.Math.abs;
 import static java.lang.Math.signum;
 import geom3d.Point;
-
-import java.util.Iterator;
-import java.util.Set;
-
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -17,41 +13,21 @@ import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 public class AlgebraicCurveUtility {
 
 	public static Complex calculateCutModulus(CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
-		Iterator<Set<CoEdge>> pathIt = cutInfo.paths.iterator();
-		Set<CoEdge> path1 = pathIt.next();
-		Set<CoEdge> path2 = pathIt.next();
+		CoVertex v0 = cutInfo.cutRoot;
+		CoVertex v1 = cutInfo.vertexCopyMap.get(v0);
+		if (v1 == null) throw new RuntimeException("Connot calculate modulus. No cut-root copies found");
+		CoVertex v2 = cutInfo.vertexCopyMap.get(v1);
+		if (v2 == null) throw new RuntimeException("Connot calculate modulus. No second cut-root copy found");
+		Point t0 = v0.getTextureCoord();
+		Point t1 = v1.getTextureCoord();
+		Point t2 = v2.getTextureCoord();
+		Complex z0 = new Complex(t0.x() / t0.z(), t0.y() / t0.z());
+		Complex z1 = new Complex(t1.x() / t1.z(), t1.y() / t1.z());
+		Complex z2 = new Complex(t2.x() / t2.z(), t2.y() / t2.z());
+		Complex w1 = z1.minus(z0);
+		Complex w2 = z2.minus(z0);
+		Complex tau = w2.divide(w1);
 		
-		Set<CoVertex> path1V = PathUtility.getVerticesOnPath(path1);
-		Set<CoVertex> path2V = PathUtility.getVerticesOnPath(path2);
-	
-		Complex tau = null;
-		double maxIm = 0;
-		for (CoVertex v : path1V) {
-			for (CoVertex vv : path2V) {
-				CoVertex vc = cutInfo.vertexCopyMap.get(v);
-				CoVertex vvc = cutInfo.vertexCopyMap.get(vv);
-				if (vc == null || vvc == null) {
-					continue;
-				}
-				Point tv = v.getTextureCoord();
-				Point tvv = vv.getTextureCoord();
-				Point tvc = vc.getTextureCoord();
-				Point tvvc = vvc.getTextureCoord();
-				Complex z0 = new Complex(tv.x() / tv.z(), tv.y() / tv.z());
-				Complex z1 = new Complex(tvv.x() / tvv.z(), tvv.y() / tvv.z());
-				Complex z2 = new Complex(tvc.x() / tvc.z(), tvc.y() / tvc.z());
-				Complex z3 = new Complex(tvvc.x() / tvvc.z(), tvvc.y() / tvvc.z());
-				Complex w1 = z0.minus(z2);
-				Complex w2 = z1.minus(z3);
-				Complex tauTmp = w2.divide(w1);
-				double absIm = Math.abs(tauTmp.im);
-				if (absIm > maxIm) {
-					tau = tauTmp;
-					maxIm = absIm;
-				}
-			}
-		}
-		assert tau != null;
 		int maxIter = 100;
 		// move tau into its fundamental domain
 		while ((abs(tau.re) > 0.5 || tau.im < 0 || tau.abs() < 1) && --maxIter > 0) {

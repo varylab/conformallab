@@ -53,7 +53,7 @@ public class CuttingUtility {
 			while (tmpV != null) {
 				copies.add(tmpV);
 				tmpV = vertexCopyMap.get(tmpV);
-			}		
+			}	
 			copies.add(v);
 			return copies;
 		}
