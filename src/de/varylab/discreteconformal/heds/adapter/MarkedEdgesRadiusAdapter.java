@@ -36,15 +36,15 @@ public class MarkedEdgesRadiusAdapter extends AbstractTypedAdapter<CoVertex, CoE
 		for (Set<CoEdge> path : context.paths) {
 			Set<CoEdge> coPath = context.pathCutMap.get(path);
 			if (path.contains(e) || path.contains(e.getOppositeEdge())) {
-				return 4.0;
+				return 1.0;
 			}
 			if(coPath != null) {
 				if (coPath.contains(e) || coPath.contains(e.getOppositeEdge())) {
-					return 4.0;
+					return 1.0;
 				}
 			}
 		}
-		return 0.0;
+		return 0.5;
 	}
 
 	@Override
