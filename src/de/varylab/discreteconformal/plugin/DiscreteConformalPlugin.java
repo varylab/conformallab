@@ -152,7 +152,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		modelPanel = new ShrinkPanel("Hyperbolic Model"),
 		visualizationPanel = new ShrinkPanel("Visualization");
 	private SpinnerNumberModel
-		customThetaModel = new SpinnerNumberModel(360, 0, 1000, 1),
+		customThetaModel = new SpinnerNumberModel(360.0, 0.0, 1000.0, 1.0),
 		numConesModel = new SpinnerNumberModel(0, 0, 100, 1),
 		toleranceExpModel = new SpinnerNumberModel(-8, -30, -1, 1),
 		maxIterationsModel = new SpinnerNumberModel(150, 1, 10000, 1);

@@ -123,11 +123,15 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			cutInfo = cutManifoldToDisk(surface, cutRoot, constantWeight);
 			layoutRoot = EuclideanLayout.doLayout(surface, u);
 			layoutTime = System.currentTimeMillis();
-			Complex tau = AlgebraicCurveUtility.calculateCutModulus(cutInfo);
-			System.out.println("Tau Re " + tau.re);
-			System.out.println("Tau Im " + tau.im);
-			System.out.println("Tau Abs " + tau.abs());
-			System.out.println("Tau Arg " + tau.arg());
+			try {
+				Complex tau = AlgebraicCurveUtility.calculateCutModulus(cutInfo);
+				System.out.println("Tau Re " + tau.re);
+				System.out.println("Tau Im " + tau.im);
+				System.out.println("Tau Abs " + tau.abs());
+				System.out.println("Tau Arg " + tau.arg());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			setProgress(100);
 			break;
 		// genus > 1 -------------------------
