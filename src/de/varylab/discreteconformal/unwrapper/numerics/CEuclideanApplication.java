@@ -77,7 +77,7 @@ public class CEuclideanApplication extends TaoApplication implements
 	}
 	
 	
-	private static class TaoGradient implements Gradient {
+	public static class TaoGradient implements Gradient {
 
 		private Vec
 			G = null;
@@ -109,7 +109,7 @@ public class CEuclideanApplication extends TaoApplication implements
 	}
 	
 	
-	private static class TaoHessian implements Hessian {
+	public static class TaoHessian implements Hessian {
 		
 		private Mat
 			H = null;

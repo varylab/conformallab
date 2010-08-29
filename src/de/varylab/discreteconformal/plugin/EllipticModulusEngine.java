@@ -68,11 +68,6 @@ public class EllipticModulusEngine extends AlgorithmPlugin {
 	}
 	
 	
-	public static void setRandomSeeed(long seeed) {
-		rnd.setSeed(seeed);
-	}
-	
-	
 	public < 
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
