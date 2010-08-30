@@ -5,6 +5,7 @@ import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isInteriorEdge;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isManifoldVertex;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -17,6 +18,7 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class CuttingUtility {
@@ -73,6 +75,65 @@ public class CuttingUtility {
 		}
 		
 	}
+	
+	
+	@Deprecated
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> CuttingInfo<V, E, F> cutTorusToDisk(HDS hds, V root, WeightAdapter<E> wa) {
+		//TODO: This does not work when the first path cuts a triangle at two sides
+		if (HalfEdgeUtils.getGenus(hds) != 1) throw new RuntimeException("Invalid genus in cutTorusToDisk()");
+		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
+		context.cutRoot = root;
+		List<Set<E>> paths = HomologyUtility.getGeneratorPaths(root, wa);
+		Set<E> path0 = paths.get(0);
+		context.paths.add(path0);
+		
+		cutAlongPath(path0, context);
+		V rootCopy = context.vertexCopyMap.get(root);
+		List<E> path1 = Search.bFS(root, rootCopy, true);
+		context.paths.add(new HashSet<E>(path1));
+		cutAlongPath(path1, context);
+		
+		for (Set<E> path : context.paths) {
+			Set<E> coPath = new TreeSet<E>(new NodeComparator<E>());
+			context.pathCutMap.put(path, coPath);
+			for (E e : path) {
+				E coE = context.edgeCutMap.get(e);
+				if (coE != null) {
+					coPath.add(coE);
+				}
+			}
+		}
+		return context;
+	}
+	
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	>  void cutAlongPath(Collection<E> path, CuttingInfo<V, E, F> context) {
+		for (E e : path) { 
+			if (isInteriorEdge(e)) {
+				context.edgeCutMap.put(e, e.getOppositeEdge());
+				context.edgeCutMap.put(e.getOppositeEdge(), e);
+				Map<V, V> vMap = cutAtEdge(e);
+				for (V v : vMap.keySet()) {
+					V copy = vMap.get(v);
+					if (context.vertexCopyMap.keySet().contains(v)) {
+						V oldCopy = context.vertexCopyMap.get(v);
+						context.vertexCopyMap.put(copy, oldCopy);
+					}
+					context.vertexCopyMap.put(v, copy);
+				}
+			}
+		}
+	}
+	
 	
 	
 	/**

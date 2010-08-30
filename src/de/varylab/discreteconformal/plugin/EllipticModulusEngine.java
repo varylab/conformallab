@@ -157,27 +157,27 @@ public class EllipticModulusEngine extends AlgorithmPlugin {
 		List<CoEdge> path1 = Search.bFS(v1, v2, new HashSet<CoVertex>());
 		Set<CoVertex> path1Vertices = PathUtility.getVerticesOnPath(path1);
 		List<CoEdge> path2 = Search.bFS(v3, v4, path1Vertices);
-		List<CoEdge> cutPath2 = Search.bFS(v1, v3, path1Vertices);
+//		List<CoEdge> cutPath2 = Search.bFS(v1, v3, path1Vertices);
 		
 		
 		List<CoEdge> path1c = new LinkedList<CoEdge>();
 		List<CoEdge> path2c = new LinkedList<CoEdge>();
-		List<CoEdge> cutPath2c = new LinkedList<CoEdge>();
+//		List<CoEdge> cutPath2c = new LinkedList<CoEdge>();
 		for (CoEdge e : path1) {
 			path1c.add(hds.getEdge(eOffset + e.getIndex()));
 		}
 		for (CoEdge e : path2) {
 			path2c.add(hds.getEdge(eOffset + e.getIndex()));
 		}
-		for (CoEdge e : cutPath2) {
-			cutPath2c.add(hds.getEdge(eOffset + e.getIndex()));
-		}
+//		for (CoEdge e : cutPath2) {
+//			cutPath2c.add(hds.getEdge(eOffset + e.getIndex()));
+//		}
 		
 		// generators
 		cutEdges.addAll(path1);
 		cutEdges.addAll(path1c);
-		cutEdges.addAll(cutPath2);
-		cutEdges.addAll(cutPath2c);
+//		cutEdges.addAll(cutPath2);
+//		cutEdges.addAll(cutPath2c);
 		
 		SurgeryUtility.cutAndGluePaths(path1, path1c);
 		SurgeryUtility.cutAndGluePaths(path2, path2c);

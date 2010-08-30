@@ -19,12 +19,14 @@ import de.jreality.scene.SceneGraphComponent;
 import de.jreality.util.NativePathUtility;
 import de.jreality.util.SceneGraphUtility;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.halfedgetools.io.HalfedgeIO;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.calculator.SubdivisionCalculator;
 import de.varylab.discreteconformal.plugin.EllipticModulusEngine;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.SphereUtility;
@@ -78,12 +80,17 @@ public class Convergence {
 			return;
 		}
 		
-		File errFile = new File(fileBaseSpec.value(opts) + "_Err.dat");
+		String fileBase = fileBaseSpec.value(opts);
+		File errFile = new File(fileBase + "/err.dat");
 		if (errFile.exists()) {
 			System.err.println("File " + errFile + " exists. Overwrite? (y/n)");
 			char c = (char)System.in.read();
 			if (c != 'y') return;
+		} else {
+			File dirFile = new File(fileBase);
+			dirFile.mkdirs();
 		}
+		
 		FileWriter fwErr = new FileWriter(errFile);
 		fwErr.write("# index[1], absErr[2], argErr[3], reErr[4], imErr[5], gradNormSq[6]\n");
 		for (int i = minExtraPoints; i <= maxExtraPoints; i += incExtraPoints) {
@@ -135,7 +142,14 @@ public class Convergence {
 				fixedVertices.add(v4);
 				SphereUtility.equalizeSphereVertices(hds, fixedVertices, numOptSteps, 1E-6);
 				AdapterSet a = new AdapterSet(new PositionAdapter());
-				String fileName = "data/convergence/objseries/optGeom" + i + ".obj";
+				File dirFile = new File(fileBase + "/objseries");
+				dirFile.mkdirs();
+				String fileName = fileBase + "/objseries/optGeom" + i + ".obj";
+				try {
+					ConvexHull.convexHull(hds, new SubdivisionCalculator(), 1E-8);
+				} catch (Exception e) {
+					System.err.println("No convex hull for " + fileName);
+				}
 				HalfedgeIO.writeOBJ(hds, a, fileName);
 			}
 			

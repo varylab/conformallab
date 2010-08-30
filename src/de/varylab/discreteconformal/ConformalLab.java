@@ -10,6 +10,7 @@ import de.jreality.plugin.experimental.WebContentLoader;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedgetools.JRHalfedgeViewer;
 import de.jtem.halfedgetools.plugin.HalfedgePluginFactory;
+import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
 import de.jtem.jrworkspace.plugin.Plugin;
 import de.jtem.jrworkspace.plugin.lnfswitch.LookAndFeelSwitch;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.CrossPlatformLnF;
@@ -59,6 +60,7 @@ public class ConformalLab {
 		v.registerPlugin(new CrossPlatformLnF());
 		v.registerPlugin(new NimbusLnF());
 		v.registerPlugin(new SystemLookAndFeel());
+		v.registerPlugin(new VertexEditorPlugin());
 		v.registerPlugins(createConformalPlugins());
 		v.registerPlugins(HalfedgePluginFactory.createPlugins());
 		v.startup();
