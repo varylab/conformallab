@@ -93,7 +93,10 @@ public class CuttingUtility {
 		List<E> path1 = null;
 		V cutRoot = null;
 		Collection<V> boundary = HalfEdgeUtils.boundaryVertices(hds);
-		for (V bv : context.vertexCopyMap.keySet()) {
+		List<V> checkList = new LinkedList<V>();
+		checkList.add(root); // we want the root to be the cut root if possible
+		checkList.addAll(context.vertexCopyMap.keySet());
+		for (V bv : checkList) {
 			V cbv = context.vertexCopyMap.get(bv);
 			Set<V> avoidSet = new HashSet<V>(boundary);
 			avoidSet.remove(bv);
