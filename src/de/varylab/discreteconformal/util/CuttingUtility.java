@@ -77,27 +77,41 @@ public class CuttingUtility {
 	}
 	
 	
-	@Deprecated
 	public static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> CuttingInfo<V, E, F> cutTorusToDisk(HDS hds, V root, WeightAdapter<E> wa) {
-		//TODO: This does not work when the first path cuts a triangle at two sides
 		if (HalfEdgeUtils.getGenus(hds) != 1) throw new RuntimeException("Invalid genus in cutTorusToDisk()");
 		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
-		context.cutRoot = root;
 		List<Set<E>> paths = HomologyUtility.getGeneratorPaths(root, wa);
 		Set<E> path0 = paths.get(0);
 		context.paths.add(path0);
-		
 		cutAlongPath(path0, context);
-		V rootCopy = context.vertexCopyMap.get(root);
-		List<E> path1 = Search.bFS(root, rootCopy, true);
+
+		List<E> path1 = null;
+		V cutRoot = null;
+		Collection<V> boundary = HalfEdgeUtils.boundaryVertices(hds);
+		for (V bv : context.vertexCopyMap.keySet()) {
+			V cbv = context.vertexCopyMap.get(bv);
+			Set<V> avoidSet = new HashSet<V>(boundary);
+			avoidSet.remove(bv);
+			avoidSet.remove(cbv);
+			try {
+				path1 = Search.bFS(bv, cbv, avoidSet);
+			} catch (Exception e) {
+				continue;
+			}
+			cutRoot = bv;
+			break;
+		}
+		assert path1 != null;
+		assert cutRoot != null;
+		
+		context.cutRoot = cutRoot;
 		context.paths.add(new HashSet<E>(path1));
 		cutAlongPath(path1, context);
-		
 		for (Set<E> path : context.paths) {
 			Set<E> coPath = new TreeSet<E>(new NodeComparator<E>());
 			context.pathCutMap.put(path, coPath);

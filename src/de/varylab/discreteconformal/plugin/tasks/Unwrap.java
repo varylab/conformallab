@@ -26,6 +26,7 @@ import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.AlgebraicCurveUtility;
+import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
 
@@ -120,7 +121,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			setProgress(50);
 			DefaultWeightAdapter<CoEdge> constantWeight = new DefaultWeightAdapter<CoEdge>();
 			CoVertex cutRoot = surface.getVertex(0);
-			cutInfo = cutManifoldToDisk(surface, cutRoot, constantWeight);
+			cutInfo = CuttingUtility.cutTorusToDisk(surface, cutRoot, constantWeight);
 			layoutRoot = EuclideanLayout.doLayout(surface, u);
 			layoutTime = System.currentTimeMillis();
 			try {

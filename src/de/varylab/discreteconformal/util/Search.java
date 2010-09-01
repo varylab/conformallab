@@ -6,6 +6,7 @@ import static java.lang.Double.POSITIVE_INFINITY;
 import static java.util.Collections.singleton;
 import static java.util.Collections.sort;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -35,7 +36,7 @@ public class Search {
 	 * @param <F>
 	 * @param start
 	 * @param end
-	 * @param avoidBorder
+	 * @param avoidBorderEdges
 	 * @return
 	 * @throws NoSuchElementException
 	 */
@@ -44,9 +45,9 @@ public class Search {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> List<E> bFS(V start, V end, boolean avoidBorder) throws NoSuchElementException{
+	> List<E> bFS(V start, V end, boolean avoidBorderEdges) throws NoSuchElementException{
 		Set<E> allEdges = new HashSet<E>(start.getHalfEdgeDataStructure().getEdges());
-		return bFS(allEdges, start, singleton(end), avoidBorder, null);
+		return bFS(allEdges, start, singleton(end), avoidBorderEdges, null);
 	}
 
 	
@@ -55,7 +56,7 @@ public class Search {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> List<E> bFS(Set<E> valid, V start, V end) throws NoSuchElementException{
+	> List<E> bFS(Collection<E> valid, V start, V end) throws NoSuchElementException{
 		return bFS(valid, start, singleton(end), false, null);
 	}
 	
@@ -73,7 +74,7 @@ public class Search {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> List<E> bFS(Set<E> valid, V start, Set<V> endPoints, boolean avoidBorder, Comparator<E> comp) throws NoSuchElementException{
+	> List<E> bFS(Collection<E> valid, V start, Collection<V> endPoints, boolean avoidBorderEdges, Comparator<E> comp) throws NoSuchElementException{
 		HashMap<V, Stack<E>> pathMap = new HashMap<V, Stack<E>>();
 		LinkedList<V> queue = new LinkedList<V>();
 		HashSet<V> visited = new HashSet<V>();
@@ -93,7 +94,7 @@ public class Search {
 				if (visited.contains(v)) {
 					continue;
 				}
-				if (!isInteriorEdge(e) && avoidBorder) {
+				if (!isInteriorEdge(e) && avoidBorderEdges) {
 					continue;
 				}
 				if (!valid.contains(e)) {
@@ -121,7 +122,7 @@ public class Search {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> List<E> bFS(V start, V end, Set<V> avoid) throws NoSuchElementException {
+	> List<E> bFS(V start, V end, Collection<V> avoid) throws NoSuchElementException {
 		HashMap<V, Stack<E>> pathMap = new HashMap<V, Stack<E>>();
 		LinkedList<V> queue = new LinkedList<V>();
 		HashSet<V> visited = new HashSet<V>(avoid);
