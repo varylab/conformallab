@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.plugin;
+package de.varylab.discreteconformal.plugin.visualizer;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;

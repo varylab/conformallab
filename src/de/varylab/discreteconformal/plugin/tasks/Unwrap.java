@@ -25,7 +25,7 @@ import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
-import de.varylab.discreteconformal.util.AlgebraicCurveUtility;
+import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
@@ -125,7 +125,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			layoutRoot = EuclideanLayout.doLayout(surface, u);
 			layoutTime = System.currentTimeMillis();
 			try {
-				Complex tau = AlgebraicCurveUtility.calculateCutModulus(cutInfo);
+				Complex tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(cutInfo);
 				System.out.println("Tau Re " + tau.re);
 				System.out.println("Tau Im " + tau.im);
 				System.out.println("Tau Abs " + tau.abs());

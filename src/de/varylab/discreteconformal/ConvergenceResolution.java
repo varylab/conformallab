@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal;
 
 import static de.jreality.scene.data.Attribute.COORDINATES;
-import static java.lang.Math.max;
 import static java.lang.Math.sqrt;
 import geom3d.Point;
 
@@ -28,31 +27,42 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.calculator.SubdivisionCalculator;
-import de.varylab.discreteconformal.plugin.EllipticModulusEngine;
+import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.SphereUtility;
+import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 
-public class Convergence2 {
+public class ConvergenceResolution {
 
 	private static Random
 		rnd = new Random();
 	
+	/**
+	 * Calculates series of elliptic half-period ratios for a given set of
+	 * branch points.
+	 * It adds random points and uses the convex hull as triangulation
+	 * An optional optimization step can be used to produce better convergence 
+	 * results.
+	 * @param args
+	 * @throws Exception
+	 */
 	public static void main(String[] args) throws Exception {
 		NativePathUtility.set("native");
 		OptionParser p = new OptionParser();
 		OptionSpec<String> fileBaseSpec = p.accepts("f", "Base file name of the data series").withRequiredArg().ofType(String.class);
-		OptionSpec<Integer> numSamplesSpec = p.accepts("num", "Number of samples").withRequiredArg().ofType(Integer.class).defaultsTo(1);
-		OptionSpec<Integer> numExtraPointsSpec = p.accepts("extra", "Number of extra points").withRequiredArg().ofType(Integer.class).defaultsTo(0);
+		OptionSpec<Integer> minPointsSpec = p.accepts("min", "Minimum number of extra points").withRequiredArg().ofType(Integer.class).defaultsTo(0);
+		OptionSpec<Integer> maxPointsSpec = p.accepts("max", "Maximum number of extra points").withRequiredArg().ofType(Integer.class).defaultsTo(50);
+		OptionSpec<Integer> incPointsSpec = p.accepts("inc", "Increment").withRequiredArg().ofType(Integer.class).defaultsTo(1);
 		OptionSpec<Double> expectedTauReSpec = p.accepts("tre").withRequiredArg().ofType(Double.class).defaultsTo(0.5);
 		OptionSpec<Double> expectedTauImSpec = p.accepts("tim").withRequiredArg().ofType(Double.class).defaultsTo(sqrt(3) / 2);
 		OptionSpec<String> inputObj = p.accepts("pin", "Predefined branch points as obj file").withRequiredArg().ofType(String.class);
 		OptionSpec<Integer> optStepsSpec = p.accepts("nopt", "Number of triangulation optimization steps").withRequiredArg().ofType(Integer.class).defaultsTo(1);
 		p.accepts("reuse", "Reuse extra points");
 		p.accepts("help", "Prints Help Information");
-		p.accepts("w", "Write OBJ files to objseries folder");
 		OptionSet opts = p.parse(args);
 		
-		int numSamples = numSamplesSpec.value(opts);
-		int numExtraPoints = numExtraPointsSpec.value(opts);
+		int minExtraPoints = minPointsSpec.value(opts);
+		int maxExtraPoints = maxPointsSpec.value(opts);
+		int incExtraPoints = incPointsSpec.value(opts);
 		
 		double tauReExp = opts.valueOf(expectedTauReSpec);
 		double tauImExp = opts.valueOf(expectedTauImSpec);
@@ -61,7 +71,6 @@ public class Convergence2 {
 
 		boolean reuse = opts.has("reuse");
 		boolean trianopt = opts.has("nopt");
-		boolean writeOBJs = opts.has("w");
 		int numOptSteps = 0;
 		if (trianopt) {
 			numOptSteps = opts.valueOf(optStepsSpec);
@@ -91,14 +100,12 @@ public class Convergence2 {
 		}
 		
 		FileWriter fwErr = new FileWriter(errFile);
-		fwErr.write("# index[1], absErr[2], argErr[3], reErr[4], imErr[5], qFun[6]\n");
-		for (int i = 0; i <numSamples; i ++) {
+		fwErr.write("# index[1], absErr[2], argErr[3], reErr[4], imErr[5], gradNormSq[6]\n");
+		for (int i = minExtraPoints; i <= maxExtraPoints; i += incExtraPoints) {
 			if (reuse) {
 				rnd.setSeed(123);
 			}
-			System.out.println("Taking sample number " + i);
-			Set<CoEdge> glueSet = new HashSet<CoEdge>();
-			Set<CoEdge> cutSet = new HashSet<CoEdge>();
+			System.out.println(i + " extra points --------------------");
 			Complex tau = null;
 			CoHDS hds = new CoHDS();
 			CoVertex v1 = hds.addNewVertex();
@@ -124,8 +131,8 @@ public class Convergence2 {
 				v3.getPosition().set(-1, 1, -1);
 				v4.getPosition().set(-1, -1, 1);
 			}
-			// extra points
-			for (int j = 0; j < numExtraPoints; j++) {
+			// additional points
+			for (int j = 0; j < i; j++) {
 				double[] pos = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
 				Point pointPos = new Point(pos);
 				pointPos.normalize();
@@ -141,21 +148,21 @@ public class Convergence2 {
 				fixedVertices.add(v4);
 				SphereUtility.equalizeSphereVertices(hds, fixedVertices, numOptSteps, 1E-6);
 				AdapterSet a = new AdapterSet(new PositionAdapter());
-				if (writeOBJs) {
-					File dirFile = new File(fileBase + "/objseries");
-					dirFile.mkdirs();
-					String fileName = fileBase + "/objseries/optGeom" + i + ".obj";
-					try {
-						ConvexHull.convexHull(hds, new SubdivisionCalculator(), 1E-8);
-					} catch (Exception e) {
-						System.err.println("No convex hull for " + fileName);
-					}
-					HalfedgeIO.writeOBJ(hds, a, fileName);
+				File dirFile = new File(fileBase + "/objseries");
+				dirFile.mkdirs();
+				String fileName = fileBase + "/objseries/optGeom" + i + ".obj";
+				try {
+					ConvexHull.convexHull(hds, new SubdivisionCalculator(), 1E-8);
+				} catch (Exception e) {
+					System.err.println("No convex hull for " + fileName);
 				}
+				HalfedgeIO.writeOBJ(hds, a, fileName);
 			}
+			
 			try {
-				EllipticModulusEngine.generateEllipticCurve(hds, 0, glueSet, cutSet);
-				tau = EllipticModulusEngine.calculateModulus(hds);
+				Set<CoEdge> glueSet = new HashSet<CoEdge>();
+				DiscreteEllipticUtility.generateEllipticImage(hds, 0, glueSet);
+				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, 1E-8);
 			} catch (Exception e) {
 				System.err.println(e.getLocalizedMessage());
 				continue;
@@ -164,32 +171,11 @@ public class Convergence2 {
 			double argErr = tau.arg() - tauExp.arg();
 			double reErr = tau.re - tauExp.re;
 			double imErr = tau.im - tauExp.im;
-			double qFun = qFun(hds);
 			System.out.println("tau = " + tau);
-			System.out.println("qfun = " + qFun);
-			fwErr.write(i + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + qFun + "\n");
+			fwErr.write(i + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + EuclideanUnwrapperPETSc.lastGNorm + "\n");
 			fwErr.flush();
 		}
 		fwErr.close();
 	}
-	
-	
-	
-	private static double qFun(CoHDS hds) {
-		double r = 0.0;
-		for (CoEdge e : hds.getPositiveEdges()) {
-			double a = e.getNextEdge().getLength();
-			double b = e.getPreviousEdge().getLength();
-			double c = e.getOppositeEdge().getNextEdge().getLength();
-			double d = e.getOppositeEdge().getPreviousEdge().getLength();
-			double q = (a * c) / (b * d);
-			double qfun = (q + 1/q)/2 - 1;
-			r = max(r, qfun);
-		}
-		return r;
-	}
-	
-	
-	
 
 }

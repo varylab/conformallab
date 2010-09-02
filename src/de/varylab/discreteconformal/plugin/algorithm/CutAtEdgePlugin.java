@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.plugin;
+package de.varylab.discreteconformal.plugin.algorithm;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;

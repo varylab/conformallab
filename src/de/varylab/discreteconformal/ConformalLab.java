@@ -16,32 +16,27 @@ import de.jtem.jrworkspace.plugin.lnfswitch.LookAndFeelSwitch;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.CrossPlatformLnF;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.NimbusLnF;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.SystemLookAndFeel;
-import de.varylab.discreteconformal.plugin.CutAtEdgePlugin;
-import de.varylab.discreteconformal.plugin.CutToDiskPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
-import de.varylab.discreteconformal.plugin.EllipticModulusEngine;
-import de.varylab.discreteconformal.plugin.EllipticRootGenerator;
-import de.varylab.discreteconformal.plugin.FindPathPlugin;
-import de.varylab.discreteconformal.plugin.ThetaVisualizer;
+import de.varylab.discreteconformal.plugin.EllipticImageGemerator;
+import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
+import de.varylab.discreteconformal.plugin.algorithm.CutToDiskPlugin;
+import de.varylab.discreteconformal.plugin.algorithm.FindPathPlugin;
+import de.varylab.discreteconformal.plugin.visualizer.ThetaVisualizer;
 
 
 public class ConformalLab {
 
-	
 	public static Set<Plugin> createConformalPlugins() {
 		Set<Plugin> s = new HashSet<Plugin>();
 		s.add(new DiscreteConformalPlugin());
 		s.add(new ThetaVisualizer());
-		s.add(new EllipticRootGenerator());
-		s.add(new EllipticModulusEngine());
+		s.add(new EllipticImageGemerator());
 		s.add(new ConsolePlugin());
 		s.add(new CutToDiskPlugin());
 		s.add(new CutAtEdgePlugin());
 		s.add(new FindPathPlugin());
 		return s;
 	}
-	
-	
 	
 	public static void main(String[] args) {
 		JRHalfedgeViewer.initHalfedgeFronted();

@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.plugin;
+package de.varylab.discreteconformal.plugin.algorithm;
 
 import java.util.Set;
 
