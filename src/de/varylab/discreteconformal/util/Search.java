@@ -50,7 +50,6 @@ public class Search {
 		return bFS(allEdges, start, singleton(end), avoidBorderEdges, null);
 	}
 
-	
 	public static 
 	<
 		V extends Vertex<V, E, F>,
@@ -58,6 +57,15 @@ public class Search {
 		F extends Face<V, E, F>
 	> List<E> bFS(Collection<E> valid, V start, V end) throws NoSuchElementException{
 		return bFS(valid, start, singleton(end), false, null);
+	}
+	
+	public static 
+	<
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> List<E> dualBFS(Set<E> valid, F start, F end) throws NoSuchElementException{
+		return dualBFS(valid, start, singleton(end), false, null);
 	}
 	
 	
@@ -116,7 +124,60 @@ public class Search {
 		throw new NoSuchElementException();
 	}
 
-	
+	/**
+	 * Breadth-first-search to the first hit in endPoints
+	 * @param start
+	 * @param end
+	 * @param graph
+	 * @return
+	 * @throws NoSuchElementException
+	 */
+	public static 
+	<
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> List<E> dualBFS(Set<E> valid, F start, Set<F> endPoints, boolean avoidBorder, Comparator<E> comp) throws NoSuchElementException{
+		HashMap<F, Stack<E>> pathMap = new HashMap<F, Stack<E>>();
+		LinkedList<F> queue = new LinkedList<F>();
+		HashSet<F> visited = new HashSet<F>();
+		F actFace = start;
+		queue.add(start);
+		pathMap.put(start, new Stack<E>());
+		while (!queue.isEmpty()){
+			actFace = queue.poll();
+			Stack<E> path = pathMap.get(actFace);
+			List<E> star = HalfEdgeUtils.boundaryEdges(actFace);
+			if (comp != null) { 
+				sort(star, comp);
+			}
+			for (E e : star){
+				E pathEdge = e;//.getOppositeEdge();
+				F f = pathEdge.getRightFace();
+				if (visited.contains(f)) {
+					continue;
+				}
+				if (!isInteriorEdge(e) && avoidBorder) {
+					continue;
+				}
+				if (!valid.contains(e)) {
+					continue;
+				}
+				Stack<E> newPath = new Stack<E>();
+				newPath.addAll(path);
+				newPath.push(pathEdge);
+				pathMap.put(f, newPath);
+				if (!visited.contains(f)){
+					visited.add(f);
+					if (endPoints.contains(f))
+						return newPath;
+					else
+						queue.offer(f);
+				}
+			}
+		}
+		throw new NoSuchElementException();
+	}
 	
 	public static <
 		V extends Vertex<V, E, F>,

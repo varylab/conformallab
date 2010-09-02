@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.util;
 import static java.util.Collections.singleton;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,8 +17,6 @@ import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class HomologyUtility {
 
-
-	
 	private static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
@@ -30,6 +29,15 @@ public class HomologyUtility {
 		return r;
 	}
 	
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> List<E> findDualCycle(Set<E> set, E bridge) {
+		List<E> path = Search.dualBFS(set, bridge.getLeftFace(), bridge.getRightFace());
+		path.add(bridge);
+		return path;
+	}
 	
 	public static
 	<
@@ -61,6 +69,33 @@ public class HomologyUtility {
 		return result;
 	}
 	
+	public static
+	<
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> Set<List<E>> getDualGeneratorPaths(V root, WeightAdapter<E> wa) {
+		Set<List<E>> result = new HashSet<List<E>>();
+		
+		HalfEdgeDataStructure<V, E, F> hds = root.getHalfEdgeDataStructure();
+		Set<E> edgeSet = new TreeSet<E>(new NodeComparator<E>());
+		edgeSet.addAll(hds.getEdges());
+		Set<V> vSet = new TreeSet<V>(new NodeComparator<V>());
+		vSet.addAll(hds.getVertices());
+		Set<E> tree1 = Search.getAllShortestPathsTree(root, vSet, wa, new HashSet<V>());
+		edgeSet.removeAll(tree1);
+		Set<E> tree2 = SpanningTreeUtility.getDualSpanningTree(edgeSet, edgeSet.iterator().next());
+		edgeSet.removeAll(tree2);
 
-	
+		for (E bridge : edgeSet) {
+			if (bridge.isPositive()) {
+				if (bridge.getLeftFace() == bridge.getRightFace()) {
+					result.add(Collections.singletonList(bridge));
+				} else {
+					result.add(findDualCycle(tree2, bridge));
+				}
+			}
+		}
+		return result;
+	}
 }
