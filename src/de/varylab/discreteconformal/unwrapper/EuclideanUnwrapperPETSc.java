@@ -60,7 +60,6 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		
 		GetSolutionStatusResult status = optimizer.getSolutionStatus();
 		lastGNorm = status.gnorm;
-		System.out.println(status);
 		if (status.reason.cvalue() < 0) {
 			throw new UnwrapException("Optimization did not succeed: " + status);
 		}

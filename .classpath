@@ -7,6 +7,7 @@
 	<classpathentry kind="lib" path="lib/vecmath.jar"/>
 	<classpathentry kind="lib" path="lib/jPETScTaoV1.7jPETScTao.jar"/>
 	<classpathentry kind="lib" path="lib/jopt-simple-3.2.jar"/>
+	<classpathentry kind="lib" path="lib/JLink.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/CurvatureGeometry"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>

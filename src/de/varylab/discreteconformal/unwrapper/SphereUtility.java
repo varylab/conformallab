@@ -13,7 +13,6 @@ import de.varylab.discreteconformal.unwrapper.numerics.ConformalEnergy;
 import de.varylab.jpetsc.InsertMode;
 import de.varylab.jpetsc.Vec;
 import de.varylab.jtao.Tao;
-import de.varylab.jtao.Tao.GetSolutionStatusResult;
 import de.varylab.jtao.TaoAppAddCombinedObjectiveAndGrad;
 import de.varylab.jtao.TaoApplication;
 
@@ -69,10 +68,6 @@ public class SphereUtility {
 		optimizer.setGradientTolerances(tol, tol, tol);
 		optimizer.setMaximumIterates(steps);
 		optimizer.solve();
-		GetSolutionStatusResult stat = optimizer.getSolutionStatus();
-		String status = stat.toString().replace("getSolutionStatus : ", "");
-		System.out.println("optimization status ------------------------------------");
-		System.out.println(status);
 		for (CoVertex v : hds.getVertices()) {
 			int i = v.getIndex() * 3;
 			v.getPosition().set(0, u.getValue(i + 0));

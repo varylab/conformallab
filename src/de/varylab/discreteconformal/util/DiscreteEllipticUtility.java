@@ -11,6 +11,12 @@ import java.util.Random;
 import java.util.Set;
 
 import no.uib.cipr.matrix.Vector;
+
+import com.wolfram.jlink.KernelLink;
+import com.wolfram.jlink.MathLinkException;
+import com.wolfram.jlink.MathLinkFactory;
+
+import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.mfc.field.Complex;
@@ -119,11 +125,6 @@ public class DiscreteEllipticUtility {
 		CoVertex v2 = hds.getVertex(branchVertices[1]);
 		CoVertex v3 = hds.getVertex(branchVertices[2]);
 		CoVertex v4 = hds.getVertex(branchVertices[3]);
-		System.out.println("Using four vertices as branch points:");
-		System.out.println(v1.getPosition());
-		System.out.println(v2.getPosition());
-		System.out.println(v3.getPosition());
-		System.out.println(v4.getPosition());
 		for (CoEdge e : new HashSet<CoEdge>(hds.getEdges())) {
 			hds.removeEdge(e);
 		}
@@ -158,7 +159,10 @@ public class DiscreteEllipticUtility {
 			vc.setPosition(p2);
 		}
 		
-		List<CoEdge> path1 = Search.bFS(v1, v2, new HashSet<CoVertex>());
+		Set<CoVertex> path2Ends = new HashSet<CoVertex>();
+		path2Ends.add(v3);
+		path2Ends.add(v4);
+		List<CoEdge> path1 = Search.bFS(v1, v2, path2Ends);
 		Set<CoVertex> path1Vertices = PathUtility.getVerticesOnPath(path1);
 		List<CoEdge> path2 = Search.bFS(v3, v4, path1Vertices);
 		
@@ -180,6 +184,117 @@ public class DiscreteEllipticUtility {
 		glueEdges.addAll(path1c);
 		glueEdges.addAll(path2c);
 	}
+	
+	
+	
+	
+	
+	public static Complex calculateHalfPeriodRatioMathLink(Point p1, Point p2, Point p3, Point p4, KernelLink l) throws MathLinkException {
+		// to the sphere
+		p1.normalize();
+		p2.normalize();
+		p3.normalize();
+		p4.normalize();
+		// project stereographically
+		Complex z1 = new Complex(p1.x() / (1 - p1.z()), p1.y() / (1 - p1.z()));
+		Complex z2 = new Complex(p2.x() / (1 - p2.z()), p2.y() / (1 - p2.z()));
+		Complex z3 = new Complex(p3.x() / (1 - p3.z()), p3.y() / (1 - p3.z()));
+		Complex z4 = new Complex(p4.x() / (1 - p4.z()), p4.y() / (1 - p4.z()));
+		Complex e1 = toInfinitZeroSum(z1, z1, z2, z3, z4);
+		Complex e2 = toInfinitZeroSum(z2, z1, z2, z3, z4);
+		Complex e3 = toInfinitZeroSum(z3, z1, z2, z3, z4);
+		Complex g2 = e1.times(e2).plus(e2.times(e3)).plus(e3.times(e1)).times(-4);
+		Complex g3 = e1.times(e2).times(e3).times(4);
+		Complex[] w1w3 = invokeWeierstrassHalfperiods(g2, g3, l);
+		return w1w3[1].divide(w1w3[0]);
+	}
+	
+
+	private static Complex toInfinitZeroSum(Complex z, Complex z1, Complex z2, Complex z3, Complex z4) {
+		Complex t1 = z.minus(z4).invert();
+		Complex t2 = z1.times(z2.plus(z3).minus(z4.times(2))).plus(z2.times(z3.minus(z4.times(2)))).plus(z4.times(z4.times(3).minus(z3.times(2))));
+		Complex t3 = z4.minus(z1).times(z2.minus(z4)).times(z4.minus(z3)).times(3);
+		return t1.minus(t2.divide(t3));
+	}
+	
+	
+	
+	public static Complex[] invokeWeierstrassHalfperiods(Complex w2, Complex w3, KernelLink l) throws MathLinkException {
+		l.setComplexClass(MLComplex.class);
+		MLComplex[] g2g3 = new MLComplex[] {new MLComplex(w2), new MLComplex(w3)};
+		l.putFunction("EvaluatePacket", 1);
+		l.putFunction("WeierstrassHalfPeriods", 1);
+		l.put(g2g3);
+		l.endPacket();
+		l.waitForAnswer();
+		MLComplex[] r = (MLComplex[])l.getComplexArray1();
+		return r;
+	}
+	
+	
+	
+	public static void main(String[] args) throws Exception {
+		NativePathUtility.set("native");
+		String[] mlargs = new String[] {
+			"-linkmode", "launch", 
+			"-linkname", "\"C:\\Program Files\\Wolfram Research\\Mathematica\\7.0\\MathKernel.exe\" " + 
+			"-mathlink"
+		};
+		KernelLink link = MathLinkFactory.createKernelLink(mlargs);
+		link.discardAnswer();
+		
+		Point p1 = new Point(0.5257311122273196, 0.8506508082851774, -2.259622999145302E-9);
+		Point p2 = new Point(-7.865783539640066E-9, -0.525731111594899, -0.8506508086760348);
+		Point p3 = new Point(0.5257311164974198, -0.8506508056461103, -1.2759862959410077E-10);
+		Point p4 = new Point(5.046344158026151E-10, 0.5257311116954958, 0.8506508086138624);
+		Complex tau1 = calculateHalfPeriodRatioMathLink(p1, p2, p3, p4, link);
+		System.out.println("tau1 = " + tau1);
+		
+		
+		Complex g2 = new Complex(-0.0143277, 0.0158116);
+		Complex g3 = new Complex(-0.000768009, 2.78129E-6);
+		Complex[] w1w3 = invokeWeierstrassHalfperiods(g2, g3, link);
+		Complex tau2 = w1w3[1].divide(w1w3[0]);
+		System.out.println("tau2 = " + tau2);
+	}
+	
+	
+	
+	public static class MLComplex extends Complex {
+
+		private static final long 
+			serialVersionUID = 1L;
+
+		public MLComplex() {
+			super();
+		}
+
+		public MLComplex(Complex u) {
+			super(u);
+		}
+
+		public MLComplex(de.jtem.mfc.field.Field.Complex u) {
+			super(u);
+		}
+
+		public MLComplex(double aReal, double aImag) {
+			super(aReal, aImag);
+		}
+
+		public MLComplex(double aReal) {
+			super(aReal);
+		}
+
+		public double re() {
+			return re;
+		}
+		
+		public double im() {
+			return im;
+		}
+		
+	}
+	
 
 	
 }
