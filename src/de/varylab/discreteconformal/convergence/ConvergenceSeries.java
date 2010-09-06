@@ -20,6 +20,7 @@ import com.wolfram.jlink.MathLinkFactory;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.PointSet;
 import de.jreality.scene.SceneGraphComponent;
+import de.jreality.util.NativePathUtility;
 import de.jreality.util.SceneGraphUtility;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
@@ -63,6 +64,7 @@ public abstract class ConvergenceSeries {
 
 
 	public static void performConvergenceSeries(String... args) throws Exception {
+		NativePathUtility.set("native");
 		boolean mFound = false;
 		SeriesMethod method = null;
 		for (String arg : args) {
@@ -92,21 +94,23 @@ public abstract class ConvergenceSeries {
 		
 		OptionParser p = new OptionParser();
 		OptionSpec<String> methodSpec = p.accepts("M", "Convergence series method: Quality | Random | Subdivision").withRequiredArg().ofType(String.class);
-		OptionSpec<String> fileBaseSpec = p.accepts("f", "Base file name of the data series").withRequiredArg().ofType(String.class);
+		OptionSpec<String> fileBaseSpec = p.accepts("base", "Base directory of the data series").withRequiredArg().ofType(String.class);
+		OptionSpec<String> fileNameSpec = p.accepts("name", "Name of the data series").withRequiredArg().ofType(String.class);
 		OptionSpec<String> inputObj = p.accepts("pin", "Predefined branch points as obj file").withRequiredArg().ofType(String.class);
 		OptionSpec<String> branchIndicesSpec = p.accepts("bpi", "Indices of the four branch points in the obj file").withRequiredArg().ofType(String.class).defaultsTo("0,1,2,3");
 		p.accepts("help", "Prints Help Information");
 		OptionSet opts = series.configureAndParseOptions(p, args);
 		
 		// print help if options error
-		if (opts.has("help") || !opts.has(fileBaseSpec) || !opts.has(methodSpec)) {
+		if (opts.has("help") || !opts.has(fileBaseSpec) || !opts.has(fileNameSpec) || !opts.has(methodSpec)) {
 			p.printHelpOn(System.out);
 			return;
 		}
 		
 		// get file base directory
 		String fileBase = fileBaseSpec.value(opts);
-		File errFile = new File(fileBase + "/err.dat");
+		String fileName = fileNameSpec.value(opts);
+		File errFile = new File(fileBase + "/" + fileName + ".dat");
 		if (errFile.exists()) {
 			System.err.println("File " + errFile + " exists. Overwrite? (y/n)");
 			char c = (char)System.in.read();

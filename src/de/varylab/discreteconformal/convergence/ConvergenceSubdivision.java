@@ -58,7 +58,6 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 	protected void perform() throws Exception {
 		writeComment("numVertex[1], absErr[2], argErr[3], reErr[4], imErr[5], gradNormSq[6]");
 		for (int i = 0; i < maxSubdivision; i ++) {
-			System.out.println("subdivision step " + i + " --------------------");
 			CoHDS hds = new CoHDS();
 			// predefined vertices
 			for (int vi = 0; vi < vertices.length; vi++) {
