@@ -9,8 +9,10 @@ import java.util.Set;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.SphereUtility;
@@ -25,6 +27,20 @@ public class ConvergenceQuality extends ConvergenceSeries {
 	private boolean 
 		reuse = false,
 		trianopt = false;
+	private QualityMeasure
+		qualityMeasure = QualityMeasure.MaxCrossRatio;
+	private double
+		measureExponent = 1.0;
+	
+	
+	public enum QualityMeasure {
+		MaxCrossRatio,
+		MeanCrossRatio,
+		SumCrossRatio,
+		MaxMultiRatio,
+		MeanMultiRatio,
+		SumMultiRatio,
+	}
 	
 	
 	public ConvergenceQuality() {
@@ -53,6 +69,8 @@ public class ConvergenceQuality extends ConvergenceSeries {
 
 	@Override
 	protected OptionSet configureAndParseOptions(OptionParser p, String... args) {
+		OptionSpec<String> qualityMeasureSpec = p.accepts("QM").withRequiredArg().defaultsTo("MaxCrossRatio");
+		OptionSpec<Double> measureExpSpec = p.accepts("exp", "Measure function exponent").withRequiredArg().ofType(Double.class).defaultsTo(1.0);
 		OptionSpec<Integer> numSamplesSpec = p.accepts("num", "Number of samples").withRequiredArg().ofType(Integer.class).defaultsTo(1);
 		OptionSpec<Integer> numExtraPointsSpec = p.accepts("extra", "Number of extra points").withRequiredArg().ofType(Integer.class).defaultsTo(0);
 		OptionSpec<Integer> optStepsSpec = p.accepts("nopt", "Number of triangulation optimization steps").withRequiredArg().ofType(Integer.class).defaultsTo(1);
@@ -72,6 +90,12 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			}
 		}
 		
+		qualityMeasure = QualityMeasure.valueOf(qualityMeasureSpec.value(opts));
+		if (qualityMeasure == null) {
+			throw new RuntimeException("Unknown quality measure in ConvergenceQuality");
+		}
+		measureExponent = measureExpSpec.value(opts);
+		
 		return opts;
 	}
 	
@@ -80,6 +104,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 	
 	@Override
 	protected void perform() throws Exception {
+		writeComment("Measure exponent: " + measureExponent);
 		writeComment("index[1], absErr[2], argErr[3], reErr[4], imErr[5], qFun[6]");
 		for (int i = 0; i < numSamples; i ++) {
 			if (reuse) rnd.setSeed(123);
@@ -119,35 +144,100 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			double argErr = tau.arg() - getExpectedTau().arg();
 			double reErr = tau.re - getExpectedTau().re;
 			double imErr = tau.im - getExpectedTau().im;
-			double qFun = meanLengthCrossRatioFunction(hds);
+			double qFun = 0;
+			
+			switch (qualityMeasure) {
+			case MaxCrossRatio:
+				qFun = maxLengthCrossRatioFunction(hds, measureExponent);
+				break;
+			case MeanCrossRatio:
+				qFun = meanLengthCrossRatioFunction(hds, measureExponent);
+				break;
+			case SumCrossRatio:
+				qFun = sumLengthCrossRatioFunction(hds, measureExponent);
+				break;
+			case MaxMultiRatio:
+				qFun = maxMultiRatioFunction(hds, measureExponent);
+				break;
+			case MeanMultiRatio:
+				qFun = meanMultiRatioFunction(hds, measureExponent);
+				break;
+			case SumMultiRatio:
+				qFun = sumMultiRatioFunction(hds, measureExponent);
+				break;
+			}
+			
 			writeErrorLine(i + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + qFun);
 		}
 	}
 	
 	
-	public static double maxLengthCrossRatioFunction(CoHDS hds) {
+	public double maxLengthCrossRatioFunction(CoHDS hds, double exp) {
 		double r = 0.0;
 		for (CoEdge e : hds.getPositiveEdges()) {
 			double q = getLengthCrossRatio(e);
 			double qfun = (q + 1/q)/2 - 1;
-			r = Math.max(r, qfun);
+			r = Math.max(r, Math.pow(qfun, exp));
 		}
 		return r;
 	}
 	
 	
-	public static double meanLengthCrossRatioFunction(CoHDS hds) {
+	public double meanLengthCrossRatioFunction(CoHDS hds, double exp) {
 		double r = 0.0;
 		for (CoEdge e : hds.getPositiveEdges()) {
 			double q = getLengthCrossRatio(e);
 			double qfun = (q + 1/q)/2 - 1;
-			r += qfun;
+			r += Math.pow(qfun, exp);
 		}
-		return r / hds.numEdges() / 2.0;
+		return 2 * r / hds.numEdges();
+	}
+	
+	public double sumLengthCrossRatioFunction(CoHDS hds, double exp) {
+		double r = 0.0;
+		for (CoEdge e : hds.getPositiveEdges()) {
+			double q = getLengthCrossRatio(e);
+			double qfun = (q + 1/q)/2 - 1;
+			r += Math.pow(qfun, exp);
+		}
+		return r;
+	}
+	
+	public double maxMultiRatioFunction(CoHDS hds, double exp) {
+		double r = 0.0;
+		for (CoFace f : hds.getFaces()) {
+			double q = 1.0;
+			for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
+				q *= getLengthCrossRatio(e);
+			}
+			double qfun = (q + 1/q)/2 - 1;
+			r = Math.max(r, Math.pow(qfun, exp));
+		}
+		return r;
+	}
+	
+	public double meanMultiRatioFunction(CoHDS hds, double exp) {
+		double r = 0.0;
+		for (CoFace f : hds.getFaces()) {
+			double q = getLengthMultiRatio(f);
+			double qfun = (q + 1/q)/2 - 1;
+			r += Math.pow(qfun, exp);
+		}
+		return r / hds.numFaces();
+	}
+	
+	public double sumMultiRatioFunction(CoHDS hds, double exp) {
+		double r = 0.0;
+		for (CoFace f : hds.getFaces()) {
+			double q = getLengthMultiRatio(f);
+			double qfun = (q + 1/q)/2 - 1;
+			r += Math.pow(qfun, exp);
+		}
+		return r;
 	}
 	
 	
-	private static double getLengthCrossRatio(CoEdge e) {
+	private double getLengthCrossRatio(CoEdge e) {
 		double a = e.getNextEdge().getLength();
 		double b = e.getPreviousEdge().getLength();
 		double c = e.getOppositeEdge().getNextEdge().getLength();
@@ -155,7 +245,13 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		return (a * c) / (b * d);
 	}
 	
-	
+	private double getLengthMultiRatio(CoFace f) {
+		double q = 1.0;
+		for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
+			q *= getLengthCrossRatio(e);
+		}
+		return q;
+	}
 	
 	
 }

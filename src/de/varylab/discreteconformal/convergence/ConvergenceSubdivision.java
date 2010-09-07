@@ -4,6 +4,9 @@ import java.io.FileWriter;
 import java.util.HashSet;
 import java.util.Set;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.halfedgetools.algorithm.subdivision.LoopLinear;
 import de.jtem.mfc.field.Complex;
@@ -13,14 +16,12 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.calculator.SubdivisionCalculator;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
 
 public class ConvergenceSubdivision extends ConvergenceSeries {
 
 	private int 
-		maxSubdivision = 0;
+		maxSubdivision = 0,
+		numExtraPoints = 0;
 	private LoopLinear 
 		loop = new LoopLinear();
 	private SubdivisionCalculator 
@@ -49,8 +50,10 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 	@Override
 	protected OptionSet configureAndParseOptions(OptionParser p, String... args) {
 		OptionSpec<Integer> mixSubdivisionSpec = p.accepts("max", "Maxmum number of subdivision steps").withRequiredArg().ofType(Integer.class).defaultsTo(0);
+		OptionSpec<Integer> numExtraPointsSpec = p.accepts("extra", "Number of extra points").withRequiredArg().ofType(Integer.class).defaultsTo(0);
 		OptionSet result = p.parse(args);
 		maxSubdivision = mixSubdivisionSpec.value(result);
+		numExtraPoints = numExtraPointsSpec.value(result);
 		return result;
 	}
 	
@@ -64,13 +67,24 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 				CoVertex v = hds.addNewVertex();
 				v.getPosition().set(vertices[vi][0], vertices[vi][1], vertices[vi][2]);	
 			}
+			// extra points
+			for (int j = 0; j < numExtraPoints; j++) {
+				CoVertex v = hds.addNewVertex();
+				v.getPosition().set(rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian());
+				v.getPosition().normalize();
+			}
 			ConvexHull.convexHull(hds, sc, 1E-8);
 			// subdivision
 			for (int si = 0; si < i; si++) {
 				CoHDS subdivided = new CoHDS();
 				loop.subdivide(hds, subdivided, sc, sc, sc);
 				hds = subdivided;
+				// project to the sphere in every step
+				for (CoVertex v : hds.getVertices()) {
+					v.getPosition().normalize();
+				}
 			}
+			int numVerts = hds.numVertices();
 			Complex tau = null;
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
@@ -84,7 +98,7 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 			double argErr = tau.arg() - getExpectedTau().arg();
 			double reErr = tau.re - getExpectedTau().re;
 			double imErr = tau.im - getExpectedTau().im;
-			writeErrorLine(hds.numVertices() + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + EuclideanUnwrapperPETSc.lastGNorm);
+			writeErrorLine(numVerts + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + EuclideanUnwrapperPETSc.lastGNorm);
 		}
 	}
 

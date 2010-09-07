@@ -166,6 +166,7 @@ public abstract class ConvergenceSeries {
 		Point p4 = new Point(series.vertices[series.branchIndices[3]]);
 		series.tauExpected = DiscreteEllipticUtility.calculateHalfPeriodRatioMathLink(p1, p2, p3, p4, link);
 		series.writeComment("Expected tau: " + series.tauExpected);
+		link.close();
 		
 		series.perform();
 		series.getErrorWriter().close();
