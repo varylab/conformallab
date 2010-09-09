@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.convergence;
 
 import geom3d.Point;
+import geom3d.Vector;
 
 import java.io.FileWriter;
 import java.util.HashSet;
@@ -26,6 +27,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		numOptSteps = 0;
 	private boolean 
 		reuse = false,
+		trainoptrand = false,
 		trianopt = false;
 	private QualityMeasure
 		qualityMeasure = QualityMeasure.MaxCrossRatio;
@@ -40,6 +42,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		MaxMultiRatio,
 		MeanMultiRatio,
 		SumMultiRatio,
+		ElectrostaticEnergy
 	}
 	
 	
@@ -74,6 +77,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		OptionSpec<Integer> numSamplesSpec = p.accepts("num", "Number of samples").withRequiredArg().ofType(Integer.class).defaultsTo(1);
 		OptionSpec<Integer> numExtraPointsSpec = p.accepts("extra", "Number of extra points").withRequiredArg().ofType(Integer.class).defaultsTo(0);
 		OptionSpec<Integer> optStepsSpec = p.accepts("nopt", "Number of triangulation optimization steps").withRequiredArg().ofType(Integer.class).defaultsTo(1);
+		p.accepts("noptrand", "Randomize optimization steps");
 		p.accepts("reuse", "Reuse extra points");
 		
 		OptionSet opts = p.parse(args);
@@ -82,6 +86,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		numExtraPoints = numExtraPointsSpec.value(opts);
 		reuse = opts.has("reuse");
 		trianopt = opts.has("nopt");
+		trainoptrand = opts.has("noptrand");
 		numOptSteps = 0;
 		if (trianopt) {
 			numOptSteps = opts.valueOf(optStepsSpec);
@@ -104,6 +109,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 	
 	@Override
 	protected void perform() throws Exception {
+		writeComment("Quality measure: " + qualityMeasure);
 		writeComment("Measure exponent: " + measureExponent);
 		writeComment("index[1], absErr[2], argErr[3], reErr[4], imErr[5], qFun[6]");
 		for (int i = 0; i < numSamples; i ++) {
@@ -116,11 +122,9 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			}
 			// extra points
 			for (int j = 0; j < numExtraPoints; j++) {
-				double[] pos = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
-				Point pointPos = new Point(pos);
-				pointPos.normalize();
 				CoVertex v = hds.addNewVertex();
-				v.setPosition(pointPos);
+				v.getPosition().set(rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian());
+				v.getPosition().normalize();
 			}
 			// optimize triangulation
 			if (trianopt) {
@@ -129,47 +133,73 @@ public class ConvergenceQuality extends ConvergenceSeries {
 				fixedVertices.add(hds.getVertex(branchIndices[1]));
 				fixedVertices.add(hds.getVertex(branchIndices[2]));
 				fixedVertices.add(hds.getVertex(branchIndices[3]));
-				SphereUtility.equalizeSphereVertices(hds, fixedVertices, numOptSteps, 1E-6);
+				int steps = numOptSteps;
+				if (trainoptrand) {
+					steps = rnd.nextInt(numOptSteps + 1);
+				}
+				SphereUtility.equalizeSphereVertices(hds, fixedVertices, steps, 1E-6);
 			}
+			
+			// calculate quality measure for the closed surface
+			double meshQuality = 0;
 			Complex tau = null;
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
 				DiscreteEllipticUtility.generateEllipticImage(hds, 0, glueSet, branchIndices);
+				meshQuality = calculateQualityMeasure(qualityMeasure, measureExponent, hds);
 				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, 1E-8);
 			} catch (Exception e) {
 				e.printStackTrace();
 				continue;
 			}
+			
 			double absErr = tau.abs() - getExpectedTau().abs();
 			double argErr = tau.arg() - getExpectedTau().arg();
 			double reErr = tau.re - getExpectedTau().re;
 			double imErr = tau.im - getExpectedTau().im;
-			double qFun = 0;
-			
-			switch (qualityMeasure) {
-			case MaxCrossRatio:
-				qFun = maxLengthCrossRatioFunction(hds, measureExponent);
-				break;
-			case MeanCrossRatio:
-				qFun = meanLengthCrossRatioFunction(hds, measureExponent);
-				break;
-			case SumCrossRatio:
-				qFun = sumLengthCrossRatioFunction(hds, measureExponent);
-				break;
-			case MaxMultiRatio:
-				qFun = maxMultiRatioFunction(hds, measureExponent);
-				break;
-			case MeanMultiRatio:
-				qFun = meanMultiRatioFunction(hds, measureExponent);
-				break;
-			case SumMultiRatio:
-				qFun = sumMultiRatioFunction(hds, measureExponent);
-				break;
-			}
-			
-			writeErrorLine(i + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + qFun);
+			writeErrorLine(i + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + meshQuality);
 		}
 	}
+	
+	
+	
+	private double calculateQualityMeasure(QualityMeasure qualityMeasure, double measureExponent, CoHDS hds) {
+		switch (qualityMeasure) {
+		case MaxCrossRatio:
+			return maxLengthCrossRatioFunction(hds, measureExponent);
+		case MeanCrossRatio:
+			return meanLengthCrossRatioFunction(hds, measureExponent);
+		case SumCrossRatio:
+			return sumLengthCrossRatioFunction(hds, measureExponent);
+		case MaxMultiRatio:
+			return maxMultiRatioFunction(hds, measureExponent);
+		case MeanMultiRatio:
+			return meanMultiRatioFunction(hds, measureExponent);
+		case SumMultiRatio:
+			return sumMultiRatioFunction(hds, measureExponent);
+		case ElectrostaticEnergy:
+			return electrostaticEnergy(hds);
+		}
+		return 1.0;
+	}
+	
+	
+	public double electrostaticEnergy(CoHDS hds) {
+		double E = 0.0; 
+		for (CoVertex v : hds.getVertices()) {
+			Point vPos = v.getPosition();
+			for (CoVertex w : hds.getVertices()) {
+				if (v == w) continue;
+				Point wPos = w.getPosition();
+				Vector dir = wPos.vectorTo(vPos);
+				double dsq = dir.dot(dir);
+				if (dsq == 0) continue;
+				E += 1 / dsq;
+			}
+		}
+		return E;
+	}
+	
 	
 	
 	public double maxLengthCrossRatioFunction(CoHDS hds, double exp) {

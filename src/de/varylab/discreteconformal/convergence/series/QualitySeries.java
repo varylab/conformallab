@@ -12,12 +12,14 @@ public class QualitySeries {
 //		ConvergenceSeries.performConvergenceSeries(
 //			"-M", "Quality",
 //			"--base", "data/convergence/qualityMultiRatioExp1",
-//			"--name", "icosahedron1-3-7-11-extra200",
+//			"--name", "icosahedron0-1-10-11-extra50-randopt",
 //			"--pin", "data/convergence/icosahedron.obj",
-//			"--bpi", "1,3,7,11",
-//			"--num", "200",
-//			"--extra", "200",
-//			"--nopt", "0",
+//			"--bpi", "0,1,10,11",
+//			"--num", "100000",
+//			"--extra", "50",
+//			"--nopt", "20",
+//			"--noptrand",
+//			"--exp", "1.0",
 //			"--QM", "MeanMultiRatio"
 //		);
 //	}
@@ -26,12 +28,13 @@ public class QualitySeries {
 //		ConvergenceSeries.performConvergenceSeries(
 //			"-M", "Quality",
 //			"--base", "data/convergence/qualityMultiRatioExp2",
-//			"--name", "icosahedron1-3-7-11-extra200",
+//			"--name", "icosahedron0-1-10-11-extra50-randopt",
 //			"--pin", "data/convergence/icosahedron.obj",
-//			"--bpi", "1,3,7,11",
-//			"--num", "200",
-//			"--extra", "200",
-//			"--nopt", "0",
+//			"--bpi", "0,1,10,11",
+//			"--num", "100000",
+//			"--extra", "50",
+//			"--nopt", "20",
+//			"--noptrand",
 //			"--exp", "2.0",
 //			"--QM", "MeanMultiRatio"
 //		);
@@ -41,60 +44,160 @@ public class QualitySeries {
 //		ConvergenceSeries.performConvergenceSeries(
 //			"-M", "Quality",
 //			"--base", "data/convergence/qualityMultiRatioExp10",
-//			"--name", "icosahedron1-3-7-11-extra200",
+//			"--name", "icosahedron0-1-10-11-extra50-randopt",
 //			"--pin", "data/convergence/icosahedron.obj",
-//			"--bpi", "1,3,7,11",
-//			"--num", "200",
-//			"--extra", "200",
-//			"--nopt", "0",
-//			"--exp", "10.0",
+//			"--bpi", "0,1,10,11",
+//			"--num", "100000",
+//			"--extra", "50",
+//			"--nopt", "20",
+//			"--noptrand",
+//			"--exp", "1.0",
 //			"--QM", "MeanMultiRatio"
 //		);
 //	}
+//	@Test
+//	public void icoMultiRatioExp05() throws Exception {
+//		ConvergenceSeries.performConvergenceSeries(
+//			"-M", "Quality",
+//			"--base", "data/convergence/qualityMultiRatioExp05",
+//			"--name", "icosahedron0-1-10-11-extra50-randopt",
+//			"--pin", "data/convergence/icosahedron.obj",
+//			"--bpi", "0,1,10,11",
+//			"--num", "100000",
+//			"--extra", "50",
+//			"--nopt", "20",
+//			"--noptrand",
+//			"--exp", "0.5",
+//			"--QM", "MeanMultiRatio"
+//		);
+//	}
+//	
 	
+//	@Test
+//	public void icoCrossRatioExp1() throws Exception {
+//		ConvergenceSeries.performConvergenceSeries(
+//			"-M", "Quality",
+//			"--base", "data/convergence/qualityCrossRatioExp1",
+//			"--name", "icosahedron0-1-10-11-extra50-randopt",
+//			"--pin", "data/convergence/icosahedron.obj",
+//			"--bpi", "0,1,10,11",
+//			"--num", "100000",
+//			"--extra", "50",
+//			"--nopt", "20",
+//			"--noptrand",
+//			"--exp", "1.0",
+//			"--QM", "MeanCrossRatio"
+//		);
+//	}
+//	@Test
+//	public void icoCrossRatioExp2() throws Exception {
+//		ConvergenceSeries.performConvergenceSeries(
+//			"-M", "Quality",
+//			"--base", "data/convergence/qualityCrossRatioExp2",
+//			"--name", "icosahedron0-1-10-11-extra50-randopt",
+//			"--pin", "data/convergence/icosahedron.obj",
+//			"--bpi", "0,1,10,11",
+//			"--num", "100000",
+//			"--extra", "50",
+//			"--nopt", "20",
+//			"--noptrand",
+//			"--exp", "2.0",
+//			"--QM", "MeanCrossRatio"
+//		);
+//	}
+//	@Test
+//	public void icoCrossRatioExp10() throws Exception {
+//		ConvergenceSeries.performConvergenceSeries(
+//			"-M", "Quality",
+//			"--base", "data/convergence/qualityCrossRatioExp10",
+//			"--name", "icosahedron0-1-10-11-extra50-randopt",
+//			"--pin", "data/convergence/icosahedron.obj",
+//			"--bpi", "0,1,10,11",
+//			"--num", "100000",
+//			"--extra", "50",
+//			"--nopt", "20",
+//			"--noptrand",
+//			"--exp", "10.0",
+//			"--QM", "MeanCrossRatio"
+//		);
+//	}
+//	
+//	public void icoCrossRatioExp05() throws Exception {
+//		ConvergenceSeries.performConvergenceSeries(
+//			"-M", "Quality",
+//			"--base", "data/convergence/qualityCrossRatioExp05",
+//			"--name", "icosahedron0-1-10-11-extra50-randopt",
+//			"--pin", "data/convergence/icosahedron.obj",
+//			"--bpi", "0,1,10,11",
+//			"--num", "100000",
+//			"--extra", "50",
+//			"--nopt", "20",
+//			"--noptrand",
+//			"--exp", "0.5",
+//			"--QM", "MeanCrossRatio"
+//		);
+//	}
+	
+/** random configuration **/
 	
 	@Test
-	public void icoCrossRatioExp1() throws Exception {
+	public void randomMultiRatioExp1() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Quality",
-			"--base", "data/convergence/qualityCrossRatioExp1",
-			"--name", "icosahedron1-3-7-11-extra200",
-			"--pin", "data/convergence/icosahedron.obj",
-			"--bpi", "1,3,7,11",
-			"--num", "200",
-			"--extra", "200",
-			"--nopt", "0",
-			"--QM", "MeanCrossRatio"
+			"--base", "data/convergence/qualityMultiRatioExp1",
+			"--name", "random02-extra50-randopt",
+			"--pin", "data/convergence/random02.obj",
+			"--num", "10000",
+			"--extra", "40",
+			"--nopt", "20",
+			"--noptrand",
+			"--exp", "1.0",
+			"--QM", "MeanMultiRatio"
 		);
 	}
 	@Test
-	public void icoCrossRatioExp2() throws Exception {
+	public void randomMultiRatioExp2() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Quality",
-			"--base", "data/convergence/qualityCrossRatioExp2",
-			"--name", "icosahedron1-3-7-11-extra200",
-			"--pin", "data/convergence/icosahedron.obj",
-			"--bpi", "1,3,7,11",
-			"--num", "200",
-			"--extra", "200",
-			"--nopt", "0",
+			"--base", "data/convergence/qualityMultiRatioExp2",
+			"--name", "random02-extra50-randopt",
+			"--pin", "data/convergence/random02.obj",
+			"--num", "10000",
+			"--extra", "40",
+			"--nopt", "20",
+			"--noptrand",
 			"--exp", "2.0",
-			"--QM", "MeanCrossRatio"
+			"--QM", "MeanMultiRatio"
 		);
 	}
 	@Test
-	public void icoCrossRatioExp10() throws Exception {
+	public void randomMultiRatioExp10() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Quality",
-			"--base", "data/convergence/qualityCrossRatioExp10",
-			"--name", "icosahedron1-3-7-11-extra200",
-			"--pin", "data/convergence/icosahedron.obj",
-			"--bpi", "1,3,7,11",
-			"--num", "200",
-			"--extra", "200",
-			"--nopt", "0",
-			"--exp", "10.0",
-			"--QM", "MeanCrossRatio"
+			"--base", "data/convergence/qualityMultiRatioExp10",
+			"--name", "random02-extra50-randopt",
+			"--pin", "data/convergence/random02.obj",
+			"--num", "10000",
+			"--extra", "40",
+			"--nopt", "20",
+			"--noptrand",
+			"--exp", "1.0",
+			"--QM", "MeanMultiRatio"
+		);
+	}
+	@Test
+	public void randomMultiRatioExp05() throws Exception {
+		ConvergenceSeries.performConvergenceSeries(
+			"-M", "Quality",
+			"--base", "data/convergence/qualityMultiRatioExp05",
+			"--name", "random02-extra50-randopt",
+			"--pin", "data/convergence/random02.obj",
+			"--num", "10000",
+			"--extra", "40",
+			"--nopt", "20",
+			"--noptrand",
+			"--exp", "0.5",
+			"--QM", "MeanMultiRatio"
 		);
 	}
 	
