@@ -35,7 +35,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		measureExponent = 1.0;
 	
 	
-	public enum QualityMeasure {
+	public static enum QualityMeasure {
 		MaxCrossRatio,
 		MeanCrossRatio,
 		SumCrossRatio,
@@ -163,7 +163,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 	
 	
 	
-	private double calculateQualityMeasure(QualityMeasure qualityMeasure, double measureExponent, CoHDS hds) {
+	public static double calculateQualityMeasure(QualityMeasure qualityMeasure, double measureExponent, CoHDS hds) {
 		switch (qualityMeasure) {
 		case MaxCrossRatio:
 			return maxLengthCrossRatioFunction(hds, measureExponent);
@@ -184,7 +184,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 	}
 	
 	
-	public double electrostaticEnergy(CoHDS hds) {
+	public static double electrostaticEnergy(CoHDS hds) {
 		double E = 0.0; 
 		for (CoVertex v : hds.getVertices()) {
 			Point vPos = v.getPosition();
@@ -202,7 +202,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 	
 	
 	
-	public double maxLengthCrossRatioFunction(CoHDS hds, double exp) {
+	public static double maxLengthCrossRatioFunction(CoHDS hds, double exp) {
 		double r = 0.0;
 		for (CoEdge e : hds.getPositiveEdges()) {
 			double q = getLengthCrossRatio(e);
@@ -213,7 +213,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 	}
 	
 	
-	public double meanLengthCrossRatioFunction(CoHDS hds, double exp) {
+	public static double meanLengthCrossRatioFunction(CoHDS hds, double exp) {
 		double r = 0.0;
 		for (CoEdge e : hds.getPositiveEdges()) {
 			double q = getLengthCrossRatio(e);
@@ -223,7 +223,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		return 2 * r / hds.numEdges();
 	}
 	
-	public double sumLengthCrossRatioFunction(CoHDS hds, double exp) {
+	public static double sumLengthCrossRatioFunction(CoHDS hds, double exp) {
 		double r = 0.0;
 		for (CoEdge e : hds.getPositiveEdges()) {
 			double q = getLengthCrossRatio(e);
@@ -233,7 +233,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		return r;
 	}
 	
-	public double maxMultiRatioFunction(CoHDS hds, double exp) {
+	public static double maxMultiRatioFunction(CoHDS hds, double exp) {
 		double r = 0.0;
 		for (CoFace f : hds.getFaces()) {
 			double q = 1.0;
@@ -246,7 +246,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		return r;
 	}
 	
-	public double meanMultiRatioFunction(CoHDS hds, double exp) {
+	public static double meanMultiRatioFunction(CoHDS hds, double exp) {
 		double r = 0.0;
 		for (CoFace f : hds.getFaces()) {
 			double q = getLengthMultiRatio(f);
@@ -256,7 +256,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		return r / hds.numFaces();
 	}
 	
-	public double sumMultiRatioFunction(CoHDS hds, double exp) {
+	public static double sumMultiRatioFunction(CoHDS hds, double exp) {
 		double r = 0.0;
 		for (CoFace f : hds.getFaces()) {
 			double q = getLengthMultiRatio(f);
@@ -267,7 +267,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 	}
 	
 	
-	private double getLengthCrossRatio(CoEdge e) {
+	private static double getLengthCrossRatio(CoEdge e) {
 		double a = e.getNextEdge().getLength();
 		double b = e.getPreviousEdge().getLength();
 		double c = e.getOppositeEdge().getNextEdge().getLength();
@@ -275,7 +275,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		return (a * c) / (b * d);
 	}
 	
-	private double getLengthMultiRatio(CoFace f) {
+	private static double getLengthMultiRatio(CoFace f) {
 		double q = 1.0;
 		for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
 			q *= getLengthCrossRatio(e);
