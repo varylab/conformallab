@@ -62,7 +62,6 @@ import de.jreality.shader.ImageData;
 import de.jreality.shader.Texture2D;
 import de.jreality.shader.TextureUtility;
 import de.jtem.halfedge.Vertex;
-import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeSelection;
@@ -89,8 +88,8 @@ import de.varylab.discreteconformal.heds.calculator.SubdivisionCalculator;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
-import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.FundamentalDomainUtility;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;
 
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSelectionListener, ChangeListener, ActionListener, PropertyChangeListener, SelectionListener {
@@ -185,7 +184,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		selectedVertexList = new JList();
 	private JScrollPane
 		selectionScroller = new JScrollPane(selectedVertexList);
-	
+	private TexCoordPositionAdapter
+		texCoordPositionAdapter = null;
 		
 		
 	public DiscreteConformalPlugin() {
@@ -241,6 +241,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		universalCoverAppearance.setAttribute(FACE_DRAW, true);
 		universalCoverAppearance.setAttribute(LIGHTING_ENABLED, false);
 		universalCoverAppearance.setAttribute(DIFFUSE_COLOR, WHITE);
+		
+		texCoordPositionAdapter = new TexCoordPositionAdapter(getSelectedModel(),useProjectiveTexture.isSelected());
 	}
 
 	
@@ -532,20 +534,28 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		}
 		hif.clearSelection();
 		boolean projective = useProjectiveTexture.isSelected();
-		AdapterSet adapters = new AdapterSet();
-		adapters.add(new TexCoordAdapter(getSelectedModel(), projective));
+		hif.addLayerAdapter(new TexCoordAdapter(getSelectedModel(), projective),true);
+		texCoordPositionAdapter.setProjective(projective);
+		texCoordPositionAdapter.setModel(getSelectedModel());
 		if (showUnwrapped.isSelected()) {
-			adapters.add(new TexCoordPositionAdapter(getSelectedModel(), projective));
+			hif.addLayerAdapter(texCoordPositionAdapter,true);
 		} else {
-			adapters.add(new PositionAdapter());
+			//adapters.add(new PositionAdapter()); ???
+			hif.removeAdapter(texCoordPositionAdapter);
 		}
 		if (genus >= 1) {
-			adapters.add(cutRadiusAdapter);
-			adapters.add(cutColorAdapter);
-			adapters.add(pointRadiusAdapter);
-			adapters.add(pointColorAdapter);
+			hif.addLayerAdapter(cutRadiusAdapter,true);
+			hif.addLayerAdapter(cutColorAdapter,true);
+			hif.addLayerAdapter(pointRadiusAdapter,true);
+			hif.addLayerAdapter(pointColorAdapter,true);
+		} else {
+			hif.removeAdapter(cutRadiusAdapter);
+			hif.removeAdapter(cutColorAdapter);
+			hif.removeAdapter(pointRadiusAdapter);
+			hif.removeAdapter(pointColorAdapter);
 		}
-		hif.set(surface, adapters);
+		
+		hif.set(surface);
 		hif.getActiveLayer().addTemporaryGeometry(auxGeometry);
 		hif.getActiveLayer().addTemporaryGeometry(copiedGeometry);
 		hif.getActiveLayer().addTemporaryGeometry(fundamentalPolygonRoot);
@@ -669,8 +679,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
-		hif.addAdapter(new PositionAdapter());
-		hif.addAdapter(new TexCoordAdapter(0));
+		hif.addGlobalAdapter(new PositionAdapter(), true);
+		hif.addGlobalAdapter(new TexCoordAdapter(0), true);
 		hif.addCalculator(new SubdivisionCalculator());
 		hif.addSelectionListener(this);
 	}

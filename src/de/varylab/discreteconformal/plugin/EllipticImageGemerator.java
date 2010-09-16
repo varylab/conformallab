@@ -14,7 +14,6 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Node;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AbstractAdapter;
-import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.CalculatorException;
 import de.jtem.halfedgetools.adapter.CalculatorSet;
 import de.jtem.halfedgetools.adapter.type.Color;
@@ -24,7 +23,6 @@ import de.jtem.halfedgetools.plugin.algorithm.AlgorithmCategory;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmPlugin;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
-import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 
 public class EllipticImageGemerator extends AlgorithmPlugin {
@@ -69,9 +67,8 @@ public class EllipticImageGemerator extends AlgorithmPlugin {
 			pathVisualizer.add(e.getOppositeEdge());
 		}
 		// show the result
-		AdapterSet set = new AdapterSet(pathVisualizer);
-		set.add(new PositionAdapter());
-		hif.set(hds, set);
+		hif.addLayerAdapter(pathVisualizer, true);
+		hif.set(hds);
 	}
 	
 	
