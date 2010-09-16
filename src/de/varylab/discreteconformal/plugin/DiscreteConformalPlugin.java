@@ -479,13 +479,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	 * Set up scene
 	 */
 	private void updateStates() {
-//		managedContent.addContentUnique(getClass(), auxGeometry);
-//		managedContent.addContentUnique(getClass(), surfaceRoot);
-//		managedContent.addContentUnique(getClass(), copiedGeometry);
-//		managedContent.addContentUnique(getClass(), fundamentalPolygonRoot);
-//		managedContent.addContentUnique(getClass(), universalCoverRoot);
-////		managedContent.addToolUnique(getClass(), hyperbolicCopyTool);
-//		managedContent.update();
 		surfaceRoot.setVisible(showGeometry.isSelected());
 		if (genus > 1) {
 			fundamentalPolygonRoot.setVisible(showUnwrapped.isSelected() && showFundamentalPolygon.isSelected());
@@ -538,7 +531,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			return;
 		}
 		hif.clearSelection();
-//		ConverterHeds2JR converter = new ConverterHeds2JR();
 		boolean projective = useProjectiveTexture.isSelected();
 		AdapterSet adapters = new AdapterSet();
 		adapters.add(new TexCoordAdapter(getSelectedModel(), projective));
@@ -547,26 +539,18 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		} else {
 			adapters.add(new PositionAdapter());
 		}
-//		IndexedFaceSet ifs = null;
 		if (genus >= 1) {
 			adapters.add(cutRadiusAdapter);
 			adapters.add(cutColorAdapter);
 			adapters.add(pointRadiusAdapter);
 			adapters.add(pointColorAdapter);
-//			ifs = converter.heds2ifs(surface, adapters, null);
-		} else {
-//			ifs = converter.heds2ifs(surface, adapters, null);
 		}
 		hif.set(surface, adapters);
 		hif.getActiveLayer().addTemporaryGeometry(auxGeometry);
-//		hif.getActiveLayer().addTemporaryGeometry(surfaceRoot);
 		hif.getActiveLayer().addTemporaryGeometry(copiedGeometry);
 		hif.getActiveLayer().addTemporaryGeometry(fundamentalPolygonRoot);
 		hif.getActiveLayer().addTemporaryGeometry(universalCoverRoot);
 		hif.encompassAll();
-//		IndexedFaceSetUtility.calculateAndSetNormals(ifs);
-//		surfaceRoot.setGeometry(ifs);
-//		surfaceRoot.setVisible(true);
 	}
 	
 
@@ -689,15 +673,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		hif.addAdapter(new TexCoordAdapter(0));
 		hif.addCalculator(new SubdivisionCalculator());
 		hif.addSelectionListener(this);
-//		managedContent = c.getPlugin(ManagedContent.class);
 	}
-	
-	@Override
-	public void uninstall(Controller c) throws Exception {
-		super.uninstall(c);
-//		managedContent.removeAll(getClass());
-	}
-	
 	
 	@Override
 	public void storeStates(Controller c) throws Exception {
