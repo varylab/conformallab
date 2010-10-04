@@ -538,16 +538,16 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		texCoordPositionAdapter.setProjective(projective);
 		texCoordPositionAdapter.setModel(getSelectedModel());
 		if (showUnwrapped.isSelected()) {
-			hif.addLayerAdapter(texCoordPositionAdapter,true);
+			hif.addLayerAdapter(texCoordPositionAdapter,false);
 		} else {
 			//adapters.add(new PositionAdapter()); ???
 			hif.removeAdapter(texCoordPositionAdapter);
 		}
 		if (genus >= 1) {
-			hif.addLayerAdapter(cutRadiusAdapter,true);
-			hif.addLayerAdapter(cutColorAdapter,true);
-			hif.addLayerAdapter(pointRadiusAdapter,true);
-			hif.addLayerAdapter(pointColorAdapter,true);
+			hif.addLayerAdapter(cutRadiusAdapter,false);
+			hif.addLayerAdapter(cutColorAdapter,false);
+			hif.addLayerAdapter(pointRadiusAdapter,false);
+			hif.addLayerAdapter(pointColorAdapter,false);
 		} else {
 			hif.removeAdapter(cutRadiusAdapter);
 			hif.removeAdapter(cutColorAdapter);
