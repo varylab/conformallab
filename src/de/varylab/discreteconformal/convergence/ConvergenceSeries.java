@@ -31,7 +31,8 @@ public abstract class ConvergenceSeries {
 	public static enum SeriesMethod {
 		Quality,
 		Random,
-		Subdivision
+		Subdivision,
+		Noise
 	}
 	
 	protected Random
@@ -88,6 +89,9 @@ public abstract class ConvergenceSeries {
 			break;
 		case Subdivision:
 			series = new ConvergenceSubdivision();
+			break;
+		case Noise:
+			series = new ConvergenceNoise();
 			break;
 		}
 		assert series != null;

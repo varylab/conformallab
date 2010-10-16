@@ -27,13 +27,13 @@ public class RandomSeries {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Random",
 			"--base", "data/convergence/pointsMultiRatioExp2",
-			"--name", "random02",
+			"--name", "random0215Steps",
 			"--pin", "data/convergence/random02.obj",
 			"--min", "0",
-			"--max", "2000",
-			"--nopt", "0",
+			"--max", "10000",
+			"--nopt", "15",
 			"--QM", "MeanMultiRatio",
-			"--QE", "10.0"
+			"--QE", "2.0"
 		);
 	}
 	

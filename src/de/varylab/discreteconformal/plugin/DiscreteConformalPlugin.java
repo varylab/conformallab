@@ -86,6 +86,7 @@ import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
 import de.varylab.discreteconformal.heds.adapter.TexCoordPositionAdapter;
 import de.varylab.discreteconformal.heds.calculator.SubdivisionCalculator;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.util.FundamentalDomainUtility;
@@ -143,6 +144,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 
 	// user interface section ------------
 	private JButton
+		checkGaussBonnetBtn = new JButton("Check Gauß-Bonnet"),
 		unwrapBtn = new JButton("Unwrap");
 	private ShrinkPanel
 		customVertexPanel = new ShrinkPanel("Custom Vertices"),
@@ -193,6 +195,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		showGeometry.addActionListener(this);
 		showPoygonTexture.addActionListener(this);
 		unwrapBtn.addActionListener(this);
+		checkGaussBonnetBtn.addActionListener(this);
 		showUnwrapped.addActionListener(this);
 		showUnitCircle.addActionListener(this);
 		kleinButton.addActionListener(this);
@@ -268,6 +271,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		shrinkPanel.add(toleranceExpSpinner, c2);
 		shrinkPanel.add(new JLabel("Max Iterations"), c1);
 		shrinkPanel.add(maxIterationsSpinner, c2);
+		shrinkPanel.add(checkGaussBonnetBtn, c1);
 		shrinkPanel.add(unwrapBtn, c2);
 		
 		boundaryPanel.setLayout(new GridBagLayout());
@@ -474,6 +478,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				CoVertex v = (CoVertex)sel;
 				v.getCustomInfo().useCustomTheta = useCustomThetaChecker.isSelected(); 
 			}
+		}
+		if (checkGaussBonnetBtn == s) {
+			CoHDS hds = hif.get(new CoHDS());
+			BoundaryMode boundaryMode = (BoundaryMode)boundaryModeCombo.getSelectedItem();
+			QuantizationMode boundaryQuantMode = (QuantizationMode)boundaryQuantizationCombo.getSelectedItem();
+			UnwrapUtility.prepareInvariantDataEuclidean(hds, boundaryMode, boundaryQuantMode);
 		}
 	}
 	
