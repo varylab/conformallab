@@ -11,14 +11,11 @@ import java.util.Set;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.io.HalfedgeIO;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.convergence.ConvergenceQuality.QualityMeasure;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.unwrapper.SphereUtility;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 
@@ -106,7 +103,7 @@ public class ConvergenceRandom extends ConvergenceSeries {
 					System.out.println("Mesh discarded: Q=" + meshQuality + " > " + qualityThreshold);
 					continue;
 				}
-				HalfedgeIO.writeOBJ(hds, new AdapterSet(new PositionAdapter()), "data/tmp/tmp" + i + ".obj");
+//				HalfedgeIO.writeOBJ(hds, new AdapterSet(new PositionAdapter()), "data/tmp/tmp" + i + ".obj");
 				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, 1E-8);
 			} catch (Exception e) {
 				e.printStackTrace();
