@@ -18,6 +18,7 @@ import com.wolfram.jlink.MathLinkFactory;
 
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -90,7 +91,7 @@ public class DiscreteEllipticUtility {
 		unwrapper.setMaxIterations(500);
 		Vector u = null;
 		try {
-			u = unwrapper.unwrap(hds);
+			u = unwrapper.unwrap(hds, new AdapterSet());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new Complex();

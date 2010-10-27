@@ -4,6 +4,7 @@ import static de.varylab.discreteconformal.util.SparseUtility.getPETScNonZeros;
 import static de.varylab.jpetsc.PETSc.PETSC_DEFAULT;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicApplication;
 import de.varylab.jpetsc.Mat;
@@ -19,7 +20,7 @@ public class CHyperbolicUnwrapperPETSc implements Unwrapper{
 	
 	
 	@Override
-	public Vector unwrap(CoHDS surface) throws Exception {
+	public Vector unwrap(CoHDS surface, AdapterSet aSet) throws Exception {
 		UnwrapUtility.prepareInvariantDataHyperbolic(surface);
 		
 		Tao.Initialize();

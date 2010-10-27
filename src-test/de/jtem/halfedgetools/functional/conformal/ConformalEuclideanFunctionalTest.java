@@ -59,7 +59,7 @@ public class ConformalEuclideanFunctionalTest extends FunctionalTest<CoVertex, C
 			e.printStackTrace();
 		}
 		
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds);
+		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds, new AdapterSet());
 		Random rnd = new Random(); 
 		rnd.setSeed(1);
 		

@@ -11,6 +11,7 @@ import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
@@ -33,7 +34,7 @@ public class SphericalUnwrapper implements Unwrapper{
 	 * This is completely untested and probably rubbish
 	 */
 	@Override
-	public Vector unwrap(CoHDS surface) throws Exception {
+	public Vector unwrap(CoHDS surface, AdapterSet aSet) throws Exception {
 		// punch out vertex 0 and reorder solver indices
 		CoVertex v0 = surface.getVertex(0);
 		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
@@ -49,7 +50,7 @@ public class SphericalUnwrapper implements Unwrapper{
 //		HashSet<CoVertex> boundary = new HashSet<CoVertex>();
 //		boundary.add(v0);
 //		boundary.addAll(neighboringVertices(v0));
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(surface, Isometric, AllAngles);
+		int n = UnwrapUtility.prepareInvariantDataEuclidean(surface, Isometric, AllAngles, aSet);
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
 		
 		// optimization

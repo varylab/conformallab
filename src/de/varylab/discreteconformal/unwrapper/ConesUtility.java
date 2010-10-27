@@ -41,14 +41,18 @@ public class ConesUtility {
 	 */
 	public static void cutMesh(CoHDS hds, Collection<CoVertex> cones, Vector u) {
 		if (cones.isEmpty()) return;
-		Set<CoVertex> bSet = new HashSet<CoVertex>();
-		for (CoVertex v : hds.getVertices()){
-			if (isBoundaryVertex(v)) {
-				bSet.add(v);
-			}
-		}
+
 		for (CoVertex c : cones) {
+			// get boundary set
+			Set<CoVertex> bSet = new HashSet<CoVertex>();
+			for (CoVertex v : hds.getVertices()){
+				if (isBoundaryVertex(v)) {
+					bSet.add(v);
+				}
+			}
+			// find path to boundary
 			List<CoEdge> path = Search.getShortestPath(c, bSet, new EdgeLengthAdapter(u));
+			// cut
 			for (CoEdge e : path) {
 				CoEdge eOpp = e.getOppositeEdge();
 				Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);

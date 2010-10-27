@@ -10,6 +10,7 @@ import geom3d.Vector;
 import java.util.Collection;
 
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.varylab.discreteconformal.functional.ConformalEuclideanFunctional;
 import de.varylab.discreteconformal.functional.ConformalHyperbolicFunctional;
@@ -74,8 +75,8 @@ public class UnwrapUtility {
 	 * @param boundary the boundary vertices which do not belong to the solver system
 	 * @return the dimension of the parameter space
 	 */
-	public static int prepareInvariantDataEuclidean(CoHDS hds) {
-		return prepareInvariantDataEuclidean(hds, Isometric, AllAngles);
+	public static int prepareInvariantDataEuclidean(CoHDS hds, AdapterSet aSet) {
+		return prepareInvariantDataEuclidean(hds, Isometric, AllAngles, aSet);
 	}
 	
 	
@@ -85,7 +86,7 @@ public class UnwrapUtility {
 	 * @param boundary the boundary vertices which do not belong to the solver system
 	 * @return the dimension of the parameter space
 	 */
-	public static int prepareInvariantDataEuclidean(CoHDS hds, BoundaryMode bm, QuantizationMode qm) {
+	public static int prepareInvariantDataEuclidean(CoHDS hds, BoundaryMode bm, QuantizationMode qm, AdapterSet aSet) {
 		// set initial lambdas
 		for (final CoEdge e : hds.getPositiveEdges()) {
 			final double l = e.getLength();

@@ -441,7 +441,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		}
 		if (unwrapBtn == s) {
 			CoHDS surface = getLoaderGeometry();
-			Unwrap uw = new Unwrap(surface);
+			Unwrap uw = new Unwrap(surface, hif.getAdapters());
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());
 			uw.setMaxIterations(maxIterationsModel.getNumber().intValue());
 			uw.setNumCones(numConesModel.getNumber().intValue());
@@ -483,7 +483,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			CoHDS hds = hif.get(new CoHDS());
 			BoundaryMode boundaryMode = (BoundaryMode)boundaryModeCombo.getSelectedItem();
 			QuantizationMode boundaryQuantMode = (QuantizationMode)boundaryQuantizationCombo.getSelectedItem();
-			UnwrapUtility.prepareInvariantDataEuclidean(hds, boundaryMode, boundaryQuantMode);
+			UnwrapUtility.prepareInvariantDataEuclidean(hds, boundaryMode, boundaryQuantMode, hif.getAdapters());
 		}
 	}
 	

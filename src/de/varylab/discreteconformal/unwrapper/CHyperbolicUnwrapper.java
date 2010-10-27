@@ -5,6 +5,7 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicOptimizable;
 import de.varylab.mtjoptimization.NotConvergentException;
@@ -20,7 +21,7 @@ public class CHyperbolicUnwrapper implements Unwrapper{
 		maxIterations = 150;
 	
 	@Override
-	public Vector unwrap(CoHDS surface) throws Exception {
+	public Vector unwrap(CoHDS surface, AdapterSet aSet) throws Exception {
 		UnwrapUtility.prepareInvariantDataHyperbolic(surface);
 		
 		CHyperbolicOptimizable opt = new CHyperbolicOptimizable(surface);

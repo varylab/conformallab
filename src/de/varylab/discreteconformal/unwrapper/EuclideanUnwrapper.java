@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.unwrapper;
 
+import static de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode.AllAngles;
 import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 
 import java.util.Collection;
@@ -8,6 +9,7 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
@@ -33,8 +35,8 @@ public class EuclideanUnwrapper implements Unwrapper{
 	
 	
 	@Override
-	public Vector unwrap(CoHDS surface) throws Exception {
-		UnwrapUtility.prepareInvariantDataEuclidean(surface, boundaryMode, boundaryQuantMode);
+	public Vector unwrap(CoHDS surface, AdapterSet aSet) throws Exception {
+		UnwrapUtility.prepareInvariantDataEuclidean(surface, boundaryMode, boundaryQuantMode, aSet);
 		// cones
 		Collection<CoVertex> cones = ConesUtility.setUpCones(surface, numCones); 
 		// optimization
@@ -53,15 +55,17 @@ public class EuclideanUnwrapper implements Unwrapper{
 			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
 		}
 		if (!cones.isEmpty()) {
-			cones = ConesUtility.quantizeCones(surface, cones, conesMode);
-			n = opt.getDomainDimension();
-			u = new DenseVector(n);
-			H = new CompRowMatrix(n,n,makeNonZeros(surface));
-			optimizer.setHessianTemplate(H);
-			try {
-				optimizer.minimize(u, opt);
-			} catch (NotConvergentException e) {
-				throw new UnwrapException("Cone quantization did not succeed: " + e.getMessage());
+			if (conesMode != AllAngles) {
+				cones = ConesUtility.quantizeCones(surface, cones, conesMode);
+				n = opt.getDomainDimension();
+				u = new DenseVector(n);
+				H = new CompRowMatrix(n,n,makeNonZeros(surface));
+				optimizer.setHessianTemplate(H);
+				try {
+					optimizer.minimize(u, opt);
+				} catch (NotConvergentException e) {
+					throw new UnwrapException("Cone quantization did not succeed: " + e.getMessage());
+				}
 			}
 			ConesUtility.cutMesh(surface, cones, u);
 		}

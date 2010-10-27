@@ -10,6 +10,7 @@ import javax.swing.SwingWorker;
 
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.adapter.HyperbolicLengthWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -34,6 +35,8 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 
 	private CoHDS
 		surface = null;
+	private AdapterSet
+		aSet = new AdapterSet();
 	private boolean
 		usePetsc = false;
 	private QuantizationMode
@@ -56,8 +59,9 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		cutInfo = null;
 	
 	
-	public Unwrap(CoHDS surface) {
+	public Unwrap(CoHDS surface, AdapterSet aSet) {
 		this.surface = surface;
+		this.aSet = aSet;
 	}
 	
 	
@@ -99,7 +103,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
-			u = unwrapper.unwrap(surface);
+			u = unwrapper.unwrap(surface, aSet);
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
 			layoutRoot = EuclideanLayout.doLayout(surface, u);
@@ -116,7 +120,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
-			u = unwrapper.unwrap(surface);
+			u = unwrapper.unwrap(surface, aSet);
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
 			DefaultWeightAdapter<CoEdge> constantWeight = new DefaultWeightAdapter<CoEdge>();
@@ -145,7 +149,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
-			u = unwrapper.unwrap(surface);
+			u = unwrapper.unwrap(surface, aSet);
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
 			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);

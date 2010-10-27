@@ -47,7 +47,7 @@ public class EuclideanFunctionalTest {
 	
 	@Test
 	public void testGradient() throws Exception {
-		UnwrapUtility.prepareInvariantDataEuclidean(hds);
+		UnwrapUtility.prepareInvariantDataEuclidean(hds, new AdapterSet());
 		
 		Tao.Initialize();
 		Tao optimizer = new Tao(Method.CG);
@@ -63,7 +63,7 @@ public class EuclideanFunctionalTest {
 	
 	@Test
 	public void testHessian() throws Exception {
-		UnwrapUtility.prepareInvariantDataEuclidean(hds);
+		UnwrapUtility.prepareInvariantDataEuclidean(hds, new AdapterSet());
 		
 		Tao.Initialize();
 		Tao optimizer = new Tao(Method.CG);

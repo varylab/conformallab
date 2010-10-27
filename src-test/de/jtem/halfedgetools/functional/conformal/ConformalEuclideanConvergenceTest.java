@@ -25,14 +25,12 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
-import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
+import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
@@ -71,7 +69,7 @@ public class ConformalEuclideanConvergenceTest  {
 			e.printStackTrace();
 		}
 		
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds, BoundaryMode.Isometric, QuantizationMode.AllAngles);
+		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds, new AdapterSet());
 		Random rnd = new Random(); 
 		rnd.setSeed(1);
 		

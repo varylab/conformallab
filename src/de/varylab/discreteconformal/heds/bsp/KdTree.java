@@ -411,7 +411,8 @@ public class KdTree <
 			}
 		} while (lower <= upper);
 		upperMid = lower;
-		return new int[] { lowerMid - 1, upperMid - 1};
+		int[] result = {lowerMid - 1, upperMid - 1};
+		return result;
 	}
 
 

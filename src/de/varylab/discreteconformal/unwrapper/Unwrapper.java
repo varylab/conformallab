@@ -1,11 +1,12 @@
 package de.varylab.discreteconformal.unwrapper;
 
 import no.uib.cipr.matrix.Vector;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoHDS;
 
 public interface Unwrapper {
 
-	public Vector unwrap(CoHDS surface) throws Exception;
+	public Vector unwrap(CoHDS surface, AdapterSet aSet) throws Exception;
 	
 	public void setGradientTolerance(double tol);
 	

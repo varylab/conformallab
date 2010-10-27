@@ -40,12 +40,12 @@ public class EuclideanLayoutTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		UnwrapUtility.prepareInvariantDataEuclidean(hds);
+		UnwrapUtility.prepareInvariantDataEuclidean(hds, new AdapterSet());
 	}
 
 	@Test
 	public void testDoLayout() {
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds);
+		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds, new AdapterSet());
 		Vector u = new SparseVector(n);
 		EuclideanLayout.doLayout(hds, u);
 		
