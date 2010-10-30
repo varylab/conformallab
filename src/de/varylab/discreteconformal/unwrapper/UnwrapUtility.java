@@ -223,6 +223,13 @@ public class UnwrapUtility {
 		}
 		
 		if (bm == BoundaryMode.ConformalCurvature && bSize != 0) {
+			CoFace f0 = hds.getFace(0);
+			Vector f01 = f0.getBoundaryEdge().getVector();
+			Vector f02 = f0.getBoundaryEdge().getPreviousEdge().getOppositeEdge().getVector();
+			Vector f0N = new Vector(aSet.get(Normal.class, f0, double[].class));
+			Basis f0B = new Basis(f01, f02, f0N);
+			double surfaceOrientation = signum(f0B.getDeterminant());
+			System.out.println("surface orientation is " + surfaceOrientation);
 			Adapter<double[]> cVec = aSet.query(CurvatureField.class, hds.getEdgeClass(), double[].class);
 			if (cVec == null) throw new RuntimeException("No curvature vector field on edges found");
 			Collection<CoEdge> bList = HalfEdgeUtils.boundaryEdges(hds);
@@ -241,7 +248,7 @@ public class UnwrapUtility {
 				Vector nVec = new Vector(nArr);
 				Basis B = new Basis(nVec, eVec, xVec);
 				double sign = Math.signum(B.getDeterminant());
-				double alpha = eVec.getAngle(xVec) * sign;
+				double alpha = normalizeAngle(eVec.getAngle(xVec) * sign);
 				
 				if (alphaP != null) { // check if we must flip viVec
 					double th = 0.0;
@@ -249,13 +256,25 @@ public class UnwrapUtility {
 						if (edge.getLeftFace() == null) continue;
 						th += getAngle(edge);
 					}
-					double gamma = (th - alphaP + alpha) % (2*PI);
-					if(abs(gamma) > PI/2 && abs(gamma) < PI*3/2) { // flip x
-						alpha -= signum(alpha) * PI;
+					if (th < PI) {
+						System.out.println("corner");
+					}
+					th *= surfaceOrientation;
+					double gamma =  normalizeAngle(th - alphaP + alpha);
+					if(abs(gamma) > PI/2) { // flip x
+						System.out.println("flip at " + v.getIndex());
+						alpha += PI;
+						normalizeAngle(alpha);
 						Rn.times(xArr, -1, xArr); // flip vector
 						Rn.times(xOppArr, -1, xOppArr); // flip opposite vector
 					}
-					double theta = abs(alpha - alphaP);
+					double a1 = alpha < 0 ? alpha + 2*PI : alpha;
+					double a2 = alphaP < 0 ? alphaP + 2*PI : alphaP;
+					double theta = a1 - a2;
+					if (theta > 0) {
+						theta = 2*PI - theta;
+					}
+					theta = abs(theta);
 					System.out.println("sum theta: " + th);
 					System.out.println("gamma: " + gamma);
 					System.out.println("a: " + alpha + "   ap: " + alphaP);
@@ -268,13 +287,16 @@ public class UnwrapUtility {
 				} else {
 					firstAlpha = alpha;
 				}
-				alphaP = PI - alpha;
-				alphaP = alphaP > PI ? alphaP - 2*PI : alphaP;
+				if (alpha <= 0) {
+					alphaP = alpha + PI;
+				} else {
+					alphaP = alpha - PI;
+				}
 				e = e.getNextEdge();
 			} while (true);
-//			if (firstAlpha != alphaP) {
-//				throw new RuntimeException("Parallel transport along the boundary was discontinous!");
-//			}
+			if (firstAlpha != alphaP) {
+				throw new RuntimeException("Parallel transport along the boundary was discontinous!");
+			}
 		}
 		
 		// make conformal boundary embeddable
@@ -303,6 +325,17 @@ public class UnwrapUtility {
 		}
 		return dim;
 	}
+	
+	
+	
+	private static double normalizeAngle(double a) {
+		a %= 2*PI;
+		if (abs(a) > PI) {
+			a -= signum(a) * 2*PI;
+		}
+		return a;
+	}
+	
 	
 	
 	
