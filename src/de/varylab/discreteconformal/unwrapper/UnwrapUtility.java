@@ -3,27 +3,34 @@ package de.varylab.discreteconformal.unwrapper;
 import static de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode.Isometric;
 import static de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode.AllAngles;
 import static java.lang.Math.PI;
+import static java.lang.Math.abs;
 import static java.lang.Math.log;
+import static java.lang.Math.signum;
+import geom3d.Basis;
 import geom3d.Point;
 import geom3d.Vector;
 
 import java.util.Collection;
 
+import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.adapter.Adapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.CurvatureField;
+import de.jtem.halfedgetools.adapter.type.Normal;
 import de.jtem.halfedgetools.functional.DomainValue;
+import de.varylab.discreteconformal.functional.ConformalAdapters.InitialEnergy;
 import de.varylab.discreteconformal.functional.ConformalEuclideanFunctional;
 import de.varylab.discreteconformal.functional.ConformalHyperbolicFunctional;
-import de.varylab.discreteconformal.functional.ConformalAdapters.InitialEnergy;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.numerics.ConformalEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
+import de.varylab.discreteconformal.unwrapper.numerics.ConformalEnergy;
 
 public class UnwrapUtility {
 
@@ -210,17 +217,68 @@ public class UnwrapUtility {
 				v.setSolverIndex(dim++);
 				break;
 			case ConformalCurvature:
-				
-				
-				
-				
-				
+				bSize++;
 				break;
 			}
 		}
 		
+		if (bm == BoundaryMode.ConformalCurvature && bSize != 0) {
+			Adapter<double[]> cVec = aSet.query(CurvatureField.class, hds.getEdgeClass(), double[].class);
+			if (cVec == null) throw new RuntimeException("No curvature vector field on edges found");
+			Collection<CoEdge> bList = HalfEdgeUtils.boundaryEdges(hds);
+			CoEdge e = bList.iterator().next();
+			CoEdge e0 = e;
+			
+			Double alphaP = null;
+			Double firstAlpha = null;
+			do {
+				CoVertex v = e.getStartVertex();
+				Vector eVec = e.getVector();
+				double[] xArr = cVec.get(e, aSet);
+				double[] xOppArr = cVec.get(e.getOppositeEdge(), aSet);
+				Vector xVec = new Vector(xArr);
+				double[] nArr = aSet.get(Normal.class, e.getRightFace(), double[].class);
+				Vector nVec = new Vector(nArr);
+				Basis B = new Basis(nVec, eVec, xVec);
+				double sign = Math.signum(B.getDeterminant());
+				double alpha = eVec.getAngle(xVec) * sign;
+				
+				if (alphaP != null) { // check if we must flip viVec
+					double th = 0.0;
+					for (CoEdge edge : HalfEdgeUtils.incomingEdges(v)) {
+						if (edge.getLeftFace() == null) continue;
+						th += getAngle(edge);
+					}
+					double gamma = (th - alphaP + alpha) % (2*PI);
+					if(abs(gamma) > PI/2 && abs(gamma) < PI*3/2) { // flip x
+						alpha -= signum(alpha) * PI;
+						Rn.times(xArr, -1, xArr); // flip vector
+						Rn.times(xOppArr, -1, xOppArr); // flip opposite vector
+					}
+					double theta = abs(alpha - alphaP);
+					System.out.println("sum theta: " + th);
+					System.out.println("gamma: " + gamma);
+					System.out.println("a: " + alpha + "   ap: " + alphaP);
+					System.out.println("Theta at " + v.getIndex() + ": " + theta);
+					System.out.println("");
+					bSum += Math.PI - theta;
+					v.setTheta(theta);
+					v.setSolverIndex(dim++);
+					if (e == e0) break;
+				} else {
+					firstAlpha = alpha;
+				}
+				alphaP = PI - alpha;
+				alphaP = alphaP > PI ? alphaP - 2*PI : alphaP;
+				e = e.getNextEdge();
+			} while (true);
+//			if (firstAlpha != alphaP) {
+//				throw new RuntimeException("Parallel transport along the boundary was discontinous!");
+//			}
+		}
+		
 		// make conformal boundary embeddable
-		if (bm == BoundaryMode.Conformal) {
+		if (bm == BoundaryMode.Conformal || bm == BoundaryMode.ConformalCurvature) {
 //			double factor = (bSize - 2) * PI / bSum;
 			System.out.println("Gauss-Bonnet sum: " + (bSum / PI));
 //			for (CoVertex v : vertexBoundary) {
@@ -246,6 +304,25 @@ public class UnwrapUtility {
 		return dim;
 	}
 	
+	
+	
+	/**
+	 * Calculate the angle at the target vertex of e
+	 * @param e
+	 * @return
+	 */
+	public static double getAngle(CoEdge e) {
+		CoVertex v = e.getTargetVertex();
+		Point pv = v.getPosition();
+		Point p1 = e.getStartVertex().getPosition();
+		Point p2 = e.getNextEdge().getTargetVertex().getPosition();
+		Vector v1 = pv.vectorTo(p1);
+		Vector v2 = pv.vectorTo(p2);
+		Vector cr = new Vector(v1).cross(v2);
+		double x = v1.dot(v2);
+		double y = cr.getLength();
+		return Math.atan2(y, x);
+	}
 	
 	
 	
