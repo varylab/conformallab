@@ -237,7 +237,6 @@ public class UnwrapUtility {
 			CoEdge e0 = e;
 			
 			Double alphaP = null;
-			Double firstAlpha = null;
 			do {
 				CoVertex v = e.getStartVertex();
 				Vector eVec = e.getVector();
@@ -275,17 +274,17 @@ public class UnwrapUtility {
 						theta = 2*PI - theta;
 					}
 					theta = abs(theta);
-					System.out.println("sum theta: " + th);
-					System.out.println("gamma: " + gamma);
-					System.out.println("a: " + alpha + "   ap: " + alphaP);
-					System.out.println("Theta at " + v.getIndex() + ": " + theta);
-					System.out.println("");
+//					System.out.println("sum theta: " + th);
+//					System.out.println("gamma: " + gamma);
+//					System.out.println("a: " + alpha + "   ap: " + alphaP);
+//					System.out.println("Theta at " + v.getIndex() + ": " + theta);
+//					System.out.println("");
 					bSum += Math.PI - theta;
 					v.setTheta(theta);
 					v.setSolverIndex(dim++);
-					if (e == e0) break;
-				} else {
-					firstAlpha = alpha;
+					if (e == e0) {
+						break;
+					}
 				}
 				if (alpha <= 0) {
 					alphaP = alpha + PI;
@@ -294,20 +293,9 @@ public class UnwrapUtility {
 				}
 				e = e.getNextEdge();
 			} while (true);
-			if (firstAlpha != alphaP) {
-				throw new RuntimeException("Parallel transport along the boundary was discontinous!");
-			}
 		}
 		
-		// make conformal boundary embeddable
-		if (bm == BoundaryMode.Conformal || bm == BoundaryMode.ConformalCurvature) {
-//			double factor = (bSize - 2) * PI / bSum;
-			System.out.println("Gauss-Bonnet sum: " + (bSum / PI));
-//			for (CoVertex v : vertexBoundary) {
-//				double theta = v.getTheta();
-//				v.setTheta(theta * factor);
-//			}
-		}
+		System.out.println("Gauss-Bonnet sum: " + (bSum / PI));
 		
 		// initial Euclidean energy
 		ZeroU zeroU = new ZeroU();
