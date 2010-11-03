@@ -241,7 +241,6 @@ public class UnwrapUtility {
 				CoVertex v = e.getStartVertex();
 				Vector eVec = e.getVector();
 				double[] xArr = cVec.get(e, aSet);
-				double[] xOppArr = cVec.get(e.getOppositeEdge(), aSet);
 				Vector xVec = new Vector(xArr);
 				double[] nArr = aSet.get(Normal.class, e.getRightFace(), double[].class);
 				Vector nVec = new Vector(nArr);
@@ -255,17 +254,13 @@ public class UnwrapUtility {
 						if (edge.getLeftFace() == null) continue;
 						th += getAngle(edge);
 					}
-					if (th < PI) {
-						System.out.println("corner");
-					}
 					th *= surfaceOrientation;
 					double gamma =  normalizeAngle(th - alphaP + alpha);
 					if(abs(gamma) > PI/2) { // flip x
-						System.out.println("flip at " + v.getIndex());
+//						System.out.println("flip at " + v.getIndex());
 						alpha += PI;
 						normalizeAngle(alpha);
 						Rn.times(xArr, -1, xArr); // flip vector
-						Rn.times(xOppArr, -1, xOppArr); // flip opposite vector
 					}
 					double a1 = alpha < 0 ? alpha + 2*PI : alpha;
 					double a2 = alphaP < 0 ? alphaP + 2*PI : alphaP;
