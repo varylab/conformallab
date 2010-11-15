@@ -14,7 +14,7 @@ import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 
@@ -57,7 +57,7 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 	@Override
 	protected void perform() throws Exception {
 		writeComment("numVertex[1], absErr[2], argErr[3], reErr[4], imErr[5], gradNormSq[6]");
-		TypedAdapterSet<double[]> a = new TypedAdapterSet<double[]>(new PositionAdapter());
+		TypedAdapterSet<double[]> a = new TypedAdapterSet<double[]>(new CoPositionAdapter());
 		for (int i = 0; i < maxSubdivision; i ++) {
 			CoHDS hds = new CoHDS();
 			// predefined vertices

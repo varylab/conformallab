@@ -10,19 +10,19 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoVertex;
 
 @Position
-public class TexCoordPositionAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
+public class CoTexturePositionPositionAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
 
 	private HyperbolicModel
 		model = HyperbolicModel.Klein;
 	private boolean
 		projective = true;
 	
-	public TexCoordPositionAdapter(boolean projective) {
+	public CoTexturePositionPositionAdapter(boolean projective) {
 		super(CoVertex.class, null, null, double[].class, true, false);
 		this.projective = projective;
 	}
 
-	public TexCoordPositionAdapter(HyperbolicModel model, boolean projective) {
+	public CoTexturePositionPositionAdapter(HyperbolicModel model, boolean projective) {
 		this(projective);
 		this.model = model;
 	}

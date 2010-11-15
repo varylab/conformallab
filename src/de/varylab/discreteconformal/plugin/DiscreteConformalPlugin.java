@@ -81,9 +81,9 @@ import de.varylab.discreteconformal.heds.adapter.BranchPointColorAdapter;
 import de.varylab.discreteconformal.heds.adapter.BranchPointRadiusAdapter;
 import de.varylab.discreteconformal.heds.adapter.MarkedEdgesColorAdapter;
 import de.varylab.discreteconformal.heds.adapter.MarkedEdgesRadiusAdapter;
-import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
-import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
-import de.varylab.discreteconformal.heds.adapter.TexCoordPositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoTexturePositionPositionAdapter;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
@@ -185,7 +185,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		selectedVertexList = new JList();
 	private JScrollPane
 		selectionScroller = new JScrollPane(selectedVertexList);
-	private TexCoordPositionAdapter
+	private CoTexturePositionPositionAdapter
 		texCoordPositionAdapter = null;
 		
 		
@@ -244,7 +244,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		universalCoverAppearance.setAttribute(LIGHTING_ENABLED, false);
 		universalCoverAppearance.setAttribute(DIFFUSE_COLOR, WHITE);
 		
-		texCoordPositionAdapter = new TexCoordPositionAdapter(getSelectedModel(),useProjectiveTexture.isSelected());
+		texCoordPositionAdapter = new CoTexturePositionPositionAdapter(getSelectedModel(),useProjectiveTexture.isSelected());
 	}
 
 	
@@ -546,7 +546,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		}
 		hif.clearSelection();
 		boolean projective = useProjectiveTexture.isSelected();
-		hif.addLayerAdapter(new TexCoordAdapter(getSelectedModel(), projective),true);
+		hif.addLayerAdapter(new CoTexturePositionAdapter(getSelectedModel(), projective), false);
 		texCoordPositionAdapter.setProjective(projective);
 		texCoordPositionAdapter.setModel(getSelectedModel());
 		if (showUnwrapped.isSelected()) {
@@ -691,8 +691,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
-		hif.addGlobalAdapter(new PositionAdapter(), true);
-		hif.addGlobalAdapter(new TexCoordAdapter(0), true);
+		hif.addGlobalAdapter(new CoPositionAdapter(), true);
+		hif.addGlobalAdapter(new CoTexturePositionAdapter(0), true);
 		hif.addSelectionListener(this);
 	}
 	

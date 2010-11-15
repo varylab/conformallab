@@ -26,7 +26,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
@@ -149,7 +149,7 @@ public class DiscreteEllipticUtility {
 		}
 		
 		// convex hull
-		TypedAdapterSet<double[]> a = new TypedAdapterSet<double[]>(new PositionAdapter());
+		TypedAdapterSet<double[]> a = new TypedAdapterSet<double[]>(new CoPositionAdapter());
 		ConvexHull.convexHull(hds, a, 1E-8);
 		int vOffset = hds.numVertices();
 		int eOffset = hds.numEdges();

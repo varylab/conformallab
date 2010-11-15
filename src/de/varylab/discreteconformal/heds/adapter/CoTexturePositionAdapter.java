@@ -3,14 +3,14 @@ package de.varylab.discreteconformal.heds.adapter;
 import geom3d.Point;
 import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.type.TexCoordinate;
+import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoVertex;
 
-@TexCoordinate
-public class TexCoordAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
+@TexturePosition
+public class CoTexturePositionAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
 
 	private HyperbolicModel
 		model = HyperbolicModel.Klein;
@@ -20,18 +20,18 @@ public class TexCoordAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFa
 		priority = 1;
 	
 	
-	public TexCoordAdapter(int priority) {
+	public CoTexturePositionAdapter(int priority) {
 		super(CoVertex.class, null, null, double[].class, true, true);
 		this.projective = false;
 		this.priority = priority;
 	}
 	
-	public TexCoordAdapter(boolean projective) {
+	public CoTexturePositionAdapter(boolean projective) {
 		super(CoVertex.class, null, null, double[].class, true, true);
 		this.projective = projective;
 	}
 	
-	public TexCoordAdapter(HyperbolicModel model, boolean projective) {
+	public CoTexturePositionAdapter(HyperbolicModel model, boolean projective) {
 		this(projective);
 		this.model = model;
 	}
@@ -71,7 +71,9 @@ public class TexCoordAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFa
 			v.getTextureCoord().get()[1] = value[1];
 			v.getTextureCoord().get()[2] = 1.0;
 		} else {
-			v.getTextureCoord().set(value);
+			v.getTextureCoord().set(0, value[0]);
+			v.getTextureCoord().set(1, value[1]);
+			v.getTextureCoord().set(2, value[3]);
 		}
 	}
 	

@@ -35,7 +35,7 @@ import de.jtem.halfedgetools.adapter.type.Color;
 import de.jtem.halfedgetools.adapter.type.Radius;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
-import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.util.HomologyUtility;
 import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
 
@@ -55,7 +55,7 @@ public class HomologyTest {
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds converter = new ConverterJR2Heds();
 			hds = new CoHDS();
-			AdapterSet a = new AdapterSet(new PositionAdapter());
+			AdapterSet a = new AdapterSet(new CoPositionAdapter());
 			converter.ifs2heds(ifs, hds, a, null);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -172,7 +172,7 @@ public class HomologyTest {
 		
 		List<Set<CoEdge>> paths = HomologyUtility.getGeneratorPaths(root, new DefaultWeightAdapter<CoEdge>());
 		
-		PositionAdapter positionAdapter = new PositionAdapter();
+		CoPositionAdapter positionAdapter = new CoPositionAdapter();
 		EdgeColorAdapter colorAdapter = new EdgeColorAdapter(paths);
 		EdgeRadiusAdapter radiusAdapter = new EdgeRadiusAdapter(paths);
 		

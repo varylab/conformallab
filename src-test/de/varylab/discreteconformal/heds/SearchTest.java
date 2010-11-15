@@ -31,7 +31,7 @@ import de.jtem.halfedgetools.adapter.impl.DoubleArrayAdapter;
 import de.jtem.halfedgetools.adapter.type.Color;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
-import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.util.Search;
 import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
 
@@ -51,7 +51,7 @@ public class SearchTest {
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds converter = new ConverterJR2Heds();
 			hds = new CoHDS();
-			AdapterSet a = new AdapterSet(new PositionAdapter());
+			AdapterSet a = new AdapterSet(new CoPositionAdapter());
 			converter.ifs2heds(ifs, hds, a, null);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -116,7 +116,7 @@ public class SearchTest {
 		EdgeColorAdapter colorAdapter = new EdgeColorAdapter(tree, new HashSet<CoEdge>());
 		
 		ConverterHeds2JR converter = new ConverterHeds2JR();
-		AdapterSet a = new AdapterSet(new PositionAdapter());
+		AdapterSet a = new AdapterSet(new CoPositionAdapter());
 		a.add(colorAdapter);
 		IndexedFaceSet ifs = converter.heds2ifs(hds, a);
 		

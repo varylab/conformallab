@@ -31,7 +31,7 @@ import de.jtem.halfedgetools.adapter.impl.DoubleArrayAdapter;
 import de.jtem.halfedgetools.adapter.type.Color;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
-import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.util.SpanningTreeUtility;
 
 public class SpanningTreeTest {
@@ -50,7 +50,7 @@ public class SpanningTreeTest {
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds converter = new ConverterJR2Heds();
 			hds = new CoHDS();
-			AdapterSet a = new AdapterSet(new PositionAdapter());
+			AdapterSet a = new AdapterSet(new CoPositionAdapter());
 			converter.ifs2heds(ifs, hds, a, null);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -128,7 +128,7 @@ public class SpanningTreeTest {
 		Set<CoEdge> tree = test.makeSpanningTree(edges);
 		edges.removeAll(tree);
 		Set<CoEdge> treeDual = test.makeDualSpanningTree(edges);
-		PositionAdapter positionAdapter = new PositionAdapter();
+		CoPositionAdapter positionAdapter = new CoPositionAdapter();
 		EdgeColorAdapter colorAdapter = new EdgeColorAdapter(tree, treeDual);
 		
 		ConverterHeds2JR converter = new ConverterHeds2JR();

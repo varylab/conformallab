@@ -21,7 +21,7 @@ import de.jreality.util.Input;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
-import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility;
 
@@ -43,7 +43,7 @@ public class HyperbolicLayoutTest {
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds converter = new ConverterJR2Heds();
 			hds = new CoHDS();
-			AdapterSet a = new AdapterSet(new PositionAdapter());
+			AdapterSet a = new AdapterSet(new CoPositionAdapter());
 			converter.ifs2heds(ifs, hds, a, null);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -87,7 +87,7 @@ public class HyperbolicLayoutTest {
 	public static void main(String[] args) throws Exception{
 		setUpBeforeClass();
 		ConverterHeds2JR converter = new ConverterHeds2JR();
-		AdapterSet a = new AdapterSet(new PositionAdapter());
+		AdapterSet a = new AdapterSet(new CoPositionAdapter());
 		IndexedFaceSet ifs = converter.heds2ifs(hds, a);
 		String[] vertexLabels = new String[hds.numVertices()];
 		for (int  i = 0; i < hds.numVertices(); i++) {

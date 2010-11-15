@@ -9,6 +9,7 @@ import de.jreality.plugin.basic.ConsolePlugin;
 import de.jreality.plugin.experimental.WebContentLoader;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedgetools.JRHalfedgeViewer;
+import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgePluginFactory;
 import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
 import de.jtem.jrworkspace.plugin.Plugin;
@@ -16,6 +17,7 @@ import de.jtem.jrworkspace.plugin.lnfswitch.LookAndFeelSwitch;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.CrossPlatformLnF;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.NimbusLnF;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.SystemLookAndFeel;
+import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.EllipticImageGemerator;
 import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
@@ -59,6 +61,7 @@ public class ConformalLab {
 		v.registerPlugins(createConformalPlugins());
 		v.registerPlugins(HalfedgePluginFactory.createPlugins());
 		v.startup();
+		v.getPlugin(HalfedgeInterface.class).set(new CoHDS());
 	} 
 
 }
