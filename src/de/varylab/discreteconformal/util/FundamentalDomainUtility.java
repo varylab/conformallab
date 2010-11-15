@@ -8,10 +8,6 @@ import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 import static java.lang.Math.cos;
 import static java.lang.Math.signum;
 import static java.lang.Math.sin;
-import geom3d.Circle;
-import geom3d.Point;
-import geom3d.Triangle;
-import geom3d.Vector;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -69,9 +65,9 @@ public class FundamentalDomainUtility {
 				edges = new int[n * resolution][];	
 				break;
 		}
-		Point pRoot = cutInfo.cutRoot.getTextureCoord();
+		double[] pRoot = cutInfo.cutRoot.T;
 		
-		double[] root = new double[] {pRoot.x(), pRoot.y(), 0.0, pRoot.z()};
+		double[] root = new double[] {pRoot[0], pRoot[1], 0.0, pRoot[3]};
 		List<double[]> orbit = fundamentalPolygon.getOrbit(root);
 		for (int i = 0; i < n; i++) {
 			double[] pos = orbit.get(i);
@@ -219,53 +215,79 @@ public class FundamentalDomainUtility {
 		int res,
 		HyperbolicModel model
 	) {
-		Point p1 = null;
-		Point p2 = null;
-		Point p3 = null;
+		double[] p1 = null;
+		double[] p2 = null;
+		double[] p3 = null;
 		switch (model) {
 			case Klein:
-				p1 = new Point(p1a[0] / p1a[3], p1a[1] / p1a[3], 0);
-				p2 = new Point(p2a[0] / p2a[3], p2a[1] / p2a[3], 0);
-				p3 = new Point(p3a[0] / p3a[3], p3a[1] / p3a[3], 0);		
+				p1 = new double[] {p1a[0] / p1a[3], p1a[1] / p1a[3], 0};
+				p2 = new double[] {p2a[0] / p2a[3], p2a[1] / p2a[3], 0};
+				p3 = new double[] {p3a[0] / p3a[3], p3a[1] / p3a[3], 0};		
 				break;
 				default:
 			case Poincaré:
-				p1 = new Point(p1a[0] / (p1a[3] + 1), p1a[1] / (p1a[3] + 1), 0);
-				p2 = new Point(p2a[0] / (p2a[3] + 1), p2a[1] / (p2a[3] + 1), 0);
-				p3 = new Point(p3a[0] / (p3a[3] + 1), p3a[1] / (p3a[3] + 1), 0);
+				p1 = new double[] {p1a[0] / (p1a[3] + 1), p1a[1] / (p1a[3] + 1), 0};
+				p2 = new double[] {p2a[0] / (p2a[3] + 1), p2a[1] / (p2a[3] + 1), 0};
+				p3 = new double[] {p3a[0] / (p3a[3] + 1), p3a[1] / (p3a[3] + 1), 0};
 				break;
 			case Halfplane:
-				p1 = new Point(p1a[1] / (p1a[3] - p1a[0]), 1 / (p1a[3] - p1a[0]), 0);
-				p2 = new Point(p2a[1] / (p2a[3] - p2a[0]), 1 / (p2a[3] - p2a[0]), 0);
-				p3 = new Point(p3a[1] / (p3a[3] - p3a[0]), 1 / (p3a[3] - p3a[0]), 0);
+				p1 = new double[] {p1a[1] / (p1a[3] - p1a[0]), 1 / (p1a[3] - p1a[0]), 0};
+				p2 = new double[] {p2a[1] / (p2a[3] - p2a[0]), 1 / (p2a[3] - p2a[0]), 0};
+				p3 = new double[] {p3a[1] / (p3a[3] - p3a[0]), 1 / (p3a[3] - p3a[0]), 0};
 		}
 
-		Triangle t = new Triangle(p1, p2, p3);
 		try {
-			Circle c = t.getCircumCircle();
-			Point center = c.getCenter();
-			Vector vec1 = center.vectorTo(p1);
-			Vector vec2 = center.vectorTo(p2);
-			double angle = vec1.getAngle(vec2);
-			double startAngle = Math.atan2(vec1.y(), vec1.x());
-			angle *= signum(-vec2.x()*sin(startAngle) + vec2.y()*cos(startAngle));
+			double[] center = getCircumCenter(p1, p2, p3);
+			double cRad = Rn.euclideanDistance(p1, center);
+			double[] vec1 = Rn.subtract(null, p1, center);
+			double[] vec2 = Rn.subtract(null, p2, center);
+			double angle = Rn.euclideanAngle(vec1, vec2);
+			double startAngle = Math.atan2(vec1[1], vec1[0]);
+			angle *= signum(-vec2[0] * sin(startAngle) + vec2[1] * cos(startAngle));
 			
 			double degAngle = Math.toDegrees(angle);
 			double degStartAngle = Math.toDegrees(startAngle);
-			double centerX = (center.x() / 2 + 0.5) * res;
-			double centerY = (-center.y() / 2 + 0.5) * res;
-			double radius = (c.getRadius() / 2) * res;
+			double centerX = (center[0] / 2 + 0.5) * res;
+			double centerY = (-center[1] / 2 + 0.5) * res;
+			double radius = (cRad / 2) * res;
 			Arc2D arc = new Arc2D.Double(centerX - radius, centerY - radius, radius * 2, radius * 2, degStartAngle, degAngle, OPEN);
 			g.draw(arc);
 			
 		} catch (Exception e) {
-			int p1x = (int)((p1.x() / 2 + 0.5) * res);
-			int p1y = (int)((-p1.y() / 2 + 0.5) * res);
-			int p2x = (int)((p2.x() / 2 + 0.5) * res);
-			int p2y = (int)((-p2.y() / 2 + 0.5) * res);
+			int p1x = (int)((p1[0] / 2 + 0.5) * res);
+			int p1y = (int)((-p1[1] / 2 + 0.5) * res);
+			int p2x = (int)((p2[0] / 2 + 0.5) * res);
+			int p2y = (int)((-p2[1] / 2 + 0.5) * res);
 			g.drawLine(p1x, p1y, p2x, p2y);
 		}
 		
+	}
+	
+	
+	/**
+	 * Calculate the circum-center of a triangle in affine coordinates
+	 * @param Ap
+	 * @param Bp
+	 * @param Cp
+	 * @return
+	 */
+	public static double[] getCircumCenter(double[] Ap, double[] Bp, double[] Cp) {
+		double[] AB = Rn.subtract(null, Bp, Ap);
+		double[] AC = Rn.subtract(null, Cp, Ap);
+		double A = Rn.euclideanAngle(AB, AC);
+		double[] BC = Rn.subtract(null, Cp, Bp);
+		double[] BA = Rn.subtract(null, Ap, Bp);
+		double B = Rn.euclideanAngle(BC, BA);
+		double[] CB = Rn.subtract(null, Bp, Cp);
+		double[] CA = Rn.subtract(null, Ap, Cp);
+		double C = Rn.euclideanAngle(CB, CA);
+		double a = Rn.euclideanNorm(CB);
+		double b = Rn.euclideanNorm(CA);
+		double c = Rn.euclideanNorm(AB);
+		double x = 0.5 * a / Math.tan(A);
+		double y = 0.5 * b / Math.tan(B);
+		double z = 0.5 * c / Math.tan(C);
+		return new double[] {x, y, z};
 	}
 	
 	

@@ -2,7 +2,6 @@ package de.varylab.discreteconformal.util;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.signum;
-import geom3d.Point;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -16,6 +15,7 @@ import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 import com.wolfram.jlink.MathLinkFactory;
 
+import de.jreality.math.Pn;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -50,12 +50,12 @@ public class DiscreteEllipticUtility {
 		if (v1 == null) throw new RuntimeException("Connot calculate modulus. No cut-root copies found");
 		CoVertex v2 = cutInfo.vertexCopyMap.get(v1);
 		if (v2 == null) throw new RuntimeException("Connot calculate modulus. No second cut-root copy found");
-		Point t0 = v0.getTextureCoord();
-		Point t1 = v1.getTextureCoord();
-		Point t2 = v2.getTextureCoord();
-		Complex z0 = new Complex(t0.x() / t0.z(), t0.y() / t0.z());
-		Complex z1 = new Complex(t1.x() / t1.z(), t1.y() / t1.z());
-		Complex z2 = new Complex(t2.x() / t2.z(), t2.y() / t2.z());
+		double[] t0 = v0.T;
+		double[] t1 = v1.T;
+		double[] t2 = v2.T;
+		Complex z0 = new Complex(t0[0] / t0[3], t0[1] / t0[3]);
+		Complex z1 = new Complex(t1[0] / t1[3], t1[1] / t1[3]);
+		Complex z2 = new Complex(t2[0] / t2[3], t2[1] / t2[3]);
 		Complex w1 = z1.minus(z0);
 		Complex w2 = z2.minus(z0);
 		Complex tau = w2.divide(w1);
@@ -137,15 +137,13 @@ public class DiscreteEllipticUtility {
 		// additional points
 		Random rnd = new Random();
 		for (int i = 0; i < numExtraPoints; i++) {
-			double[] pos = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
 			CoVertex v = hds.addNewVertex();
-			v.setPosition(new Point(pos));
+			v.P = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian(), 1.0};
 		}
 		
 		// on the sphere
 		for (CoVertex v : hds.getVertices()) {
-			Point vec = v.getPosition();
-			vec.normalize();
+			Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 		}
 		
 		// convex hull
@@ -157,9 +155,8 @@ public class DiscreteEllipticUtility {
 		for (int i = 0; i < vOffset; i++) {
 			CoVertex v = hds.getVertex(i);
 			CoVertex vc = hds.getVertex(vOffset + i); 
-			Point p = v.getPosition();
-			Point p2 = new Point(p);
-			vc.setPosition(p2);
+			double[] p = v.P;
+			vc.P = p.clone();
 		}
 		
 		Set<CoVertex> path2Ends = new HashSet<CoVertex>();
@@ -192,17 +189,21 @@ public class DiscreteEllipticUtility {
 	
 	
 	
-	public static Complex calculateHalfPeriodRatioMathLink(Point p1, Point p2, Point p3, Point p4, KernelLink l) throws MathLinkException {
+	public static Complex calculateHalfPeriodRatioMathLink(double[] p1, double[] p2, double[] p3, double[] p4, KernelLink l) throws MathLinkException {
 		// to the sphere
-		p1.normalize();
-		p2.normalize();
-		p3.normalize();
-		p4.normalize();
+		Pn.setToLength(p1, p1, 1.0, Pn.EUCLIDEAN);
+		Pn.setToLength(p2, p2, 1.0, Pn.EUCLIDEAN);
+		Pn.setToLength(p3, p3, 1.0, Pn.EUCLIDEAN);
+		Pn.setToLength(p4, p4, 1.0, Pn.EUCLIDEAN);
+		Pn.dehomogenize(p1, p1);
+		Pn.dehomogenize(p2, p2);
+		Pn.dehomogenize(p3, p3);
+		Pn.dehomogenize(p4, p4);
 		// project stereographically
-		Complex z1 = new Complex(p1.x() / (1 - p1.z()), p1.y() / (1 - p1.z()));
-		Complex z2 = new Complex(p2.x() / (1 - p2.z()), p2.y() / (1 - p2.z()));
-		Complex z3 = new Complex(p3.x() / (1 - p3.z()), p3.y() / (1 - p3.z()));
-		Complex z4 = new Complex(p4.x() / (1 - p4.z()), p4.y() / (1 - p4.z()));
+		Complex z1 = new Complex(p1[0] / (1 - p1[2]), p1[1] / (1 - p1[2]));
+		Complex z2 = new Complex(p2[0] / (1 - p2[2]), p2[1] / (1 - p2[2]));
+		Complex z3 = new Complex(p3[0] / (1 - p3[2]), p3[1] / (1 - p3[2]));
+		Complex z4 = new Complex(p4[0] / (1 - p4[2]), p4[1] / (1 - p4[2]));
 		Complex e1 = toInfinitZeroSum(z1, z1, z2, z3, z4);
 		Complex e2 = toInfinitZeroSum(z2, z1, z2, z3, z4);
 		Complex e3 = toInfinitZeroSum(z3, z1, z2, z3, z4);
@@ -246,10 +247,10 @@ public class DiscreteEllipticUtility {
 		KernelLink link = MathLinkFactory.createKernelLink(mlargs);
 		link.discardAnswer();
 		
-		Point p1 = new Point(0.5257311122273196, 0.8506508082851774, -2.259622999145302E-9);
-		Point p2 = new Point(-7.865783539640066E-9, -0.525731111594899, -0.8506508086760348);
-		Point p3 = new Point(0.5257311164974198, -0.8506508056461103, -1.2759862959410077E-10);
-		Point p4 = new Point(5.046344158026151E-10, 0.5257311116954958, 0.8506508086138624);
+		double[] p1 = {0.5257311122273196, 0.8506508082851774, -2.259622999145302E-9, 1.0};
+		double[] p2 = {-7.865783539640066E-9, -0.525731111594899, -0.8506508086760348, 1.0};
+		double[] p3 = {0.5257311164974198, -0.8506508056461103, -1.2759862959410077E-10, 1.0};
+		double[] p4 = {5.046344158026151E-10, 0.5257311116954958, 0.8506508086138624, 1.0};
 		Complex tau1 = calculateHalfPeriodRatioMathLink(p1, p2, p3, p4, link);
 		System.out.println("tau1 = " + tau1);
 		

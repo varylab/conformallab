@@ -21,7 +21,7 @@ public class MarkedEdgesColorAdapter extends AbstractTypedAdapter<CoVertex, CoEd
 	private Random
 		rnd = new Random();
 	private double[]
-	    normalColor = {1, 1, 1};
+	    normalColor = {0.5, 0.5, 0.5};
 	private Map<Set<CoEdge>, double[]>
 		pathColors = new HashMap<Set<CoEdge>, double[]>();
 	

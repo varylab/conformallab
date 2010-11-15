@@ -13,7 +13,6 @@ import static java.lang.Math.sin;
 import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 import static java.util.Collections.sort;
-import geom3d.Point;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -31,6 +30,7 @@ import java.util.TreeSet;
 import no.uib.cipr.matrix.Vector;
 import de.jreality.math.Matrix;
 import de.jreality.math.Pn;
+import de.jreality.math.Rn;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -69,61 +69,58 @@ public class UniformizationUtility {
 	
 	
 	public static Matrix makeHyperbolicMotion(CoEdge s, CoEdge t) {
-		Point s1 = s.getStartVertex().getTextureCoord();
-		Point s2 = s.getTargetVertex().getTextureCoord();
-		Point t1 = t.getStartVertex().getTextureCoord();
-		Point t2 = t.getTargetVertex().getTextureCoord();
+		double[] s1 = s.getStartVertex().T;
+		double[] s2 = s.getTargetVertex().T;
+		double[] t1 = t.getStartVertex().T;
+		double[] t2 = t.getTargetVertex().T;
 		return makeHyperbolicMotion(s1, s2, t1, t2);
 	}
 		
-	public static Matrix makeHyperbolicMotion(Point s1, Point s2, Point t1, Point t2) {
-		geom3d.Vector ns = new geom3d.Vector(s1).cross(s2);
-		geom3d.Vector nt = new geom3d.Vector(t1).cross(t2);
+	public static Matrix makeHyperbolicMotion(double[] s14, double[] s24, double[] t14, double[] t24) {
+		double[] s1 = {s14[0], s14[1], s14[3]};
+		double[] s2 = {s24[0], s24[1], s24[3]};
+		double[] t1 = {t14[0], t14[1], t14[3]};
+		double[] t2 = {t24[0], t24[1], t24[3]};
+		double[] ns = Rn.crossProduct(null, s1, s2);
+		double[] nt = Rn.crossProduct(null, t1, t2);
 		
-		double s1s1 = Pn.innerProduct(s1.get(), s1.get(), HYPERBOLIC);
-		double t1t1 = Pn.innerProduct(t1.get(), t1.get(), HYPERBOLIC);
-		double s1s2 = Pn.innerProduct(s1.get(), s2.get(), HYPERBOLIC);
-		double t1t2 = Pn.innerProduct(t1.get(), t2.get(), HYPERBOLIC);
-		geom3d.Vector ws = new geom3d.Vector(s2).add(new Point(s1).times(s1s2 / s1s1).times(-1));
-		geom3d.Vector wt = new geom3d.Vector(t2).add(new Point(t1).times(t1t2 / t1t1).times(-1));
-		Pn.normalize(ws.get(), ws.get(), HYPERBOLIC);
-		Pn.normalize(wt.get(), wt.get(), HYPERBOLIC);
+		double s1s1 = Pn.innerProduct(s1, s1, HYPERBOLIC);
+		double t1t1 = Pn.innerProduct(t1, t1, HYPERBOLIC);
+		double s1s2 = Pn.innerProduct(s1, s2, HYPERBOLIC);
+		double t1t2 = Pn.innerProduct(t1, t2, HYPERBOLIC);
+		double[] ws = Rn.linearCombination(null, 1, s2, -s1s2 / s1s1, s2);
+		double[] wt = Rn.linearCombination(null, 1, t2, -t1t2 / t1t1, t1);
+		Pn.normalize(ws, ws, HYPERBOLIC);
+		Pn.normalize(wt, wt, HYPERBOLIC);
 		
-		double nss1 = Pn.innerProduct(ns.get(), s1.get(), HYPERBOLIC);
-		double ntt1 = Pn.innerProduct(nt.get(), t1.get(), HYPERBOLIC);
-		ns.add(new Point(s1).times(nss1 / s1s1).times(-1));
-		nt.add(new Point(t1).times(ntt1 / t1t1).times(-1));
+		double nss1 = Pn.innerProduct(ns, s1, HYPERBOLIC);
+		double ntt1 = Pn.innerProduct(nt, t1, HYPERBOLIC);
+		ns = Rn.linearCombination(null, 1, ns, -nss1 / s1s1, s1);
+		nt = Rn.linearCombination(null, 1, nt, -ntt1 / t1t1, t1);
 		
-		double nsws = Pn.innerProduct(ns.get(), ws.get(), HYPERBOLIC);
-		double ntwt = Pn.innerProduct(nt.get(), wt.get(), HYPERBOLIC);	
-		double wsws = Pn.innerProduct(ws.get(), ws.get(), HYPERBOLIC);
-		double wtwt = Pn.innerProduct(wt.get(), wt.get(), HYPERBOLIC);
-		ns.add(new Point(ws).times(nsws / wsws).times(-1));
-		nt.add(new Point(wt).times(ntwt / wtwt).times(-1));
-		Pn.normalize(ns.get(), ns.get(), HYPERBOLIC);
-		Pn.normalize(nt.get(), nt.get(), HYPERBOLIC);
-		
-		double[] sa1 = s1.get();
-		double[] wsa = ws.get();
-		double[] wta = wt.get();
-		double[] ta1 = t1.get();
-		double[] nsa = ns.get();
-		double[] nta = nt.get();
+		double nsws = Pn.innerProduct(ns, ws, HYPERBOLIC);
+		double ntwt = Pn.innerProduct(nt, wt, HYPERBOLIC);	
+		double wsws = Pn.innerProduct(ws, ws, HYPERBOLIC);
+		double wtwt = Pn.innerProduct(wt, wt, HYPERBOLIC);
+		ns = Rn.linearCombination(null, 1, ns, -nsws / wsws, ws);
+		nt = Rn.linearCombination(null, 1, nt, -ntwt / wtwt, wt);
+		Pn.normalize(ns, ns, HYPERBOLIC);
+		Pn.normalize(nt, nt, HYPERBOLIC);
 		
 		Matrix S = new Matrix(
-			nsa[0], wsa[0], 0, sa1[0],
-			nsa[1], wsa[1], 0, sa1[1],
+			ns[0], 	ws[0], 	0, 	s1[0],
+			ns[1], 	ws[1], 	0, 	s1[1],
 			0,		0, 		1, 		0,
-			nsa[2], wsa[2], 0, sa1[2]
+			ns[2],	ws[2], 	0, 	s1[2]
 		);
 		Matrix SInv = S.getTranspose();
 		SInv.multiplyOnLeft(E);
 		SInv.multiplyOnRight(E);
 		Matrix T = new Matrix(
-			nta[0], wta[0], 0, ta1[0],
-			nta[1], wta[1], 0, ta1[1],
+			nt[0], 	wt[0], 	0, 	t1[0],
+			nt[1], 	wt[1], 	0, 	t1[1],
 			0,		0, 		1, 		0,
-			nta[2], wta[2], 0, ta1[2]
+			nt[2], 	wt[2], 	0, 	t1[2]
 		);
 		Matrix R = Matrix.times(T, SInv);
 		return R;
@@ -327,10 +324,10 @@ public class UniformizationUtility {
 				FundamentalVertex end = branchMap.get(vTarget);
 				// hyperbolic motion
 				CoEdge coEdge = cutInfo.edgeCutMap.get(eActive.getOppositeEdge());
-				Point lastTargetPoint = firstOfSegment.getTargetVertex().getTextureCoord();
-				Point lastStartPoint = cutInfo.edgeCutMap.get(firstOfSegment).getStartVertex().getTextureCoord();
-				Point actTargetPoint = vTarget.getTextureCoord();
-				Point actStartPoint = coEdge.getTargetVertex().getTextureCoord();
+				double[] lastTargetPoint = firstOfSegment.getTargetVertex().T;
+				double[] lastStartPoint = cutInfo.edgeCutMap.get(firstOfSegment).getStartVertex().T;
+				double[] actTargetPoint = vTarget.T;
+				double[] actStartPoint = coEdge.getTargetVertex().T;
 				Matrix A = makeHyperbolicMotion(lastStartPoint, actStartPoint, lastTargetPoint, actTargetPoint);
 //				System.out.println("Dist start: " + Pn.distanceBetween(lastStartPoint.get(), actStartPoint.get(), HYPERBOLIC));
 //				System.out.println("Dist target: " + Pn.distanceBetween(lastTargetPoint.get(), actTargetPoint.get(), HYPERBOLIC));

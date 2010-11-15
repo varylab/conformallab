@@ -13,7 +13,7 @@ import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
 import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
-public class CHyperbolicUnwrapper implements Unwrapper{
+public class HyperbolicUnwrapper implements Unwrapper{
 
 	private double
 		gradTolerance = 1E-8;
@@ -22,7 +22,7 @@ public class CHyperbolicUnwrapper implements Unwrapper{
 	
 	@Override
 	public Vector unwrap(CoHDS surface, AdapterSet aSet) throws Exception {
-		UnwrapUtility.prepareInvariantDataHyperbolic(surface);
+		UnwrapUtility.prepareInvariantDataHyperbolic(surface, aSet);
 		
 		CHyperbolicOptimizable opt = new CHyperbolicOptimizable(surface);
 		int n = opt.getDomainDimension();

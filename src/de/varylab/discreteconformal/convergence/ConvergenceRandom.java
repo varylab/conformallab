@@ -3,7 +3,6 @@ package de.varylab.discreteconformal.convergence;
 import static de.varylab.discreteconformal.convergence.ConvergenceQuality.calculateQualityMeasure;
 import static java.lang.Double.POSITIVE_INFINITY;
 import static java.lang.Math.signum;
-import geom3d.Point;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -11,6 +10,7 @@ import java.util.Set;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import de.jreality.math.Pn;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.convergence.ConvergenceQuality.QualityMeasure;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -74,15 +74,14 @@ public class ConvergenceRandom extends ConvergenceSeries {
 			// predefined vertices
 			for (int vi = 0; vi < vertices.length; vi++) {
 				CoVertex v = hds.addNewVertex();
-				v.getPosition().set(vertices[vi][0], vertices[vi][1], vertices[vi][2]);	
+				v.P = new double[] {vertices[vi][0], vertices[vi][1], vertices[vi][2], 1.0};
+				Pn.setToLength(v.P, v.P, 1, Pn.EUCLIDEAN);
 			}
 			// additional points
 			for (int j = 0; j < i; j++) {
-				double[] pos = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
-				Point pointPos = new Point(pos);
-				pointPos.normalize();
 				CoVertex v = hds.addNewVertex();
-				v.setPosition(pointPos);
+				v.P = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian(), 1.0};
+				Pn.setToLength(v.P, v.P, 1, Pn.EUCLIDEAN);
 			}
 			// optimize triangulation
 			if (trianopt) {

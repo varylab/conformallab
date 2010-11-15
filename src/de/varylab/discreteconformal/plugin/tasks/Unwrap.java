@@ -17,14 +17,14 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout;
-import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapper;
-import de.varylab.discreteconformal.unwrapper.CHyperbolicUnwrapperPETSc;
+import de.varylab.discreteconformal.unwrapper.BoundaryMode;
+import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
+import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapper;
+import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapper;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
+import de.varylab.discreteconformal.unwrapper.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 import de.varylab.discreteconformal.util.CuttingUtility;
@@ -142,9 +142,9 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		default:
 			System.out.println("unwrapping surface of genus " + genus + "...");
 			if (usePetsc) {
-				unwrapper = new CHyperbolicUnwrapperPETSc();
+				unwrapper = new HyperbolicUnwrapperPETSc();
 			} else {
-				unwrapper = new CHyperbolicUnwrapper();
+				unwrapper = new HyperbolicUnwrapper();
 			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
@@ -155,7 +155,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			cutRoot = surface.getVertex(getMinUIndex(u));
 			cutInfo = cutManifoldToDisk(surface, cutRoot, hypWa);
 			CoVertex layoutRoot = surface.getVertex(getMaxUIndex(u));
-			layoutRoot = CHyperbolicLayout.doLayout(surface, layoutRoot, u);
+			layoutRoot = HyperbolicLayout.doLayout(surface, layoutRoot, u);
 			layoutTime = System.currentTimeMillis();
 			setProgress(100);
 			break;

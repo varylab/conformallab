@@ -1,8 +1,7 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode.Isometric;
-import static de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode.AllAngles;
-import geom3d.Point;
+import static de.varylab.discreteconformal.unwrapper.BoundaryMode.Isometric;
+import static de.varylab.discreteconformal.unwrapper.QuantizationMode.AllAngles;
 
 import java.util.Map;
 
@@ -10,6 +9,8 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
+import de.jreality.math.Pn;
+import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -41,7 +42,7 @@ public class SphericalUnwrapper implements Unwrapper{
 			Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);
 			for (CoVertex vOld : vMap.keySet()) {
 				CoVertex vNew = vMap.get(vOld);
-				vNew.setPosition(vOld.getPosition());
+				vNew.P = vOld.P.clone();
 			}			
 		}
 		
@@ -72,29 +73,26 @@ public class SphericalUnwrapper implements Unwrapper{
 		
 		// spherical mapping
 		for (CoVertex v : surface.getVertices()) {
-			Point t = v.getPosition();
-			t.setX(t.x() / t.z());
-			t.setY(t.y() / t.z());
-			t.setZ(1.0);
+			Pn.dehomogenize(v.T, v.T);
 		}
 		normalizeBeforeProjection(surface, 10.0);
 		inverseStereographicProjection(surface, 1.0);
-		v0.setTextureCoord(new Point(0.0, 0.0, 1.0));
+		v0.T = new double[] {0,0,1,1};
 		try {
 			SphericalNormalizer.normalize(surface);
 		} catch (NotConvergentException e) {
 			throw new UnwrapException("Sphere normalization did not succeed: " + e.getMessage());
 		}
-		for (CoVertex v : surface.getVertices()) {
-			v.setPosition(v.getTextureCoord());
-			Point p = v.getPosition();
-			Point t = v.getTextureCoord();
-			double U = Math.acos(p.z());
-			double V = Math.acos(p.x() / Math.sin(U));
-			t.setX(U);
-			t.setY(V);
-			t.setZ(1.0);
-		}
+//		for (CoVertex v : surface.getVertices()) {
+//			v.setPosition(v.getTextureCoord());
+//			Point p = v.getPosition();
+//			Point t = v.getTextureCoord();
+//			double U = Math.acos(p.z());
+//			double V = Math.acos(p.x() / Math.sin(U));
+//			t.setX(U);
+//			t.setY(V);
+//			t.setZ(1.0);
+//		}
 		return null;
 	}
 
@@ -107,43 +105,46 @@ public class SphericalUnwrapper implements Unwrapper{
 	 */
 	public static void inverseStereographicProjection(CoHDS hds, double scale){
 		for (CoVertex v : hds.getVertices()){
-			double x = v.getTextureCoord().x() / scale;
-			double y = v.getTextureCoord().y() / scale;
+			Pn.dehomogenize(v.T, v.T);
+			double x = v.T[0] / scale;
+			double y = v.T[1] / scale;
 			double nx = 2 * x;
 			double ny = x*x + y*y - 1;
 			double nz = 2 * y;
 			double nw = ny + 2;
-			v.getTextureCoord().set(nx / nw, ny / nw, nz / nw);
+			v.T = new double[] {nx / nw, ny / nw, nz / nw, 1.0};
 		}
 	}
 	
 	
-	public static Point baryCenter(CoHDS hds){
-		Point result = new Point(0,0,0);
+	public static double[] baryCenter(CoHDS hds){
+		double[] result = {0,0,0,1};
 		for (CoVertex v : hds.getVertices()){
-			result.add(v.getTextureCoord());
+			Rn.add(result, v.T, result);
 		}
-		result.times(1.0 / hds.numVertices());
-		return result;
+		return Rn.times(result, 1.0 / hds.numVertices(), result);
 	}
 	
 	
 	public static double meanRadius(CoHDS hds){
 		double result = 0;
+		double[] zero = {0,0,0,1};
 		for (CoVertex v : hds.getVertices()){
-			result += v.getTextureCoord().getLength();
+			result += Pn.distanceBetween(zero, v.T, Pn.EUCLIDEAN);
 		}
 		return result / hds.numVertices();
 	}
 	
 	public static void normalizeBeforeProjection(CoHDS hds, double scale){
-		Point offset = baryCenter(hds);
+		double[] offset = baryCenter(hds);
+		Pn.dehomogenize(offset, offset);
 		for (CoVertex v : hds.getVertices()){
-			v.getTextureCoord().subtract(offset);
+			Rn.subtract(v.T, v.T, offset);
+			v.T[3] = 1.0;
 		}
 		scale = meanRadius(hds) / scale;
 		for (CoVertex v : hds.getVertices()){
-			v.getTextureCoord().times(1 / scale);
+			v.T[3] *= scale;
 		}
 	
 	}

@@ -1,8 +1,5 @@
 package de.varylab.discreteconformal.convergence;
 
-import geom3d.Point;
-import geom3d.Vector;
-
 import java.io.FileWriter;
 import java.util.HashSet;
 import java.util.Set;
@@ -10,6 +7,8 @@ import java.util.Set;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import de.jreality.math.Pn;
+import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -118,13 +117,14 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			// predefined vertices
 			for (int vi = 0; vi < vertices.length; vi++) {
 				CoVertex v = hds.addNewVertex();
-				v.getPosition().set(vertices[vi][0], vertices[vi][1], vertices[vi][2]);	
+				v.P = new double[] {vertices[vi][0], vertices[vi][1], vertices[vi][2], 1.0};
+				Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 			}
 			// extra points
 			for (int j = 0; j < numExtraPoints; j++) {
 				CoVertex v = hds.addNewVertex();
-				v.getPosition().set(rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian());
-				v.getPosition().normalize();
+				v.P = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian(), 1.0};
+				Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 			}
 			// optimize triangulation
 			if (trianopt) {
@@ -187,12 +187,14 @@ public class ConvergenceQuality extends ConvergenceSeries {
 	public static double electrostaticEnergy(CoHDS hds) {
 		double E = 0.0; 
 		for (CoVertex v : hds.getVertices()) {
-			Point vPos = v.getPosition();
+			double[] vPos = v.P;
+			Pn.dehomogenize(vPos, vPos);
 			for (CoVertex w : hds.getVertices()) {
 				if (v == w) continue;
-				Point wPos = w.getPosition();
-				Vector dir = wPos.vectorTo(vPos);
-				double dsq = dir.dot(dir);
+				double[] wPos = w.P;
+				Pn.dehomogenize(wPos, wPos);
+				double[] dir = Rn.subtract(null, vPos, wPos);
+				double dsq = Rn.innerProduct(dir, dir);
 				if (dsq == 0) continue;
 				E += 1 / dsq;
 			}

@@ -9,6 +9,7 @@ import no.uib.cipr.matrix.sparse.SparseVector;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import de.jreality.math.Pn;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
@@ -16,6 +17,7 @@ import de.jreality.util.Input;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility;
 
@@ -40,20 +42,28 @@ public class EuclideanLayoutTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		UnwrapUtility.prepareInvariantDataEuclidean(hds, new AdapterSet());
+		AdapterSet a = AdapterSet.createGenericAdapters();
+		a.add(new CoPositionAdapter());
+		a.add(new CoPositionAdapter());
+		a.add(new CoTexturePositionAdapter());
+		UnwrapUtility.prepareInvariantDataEuclidean(hds, a);
 	}
 
 	@Test
 	public void testDoLayout() {
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds, new AdapterSet());
+		AdapterSet a = AdapterSet.createGenericAdapters();
+		a.add(new CoPositionAdapter());
+		a.add(new CoPositionAdapter());
+		a.add(new CoTexturePositionAdapter());
+		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds, a);
 		Vector u = new SparseVector(n);
 		EuclideanLayout.doLayout(hds, u);
 		
 		for (CoEdge e : hds.getPositiveEdges()) {
 			CoVertex s = e.getStartVertex();
 			CoVertex t = e.getTargetVertex();
-			double l1 = s.getPosition().distanceTo(t.getPosition());
-			double l2 = s.getTextureCoord().distanceTo(t.getTextureCoord());
+			double l1 = Pn.distanceBetween(s.P, t.P, Pn.EUCLIDEAN);
+			double l2 = Pn.distanceBetween(s.T, t.T, Pn.EUCLIDEAN);
 			Assert.assertEquals(l1, l2, 1E-6);
 		}
 	}

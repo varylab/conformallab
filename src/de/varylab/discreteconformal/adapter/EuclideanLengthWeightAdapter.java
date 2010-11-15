@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.adapter;
 
 import static java.lang.Math.exp;
 import no.uib.cipr.matrix.Vector;
+import de.jreality.math.Pn;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
@@ -29,7 +30,9 @@ public class EuclideanLengthWeightAdapter implements WeightAdapter<CoEdge> {
 	 */
 	public Double getNewLength(CoEdge e) {
 		if (u == null) {
-			return e.getLength();
+			double[] s = e.getStartVertex().P;
+			double[] t = e.getTargetVertex().P;
+			return Pn.distanceBetween(s, t, Pn.EUCLIDEAN);
 		}
 		CoVertex v1 = e.getStartVertex();
 		CoVertex v2 = e.getTargetVertex();

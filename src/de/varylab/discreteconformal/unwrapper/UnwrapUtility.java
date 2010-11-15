@@ -1,23 +1,22 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode.Isometric;
-import static de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode.AllAngles;
+import static de.varylab.discreteconformal.unwrapper.BoundaryMode.Isometric;
+import static de.varylab.discreteconformal.unwrapper.QuantizationMode.AllAngles;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.log;
 import static java.lang.Math.signum;
-import geom3d.Basis;
-import geom3d.Point;
-import geom3d.Vector;
 
 import java.util.Collection;
 
+import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.Adapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.CurvatureField;
-import de.jtem.halfedgetools.adapter.type.Normal;
+import de.jtem.halfedgetools.adapter.type.Length;
+import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.varylab.discreteconformal.functional.ConformalAdapters.InitialEnergy;
 import de.varylab.discreteconformal.functional.ConformalEuclideanFunctional;
@@ -34,23 +33,6 @@ import de.varylab.discreteconformal.unwrapper.numerics.ConformalEnergy;
 
 public class UnwrapUtility {
 
-	
-	public static enum QuantizationMode {
-		AllAngles,
-		Quads,
-		QuadsStrict,
-		Hexagons,
-		Straight
-	}
-	
-	
-	public static enum BoundaryMode {
-		Isometric,
-		Conformal,
-		ConformalCurvature
-	}
-	
-	
 	
 	private static class ZeroInitialEnergy implements InitialEnergy<CoFace> {
 		@Override
@@ -96,7 +78,7 @@ public class UnwrapUtility {
 	public static int prepareInvariantDataEuclidean(CoHDS hds, BoundaryMode bm, QuantizationMode qm, AdapterSet aSet) {
 		// set initial lambdas
 		for (final CoEdge e : hds.getPositiveEdges()) {
-			final double l = e.getLength();
+			double l = aSet.get(Length.class, e, Double.class);
 			e.setLambda(log(l));
 			e.getOppositeEdge().setLambda(e.getLambda());
 		}
@@ -104,22 +86,23 @@ public class UnwrapUtility {
 		Collection<CoEdge> edgeBoundary = HalfEdgeUtils.boundaryEdges(hds);
 		
 		// find reference normal
-		Vector refNormal = new Vector(0, 0, 0);
-		Point middle = new Point();
+		double[] refNormal = new double[3];
+		double[] middle = new double[4];
 		for (CoVertex v : vertexBoundary) {
-			middle.add(v.getPosition());
+			Pn.dehomogenize(v.P, v.P);
+			Rn.add(middle, v.P, middle);
 		}
-		middle.times(1.0 / vertexBoundary.size());
+		Rn.times(middle, 1.0 / vertexBoundary.size(), middle);
+		middle[3] = 1.0;
 		for (CoEdge e : edgeBoundary) {
-			Point p1 = e.getStartVertex().getPosition();
-			Point p2 = e.getTargetVertex().getPosition();
-			Vector bv = p1.vectorTo(p2);
-			Vector mv = p1.vectorTo(middle);
-			Vector n = new Vector(mv).cross(bv).normalize();
-			refNormal.add(n);
+			double[] p = e.getStartVertex().P;
+			Pn.dehomogenize(p, p);
+			double[] bv = aSet.get(EdgeVector.class, e, double[].class);
+			double[] mv = {middle[0] - p[0], middle[1] - p[1], middle[2] - p[1]};
+			double[] n = Rn.crossProduct(null, mv, bv);
+			Rn.add(refNormal, n, refNormal);
 		}
-		refNormal.times(1.0 / edgeBoundary.size());
-		refNormal.normalize();
+		Rn.normalize(refNormal, refNormal);
 		
 		// set thetas and solver indices
 		int bSize = 0;
@@ -127,9 +110,9 @@ public class UnwrapUtility {
 		double bSum = 0.0;
 		for (CoVertex v : hds.getVertices()) {
 			if (!HalfEdgeUtils.isBoundaryVertex(v)) {
-				if (v.getCustomInfo() != null && v.getCustomInfo().useCustomTheta) {
-					bSum += 2 * PI - v.getCustomInfo().theta;
-					v.setTheta(v.getCustomInfo().theta);
+				if (v.info != null && v.info.useCustomTheta) {
+					bSum += 2 * PI - v.info.theta;
+					v.setTheta(v.info.theta);
 				} else {
 					v.setTheta(2 * PI);
 				}
@@ -137,11 +120,11 @@ public class UnwrapUtility {
 				continue;
 			}
 			BoundaryMode mode = bm;
-			if (v.getCustomInfo() != null) {
-				if (v.getCustomInfo().useCustomTheta) {
+			if (v.info != null) {
+				if (v.info.useCustomTheta) {
 					mode = BoundaryMode.Conformal;
 				} else {
-					mode = v.getCustomInfo().boundaryMode;
+					mode = v.info.boundaryMode;
 				}
 			}
 			switch (mode) {
@@ -151,9 +134,9 @@ public class UnwrapUtility {
 				break;
 			case Conformal:
 				double theta = 0;
-				if (v.getCustomInfo() != null) {
-					if (v.getCustomInfo().useCustomTheta) {
-						v.setTheta(v.getCustomInfo().theta);
+				if (v.info != null) {
+					if (v.info.useCustomTheta) {
+						v.setTheta(v.info.theta);
 						v.setSolverIndex(dim++);
 						bSize++;
 						bSum += Math.PI - v.getTheta();
@@ -162,22 +145,19 @@ public class UnwrapUtility {
 				}
 				for (CoEdge edge : HalfEdgeUtils.incomingEdges(v)) {
 					if (edge.getLeftFace() == null) {
-						Point pv = v.getPosition();
-						Point p1 = edge.getStartVertex().getPosition();
-						Point p2 = edge.getNextEdge().getTargetVertex().getPosition();
-						Vector v1 = pv.vectorTo(p1);
-						Vector v2 = pv.vectorTo(p2);
-						Vector cr = new Vector(v1).cross(v2);
-						double x = v1.dot(v2);
-						double y = cr.getLength();
+						double[] v1 = aSet.get(EdgeVector.class, edge.getOppositeEdge(), double[].class);
+						double[] v2 = aSet.get(EdgeVector.class, edge.getNextEdge(), double[].class);
+						double[] cr = Rn.crossProduct(null, v1, v2); 
+						double x = Rn.innerProduct(v1, v2);
+						double y = Rn.euclideanNorm(cr);
 						theta = Math.atan2(y, x);
-						double check = cr.dot(refNormal);
+						double check = Rn.innerProduct(cr, refNormal);
 						if (check < 0) {
 							theta = 2*PI - theta;
 						}
 						QuantizationMode qMode = qm;
-						if (v.getCustomInfo() != null) {
-							qMode = v.getCustomInfo().quantizationMode;
+						if (v.info != null) {
+							qMode = v.info.quantizationMode;
 						}
 						switch (qMode) {
 						case AllAngles: break;
@@ -223,13 +203,13 @@ public class UnwrapUtility {
 		}
 		
 		if (bm == BoundaryMode.ConformalCurvature && bSize != 0) {
-			CoFace f0 = hds.getFace(0);
-			Vector f01 = f0.getBoundaryEdge().getVector();
-			Vector f02 = f0.getBoundaryEdge().getPreviousEdge().getOppositeEdge().getVector();
-			Vector f0N = new Vector(aSet.get(Normal.class, f0, double[].class));
-			Basis f0B = new Basis(f01, f02, f0N);
-			double surfaceOrientation = signum(f0B.getDeterminant());
-			System.out.println("surface orientation is " + surfaceOrientation);
+//			CoFace f0 = hds.getFace(0);
+//			double[] f01 = aSet.get(EdgeVector.class, f0.getBoundaryEdge(), double[].class);
+//			double[] f02 = aSet.get(EdgeVector.class, f0.getBoundaryEdge().getPreviousEdge().getOppositeEdge(), double[].class);
+//			double[] f0N = aSet.get(Normal.class, f0, double[].class);
+//			double[][] f0B = {f01, f02, f0N};
+//			double surfaceOrientation = signum(Rn.determinant(f0B));
+//			System.out.println("surface orientation is " + surfaceOrientation);
 			Adapter<double[]> cVec = aSet.query(CurvatureField.class, hds.getEdgeClass(), double[].class);
 			if (cVec == null) throw new RuntimeException("No curvature vector field on edges found");
 			Collection<CoEdge> bList = HalfEdgeUtils.boundaryEdges(hds);
@@ -239,28 +219,28 @@ public class UnwrapUtility {
 			Double alphaP = null;
 			do {
 				CoVertex v = e.getStartVertex();
-				Vector eVec = e.getVector();
-				double[] xArr = cVec.get(e, aSet);
-				Vector xVec = new Vector(xArr);
-				double[] nArr = aSet.get(Normal.class, e.getRightFace(), double[].class);
-				Vector nVec = new Vector(nArr);
-				Basis B = new Basis(nVec, eVec, xVec);
-				double sign = Math.signum(B.getDeterminant());
-				double alpha = normalizeAngle(eVec.getAngle(xVec) * sign);
+				double[] eVec = aSet.get(EdgeVector.class, e, double[].class);
+				double[] xVec = cVec.get(e, aSet);
+//				Vector xVec = new Vector(xArr);
+//				double[] nArr = aSet.get(Normal.class, e.getRightFace(), double[].class);
+//				Vector nVec = new Vector(nArr);
+//				Basis B = new Basis(nVec, eVec, xVec);
+//				double sign = Math.signum(B.getDeterminant());
+				double alpha = normalizeAngle(Rn.euclideanAngle(eVec, xVec));// * sign);
 				
 				if (alphaP != null) { // check if we must flip viVec
 					double th = 0.0;
 					for (CoEdge edge : HalfEdgeUtils.incomingEdges(v)) {
 						if (edge.getLeftFace() == null) continue;
-						th += getAngle(edge);
+						th += getAngle(edge, aSet);
 					}
-					th *= surfaceOrientation;
+//					th *= surfaceOrientation;
 					double gamma =  normalizeAngle(th - alphaP + alpha);
 					if(abs(gamma) > PI/2) { // flip x
 //						System.out.println("flip at " + v.getIndex());
 						alpha += PI;
 						normalizeAngle(alpha);
-						Rn.times(xArr, -1, xArr); // flip vector
+						Rn.times(xVec, -1, xVec); // flip vector
 					}
 					double a1 = alpha < 0 ? alpha + 2*PI : alpha;
 					double a2 = alphaP < 0 ? alphaP + 2*PI : alphaP;
@@ -327,16 +307,12 @@ public class UnwrapUtility {
 	 * @param e
 	 * @return
 	 */
-	public static double getAngle(CoEdge e) {
-		CoVertex v = e.getTargetVertex();
-		Point pv = v.getPosition();
-		Point p1 = e.getStartVertex().getPosition();
-		Point p2 = e.getNextEdge().getTargetVertex().getPosition();
-		Vector v1 = pv.vectorTo(p1);
-		Vector v2 = pv.vectorTo(p2);
-		Vector cr = new Vector(v1).cross(v2);
-		double x = v1.dot(v2);
-		double y = cr.getLength();
+	public static double getAngle(CoEdge e, AdapterSet a) {
+		double[] v1 = a.get(EdgeVector.class, e.getOppositeEdge(), double[].class);
+		double[] v2 = a.get(EdgeVector.class, e.getNextEdge(), double[].class);
+		double[] cr = Rn.crossProduct(null, v1, v2);
+		double x = Rn.innerProduct(v1, v2);
+		double y = Rn.euclideanNorm(cr);
 		return Math.atan2(y, x);
 	}
 	
@@ -349,10 +325,10 @@ public class UnwrapUtility {
 	 * @param boundary the boundary vertices which do not belong to the solver system
 	 * @return the dimension of the parameter space
 	 */
-	public static int prepareInvariantDataHyperbolic(CoHDS hds) {
+	public static int prepareInvariantDataHyperbolic(CoHDS hds, AdapterSet a) {
 		// set initial lambdas
 		for (final CoEdge e : hds.getPositiveEdges()) {
-			final double l = e.getLength();
+			double l = a.get(Length.class, e, Double.class);
 			e.setLambda(2*log(l));
 			e.getOppositeEdge().setLambda(e.getLambda());
 		}

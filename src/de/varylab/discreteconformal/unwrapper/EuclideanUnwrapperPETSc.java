@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode.AllAngles;
+import static de.varylab.discreteconformal.unwrapper.QuantizationMode.AllAngles;
 import static de.varylab.discreteconformal.util.SparseUtility.getPETScNonZeros;
 
 import java.util.Collection;
@@ -10,8 +10,6 @@ import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
 import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.PETSc;

@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.unwrapper;
 
 import java.util.Set;
 
+import de.jreality.math.Pn;
 import de.varylab.discreteconformal.functional.ElectrostaticSphereFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -56,9 +57,10 @@ public class SphereUtility {
 		int n = fun.getDimension(hds);
 		Vec u = new Vec(n);
 		for (CoVertex v : hds.getVertices()) {
-			u.setValue(v.getIndex() * 3 + 0, v.getPosition().get(0), InsertMode.INSERT_VALUES);
-			u.setValue(v.getIndex() * 3 + 1, v.getPosition().get(1), InsertMode.INSERT_VALUES);
-			u.setValue(v.getIndex() * 3 + 2, v.getPosition().get(2), InsertMode.INSERT_VALUES);
+			Pn.dehomogenize(v.P, v.P);
+			u.setValue(v.getIndex() * 3 + 0, v.P[0], InsertMode.INSERT_VALUES);
+			u.setValue(v.getIndex() * 3 + 1, v.P[1], InsertMode.INSERT_VALUES);
+			u.setValue(v.getIndex() * 3 + 2, v.P[2], InsertMode.INSERT_VALUES);
 		}
 		app.setInitialSolutionVec(u);
 		
@@ -70,10 +72,11 @@ public class SphereUtility {
 		optimizer.solve();
 		for (CoVertex v : hds.getVertices()) {
 			int i = v.getIndex() * 3;
-			v.getPosition().set(0, u.getValue(i + 0));
-			v.getPosition().set(1, u.getValue(i + 1));
-			v.getPosition().set(2, u.getValue(i + 2));
-			v.getPosition().normalize();
+			v.P[0] = u.getValue(i + 0);
+			v.P[1] = u.getValue(i + 1);
+			v.P[2] = u.getValue(i + 2);
+			v.P[3] = 1.0;
+			Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 		}
 	}
 	

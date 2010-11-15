@@ -25,7 +25,6 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.Search;
@@ -60,7 +59,7 @@ public class ConesUtility {
 					CoVertex nV = vMap.get(v);
 					nV.setSolverIndex(v.getSolverIndex());
 					nV.setTheta(v.getTheta());
-					nV.setPosition(v.getPosition());
+					nV.P = v.P.clone();
 				}
 				e.getOppositeEdge().setLambda(e.getLambda());
 				eOpp.getOppositeEdge().setLambda(eOpp.getLambda());
@@ -135,10 +134,10 @@ public class ConesUtility {
 		// custom cones
 		for (CoVertex v : hds.getVertices()) {
 			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
-			if (v.getCustomInfo() == null) continue;
-			if (v.getCustomInfo().useCustomTheta) {
+			if (v.info == null) continue;
+			if (v.info.useCustomTheta) {
 				v.setSolverIndex(0);
-				v.setTheta(v.getCustomInfo().theta);
+				v.setTheta(v.info.theta);
 				result.add(v);
 			}
 		}

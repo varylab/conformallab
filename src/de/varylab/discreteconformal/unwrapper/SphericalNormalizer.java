@@ -2,7 +2,6 @@ package de.varylab.discreteconformal.unwrapper;
 
 import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
-import geom3d.Point;
 
 import java.util.List;
 
@@ -10,6 +9,7 @@ import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
+import de.jreality.math.Pn;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.mtjoptimization.NotConvergentException;
@@ -71,12 +71,12 @@ public class SphericalNormalizer {
 		
 		// transform
 		for (CoVertex v : hds.getVertices()){
-			Point p = v.getTextureCoord();
-			Vector v1 = new DenseVector(new double[]{p.x(), p.y(), p.z(), 1.0});
+			Vector v1 = new DenseVector(v.T);
 			Vector newV = A_inv.mult(v1, new DenseVector(4));
-			p.set(0, newV.get(0) / newV.get(3));
-			p.set(1, newV.get(1) / newV.get(3));
-			p.set(2, newV.get(2) / newV.get(3));
+			v.T[0] = newV.get(0);
+			v.T[1] = newV.get(1);
+			v.T[2] = newV.get(2);
+			v.T[3] = newV.get(3);
 		}
 	}
 	
@@ -128,14 +128,16 @@ public class SphericalNormalizer {
 		public Double evaluate(Vector x) {
 			double result = 0;
 			double l = myLength(x);
-			for (CoVertex v : hds.getVertices())
-				result += log( dot(v.getTextureCoord(), x) / sqrt(l) );
+			for (CoVertex v : hds.getVertices()) {
+				Pn.dehomogenize(v.T, v.T);
+				result += log( dot(v.T, x) / sqrt(l) );
+			}
 			return result;
 		}
 
 		
-		private double dot(Point p, Vector x){
-			return -x.get(0)*p.x() - x.get(1)*p.y() - x.get(2)*p.z() + 1.0;
+		private double dot(double[] p, Vector x){
+			return -x.get(0)*p[0] - x.get(1)*p[1] - x.get(2)*p[2] + 1.0;
 		}
 		
 		
@@ -148,14 +150,13 @@ public class SphericalNormalizer {
 			List<CoVertex> vList = hds.getVertices(); 
 			for (int i = 0; i < 3; i++){
 				for (CoVertex v : vList){
-					Point p = v.getTextureCoord();
+					Pn.dehomogenize(v.T, v.T);
 					double pi = 0;
-					if (i == 0) pi = p.x();
-					if (i == 1) pi = p.y();
-					if (i == 2) pi = p.z();
+					if (i == 0) pi = v.T[0];
+					if (i == 1) pi = v.T[1];
+					if (i == 2) pi = v.T[2];
 					double xi = x.get(i);
-					
-					double dot = dot(v.getTextureCoord(), x);
+					double dot = dot(v.T, x);
 					double l = myLength(x);
 					
 					g.add(i, (-pi/dot + xi/l));
@@ -170,19 +171,19 @@ public class SphericalNormalizer {
 			for (int i = 0; i < 3; i++){
 				for (int j = 0; j < 3; j++){
 					for (CoVertex v : vList){
-						Point p = v.getTextureCoord();
+						Pn.dehomogenize(v.T, v.T);
 						double xi = x.get(i);
 						double xj = x.get(j);
 						double pi = 0;
-						if (i == 0) pi = p.x();
-						if (i == 1) pi = p.y();
-						if (i == 2) pi = p.z();
+						if (i == 0) pi = v.T[0];
+						if (i == 1) pi = v.T[1];
+						if (i == 2) pi = v.T[2];
 						double pj = 0;
-						if (j == 0) pj = p.x();
-						if (j == 1) pj = p.y();
-						if (j == 2) pj = p.z();
+						if (j == 0) pj = v.T[0];
+						if (j == 1) pj = v.T[1];
+						if (j == 2) pj = v.T[2];
 						
-						double d = dot(v.getTextureCoord(), x);
+						double d = dot(v.T, x);
 						double l = myLength(x);
 						double diag = i == j ? 1 : 0;
 						hess.add(i, j, diag/l + 2*xi*xj/(l*l) - pi*pj/(d*d));

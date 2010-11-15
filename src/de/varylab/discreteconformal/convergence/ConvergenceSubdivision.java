@@ -7,6 +7,7 @@ import java.util.Set;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import de.jreality.math.Pn;
 import de.jtem.halfedgetools.adapter.TypedAdapterSet;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.halfedgetools.algorithm.subdivision.LoopLinear;
@@ -63,13 +64,14 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 			// predefined vertices
 			for (int vi = 0; vi < vertices.length; vi++) {
 				CoVertex v = hds.addNewVertex();
-				v.getPosition().set(vertices[vi][0], vertices[vi][1], vertices[vi][2]);	
+				v.P = new double[] {vertices[vi][0], vertices[vi][1], vertices[vi][2], 1.0};
+				Pn.setToLength(v.P, v.P, 1, Pn.EUCLIDEAN);
 			}
 			// extra points
 			for (int j = 0; j < numExtraPoints; j++) {
 				CoVertex v = hds.addNewVertex();
-				v.getPosition().set(rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian());
-				v.getPosition().normalize();
+				v.P = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian(), 1.0};
+				Pn.setToLength(v.P, v.P, 1, Pn.EUCLIDEAN);
 			}
 			ConvexHull.convexHull(hds, a, 1E-8);
 			// subdivision
@@ -79,7 +81,7 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 				hds = subdivided;
 				// project to the sphere in every step
 				for (CoVertex v : hds.getVertices()) {
-					v.getPosition().normalize();
+					Pn.setToLength(v.P, v.P, 1, Pn.EUCLIDEAN);
 				}
 			}
 			int numVerts = hds.numVertices();

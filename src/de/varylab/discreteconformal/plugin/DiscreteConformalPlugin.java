@@ -14,7 +14,6 @@ import static java.awt.Color.WHITE;
 import static java.lang.Math.PI;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
-import geom3d.Point;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -79,15 +78,15 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.CustomVertexInfo;
 import de.varylab.discreteconformal.heds.adapter.BranchPointColorAdapter;
 import de.varylab.discreteconformal.heds.adapter.BranchPointRadiusAdapter;
-import de.varylab.discreteconformal.heds.adapter.MarkedEdgesColorAdapter;
-import de.varylab.discreteconformal.heds.adapter.MarkedEdgesRadiusAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionPositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.MarkedEdgesColorAdapter;
+import de.varylab.discreteconformal.heds.adapter.MarkedEdgesRadiusAdapter;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
+import de.varylab.discreteconformal.unwrapper.BoundaryMode;
+import de.varylab.discreteconformal.unwrapper.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.FundamentalDomainUtility;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;
@@ -119,6 +118,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	private int
 		genus = -1;
 
+	private CoTexturePositionAdapter
+		texturePositionAdapter = new CoTexturePositionAdapter();
+	private CoTexturePositionPositionAdapter
+		texCoordPositionAdapter = new CoTexturePositionPositionAdapter();
 	private MarkedEdgesColorAdapter
 		cutColorAdapter = new MarkedEdgesColorAdapter();
 	private MarkedEdgesRadiusAdapter
@@ -185,9 +188,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		selectedVertexList = new JList();
 	private JScrollPane
 		selectionScroller = new JScrollPane(selectedVertexList);
-	private CoTexturePositionPositionAdapter
-		texCoordPositionAdapter = null;
-		
 		
 	public DiscreteConformalPlugin() {
 		createLayout();
@@ -243,8 +243,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		universalCoverAppearance.setAttribute(FACE_DRAW, true);
 		universalCoverAppearance.setAttribute(LIGHTING_ENABLED, false);
 		universalCoverAppearance.setAttribute(DIFFUSE_COLOR, WHITE);
-		
-		texCoordPositionAdapter = new CoTexturePositionPositionAdapter(getSelectedModel(),useProjectiveTexture.isSelected());
 	}
 
 	
@@ -333,8 +331,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		for (Vertex<?,?,?> v : s.getVertices()) {
 			if (v instanceof CoVertex) {
 				CoVertex cov = (CoVertex)v;
-				if (cov.getCustomInfo() == null) {
-					cov.setCustomInfo(new CustomVertexInfo());
+				if (cov.info == null) {
+					cov.info = new CustomVertexInfo();
 				}
 				customVertices.add(cov);
 			}
@@ -357,10 +355,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	public void valueChanged(ListSelectionEvent e) {
 		if (selectedVertexList.getSelectedValue() == null) return;
 		CoVertex v = (CoVertex)selectedVertexList.getSelectedValue();
-		customModeCombo.setSelectedItem(v.getCustomInfo().boundaryMode);
-		customQuantizationCombo.setSelectedItem(v.getCustomInfo().quantizationMode);
-		useCustomThetaChecker.setSelected(v.getCustomInfo().useCustomTheta);
-		customThetaModel.setValue(Math.toDegrees(v.getCustomInfo().theta));
+		customModeCombo.setSelectedItem(v.info.boundaryMode);
+		customQuantizationCombo.setSelectedItem(v.info.quantizationMode);
+		useCustomThetaChecker.setSelected(v.info.useCustomTheta);
+		customThetaModel.setValue(Math.toDegrees(v.info.theta));
 	}
 	
 	@Override
@@ -369,7 +367,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		for (Object s : selectedVertexList.getSelectedValues()) {
 			CoVertex v = (CoVertex)s;
 			double thetaDeg = customThetaModel.getNumber().doubleValue();
-			v.getCustomInfo().theta = Math.toRadians(thetaDeg);
+			v.info.theta = Math.toRadians(thetaDeg);
 		}
 	}
 	
@@ -429,9 +427,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
-		if (
-			useProjectiveTexture == s ||
-			showFundamentalPolygon == s ||
+		if (showFundamentalPolygon == s ||
 			showGeometry == s ||
 			showPoygonTexture == s ||
 			showUnitCircle == s ||
@@ -454,7 +450,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			uw.addPropertyChangeListener(this);
 			uw.execute();
 		}
-		if (showUnwrapped == s || kleinButton == s || poincareButton == s || halfplaneButton == s) {
+		if (showUnwrapped == s || useProjectiveTexture == s || kleinButton == s || poincareButton == s || halfplaneButton == s) {
 			copiedGeometry.setGeometry(null);
 			updateSurface();
 			if (genus > 1) {
@@ -466,19 +462,19 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		if (customModeCombo == s) {
 			for (Object sel : selectedVertexList.getSelectedValues()) {
 				CoVertex v = (CoVertex)sel;
-				v.getCustomInfo().boundaryMode = (BoundaryMode)customModeCombo.getSelectedItem();
+				v.info.boundaryMode = (BoundaryMode)customModeCombo.getSelectedItem();
 			}
 		}
 		if (customQuantizationCombo == s) {
 			for (Object sel : selectedVertexList.getSelectedValues()) {
 				CoVertex v = (CoVertex)sel;
-				v.getCustomInfo().quantizationMode = (QuantizationMode)customQuantizationCombo.getSelectedItem();
+				v.info.quantizationMode = (QuantizationMode)customQuantizationCombo.getSelectedItem();
 			}
 		}
 		if (useCustomThetaChecker == s) {
 			for (Object sel : selectedVertexList.getSelectedValues()) {
 				CoVertex v = (CoVertex)sel;
-				v.getCustomInfo().useCustomTheta = useCustomThetaChecker.isSelected(); 
+				v.info.useCustomTheta = useCustomThetaChecker.isSelected(); 
 			}
 		}
 		if (checkGaussBonnetBtn == s) {
@@ -532,7 +528,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		// clear non-custom vertices
 		for (CoVertex v : surface.getVertices()) {
 			if (!customVertices.contains(v)) {
-				v.setCustomInfo(null);
+				v.info = null;
 			}
 		}
 		Triangulator.triangulate(surface);
@@ -545,21 +541,19 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			return;
 		}
 		hif.clearSelection();
-		boolean projective = useProjectiveTexture.isSelected();
-		hif.addLayerAdapter(new CoTexturePositionAdapter(getSelectedModel(), projective), false);
-		texCoordPositionAdapter.setProjective(projective);
+		texturePositionAdapter.setProjective(useProjectiveTexture.isSelected());
+		texturePositionAdapter.setModel(getSelectedModel());
 		texCoordPositionAdapter.setModel(getSelectedModel());
 		if (showUnwrapped.isSelected()) {
-			hif.addLayerAdapter(texCoordPositionAdapter,false);
+			hif.addLayerAdapter(texCoordPositionAdapter, true);
 		} else {
-			//adapters.add(new PositionAdapter()); ???
 			hif.removeAdapter(texCoordPositionAdapter);
 		}
 		if (genus >= 1) {
-			hif.addLayerAdapter(cutRadiusAdapter,false);
-			hif.addLayerAdapter(cutColorAdapter,false);
-			hif.addLayerAdapter(pointRadiusAdapter,false);
-			hif.addLayerAdapter(pointColorAdapter,false);
+//			hif.addLayerAdapter(cutRadiusAdapter,false);
+//			hif.addLayerAdapter(cutColorAdapter,false);
+//			hif.addLayerAdapter(pointRadiusAdapter,false);
+//			hif.addLayerAdapter(pointColorAdapter,false);
 		} else {
 			hif.removeAdapter(cutRadiusAdapter);
 			hif.removeAdapter(cutColorAdapter);
@@ -572,7 +566,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		hif.getActiveLayer().addTemporaryGeometry(copiedGeometry);
 		hif.getActiveLayer().addTemporaryGeometry(fundamentalPolygonRoot);
 		hif.getActiveLayer().addTemporaryGeometry(universalCoverRoot);
-		hif.encompassAll();
 	}
 	
 
@@ -583,8 +576,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	
 	
 	public void updatePolygonTexture(int depth, int resolution) {
-		Point pRoot = cutInfo.cutRoot.getTextureCoord();
-		double[] root = new double[] {pRoot.x(), pRoot.y(), 0.0, pRoot.z()};
+		double[] pRoot = cutInfo.cutRoot.T;
+		double[] root = new double[] {pRoot[0], pRoot[1], 0.0, pRoot[3]};
 		HyperbolicModel model = getSelectedModel();
 		polygonImage = FundamentalDomainUtility.createCoverTexture(root, fundamentalPolygon, depth, model, resolution);
 		updateStates();
@@ -692,7 +685,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
 		hif.addGlobalAdapter(new CoPositionAdapter(), true);
-		hif.addGlobalAdapter(new CoTexturePositionAdapter(0), true);
+		hif.addGlobalAdapter(texturePositionAdapter, true);
 		hif.addSelectionListener(this);
 	}
 	

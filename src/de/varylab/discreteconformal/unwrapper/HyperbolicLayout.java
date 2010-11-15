@@ -2,13 +2,14 @@ package de.varylab.discreteconformal.unwrapper;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static java.lang.Math.PI;
+import static java.lang.Math.cos;
 import static java.lang.Math.cosh;
 import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.max;
+import static java.lang.Math.sin;
 import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
-import geom3d.Point;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +24,7 @@ import java.util.TreeSet;
 
 import no.uib.cipr.matrix.Vector;
 import de.jreality.math.Pn;
+import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.adapter.LengthMapWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -32,7 +34,7 @@ import de.varylab.discreteconformal.util.NodeComparator;
 import de.varylab.discreteconformal.util.PathUtility;
 import de.varylab.discreteconformal.util.Search;
 
-public class CHyperbolicLayout {
+public class HyperbolicLayout {
 
 	
 	public static CoVertex guessRootVertex(
@@ -136,10 +138,9 @@ public class CHyperbolicLayout {
 		// vertices
 		Double d = lMap.get(e0);
 		
-		final Point p0 = new Point(0, 0, 1);
-		v1.setTextureCoord(p0);
-		final Point p1 = normalize(new Point(sinh(d), 0, cosh(d)).asPoint());
-		v2.setTextureCoord(p1);
+		v1.T = new double[] {0, 0, 0, 1};
+		v2.T = new double[] {sinh(d), 0, 0, cosh(d)};
+		Pn.normalize(v2.T, v2.T, Pn.HYPERBOLIC);
 		
 		visited.add(v1);
 		visited.add(v2);
@@ -166,10 +167,10 @@ public class CHyperbolicLayout {
 				if (!visited.contains(cVertex)) {
 					d = lMap.get(e);
 					double dCheck = lMap.get(next);
-					Point A = aVertex.getTextureCoord();
-					Point B = bVertex.getTextureCoord();
+					double[] A = aVertex.T;
+					double[] B = bVertex.T;
 					
-					Point C = null;
+					double[] C = null;
 					try {
 						C = layoutTriangle(A, B, alpha, d, dCheck);
 					} catch (Exception e2) {
@@ -177,7 +178,7 @@ public class CHyperbolicLayout {
 						//e2.printStackTrace();
 					}
 					if (C != null) {
-						cVertex.setTextureCoord(C);
+						cVertex.T = C;
 						visited.add(cVertex);
 						Qv.offer(cVertex);
 						Qe.offer(e);
@@ -192,74 +193,51 @@ public class CHyperbolicLayout {
 	
 	
 	
-	private static Point layoutTriangle(Point A, Point B, double alpha, double d, double dP) throws Exception {
-		/*
-		double distAB = Pn.distanceBetween(A.get(), B.get(), Pn.HYPERBOLIC);
-		MatrixBuilder Ttrans = MatrixBuilder.hyperbolic().translateFromTo(new double[] {0,0,1}, B.get());
-		MatrixBuilder Tscale = MatrixBuilder.hyperbolic().scale(d / distAB);
-		MatrixBuilder Trotate = MatrixBuilder.hyperbolic().rotateZ(alpha);
-		MatrixBuilder TtransInv = MatrixBuilder.hyperbolic().translateFromTo(B.get(), new double[] {0,0,1});
-		double[] cArr = TtransInv.getMatrix().multiplyVector(A.get());
-//		MatrixBuilder.hyperbolic().
-		Pn.normalize(cArr, cArr, Pn.HYPERBOLIC);
-		cArr = Trotate.getMatrix().multiplyVector(cArr); 
-		Pn.normalize(cArr, cArr, Pn.HYPERBOLIC);
-		cArr = Tscale.getMatrix().multiplyVector(cArr);
-		Pn.normalize(cArr, cArr, Pn.HYPERBOLIC);
-		cArr = Ttrans.getMatrix().multiplyVector(cArr);
-		Pn.normalize(cArr, cArr, Pn.HYPERBOLIC);
-
-		double[] bArr = TtransInv.getMatrix().multiplyVector(B.get());
-		Pn.normalize(bArr, bArr, Pn.HYPERBOLIC);
-		bArr = Trotate.getMatrix().multiplyVector(bArr);
-		Pn.normalize(bArr, bArr, Pn.HYPERBOLIC);
-		bArr = Tscale.getMatrix().multiplyVector(bArr);
-		Pn.normalize(bArr, bArr, Pn.HYPERBOLIC);
-		bArr = Ttrans.getMatrix().multiplyVector(bArr);
-		Pn.normalize(bArr, bArr, Pn.HYPERBOLIC);
-		
-
-		Point C = new Point(cArr);
-		double dist = Pn.distanceBetween(C.get(), A.get(), Pn.HYPERBOLIC);
-		if (Math.abs(dist - dP) > 1E-5) {
-			return null;
-		}
-		return C;
-		*/
-//		/*
-		Point BHat = new Point(B.x(), B.y(), -B.z());
-		Point AHat = new Point(A.x(), A.y(), -A.z());
-		Point lAB = normalize(new Point(A).cross(B).asPoint());
-		Point At = normalize(new Point(lAB).cross(BHat).asPoint());
-		Point AtPerp = normalize(new Point(AHat).cross(BHat).asPoint());
-		Point Ct = normalize(new Point(At).times(Math.cos(alpha)).add(new Point(AtPerp).times(Math.sin(alpha))).asPoint());
-		Point C1 = normalize(new Point(B).times(Math.cosh(d)).add(new Point(Ct).times(Math.sinh(d))).asPoint());
-		Point C2 = normalize(new Point(B).times(Math.cosh(d)).subtract(new Point(Ct).times(Math.sinh(d))).asPoint());
+	private static double[] layoutTriangle(double[] A, double[] B, double alpha, double d, double dP) throws Exception {
+		// calculation is in RP2
+		// project to RP2 
+		double[] A3 = {A[0], A[1], A[3]};
+		double[] B3 = {B[0], B[1], B[3]};
+		// polarize
+		double[] AHat = {A[0], A[1], -A[3]};
+		double[] BHat = {B[0], B[1], -B[3]};
+		double[] lAB = Rn.crossProduct(null, A3, B3);
+		normalize(lAB);
+		double[] At = Rn.crossProduct(null, lAB, BHat);
+		normalize(At);
+		double[] AtPerp = Rn.crossProduct(null, AHat, BHat);
+		normalize(AtPerp);
+		double[] Ct = Rn.linearCombination(null, cos(alpha), At, sin(alpha), AtPerp);
+		normalize(Ct);
+		double[] C1 = Rn.linearCombination(null, cosh(d), B3, sinh(d), Ct);
+		normalize(C1);
+		double[] C2 = Rn.linearCombination(null, cosh(d), B3, -sinh(d), Ct);
+		normalize(C2);
 		double d1 = Double.MAX_VALUE;
 		double d2 = Double.MAX_VALUE;
 		try {
-			d1 = Pn.distanceBetween(C1.get(), A.get(), Pn.HYPERBOLIC);
+			d1 = Pn.distanceBetween(C1, A3, Pn.HYPERBOLIC);
 		} catch (IllegalArgumentException iae) {}
 		try {
-			d2 = Pn.distanceBetween(C2.get(), A.get(), Pn.HYPERBOLIC);
+			d2 = Pn.distanceBetween(C2, A3, Pn.HYPERBOLIC);
 		} catch (IllegalArgumentException iae) {}
 		double dif1 = Math.abs(d1 - dP);
 		double dif2 = Math.abs(d2 - dP);
-		Point C = dif1 < dif2 ? C1 : C2; 
+		double[] C = dif1 < dif2 ? C1 : C2; 
 		double dif = dif1 < dif2 ? dif1 : dif2;
 		if (dif < 1E-5) {
-			return C;
+			// lift to RP3
+			return new double[] {C[0], C[1], 0, C[2]};
 		} else {
 			return null;
 		}
-//		*/
 	}
 	
 	
 	
 	
-	private static Point normalize(Point p) {
-		Pn.normalize(p.get(), p.get(), Pn.HYPERBOLIC);
+	private static double[] normalize(double[] p) {
+		Pn.normalize(p, p, Pn.HYPERBOLIC);
 		return p;
 	}
 	

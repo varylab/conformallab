@@ -33,7 +33,7 @@ public class BranchPointRadiusAdapter extends AbstractTypedAdapter<CoVertex, CoE
 		if (rootCopySet.contains(v) || branchSet.contains(v)) {
 			return 1.0;
 		} else {
-			return 0.0;
+			return 0.2;
 		}
 	}
 	

@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.convergence;
 
 import static de.jreality.scene.data.Attribute.COORDINATES;
-import geom3d.Point;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -17,6 +16,7 @@ import joptsimple.OptionSpec;
 import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkFactory;
 
+import de.jreality.math.Pn;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.PointSet;
 import de.jreality.scene.SceneGraphComponent;
@@ -164,10 +164,16 @@ public abstract class ConvergenceSeries {
 		};
 		KernelLink link = MathLinkFactory.createKernelLink(mlargs);
 		link.discardAnswer();
-		Point p1 = new Point(series.vertices[series.branchIndices[0]]);
-		Point p2 = new Point(series.vertices[series.branchIndices[1]]);
-		Point p3 = new Point(series.vertices[series.branchIndices[2]]);
-		Point p4 = new Point(series.vertices[series.branchIndices[3]]);
+		double[] p1 = series.vertices[series.branchIndices[0]];
+		double[] p2 = series.vertices[series.branchIndices[1]];
+		double[] p3 = series.vertices[series.branchIndices[2]];
+		double[] p4 = series.vertices[series.branchIndices[3]];
+		if (p1.length == 3) {
+			Pn.homogenize(p1, p1);
+			Pn.homogenize(p2, p2);
+			Pn.homogenize(p3, p3);
+			Pn.homogenize(p4, p4);
+		}
 		series.tauExpected = DiscreteEllipticUtility.calculateHalfPeriodRatioMathLink(p1, p2, p3, p4, link);
 		series.writeComment("Expected tau: " + series.tauExpected);
 		link.close();

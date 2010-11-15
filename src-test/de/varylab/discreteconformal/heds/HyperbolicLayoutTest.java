@@ -7,10 +7,12 @@ import no.uib.cipr.matrix.sparse.SparseVector;
 
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import de.jreality.math.Pn;
 import de.jreality.plugin.JRViewer;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
@@ -22,7 +24,8 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
-import de.varylab.discreteconformal.unwrapper.CHyperbolicLayout;
+import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
+import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility;
 
 public class HyperbolicLayoutTest {
@@ -48,7 +51,11 @@ public class HyperbolicLayoutTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		UnwrapUtility.prepareInvariantDataHyperbolic(hds);
+		AdapterSet a = AdapterSet.createGenericAdapters();
+		a.add(new CoPositionAdapter());
+		a.add(new CoPositionAdapter());
+		a.add(new CoTexturePositionAdapter());
+		UnwrapUtility.prepareInvariantDataHyperbolic(hds, a);
 	}
 
 	@AfterClass
@@ -69,19 +76,23 @@ public class HyperbolicLayoutTest {
 	@Test
 	public void testDoLayout() {
 		System.out.println("CLayoutTest.testDoLayout()");
-		int n = UnwrapUtility.prepareInvariantDataHyperbolic(hds);
+		AdapterSet a = AdapterSet.createGenericAdapters();
+		a.add(new CoPositionAdapter());
+		a.add(new CoPositionAdapter());
+		a.add(new CoTexturePositionAdapter());
+		int n = UnwrapUtility.prepareInvariantDataHyperbolic(hds, a);
 		Vector u = new SparseVector(n);
-		CHyperbolicLayout.doLayout(hds, hds.getVertex(0), u);
+		HyperbolicLayout.doLayout(hds, hds.getVertex(0), u);
 		
-//		for (CoEdge e : hds.getPositiveEdges()) {
-			//TODO figure out how a reasonable test looks like
-//			Point s = e.getStartVertex().getTextureCoord();
-//			Point t = e.getTargetVertex().getTextureCoord();
-			
-//			double l1 = Pn.distanceBetween(null, null, n)
-//			double l2 = s.getTextureCoord().distanceTo(t.getTextureCoord());
-//			Assert.assertEquals(l1, l2, 1E-3);
-//		}
+		for (CoEdge e : hds.getPositiveEdges()) {
+			double[] s = e.getStartVertex().P;
+			double[] t = e.getTargetVertex().P;
+			double[] st = e.getStartVertex().T;
+			double[] tt = e.getTargetVertex().T;
+			double l1 = Pn.distanceBetween(s, t, Pn.HYPERBOLIC);
+			double l2 = Pn.distanceBetween(st, tt, Pn.HYPERBOLIC);
+			Assert.assertEquals(l1, l2, 1E-3);
+		}
 	}
 
 	public static void main(String[] args) throws Exception{

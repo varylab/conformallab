@@ -1,6 +1,5 @@
 package de.varylab.discreteconformal.heds.adapter;
 
-import geom3d.Point;
 import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
@@ -19,6 +18,9 @@ public class CoTexturePositionAdapter extends AbstractTypedAdapter<CoVertex, CoE
 	private int
 		priority = 1;
 	
+	public CoTexturePositionAdapter() {
+		this(1);
+	}
 	
 	public CoTexturePositionAdapter(int priority) {
 		super(CoVertex.class, null, null, double[].class, true, true);
@@ -27,7 +29,7 @@ public class CoTexturePositionAdapter extends AbstractTypedAdapter<CoVertex, CoE
 	}
 	
 	public CoTexturePositionAdapter(boolean projective) {
-		super(CoVertex.class, null, null, double[].class, true, true);
+		this(1);
 		this.projective = projective;
 	}
 	
@@ -39,26 +41,26 @@ public class CoTexturePositionAdapter extends AbstractTypedAdapter<CoVertex, CoE
 	
 	@Override
 	public double[] getVertexValue(CoVertex v, AdapterSet a) {
-		Point t = v.getTextureCoord();
+		double[] t = v.T;
 		if (projective) {
 			switch (model) {
 				case Klein:
-					return new double[] {t.x(), t.y(), 0.0, t.z()};
+					return t;
 				case Poincaré: 
 				default:
-					return new double[] {t.x(), t.y(), 0.0, t.z() + 1};
+					return new double[] {t[0], t[1], 0.0, t[3] + 1};
 				case Halfplane:
-					return new double[] {t.y(), 1, 0.0, t.z() - t.x()};
+					return new double[] {t[1], 1, 0.0, t[3] - t[0]};
 			}
 		} else {
 			switch (model) {
 				case Klein:
-					return new double[] {t.x() / t.z(), t.y() / t.z()};
+					return new double[] {t[0] / t[3], t[1] / t[3]};
 				case Poincaré: 
 				default:
-					return new double[] {t.x() / (t.z() + 1), t.y() / (t.z() + 1)};
+					return new double[] {t[0] / (t[3] + 1), t[1] / (t[3] + 1)};
 				case Halfplane:
-					return new double[] {t.y() / (t.z() - t.x()), 1 / (t.z() - t.x())};
+					return new double[] {t[1] / (t[3] - t[0]), 1 / (t[3] - t[0])};
 			}
 		}
 	}
@@ -66,14 +68,14 @@ public class CoTexturePositionAdapter extends AbstractTypedAdapter<CoVertex, CoE
 	
 	@Override
 	public void setVertexValue(CoVertex v, double[] value, AdapterSet a) {
+		double[] t = v.T;
 		if (value.length == 2) {
-			v.getTextureCoord().get()[0] = value[0];
-			v.getTextureCoord().get()[1] = value[1];
-			v.getTextureCoord().get()[2] = 1.0;
+			t[0] = value[0];
+			t[1] = value[1];
+			t[2] = 0.0;
+			t[3] = 1.0;
 		} else {
-			v.getTextureCoord().set(0, value[0]);
-			v.getTextureCoord().set(1, value[1]);
-			v.getTextureCoord().set(2, value[3]);
+			t = value;
 		}
 	}
 	

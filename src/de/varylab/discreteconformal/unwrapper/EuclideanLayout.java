@@ -5,7 +5,6 @@ import static java.lang.Math.PI;
 import static java.lang.Math.cos;
 import static java.lang.Math.exp;
 import static java.lang.Math.sin;
-import geom3d.Point;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -15,6 +14,8 @@ import java.util.Queue;
 import java.util.Set;
 
 import no.uib.cipr.matrix.Vector;
+import de.jreality.math.Pn;
+import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -55,8 +56,8 @@ public class EuclideanLayout {
 
 		// vertices
 		Double l = getNewLength(e0, u);
-		v1.setTextureCoord(new Point(0, 0, 1.0));
-		v2.setTextureCoord(new Point(l, 0, 1.0));
+		v1.T = new double[] {0,0,0,1};
+		v2.T = new double[] {l,0,0,1};
 		visited.add(v1);
 		visited.add(v2);
 		
@@ -65,7 +66,7 @@ public class EuclideanLayout {
 			CoEdge inE = Qe.poll();
 			Double a = Qa.poll();
 			CoEdge outE = inE.getOppositeEdge();
-			Point tp = v.getTextureCoord();
+			double[] tp = v.T;
 			
 			CoEdge e = inE.getNextEdge();
 			Double globalAngle = a + PI;
@@ -87,8 +88,11 @@ public class EuclideanLayout {
 					Qa.offer(globalAngle);
 
 					l = getNewLength(e, u);
-					geom3d.Vector dif = new geom3d.Vector(cos(globalAngle), sin(globalAngle), 1.0).times(l);
-					nearVertex.getTextureCoord().set(tp).add(dif);
+					double[] dif = {cos(globalAngle), sin(globalAngle), 0.0, 1.0};
+					Rn.times(dif, l, dif);
+					double[] t = Rn.add(null, tp, dif);
+					t[3] = 1.0;
+					nearVertex.T = t;
 				} 
 				e = e.getOppositeEdge().getNextEdge();
 			}
@@ -97,9 +101,10 @@ public class EuclideanLayout {
 		// projective texture coordinates
 		for (CoVertex v : hds.getVertices()) {
 			double uv = v.getSolverIndex() < 0 ? 0.0 : u.get(v.getSolverIndex());
-			Point t = v.getTextureCoord();
+			double[] t = v.T;
 			double e = exp( -uv );
-			t.set(e * t.x(), e * t.y(), e);
+			Pn.dehomogenize(t, t);
+			Rn.times(t, e, t);
 		}
 		
 		assert (visited.size() == hds.numVertices());

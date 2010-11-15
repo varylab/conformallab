@@ -19,7 +19,7 @@ public class BranchPointColorAdapter extends AbstractTypedAdapter<CoVertex, CoEd
 	private Set<CoVertex>
 		branchSet = new HashSet<CoVertex>();
 	private double[]
-	    colorNormal = {1.0, 1.0, 1.0},
+	    colorNormal = {0.5, 0.5, 0.5},
 	    colorMarked = {1.0, 0.0, 0.0},
 		colorMarked2 = {0.0, 1.0, 0.0};
 	

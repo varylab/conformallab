@@ -11,7 +11,7 @@ import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.Vec;
 import de.varylab.jtao.Tao;
 
-public class CHyperbolicUnwrapperPETSc implements Unwrapper{
+public class HyperbolicUnwrapperPETSc implements Unwrapper{
 
 	private double
 		gradTolerance = 1E-8;
@@ -21,7 +21,7 @@ public class CHyperbolicUnwrapperPETSc implements Unwrapper{
 	
 	@Override
 	public Vector unwrap(CoHDS surface, AdapterSet aSet) throws Exception {
-		UnwrapUtility.prepareInvariantDataHyperbolic(surface);
+		UnwrapUtility.prepareInvariantDataHyperbolic(surface, aSet);
 		
 		Tao.Initialize();
 		CHyperbolicApplication app = new CHyperbolicApplication(surface);

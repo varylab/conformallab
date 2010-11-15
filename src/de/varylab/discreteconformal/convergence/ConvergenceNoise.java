@@ -10,6 +10,7 @@ import java.util.Set;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import de.jreality.math.Pn;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.convergence.ConvergenceQuality.QualityMeasure;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -49,7 +50,7 @@ public class ConvergenceNoise extends ConvergenceSeries {
 	protected void perform() throws Exception {
 		writeComment("index[1], absErr[2], argErr[3], reErr[4], imErr[5], quality[6]");
 		
-		double[] vPos = new double[3];
+		double[] vPos = {0,0,0,1};
 		for (int i = 0; i < numIterations; i ++) {
 			CoHDS hds = new CoHDS();
 			// predefined vertices
@@ -58,8 +59,8 @@ public class ConvergenceNoise extends ConvergenceSeries {
 				vPos[0] = vertices[vi][0] + noiseCoeff * rnd.nextDouble();
 				vPos[1] = vertices[vi][1] + noiseCoeff * rnd.nextDouble();
 				vPos[2] = vertices[vi][2] + noiseCoeff * rnd.nextDouble();
-				v.getPosition().set(vPos);	
-				v.getPosition().normalize();
+				v.P = vPos.clone();
+				Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 			}
 			Complex tau = null;
 			double meshQuality = 0.0;

@@ -1,8 +1,8 @@
 package de.varylab.discreteconformal.heds;
 
 import static java.lang.Math.PI;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
+import de.varylab.discreteconformal.unwrapper.BoundaryMode;
+import de.varylab.discreteconformal.unwrapper.QuantizationMode;
 
 public class CustomVertexInfo {
 
@@ -14,5 +14,16 @@ public class CustomVertexInfo {
 		boundaryMode = BoundaryMode.Isometric;
 	public QuantizationMode
 		quantizationMode = QuantizationMode.AllAngles;
+	
+
+	public CustomVertexInfo() {
+	}
+
+	public CustomVertexInfo(CustomVertexInfo info) {
+		this.useCustomTheta = info.useCustomTheta;
+		this.theta = info.theta;
+		this.boundaryMode = info.boundaryMode;
+		this.quantizationMode = info.quantizationMode;
+	}
 	
 }
