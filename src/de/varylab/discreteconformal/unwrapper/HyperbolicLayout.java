@@ -30,7 +30,7 @@ import de.varylab.discreteconformal.adapter.LengthMapWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.util.NodeComparator;
+import de.varylab.discreteconformal.util.NodeIndexComparator;
 import de.varylab.discreteconformal.util.PathUtility;
 import de.varylab.discreteconformal.util.Search;
 
@@ -44,7 +44,7 @@ public class HyperbolicLayout {
 	) {
 		Random rnd = new Random();
 		
-		Set<CoVertex> boundary = new TreeSet<CoVertex>(new NodeComparator<CoVertex>());
+		Set<CoVertex> boundary = new TreeSet<CoVertex>(new NodeIndexComparator<CoVertex>());
 		boundary.addAll(HalfEdgeUtils.boundaryVertices(hds));
 		Set<CoVertex> mcBoundarySet = new HashSet<CoVertex>();
 		Iterator<CoVertex> boundaryIterator = boundary.iterator();

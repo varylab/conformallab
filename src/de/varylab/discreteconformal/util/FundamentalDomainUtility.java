@@ -271,23 +271,19 @@ public class FundamentalDomainUtility {
 	 * @param Cp
 	 * @return
 	 */
-	public static double[] getCircumCenter(double[] Ap, double[] Bp, double[] Cp) {
-		double[] AB = Rn.subtract(null, Bp, Ap);
-		double[] AC = Rn.subtract(null, Cp, Ap);
-		double A = Rn.euclideanAngle(AB, AC);
-		double[] BC = Rn.subtract(null, Cp, Bp);
-		double[] BA = Rn.subtract(null, Ap, Bp);
-		double B = Rn.euclideanAngle(BC, BA);
-		double[] CB = Rn.subtract(null, Bp, Cp);
-		double[] CA = Rn.subtract(null, Ap, Cp);
-		double C = Rn.euclideanAngle(CB, CA);
-		double a = Rn.euclideanNorm(CB);
-		double b = Rn.euclideanNorm(CA);
-		double c = Rn.euclideanNorm(AB);
-		double x = 0.5 * a / Math.tan(A);
-		double y = 0.5 * b / Math.tan(B);
-		double z = 0.5 * c / Math.tan(C);
-		return new double[] {x, y, z};
+	public static double[] getCircumCenter(double[] A, double[] B, double[] C) {
+		double a = Rn.euclideanDistance(B, C);
+		double b = Rn.euclideanDistance(C, A);
+		double c = Rn.euclideanDistance(A, B);
+		double ca = a*a*(b*b + c*c - a*a);
+		double cb = b*b*(c*c + a*a - b*b);
+		double cc = c*c*(a*a + b*b - c*c);
+		double l = ca + cb + cc;
+		double[] r = {0, 0, 0};
+		r[0] = (ca*A[0] + cb*B[0] + cc*C[0]) / l;
+		r[1] = (ca*A[1] + cb*B[1] + cc*C[1]) / l;
+		r[2] = (ca*A[2] + cb*B[2] + cc*C[2]) / l;
+		return r;
 	}
 	
 	

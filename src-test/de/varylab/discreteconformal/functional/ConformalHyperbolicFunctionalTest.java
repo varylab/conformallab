@@ -1,4 +1,4 @@
-package de.jtem.halfedgetools.functional.conformal;
+package de.varylab.discreteconformal.functional;
 
 import java.util.Random;
 
@@ -6,16 +6,16 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
-import de.jtem.halfedgetools.functional.conformal.hds.ConformalHDS;
-import de.jtem.halfedgetools.functional.conformal.hds.MyConformalEdge;
-import de.jtem.halfedgetools.functional.conformal.hds.MyConformalFace;
-import de.jtem.halfedgetools.functional.conformal.hds.MyConformalVertex;
-import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CAlpha;
-import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CInitialEnergy;
-import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CLambda;
-import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CTheta;
-import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CVariable;
 import de.varylab.discreteconformal.functional.ConformalHyperbolicFunctional;
+import de.varylab.discreteconformal.functional.hds.ConformalHDS;
+import de.varylab.discreteconformal.functional.hds.MyConformalEdge;
+import de.varylab.discreteconformal.functional.hds.MyConformalFace;
+import de.varylab.discreteconformal.functional.hds.MyConformalVertex;
+import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CAlpha;
+import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CInitialEnergy;
+import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CLambda;
+import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CTheta;
+import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CVariable;
 
 public class ConformalHyperbolicFunctionalTest extends FunctionalTest<MyConformalVertex, MyConformalEdge, MyConformalFace> {
 

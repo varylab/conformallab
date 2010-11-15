@@ -88,7 +88,7 @@ public class UniformizationUtility {
 		double t1t1 = Pn.innerProduct(t1, t1, HYPERBOLIC);
 		double s1s2 = Pn.innerProduct(s1, s2, HYPERBOLIC);
 		double t1t2 = Pn.innerProduct(t1, t2, HYPERBOLIC);
-		double[] ws = Rn.linearCombination(null, 1, s2, -s1s2 / s1s1, s2);
+		double[] ws = Rn.linearCombination(null, 1, s2, -s1s2 / s1s1, s1);
 		double[] wt = Rn.linearCombination(null, 1, t2, -t1t2 / t1t1, t1);
 		Pn.normalize(ws, ws, HYPERBOLIC);
 		Pn.normalize(wt, wt, HYPERBOLIC);
@@ -238,6 +238,7 @@ public class UniformizationUtility {
 				T.multiplyOnRight(active.motion);
 				active = active.partner.nextEdge;
 			} while (active != start);
+			System.out.println("Dual orbit transform: " + T.toString());
 			return result;
 		}
 		

@@ -1,4 +1,4 @@
-package de.jtem.halfedgetools.functional.conformal.hds;
+package de.varylab.discreteconformal.functional.hds;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.log;
@@ -10,13 +10,13 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.MyEnergy;
-import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CAlpha;
-import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CLambda;
-import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CTheta;
-import de.jtem.halfedgetools.functional.conformal.hds.MyConformalAdapters.CVariable;
 import de.varylab.discreteconformal.functional.ConformalEuclideanFunctional;
 import de.varylab.discreteconformal.functional.ConformalHyperbolicFunctional;
 import de.varylab.discreteconformal.functional.ConformalAdapters.InitialEnergy;
+import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CAlpha;
+import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CLambda;
+import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CTheta;
+import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CVariable;
 
 public class ConformalHDS extends HalfEdgeDataStructure<MyConformalVertex, MyConformalEdge, MyConformalFace> {
 

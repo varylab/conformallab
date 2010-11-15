@@ -1,4 +1,4 @@
-package de.jtem.halfedgetools.functional.conformal;
+package de.varylab.discreteconformal.functional;
 
 import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 

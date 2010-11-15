@@ -1,4 +1,4 @@
-package de.jtem.halfedgetools.functional.conformal.hds;
+package de.varylab.discreteconformal.functional.hds;
 
 import de.varylab.discreteconformal.functional.ConformalAdapters.Alpha;
 import de.varylab.discreteconformal.functional.ConformalAdapters.InitialEnergy;

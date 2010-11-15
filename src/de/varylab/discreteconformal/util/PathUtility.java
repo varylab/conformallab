@@ -27,7 +27,7 @@ public class PathUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> Set<V> getVerticesOnPath(Iterable<E> path) {
-		Set<V> result = new TreeSet<V>(new NodeComparator<V>());
+		Set<V> result = new TreeSet<V>(new NodeIndexComparator<V>());
 		for (E e : path) {
 			result.add(e.getStartVertex());
 			result.add(e.getTargetVertex());
@@ -62,7 +62,7 @@ public class PathUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> Set<E> getFullPath(Iterable<E> path) {
-		Set<E> result = new TreeSet<E>(new NodeComparator<E>());
+		Set<E> result = new TreeSet<E>(new NodeIndexComparator<E>());
 		for (E e : path) {
 			result.add(e);
 			result.add(e.getOppositeEdge());

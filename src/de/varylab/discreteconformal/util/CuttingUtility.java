@@ -41,7 +41,7 @@ public class CuttingUtility {
 			vertexCopyMap = new HashMap<V, V>();
 		
 		public Set<V> getCopies(V v) {
-			Set<V> copies = new TreeSet<V>(new NodeComparator<V>());
+			Set<V> copies = new TreeSet<V>(new NodeIndexComparator<V>());
 			for (V cV : vertexCopyMap.keySet()) {
 				V tmpV = vertexCopyMap.get(cV);
 				while (tmpV != null) {
@@ -61,7 +61,7 @@ public class CuttingUtility {
 		}
 		
 		public Set<V> getBranchSet() {
-			Set<V> branches = new TreeSet<V>(new NodeComparator<V>());
+			Set<V> branches = new TreeSet<V>(new NodeIndexComparator<V>());
 			for (V v : vertexCopyMap.keySet()) {
 				V copy = vertexCopyMap.get(v);
 				V branchCopy = vertexCopyMap.get(copy);
@@ -116,7 +116,7 @@ public class CuttingUtility {
 		context.paths.add(new HashSet<E>(path1));
 		cutAlongPath(path1, context);
 		for (Set<E> path : context.paths) {
-			Set<E> coPath = new TreeSet<E>(new NodeComparator<E>());
+			Set<E> coPath = new TreeSet<E>(new NodeIndexComparator<E>());
 			context.pathCutMap.put(path, coPath);
 			for (E e : path) {
 				E coE = context.edgeCutMap.get(e);
@@ -176,7 +176,7 @@ public class CuttingUtility {
 		for(Set<E> path : HomologyUtility.getGeneratorPaths(root, wa)) {
 			context.paths.add(path) ;
 		}
-		Set<E> masterPath = new TreeSet<E>(new NodeComparator<E>());
+		Set<E> masterPath = new TreeSet<E>(new NodeIndexComparator<E>());
 		for (Set<E> path : context.paths) {
 			masterPath.addAll(path);
 		}
@@ -196,7 +196,7 @@ public class CuttingUtility {
 			}
 		}
 		for (Set<E> path : context.paths) {
-			Set<E> coPath = new TreeSet<E>(new NodeComparator<E>());
+			Set<E> coPath = new TreeSet<E>(new NodeIndexComparator<E>());
 			context.pathCutMap.put(path, coPath);
 			for (E e : path) {
 				E coE = context.edgeCutMap.get(e);

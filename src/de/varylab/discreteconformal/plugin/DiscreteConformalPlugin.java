@@ -566,6 +566,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		hif.getActiveLayer().addTemporaryGeometry(copiedGeometry);
 		hif.getActiveLayer().addTemporaryGeometry(fundamentalPolygonRoot);
 		hif.getActiveLayer().addTemporaryGeometry(universalCoverRoot);
+		hif.encompassAll();
 	}
 	
 

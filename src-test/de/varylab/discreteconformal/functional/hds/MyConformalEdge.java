@@ -1,4 +1,4 @@
-package de.jtem.halfedgetools.functional.conformal.hds;
+package de.varylab.discreteconformal.functional.hds;
 
 import javax.vecmath.Point3d;
 

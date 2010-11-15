@@ -23,7 +23,7 @@ public class HomologyUtility {
 		F extends Face<V, E, F>
 	> Set<E> findCycle(Set<E> set, E bridge) {
 		List<E> path = Search.bFS(set, bridge.getTargetVertex(), bridge.getStartVertex());
-		Set<E> r = new TreeSet<E>(new NodeComparator<E>());
+		Set<E> r = new TreeSet<E>(new NodeIndexComparator<E>());
 		r.addAll(path);
 		r.add(bridge);
 		return r;
@@ -48,9 +48,9 @@ public class HomologyUtility {
 		List<Set<E>> result = new ArrayList<Set<E>>();
 		
 		HalfEdgeDataStructure<V, E, F> hds = root.getHalfEdgeDataStructure();
-		Set<E> edgeSet = new TreeSet<E>(new NodeComparator<E>());
+		Set<E> edgeSet = new TreeSet<E>(new NodeIndexComparator<E>());
 		edgeSet.addAll(hds.getEdges());
-		Set<V> vSet = new TreeSet<V>(new NodeComparator<V>());
+		Set<V> vSet = new TreeSet<V>(new NodeIndexComparator<V>());
 		vSet.addAll(hds.getVertices());
 		Set<E> tree1 = Search.getAllShortestPathsTree(root, vSet, wa, new HashSet<V>());
 		edgeSet.removeAll(tree1);
@@ -78,9 +78,9 @@ public class HomologyUtility {
 		Set<List<E>> result = new HashSet<List<E>>();
 		
 		HalfEdgeDataStructure<V, E, F> hds = root.getHalfEdgeDataStructure();
-		Set<E> edgeSet = new TreeSet<E>(new NodeComparator<E>());
+		Set<E> edgeSet = new TreeSet<E>(new NodeIndexComparator<E>());
 		edgeSet.addAll(hds.getEdges());
-		Set<V> vSet = new TreeSet<V>(new NodeComparator<V>());
+		Set<V> vSet = new TreeSet<V>(new NodeIndexComparator<V>());
 		vSet.addAll(hds.getVertices());
 		Set<E> tree1 = Search.getAllShortestPathsTree(root, vSet, wa, new HashSet<V>());
 		edgeSet.removeAll(tree1);

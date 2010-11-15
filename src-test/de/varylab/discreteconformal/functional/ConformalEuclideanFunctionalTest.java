@@ -1,4 +1,4 @@
-package de.jtem.halfedgetools.functional.conformal;
+package de.varylab.discreteconformal.functional;
 
 import java.io.IOException;
 import java.util.Random;

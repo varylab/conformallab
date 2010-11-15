@@ -21,7 +21,7 @@ public class SpanningTreeUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> Set<E> getSpanningTree(Set<E> edges, E root) {
-		Set<E> r = new TreeSet<E>(new NodeComparator<E>());
+		Set<E> r = new TreeSet<E>(new NodeIndexComparator<E>());
 		if (root.getHalfEdgeDataStructure().numVertices() <= 1) {
 			return r;
 		}
@@ -46,14 +46,14 @@ public class SpanningTreeUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	>  Set<E> growTree(Set<E> edges, Set<E> tree, E branch) {
-		Set<E> r = new TreeSet<E>(new NodeComparator<E>());
+		Set<E> r = new TreeSet<E>(new NodeIndexComparator<E>());
 		V t = branch.getTargetVertex();
 		List<E> star = incomingEdges(t);
 		for (E e : star) {
 			if (!edges.contains(e)) {
 				continue;
 			}
-			Set<E> nextStar = new TreeSet<E>(new NodeComparator<E>());
+			Set<E> nextStar = new TreeSet<E>(new NodeIndexComparator<E>());
 			nextStar.addAll(incomingEdges(e.getStartVertex()));
 			nextStar.retainAll(tree);
 			if (nextStar.size() != 0) {
@@ -73,7 +73,7 @@ public class SpanningTreeUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	>  Set<E> growTreeDual(Set<E> edges, Set<E> tree, E branch) {
-		Set<E> r = new TreeSet<E>(new NodeComparator<E>());
+		Set<E> r = new TreeSet<E>(new NodeIndexComparator<E>());
 		F t = branch.getLeftFace();
 		List<E> star = HalfEdgeUtils.boundaryEdges(t);
 		for (E e : star) {
@@ -84,7 +84,7 @@ public class SpanningTreeUtility {
 			if (next == null) {
 				continue;
 			}
-			Set<E> nextStar = new TreeSet<E>(new NodeComparator<E>());
+			Set<E> nextStar = new TreeSet<E>(new NodeIndexComparator<E>());
 			nextStar.addAll(HalfEdgeUtils.boundaryEdges(next));
 			nextStar.retainAll(tree);
 			if (nextStar.size() != 0) {
@@ -105,7 +105,7 @@ public class SpanningTreeUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> Set<E> getDualSpanningTree(Set<E> edges, E root) {
-		Set<E> r = new TreeSet<E>(new NodeComparator<E>());
+		Set<E> r = new TreeSet<E>(new NodeIndexComparator<E>());
 		if (root.getHalfEdgeDataStructure().numFaces() <= 1) {
 			return r;
 		}
