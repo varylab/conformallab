@@ -84,13 +84,12 @@ import de.varylab.discreteconformal.heds.adapter.MarkedEdgesRadiusAdapter;
 import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.TexCoordAdapter;
 import de.varylab.discreteconformal.heds.adapter.TexCoordPositionAdapter;
-import de.varylab.discreteconformal.heds.calculator.SubdivisionCalculator;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
-import de.varylab.discreteconformal.util.FundamentalDomainUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.util.FundamentalDomainUtility;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;
 
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSelectionListener, ChangeListener, ActionListener, PropertyChangeListener, SelectionListener {
@@ -400,6 +399,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 					JOptionPane.showMessageDialog(w, stackBuffer.toString(), name, ERROR_MESSAGE);
 				}
 				return;
+			} finally {
+				unwrapper.getSurface().revertNormalization();
 			}
 			genus = unwrapper.genus;
 			if (genus > 0) {
@@ -441,6 +442,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		}
 		if (unwrapBtn == s) {
 			CoHDS surface = getLoaderGeometry();
+			surface.normalizeCoordinates();
 			Unwrap uw = new Unwrap(surface, hif.getAdapters());
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());
 			uw.setMaxIterations(maxIterationsModel.getNumber().intValue());
@@ -691,7 +693,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		hif = c.getPlugin(HalfedgeInterface.class);
 		hif.addGlobalAdapter(new PositionAdapter(), true);
 		hif.addGlobalAdapter(new TexCoordAdapter(0), true);
-		hif.addCalculator(new SubdivisionCalculator());
 		hif.addSelectionListener(this);
 	}
 	

@@ -7,13 +7,14 @@ import java.util.Set;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import de.jtem.halfedgetools.adapter.TypedAdapterSet;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.halfedgetools.algorithm.subdivision.LoopLinear;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.calculator.SubdivisionCalculator;
+import de.varylab.discreteconformal.heds.adapter.PositionAdapter;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 
@@ -24,8 +25,6 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 		numExtraPoints = 0;
 	private LoopLinear 
 		loop = new LoopLinear();
-	private SubdivisionCalculator 
-		sc = new SubdivisionCalculator();
 	
 	
 	public ConvergenceSubdivision() {
@@ -37,13 +36,11 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 		Complex tauExpected, 
 		FileWriter errorWriter, 
 		int maxSubdivision,
-		LoopLinear loop, 
-		SubdivisionCalculator sc
+		LoopLinear loop
 	) {
 		super(vertices, branchIndices, tauExpected, errorWriter);
 		this.maxSubdivision = maxSubdivision;
 		this.loop = loop;
-		this.sc = sc;
 	}
 
 
@@ -60,6 +57,7 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 	@Override
 	protected void perform() throws Exception {
 		writeComment("numVertex[1], absErr[2], argErr[3], reErr[4], imErr[5], gradNormSq[6]");
+		TypedAdapterSet<double[]> a = new TypedAdapterSet<double[]>(new PositionAdapter());
 		for (int i = 0; i < maxSubdivision; i ++) {
 			CoHDS hds = new CoHDS();
 			// predefined vertices
@@ -73,11 +71,11 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 				v.getPosition().set(rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian());
 				v.getPosition().normalize();
 			}
-			ConvexHull.convexHull(hds, sc, 1E-8);
+			ConvexHull.convexHull(hds, a, 1E-8);
 			// subdivision
 			for (int si = 0; si < i; si++) {
 				CoHDS subdivided = new CoHDS();
-				loop.subdivide(hds, subdivided, sc, sc, sc);
+				loop.subdivide(hds, subdivided, a);
 				hds = subdivided;
 				// project to the sphere in every step
 				for (CoVertex v : hds.getVertices()) {

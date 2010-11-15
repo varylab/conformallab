@@ -14,8 +14,7 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Node;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AbstractAdapter;
-import de.jtem.halfedgetools.adapter.CalculatorException;
-import de.jtem.halfedgetools.adapter.CalculatorSet;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Color;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeSelection;
@@ -44,7 +43,7 @@ public class EllipticImageGemerator extends AlgorithmPlugin {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,
 		HDS extends HalfEdgeDataStructure<V, E, F>
-	> void execute(HDS h, CalculatorSet c, HalfedgeInterface hif) throws CalculatorException {
+	> void execute(HDS h, AdapterSet a, HalfedgeInterface hif) {
 		Window w = SwingUtilities.getWindowAncestor(hif.getShrinkPanel());
 		String numString = JOptionPane.showInputDialog(w, "Number of extra points", 0);
 		if (numString == null) return;

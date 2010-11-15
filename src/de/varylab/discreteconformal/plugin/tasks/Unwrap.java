@@ -71,7 +71,6 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		long unwrapTime = -1;
 		long layoutTime = -1;
 		setProgress(0);
-		surface.normalizeCoordinates();
 		genus = HalfEdgeUtils.getGenus(surface);
 		Vector u = null;
 		double gradTolerance = Math.pow(10, toleranceExp);
@@ -161,13 +160,13 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			setProgress(100);
 			break;
 		}
-		surface.revertNormalization();
 		NumberFormat nf = new DecimalFormat("0.00");
 		System.out.println("minimization took " + nf.format((unwrapTime - startTime) / 1000.0) + "sec.");
 		System.out.println("layout took " + nf.format((layoutTime - unwrapTime) / 1000.0) + "sec.");
 		return surface;
 	}
 
+	
 
 	private int getMinUIndex(Vector u) {
 		int index = 0;
