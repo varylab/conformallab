@@ -14,8 +14,10 @@ import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.Adapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.TypedAdapterSet;
 import de.jtem.halfedgetools.adapter.type.CurvatureField;
 import de.jtem.halfedgetools.adapter.type.Length;
+import de.jtem.halfedgetools.adapter.type.Normal;
 import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.varylab.discreteconformal.functional.ConformalAdapters.InitialEnergy;
@@ -77,6 +79,7 @@ public class UnwrapUtility {
 	 */
 	public static int prepareInvariantDataEuclidean(CoHDS hds, BoundaryMode bm, QuantizationMode qm, AdapterSet aSet) {
 		// set initial lambdas
+		TypedAdapterSet<double[]> da = aSet.querySet(double[].class);
 		for (final CoEdge e : hds.getPositiveEdges()) {
 			double l = aSet.get(Length.class, e, Double.class);
 			e.setLambda(log(l));
@@ -97,7 +100,7 @@ public class UnwrapUtility {
 		for (CoEdge e : edgeBoundary) {
 			double[] p = e.getStartVertex().P;
 			Pn.dehomogenize(p, p);
-			double[] bv = aSet.get(EdgeVector.class, e, double[].class);
+			double[] bv = da.get(EdgeVector.class, e);
 			double[] mv = {middle[0] - p[0], middle[1] - p[1], middle[2] - p[1]};
 			double[] n = Rn.crossProduct(null, mv, bv);
 			Rn.add(refNormal, n, refNormal);
@@ -145,8 +148,8 @@ public class UnwrapUtility {
 				}
 				for (CoEdge edge : HalfEdgeUtils.incomingEdges(v)) {
 					if (edge.getLeftFace() == null) {
-						double[] v1 = aSet.get(EdgeVector.class, edge.getOppositeEdge(), double[].class);
-						double[] v2 = aSet.get(EdgeVector.class, edge.getNextEdge(), double[].class);
+						double[] v1 = da.get(EdgeVector.class, edge.getOppositeEdge());
+						double[] v2 = da.get(EdgeVector.class, edge.getNextEdge());
 						double[] cr = Rn.crossProduct(null, v1, v2); 
 						double x = Rn.innerProduct(v1, v2);
 						double y = Rn.euclideanNorm(cr);
@@ -204,13 +207,13 @@ public class UnwrapUtility {
 		
 		if (bm == BoundaryMode.ConformalCurvature && bSize != 0) {
 //			CoFace f0 = hds.getFace(0);
-//			double[] f01 = aSet.get(EdgeVector.class, f0.getBoundaryEdge(), double[].class);
-//			double[] f02 = aSet.get(EdgeVector.class, f0.getBoundaryEdge().getPreviousEdge().getOppositeEdge(), double[].class);
-//			double[] f0N = aSet.get(Normal.class, f0, double[].class);
+//			double[] f01 = da.get(EdgeVector.class, f0.getBoundaryEdge());
+//			double[] f02 = da.get(EdgeVector.class, f0.getBoundaryEdge().getPreviousEdge().getOppositeEdge());
+//			double[] f0N = da.get(Normal.class, f0);
 //			double[][] f0B = {f01, f02, f0N};
 //			double surfaceOrientation = signum(Rn.determinant(f0B));
 //			System.out.println("surface orientation is " + surfaceOrientation);
-			Adapter<double[]> cVec = aSet.query(CurvatureField.class, hds.getEdgeClass(), double[].class);
+			Adapter<double[]> cVec = da.query(CurvatureField.class, hds.getEdgeClass());
 			if (cVec == null) throw new RuntimeException("No curvature vector field on edges found");
 			Collection<CoEdge> bList = HalfEdgeUtils.boundaryEdges(hds);
 			CoEdge e = bList.iterator().next();
@@ -219,14 +222,12 @@ public class UnwrapUtility {
 			Double alphaP = null;
 			do {
 				CoVertex v = e.getStartVertex();
-				double[] eVec = aSet.get(EdgeVector.class, e, double[].class);
+				double[] eVec = da.get(EdgeVector.class, e);
 				double[] xVec = cVec.get(e, aSet);
-//				Vector xVec = new Vector(xArr);
-//				double[] nArr = aSet.get(Normal.class, e.getRightFace(), double[].class);
-//				Vector nVec = new Vector(nArr);
-//				Basis B = new Basis(nVec, eVec, xVec);
-//				double sign = Math.signum(B.getDeterminant());
-				double alpha = normalizeAngle(Rn.euclideanAngle(eVec, xVec));// * sign);
+				double[] nVec = da.get(Normal.class, e.getRightFace());
+				double[][] B = {nVec, eVec, xVec};
+				double sign = Math.signum(Rn.determinant(B));
+				double alpha = normalizeAngle(Rn.euclideanAngle(eVec, xVec) * sign);
 				
 				if (alphaP != null) { // check if we must flip viVec
 					double th = 0.0;
