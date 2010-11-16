@@ -1,6 +1,5 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.varylab.discreteconformal.unwrapper.QuantizationMode.AllAngles;
 import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 
 import java.util.Collection;
@@ -12,6 +11,8 @@ import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
@@ -53,7 +54,7 @@ public class EuclideanUnwrapper implements Unwrapper{
 			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
 		}
 		if (!cones.isEmpty()) {
-			if (conesMode != AllAngles) {
+			if (conesMode != QuantizationMode.AllAngles) {
 				cones = ConesUtility.quantizeCones(surface, cones, conesMode);
 				n = opt.getDomainDimension();
 				u = new DenseVector(n);

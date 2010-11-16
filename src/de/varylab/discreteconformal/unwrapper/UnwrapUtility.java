@@ -1,7 +1,5 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.varylab.discreteconformal.unwrapper.BoundaryMode.Isometric;
-import static de.varylab.discreteconformal.unwrapper.QuantizationMode.AllAngles;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.log;
@@ -36,6 +34,23 @@ import de.varylab.discreteconformal.unwrapper.numerics.ConformalEnergy;
 public class UnwrapUtility {
 
 	
+	public static enum QuantizationMode {
+		AllAngles,
+		Quads,
+		QuadsStrict,
+		Hexagons,
+		Straight
+	}
+	
+	
+	public static enum BoundaryMode {
+		Isometric,
+		Conformal,
+		ConformalCurvature
+	}
+	
+	
+	
 	private static class ZeroInitialEnergy implements InitialEnergy<CoFace> {
 		@Override
 		public double getInitialEnergy(CoFace f) {
@@ -67,7 +82,7 @@ public class UnwrapUtility {
 	 * @return the dimension of the parameter space
 	 */
 	public static int prepareInvariantDataEuclidean(CoHDS hds, AdapterSet aSet) {
-		return prepareInvariantDataEuclidean(hds, Isometric, AllAngles, aSet);
+		return prepareInvariantDataEuclidean(hds, BoundaryMode.Isometric, QuantizationMode.AllAngles, aSet);
 	}
 	
 	

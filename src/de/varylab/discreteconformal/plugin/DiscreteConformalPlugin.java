@@ -84,9 +84,9 @@ import de.varylab.discreteconformal.heds.adapter.CoTexturePositionPositionAdapte
 import de.varylab.discreteconformal.heds.adapter.MarkedEdgesColorAdapter;
 import de.varylab.discreteconformal.heds.adapter.MarkedEdgesRadiusAdapter;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
-import de.varylab.discreteconformal.unwrapper.BoundaryMode;
-import de.varylab.discreteconformal.unwrapper.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.UnwrapUtility;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.FundamentalDomainUtility;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;

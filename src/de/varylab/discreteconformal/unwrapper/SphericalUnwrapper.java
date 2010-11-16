@@ -1,8 +1,5 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.varylab.discreteconformal.unwrapper.BoundaryMode.Isometric;
-import static de.varylab.discreteconformal.unwrapper.QuantizationMode.AllAngles;
-
 import java.util.Map;
 
 import no.uib.cipr.matrix.DenseVector;
@@ -16,6 +13,8 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.SparseUtility;
@@ -51,7 +50,7 @@ public class SphericalUnwrapper implements Unwrapper{
 //		HashSet<CoVertex> boundary = new HashSet<CoVertex>();
 //		boundary.add(v0);
 //		boundary.addAll(neighboringVertices(v0));
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(surface, Isometric, AllAngles, aSet);
+		int n = UnwrapUtility.prepareInvariantDataEuclidean(surface, BoundaryMode.Isometric, QuantizationMode.AllAngles, aSet);
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
 		
 		// optimization

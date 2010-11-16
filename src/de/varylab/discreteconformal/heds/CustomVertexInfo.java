@@ -1,8 +1,8 @@
 package de.varylab.discreteconformal.heds;
 
 import static java.lang.Math.PI;
-import de.varylab.discreteconformal.unwrapper.BoundaryMode;
-import de.varylab.discreteconformal.unwrapper.QuantizationMode;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 
 public class CustomVertexInfo {
 

@@ -17,18 +17,18 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.BoundaryMode;
-import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
-import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapper;
-import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapper;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
-import de.varylab.discreteconformal.unwrapper.QuantizationMode;
+import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
+import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapper;
+import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapperPETSc;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
+import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
-import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
 
 public class Unwrap extends SwingWorker<CoHDS, Void> {
