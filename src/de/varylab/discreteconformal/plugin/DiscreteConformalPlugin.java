@@ -14,6 +14,8 @@ import static java.awt.Color.WHITE;
 import static java.lang.Math.PI;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
+import static javax.swing.JOptionPane.showMessageDialog;
+import static javax.swing.SwingUtilities.getWindowAncestor;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -481,7 +483,17 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			CoHDS hds = hif.get(new CoHDS());
 			BoundaryMode boundaryMode = (BoundaryMode)boundaryModeCombo.getSelectedItem();
 			QuantizationMode boundaryQuantMode = (QuantizationMode)boundaryQuantizationCombo.getSelectedItem();
-			UnwrapUtility.prepareInvariantDataEuclidean(hds, boundaryMode, boundaryQuantMode, hif.getAdapters());
+			try {
+				UnwrapUtility.prepareInvariantDataEuclidean(
+					hds, 
+					boundaryMode, 
+					boundaryQuantMode, 
+					hif.getAdapters()
+				);
+			} catch (Exception e1) {
+				Window w = getWindowAncestor(shrinkPanel);
+				showMessageDialog(w, e1.getMessage(), "Error", ERROR_MESSAGE);
+			}
 		}
 	}
 	
