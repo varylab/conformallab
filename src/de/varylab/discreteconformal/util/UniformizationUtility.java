@@ -199,6 +199,16 @@ public class UniformizationUtility {
 		}
 		
 		
+		public int getNumVertices() {
+			Set<FundamentalVertex> vSet = new HashSet<UniformizationUtility.FundamentalVertex>();
+			for (FundamentalEdge e : edgeList) {
+				vSet.add(e.end);
+				vSet.add(e.start);
+			}
+			return vSet.size();
+		}
+		
+		
 		public List<double[]> getOrbit(double[] root) {
 			double[] pos1 = root.clone();
 			double[] pos2 = root.clone();
@@ -231,16 +241,152 @@ public class UniformizationUtility {
 			FundamentalEdge start = edgeList.get(0);
 			FundamentalEdge active = start;
 			Matrix T = new Matrix();
+			System.out.println("------------------------ orbit calculation");
 			do {
+				System.out.print(active.index + ", ");
 				double[] pos = T.multiplyVector(root);
 				Pn.normalize(pos, pos, HYPERBOLIC);
 				result.add(pos);
 				T.multiplyOnRight(active.motion);
 				active = active.partner.nextEdge;
 			} while (active != start);
-			System.out.println("Dual orbit transform: " + T.toString());
+			System.out.println("\nDual orbit transform: \n" + T.toString());
 			return result;
 		}
+		
+		
+		public FundamentalPolygon getMinimal() {
+			// canonical polygon construction --------------
+			FundamentalVertex fRoot = edgeList.get(0).start;
+			List<FundamentalEdge> newPoly = new LinkedList<FundamentalEdge>();
+			Set<FundamentalEdge> deleted = new TreeSet<FundamentalEdge>();
+			for (FundamentalEdge e : edgeList) {
+				if (deleted.contains(e)) {
+					continue;
+				}
+				FundamentalVertex badVertex = e.end;
+				if (badVertex != fRoot) {
+					deleted.add(e);
+					deleted.add(e.partner);
+					for (FundamentalEdge fe : edgeList) {
+						if (fe.start == badVertex) {
+							fe.start = fRoot;
+						}
+						if (fe.end == badVertex) {
+							fe.end = fRoot;
+						}
+					}
+				} else {
+					newPoly.add(e);
+				}
+			}
+			edgeList = newPoly;
+			// linkage
+			for (int i = 0; i < newPoly.size(); i++) {
+				FundamentalEdge prev = newPoly.get(i - 1 < 0 ? newPoly.size() - 1 : i - 1);
+				FundamentalEdge next = newPoly.get((i + 1) % newPoly.size());
+				FundamentalEdge act = newPoly.get(i);
+				prev.nextEdge = act;
+				act.index = i;
+				act.prevEdge = prev;
+				act.nextEdge = next;
+				next.prevEdge = act;
+			}
+			FundamentalPolygon result = new FundamentalPolygon();
+			result.edgeList = newPoly;
+			return result;
+		}
+		
+		
+		public FundamentalPolygon getCanonical() {
+			FundamentalPolygon min = getMinimal();
+			FundamentalEdge a = min.edgeList.get(0);
+			int g = getGenus();
+			for (int i = 0; i < g; i++) {
+				FundamentalEdge b = findLinkedEdge(a);
+				bringTogether(a, b);
+				getDualOrbit(new double[] {0,0,0,1});
+				enumerateFrom(a);
+				bringTogether(b, a.partner);
+				getDualOrbit(new double[] {0,0,0,1});
+				enumerateFrom(a);
+				bringTogether(a.partner, b.partner);
+				getDualOrbit(new double[] {0,0,0,1});
+				enumerateFrom(a);
+				a = b.partner.nextEdge;
+			};
+			// assemble the polygon list
+			List<FundamentalEdge> canList = new LinkedList<UniformizationUtility.FundamentalEdge>();
+			int index = 0;
+			FundamentalEdge first = a;
+			do {
+				a.index = index++;
+				canList.add(a);
+				a = a.nextEdge;
+			} while (a != first);
+			FundamentalPolygon r = new FundamentalPolygon();
+			r.edgeList = canList;
+			return r;
+		}
+		
+		
+		private void enumerateFrom(FundamentalEdge e) {
+			System.out.println("Polygon Enumeration -----------------------------");
+			FundamentalEdge act = e;
+			do {
+				System.out.print(act + ": ");
+				System.out.print(act.start.index + " <-> " + act.end.index);
+				System.out.print(" -> " + act.partner);
+				System.out.print("\n");
+				act = act.nextEdge;
+			} while (act != e);
+		}
+		
+		private FundamentalEdge findLinkedEdge(FundamentalEdge a) {
+			Set<FundamentalEdge> checkSet = new TreeSet<UniformizationUtility.FundamentalEdge>();
+			for (FundamentalEdge e = a.nextEdge; e != a.partner; e = e.nextEdge) {
+				checkSet.add(e);
+			}
+			FundamentalEdge b = null;
+			for (FundamentalEdge e : checkSet) {
+				if (!checkSet.contains(e.partner)) {
+					b = e;
+					break;
+				}
+			}
+			return b;
+		}
+		
+		private void bringTogether(FundamentalEdge a, FundamentalEdge b) {
+			if (a.nextEdge == b) return; // already together
+			FundamentalEdge aiPrev = a.partner.prevEdge;
+			FundamentalEdge c = a.nextEdge;
+			FundamentalEdge cNext = c.nextEdge;
+			// move first connection
+			c.nextEdge = a.partner;
+			a.partner.prevEdge = c;
+			// identify
+			c.motion.multiplyOnRight(a.partner.motion);
+			c.partner.motion.multiplyOnLeft(a.motion);
+			while (cNext != b) {
+				FundamentalEdge cLast = c;
+				c = cNext;
+				cNext = c.nextEdge;
+				// move
+				c.nextEdge = cLast;
+				cLast.prevEdge = c;
+				// identify
+				c.motion.multiplyOnRight(a.partner.motion);
+				c.partner.motion.multiplyOnLeft(a.motion);
+			}
+			// last connection
+			aiPrev.nextEdge = c;
+			c.prevEdge = aiPrev;
+			// bring together
+			a.nextEdge = b;
+			b.prevEdge = a;
+		}
+		
 		
 		
 		@Override
@@ -254,8 +400,14 @@ public class UniformizationUtility {
 				sb.append(" -> " + fe.partner);
 				sb.append("\n");
 			}
+			sb.append("genus: " + getGenus() + "\n");
 			sb.append("---------------------------------");
 			return sb.toString();
+		}
+		
+		public int getGenus() {
+			int X = getNumVertices() - edgeList.size() / 2 + 1;
+			return 1 - X/2;
 		}
 		
 	}
@@ -363,45 +515,19 @@ public class UniformizationUtility {
 		lastFunE.nextEdge = firstFunE;
 		firstFunE.prevEdge = firstFunE;
 		
-//		System.out.println("Cutted Polygon:\n" + poly);
+		// try dual orbit of the raw polygon
+		System.out.println("Cutted Polygon:\n" + poly);
+		poly.getDualOrbit(new double[] {0,0,0,1});
 		
-		// canonical polygon construction --------------
-		FundamentalVertex fRoot = poly.edgeList.get(0).start;
-		List<FundamentalEdge> newPoly = new LinkedList<FundamentalEdge>();
-		Set<FundamentalEdge> deleted = new TreeSet<FundamentalEdge>();
-		for (FundamentalEdge e : poly.edgeList) {
-			if (deleted.contains(e)) {
-				continue;
-			}
-			FundamentalVertex badVertex = e.end;
-			if (badVertex != fRoot) {
-				deleted.add(e);
-				deleted.add(e.partner);
-				for (FundamentalEdge fe : poly.edgeList) {
-					if (fe.start == badVertex) {
-						fe.start = fRoot;
-					}
-					if (fe.end == badVertex) {
-						fe.end = fRoot;
-					}
-				}
-			} else {
-				newPoly.add(e);
-			}
-		}
-		poly.edgeList = newPoly;
+		// reduce to minimal polygon
+		poly = poly.getMinimal();
+		System.out.println("Minimal Polygon:\n" + poly);
+		poly.getDualOrbit(new double[] {0,0,0,1});
 		
-		// linkage
-		for (int i = 0; i < newPoly.size(); i++) {
-			FundamentalEdge prev = newPoly.get(i - 1 < 0 ? newPoly.size() - 1 : i - 1);
-			FundamentalEdge next = newPoly.get((i + 1) % newPoly.size());
-			FundamentalEdge act = newPoly.get(i);
-			prev.nextEdge = act;
-			act.prevEdge = prev;
-			act.nextEdge = next;
-			next.prevEdge = act;
-		}
-//		System.out.println("Canonical Polygon:\n" + poly);
+		// construct the canonical polygon
+		poly = poly.getCanonical();
+		System.out.println("Canonical Polygon:\n" + poly);
+		poly.getDualOrbit(new double[] {0,0,0,1});
 		return poly;
 	}
 	

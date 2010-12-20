@@ -7,6 +7,7 @@ import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicApplication;
+import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.jpetsc.Mat;
 import de.varylab.jpetsc.Vec;
 import de.varylab.jtao.Tao;

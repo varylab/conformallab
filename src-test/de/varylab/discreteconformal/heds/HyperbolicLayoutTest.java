@@ -26,7 +26,7 @@ import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility;
+import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class HyperbolicLayoutTest {
 

@@ -86,12 +86,12 @@ import de.varylab.discreteconformal.heds.adapter.CoTexturePositionPositionAdapte
 import de.varylab.discreteconformal.heds.adapter.MarkedEdgesColorAdapter;
 import de.varylab.discreteconformal.heds.adapter.MarkedEdgesRadiusAdapter;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.FundamentalDomainUtility;
+import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;
+import de.varylab.discreteconformal.util.UnwrapUtility.BoundaryMode;
+import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
 
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSelectionListener, ChangeListener, ActionListener, PropertyChangeListener, SelectionListener {
 
@@ -562,10 +562,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			hif.removeAdapter(texCoordPositionAdapter);
 		}
 		if (genus >= 1) {
-//			hif.addLayerAdapter(cutRadiusAdapter,false);
-//			hif.addLayerAdapter(cutColorAdapter,false);
-//			hif.addLayerAdapter(pointRadiusAdapter,false);
-//			hif.addLayerAdapter(pointColorAdapter,false);
+			hif.addLayerAdapter(cutRadiusAdapter,false);
+			hif.addLayerAdapter(cutColorAdapter,false);
+			hif.addLayerAdapter(pointRadiusAdapter,false);
+			hif.addLayerAdapter(pointColorAdapter,false);
 		} else {
 			hif.removeAdapter(cutRadiusAdapter);
 			hif.removeAdapter(cutColorAdapter);

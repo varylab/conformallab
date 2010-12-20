@@ -23,13 +23,13 @@ import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapperPETSc;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.BoundaryMode;
-import de.varylab.discreteconformal.unwrapper.UnwrapUtility.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
+import de.varylab.discreteconformal.util.UnwrapUtility.BoundaryMode;
+import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
 
 public class Unwrap extends SwingWorker<CoHDS, Void> {
 
