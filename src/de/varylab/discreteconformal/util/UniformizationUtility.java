@@ -60,12 +60,22 @@ public class UniformizationUtility {
 		);
 	
 	
+	public static void normalize(Matrix M) {
+		double max = 0;
+		for (double d : M.getArray()) {
+			if (Math.abs(d) > max) {
+				max = d;
+			}
+		}
+		M.times(1 / max);
+	}
+	
+	
 	private static void log(int log, String msg) {
 		if (UniformizationUtility.log >= log) {
 			System.out.println(msg); 
 		}
 	}
-	
 	
 	
 	public static Matrix makeHyperbolicMotion(CoEdge s, CoEdge t) {
@@ -122,8 +132,9 @@ public class UniformizationUtility {
 			0,		0, 		1, 		0,
 			nt[2], 	wt[2], 	0, 	t1[2]
 		);
-		Matrix R = Matrix.times(T, SInv);
-		return R;
+		Matrix M = Matrix.times(T, SInv);
+		normalize(M);
+		return M;
 	}
 	
 	
@@ -247,10 +258,11 @@ public class UniformizationUtility {
 				double[] pos = T.multiplyVector(root);
 				Pn.normalize(pos, pos, HYPERBOLIC);
 				result.add(pos);
+				// apply in the opposite order to get the relation
 				T.multiplyOnRight(active.motion);
 				active = active.partner.nextEdge;
 			} while (active != start);
-			System.out.println("\nDual orbit transform: \n" + T.toString());
+			System.out.println("\nDual orbit transform: \n" + T);
 			return result;
 		}
 		
@@ -340,6 +352,10 @@ public class UniformizationUtility {
 				System.out.print("\n");
 				act = act.nextEdge;
 			} while (act != e);
+			do {
+				System.out.println(act.motion);
+				act = act.nextEdge;
+			} while (act != e);
 		}
 		
 		private FundamentalEdge findLinkedEdge(FundamentalEdge a) {
@@ -370,32 +386,19 @@ public class UniformizationUtility {
 			
 			Matrix A = a.motion;
 			Matrix Ainv = a.partner.motion;
+			System.out.println("A = \n" + A);
+			
 			for (FundamentalEdge c : cSet) {
 				System.out.println(c.index + " = " + c.index + " " + a.partner.index);
-				c.motion.multiplyOnRight(Ainv);
+				c.motion.multiplyOnLeft(Ainv);
+				normalize(c.motion);
 				System.out.println(c.partner.index + " = " + a.index + " " + c.partner.index);
-				c.partner.motion.multiplyOnLeft(A);
+				c.partner.motion.multiplyOnRight(A);
+				normalize(c.partner.motion);
 			}
-			
 			// move first connection
 			aiPrev.nextEdge = c1;
 			c1.prevEdge = aiPrev;
-//			while (c != b) {
-//				if (!cSet.contains(c.partner)) {
-//					System.out.println(c.index + " = " + c.index + " " + a.partner.index);
-//					c.motion.multiplyOnLeft(a.partner.motion);
-//					System.out.println(c.partner.index + " = " + a.index + " " + c.partner.index);
-//					c.partner.motion.multiplyOnRight(a.motion);
-//				} else {
-//					System.out.println(c.partner.index + " = " + a.index + " " + c.partner.index);
-//					c.partner.motion.multiplyOnLeft(a.partner.motion);
-//					c.partner.motion.multiplyOnRight(a.motion);
-//					System.out.println(c.index + " = " + c.index + " " + a.partner.index);
-//					c.motion.multiplyOnLeft(a.partner.motion);
-//					c.motion.multiplyOnRight(a.motion);
-//				}
-//				c = c.nextEdge;
-//			}
 			cn.nextEdge = a.partner;
 			a.partner.prevEdge = cn;
 			// bring together
@@ -540,10 +543,10 @@ public class UniformizationUtility {
 		System.out.println("Minimal Polygon:\n" + poly);
 		poly.getDualOrbit(new double[] {0,0,0,1});
 		
-		// construct the canonical polygon
-		poly = poly.getCanonical();
-		System.out.println("Canonical Polygon:\n" + poly);
-		poly.getDualOrbit(new double[] {0,0,0,1});
+//		// construct the canonical polygon
+//		poly = poly.getCanonical();
+//		System.out.println("Canonical Polygon:\n" + poly);
+//		poly.getDualOrbit(new double[] {0,0,0,1});
 		return poly;
 	}
 	

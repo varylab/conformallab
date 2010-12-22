@@ -561,17 +561,17 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		} else {
 			hif.removeAdapter(texCoordPositionAdapter);
 		}
-		if (genus >= 1) {
-			hif.addLayerAdapter(cutRadiusAdapter,false);
-			hif.addLayerAdapter(cutColorAdapter,false);
-			hif.addLayerAdapter(pointRadiusAdapter,false);
-			hif.addLayerAdapter(pointColorAdapter,false);
-		} else {
-			hif.removeAdapter(cutRadiusAdapter);
-			hif.removeAdapter(cutColorAdapter);
-			hif.removeAdapter(pointRadiusAdapter);
-			hif.removeAdapter(pointColorAdapter);
-		}
+//		if (genus >= 1) {
+//			hif.addLayerAdapter(cutRadiusAdapter,false);
+//			hif.addLayerAdapter(cutColorAdapter,false);
+//			hif.addLayerAdapter(pointRadiusAdapter,false);
+//			hif.addLayerAdapter(pointColorAdapter,false);
+//		} else {
+//			hif.removeAdapter(cutRadiusAdapter);
+//			hif.removeAdapter(cutColorAdapter);
+//			hif.removeAdapter(pointRadiusAdapter);
+//			hif.removeAdapter(pointColorAdapter);
+//		}
 		
 		hif.set(surface);
 		hif.getActiveLayer().addTemporaryGeometry(auxGeometry);
