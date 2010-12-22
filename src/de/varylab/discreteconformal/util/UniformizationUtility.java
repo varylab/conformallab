@@ -358,30 +358,46 @@ public class UniformizationUtility {
 		}
 		
 		private void bringTogether(FundamentalEdge a, FundamentalEdge b) {
+			System.out.println("bring together " + a + " - " + b);
 			if (a.nextEdge == b) return; // already together
-			FundamentalEdge aiPrev = a.partner.prevEdge;
-			FundamentalEdge c = a.nextEdge;
-			FundamentalEdge cNext = c.nextEdge;
-			// move first connection
-			c.nextEdge = a.partner;
-			a.partner.prevEdge = c;
-			// identify
-			c.motion.multiplyOnRight(a.partner.motion);
-			c.partner.motion.multiplyOnLeft(a.motion);
-			while (cNext != b) {
-				FundamentalEdge cLast = c;
-				c = cNext;
-				cNext = c.nextEdge;
-				// move
-				c.nextEdge = cLast;
-				cLast.prevEdge = c;
-				// identify
-				c.motion.multiplyOnRight(a.partner.motion);
-				c.partner.motion.multiplyOnLeft(a.motion);
+			Set<FundamentalEdge> cSet = new TreeSet<UniformizationUtility.FundamentalEdge>();
+			for (FundamentalEdge e = a.nextEdge; e != b; e = e.nextEdge) {
+				cSet.add(e);
 			}
-			// last connection
-			aiPrev.nextEdge = c;
-			c.prevEdge = aiPrev;
+			FundamentalEdge aiPrev = a.partner.prevEdge;
+			FundamentalEdge c1 = a.nextEdge;
+			FundamentalEdge cn = b.prevEdge;
+			
+			Matrix A = a.motion;
+			Matrix Ainv = a.partner.motion;
+			for (FundamentalEdge c : cSet) {
+				System.out.println(c.index + " = " + c.index + " " + a.partner.index);
+				c.motion.multiplyOnRight(Ainv);
+				System.out.println(c.partner.index + " = " + a.index + " " + c.partner.index);
+				c.partner.motion.multiplyOnLeft(A);
+			}
+			
+			// move first connection
+			aiPrev.nextEdge = c1;
+			c1.prevEdge = aiPrev;
+//			while (c != b) {
+//				if (!cSet.contains(c.partner)) {
+//					System.out.println(c.index + " = " + c.index + " " + a.partner.index);
+//					c.motion.multiplyOnLeft(a.partner.motion);
+//					System.out.println(c.partner.index + " = " + a.index + " " + c.partner.index);
+//					c.partner.motion.multiplyOnRight(a.motion);
+//				} else {
+//					System.out.println(c.partner.index + " = " + a.index + " " + c.partner.index);
+//					c.partner.motion.multiplyOnLeft(a.partner.motion);
+//					c.partner.motion.multiplyOnRight(a.motion);
+//					System.out.println(c.index + " = " + c.index + " " + a.partner.index);
+//					c.motion.multiplyOnLeft(a.partner.motion);
+//					c.motion.multiplyOnRight(a.motion);
+//				}
+//				c = c.nextEdge;
+//			}
+			cn.nextEdge = a.partner;
+			a.partner.prevEdge = cn;
 			// bring together
 			a.nextEdge = b;
 			b.prevEdge = a;
@@ -416,7 +432,7 @@ public class UniformizationUtility {
 	public static FundamentalPolygon constructFundamentalPolygon(
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo
 	) {
-		FundamentalPolygon poly = new FundamentalPolygon();
+ 		FundamentalPolygon poly = new FundamentalPolygon();
 		
 		// find max valence branch
 		Set<CoVertex> branchSet = cutInfo.getBranchSet();
