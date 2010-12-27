@@ -260,6 +260,7 @@ public class UniformizationUtility {
 				result.add(pos);
 				// apply in the opposite order to get the relation
 				T.multiplyOnRight(active.motion);
+				normalize(T);
 				active = active.partner.nextEdge;
 			} while (active != start);
 			System.out.println("\nDual orbit transform: \n" + T);

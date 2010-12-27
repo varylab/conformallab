@@ -15,6 +15,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.geom.Arc2D;
+import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
@@ -235,24 +236,31 @@ public class FundamentalDomainUtility {
 				p2 = new double[] {p2a[1] / (p2a[3] - p2a[0]), 1 / (p2a[3] - p2a[0]), 0};
 				p3 = new double[] {p3a[1] / (p3a[3] - p3a[0]), 1 / (p3a[3] - p3a[0]), 0};
 		}
-
 		try {
-			double[] center = getCircumCenter(p1, p2, p3);
-			double cRad = Rn.euclideanDistance(p1, center);
-			double[] vec1 = Rn.subtract(null, p1, center);
-			double[] vec2 = Rn.subtract(null, p2, center);
-			double angle = Rn.euclideanAngle(vec1, vec2);
-			double startAngle = Math.atan2(vec1[1], vec1[0]);
-			angle *= signum(-vec2[0] * sin(startAngle) + vec2[1] * cos(startAngle));
-			
-			double degAngle = Math.toDegrees(angle);
-			double degStartAngle = Math.toDegrees(startAngle);
-			double centerX = (center[0] / 2 + 0.5) * res;
-			double centerY = (-center[1] / 2 + 0.5) * res;
-			double radius = (cRad / 2) * res;
-			Arc2D arc = new Arc2D.Double(centerX - radius, centerY - radius, radius * 2, radius * 2, degStartAngle, degAngle, OPEN);
-			g.draw(arc);
-			
+			if (model == HyperbolicModel.Klein) {
+				double sx = (p1[0] / 2 + 0.5) * res;
+				double sy = (-p1[1] / 2 + 0.5) * res;
+				double tx = (p2[0] / 2 + 0.5) * res;
+				double ty = (-p2[1] / 2 + 0.5) * res;
+				Line2D line = new Line2D.Double(sx, sy, tx, ty);
+				g.draw(line);
+			} else {
+				double[] center = getCircumCenter(p1, p2, p3);
+				double cRad = Rn.euclideanDistance(p1, center);
+				double[] vec1 = Rn.subtract(null, p1, center);
+				double[] vec2 = Rn.subtract(null, p2, center);
+				double angle = Rn.euclideanAngle(vec1, vec2);
+				double startAngle = Math.atan2(vec1[1], vec1[0]);
+				angle *= signum(-vec2[0] * sin(startAngle) + vec2[1] * cos(startAngle));
+				
+				double degAngle = Math.toDegrees(angle);
+				double degStartAngle = Math.toDegrees(startAngle);
+				double centerX = (center[0] / 2 + 0.5) * res;
+				double centerY = (-center[1] / 2 + 0.5) * res;
+				double radius = (cRad / 2) * res;
+				Arc2D arc = new Arc2D.Double(centerX - radius, centerY - radius, radius * 2, radius * 2, degStartAngle, degAngle, OPEN);
+				g.draw(arc);
+			}
 		} catch (Exception e) {
 			int p1x = (int)((p1[0] / 2 + 0.5) * res);
 			int p1y = (int)((-p1[1] / 2 + 0.5) * res);

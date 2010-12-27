@@ -1,15 +1,20 @@
 package de.varylab.discreteconformal.plugin;
 
 import static de.jreality.math.MatrixBuilder.euclidean;
+import static de.jreality.scene.Appearance.DEFAULT;
 import static de.jreality.shader.CommonAttributes.DIFFUSE_COLOR;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.LIGHTING_ENABLED;
+import static de.jreality.shader.CommonAttributes.LINE_SHADER;
 import static de.jreality.shader.CommonAttributes.POLYGON_SHADER;
-import static de.jreality.shader.CommonAttributes.VERTEX_COLORS_ENABLED;
+import static de.jreality.shader.CommonAttributes.TEXTURE_2D;
+import static de.jreality.shader.CommonAttributes.TUBE_RADIUS;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.varylab.discreteconformal.util.FundamentalDomainUtility.createFundamentalPolygon;
 import static de.varylab.discreteconformal.util.UniformizationUtility.constructFundamentalPolygon;
+import static java.awt.Color.BLACK;
+import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
 import static java.lang.Math.PI;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
@@ -65,6 +70,7 @@ import de.jreality.shader.TextureUtility;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.halfedgetools.plugin.SelectionListener;
 import de.jtem.jrworkspace.plugin.Controller;
@@ -88,8 +94,8 @@ import de.varylab.discreteconformal.heds.adapter.MarkedEdgesRadiusAdapter;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.FundamentalDomainUtility;
-import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;
+import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.discreteconformal.util.UnwrapUtility.BoundaryMode;
 import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
 
@@ -97,8 +103,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 
 	private static int
 		polyResolution = 1000,
-		coverRecursion = 2,
-		coverResolution = 1000;
+		coverRecursion = 3,
+		coverResolution = 2048;
 	
 	// plug-in section ------------------ 
 	private HalfedgeInterface
@@ -136,12 +142,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 //	private Tool
 //		hyperbolicCopyTool = new HyperbolicCopyTool(this);
 	private Appearance
-		universalCoverAppearance = new Appearance(),
-		surfaceAppearance = new Appearance();
+		universalCoverAppearance = new Appearance();
 	private SceneGraphComponent
-		surfaceRoot = new SceneGraphComponent("Surface Geometry"),
-		auxGeometry = new SceneGraphComponent("Aux Geometry"),
-		copiedGeometry = new SceneGraphComponent("Click Copy Geometry"),
 		fundamentalPolygonRoot = new SceneGraphComponent("Fundamental Polygon"), 
 		unitCircle = new SceneGraphComponent("Hyperbolic Boundary"),
 		universalCoverRoot = new SceneGraphComponent("Universal Cover");
@@ -168,13 +170,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		maxIterationsSpinner = new JSpinner(maxIterationsModel);
 	private JCheckBox
 		useCustomThetaChecker = new JCheckBox("Custom Theta"),
-		showGeometry = new JCheckBox("Geometry", true),
 		showFundamentalPolygon = new JCheckBox("Fundamental Polygon"),
-		showPoygonTexture = new JCheckBox("Polygon Texture"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
 		showUnwrapped = new JCheckBox("Show Unwrapped"),
-		showUniversalCover = new JCheckBox("Universal Cover"),
-		showUnitCircle = new JCheckBox("Show Unit Cirlce");
+		showUniversalCover = new JCheckBox("Universal Cover");
 	private JComboBox
 		numericsCombo = new JComboBox(new String[] {"Java/MTJ Numerics", "Petsc/Tao Numerics"}),
 		quantizationModeCombo = new JComboBox(QuantizationMode.values()),
@@ -193,12 +192,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		
 	public DiscreteConformalPlugin() {
 		createLayout();
-		showGeometry.addActionListener(this);
-		showPoygonTexture.addActionListener(this);
 		unwrapBtn.addActionListener(this);
 		checkGaussBonnetBtn.addActionListener(this);
 		showUnwrapped.addActionListener(this);
-		showUnitCircle.addActionListener(this);
 		kleinButton.addActionListener(this);
 		poincareButton.addActionListener(this);
 		halfplaneButton.addActionListener(this);
@@ -211,22 +207,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		modelGroup.add(poincareButton);
 		modelGroup.add(halfplaneButton);
 		
-		Appearance circleApp = new Appearance();
-		circleApp.setAttribute(EDGE_DRAW, false);
-		circleApp.setAttribute(VERTEX_DRAW, false); 
-		circleApp.setAttribute(FACE_DRAW, true);
-		unitCircle.setAppearance(circleApp);
-		unitCircle.setVisible(false);
-		euclidean().rotate(PI / 2, 1, 0, 0).assignTo(unitCircle);
-		unitCircle.setGeometry(Primitives.torus(1.0, 0.005, 200, 5));
-		auxGeometry.addChild(unitCircle);
-		
-		surfaceAppearance.setAttribute(POLYGON_SHADER + "." + VERTEX_COLORS_ENABLED, false);
-		surfaceRoot.setAppearance(surfaceAppearance);
-		
 		Appearance funPolyApp = new Appearance();
 		funPolyApp.setAttribute(VERTEX_DRAW, false);
 		funPolyApp.setAttribute(EDGE_DRAW, true);
+		funPolyApp.setAttribute(LINE_SHADER + "." + TUBE_RADIUS, 0.03);
+		funPolyApp.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, RED);
 		fundamentalPolygonRoot.setAppearance(funPolyApp);
 		
 		IndexedFaceSetFactory ifsf = new IndexedFaceSetFactory();
@@ -234,17 +219,27 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		ifsf.setFaceCount(1);
 		ifsf.setFaceIndices(new int[][] {{0,1,2,3}});
 		ifsf.setVertexTextureCoordinates(new double[] {-1,-1,1,-1,1,1,-1,1});
-		ifsf.setVertexCoordinates(new double[]{-1,-1,-0.01, 1,-1,-0.01,  1,1,-0.001,  -1,1,-0.01});
+		ifsf.setVertexCoordinates(new double[]{-1,-1,-0.001, 1,-1,-0.001,  1,1,-0.001,  -1,1,-0.001});
 		ifsf.setGenerateFaceNormals(true);
 		ifsf.update();
 		universalCoverRoot.setGeometry(ifsf.getGeometry());
-		universalCoverRoot.setAppearance(surfaceAppearance);
 		universalCoverRoot.setAppearance(universalCoverAppearance);
 		universalCoverAppearance.setAttribute(VERTEX_DRAW, false);
 		universalCoverAppearance.setAttribute(EDGE_DRAW, false);
 		universalCoverAppearance.setAttribute(FACE_DRAW, true);
 		universalCoverAppearance.setAttribute(LIGHTING_ENABLED, false);
-		universalCoverAppearance.setAttribute(DIFFUSE_COLOR, WHITE);
+		universalCoverAppearance.setAttribute(POLYGON_SHADER + "." + DIFFUSE_COLOR, WHITE);
+		
+		Appearance circleApp = new Appearance();
+		circleApp.setAttribute(EDGE_DRAW, false);
+		circleApp.setAttribute(VERTEX_DRAW, false); 
+		circleApp.setAttribute(FACE_DRAW, true);
+		circleApp.setAttribute(POLYGON_SHADER + "." + DIFFUSE_COLOR, BLACK);
+		circleApp.setAttribute(POLYGON_SHADER + "." + TEXTURE_2D, DEFAULT); 
+		unitCircle.setAppearance(circleApp);
+		euclidean().rotate(PI / 2, 1, 0, 0).assignTo(unitCircle);
+		unitCircle.setGeometry(Primitives.torus(1.0, 0.005, 200, 5));
+		universalCoverRoot.addChild(unitCircle);
 	}
 
 	
@@ -307,11 +302,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		shrinkPanel.add(customVertexPanel, c2);
 		
 		visualizationPanel.setLayout(new GridBagLayout());
-		visualizationPanel.add(showGeometry, c2);
-		visualizationPanel.add(showUnitCircle, c2);
 		visualizationPanel.add(showUnwrapped, c2);
 		visualizationPanel.add(showFundamentalPolygon, c2);
-		visualizationPanel.add(showPoygonTexture, c2);
 		visualizationPanel.add(showUniversalCover, c2);
 		visualizationPanel.add(useProjectiveTexture, c2);
 		visualizationPanel.setShrinked(true);
@@ -430,9 +422,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
 		if (showFundamentalPolygon == s ||
-			showGeometry == s ||
-			showPoygonTexture == s ||
-			showUnitCircle == s ||
 			showUniversalCover == s
 		) {
 			updateStates();
@@ -453,7 +442,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			uw.execute();
 		}
 		if (showUnwrapped == s || useProjectiveTexture == s || kleinButton == s || poincareButton == s || halfplaneButton == s) {
-			copiedGeometry.setGeometry(null);
 			updateSurface();
 			if (genus > 1) {
 				updateFundamentalPolygon(polyResolution);
@@ -501,25 +489,20 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	 * Set up scene
 	 */
 	private void updateStates() {
-		surfaceRoot.setVisible(showGeometry.isSelected());
-		if (genus > 1) {
-			fundamentalPolygonRoot.setVisible(showUnwrapped.isSelected() && showFundamentalPolygon.isSelected());
-			universalCoverRoot.setVisible(showUniversalCover.isSelected() && showUnwrapped.isSelected());
-			unitCircle.setVisible(showUnitCircle.isSelected() && showUnwrapped.isSelected() && (getSelectedModel() != HyperbolicModel.Halfplane));
-		} else {
-			unitCircle.setVisible(false);
-			fundamentalPolygonRoot.setVisible(false);
-			universalCoverRoot.setVisible(false);
+		HalfedgeLayer l = hif.getActiveLayer();
+		l.removeTemporaryGeometry(fundamentalPolygonRoot);
+		l.removeTemporaryGeometry(universalCoverRoot);
+		if (genus > 1 && showUnwrapped.isSelected()) {
+			if (showFundamentalPolygon.isSelected()) {
+				l.addTemporaryGeometry(fundamentalPolygonRoot);
+			} 
+			if (showUniversalCover.isSelected()) {
+				l.addTemporaryGeometry(universalCoverRoot);
+			}
 		}
 		ImageData imgData = null;
-		if (polygonImage != null && (showPoygonTexture.isSelected() || showUniversalCover.isSelected())) {
+		if (polygonImage != null && (showUniversalCover.isSelected())) {
 			imgData = new ImageData(polygonImage);
-		}
-		if (polygonImage != null && showPoygonTexture.isSelected()) {
-			Texture2D tex2d = TextureUtility.createTexture(surfaceAppearance, POLYGON_SHADER, imgData);
-			tex2d.setTextureMatrix(polygonTextureMatrix);
-		} else {
-			TextureUtility.removeTexture(surfaceAppearance, POLYGON_SHADER);
 		}
 		if (polygonImage != null && showUniversalCover.isSelected()) {
 			Texture2D tex2d = TextureUtility.createTexture(universalCoverAppearance, POLYGON_SHADER, imgData);
@@ -528,6 +511,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			TextureUtility.removeTexture(universalCoverAppearance, POLYGON_SHADER);
 		}
 	}
+	
+	
+	
+	
 	
 	
 	private CoHDS getLoaderGeometry() {
@@ -572,18 +559,18 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 //			hif.removeAdapter(pointRadiusAdapter);
 //			hif.removeAdapter(pointColorAdapter);
 //		}
-		
 		hif.set(surface);
-		hif.getActiveLayer().addTemporaryGeometry(auxGeometry);
-		hif.getActiveLayer().addTemporaryGeometry(copiedGeometry);
-		hif.getActiveLayer().addTemporaryGeometry(fundamentalPolygonRoot);
-		hif.getActiveLayer().addTemporaryGeometry(universalCoverRoot);
-		hif.encompassAll();
 	}
 	
 
 	public void updateFundamentalPolygon(int resolution) {
-		createFundamentalPolygon(fundamentalPolygon, cutInfo, fundamentalPolygonRoot, resolution, getSelectedModel());
+		createFundamentalPolygon(
+			fundamentalPolygon, 
+			cutInfo, 
+			fundamentalPolygonRoot, 
+			resolution, 
+			getSelectedModel()
+		);
 	}
 	
 	
@@ -711,16 +698,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		c.storeProperty(getClass(), "boundaryQuantMode", boundaryQuantizationCombo.getSelectedItem());
 		c.storeProperty(getClass(), "numericsMethod", numericsCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "klein", kleinButton.isSelected()); 
-		c.storeProperty(getClass(), "showGeometry", showGeometry.isSelected());
 		c.storeProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected());
-		c.storeProperty(getClass(), "showUnitCircle", showUnitCircle.isSelected());
-		c.storeProperty(getClass(), "showPoygonTexture", showPoygonTexture.isSelected());
 		c.storeProperty(getClass(), "showUniversalCover", showUniversalCover.isSelected());
 		c.storeProperty(getClass(), "quantizationMode", quantizationModeCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected());
 		c.storeProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber());
 		c.storeProperty(getClass(), "maxIterations", maxIterationsModel.getNumber());
-		
 		c.storeProperty(getClass(), "boundaryPanelShrinked", boundaryPanel.isShrinked());	
 		c.storeProperty(getClass(), "conesPanelShrinked", coneConfigPanel.isShrinked());	
 		c.storeProperty(getClass(), "visualizationPanelShrinked", visualizationPanel.isShrinked());	
@@ -736,10 +719,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		numericsCombo.setSelectedIndex(c.getProperty(getClass(), "numericsMethod", numericsCombo.getSelectedIndex()));
 		kleinButton.setSelected(c.getProperty(getClass(), "klein", kleinButton.isSelected()));
 		poincareButton.setSelected(!kleinButton.isSelected());
-		showGeometry.setSelected(c.getProperty(getClass(), "showGeometry", showGeometry.isSelected()));
 		showUnwrapped.setSelected(c.getProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected()));
-		showUnitCircle.setSelected(c.getProperty(getClass(), "showUnitCircle", showUnitCircle.isSelected()));
-		showPoygonTexture.setSelected(c.getProperty(getClass(), "showPoygonTexture", showPoygonTexture.isSelected()));
 		showUniversalCover.setSelected(c.getProperty(getClass(), "showUniversalCover", showUniversalCover.isSelected()));
 		quantizationModeCombo.setSelectedIndex(c.getProperty(getClass(), "quantizationMode", quantizationModeCombo.getSelectedIndex()));
 		useProjectiveTexture.setSelected(c.getProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected()));
@@ -748,7 +728,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		quantizationModeCombo.setSelectedItem(c.getProperty(getClass(), "quantizeMode", quantizationModeCombo.getSelectedItem()));
 		boundaryModeCombo.setSelectedItem(c.getProperty(getClass(), "boundaryMode", boundaryModeCombo.getSelectedItem()));
 		boundaryQuantizationCombo.setSelectedItem(c.getProperty(getClass(), "boundaryQuantMode", boundaryQuantizationCombo.getSelectedItem()));
-		
 		boundaryPanel.setShrinked(c.getProperty(getClass(), "boundaryPanelShrinked", true));
 		coneConfigPanel.setShrinked(c.getProperty(getClass(), "conesPanelShrinked", true));
 		visualizationPanel.setShrinked(c.getProperty(getClass(), "visualizationPanelShrinked", true));
