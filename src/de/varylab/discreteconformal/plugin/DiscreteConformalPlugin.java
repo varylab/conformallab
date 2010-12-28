@@ -705,6 +705,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		c.storeProperty(getClass(), "klein", kleinButton.isSelected()); 
 		c.storeProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected());
 		c.storeProperty(getClass(), "showUniversalCover", showUniversalCover.isSelected());
+		c.storeProperty(getClass(), "showFundamentalPolygon", showFundamentalPolygon.isSelected());
 		c.storeProperty(getClass(), "quantizationMode", quantizationModeCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected());
 		c.storeProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber());
@@ -726,6 +727,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		poincareButton.setSelected(!kleinButton.isSelected());
 		showUnwrapped.setSelected(c.getProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected()));
 		showUniversalCover.setSelected(c.getProperty(getClass(), "showUniversalCover", showUniversalCover.isSelected()));
+		showFundamentalPolygon.setSelected(c.getProperty(getClass(), "showFundamentalPolygon", showFundamentalPolygon.isSelected()));
 		quantizationModeCombo.setSelectedIndex(c.getProperty(getClass(), "quantizationMode", quantizationModeCombo.getSelectedIndex()));
 		useProjectiveTexture.setSelected(c.getProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected()));
 		toleranceExpModel.setValue(c.getProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber()));

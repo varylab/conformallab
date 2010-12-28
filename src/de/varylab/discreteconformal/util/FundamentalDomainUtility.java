@@ -161,7 +161,7 @@ public class FundamentalDomainUtility {
 		if (depth > maxDepth) {
 			return;
 		}
-		double eps = 1E-4;
+		double eps = 1E-3;
 		for (FundamentalEdge fe : poly.edgeList) {
 			Matrix T = Matrix.times(domain, fe.motion);
 			boolean proceed = true;

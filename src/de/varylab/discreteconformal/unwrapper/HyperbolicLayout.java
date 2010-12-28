@@ -125,7 +125,7 @@ public class HyperbolicLayout {
 		final Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		final Queue<CoEdge> Qe = new LinkedList<CoEdge>();
 		// start
-		final CoVertex v1 = root;//guessRootVertex(hds, lMap, 10);
+		final CoVertex v1 = guessRootVertex(hds, lMap, 100);
 		final CoEdge e1 = v1.getIncomingEdge();
 		final CoEdge e0 = e1.getOppositeEdge();
 		final CoVertex v2 = e0.getTargetVertex();
