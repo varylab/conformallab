@@ -161,6 +161,7 @@ public class FundamentalDomainUtility {
 		if (depth > maxDepth) {
 			return;
 		}
+		double eps = 1E-4;
 		for (FundamentalEdge fe : poly.edgeList) {
 			Matrix T = Matrix.times(domain, fe.motion);
 			boolean proceed = true;
@@ -179,16 +180,16 @@ public class FundamentalDomainUtility {
 				switch (model) {
 				case Klein:
 				case Poincaré:
-					if (getDistToUnitCircle(p1a) < 0.001 && 
-						getDistToUnitCircle(p2a) < 0.001 &&
-						getDistToUnitCircle(p3a) < 0.001) {
+					if (getDistToUnitCircle(p1a) < eps && 
+						getDistToUnitCircle(p2a) < eps &&
+						getDistToUnitCircle(p3a) < eps) {
 						proceed = drawArc = false;
 					}
 					break;
 				case Halfplane:
-					if (1 / (p1a[3] - p1a[0]) < 0.0001 ||
-						1 / (p2a[3] - p2a[0]) < 0.0001 ||
-						1 / (p3a[3] - p3a[0]) < 0.0001) {
+					if (1 / (p1a[3] - p1a[0]) < eps ||
+						1 / (p2a[3] - p2a[0]) < eps ||
+						1 / (p3a[3] - p3a[0]) < eps) {
 						proceed = drawArc = false;
 					}
 				}

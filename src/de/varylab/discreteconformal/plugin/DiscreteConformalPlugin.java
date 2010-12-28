@@ -238,7 +238,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		circleApp.setAttribute(POLYGON_SHADER + "." + TEXTURE_2D, DEFAULT); 
 		unitCircle.setAppearance(circleApp);
 		euclidean().rotate(PI / 2, 1, 0, 0).assignTo(unitCircle);
-		unitCircle.setGeometry(Primitives.torus(1.0, 0.005, 200, 5));
+		unitCircle.setGeometry(Primitives.torus(1.0025, 0.005, 200, 5));
 		universalCoverRoot.addChild(unitCircle);
 	}
 
@@ -402,7 +402,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				pointRadiusAdapter.setContext(cutInfo);
 				pointColorAdapter.setContext(cutInfo);
 			}
-			if (unwrapper.genus > 1) {
+			if (genus > 1) {
 				fundamentalPolygon = constructFundamentalPolygon(cutInfo);
 				updateFundamentalPolygon(polyResolution);
 				updatePolygonTexture(coverRecursion, coverResolution);
@@ -441,7 +441,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			uw.addPropertyChangeListener(this);
 			uw.execute();
 		}
-		if (showUnwrapped == s || useProjectiveTexture == s || kleinButton == s || poincareButton == s || halfplaneButton == s) {
+		if (showUnwrapped == s || useProjectiveTexture == s) {
+			updateSurface();
+			updateStates();
+		}
+		if (kleinButton == s || poincareButton == s || halfplaneButton == s) {
 			updateSurface();
 			if (genus > 1) {
 				updateFundamentalPolygon(polyResolution);
@@ -498,6 +502,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			} 
 			if (showUniversalCover.isSelected()) {
 				l.addTemporaryGeometry(universalCoverRoot);
+				unitCircle.setVisible(getSelectedModel() == HyperbolicModel.Poincaré);
 			}
 		}
 		ImageData imgData = null;
@@ -544,7 +549,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		texturePositionAdapter.setModel(getSelectedModel());
 		texCoordPositionAdapter.setModel(getSelectedModel());
 		if (showUnwrapped.isSelected()) {
-			hif.addLayerAdapter(texCoordPositionAdapter, true);
+			hif.addLayerAdapter(texCoordPositionAdapter, false);
 		} else {
 			hif.removeAdapter(texCoordPositionAdapter);
 		}

@@ -35,13 +35,14 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper{
 		app.setInitialSolutionVec(u);
 		app.setHessianMat(H, H);	
 		
-		Tao optimizer = new Tao(Tao.Method.NTR);
+		Tao optimizer = new Tao(Tao.Method.NLS);
 		optimizer.setApplication(app);
 		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance); 
 		optimizer.setTolerances(0, 0, 0, 0);
 		optimizer.setMaximumIterates(maxIterations);
 		System.out.println("Using grad tolerance " + gradTolerance);
 		optimizer.solve();
+		System.out.println(optimizer.getSolutionStatus());
 		DenseVector result = new DenseVector(u.getArray());
 		u.restoreArray();
 		return result;
