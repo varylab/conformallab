@@ -42,13 +42,15 @@ public class HyperbolicLayout {
 		Map<CoEdge, Double> lMap,
 		int mcSamples
 	) {
+		// deterministic random numbers
 		Random rnd = new Random();
+		rnd.setSeed(hds.numVertices());
 		
 		Set<CoVertex> boundary = new TreeSet<CoVertex>(new NodeIndexComparator<CoVertex>());
 		boundary.addAll(HalfEdgeUtils.boundaryVertices(hds));
 		Set<CoVertex> mcBoundarySet = new HashSet<CoVertex>();
 		Iterator<CoVertex> boundaryIterator = boundary.iterator();
-		for (int i = 0; i < max(boundary.size() / 10, 10); i++) {
+		for (int i = 0; i < max(boundary.size() / 5, 5); i++) {
 			mcBoundarySet.add(boundaryIterator.next());
 		}
 		
@@ -74,7 +76,7 @@ public class HyperbolicLayout {
 				mean += length;
 				distMap.put(bv, length);
 			}
-			mean /= boundary.size();
+			mean /= mcBoundarySet.size();
 			double s = 0.0;
 			for (CoVertex bv : distMap.keySet()) {
 				double dist = distMap.get(bv);
@@ -84,7 +86,7 @@ public class HyperbolicLayout {
 			sMap.put(v, s);
 		}
 		CoVertex root = mcSet.iterator().next();
-		double minS = sMap.get(root); 
+		double minS = Double.MAX_VALUE; 
 		for (CoVertex v : sMap.keySet()) {
 			double s = sMap.get(v);
 			if (s < minS) {
@@ -92,7 +94,6 @@ public class HyperbolicLayout {
 				root = v;
 			}
 		}
-		
 		return root;
 	}
 	
