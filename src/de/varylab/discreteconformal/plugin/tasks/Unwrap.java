@@ -5,6 +5,7 @@ import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
+import java.util.Map;
 
 import javax.swing.SwingWorker;
 
@@ -57,6 +58,8 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		layoutRoot = null;
 	public CuttingInfo<CoVertex, CoEdge, CoFace> 
 		cutInfo = null;
+	public Map<CoEdge, Double>
+		lengthMap = null;
 	
 	
 	public Unwrap(CoHDS surface, AdapterSet aSet) {
@@ -105,6 +108,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			u = unwrapper.unwrap(surface, aSet);
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
+			lengthMap = HyperbolicLayout.getLengthMap(surface, u);
 			layoutRoot = EuclideanLayout.doLayout(surface, u);
 			layoutTime = System.currentTimeMillis();
 			setProgress(100);
@@ -125,6 +129,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			DefaultWeightAdapter<CoEdge> constantWeight = new DefaultWeightAdapter<CoEdge>();
 			CoVertex cutRoot = surface.getVertex(0);
 			cutInfo = CuttingUtility.cutTorusToDisk(surface, cutRoot, constantWeight);
+			lengthMap = HyperbolicLayout.getLengthMap(surface, u);
 			layoutRoot = EuclideanLayout.doLayout(surface, u);
 			layoutTime = System.currentTimeMillis();
 			try {
@@ -155,6 +160,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			cutRoot = surface.getVertex(getMinUIndex(u));
 			cutInfo = cutManifoldToDisk(surface, cutRoot, hypWa);
 			CoVertex layoutRoot = surface.getVertex(getMaxUIndex(u));
+			lengthMap = HyperbolicLayout.getLengthMap(surface, u);
 			layoutRoot = HyperbolicLayout.doLayout(surface, layoutRoot, u);
 			layoutTime = System.currentTimeMillis();
 			setProgress(100);

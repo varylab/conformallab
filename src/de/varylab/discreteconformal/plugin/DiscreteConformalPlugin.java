@@ -36,6 +36,7 @@ import java.beans.PropertyChangeListener;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -89,6 +90,7 @@ import de.varylab.discreteconformal.heds.adapter.BranchPointRadiusAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionPositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.MetricEdgeLengthAdapter;
 import de.varylab.discreteconformal.heds.adapter.MarkedEdgesColorAdapter;
 import de.varylab.discreteconformal.heds.adapter.MarkedEdgesRadiusAdapter;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
@@ -115,6 +117,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		surface = null;
 	private CuttingInfo<CoVertex, CoEdge, CoFace> 
 		cutInfo = null;
+	public Map<CoEdge, Double>
+		lengthMap = null;
 	private List<CoVertex>
 		customVertices = new LinkedList<CoVertex>();
 	private FundamentalPolygon 
@@ -126,6 +130,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	private int
 		genus = -1;
 
+	private MetricEdgeLengthAdapter
+		edgeLengthAdapter = new MetricEdgeLengthAdapter();
 	private CoTexturePositionAdapter
 		texturePositionAdapter = new CoTexturePositionAdapter();
 	private CoTexturePositionPositionAdapter
@@ -151,7 +157,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	// user interface section ------------
 	private JButton
 		checkGaussBonnetBtn = new JButton("Check Gauß-Bonnet"),
-		unwrapBtn = new JButton("Unwrap");
+		unwrapBtn = new JButton("Unwrap"),
+		normalizePolygonBtn = new JButton("Normalize Polygon");
 	private ShrinkPanel
 		customVertexPanel = new ShrinkPanel("Custom Vertices"),
 		boundaryPanel = new ShrinkPanel("Boundary"),
@@ -201,6 +208,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		showUniversalCover.addActionListener(this);
 		showFundamentalPolygon.addActionListener(this);
 		useProjectiveTexture.addActionListener(this);
+		normalizePolygonBtn.addActionListener(this);
 		
 		ButtonGroup modelGroup = new ButtonGroup();
 		modelGroup.add(kleinButton);
@@ -304,6 +312,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		visualizationPanel.setLayout(new GridBagLayout());
 		visualizationPanel.add(showUnwrapped, c2);
 		visualizationPanel.add(showFundamentalPolygon, c2);
+		visualizationPanel.add(normalizePolygonBtn, c2);
 		visualizationPanel.add(showUniversalCover, c2);
 		visualizationPanel.add(useProjectiveTexture, c2);
 		visualizationPanel.setShrinked(true);
@@ -315,6 +324,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		modelPanel.add(halfplaneButton);
 		modelPanel.setShrinked(true);
 		shrinkPanel.add(modelPanel, c2);
+		
+		normalizePolygonBtn.setEnabled(false);
 	}
 	
 	
@@ -395,6 +406,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				unwrapper.getSurface().revertNormalization();
 			}
 			genus = unwrapper.genus;
+			lengthMap = unwrapper.lengthMap;
 			if (genus > 0) {
 				cutInfo = unwrapper.cutInfo;
 				cutColorAdapter.setContext(cutInfo);
@@ -406,6 +418,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				fundamentalPolygon = constructFundamentalPolygon(cutInfo);
 				updateFundamentalPolygon(polyResolution);
 				updatePolygonTexture(coverRecursion, coverResolution);
+				normalizePolygonBtn.setEnabled(true);
+			} else {
+				normalizePolygonBtn.setEnabled(false);
 			}
 			if (genus == 0) {
 				kleinButton.setSelected(true);
@@ -487,6 +502,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				showMessageDialog(w, e1.getMessage(), "Error", ERROR_MESSAGE);
 			}
 		}
+		if (normalizePolygonBtn == s) {
+			fundamentalPolygon = fundamentalPolygon.getCanonical();
+			updateFundamentalPolygon(polyResolution);
+			updatePolygonTexture(coverRecursion, coverResolution);
+		}
 	}
 	
 	/*
@@ -548,10 +568,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		texturePositionAdapter.setProjective(useProjectiveTexture.isSelected());
 		texturePositionAdapter.setModel(getSelectedModel());
 		texCoordPositionAdapter.setModel(getSelectedModel());
+		edgeLengthAdapter.setLengthMap(lengthMap);
+		hif.addGlobalAdapter(edgeLengthAdapter, false);
 		if (showUnwrapped.isSelected()) {
-			hif.addLayerAdapter(texCoordPositionAdapter, false);
-		} else {
-			hif.removeAdapter(texCoordPositionAdapter);
+			hif.addGlobalAdapter(texCoordPositionAdapter, false);	
 		}
 //		if (genus >= 1) {
 //			hif.addLayerAdapter(cutRadiusAdapter,false);
@@ -569,9 +589,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	
 
 	public void updateFundamentalPolygon(int resolution) {
+		double[] rootPos = cutInfo.cutRoot.T;
 		createFundamentalPolygon(
 			fundamentalPolygon, 
-			cutInfo, 
+			rootPos, 
 			fundamentalPolygonRoot, 
 			resolution, 
 			getSelectedModel()

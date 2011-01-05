@@ -25,10 +25,6 @@ import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jreality.scene.SceneGraphComponent;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
-import de.varylab.discreteconformal.heds.CoEdge;
-import de.varylab.discreteconformal.heds.CoFace;
-import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalEdge;
 import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;
 
@@ -38,14 +34,11 @@ public class FundamentalDomainUtility {
 	
 	public static void createFundamentalPolygon(
 		FundamentalPolygon fundamentalPolygon,
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo,
+		double[] pRoot,
 		SceneGraphComponent c, 
 		int resolution, 
 		HyperbolicModel model
 	) {
-		if (fundamentalPolygon == null || cutInfo == null) {
-			return;
-		}
 		final IndexedLineSetFactory ilsf = new IndexedLineSetFactory();
 		int n = fundamentalPolygon.getLength();
 		double[][] verts = null;
@@ -66,7 +59,6 @@ public class FundamentalDomainUtility {
 				edges = new int[n * resolution][];	
 				break;
 		}
-		double[] pRoot = cutInfo.cutRoot.T;
 		
 		double[] root = new double[] {pRoot[0], pRoot[1], 0.0, pRoot[3]};
 		List<double[]> orbit = fundamentalPolygon.getOrbit(root);

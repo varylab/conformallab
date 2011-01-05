@@ -29,8 +29,8 @@ import java.util.TreeSet;
 
 import no.uib.cipr.matrix.Vector;
 import de.jreality.math.Matrix;
+import de.jreality.math.P2;
 import de.jreality.math.Pn;
-import de.jreality.math.Rn;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -51,14 +51,6 @@ public class UniformizationUtility {
 
 	private static int 
 		log = 3;
-	private static Matrix 
-		E = new Matrix(
-			1, 0, 0, 0,
-			0, 1, 0, 0,
-			0, 0, 1, 0,
-			0, 0, 0, -1
-		);
-	
 	
 	public static void normalize(Matrix M) {
 		double max = 0;
@@ -76,67 +68,6 @@ public class UniformizationUtility {
 			System.out.println(msg); 
 		}
 	}
-	
-	
-	public static Matrix makeHyperbolicMotion(CoEdge s, CoEdge t) {
-		double[] s1 = s.getStartVertex().T;
-		double[] s2 = s.getTargetVertex().T;
-		double[] t1 = t.getStartVertex().T;
-		double[] t2 = t.getTargetVertex().T;
-		return makeHyperbolicMotion(s1, s2, t1, t2);
-	}
-		
-	public static Matrix makeHyperbolicMotion(double[] s14, double[] s24, double[] t14, double[] t24) {
-		double[] s1 = {s14[0], s14[1], s14[3]};
-		double[] s2 = {s24[0], s24[1], s24[3]};
-		double[] t1 = {t14[0], t14[1], t14[3]};
-		double[] t2 = {t24[0], t24[1], t24[3]};
-		double[] ns = Rn.crossProduct(null, s1, s2);
-		double[] nt = Rn.crossProduct(null, t1, t2);
-		
-		double s1s1 = Pn.innerProduct(s1, s1, HYPERBOLIC);
-		double t1t1 = Pn.innerProduct(t1, t1, HYPERBOLIC);
-		double s1s2 = Pn.innerProduct(s1, s2, HYPERBOLIC);
-		double t1t2 = Pn.innerProduct(t1, t2, HYPERBOLIC);
-		double[] ws = Rn.linearCombination(null, 1, s2, -s1s2 / s1s1, s1);
-		double[] wt = Rn.linearCombination(null, 1, t2, -t1t2 / t1t1, t1);
-		Pn.normalize(ws, ws, HYPERBOLIC);
-		Pn.normalize(wt, wt, HYPERBOLIC);
-		
-		double nss1 = Pn.innerProduct(ns, s1, HYPERBOLIC);
-		double ntt1 = Pn.innerProduct(nt, t1, HYPERBOLIC);
-		ns = Rn.linearCombination(null, 1, ns, -nss1 / s1s1, s1);
-		nt = Rn.linearCombination(null, 1, nt, -ntt1 / t1t1, t1);
-		
-		double nsws = Pn.innerProduct(ns, ws, HYPERBOLIC);
-		double ntwt = Pn.innerProduct(nt, wt, HYPERBOLIC);	
-		double wsws = Pn.innerProduct(ws, ws, HYPERBOLIC);
-		double wtwt = Pn.innerProduct(wt, wt, HYPERBOLIC);
-		ns = Rn.linearCombination(null, 1, ns, -nsws / wsws, ws);
-		nt = Rn.linearCombination(null, 1, nt, -ntwt / wtwt, wt);
-		Pn.normalize(ns, ns, HYPERBOLIC);
-		Pn.normalize(nt, nt, HYPERBOLIC);
-		
-		Matrix S = new Matrix(
-			ns[0], 	ws[0], 	0, 	s1[0],
-			ns[1], 	ws[1], 	0, 	s1[1],
-			0,		0, 		1, 		0,
-			ns[2],	ws[2], 	0, 	s1[2]
-		);
-		Matrix SInv = S.getTranspose();
-		SInv.multiplyOnLeft(E);
-		SInv.multiplyOnRight(E);
-		Matrix T = new Matrix(
-			nt[0], 	wt[0], 	0, 	t1[0],
-			nt[1], 	wt[1], 	0, 	t1[1],
-			0,		0, 		1, 		0,
-			nt[2], 	wt[2], 	0, 	t1[2]
-		);
-		Matrix M = Matrix.times(T, SInv);
-		normalize(M);
-		return M;
-	}
-	
 	
 	
 	public static class FundamentalVertex {
@@ -260,7 +191,7 @@ public class UniformizationUtility {
 				result.add(pos);
 				// apply in the opposite order to get the relation
 				T.multiplyOnRight(active.motion);
-				normalize(T);
+//				normalize(T);
 				active = active.partner.nextEdge;
 			} while (active != start);
 			System.out.println("\nDual orbit transform: \n" + T);
@@ -353,10 +284,10 @@ public class UniformizationUtility {
 				System.out.print("\n");
 				act = act.nextEdge;
 			} while (act != e);
-			do {
-				System.out.println(act.motion);
-				act = act.nextEdge;
-			} while (act != e);
+//			do {
+//				System.out.println(act.motion);
+//				act = act.nextEdge;
+//			} while (act != e);
 		}
 		
 		private FundamentalEdge findLinkedEdge(FundamentalEdge a) {
@@ -392,10 +323,10 @@ public class UniformizationUtility {
 			for (FundamentalEdge c : cSet) {
 				System.out.println(c.index + " = " + c.index + " " + a.partner.index);
 				c.motion.multiplyOnLeft(Ainv);
-				normalize(c.motion);
+//				normalize(c.motion);
 				System.out.println(c.partner.index + " = " + a.index + " " + c.partner.index);
 				c.partner.motion.multiplyOnRight(A);
-				normalize(c.partner.motion);
+//				normalize(c.partner.motion);
 			}
 			// move first connection
 			aiPrev.nextEdge = c1;
@@ -501,9 +432,14 @@ public class UniformizationUtility {
 				double[] lastStartPoint = cutInfo.edgeCutMap.get(firstOfSegment).getStartVertex().T;
 				double[] actTargetPoint = vTarget.T;
 				double[] actStartPoint = coEdge.getTargetVertex().T;
-				Matrix A = makeHyperbolicMotion(lastStartPoint, actStartPoint, lastTargetPoint, actTargetPoint);
-//				System.out.println("Dist start: " + Pn.distanceBetween(lastStartPoint.get(), actStartPoint.get(), HYPERBOLIC));
-//				System.out.println("Dist target: " + Pn.distanceBetween(lastTargetPoint.get(), actTargetPoint.get(), HYPERBOLIC));
+				double[] T = P2.makeDirectIsometryFromFrames(null, 
+					lastStartPoint, 
+					actStartPoint, 
+					lastTargetPoint, 
+					actTargetPoint, 
+					HYPERBOLIC
+				);
+				Matrix A = new Matrix(P2.imbedMatrixP2InP3(null, T));
 				FundamentalEdge fEdge = new FundamentalEdge(index++, start, end, A);
 				funEdgeMap.put(firstOfSegment, fEdge);
 				poly.edgeList.add(fEdge);

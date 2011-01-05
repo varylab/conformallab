@@ -37,6 +37,14 @@ import de.varylab.discreteconformal.util.Search;
 public class HyperbolicLayout {
 
 	
+	/**
+	 * Implements a heuristic for finding a root vertex for the
+	 * hyperbolic layout. Its numerically best to have equal distance to the boundary. 
+	 * @param hds
+	 * @param lMap
+	 * @param mcSamples
+	 * @return
+	 */
 	public static CoVertex guessRootVertex(
 		CoHDS hds, 
 		Map<CoEdge, Double> lMap,
@@ -209,7 +217,7 @@ public class HyperbolicLayout {
 		double[] AtPerp = Rn.crossProduct(null, AHat, BHat);
 		normalize(AtPerp);
 		double[] Ct = Rn.linearCombination(null, cos(alpha), At, sin(alpha), AtPerp);
-		normalize(Ct);
+//		normalize(Ct);
 		double[] C1 = Rn.linearCombination(null, cosh(d), B3, sinh(d), Ct);
 		normalize(C1);
 		double[] C2 = Rn.linearCombination(null, cosh(d), B3, -sinh(d), Ct);

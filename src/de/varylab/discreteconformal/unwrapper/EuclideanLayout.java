@@ -7,9 +7,11 @@ import static java.lang.Math.exp;
 import static java.lang.Math.sin;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -128,6 +130,17 @@ public class EuclideanLayout {
 			}
 		}
 		return r;
+	}
+	
+	
+	public static Map<CoEdge, Double> getLengthMap(CoHDS hds, Vector u) {
+		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
+		for (CoEdge e : hds.getPositiveEdges()) {
+			double l = getNewLength(e, u);
+			lMap.put(e, l);
+			lMap.put(e.getOppositeEdge(), l);
+		}
+		return lMap;
 	}
 	
 	
