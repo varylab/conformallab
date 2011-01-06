@@ -420,8 +420,8 @@ public class UniformizationUtility {
 		index = 0;
 		Map<CoEdge, FundamentalEdge> funEdgeMap = new HashMap<CoEdge, FundamentalEdge>();
 		// circle around the polygon
+		double[] s1 = new double[3], s2 = new double[3], t1 = new double[3], t2 = new double[3];
 		while (!visited.contains(eActive)) {
-			
 			CoVertex vTarget = eActive.getTargetVertex();
 			if (branchSet.contains(vTarget)) {
 				FundamentalVertex start = lastFunV;
@@ -433,10 +433,10 @@ public class UniformizationUtility {
 				double[] actTargetPoint = vTarget.T;
 				double[] actStartPoint = coEdge.getTargetVertex().T;
 				double[] T = P2.makeDirectIsometryFromFrames(null, 
-					lastStartPoint, 
-					actStartPoint, 
-					lastTargetPoint, 
-					actTargetPoint, 
+					P2.projectP3ToP2(s1, lastStartPoint), 
+					P2.projectP3ToP2(s2, actStartPoint), 
+					P2.projectP3ToP2(t1, lastTargetPoint), 
+					P2.projectP3ToP2(t2, actTargetPoint), 
 					HYPERBOLIC
 				);
 				Matrix A = new Matrix(P2.imbedMatrixP2InP3(null, T));

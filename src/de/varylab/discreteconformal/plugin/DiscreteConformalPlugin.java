@@ -36,7 +36,6 @@ import java.beans.PropertyChangeListener;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -62,6 +61,7 @@ import javax.swing.event.ListSelectionListener;
 import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
+import de.jreality.math.Pn;
 import de.jreality.plugin.basic.View;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.SceneGraphComponent;
@@ -90,9 +90,9 @@ import de.varylab.discreteconformal.heds.adapter.BranchPointRadiusAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionPositionAdapter;
-import de.varylab.discreteconformal.heds.adapter.MetricEdgeLengthAdapter;
 import de.varylab.discreteconformal.heds.adapter.MarkedEdgesColorAdapter;
 import de.varylab.discreteconformal.heds.adapter.MarkedEdgesRadiusAdapter;
+import de.varylab.discreteconformal.heds.adapter.MetricErrorAdapter;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.FundamentalDomainUtility;
@@ -117,8 +117,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		surface = null;
 	private CuttingInfo<CoVertex, CoEdge, CoFace> 
 		cutInfo = null;
-	public Map<CoEdge, Double>
-		lengthMap = null;
 	private List<CoVertex>
 		customVertices = new LinkedList<CoVertex>();
 	private FundamentalPolygon 
@@ -130,8 +128,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	private int
 		genus = -1;
 
-	private MetricEdgeLengthAdapter
-		edgeLengthAdapter = new MetricEdgeLengthAdapter();
+	private MetricErrorAdapter
+		edgeLengthAdapter = new MetricErrorAdapter();
 	private CoTexturePositionAdapter
 		texturePositionAdapter = new CoTexturePositionAdapter();
 	private CoTexturePositionPositionAdapter
@@ -406,7 +404,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				unwrapper.getSurface().revertNormalization();
 			}
 			genus = unwrapper.genus;
-			lengthMap = unwrapper.lengthMap;
+			edgeLengthAdapter.setLengthMap(unwrapper.lengthMap);
+			edgeLengthAdapter.setSignature(Pn.EUCLIDEAN);
 			if (genus > 0) {
 				cutInfo = unwrapper.cutInfo;
 				cutColorAdapter.setContext(cutInfo);
@@ -419,6 +418,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				updateFundamentalPolygon(polyResolution);
 				updatePolygonTexture(coverRecursion, coverResolution);
 				normalizePolygonBtn.setEnabled(true);
+				edgeLengthAdapter.setSignature(Pn.HYPERBOLIC);
 			} else {
 				normalizePolygonBtn.setEnabled(false);
 			}
@@ -568,7 +568,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		texturePositionAdapter.setProjective(useProjectiveTexture.isSelected());
 		texturePositionAdapter.setModel(getSelectedModel());
 		texCoordPositionAdapter.setModel(getSelectedModel());
-		edgeLengthAdapter.setLengthMap(lengthMap);
 		hif.addGlobalAdapter(edgeLengthAdapter, false);
 		if (showUnwrapped.isSelected()) {
 			hif.addGlobalAdapter(texCoordPositionAdapter, false);	

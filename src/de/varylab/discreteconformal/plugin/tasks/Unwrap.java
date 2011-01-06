@@ -108,7 +108,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			u = unwrapper.unwrap(surface, aSet);
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
-			lengthMap = HyperbolicLayout.getLengthMap(surface, u);
+			lengthMap = EuclideanLayout.getLengthMap(surface, u);
 			layoutRoot = EuclideanLayout.doLayout(surface, u);
 			layoutTime = System.currentTimeMillis();
 			setProgress(100);
