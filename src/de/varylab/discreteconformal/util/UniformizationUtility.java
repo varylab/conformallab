@@ -14,6 +14,8 @@ import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 import static java.util.Collections.sort;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -96,6 +98,8 @@ public class UniformizationUtility {
 			end = new FundamentalVertex(0);
 		public Matrix
 			motion = new Matrix(); // identification motion
+		public BigDecimal[]
+		    motionBig = null;
 		public FundamentalEdge
 			prevEdge = null,
 			nextEdge = null;
@@ -110,12 +114,14 @@ public class UniformizationUtility {
 			int index,
 			FundamentalVertex start, 
 			FundamentalVertex end,
-			Matrix motion
+			Matrix motion,
+			BigDecimal[] motionBig
 		) {
 			this(index);
 			this.start = start;
 			this.end = end;
 			this.motion = motion;
+			this.motionBig = motionBig;
 		}
 		
 		@Override
@@ -183,6 +189,8 @@ public class UniformizationUtility {
 			FundamentalEdge start = edgeList.get(0);
 			FundamentalEdge active = start;
 			Matrix T = new Matrix();
+			BigDecimal[] Tbig = new BigDecimal[16];
+			RnBig.setIdentityMatrix(Tbig);
 			System.out.println("------------------------ orbit calculation");
 			do {
 				System.out.print(active.index + ", ");
@@ -191,10 +199,16 @@ public class UniformizationUtility {
 				result.add(pos);
 				// apply in the opposite order to get the relation
 				T.multiplyOnRight(active.motion);
+				RnBig.times(Tbig, Tbig, active.motionBig);
+//				P3.orthonormalizeMatrix(T.getArray(), T.getArray(), 1E-5, HYPERBOLIC);
+//				if (P3.isometryIsUnstable(T.getArray(), HYPERBOLIC)) {
+//					System.out.println("Isometry is unstable \n" + T);
+//				}
 //				normalize(T);
 				active = active.partner.nextEdge;
 			} while (active != start);
 			System.out.println("\nDual orbit transform: \n" + T);
+			System.out.println("\nBig dual orbit transform: \n" + RnBig.matrixToString(Tbig));
 			return result;
 		}
 		
@@ -318,15 +332,17 @@ public class UniformizationUtility {
 			
 			Matrix A = a.motion;
 			Matrix Ainv = a.partner.motion;
+			BigDecimal[] ABig = a.motionBig;
+			BigDecimal[] ABiginv = a.partner.motionBig;
 			System.out.println("A = \n" + A);
 			
 			for (FundamentalEdge c : cSet) {
 				System.out.println(c.index + " = " + c.index + " " + a.partner.index);
 				c.motion.multiplyOnLeft(Ainv);
-//				normalize(c.motion);
+				RnBig.times(c.motionBig, ABiginv, c.motionBig);
 				System.out.println(c.partner.index + " = " + a.index + " " + c.partner.index);
 				c.partner.motion.multiplyOnRight(A);
-//				normalize(c.partner.motion);
+				RnBig.times(c.partner.motionBig, c.partner.motionBig, ABig);
 			}
 			// move first connection
 			aiPrev.nextEdge = c1;
@@ -421,6 +437,7 @@ public class UniformizationUtility {
 		Map<CoEdge, FundamentalEdge> funEdgeMap = new HashMap<CoEdge, FundamentalEdge>();
 		// circle around the polygon
 		double[] s1 = new double[3], s2 = new double[3], t1 = new double[3], t2 = new double[3];
+		BigDecimal[] s1b = new BigDecimal[3], s2b = new BigDecimal[3], t1b = new BigDecimal[3], t2b = new BigDecimal[3];
 		while (!visited.contains(eActive)) {
 			CoVertex vTarget = eActive.getTargetVertex();
 			if (branchSet.contains(vTarget)) {
@@ -432,6 +449,8 @@ public class UniformizationUtility {
 				double[] lastStartPoint = cutInfo.edgeCutMap.get(firstOfSegment).getStartVertex().T;
 				double[] actTargetPoint = vTarget.T;
 				double[] actStartPoint = coEdge.getTargetVertex().T;
+				
+				// double precision isometry
 				double[] T = P2.makeDirectIsometryFromFrames(null, 
 					P2.projectP3ToP2(s1, lastStartPoint), 
 					P2.projectP3ToP2(s2, actStartPoint), 
@@ -440,7 +459,23 @@ public class UniformizationUtility {
 					HYPERBOLIC
 				);
 				Matrix A = new Matrix(P2.imbedMatrixP2InP3(null, T));
-				FundamentalEdge fEdge = new FundamentalEdge(index++, start, end, A);
+				System.out.println("Motion:\n" + A);
+				
+				MathContext contex = new MathContext(25);
+				// arbitrary precision isometry
+				BigDecimal[] TBig = P2Big.makeDirectIsometryFromFrames(null, 
+					P2Big.projectP3ToP2(s1b, RnBig.toBig(null, lastStartPoint)), 
+					P2Big.projectP3ToP2(s2b, RnBig.toBig(null, actStartPoint)), 
+					P2Big.projectP3ToP2(t1b, RnBig.toBig(null, lastTargetPoint)), 
+					P2Big.projectP3ToP2(t2b, RnBig.toBig(null, actTargetPoint)), 
+					HYPERBOLIC,
+					contex
+				);
+				BigDecimal[] ABig = P2Big.imbedMatrixP2InP3(null, TBig);
+				System.out.println("Big Motion:\n" + RnBig.matrixToString(ABig));
+				
+				
+				FundamentalEdge fEdge = new FundamentalEdge(index++, start, end, A, ABig);
 				funEdgeMap.put(firstOfSegment, fEdge);
 				poly.edgeList.add(fEdge);
 				// identification
