@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.util;
 
 import static de.jreality.math.Pn.HYPERBOLIC;
+import static de.varylab.discreteconformal.util.UniformizationUtility.context;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.WHITE;
 import static java.awt.geom.Arc2D.OPEN;
@@ -8,6 +9,8 @@ import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 import static java.lang.Math.cos;
 import static java.lang.Math.signum;
 import static java.lang.Math.sin;
+import static java.math.BigDecimal.ONE;
+import static java.math.BigDecimal.ZERO;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -17,10 +20,11 @@ import java.awt.RenderingHints;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.List;
 
 import de.jreality.geometry.IndexedLineSetFactory;
-import de.jreality.math.Matrix;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jreality.scene.SceneGraphComponent;
@@ -41,43 +45,44 @@ public class FundamentalDomainUtility {
 	) {
 		final IndexedLineSetFactory ilsf = new IndexedLineSetFactory();
 		int n = fundamentalPolygon.getLength();
-		double[][] verts = null;
+		BigDecimal[][] verts = null;
 		int[][] edges = null;
 		switch (model) {
 			default:
 			case Klein:
 				ilsf.setVertexCount(n);
 				ilsf.setEdgeCount(n);	
-				verts = new double[n][];
+				verts = new BigDecimal[n][];
 				edges = new int[n][];
 				break;
 			case Poincaré:
 			case Halfplane:
 				ilsf.setVertexCount(n * resolution);
 				ilsf.setEdgeCount(n * resolution);
-				verts = new double[n * resolution][];
+				verts = new BigDecimal[n * resolution][];
 				edges = new int[n * resolution][];	
 				break;
 		}
 		
 		double[] root = new double[] {pRoot[0], pRoot[1], 0.0, pRoot[3]};
-		List<double[]> orbit = fundamentalPolygon.getOrbit(root);
+		List<BigDecimal[]> orbit = fundamentalPolygon.getOrbit(root);
 		for (int i = 0; i < n; i++) {
-			double[] pos = orbit.get(i);
-			double[] posNext = orbit.get((i + 1) % n);
+			BigDecimal[] pos = orbit.get(i);
+			BigDecimal[] posNext = orbit.get((i + 1) % n);
 			switch (model) {
 				default:
 				case Klein:
-					verts[i] = new double[] {pos[0], pos[1], 0.0, pos[3]};
+					verts[i] = new BigDecimal[] {pos[0], pos[1], ZERO, pos[3]};
 					edges[i] = new int[] {i, (i + 1) % (n)};
 					break;
 				case Poincaré:
 					for (int j = 0; j < resolution; j++) {
 						int index = i * resolution + j;
 						double t = j / (resolution - 1.0);
-						double[] p = Rn.linearCombination(null, t, posNext, 1-t, pos);
-						Pn.normalize(p, p, Pn.HYPERBOLIC);
-						verts[index] = new double[] {p[0], p[1], 0.0, p[3] + 1};
+						BigDecimal tBig = new BigDecimal(t);
+						BigDecimal[] p = RnBig.linearCombination(null, tBig, posNext, ONE.subtract(tBig), pos, context);
+						PnBig.normalize(p, p, Pn.HYPERBOLIC, context);
+						verts[index] = new BigDecimal[] {p[0], p[1], ZERO, p[3].add(ONE)};
 						edges[index] = new int[] {index, (index + 1) % (n * resolution)};
 					}
 					break;
@@ -85,15 +90,16 @@ public class FundamentalDomainUtility {
 					for (int j = 0; j < resolution; j++) {
 						int index = i * resolution + j;
 						double t = j / (resolution - 1.0);
-						double[] p = Rn.linearCombination(null, t, posNext, 1-t, pos);
-						Pn.normalize(p, p, Pn.HYPERBOLIC);
-						verts[index] = new double[] {p[1], 1.0, 0.0, (p[3] - p[0])};
+						BigDecimal tBig = new BigDecimal(t);
+						BigDecimal[] p = RnBig.linearCombination(null, tBig, posNext, ONE.subtract(tBig), pos, context);
+						PnBig.normalize(p, p, Pn.HYPERBOLIC, context);
+						verts[index] = new BigDecimal[] {p[1], ONE, ZERO, p[3].subtract(p[0], context)};
 						edges[index] = new int[] {index, (index + 1) % (n * resolution)};
 					}
 					break;
 			}
 		}
-		ilsf.setVertexCoordinates(verts);
+		ilsf.setVertexCoordinates(RnBig.toDouble(null, verts));
 		ilsf.setEdgeIndices(edges);
 		ilsf.update();
 		c.setGeometry(ilsf.getGeometry());
@@ -128,9 +134,14 @@ public class FundamentalDomainUtility {
 				break;
 		}
 		
-		List<double[]> orbit = poly.getOrbit(root);
+		List<BigDecimal[]> orbit = poly.getOrbit(root);
 		g.setColor(BLACK);
-		drawPolygon(poly, orbit, new Matrix(), g, res, 0, depth, model);
+		BigDecimal[] id = new BigDecimal[16];
+		RnBig.setIdentityMatrix(id);
+		drawPolygon(poly, orbit, id, g, res, 0, 0, model);
+//		g.setColor(RED);
+//		RnBig.setIdentityMatrix(id);
+//		drawPolygon(poly, orbit, id, g, res, 0, 0, model);
 //		try {
 //			ImageIO.write(image, "png", new File("test.png"));
 //		} catch (Exception e) {
@@ -142,8 +153,8 @@ public class FundamentalDomainUtility {
 	
 	private static void drawPolygon(
 		FundamentalPolygon poly,
-		List<double[]> orbit,
-		Matrix domain,
+		List<BigDecimal[]> orbit,
+		BigDecimal[] domain,
 		Graphics2D g,
 		int res,
 		int depth,
@@ -154,39 +165,43 @@ public class FundamentalDomainUtility {
 			return;
 		}
 		double eps = 1E-3;
+		BigDecimal HALF = new BigDecimal(0.5);
 		for (FundamentalEdge fe : poly.edgeList) {
-			Matrix T = Matrix.times(domain, fe.motion);
+			BigDecimal[] T = RnBig.times(null, domain, fe.motionBig, context);
 			boolean proceed = true;
 			for (int i = 0; i < orbit.size(); i++) {
-				double[] p1a = orbit.get(i).clone();
-				double[] p2a = orbit.get((i + 1) % orbit.size()).clone();
-				double[] p3a = Rn.linearCombination(null, 0.5, p1a, 0.5, p2a);
-				Pn.normalize(p3a, p3a, HYPERBOLIC);
-				T.transformVector(p1a);
-				T.transformVector(p2a);
-				T.transformVector(p3a);
-				Pn.normalize(p1a, p1a, HYPERBOLIC);
-				Pn.normalize(p2a, p2a, HYPERBOLIC);
-				Pn.normalize(p3a, p3a, HYPERBOLIC);
+				BigDecimal[] p1a = orbit.get(i).clone();
+				BigDecimal[] p2a = orbit.get((i + 1) % orbit.size()).clone();
+				BigDecimal[] p3a = RnBig.linearCombination(null, HALF, p1a, HALF, p2a, context);
+				PnBig.normalize(p3a, p3a, HYPERBOLIC, context);
+				RnBig.matrixTimesVector(p1a, T, p1a, context);
+				RnBig.matrixTimesVector(p2a, T, p2a, context);
+				RnBig.matrixTimesVector(p3a, T, p3a, context);
+				PnBig.normalize(p1a, p1a, HYPERBOLIC, context);
+				PnBig.normalize(p2a, p2a, HYPERBOLIC, context);
+				PnBig.normalize(p3a, p3a, HYPERBOLIC, context);
 				boolean drawArc = true;
 				switch (model) {
 				case Klein:
 				case Poincaré:
-					if (getDistToUnitCircle(p1a) < eps && 
-						getDistToUnitCircle(p2a) < eps &&
-						getDistToUnitCircle(p3a) < eps) {
+					if (getDistToUnitCircle(p1a, context) < eps && 
+						getDistToUnitCircle(p2a, context) < eps &&
+						getDistToUnitCircle(p3a, context) < eps) {
 						proceed = drawArc = false;
 					}
 					break;
 				case Halfplane:
-					if (1 / (p1a[3] - p1a[0]) < eps ||
-						1 / (p2a[3] - p2a[0]) < eps ||
-						1 / (p3a[3] - p3a[0]) < eps) {
+					if (1 / (p1a[3].subtract(p1a[0], context).doubleValue()) < eps ||
+						1 / (p2a[3].subtract(p2a[0], context).doubleValue()) < eps ||
+						1 / (p3a[3].subtract(p3a[0], context).doubleValue()) < eps) {
 						proceed = drawArc = false;
 					}
 				}
 				if (drawArc) {
-					drawArc(p1a, p2a, p3a, g, res, model);
+					double[] p1aDouble = RnBig.toDouble(null, p1a);
+					double[] p2aDouble = RnBig.toDouble(null, p2a);
+					double[] p3aDouble = RnBig.toDouble(null, p3a);
+					drawArc(p1aDouble, p2aDouble, p3aDouble, g, res, model);
 				}
 			}
 			if (proceed) {
@@ -195,9 +210,9 @@ public class FundamentalDomainUtility {
 		}
 	}
 	
-	private static double getDistToUnitCircle(double[] p) {
-		double x = p[0] / (p[3] + 1);
-		double y = p[1] / (p[3] + 1);
+	private static double getDistToUnitCircle(BigDecimal[] p, MathContext c) {
+		double x = p[0].divide(p[3].add(BigDecimal.ONE, context), c).doubleValue();
+		double y = p[1].divide(p[3].add(BigDecimal.ONE, context), c).doubleValue();
 		return 1 - Math.sqrt(x*x + y*y);
 	}
 	

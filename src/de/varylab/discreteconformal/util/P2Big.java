@@ -21,7 +21,7 @@ public class P2Big {
 		BigDecimal[] toP = makeDirectIsometryFromFrame(null, p0, p1, signature, context);
 		BigDecimal[] toQ = makeDirectIsometryFromFrame(null, q0, q1, signature, context);
 		BigDecimal[] iToP = RnBig.inverse(null, toP, context);
-		dst = RnBig.times(dst, toQ, iToP);
+		dst = RnBig.times(dst, toQ, iToP, context);
 		return dst;
 	}
 
@@ -35,8 +35,8 @@ public class P2Big {
 		if (dst == null) dst = new BigDecimal[9];
 		PnBig.normalize(p0, p0, signature, context);
 		BigDecimal[] polarP = PnBig.polarize(null, p0, signature);
-		BigDecimal[] lineP = lineFromPoints(null, p0, p1);
-		BigDecimal[] p1n = PnBig.normalize(null, pointFromLines(null, polarP, lineP), signature, context);
+		BigDecimal[] lineP = lineFromPoints(null, p0, p1, context);
+		BigDecimal[] p1n = PnBig.normalize(null, pointFromLines(null, polarP, lineP, context), signature, context);
 		BigDecimal[] p2 = PnBig.polarize(null, lineP, signature);
 		PnBig.normalize(p2, p2, signature, context);
 		makeMatrixFromColumns(dst, p0, p1n, p2);
@@ -44,14 +44,19 @@ public class P2Big {
 	}
 
 	
-	public static BigDecimal[] pointFromLines(BigDecimal[] point, BigDecimal[] l1, BigDecimal[] l2)	{
+	public static BigDecimal[] pointFromLines(
+		BigDecimal[] point,
+		BigDecimal[] l1, 
+		BigDecimal[] l2,
+		MathContext context
+	)	{
 		if (l1.length < 3 || l2.length < 3)	{
 			throw new IllegalArgumentException("Input arrays too short");
 		}
 		if (point == null) point = new BigDecimal[3];	
-		point[0] = l1[1].multiply(l2[2]).subtract(l1[2].multiply(l2[1]));
-		point[1] = l1[2].multiply(l2[0]).subtract(l1[0].multiply(l2[2]));
-		point[2] = l1[0].multiply(l2[1]).subtract(l1[1].multiply(l2[0]));
+		point[0] = l1[1].multiply(l2[2], context).subtract(l1[2].multiply(l2[1], context), context);
+		point[1] = l1[2].multiply(l2[0], context).subtract(l1[0].multiply(l2[2], context), context);
+		point[2] = l1[0].multiply(l2[1], context).subtract(l1[1].multiply(l2[0], context), context);
 		return point;
 	}
 	
@@ -62,8 +67,8 @@ public class P2Big {
 	 * @param l2
 	 * @return
 	 */
-	public static BigDecimal[] lineFromPoints(BigDecimal[] line, BigDecimal[] p1, BigDecimal[] p2)	{
-		return pointFromLines(line, p1, p2);
+	public static BigDecimal[] lineFromPoints(BigDecimal[] line, BigDecimal[] p1, BigDecimal[] p2, MathContext context)	{
+		return pointFromLines(line, p1, p2, context);
 	}
 	
 	

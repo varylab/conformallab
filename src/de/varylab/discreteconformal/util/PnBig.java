@@ -23,7 +23,11 @@ public class PnBig {
 		new BigDecimal(0.0) 
 	};
 	
-	public static BigDecimal[] dehomogenize(BigDecimal[] dst, BigDecimal[] src)	{
+	public static BigDecimal[] dehomogenize(
+		BigDecimal[] dst, 
+		BigDecimal[] src,
+		MathContext context
+	)	{
 		// assert dim checks
 		int sl = src.length;
 		if (dst == null) dst = new BigDecimal[src.length];
@@ -39,7 +43,7 @@ public class PnBig {
 			}
 			return dst;
 		}
-		last = ONE.divide(last);
+		last = ONE.divide(last, context);
 		for (int i = 0; i<dl; ++i)		{
 			dst[i] = last.multiply(src[i]);
 		}
@@ -49,13 +53,18 @@ public class PnBig {
 		return dst;
 	}
 	
-	public static BigDecimal norm(BigDecimal[] src, int metric) {
-		BigDecimal d = innerProduct(src, src, metric).abs();
+	public static BigDecimal norm(BigDecimal[] src, int metric, MathContext context) {
+		BigDecimal d = innerProduct(src, src, metric, context).abs();
 		double sqrt = Math.sqrt(d.doubleValue());
 		return new BigDecimal(sqrt);
 	}
 	
-	public static BigDecimal innerProduct(BigDecimal dst[], BigDecimal[] src, int metric)	{
+	public static BigDecimal innerProduct(
+		BigDecimal dst[], 
+		BigDecimal[] src, 
+		int metric,
+		MathContext context
+	)	{
 		// assert dim checks
 		BigDecimal sum = new BigDecimal(0.0);
 		if (src.length != dst.length)		{
@@ -64,21 +73,21 @@ public class PnBig {
 		int n = dst.length;
 		
 		for (int i = 0; i< n-1; ++i) {
-			sum = sum.add(dst[i].multiply(src[i]));
+			sum = sum.add(dst[i].multiply(src[i], context), context);
 		}
-		BigDecimal ff = dst[n-1].multiply(src[n-1]);
+		BigDecimal ff = dst[n-1].multiply(src[n-1], context);
 		
 		switch(metric)	{
 			case HYPERBOLIC:		// metric (n-1,1)
-				sum = sum.subtract(ff);
+				sum = sum.subtract(ff, context);
 				break;
 			case EUCLIDEAN:		// metric (n-1, 0)				
 				if (!(RnBig.isOne(ff) || RnBig.isZero(ff)))	{
-					sum = sum.divide(ff);
+					sum = sum.divide(ff, context);
 				}
 				break;
 			case ELLIPTIC:		// metric (n, 0)
-				sum = sum.add(ff);
+				sum = sum.add(ff, context);
 				break;
 		}
 		return sum;
@@ -94,7 +103,7 @@ public class PnBig {
 		if (dst == null)
 			dst = new BigDecimal[src.length];
 		if (metric == EUCLIDEAN) {
-			return dehomogenize(dst, src);
+			return dehomogenize(dst, src, context);
 		}
 		return setToLength(dst, src, ONE, metric, context);
 	}
@@ -113,16 +122,16 @@ public class PnBig {
 			throw new IllegalArgumentException("Incompatible lengths");
 		}
 		if (metric == EUCLIDEAN) {
-			dehomogenize(dst, src);
+			dehomogenize(dst, src, context);
 		} else {
 			System.arraycopy(src, 0, dst, 0, dst.length);
 		}
-		BigDecimal ll = norm(dst, metric);
+		BigDecimal ll = norm(dst, metric, context);
 		if (ll.compareTo(ZERO) == 0) {
 			return dst;
 		}
 		ll = length.divide(ll, context);
-		RnBig.times(dst, ll, dst);
+		RnBig.times(dst, ll, dst, context);
 		if (metric == EUCLIDEAN && dst[dst.length - 1].compareTo(ZERO) != 0) {
 			dst[dst.length - 1] = new BigDecimal(1.0);
 		}

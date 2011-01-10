@@ -53,6 +53,8 @@ public class UniformizationUtility {
 
 	private static int 
 		log = 3;
+	public static MathContext 
+		context = new MathContext(40);
 	
 	public static void normalize(Matrix M) {
 		double max = 0;
@@ -157,11 +159,11 @@ public class UniformizationUtility {
 		}
 		
 		
-		public List<double[]> getOrbit(double[] root) {
-			double[] pos1 = root.clone();
-			double[] pos2 = root.clone();
-			List<double[]> result = new LinkedList<double[]>();
-			Map<FundamentalEdge, double[]> posMap = new HashMap<FundamentalEdge, double[]>();
+		public List<BigDecimal[]> getOrbit(double[] root) {
+			BigDecimal[] pos1 = RnBig.toBig(null, root);
+			BigDecimal[] pos2 = RnBig.toBig(null, root);
+			
+			Map<FundamentalEdge, BigDecimal[]> posMap = new HashMap<FundamentalEdge, BigDecimal[]>();
 			FundamentalEdge start1 = edgeList.get(0);
 			FundamentalEdge active1 = start1;
 			FundamentalEdge start2 = edgeList.get(edgeList.size() - 1);
@@ -169,15 +171,17 @@ public class UniformizationUtility {
 			while (posMap.keySet().size() < edgeList.size()) {
 				posMap.put(active2.nextEdge, pos2.clone());
 				posMap.put(active1, pos1.clone());
-				active1.partner.motion.transformVector(pos1);
-				active2.partner.motion.transformVector(pos2);
-				Pn.normalize(pos1, pos1, HYPERBOLIC);
-				Pn.normalize(pos2, pos2, HYPERBOLIC);
+				RnBig.matrixTimesVector(pos1, active1.partner.motionBig, pos2, context);
+				RnBig.matrixTimesVector(pos2, active2.partner.motionBig, pos2, context);
+				PnBig.normalize(pos1, pos1, HYPERBOLIC, context);
+				PnBig.normalize(pos2, pos2, HYPERBOLIC, context);
 				active1 = active1.partner.nextEdge;
 				active2 = active2.partner.prevEdge;
 			};
+			List<BigDecimal[]> result = new LinkedList<BigDecimal[]>();
 			for (FundamentalEdge e : edgeList) {
-				result.add(posMap.get(e));
+				BigDecimal[] posBig = posMap.get(e);
+				result.add(posBig);
 			}
 			return result;
 		}
@@ -199,7 +203,7 @@ public class UniformizationUtility {
 				result.add(pos);
 				// apply in the opposite order to get the relation
 				T.multiplyOnRight(active.motion);
-				RnBig.times(Tbig, Tbig, active.motionBig);
+				RnBig.times(Tbig, Tbig, active.motionBig, context);
 //				P3.orthonormalizeMatrix(T.getArray(), T.getArray(), 1E-5, HYPERBOLIC);
 //				if (P3.isometryIsUnstable(T.getArray(), HYPERBOLIC)) {
 //					System.out.println("Isometry is unstable \n" + T);
@@ -339,10 +343,10 @@ public class UniformizationUtility {
 			for (FundamentalEdge c : cSet) {
 				System.out.println(c.index + " = " + c.index + " " + a.partner.index);
 				c.motion.multiplyOnLeft(Ainv);
-				RnBig.times(c.motionBig, ABiginv, c.motionBig);
+				RnBig.times(c.motionBig, ABiginv, c.motionBig, context);
 				System.out.println(c.partner.index + " = " + a.index + " " + c.partner.index);
 				c.partner.motion.multiplyOnRight(A);
-				RnBig.times(c.partner.motionBig, c.partner.motionBig, ABig);
+				RnBig.times(c.partner.motionBig, c.partner.motionBig, ABig, context);
 			}
 			// move first connection
 			aiPrev.nextEdge = c1;
@@ -460,8 +464,7 @@ public class UniformizationUtility {
 				);
 				Matrix A = new Matrix(P2.imbedMatrixP2InP3(null, T));
 				System.out.println("Motion:\n" + A);
-				
-				MathContext contex = new MathContext(25);
+
 				// arbitrary precision isometry
 				BigDecimal[] TBig = P2Big.makeDirectIsometryFromFrames(null, 
 					P2Big.projectP3ToP2(s1b, RnBig.toBig(null, lastStartPoint)), 
@@ -469,7 +472,7 @@ public class UniformizationUtility {
 					P2Big.projectP3ToP2(t1b, RnBig.toBig(null, lastTargetPoint)), 
 					P2Big.projectP3ToP2(t2b, RnBig.toBig(null, actTargetPoint)), 
 					HYPERBOLIC,
-					contex
+					context
 				);
 				BigDecimal[] ABig = P2Big.imbedMatrixP2InP3(null, TBig);
 				System.out.println("Big Motion:\n" + RnBig.matrixToString(ABig));
