@@ -6,14 +6,12 @@ import static java.lang.Math.cos;
 import static java.lang.Math.cosh;
 import static java.lang.Math.exp;
 import static java.lang.Math.log;
-import static java.lang.Math.max;
 import static java.lang.Math.sin;
 import static java.lang.Math.sinh;
 import static java.lang.Math.sqrt;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -56,17 +54,17 @@ public class HyperbolicLayout {
 		
 		Set<CoVertex> boundary = new TreeSet<CoVertex>(new NodeIndexComparator<CoVertex>());
 		boundary.addAll(HalfEdgeUtils.boundaryVertices(hds));
-		Set<CoVertex> mcBoundarySet = new HashSet<CoVertex>();
-		Iterator<CoVertex> boundaryIterator = boundary.iterator();
-		for (int i = 0; i < max(boundary.size() / 5, 5); i++) {
-			mcBoundarySet.add(boundaryIterator.next());
-		}
+//		Set<CoVertex> mcBoundarySet = new HashSet<CoVertex>();
+//		Iterator<CoVertex> boundaryIterator = boundary.iterator();
+//		for (int i = 0; i < max(boundary.size() / 5, 5); i++) {
+//			mcBoundarySet.add(boundaryIterator.next());
+//		}
 		
 		LengthMapWeightAdapter wa = new LengthMapWeightAdapter(lMap);
 		Map<CoVertex, Double> sMap = new HashMap<CoVertex, Double>();
 		
 		Set<CoVertex> mcSet = new HashSet<CoVertex>();
-		for (int i = 0; i < mcSamples; i++) {
+		for (int i = 0; i < Math.min(mcSamples, hds.numVertices()); i++) {
 			int sampleIndex = rnd.nextInt(hds.numVertices());
 			CoVertex sampleVertex = hds.getVertex(sampleIndex);
 			if (!HalfEdgeUtils.isBoundaryVertex(sampleVertex)) {
@@ -78,13 +76,13 @@ public class HyperbolicLayout {
 			double mean = 0;
 			Map<CoVertex, Double> distMap = new HashMap<CoVertex, Double>();
 			Map<CoVertex, List<CoEdge>> pathMap = Search.getAllShortestPaths(v, boundary, wa, new HashSet<CoVertex>());
-			for (CoVertex bv : mcBoundarySet) {
+			for (CoVertex bv : boundary) {
 				List<CoEdge> path = pathMap.get(bv);
 				double length = PathUtility.getTotalPathWeight(new HashSet<CoEdge>(path), wa);
 				mean += length;
 				distMap.put(bv, length);
 			}
-			mean /= mcBoundarySet.size();
+			mean /= boundary.size();
 			double s = 0.0;
 			for (CoVertex bv : distMap.keySet()) {
 				double dist = distMap.get(bv);
@@ -134,7 +132,7 @@ public class HyperbolicLayout {
 		final Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		final Queue<CoEdge> Qe = new LinkedList<CoEdge>();
 		// start
-		final CoVertex v1 = guessRootVertex(hds, lMap, 100);
+		final CoVertex v1 = guessRootVertex(hds, lMap, 200);
 		final CoEdge e1 = v1.getIncomingEdge();
 		final CoEdge e0 = e1.getOppositeEdge();
 		final CoVertex v2 = e0.getTargetVertex();

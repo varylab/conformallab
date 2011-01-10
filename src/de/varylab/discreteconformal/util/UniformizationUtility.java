@@ -157,6 +157,7 @@ public class UniformizationUtility {
 			}
 			return vSet.size();
 		}
+
 		
 		
 		public List<BigDecimal[]> getOrbit(double[] root) {
@@ -171,7 +172,7 @@ public class UniformizationUtility {
 			while (posMap.keySet().size() < edgeList.size()) {
 				posMap.put(active2.nextEdge, pos2.clone());
 				posMap.put(active1, pos1.clone());
-				RnBig.matrixTimesVector(pos1, active1.partner.motionBig, pos2, context);
+				RnBig.matrixTimesVector(pos1, active1.partner.motionBig, pos1, context);
 				RnBig.matrixTimesVector(pos2, active2.partner.motionBig, pos2, context);
 				PnBig.normalize(pos1, pos1, HYPERBOLIC, context);
 				PnBig.normalize(pos2, pos2, HYPERBOLIC, context);
@@ -185,7 +186,6 @@ public class UniformizationUtility {
 			}
 			return result;
 		}
-		
 		
 		
 		public List<double[]> getDualOrbit(double[] root) {
@@ -265,7 +265,7 @@ public class UniformizationUtility {
 			FundamentalEdge a = min.edgeList.get(0);
 			int g = getGenus();
 			for (int i = 0; i < g; i++) {
-				FundamentalEdge b = findLinkedEdge(a);
+				FundamentalEdge b = findOptimizedLinkedEdge(a);
 				bringTogether(a, b);
 				getDualOrbit(new double[] {0,0,0,1});
 				enumerateFrom(a);
@@ -308,7 +308,23 @@ public class UniformizationUtility {
 //			} while (act != e);
 		}
 		
-		private FundamentalEdge findLinkedEdge(FundamentalEdge a) {
+//		private FundamentalEdge findLinkedEdge(FundamentalEdge a) {
+//			Set<FundamentalEdge> checkSet = new TreeSet<UniformizationUtility.FundamentalEdge>();
+//			for (FundamentalEdge e = a.nextEdge; e != a.partner; e = e.nextEdge) {
+//				checkSet.add(e);
+//			}
+//			FundamentalEdge b = null;
+//			for (FundamentalEdge e : checkSet) {
+//				if (!checkSet.contains(e.partner)) {
+//					b = e;
+//					break;
+//				}
+//			}
+//			return b;
+//		}
+		
+		// TODO: create heuristics
+		private FundamentalEdge findOptimizedLinkedEdge(FundamentalEdge a) {
 			Set<FundamentalEdge> checkSet = new TreeSet<UniformizationUtility.FundamentalEdge>();
 			for (FundamentalEdge e = a.nextEdge; e != a.partner; e = e.nextEdge) {
 				checkSet.add(e);

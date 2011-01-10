@@ -138,7 +138,7 @@ public class FundamentalDomainUtility {
 		g.setColor(BLACK);
 		BigDecimal[] id = new BigDecimal[16];
 		RnBig.setIdentityMatrix(id);
-		drawPolygon(poly, orbit, id, g, res, 0, 0, model);
+		drawPolygon(poly, orbit, id, g, res, 0, depth, model);
 //		g.setColor(RED);
 //		RnBig.setIdentityMatrix(id);
 //		drawPolygon(poly, orbit, id, g, res, 0, 0, model);
@@ -164,7 +164,7 @@ public class FundamentalDomainUtility {
 		if (depth > maxDepth) {
 			return;
 		}
-		double eps = 1E-3;
+		double eps = 1E-4;
 		BigDecimal HALF = new BigDecimal(0.5);
 		for (FundamentalEdge fe : poly.edgeList) {
 			BigDecimal[] T = RnBig.times(null, domain, fe.motionBig, context);
