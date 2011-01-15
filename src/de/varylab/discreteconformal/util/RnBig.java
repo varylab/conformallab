@@ -75,7 +75,6 @@ public class RnBig {
 		return sb.toString();
 	}
 	
-	@SuppressWarnings("null")
 	public static BigDecimal[] matrixTimesVector(
 		BigDecimal[] dst,
 		BigDecimal[] m, 

@@ -5,8 +5,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Collections;
-import java.util.Set;
 
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
@@ -16,7 +14,6 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.Node;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.jtem.halfedgetools.adapter.Adapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.impl.StringAdapter;
 import de.jtem.halfedgetools.adapter.type.Label;
@@ -84,8 +81,10 @@ public class ThetaVisualizer extends VisualizerPlugin {
 	
 	
 	@Override
-	public Set<? extends Adapter<?>> getAdapters() {
-		return Collections.singleton(new ThetaLabelAdapter());
+	public AdapterSet getAdapters() {
+		AdapterSet result = new AdapterSet();
+		result.add(new ThetaLabelAdapter());
+		return result;
 	}
 	
 	
