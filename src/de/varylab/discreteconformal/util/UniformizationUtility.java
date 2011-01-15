@@ -266,13 +266,13 @@ public class UniformizationUtility {
 			int g = getGenus();
 			for (int i = 0; i < g; i++) {
 				FundamentalEdge b = findOptimizedLinkedEdge(a);
-				bringTogether(a, b);
+				bringTogether(a, b, false);
 				getDualOrbit(new double[] {0,0,0,1});
 				enumerateFrom(a);
-				bringTogether(b, a.partner);
+				bringTogether(b, a.partner, false);
 				getDualOrbit(new double[] {0,0,0,1});
 				enumerateFrom(a);
-				bringTogether(a.partner, b.partner);
+				bringTogether(a.partner, b.partner, false);
 				getDualOrbit(new double[] {0,0,0,1});
 				enumerateFrom(a);
 				a = b.partner.nextEdge;
@@ -339,7 +339,7 @@ public class UniformizationUtility {
 			return b;
 		}
 		
-		private void bringTogether(FundamentalEdge a, FundamentalEdge b) {
+		private void bringTogether(FundamentalEdge a, FundamentalEdge b, boolean reverse) {
 			System.out.println("bring together " + a + " - " + b);
 			if (a.nextEdge == b) return; // already together
 			Set<FundamentalEdge> cSet = new TreeSet<UniformizationUtility.FundamentalEdge>();
