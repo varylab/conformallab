@@ -1,7 +1,7 @@
-package de.varylab.discreteconformal.util;
+package de.varylab.discreteconformal.uniformization;
 
 import static de.jreality.math.Pn.HYPERBOLIC;
-import static de.varylab.discreteconformal.util.UniformizationUtility.context;
+import static de.varylab.discreteconformal.uniformization.UniformizationUtility.context;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.WHITE;
 import static java.awt.geom.Arc2D.OPEN;
@@ -29,8 +29,8 @@ import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jreality.scene.SceneGraphComponent;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
-import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalEdge;
-import de.varylab.discreteconformal.util.UniformizationUtility.FundamentalPolygon;
+import de.varylab.discreteconformal.math.PnBig;
+import de.varylab.discreteconformal.math.RnBig;
 
 public class FundamentalDomainUtility {
 

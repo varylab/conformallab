@@ -1,7 +1,7 @@
-package de.varylab.discreteconformal.util;
+package de.varylab.discreteconformal.math;
 
-import static de.varylab.discreteconformal.util.RnBig.isOne;
-import static de.varylab.discreteconformal.util.RnBig.isZero;
+import static de.varylab.discreteconformal.math.RnBig.isOne;
+import static de.varylab.discreteconformal.math.RnBig.isZero;
 import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.ZERO;
 

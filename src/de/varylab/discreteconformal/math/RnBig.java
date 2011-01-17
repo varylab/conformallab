@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.util;
+package de.varylab.discreteconformal.math;
 
 import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.ZERO;
