@@ -152,6 +152,7 @@ public class FundamentalPolygon {
 		
 		FundamentalEdge cEdge = findShortestContractableEdge(newPoly, rootVertex);
 		while (cEdge != null) {
+			System.out.println("contracting edge " + cEdge + " #src " + cEdge.sourceEdgeCount);
 			FundamentalEdge prev1 = cEdge.prevEdge;
 			FundamentalEdge next1 = cEdge.nextEdge;
 			FundamentalEdge prev2 = cEdge.partner.prevEdge;
@@ -174,6 +175,10 @@ public class FundamentalPolygon {
 				}
 			}
 			cEdge = findShortestContractableEdge(newPoly, rootVertex);
+		}
+		int index = 0; // set edge indices
+		for (FundamentalEdge e : newPoly) {
+			e.index = index++;
 		}
 		FundamentalPolygon result = new FundamentalPolygon();
 		result.edgeList = newPoly;

@@ -152,7 +152,7 @@ public class UniformizationUtility {
 		assert lastFunE != null;
 		assert firstFunE != null;
 		lastFunE.nextEdge = firstFunE;
-		firstFunE.prevEdge = firstFunE;
+		firstFunE.prevEdge = lastFunE;
 		
 		// try dual orbit of the raw polygon
 		System.out.println("Cutted Polygon:\n" + poly);
