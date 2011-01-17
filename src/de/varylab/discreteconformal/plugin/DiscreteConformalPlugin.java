@@ -156,7 +156,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	private JButton
 		checkGaussBonnetBtn = new JButton("Check Gauß-Bonnet"),
 		unwrapBtn = new JButton("Unwrap"),
-		normalizePolygonBtn = new JButton("Normalize Polygon");
+		normalizePolygonBtn = new JButton("Normalize Polygon"),
+		normalizePolygonFastBtn = new JButton("Normalize Polygon Fast");
 	private ShrinkPanel
 		customVertexPanel = new ShrinkPanel("Custom Vertices"),
 		boundaryPanel = new ShrinkPanel("Boundary"),
@@ -207,6 +208,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		showFundamentalPolygon.addActionListener(this);
 		useProjectiveTexture.addActionListener(this);
 		normalizePolygonBtn.addActionListener(this);
+		normalizePolygonFastBtn.addActionListener(this);
 		
 		ButtonGroup modelGroup = new ButtonGroup();
 		modelGroup.add(kleinButton);
@@ -311,6 +313,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		visualizationPanel.add(showUnwrapped, c2);
 		visualizationPanel.add(showFundamentalPolygon, c2);
 		visualizationPanel.add(normalizePolygonBtn, c2);
+		visualizationPanel.add(normalizePolygonFastBtn, c2);
 		visualizationPanel.add(showUniversalCover, c2);
 		visualizationPanel.add(useProjectiveTexture, c2);
 		visualizationPanel.setShrinked(true);
@@ -324,6 +327,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		shrinkPanel.add(modelPanel, c2);
 		
 		normalizePolygonBtn.setEnabled(false);
+		normalizePolygonFastBtn.setEnabled(false);
 	}
 	
 	
@@ -418,9 +422,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				updateFundamentalPolygon(polyResolution);
 				updatePolygonTexture(coverRecursion, coverResolution);
 				normalizePolygonBtn.setEnabled(true);
+				normalizePolygonFastBtn.setEnabled(true);
 				edgeLengthAdapter.setSignature(Pn.HYPERBOLIC);
 			} else {
 				normalizePolygonBtn.setEnabled(false);
+				normalizePolygonFastBtn.setEnabled(false);
 			}
 			if (genus == 0) {
 				kleinButton.setSelected(true);
@@ -503,7 +509,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			}
 		}
 		if (normalizePolygonBtn == s) {
-			fundamentalPolygon = fundamentalPolygon.getCanonical();
+			fundamentalPolygon = fundamentalPolygon.getNaiveCanonical();
+			updateFundamentalPolygon(polyResolution);
+			updatePolygonTexture(coverRecursion, coverResolution);
+		}
+		if (normalizePolygonFastBtn == s) {
+			fundamentalPolygon = fundamentalPolygon.getFastCanonical();
 			updateFundamentalPolygon(polyResolution);
 			updatePolygonTexture(coverRecursion, coverResolution);
 		}

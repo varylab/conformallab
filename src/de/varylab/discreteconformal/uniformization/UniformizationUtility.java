@@ -22,7 +22,7 @@ import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 public class UniformizationUtility {
 
 	public static MathContext 
-		context = new MathContext(40);
+		context = new MathContext(60);
 	
 	
 	public static FundamentalPolygon constructFundamentalPolygon(

@@ -215,11 +215,18 @@ public class FundamentalPolygon {
 	 * edges is aba-1b-1.... This polygon can be non-convex
 	 * @return
 	 */
-	public FundamentalPolygon getCanonical() {
+	public FundamentalPolygon getNaiveCanonical() {
 		FundamentalPolygon min = getMinimal();
 		FundamentalEdge a = min.edgeList.get(0);
+		Set<FundamentalEdge> normalized = new HashSet<FundamentalEdge>();
 		int g = getGenus();
-		for (int i = 0; i < g; i++) {
+		while (normalized.size() < 4*g) {
+			if (normalized.contains(a)) {
+				a = a.nextEdge;
+				System.out.println("skipping normalized edge " + a);
+				continue;
+			}
+			System.out.println("Collecting handle ---------------");
 			FundamentalEdge b = findLinkedEdge(a);
 			bringTogether(a, b);
 			getDualOrbit(new double[] {0,0,0,1});
@@ -230,6 +237,10 @@ public class FundamentalPolygon {
 			bringTogether(a.partner, b.partner);
 			getDualOrbit(new double[] {0,0,0,1});
 			enumerateFrom(a);
+			normalized.add(a);
+			normalized.add(b);
+			normalized.add(a.partner);
+			normalized.add(b.partner);
 			a = b.partner.nextEdge;
 		};
 		// assemble the polygon list
@@ -245,6 +256,59 @@ public class FundamentalPolygon {
 		r.edgeList = canList;
 		return r;
 	}
+	
+	
+	/**
+	 * Tries to use a heuristics to minimize the group operations
+	 * whine transforming the polygon. This uses the notion of distance
+	 * or cost of a linked pair
+	 * @return
+	 */
+	public FundamentalPolygon getFastCanonical() {
+		FundamentalPolygon P = getMinimal();
+		FundamentalEdge[] link = findMinimalLinkableEdges(P);
+		System.out.println("Constructing fast canonical polygon...");
+		if (link == null)  {
+			System.out.println("polygon is canonical");
+			return P;
+		}
+		FundamentalEdge lastHandle = null;
+		while (link != null) {
+			FundamentalEdge a = link[0];
+			FundamentalEdge b = link[1];
+			System.out.println("Collecting handle --- " + a + " :: " + b);
+			bringTogether(a, b);
+			getDualOrbit(new double[] {0,0,0,1});
+			enumerateFrom(a);
+			bringTogether(b, a.partner);
+			getDualOrbit(new double[] {0,0,0,1});
+			enumerateFrom(a);
+			bringTogether(a.partner, b.partner);
+			getDualOrbit(new double[] {0,0,0,1});
+			enumerateFrom(a);
+			link = findMinimalLinkableEdges(P);
+			lastHandle = a;
+		};
+		if (lastHandle == null) {
+			lastHandle = P.edgeList.get(0);
+		}
+		// assemble the polygon list
+		List<FundamentalEdge> canList = new LinkedList<FundamentalEdge>();
+		int index = 0;
+		FundamentalEdge a = lastHandle;
+		do {
+			a.index = index++;
+			canList.add(a);
+			a = a.nextEdge;
+		} while (a != lastHandle);
+		FundamentalPolygon r = new FundamentalPolygon();
+		r.edgeList = canList;
+		System.out.println("Result of normalization ");
+		enumerateFrom(lastHandle);
+		return r;
+	}
+	
+	
 	
 	
 	/**
@@ -264,6 +328,11 @@ public class FundamentalPolygon {
 	}
 	
 	
+	/**
+	 * Finds some linked edge
+	 * @param a
+	 * @return
+	 */
 	private FundamentalEdge findLinkedEdge(FundamentalEdge a) {
 		Set<FundamentalEdge> checkSet = new TreeSet<FundamentalEdge>();
 		for (FundamentalEdge e = a.nextEdge; e != a.partner; e = e.nextEdge) {
@@ -279,6 +348,103 @@ public class FundamentalPolygon {
 		return b;
 	}
 	
+	
+	/**
+	 * Finds the linked pair with shortest distance that is not already minimally linked
+	 * @param P
+	 * @return a linked pair or null if no pair is linkable
+	 */
+	private FundamentalEdge[] findMinimalLinkableEdges(FundamentalPolygon P) {
+		// exclude handles
+		Set<FundamentalEdge> handles = new HashSet<FundamentalEdge>();
+		for (FundamentalEdge e : P.edgeList) {
+			FundamentalEdge l = findMinimalLinkedEdge(e);
+			int cost = calculateLinkedPairCost(e, l);
+			if (cost == 3) { // is a handle
+				handles.add(e);
+				handles.add(l);
+				handles.add(e.partner);
+				handles.add(l.partner);
+			}
+		}
+		
+		// collect linkable edges
+		Set<FundamentalEdge> linkable = new HashSet<FundamentalEdge>(P.edgeList);
+		linkable.removeAll(handles);
+		if (linkable.isEmpty()) return null;
+		
+		FundamentalEdge[] result = new FundamentalEdge[2];
+		int min = Integer.MAX_VALUE;
+		for (FundamentalEdge e : linkable) {
+			FundamentalEdge l = findMinimalLinkedEdge(e);
+			int cost = calculateLinkedPairCost(e, l);
+			if (cost < min) { 
+				min = cost;
+				result[0] = e;
+				result[1] = l;
+			}
+		}
+		return result;
+	}
+	
+	
+	private int calculateLinkedPairCost(FundamentalEdge a, FundamentalEdge b) {
+		int cost = 0;
+		cost += calculateDistanceInPolygon(a, b);
+		cost += calculateDistanceInPolygon(b, a.partner);
+		cost += calculateDistanceInPolygon(a.partner, b.partner);
+		return cost;
+	}
+	
+	
+	
+	/**
+	 * Finds an edge whose partner is close to the partner of a
+	 * @param a
+	 * @return
+	 */
+	private FundamentalEdge findMinimalLinkedEdge(FundamentalEdge a) {
+		Set<FundamentalEdge> checkSet = new TreeSet<FundamentalEdge>();
+		for (FundamentalEdge e = a.nextEdge; e != a.partner; e = e.nextEdge) {
+			checkSet.add(e);
+		}
+		FundamentalEdge b = null;
+		int min = Integer.MAX_VALUE;
+		for (FundamentalEdge e : checkSet) {
+			if (!checkSet.contains(e.partner)) {
+				int dist = calculateDistanceInPolygon(a.partner, e.partner);
+				if (dist < min) {
+					min = dist;
+					b = e;	
+				}
+			}
+		}
+		return b;
+	}
+	
+	
+	/**
+	 * Calculates the edge distance of two edges when going in next direction
+	 * @param e1
+	 * @param e2
+	 * @return
+	 */
+	private int calculateDistanceInPolygon(FundamentalEdge e1, FundamentalEdge e2) {
+		int i = 0;
+		while (e1 != e2) {
+			i++;
+			e1 = e1.nextEdge;
+		}
+		return i;
+	}
+	
+	
+	/**
+	 * Performs a cut and paste operation on the given edges
+	 * such that they are next to each other afterwards
+	 * @param a
+	 * @param b
+	 */
 	private void bringTogether(FundamentalEdge a, FundamentalEdge b) {
 		System.out.println("bring together " + a + " - " + b);
 		if (a.nextEdge == b) return; // already together
