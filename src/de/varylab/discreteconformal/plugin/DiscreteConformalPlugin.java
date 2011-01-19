@@ -459,6 +459,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			uw.setBoundaryQuantMode((QuantizationMode)boundaryQuantizationCombo.getSelectedItem());
 			uw.setBoundaryMode((BoundaryMode)boundaryModeCombo.getSelectedItem());
 			uw.setUsePetsc(numericsCombo.getSelectedIndex() == 1);
+			uw.setSelectedVertices(hif.getSelection().getVertices(surface));
 			uw.addPropertyChangeListener(this);
 			uw.execute();
 		}

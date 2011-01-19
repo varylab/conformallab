@@ -5,7 +5,9 @@ import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.SwingWorker;
 
@@ -38,6 +40,8 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		surface = null;
 	private AdapterSet
 		aSet = new AdapterSet();
+	private Set<CoVertex>
+		selectedVertices = new HashSet<CoVertex>();
 	private boolean
 		usePetsc = false;
 	private QuantizationMode
@@ -158,6 +162,9 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			setProgress(50);
 			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
 			cutRoot = surface.getVertex(getMinUIndex(u));
+			if (!selectedVertices.isEmpty()) {
+				cutRoot = selectedVertices.iterator().next();
+			}
 			cutInfo = cutManifoldToDisk(surface, cutRoot, hypWa);
 			CoVertex layoutRoot = surface.getVertex(getMaxUIndex(u));
 			lengthMap = HyperbolicLayout.getLengthMap(surface, u);
@@ -252,6 +259,10 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 	
 	public void setBoundaryQuantMode(QuantizationMode boundaryQuantMode) {
 		this.boundaryQuantMode = boundaryQuantMode;
+	}
+	
+	public void setSelectedVertices(Set<CoVertex> selectedVertices) {
+		this.selectedVertices = selectedVertices;
 	}
 
 }

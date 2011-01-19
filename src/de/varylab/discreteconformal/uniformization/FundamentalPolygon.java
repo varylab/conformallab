@@ -104,52 +104,9 @@ public class FundamentalPolygon {
 	 * @return
 	 */
 	public FundamentalPolygon getMinimal() {
-		// canonical polygon construction --------------
 		System.out.println("Constructing minimal polygon...");
-//		FundamentalVertex fRoot = edgeList.get(0).start;
-//		List<FundamentalEdge> newPoly = new LinkedList<FundamentalEdge>();
-//		Set<FundamentalEdge> contracted = new TreeSet<FundamentalEdge>();
-//		for (FundamentalEdge e : edgeList) {
-//			if (contracted.contains(e)) {
-//				continue;
-//			}
-//			FundamentalVertex badVertex = e.end;
-//			if (badVertex != fRoot) { // edge contraction
-//				System.out.println("contracting edge " + e + ", #source " + e.sourceEdgeCount);
-//				contracted.add(e);
-//				contracted.add(e.partner);
-//				for (FundamentalEdge fe : edgeList) {
-//					if (fe.start == badVertex) {
-//						fe.start = fRoot;
-//					}
-//					if (fe.end == badVertex) {
-//						fe.end = fRoot;
-//					}
-//				}
-//			} else {
-//				newPoly.add(e);
-//			}
-//		}
-//		edgeList = newPoly;
-//		// linkage
-//		for (int i = 0; i < newPoly.size(); i++) {
-//			FundamentalEdge prev = newPoly.get(i - 1 < 0 ? newPoly.size() - 1 : i - 1);
-//			FundamentalEdge next = newPoly.get((i + 1) % newPoly.size());
-//			FundamentalEdge act = newPoly.get(i);
-//			prev.nextEdge = act;
-//			act.index = i;
-//			act.prevEdge = prev;
-//			act.nextEdge = next;
-//			next.prevEdge = act;
-//		}
-//		FundamentalPolygon result = new FundamentalPolygon();
-//		result.edgeList = newPoly;
-//		return result;
-		
-		
 		FundamentalVertex rootVertex = edgeList.get(0).start;
 		List<FundamentalEdge> newPoly = new LinkedList<FundamentalEdge>(edgeList);
-		
 		FundamentalEdge cEdge = findShortestContractableEdge(newPoly, rootVertex);
 		while (cEdge != null) {
 			System.out.println("contracting edge " + cEdge + " #src " + cEdge.sourceEdgeCount);
@@ -206,8 +163,6 @@ public class FundamentalPolygon {
 		}
 		return result;
 	}
-	
-	
 	
 	
 	/**
@@ -273,17 +228,18 @@ public class FundamentalPolygon {
 			return P;
 		}
 		FundamentalEdge lastHandle = null;
+		int cost = 0;
 		while (link != null) {
 			FundamentalEdge a = link[0];
 			FundamentalEdge b = link[1];
 			System.out.println("Collecting handle --- " + a + " :: " + b);
-			bringTogether(a, b);
+			cost += bringTogether(a, b);
 			getDualOrbit(new double[] {0,0,0,1});
 			enumerateFrom(a);
-			bringTogether(b, a.partner);
+			cost += bringTogether(b, a.partner);
 			getDualOrbit(new double[] {0,0,0,1});
 			enumerateFrom(a);
-			bringTogether(a.partner, b.partner);
+			cost += bringTogether(a.partner, b.partner);
 			getDualOrbit(new double[] {0,0,0,1});
 			enumerateFrom(a);
 			link = findMinimalLinkableEdges(P);
@@ -303,12 +259,10 @@ public class FundamentalPolygon {
 		} while (a != lastHandle);
 		FundamentalPolygon r = new FundamentalPolygon();
 		r.edgeList = canList;
-		System.out.println("Result of normalization ");
+		System.out.println("Result of normalization cost = " + cost);
 		enumerateFrom(lastHandle);
 		return r;
 	}
-	
-	
 	
 	
 	/**
@@ -444,10 +398,14 @@ public class FundamentalPolygon {
 	 * such that they are next to each other afterwards
 	 * @param a
 	 * @param b
+	 * @return the number of matrix products performed
 	 */
-	private void bringTogether(FundamentalEdge a, FundamentalEdge b) {
+	private int bringTogether(FundamentalEdge a, FundamentalEdge b) {
 		System.out.println("bring together " + a + " - " + b);
-		if (a.nextEdge == b) return; // already together
+		int cost = 0;
+		if (a.nextEdge == b) { // already together
+			return cost; 
+		}
 		Set<FundamentalEdge> cSet = new TreeSet<FundamentalEdge>();
 		for (FundamentalEdge e = a.nextEdge; e != b; e = e.nextEdge) {
 			cSet.add(e);
@@ -469,6 +427,7 @@ public class FundamentalPolygon {
 			System.out.println(c.partner.index + " = " + a.index + " " + c.partner.index);
 			c.partner.motion.multiplyOnRight(A);
 			RnBig.times(c.partner.motionBig, c.partner.motionBig, ABig, UniformizationUtility.context);
+			cost += 2;
 		}
 		// move first connection
 		aiPrev.nextEdge = c1;
@@ -478,6 +437,7 @@ public class FundamentalPolygon {
 		// bring together
 		a.nextEdge = b;
 		b.prevEdge = a;
+		return cost; 
 	}
 	
 	
