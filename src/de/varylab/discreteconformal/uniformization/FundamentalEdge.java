@@ -1,5 +1,8 @@
 package de.varylab.discreteconformal.uniformization;
 
+import static java.math.BigDecimal.ONE;
+import static java.math.BigDecimal.ZERO;
+
 import java.math.BigDecimal;
 
 import de.jreality.math.Matrix;
@@ -18,6 +21,7 @@ public class FundamentalEdge implements Comparable<FundamentalEdge> {
 		// identification motion
 		motion = new Matrix(); 
 	public BigDecimal[]
+	    startPosition = {ZERO, ZERO, ZERO, ONE},
 	    motionBig = null;
 	public FundamentalEdge
 		prevEdge = null,
@@ -34,6 +38,7 @@ public class FundamentalEdge implements Comparable<FundamentalEdge> {
 		int sourceEdges,
 		FundamentalVertex start, 
 		FundamentalVertex end,
+		BigDecimal[] startPosition,
 		Matrix motion,
 		BigDecimal[] motionBig
 	) {
@@ -41,6 +46,7 @@ public class FundamentalEdge implements Comparable<FundamentalEdge> {
 		this.sourceEdgeCount = sourceEdges;
 		this.start = start;
 		this.end = end;
+		this.startPosition = startPosition;
 		this.motion = motion;
 		this.motionBig = motionBig;
 	}
@@ -54,5 +60,5 @@ public class FundamentalEdge implements Comparable<FundamentalEdge> {
 	public int compareTo(FundamentalEdge o) {
 		return index - o.index;
 	}
-
+	
 }

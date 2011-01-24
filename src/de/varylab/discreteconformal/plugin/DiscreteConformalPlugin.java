@@ -6,15 +6,12 @@ import static de.jreality.shader.CommonAttributes.DIFFUSE_COLOR;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.LIGHTING_ENABLED;
-import static de.jreality.shader.CommonAttributes.LINE_SHADER;
 import static de.jreality.shader.CommonAttributes.POLYGON_SHADER;
 import static de.jreality.shader.CommonAttributes.TEXTURE_2D;
-import static de.jreality.shader.CommonAttributes.TUBE_RADIUS;
+import static de.jreality.shader.CommonAttributes.TRANSPARENCY;
+import static de.jreality.shader.CommonAttributes.TRANSPARENCY_ENABLED;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
-import static de.varylab.discreteconformal.uniformization.FundamentalDomainUtility.createFundamentalPolygon;
-import static de.varylab.discreteconformal.uniformization.UniformizationUtility.constructFundamentalPolygon;
 import static java.awt.Color.BLACK;
-import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
 import static java.lang.Math.PI;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
@@ -22,6 +19,7 @@ import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static javax.swing.SwingUtilities.getWindowAncestor;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -94,8 +92,10 @@ import de.varylab.discreteconformal.heds.adapter.MarkedEdgesColorAdapter;
 import de.varylab.discreteconformal.heds.adapter.MarkedEdgesRadiusAdapter;
 import de.varylab.discreteconformal.heds.adapter.MetricErrorAdapter;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
-import de.varylab.discreteconformal.uniformization.FundamentalDomainUtility;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
+import de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility;
+import de.varylab.discreteconformal.uniformization.FundamentalVertex;
+import de.varylab.discreteconformal.uniformization.VisualizationUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.discreteconformal.util.UnwrapUtility.BoundaryMode;
@@ -104,9 +104,14 @@ import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSelectionListener, ChangeListener, ActionListener, PropertyChangeListener, SelectionListener {
 
 	private static int
-		polyResolution = 1000,
 		coverRecursion = 3,
 		coverResolution = 2048;
+	
+	private enum Domain {
+		Cut,
+		Minimal,
+		Canonical
+	}
 	
 	// plug-in section ------------------ 
 	private HalfedgeInterface
@@ -120,11 +125,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	private List<CoVertex>
 		customVertices = new LinkedList<CoVertex>();
 	private FundamentalPolygon 
-		fundamentalPolygon = null;
+		cuttedPolygon = null,
+		minimalPolygon = null,
+		canonicalPolygon = null;
 	private Matrix 
 		polygonTextureMatrix = euclidean().translate(-0.5, -0.5, 0).scale(0.5).scale(1, -1, 1).getMatrix();
 	private Image
-		polygonImage = null;
+		cutCoverImage = null,
+		minimalCoverImage = null,
+		canonicalCoverImage = null;
 	private int
 		genus = -1;
 
@@ -148,16 +157,17 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	private Appearance
 		universalCoverAppearance = new Appearance();
 	private SceneGraphComponent
-		fundamentalPolygonRoot = new SceneGraphComponent("Fundamental Polygon"), 
 		unitCircle = new SceneGraphComponent("Hyperbolic Boundary"),
-		universalCoverRoot = new SceneGraphComponent("Universal Cover");
+		cutCoverRoot = new SceneGraphComponent("Cut Cover"),
+		minimalCoverRoot = new SceneGraphComponent("Minimal Cover"),
+		canonicalCoverRoot = new SceneGraphComponent("Canonical Cover");
 
 	// user interface section ------------
 	private JButton
 		checkGaussBonnetBtn = new JButton("Check Gauß-Bonnet"),
-		unwrapBtn = new JButton("Unwrap"),
-		normalizePolygonBtn = new JButton("Normalize Polygon"),
-		normalizePolygonFastBtn = new JButton("Normalize Polygon Fast");
+		unwrapBtn = new JButton("Unwrap");
+	private JComboBox
+		domainCombo = new JComboBox(Domain.values());
 	private ShrinkPanel
 		customVertexPanel = new ShrinkPanel("Custom Vertices"),
 		boundaryPanel = new ShrinkPanel("Boundary"),
@@ -176,7 +186,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		maxIterationsSpinner = new JSpinner(maxIterationsModel);
 	private JCheckBox
 		useCustomThetaChecker = new JCheckBox("Custom Theta"),
-		showFundamentalPolygon = new JCheckBox("Fundamental Polygon"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
 		showUnwrapped = new JCheckBox("Show Unwrapped"),
 		showUniversalCover = new JCheckBox("Universal Cover");
@@ -205,38 +214,35 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		poincareButton.addActionListener(this);
 		halfplaneButton.addActionListener(this);
 		showUniversalCover.addActionListener(this);
-		showFundamentalPolygon.addActionListener(this);
+		domainCombo.addActionListener(this);
 		useProjectiveTexture.addActionListener(this);
-		normalizePolygonBtn.addActionListener(this);
-		normalizePolygonFastBtn.addActionListener(this);
 		
 		ButtonGroup modelGroup = new ButtonGroup();
 		modelGroup.add(kleinButton);
 		modelGroup.add(poincareButton);
 		modelGroup.add(halfplaneButton);
 		
-		Appearance funPolyApp = new Appearance();
-		funPolyApp.setAttribute(VERTEX_DRAW, false);
-		funPolyApp.setAttribute(EDGE_DRAW, true);
-		funPolyApp.setAttribute(LINE_SHADER + "." + TUBE_RADIUS, 0.03);
-		funPolyApp.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, RED);
-		fundamentalPolygonRoot.setAppearance(funPolyApp);
-		
 		IndexedFaceSetFactory ifsf = new IndexedFaceSetFactory();
 		ifsf.setVertexCount(4);
 		ifsf.setFaceCount(1);
 		ifsf.setFaceIndices(new int[][] {{0,1,2,3}});
 		ifsf.setVertexTextureCoordinates(new double[] {-1,-1,1,-1,1,1,-1,1});
-		ifsf.setVertexCoordinates(new double[]{-1,-1,-0.001, 1,-1,-0.001,  1,1,-0.001,  -1,1,-0.001});
+		ifsf.setVertexCoordinates(new double[]{-1,-1,0.001, 1,-1,0.001, 1,1,0.001, -1,1,0.001});
 		ifsf.setGenerateFaceNormals(true);
 		ifsf.update();
-		universalCoverRoot.setGeometry(ifsf.getGeometry());
-		universalCoverRoot.setAppearance(universalCoverAppearance);
+		cutCoverRoot.setGeometry(ifsf.getGeometry());
+		cutCoverRoot.setAppearance(universalCoverAppearance);
+		minimalCoverRoot.setGeometry(ifsf.getGeometry());
+		minimalCoverRoot.setAppearance(universalCoverAppearance);
+		canonicalCoverRoot.setGeometry(ifsf.getGeometry());
+		canonicalCoverRoot.setAppearance(universalCoverAppearance);
 		universalCoverAppearance.setAttribute(VERTEX_DRAW, false);
 		universalCoverAppearance.setAttribute(EDGE_DRAW, false);
 		universalCoverAppearance.setAttribute(FACE_DRAW, true);
 		universalCoverAppearance.setAttribute(LIGHTING_ENABLED, false);
+		universalCoverAppearance.setAttribute(TRANSPARENCY_ENABLED, true);
 		universalCoverAppearance.setAttribute(POLYGON_SHADER + "." + DIFFUSE_COLOR, WHITE);
+		universalCoverAppearance.setAttribute(POLYGON_SHADER + "." + TRANSPARENCY, 0.0);
 		
 		Appearance circleApp = new Appearance();
 		circleApp.setAttribute(EDGE_DRAW, false);
@@ -247,7 +253,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		unitCircle.setAppearance(circleApp);
 		euclidean().rotate(PI / 2, 1, 0, 0).assignTo(unitCircle);
 		unitCircle.setGeometry(Primitives.torus(1.0025, 0.005, 200, 5));
-		universalCoverRoot.addChild(unitCircle);
+		cutCoverRoot.addChild(unitCircle);
+		minimalCoverRoot.addChild(unitCircle);
+		canonicalCoverRoot.addChild(unitCircle);
 	}
 
 	
@@ -311,10 +319,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		
 		visualizationPanel.setLayout(new GridBagLayout());
 		visualizationPanel.add(showUnwrapped, c2);
-		visualizationPanel.add(showFundamentalPolygon, c2);
-		visualizationPanel.add(normalizePolygonBtn, c2);
-		visualizationPanel.add(normalizePolygonFastBtn, c2);
 		visualizationPanel.add(showUniversalCover, c2);
+		visualizationPanel.add(new JLabel("Domain"), c1);
+		visualizationPanel.add(domainCombo, c2);
+		
 		visualizationPanel.add(useProjectiveTexture, c2);
 		visualizationPanel.setShrinked(true);
 		shrinkPanel.add(visualizationPanel, c2);
@@ -325,9 +333,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		modelPanel.add(halfplaneButton);
 		modelPanel.setShrinked(true);
 		shrinkPanel.add(modelPanel, c2);
-		
-		normalizePolygonBtn.setEnabled(false);
-		normalizePolygonFastBtn.setEnabled(false);
 	}
 	
 	
@@ -418,20 +423,25 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				pointColorAdapter.setContext(cutInfo);
 			}
 			if (genus > 1) {
-				fundamentalPolygon = constructFundamentalPolygon(cutInfo);
-				updateFundamentalPolygon(polyResolution);
-				updatePolygonTexture(coverRecursion, coverResolution);
-				normalizePolygonBtn.setEnabled(true);
-				normalizePolygonFastBtn.setEnabled(true);
+				System.out.println("Constructing fundamental cut polygon...");
+				cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo);
+				System.out.println(cuttedPolygon);
+				FundamentalVertex root = cuttedPolygon.getMaxValenceVertex();
+				System.out.println("Constructing minimal polygon...");
+				minimalPolygon = FundamentalPolygonUtility.minimize(cuttedPolygon, root);
+				System.out.println(minimalPolygon);
+				minimalPolygon.checkRelation();
+				System.out.println("Constructing fast canonical polygon...");
+				canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon);
+				System.out.println(canonicalPolygon);
+				canonicalPolygon.checkRelation();
+				updatePolygonTexture(getSelectedModel(), coverRecursion, coverResolution);
 				edgeLengthAdapter.setSignature(Pn.HYPERBOLIC);
-			} else {
-				normalizePolygonBtn.setEnabled(false);
-				normalizePolygonFastBtn.setEnabled(false);
 			}
 			if (genus == 0) {
 				kleinButton.setSelected(true);
 				cutInfo = null;
-				fundamentalPolygon = null;
+				cuttedPolygon = null;
 			}
 			updateSurface();
 			updateStates();
@@ -442,9 +452,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
-		if (showFundamentalPolygon == s ||
-			showUniversalCover == s
-		) {
+		if (showUniversalCover == s || domainCombo == s) {
 			updateStates();
 			return;
 		}
@@ -470,8 +478,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		if (kleinButton == s || poincareButton == s || halfplaneButton == s) {
 			updateSurface();
 			if (genus > 1) {
-				updateFundamentalPolygon(polyResolution);
-				updatePolygonTexture(coverRecursion, coverResolution);
+				updatePolygonTexture(getSelectedModel(), coverRecursion, coverResolution);
 			}
 			updateStates();
 		}
@@ -509,16 +516,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				showMessageDialog(w, e1.getMessage(), "Error", ERROR_MESSAGE);
 			}
 		}
-		if (normalizePolygonBtn == s) {
-			fundamentalPolygon = fundamentalPolygon.getNaiveCanonical();
-			updateFundamentalPolygon(polyResolution);
-			updatePolygonTexture(coverRecursion, coverResolution);
-		}
-		if (normalizePolygonFastBtn == s) {
-			fundamentalPolygon = fundamentalPolygon.getFastCanonical();
-			updateFundamentalPolygon(polyResolution);
-			updatePolygonTexture(coverRecursion, coverResolution);
-		}
 	}
 	
 	/*
@@ -526,32 +523,53 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	 */
 	private void updateStates() {
 		HalfedgeLayer l = hif.getActiveLayer();
-		l.removeTemporaryGeometry(fundamentalPolygonRoot);
-		l.removeTemporaryGeometry(universalCoverRoot);
+		l.removeTemporaryGeometry(cutCoverRoot);
+		l.removeTemporaryGeometry(minimalCoverRoot);
+		l.removeTemporaryGeometry(canonicalCoverRoot);
 		if (genus > 1 && showUnwrapped.isSelected()) {
-			if (showFundamentalPolygon.isSelected()) {
-				l.addTemporaryGeometry(fundamentalPolygonRoot);
-			} 
 			if (showUniversalCover.isSelected()) {
-				l.addTemporaryGeometry(universalCoverRoot);
+				switch ((Domain)domainCombo.getSelectedItem()) {
+				case Cut:
+					l.addTemporaryGeometry(cutCoverRoot);
+					break;
+				case Minimal:
+					l.addTemporaryGeometry(minimalCoverRoot);
+					break;
+					
+				case Canonical:
+					l.addTemporaryGeometry(canonicalCoverRoot);
+					break;
+				}
 				unitCircle.setVisible(getSelectedModel() == HyperbolicModel.Poincaré);
 			}
 		}
-		ImageData imgData = null;
-		if (polygonImage != null && (showUniversalCover.isSelected())) {
-			imgData = new ImageData(polygonImage);
-		}
-		if (polygonImage != null && showUniversalCover.isSelected()) {
-			Texture2D tex2d = TextureUtility.createTexture(universalCoverAppearance, POLYGON_SHADER, imgData);
-			tex2d.setTextureMatrix(polygonTextureMatrix);
-		} else {
-			TextureUtility.removeTexture(universalCoverAppearance, POLYGON_SHADER);
+		if (showUniversalCover.isSelected()) {
+			ImageData imgData = null;
+			switch ((Domain)domainCombo.getSelectedItem()) {
+			case Cut:
+				if (cutCoverImage != null) {
+					imgData = new ImageData(cutCoverImage);
+				}
+				break;
+			case Minimal:
+				if (minimalCoverImage != null) {
+					imgData = new ImageData(minimalCoverImage);
+				}
+				break;
+			case Canonical:
+				if (canonicalCoverImage != null) {
+					imgData = new ImageData(canonicalCoverImage);
+				}
+				break;
+			}
+			if (imgData != null) {
+				Texture2D tex2d = TextureUtility.createTexture(universalCoverAppearance, POLYGON_SHADER, imgData);
+				tex2d.setTextureMatrix(polygonTextureMatrix);
+			} else {
+				TextureUtility.removeTexture(universalCoverAppearance, POLYGON_SHADER);
+			}
 		}
 	}
-	
-	
-	
-	
 	
 	
 	private CoHDS getLoaderGeometry() {
@@ -584,138 +602,33 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		if (showUnwrapped.isSelected()) {
 			hif.addGlobalAdapter(texCoordPositionAdapter, false);	
 		}
-//		if (genus >= 1) {
-//			hif.addLayerAdapter(cutRadiusAdapter,false);
-//			hif.addLayerAdapter(cutColorAdapter,false);
-//			hif.addLayerAdapter(pointRadiusAdapter,false);
-//			hif.addLayerAdapter(pointColorAdapter,false);
-//		} else {
-//			hif.removeAdapter(cutRadiusAdapter);
-//			hif.removeAdapter(cutColorAdapter);
-//			hif.removeAdapter(pointRadiusAdapter);
-//			hif.removeAdapter(pointColorAdapter);
-//		}
 		hif.set(surface);
 	}
 	
 
-	public void updateFundamentalPolygon(int resolution) {
-		double[] rootPos = cutInfo.cutRoot.T;
-		createFundamentalPolygon(
-			fundamentalPolygon, 
-			rootPos, 
-			fundamentalPolygonRoot, 
-			resolution, 
-			getSelectedModel()
+	public void updatePolygonTexture(HyperbolicModel model, int depth, int resolution) {
+		cutCoverImage = VisualizationUtility.drawUniversalCover(
+			cuttedPolygon, 
+			depth, 
+			model, 
+			resolution,
+			Color.BLUE
+		);
+		minimalCoverImage = VisualizationUtility.drawUniversalCover(
+			minimalPolygon, 
+			depth, 
+			model, 
+			resolution,
+			Color.GREEN
+		);
+		canonicalCoverImage = VisualizationUtility.drawUniversalCover(
+			canonicalPolygon, 
+			depth, 
+			model, 
+			resolution,
+			Color.RED
 		);
 	}
-	
-	
-	
-	public void updatePolygonTexture(int depth, int resolution) {
-		double[] pRoot = cutInfo.cutRoot.T;
-		double[] root = new double[] {pRoot[0], pRoot[1], 0.0, pRoot[3]};
-		HyperbolicModel model = getSelectedModel();
-		polygonImage = FundamentalDomainUtility.createCoverTexture(root, fundamentalPolygon, depth, model, resolution);
-		updateStates();
-	}
-	
-	
-	public void copyAtEdge(int edgeIndex) {
-//		if (surface == null) {
-//			return;
-//		}
-//		final boolean klein = kleinButton.isSelected(); 
-//		CoEdge edge = null;
-//		int i = 0;
-//		for (CoEdge e : surface.getEdges()) {
-//			if (e.isPositive()) {
-//				if (i == edgeIndex) {
-//					if (e.getLeftFace() != null) {
-//						edge = e;
-//					} else {
-//						edge = e.getOppositeEdge();
-//					}
-//					break;
-//				}
-//				i++;
-//			}
-//		}
-//		
-//		if (edge == null) {
-//			System.err.println("Edge corresponding to index " + edgeIndex + " not found");
-//			return;
-//		}
-//		CoEdge coEdge = cutInfo.edgeCutMap.get(edge);
-//		if (coEdge == null) {
-//			System.err.println("CoEdge not found");
-//			return;
-//		}
-//		if (edge.getOppositeEdge().getLeftFace() != null) {
-//			System.err.println("Picked no boundary edge!");
-//			return;
-//		}
-//		System.out.println("hyperbolic motion: " + edge + " -> " + coEdge);
-		
-//		final Matrix A = UniformizationUtility.makeHyperbolicMotion(coEdge, edge.getOppositeEdge());
-
-//		ConverterHeds2JR converter = new ConverterHeds2JR();
-//		Adapter texAdapter = new TextCoordsAdapter2Ifs<CoVertex> () {
-//
-//			@Override
-//			public double[] getTextCoordinate(CoVertex v) {
-//				Point t = v.getTextureCoord();
-//				double[] raw = new double[] {t.x(), t.y(), 0.0, t.z()};
-//				A.transformVector(raw);
-//				if (klein) {
-//					return new double[] {raw[0], raw[1], 0.0, raw[3]};
-//				} else {
-//					return new double[] {raw[0], raw[1], 0.0, raw[3] + 1};
-//				}
-//			}
-//
-//			@Override
-//			public AdapterType getAdapterType() {
-//				return AdapterType.VERTEX_ADAPTER;
-//			}
-//			
-//		};
-//		Adapter texPosAdapter = new CoordinateAdapter2Ifs<CoVertex> () {
-//
-//			@Override
-//			public AdapterType getAdapterType() {
-//				return AdapterType.VERTEX_ADAPTER;
-//			}
-//
-//			@Override
-//			public double[] getCoordinate(CoVertex v) {
-//				Point t = v.getTextureCoord();
-//				double[] raw = new double[] {t.x(), t.y(), 0.0, t.z()};
-//				A.transformVector(raw);
-//				if (klein) {
-//					return new double[] {raw[0], raw[1], 0.0, raw[3]};
-//				} else {
-//					return new double[] {raw[0], raw[1], 0.0, raw[3] + 1};
-//				}
-//			}
-//			
-//		};
-//		IndexedFaceSet ifs = converter.heds2ifs(
-//			surface, 
-//			texPosAdapter, 
-//			texAdapter, 
-//			cutColorAdapter, 
-//			pointAdapter
-//		);
-//		IndexedFaceSetUtility.calculateAndSetNormals(ifs);
-//		SceneGraphComponent copy = new SceneGraphComponent();
-//		copy.setGeometry(ifs);
-////		copiedGeometry.addChild(copy);
-////		copiedGeometry.setGeometry(ifs);
-////		copiedGeometry.setVisible(true);
-//		surfaceRoot.addChild(copy);
-	}
-	
 	
 	@Override
 	public void install(Controller c) throws Exception {
@@ -737,7 +650,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		c.storeProperty(getClass(), "klein", kleinButton.isSelected()); 
 		c.storeProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected());
 		c.storeProperty(getClass(), "showUniversalCover", showUniversalCover.isSelected());
-		c.storeProperty(getClass(), "showFundamentalPolygon", showFundamentalPolygon.isSelected());
 		c.storeProperty(getClass(), "quantizationMode", quantizationModeCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected());
 		c.storeProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber());
@@ -759,7 +671,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		poincareButton.setSelected(!kleinButton.isSelected());
 		showUnwrapped.setSelected(c.getProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected()));
 		showUniversalCover.setSelected(c.getProperty(getClass(), "showUniversalCover", showUniversalCover.isSelected()));
-		showFundamentalPolygon.setSelected(c.getProperty(getClass(), "showFundamentalPolygon", showFundamentalPolygon.isSelected()));
 		quantizationModeCombo.setSelectedIndex(c.getProperty(getClass(), "quantizationMode", quantizationModeCombo.getSelectedIndex()));
 		useProjectiveTexture.setSelected(c.getProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected()));
 		toleranceExpModel.setValue(c.getProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber()));
