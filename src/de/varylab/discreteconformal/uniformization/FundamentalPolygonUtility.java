@@ -122,7 +122,9 @@ public class FundamentalPolygonUtility {
 		Matrix Ainv = a.partner.motion;
 		BigDecimal[] ABig = a.motionBig;
 		BigDecimal[] ABiginv = a.partner.motionBig;
-		
+		// move start and end
+		RnBig.matrixTimesVector(a.partner.startPosition, ABiginv, b.startPosition, context);
+		// move c edges
 		for (FundamentalEdge c : cSet) {
 			System.out.println(c.index + " = " + c.index + " " + a.partner.index);
 			c.motion.multiplyOnLeft(Ainv);
@@ -172,7 +174,7 @@ public class FundamentalPolygonUtility {
 		BigDecimal[] BBig = b.motionBig;
 		BigDecimal[] BBiginv = b.partner.motionBig;
 		
-		b.startPosition = c1.startPosition;
+		b.startPosition = c1.startPosition.clone();
 		for (FundamentalEdge c : cSet) {
 			System.out.println(c.index + " = " + c.index + " " + a.partner.index);
 			c.motion.multiplyOnLeft(Binv);
@@ -180,7 +182,7 @@ public class FundamentalPolygonUtility {
 			System.out.println(c.partner.index + " = " + a.index + " " + c.partner.index);
 			c.partner.motion.multiplyOnRight(B);
 			RnBig.times(c.partner.motionBig, c.partner.motionBig, BBig, FundamentalPolygonUtility.context);
-			c.startPosition = RnBig.matrixTimesVector(null, BBiginv, c.startPosition, context);
+			RnBig.matrixTimesVector(c.startPosition, BBiginv, c.startPosition, context);
 			cost += 2;
 		}
 		// move first connection
@@ -407,8 +409,6 @@ public class FundamentalPolygonUtility {
 		System.out.println("Vertices R: " + R.getVertices());
 		return R;
 	}
-	
-	
 	
 	
 	/**

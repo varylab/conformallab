@@ -61,11 +61,14 @@ import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
 import de.jreality.math.Pn;
 import de.jreality.plugin.basic.View;
+import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.shader.ImageData;
 import de.jreality.shader.Texture2D;
 import de.jreality.shader.TextureUtility;
+import de.jreality.ui.AppearanceInspector;
+import de.jreality.ui.TextureInspector;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -116,6 +119,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	// plug-in section ------------------ 
 	private HalfedgeInterface
 		hif = null;
+	private ContentAppearance
+		contentAppearance = null;
 	
 	// data section ---------------------
 	private CoHDS
@@ -164,6 +169,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 
 	// user interface section ------------
 	private JButton
+		coverToTextureButton = new JButton("Texture"),
 		checkGaussBonnetBtn = new JButton("Check Gauß-Bonnet"),
 		unwrapBtn = new JButton("Unwrap");
 	private JComboBox
@@ -216,6 +222,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		showUniversalCover.addActionListener(this);
 		domainCombo.addActionListener(this);
 		useProjectiveTexture.addActionListener(this);
+		coverToTextureButton.addActionListener(this);
 		
 		ButtonGroup modelGroup = new ButtonGroup();
 		modelGroup.add(kleinButton);
@@ -319,9 +326,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		
 		visualizationPanel.setLayout(new GridBagLayout());
 		visualizationPanel.add(showUnwrapped, c2);
-		visualizationPanel.add(showUniversalCover, c2);
-		visualizationPanel.add(new JLabel("Domain"), c1);
+		visualizationPanel.add(showUniversalCover, c1);
 		visualizationPanel.add(domainCombo, c2);
+		visualizationPanel.add(coverToTextureButton, c2);
 		
 		visualizationPanel.add(useProjectiveTexture, c2);
 		visualizationPanel.setShrinked(true);
@@ -455,6 +462,19 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		if (showUniversalCover == s || domainCombo == s) {
 			updateStates();
 			return;
+		}
+		if (coverToTextureButton == s) {
+			AppearanceInspector ai = contentAppearance.getAppearanceInspector();
+			TextureInspector ti = ai.getTextureInspector();
+			if (cutCoverImage != null) {
+				ti.addTexture("Cut Polygon", cutCoverImage);
+			}
+			if (minimalCoverImage != null) {
+				ti.addTexture("Minimal Polygon", minimalCoverImage);
+			}
+			if (canonicalCoverImage != null) {
+				ti.addTexture("Canonical Polygon", canonicalCoverImage);
+			}
 		}
 		if (unwrapBtn == s) {
 			CoHDS surface = getLoaderGeometry();
@@ -637,6 +657,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		hif.addGlobalAdapter(new CoPositionAdapter(), true);
 		hif.addGlobalAdapter(texturePositionAdapter, true);
 		hif.addSelectionListener(this);
+		contentAppearance = c.getPlugin(ContentAppearance.class);
 	}
 	
 	@Override
