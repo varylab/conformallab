@@ -2,6 +2,8 @@ package de.varylab.discreteconformal.uniformization;
 
 import static de.jreality.math.Pn.HYPERBOLIC;
 import static de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility.context;
+import static java.awt.BasicStroke.CAP_SQUARE;
+import static java.awt.BasicStroke.JOIN_ROUND;
 import static java.awt.Color.BLACK;
 import static java.awt.geom.Arc2D.OPEN;
 import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
@@ -14,14 +16,22 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.Stroke;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.EVD;
+import no.uib.cipr.matrix.NotConvergedException;
 
 import de.jreality.math.Matrix;
+import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.math.PnBig;
@@ -62,9 +72,11 @@ public class VisualizationUtility {
 //		g.setStroke(new BasicStroke(5.0f/res));
 //		drawCoverPolygon(poly, g, 0, depth+1, model);
 		
-		g.setColor(rootColor);
-		g.setStroke(new BasicStroke(15.0f/res));
-		drawPolygon(poly, model, g);
+		Stroke polygonStroke = new BasicStroke(15.0f/res);
+		Color polygonColor = rootColor;
+		Stroke axesStroke = new BasicStroke(10.0f/res, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {0.02f, 0.02f}, 1.0f);
+		Color axesColor = Color.ORANGE;
+		drawPolygon(poly, model, g, polygonColor, polygonStroke, true, axesColor, axesStroke);
 		
 		g.setColor(BLACK);
 		g.setStroke(new BasicStroke(15.0f/res));
@@ -74,8 +86,18 @@ public class VisualizationUtility {
 	}
 	
 	
-	private static boolean drawPolygon(FundamentalPolygon poly, HyperbolicModel model, Graphics2D g) {
+	private static boolean drawPolygon(
+		FundamentalPolygon poly, 
+		HyperbolicModel model, 
+		Graphics2D g, 
+		Color polygonColor,
+		Stroke polygonStroke,
+		boolean drawAxes,
+		Color axesColor,
+		Stroke axesStroke 
+	) {
 		boolean proceed = true;
+		Set<FundamentalEdge> done = new HashSet<FundamentalEdge>();
 		for (FundamentalEdge e : poly.getEdges()) {
 			BigDecimal[] p1a = e.startPosition; 
 			BigDecimal[] p2a = e.nextEdge.startPosition;
@@ -99,43 +121,89 @@ public class VisualizationUtility {
 				}
 			}
 			if (drawArc) {
-				double[] p1aDouble = RnBig.toDouble(null, p1a);
-				double[] p2aDouble = RnBig.toDouble(null, p2a);
-				double[] p3aDouble = RnBig.toDouble(null, p3a);
-				drawArcNormalized(p1aDouble, p2aDouble, p3aDouble, g, model);
+				double[] p1ad = RnBig.toDouble(null, p1a);
+				double[] p2ad = RnBig.toDouble(null, p2a);
+				double[] p3ad = RnBig.toDouble(null, p3a);
+				double[] p1, p2, p3;
+				switch (model) {
+					case Klein:
+						p1 = new double[] {p1ad[0] / p1ad[3], p1ad[1] / p1ad[3], 0};
+						p2 = new double[] {p2ad[0] / p2ad[3], p2ad[1] / p2ad[3], 0};
+						p3 = new double[] {p3ad[0] / p3ad[3], p3ad[1] / p3ad[3], 0};		
+						break;
+					default:
+					case Poincaré:
+						p1 = new double[] {p1ad[0] / (p1ad[3] + 1), p1ad[1] / (p1ad[3] + 1), 0};
+						p2 = new double[] {p2ad[0] / (p2ad[3] + 1), p2ad[1] / (p2ad[3] + 1), 0};
+						p3 = new double[] {p3ad[0] / (p3ad[3] + 1), p3ad[1] / (p3ad[3] + 1), 0};
+						break;
+					case Halfplane:
+						p1 = new double[] {p1ad[1] / (p1ad[3] - p1ad[0]), 1 / (p1ad[3] - p1ad[0]), 0};
+						p2 = new double[] {p2ad[1] / (p2ad[3] - p2ad[0]), 1 / (p2ad[3] - p2ad[0]), 0};
+						p3 = new double[] {p3ad[1] / (p3ad[3] - p3ad[0]), 1 / (p3ad[3] - p3ad[0]), 0};
+						break;
+				}
+				g.setColor(polygonColor);
+				g.setStroke(polygonStroke);
+				drawArcNormalized(p1, p2, p3, g, model);
+				if (done.contains(e) || done.contains(e.partner) || !drawAxes) {
+					continue;
+				}
+				BigDecimal[] Ta = e.motionBig;
+				double[][] Tad = new double[4][4];
+				for (int i = 0; i < Ta.length; i++) {
+					Tad[i/4][i%4] = Ta[i].doubleValue();
+				}
+				DenseMatrix T = new DenseMatrix(Tad);
+				EVD evd = new EVD(4);
+				try {
+					evd.factor(T);
+				} catch (NotConvergedException e1) {
+					e1.printStackTrace();
+					continue;
+				}
+				DenseMatrix ev = evd.getRightEigenvectors();
+				double[] evl = evd.getRealEigenvalues();
+				int i1 = evl[0] > evl[1] ? (evl[0] > evl[2] ? 0 : 2) : (evl[1] > evl[2] ? 1 : 2);
+				int i2 = evl[0] < evl[1] ? (evl[0] < evl[2] ? 0 : 2) : (evl[1] < evl[2] ? 1 : 2);
+				double[] f1 = {ev.get(0, i1) / ev.get(3, i1), ev.get(1, i1) / ev.get(3, i1), 0, 1.0};
+				double[] f2 = {ev.get(0, i2) / ev.get(3, i2), ev.get(1, i2) / ev.get(3, i2), 0, 1.0};
+				double[] f3 = Rn.linearCombination(null, 0.5, f1, 0.5, f2);
+				Pn.normalize(f3, f3, HYPERBOLIC);
+				switch (model) {
+					case Klein:
+						p1 = new double[] {f1[0] / f1[3], f1[1] / f1[3], 0};
+						p2 = new double[] {f2[0] / f2[3], f2[1] / f2[3], 0};
+						p3 = new double[] {f3[0] / f3[3], f3[1] / f3[3], 0};		
+						break;
+					case Poincaré:
+						p1 = new double[] {f1[0] / f1[3], f1[1] / f1[3], 0};
+						p2 = new double[] {f2[0] / f2[3], f2[1] / f2[3], 0};
+						p3 = new double[] {f3[0] / (f3[3] + 1), f3[1] / (f3[3] + 1), 0};
+						break;
+					case Halfplane:
+						p1 = new double[] {f1[0] / f1[3], f1[1] / f1[3], 0};
+						p2 = new double[] {f2[0] / f2[3], f2[1] / f2[3], 0};
+						p3 = new double[] {f3[1] / (f3[3] - f3[0]), 1 / (f3[3] - f3[0]), 0};
+						break;
+				}
+				g.setColor(axesColor);
+				g.setStroke(axesStroke);
+				drawArcNormalized(p1, p2, p3, g, model);
 			}
+			done.add(e);
 		}
 		return proceed;
 	}
 	
 	
 	private static void drawArcNormalized(
-		double[] p1a,
-		double[] p2a,
-		double[] p3a,
+		double[] p1,
+		double[] p2,
+		double[] p3,
 		Graphics2D g,
 		HyperbolicModel model
 	) {
-		double[] p1 = null;
-		double[] p2 = null;
-		double[] p3 = null;
-		switch (model) {
-			case Klein:
-				p1 = new double[] {p1a[0] / p1a[3], p1a[1] / p1a[3], 0};
-				p2 = new double[] {p2a[0] / p2a[3], p2a[1] / p2a[3], 0};
-				p3 = new double[] {p3a[0] / p3a[3], p3a[1] / p3a[3], 0};		
-				break;
-			default:
-			case Poincaré:
-				p1 = new double[] {p1a[0] / (p1a[3] + 1), p1a[1] / (p1a[3] + 1), 0};
-				p2 = new double[] {p2a[0] / (p2a[3] + 1), p2a[1] / (p2a[3] + 1), 0};
-				p3 = new double[] {p3a[0] / (p3a[3] + 1), p3a[1] / (p3a[3] + 1), 0};
-				break;
-			case Halfplane:
-				p1 = new double[] {p1a[1] / (p1a[3] - p1a[0]), 1 / (p1a[3] - p1a[0]), 0};
-				p2 = new double[] {p2a[1] / (p2a[3] - p2a[0]), 1 / (p2a[3] - p2a[0]), 0};
-				p3 = new double[] {p3a[1] / (p3a[3] - p3a[0]), 1 / (p3a[3] - p3a[0]), 0};
-		}
 		try {
 			if (model == HyperbolicModel.Klein) {
 				g.draw(new Line2D.Double(p1[0], p1[1], p2[0], p2[1]));
@@ -159,31 +227,31 @@ public class VisualizationUtility {
 	
 	
 	
-	private static void drawCoverPolygon(
-		FundamentalPolygon poly,
-		Graphics2D g,
-		int depth,
-		int maxDepth,
-		HyperbolicModel model
-	) {
-		boolean proceed = drawPolygon(poly, model, g);
-		if (depth + 1 > maxDepth) {
-			return;
-		}
-		if (proceed) {
-			for (FundamentalEdge e : poly.getEdges()) {
-				FundamentalPolygon rP = FundamentalPolygonUtility.copyPolygon(poly);
-				for (FundamentalEdge ce : rP.getEdges()) {
-					RnBig.times(ce.motionBig, e.motionBig, ce.motionBig, context);
-					RnBig.times(ce.motionBig, ce.motionBig, e.partner.motionBig, context);
-					ce.motion = Matrix.times(ce.motion, e.motion);
-					RnBig.matrixTimesVector(ce.startPosition, e.motionBig, ce.startPosition, context);
-					PnBig.normalize(ce.startPosition, ce.startPosition, HYPERBOLIC, context);
-				}
-				drawCoverPolygon(rP, g, depth + 1, maxDepth, model);
-			}
-		}
-	}
+//	private static void drawCoverPolygon(
+//		FundamentalPolygon poly,
+//		Graphics2D g,
+//		int depth,
+//		int maxDepth,
+//		HyperbolicModel model
+//	) {
+//		boolean proceed = drawPolygon(poly, model, g);
+//		if (depth + 1 > maxDepth) {
+//			return;
+//		}
+//		if (proceed) {
+//			for (FundamentalEdge e : poly.getEdges()) {
+//				FundamentalPolygon rP = FundamentalPolygonUtility.copyPolygon(poly);
+//				for (FundamentalEdge ce : rP.getEdges()) {
+//					RnBig.times(ce.motionBig, e.motionBig, ce.motionBig, context);
+//					RnBig.times(ce.motionBig, ce.motionBig, e.partner.motionBig, context);
+//					ce.motion = Matrix.times(ce.motion, e.motion);
+//					RnBig.matrixTimesVector(ce.startPosition, e.motionBig, ce.startPosition, context);
+//					PnBig.normalize(ce.startPosition, ce.startPosition, HYPERBOLIC, context);
+//				}
+//				drawCoverPolygon(rP, g, depth + 1, maxDepth, model);
+//			}
+//		}
+//	}
 	
 	
 	

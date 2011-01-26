@@ -107,8 +107,8 @@ import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSelectionListener, ChangeListener, ActionListener, PropertyChangeListener, SelectionListener {
 
 	private static int
-		coverRecursion = 3,
-		coverResolution = 2048;
+		coverRecursion = 2,
+		coverResolution = 1024;
 	
 	private enum Domain {
 		Cut,
