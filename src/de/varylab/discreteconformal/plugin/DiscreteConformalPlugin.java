@@ -107,8 +107,8 @@ import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSelectionListener, ChangeListener, ActionListener, PropertyChangeListener, SelectionListener {
 
 	private static int
-		coverRecursion = 2,
-		coverResolution = 1024;
+		coverRecursion = 3,
+		coverResolution = 2048;
 	
 	private enum Domain {
 		Cut,
@@ -627,21 +627,21 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	
 
 	public void updatePolygonTexture(HyperbolicModel model, int depth, int resolution) {
-		cutCoverImage = VisualizationUtility.drawUniversalCover(
+		cutCoverImage = VisualizationUtility.drawUniversalCoverImage(
 			cuttedPolygon, 
 			depth, 
 			model, 
 			resolution,
 			Color.BLUE
 		);
-		minimalCoverImage = VisualizationUtility.drawUniversalCover(
+		minimalCoverImage = VisualizationUtility.drawUniversalCoverImage(
 			minimalPolygon, 
 			depth, 
 			model, 
 			resolution,
 			Color.GREEN
 		);
-		canonicalCoverImage = VisualizationUtility.drawUniversalCover(
+		canonicalCoverImage = VisualizationUtility.drawUniversalCoverImage(
 			canonicalPolygon, 
 			depth, 
 			model, 
