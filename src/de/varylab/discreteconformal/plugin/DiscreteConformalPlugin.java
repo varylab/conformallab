@@ -107,8 +107,8 @@ import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSelectionListener, ChangeListener, ActionListener, PropertyChangeListener, SelectionListener {
 
 	private static int
-		coverRecursion = 3,
-		coverResolution = 2048;
+		coverRecursion = 2,
+		coverResolution = 1024;
 	
 	private enum Domain {
 		Cut,
@@ -191,6 +191,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		toleranceExpSpinner = new JSpinner(toleranceExpModel),
 		maxIterationsSpinner = new JSpinner(maxIterationsModel);
 	private JCheckBox
+		useDistanceToCanonicalize = new JCheckBox("Use Isometry Distances"),
 		useCustomThetaChecker = new JCheckBox("Custom Theta"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
 		showUnwrapped = new JCheckBox("Show Unwrapped"),
@@ -290,6 +291,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		shrinkPanel.add(maxIterationsSpinner, c2);
 		shrinkPanel.add(checkGaussBonnetBtn, c1);
 		shrinkPanel.add(unwrapBtn, c2);
+		shrinkPanel.add(useDistanceToCanonicalize, c2);
 		
 		boundaryPanel.setLayout(new GridBagLayout());
 		boundaryPanel.add(new JLabel("Mode"), c1);
@@ -439,7 +441,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				System.out.println(minimalPolygon);
 				minimalPolygon.checkRelation();
 				System.out.println("Constructing fast canonical polygon...");
-				canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon);
+				canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon, useDistanceToCanonicalize.isSelected());
 				System.out.println(canonicalPolygon);
 				canonicalPolygon.checkRelation();
 				updatePolygonTexture(getSelectedModel(), coverRecursion, coverResolution);

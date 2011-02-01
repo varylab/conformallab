@@ -14,5 +14,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/jreality"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedgetools"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/mfc"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/projgeom"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

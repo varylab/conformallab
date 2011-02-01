@@ -16,6 +16,9 @@ import java.util.TreeSet;
 
 import de.jreality.math.Matrix;
 import de.jreality.math.P2;
+import de.jtem.projgeom.Biquaternion;
+import de.jtem.projgeom.Biquaternion.Metric;
+import de.jtem.projgeom.IsometryAxis;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoVertex;
@@ -256,12 +259,12 @@ public class FundamentalPolygonUtility {
 	 * @param P
 	 * @return a linked pair or null if no pair is linkable
 	 */
-	private static FundamentalEdge[] findMinimalLinkableEdges(FundamentalPolygon P) {
+	private static FundamentalEdge[] findMinimalLinkableEdges(FundamentalPolygon P, boolean useDistance) {
 		// exclude handles
 		List<FundamentalEdge> edgeList = P.getEdges();
 		Set<FundamentalEdge> handles = new HashSet<FundamentalEdge>();
 		for (FundamentalEdge e : edgeList) {
-			FundamentalEdge l = findMinimalLinkedEdge(e);
+			FundamentalEdge l = findMinimalLinkedEdge(e, false);
 			int cost = calculateLinkedPairCost(e, l);
 			if (cost == 3) { // is a handle
 				handles.add(e);
@@ -277,10 +280,15 @@ public class FundamentalPolygonUtility {
 		if (linkable.isEmpty()) return null;
 		
 		FundamentalEdge[] result = new FundamentalEdge[2];
-		int min = Integer.MAX_VALUE;
+		double min = Integer.MAX_VALUE;
 		for (FundamentalEdge e : linkable) {
-			FundamentalEdge l = findMinimalLinkedEdge(e);
-			int cost = calculateLinkedPairCost(e, l);
+			FundamentalEdge l = findMinimalLinkedEdge(e, useDistance);
+			double cost = 0;
+			if (useDistance) {
+				cost = calculateLinkedPairCost(e.motionBig, l.motionBig);
+			} else {
+				cost = calculateLinkedPairCost(e, l);
+			}
 			if (cost < min) { 
 				min = cost;
 				result[0] = e;
@@ -291,6 +299,13 @@ public class FundamentalPolygonUtility {
 	}
 	
 	
+	/**
+	 * Calculates the cost of a linked pair in terms of edges in between the four edges.
+	 * Here the edges in counter clockwise order are counted.
+	 * @param a
+	 * @param b
+	 * @return
+	 */
 	private static int calculateLinkedPairCost(FundamentalEdge a, FundamentalEdge b) {
 		int cost = 0;
 		cost += calculateDistanceInPolygon(a, b);
@@ -300,22 +315,47 @@ public class FundamentalPolygonUtility {
 	}
 	
 	
+	/**
+	 * Calculates the cost of a linked pair in terms of the distance
+	 * the isometries move the points
+	 * @param T1
+	 * @param T2
+	 * @return
+	 */
+	private static double calculateLinkedPairCost(BigDecimal[] T1, BigDecimal[] T2) {
+		double[] T1d = RnBig.toDouble(null, T1);
+		double[] T2d = RnBig.toDouble(null, T2);
+		IsometryAxis ia1 = new IsometryAxis(T1d, Metric.HYPERBOLIC);
+		IsometryAxis ia2 = new IsometryAxis(T2d, Metric.HYPERBOLIC);
+        Biquaternion angle1 = ia1.getAngle();
+        Biquaternion angle2 = ia2.getAngle();
+        double dist1 = 2*angle1.getDualPart().re;
+        double dist2 = 2*angle2.getDualPart().re;
+        return dist1 + dist2;
+	}
+	
+	
 	
 	/**
 	 * Finds an edge whose partner is close to the partner of a
 	 * @param a
 	 * @return
 	 */
-	private static FundamentalEdge findMinimalLinkedEdge(FundamentalEdge a) {
+	private static FundamentalEdge findMinimalLinkedEdge(FundamentalEdge a, boolean useDistance) {
 		Set<FundamentalEdge> checkSet = new TreeSet<FundamentalEdge>();
 		for (FundamentalEdge e = a.nextEdge; e != a.partner; e = e.nextEdge) {
 			checkSet.add(e);
 		}
 		FundamentalEdge b = null;
-		int min = Integer.MAX_VALUE;
+		double min = Integer.MAX_VALUE;
 		for (FundamentalEdge e : checkSet) {
 			if (!checkSet.contains(e.partner)) {
-				int dist = calculateDistanceInPolygon(a.partner, e.partner);
+				double dist = 0;
+				if (useDistance) {
+					dist = calculateLinkedPairCost(a.partner.motionBig, e.partner.motionBig);
+				} else {
+					dist = calculateDistanceInPolygon(a.partner, e.partner);
+				}
 				if (dist < min) {
 					min = dist;
 					b = e;	
@@ -368,17 +408,19 @@ public class FundamentalPolygonUtility {
 	
 	/**
 	 * Tries to use a heuristics to minimize the group operations
-	 * while transforming the polygon. This uses the notion of distance
-	 * or cost of a linked pair.
+	 * while transforming the polygon to a canonical representation. 
+	 * This uses the notion of distance or cost of a linked pair.
 	 * Here maybe no edge is preserved
 	 * @param P a minimal polygon
+	 * @param useDistance use hyperbolic distances for determining the handles to bring
+	 * together otherwise the number of matrix products is used
 	 * @return
 	 */
-	public static FundamentalPolygon canonicalize(FundamentalPolygon P) {
+	public static FundamentalPolygon canonicalize(FundamentalPolygon P, boolean useDistance) {
 		System.out.println("Vertices P: " + P.getVertices());
 		FundamentalPolygon R = copyPolygon(P);// minimize(P, root);
 		System.out.println("Vertices R: " + R.getVertices());
-		FundamentalEdge[] link = findMinimalLinkableEdges(R);
+		FundamentalEdge[] link = findMinimalLinkableEdges(R, useDistance);
 		if (link == null)  {
 			System.out.println("polygon is canonical");
 			return R;
@@ -390,7 +432,7 @@ public class FundamentalPolygonUtility {
 			FundamentalEdge b = link[1];
 			System.out.println("Collecting handle --- " + a + " :: " + b);
 			cost += gatherHandleFast(a, b);
-			link = findMinimalLinkableEdges(R);
+			link = findMinimalLinkableEdges(R, useDistance);
 			lastHandle = a;
 		};
 		if (lastHandle == null) {
