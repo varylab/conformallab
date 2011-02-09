@@ -70,6 +70,7 @@ import de.jreality.shader.TextureUtility;
 import de.jreality.ui.AppearanceInspector;
 import de.jreality.ui.TextureInspector;
 import de.jtem.halfedge.Vertex;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
@@ -175,6 +176,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	private JComboBox
 		domainCombo = new JComboBox(Domain.values());
 	private ShrinkPanel
+		metricPreprocessPanel = new ShrinkPanel("Metric Preprocessing"),
 		customVertexPanel = new ShrinkPanel("Custom Vertices"),
 		boundaryPanel = new ShrinkPanel("Boundary"),
 		coneConfigPanel = new ShrinkPanel("Automatic Cones"),
@@ -191,6 +193,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		toleranceExpSpinner = new JSpinner(toleranceExpModel),
 		maxIterationsSpinner = new JSpinner(maxIterationsModel);
 	private JCheckBox
+		useCurvatureMatricChecker = new JCheckBox("Use Curvature Metric"),
 		useDistanceToCanonicalize = new JCheckBox("Use Isometry Distances"),
 		useCustomThetaChecker = new JCheckBox("Custom Theta"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
@@ -300,6 +303,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		boundaryPanel.add(boundaryQuantizationCombo, c2);
 		boundaryPanel.setShrinked(true);
 		shrinkPanel.add(boundaryPanel, c2);
+		
+		metricPreprocessPanel.setLayout(new GridBagLayout());
+		metricPreprocessPanel.add(useCurvatureMatricChecker, c2);
+		shrinkPanel.add(metricPreprocessPanel, c2);
 		
 		coneConfigPanel.setLayout(new GridBagLayout());
 		coneConfigPanel.add(new JLabel("Cones"), c1);
@@ -481,7 +488,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		if (unwrapBtn == s) {
 			CoHDS surface = getLoaderGeometry();
 			surface.normalizeCoordinates();
-			Unwrap uw = new Unwrap(surface, hif.getAdapters());
+			AdapterSet aSet = hif.getAdapters();
+			if (useCurvatureMatricChecker.isSelected()) {
+				aSet.add(new CurvatureLengthAdapter());
+			}
+			Unwrap uw = new Unwrap(surface, aSet);
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());
 			uw.setMaxIterations(maxIterationsModel.getNumber().intValue());
 			uw.setNumCones(numConesModel.getNumber().intValue());
