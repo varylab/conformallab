@@ -529,7 +529,9 @@ public class Search {
 	> void relax(E e, double[] d, int[] p, WeightAdapter<E> w, PriorityQueue<V> Q) {
 		V u = e.getStartVertex();
 		V v = e.getTargetVertex();
-		double newWeight = d[u.getIndex()] + w.getWeight(e);
+		double weight = 1.0;
+		if (w != null) weight = w.getWeight(e);
+		double newWeight = d[u.getIndex()] + weight;
 		if (d[v.getIndex()] > newWeight) {
 			d[v.getIndex()] = newWeight;
 			p[v.getIndex()] = u.getIndex();

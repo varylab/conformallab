@@ -85,7 +85,7 @@ public class CuttingUtility {
 	> CuttingInfo<V, E, F> cutTorusToDisk(HDS hds, V root, WeightAdapter<E> wa) {
 		if (HalfEdgeUtils.getGenus(hds) != 1) throw new RuntimeException("Invalid genus in cutTorusToDisk()");
 		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
-		List<Set<E>> paths = HomologyUtility.getGeneratorPaths(root, wa);
+		List<Set<E>> paths = HomotopyUtility.getGeneratorPaths(root, wa);
 		Set<E> path0 = paths.get(0);
 		context.paths.add(path0);
 		cutAlongPath(path0, context);
@@ -173,7 +173,7 @@ public class CuttingUtility {
 	> CuttingInfo<V, E, F> cutManifoldToDisk(HDS hds, V root, WeightAdapter<E> wa) {
 		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
 		context.cutRoot = root;
-		for(Set<E> path : HomologyUtility.getGeneratorPaths(root, wa)) {
+		for(Set<E> path : HomotopyUtility.getGeneratorPaths(root, wa)) {
 			context.paths.add(path) ;
 		}
 		Set<E> masterPath = new TreeSet<E>(new NodeIndexComparator<E>());

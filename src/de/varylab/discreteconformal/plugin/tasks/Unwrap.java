@@ -54,6 +54,8 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		maxIterations = 150;
 	private double
 		toleranceExp = -8;
+	private Vector
+		u = null;
 	
 	// result values -------
 	public int 
@@ -79,7 +81,6 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		long layoutTime = -1;
 		setProgress(0);
 		genus = HalfEdgeUtils.getGenus(surface);
-		Vector u = null;
 		double gradTolerance = Math.pow(10, toleranceExp);
 		switch (genus) {
 		// disk or sphere---------------------
@@ -263,6 +264,10 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 	
 	public void setSelectedVertices(Set<CoVertex> selectedVertices) {
 		this.selectedVertices = selectedVertices;
+	}
+	
+	public Vector getResultU() {
+		return u;
 	}
 
 }

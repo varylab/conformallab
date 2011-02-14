@@ -19,6 +19,7 @@ import de.jtem.jrworkspace.plugin.lnfswitch.plugin.NimbusLnF;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.SystemLookAndFeel;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
+import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
 import de.varylab.discreteconformal.plugin.EllipticImageGemerator;
 import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutToDiskPlugin;
@@ -31,6 +32,7 @@ public class ConformalLab {
 	public static Set<Plugin> createConformalPlugins() {
 		Set<Plugin> s = new HashSet<Plugin>();
 		s.add(new DiscreteConformalPlugin());
+		s.add(new DiscreteRiemannPlugin());
 		s.add(new ThetaVisualizer());
 		s.add(new EllipticImageGemerator());
 		s.add(new ConsolePlugin());

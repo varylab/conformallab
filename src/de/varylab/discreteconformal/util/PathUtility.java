@@ -13,6 +13,38 @@ import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class PathUtility {
 
+	/**
+	 * Returns a path which does not include opposite edges of each edge.
+	 * All edges of the result will be positive
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param path
+	 * @return
+	 */
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> Set<E> getHalfPath(Iterable<E> path) {
+		Set<E> result = new TreeSet<E>(new NodeIndexComparator<E>());
+		Set<E> negSet = new HashSet<E>();
+		for (E e : path) {
+			if (negSet.contains(e) || result.contains(e)) {
+				continue;
+			}
+			if (e.isPositive()) {
+				result.add(e);
+				negSet.add(e.getOppositeEdge());
+			} else {
+				result.add(e.getOppositeEdge());	
+				negSet.add(e);
+			}
+		}
+		return result;
+	}
+	
+	
 	
 	/**
 	 * Returns the vertices on a given path
@@ -123,6 +155,7 @@ public class PathUtility {
 	
 	/**
 	 * Checks whether a cycle is essential
+	 * TODO This is not ready yet!
 	 * @param <V>
 	 * @param <E>
 	 * @param <F>

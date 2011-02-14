@@ -56,6 +56,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import no.uib.cipr.matrix.Vector;
+
 import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
@@ -142,6 +144,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		canonicalCoverImage = null;
 	private int
 		genus = -1;
+	private Vector
+		lastConformalU = null; 
 
 	private MetricErrorAdapter
 		edgeLengthAdapter = new MetricErrorAdapter();
@@ -193,6 +197,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		toleranceExpSpinner = new JSpinner(toleranceExpModel),
 		maxIterationsSpinner = new JSpinner(maxIterationsModel);
 	private JCheckBox
+		useInverseFlatMetricChecker = new JCheckBox("Use inverse last metric"),
 		useCurvatureMatricChecker = new JCheckBox("Use Curvature Metric"),
 		useDistanceToCanonicalize = new JCheckBox("Use Isometry Distances"),
 		useCustomThetaChecker = new JCheckBox("Custom Theta"),
@@ -306,6 +311,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		
 		metricPreprocessPanel.setLayout(new GridBagLayout());
 		metricPreprocessPanel.add(useCurvatureMatricChecker, c2);
+		metricPreprocessPanel.add(useInverseFlatMetricChecker, c2);
 		shrinkPanel.add(metricPreprocessPanel, c2);
 		
 		coneConfigPanel.setLayout(new GridBagLayout());
@@ -429,6 +435,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				unwrapper.getSurface().revertNormalization();
 			}
 			genus = unwrapper.genus;
+			lastConformalU = unwrapper.getResultU();
 			edgeLengthAdapter.setLengthMap(unwrapper.lengthMap);
 			edgeLengthAdapter.setSignature(Pn.EUCLIDEAN);
 			if (genus > 0) {
@@ -491,6 +498,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			AdapterSet aSet = hif.getAdapters();
 			if (useCurvatureMatricChecker.isSelected()) {
 				aSet.add(new CurvatureLengthAdapter());
+			} else if (useInverseFlatMetricChecker.isSelected() && lastConformalU != null) {
+				aSet.add(new InversePlanarMetricAdapter(lastConformalU));
 			}
 			Unwrap uw = new Unwrap(surface, aSet);
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());

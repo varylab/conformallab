@@ -17,7 +17,7 @@ import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class HomologyUtility {
 
-	private static <
+	protected static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
@@ -29,7 +29,7 @@ public class HomologyUtility {
 		return r;
 	}
 	
-	private static <
+	protected static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
@@ -39,8 +39,18 @@ public class HomologyUtility {
 		return path;
 	}
 	
-	public static
-	<
+	/**
+	 * Calculates a basis for the homotopy of the given surface.
+	 * The resulting cycles are visiting the root vertex, possibly
+	 * over connecting paths.
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param root The root of the system of cycles.
+	 * @param wa An edge weight. Cycles minimize length with respect to this weights
+	 * @return
+	 */
+	public static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
@@ -69,6 +79,17 @@ public class HomologyUtility {
 		return result;
 	}
 	
+	
+	/**
+	 * TODO Dual cycles might be disconnected 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param root
+	 * @param wa
+	 * @return
+	 * @see getGeneratorPaths
+	 */
 	public static
 	<
 		V extends Vertex<V, E, F>,
