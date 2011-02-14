@@ -63,6 +63,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 			EdgeVectorAdapter eva = new EdgeVectorAdapter(path, "Homology Path " + path.size());
 			hif.addLayerAdapter(eva, false);
 		}
+		
 		hif.setSelection(s);
 	}
 	
