@@ -8,7 +8,6 @@ import java.util.Set;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
-import no.uib.cipr.matrix.MatrixEntry;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import no.uib.cipr.matrix.sparse.GMRES;
@@ -20,18 +19,14 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Node;
 import de.jtem.halfedge.Vertex;
-import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.EdgeIndex;
 import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.Weight;
-import de.jtem.halfedgetools.adapter.type.generic.Position3d;
 import de.jtem.halfedgetools.algorithm.triangulation.Delaunay;
 import de.jtem.halfedgetools.algorithm.triangulation.DelaunayLengthAdapter;
-import de.jtem.halfedgetools.util.HalfEdgeUtilsExtra;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
-import de.varylab.matrix.sparse.factory.BlockMatrixFactory;
 import de.varylab.matrix.sparse.factory.DoubleMatrixFactory;
 
 public class DiscreteRiemannUtility {
@@ -43,9 +38,11 @@ public class DiscreteRiemannUtility {
 			super(Double.class, true, false);
 		}
 
-		public <V extends de.jtem.halfedge.Vertex<V, E, F>, E extends de.jtem.halfedge.Edge<V, E, F>, F extends de.jtem.halfedge.Face<V, E, F>> Double getE(
-				E e, AdapterSet adapters) {
-
+		public <
+			V extends Vertex<V, E, F>,
+			E extends Edge<V, E, F>,
+			F extends Face<V, E, F>
+		> Double getE(E e, AdapterSet adapters) {
 			if (!adapters.contains(Length.class, e.getClass(), Double.class)) {
 				throw new RuntimeException(
 						"Need adapter for length of edges to calculate cotan weights.");
@@ -68,7 +65,9 @@ public class DiscreteRiemannUtility {
 		};
 
 		@Override
-		public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
+		public <
+			N extends Node<?, ?, ?>
+		> boolean canAccept(Class<N> nodeClass) {
 			return Edge.class.isAssignableFrom(nodeClass);
 		}
 
@@ -81,7 +80,7 @@ public class DiscreteRiemannUtility {
 	> double[][] getHarmonicDifferentials(HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters) {
 		// First make clear that we are working with a delaunay triangulation.
 		DelaunayLengthAdapter la = Delaunay.constructDelaunay(hds, adapters);
-		
+
 		// Get the homology basis of the surface.
 		V rootV = hds.getVertex(0);
 		WeightAdapter<E> wa = new Search.DefaultWeightAdapter<E>();
@@ -95,24 +94,12 @@ public class DiscreteRiemannUtility {
 		// For each cycle construct the corresponding harmonic differential.
 		adapters.add(la); // delaunay lengths
 		for (int i = 0; i < basis.size(); i++) {
-			dh[i] = getHarmonicDifferential(hds, adapters, basis.get(i));
+			dh[i] = getStandardHarmonicDifferential(hds, adapters, basis.get(i));
 		}
 		adapters.remove(la);
 		return dh;
 	}
-	
-	
-	private static enum EdgeStatus {
-		EndsAtLeftSide,
-		StartsAtLeftSide,
-		EndsAtRightSide,
-		StartsAtRightSide,
-		liesOnTheCycle,
-		NoConnection
-	}
-	
-	
-	
+		
 	/**
 	 * Rotate e around v clockwise
 	 * @param <V>
@@ -129,48 +116,88 @@ public class DiscreteRiemannUtility {
 	> E getNextEdgeClockwise(E e, V v) {
 		if (e.getStartVertex() == v) {
 			return e.getPreviousEdge().getOppositeEdge();
-		} if (e.getTargetVertex() == v) {
+		}
+		if (e.getTargetVertex() == v) {
 			return e.getOppositeEdge().getPreviousEdge();
 		}
-		throw new IllegalArgumentException("Edge does not contain vertex in getNextEdgeClockwise()");
+		throw new IllegalArgumentException(
+				"Edge does not contain vertex in getNextEdgeClockwise()");
 	}
 	
-	public static <
-		V extends Vertex<V, E, F>, 
-		E extends Edge<V, E, F>, 
-		F extends Face<V, E, F>
-	> EdgeStatus getEdgeStatus(E e, Set<E> eCycle, Set<V> vCycle) {
-		boolean outpointing = vCycle.contains(e.getStartVertex());
-		if(eCycle.contains(e) || eCycle.contains(e.getOppositeEdge())) 
-			return EdgeStatus.liesOnTheCycle;
-		V v= outpointing ? e.getStartVertex(): e.getTargetVertex();
-		E curr= getNextEdgeClockwise(e,v);
-		while (curr == e){
-			if(eCycle.contains(curr)) {
-				if(outpointing) return EdgeStatus.StartsAtRightSide;
-				else return EdgeStatus.EndsAtLeftSide;
-			}
-			if(eCycle.contains(curr.getOppositeEdge())) {
-				if(outpointing) return EdgeStatus.StartsAtLeftSide;
-				else return EdgeStatus.EndsAtRightSide;
-			}
-			curr=getNextEdgeClockwise(e,v);
-		} 
-		
-		return EdgeStatus.NoConnection;
+	/**
+	 * There are several possibilities how an edge can be connected to the given
+	 * cycle. If the surface is cut along the cycle, we can regard the cycle as
+	 * two cycles actually - a left and a right one.
+	 */
+	private static enum EdgeStatus {
+		endsAtLeftCycle,
+		startsAtLeftCycle,
+		endsAtRightCycle,
+		startsAtRightCycle,
+		liesOnLeftCycle,
+		liesOnRightCycle,
+		noConnection
 	}
-	
-	
 
+	/**
+	 * Returns the edge's status, see EdgeStatus description.
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param e
+	 * @param edgeCycle
+	 * @param vertexCycle
+	 * @return
+	 */
 	public static <
 		V extends Vertex<V, E, F>, 
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>
-	> double[] getHarmonicDifferential(
-		HalfEdgeDataStructure<V, E, F> hds, 
-		AdapterSet adapters,
-		Set<E> cycle
-	) {
+	> EdgeStatus getEdgeStatus(E e, Set<E> edgeCycle, Set<V> vertexCycle) {
+		boolean outpointing = vertexCycle.contains(e.getStartVertex());
+		if (edgeCycle.contains(e))
+			return EdgeStatus.liesOnLeftCycle;
+		if (edgeCycle.contains(e.getOppositeEdge()))
+			return EdgeStatus.liesOnRightCycle;
+		V v = outpointing ? e.getStartVertex() : e.getTargetVertex();
+		E curr = getNextEdgeClockwise(e, v);
+		while (curr == e) {
+			if (edgeCycle.contains(curr)) {
+				if (outpointing)
+					return EdgeStatus.startsAtRightCycle;
+				else
+					return EdgeStatus.endsAtLeftCycle;
+			}
+			if (edgeCycle.contains(curr.getOppositeEdge())) {
+				if (outpointing)
+					return EdgeStatus.startsAtLeftCycle;
+				else
+					return EdgeStatus.endsAtRightCycle;
+			}
+			curr = getNextEdgeClockwise(e, v);
+		}
+
+		return EdgeStatus.noConnection;
+	}
+	
+	/**
+	 * Returns the standard harmonic differential for the given cycle, i.e. the
+	 * harmonic differential, whose integral along the cycle is 1. 
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param hds
+	 * @param adapters
+	 * @param cycle
+	 * @return
+	 */
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> double[] getStandardHarmonicDifferential(HalfEdgeDataStructure<V, E, F> hds, 
+		AdapterSet adapters, Set<E> cycle) {
 
 		Map<Integer, Integer> tau = getIdentificationMap(hds, cycle);
 
@@ -191,11 +218,11 @@ public class DiscreteRiemannUtility {
 			EdgeStatus status= getEdgeStatus(e, cycle, boundaryVertexSet);
 				
 			switch (status) {
-			case StartsAtRightSide:
+			case startsAtRightCycle:
 				dh[k] = h[e.getTargetVertex().getIndex()]
 							- h[tau.get(e.getStartVertex().getIndex())];
 				break;
-			case EndsAtRightSide:
+			case endsAtRightCycle:
 				dh[k] = h[tau.get(e.getTargetVertex().getIndex())]
 							- h[e.getStartVertex().getIndex()];
 				break;
@@ -210,8 +237,8 @@ public class DiscreteRiemannUtility {
 	}
 
 	/**
-	 * Returns a harmonic function, which is two valued on the boundary
-	 * (constant 0 and 1 resp.).
+	 * Returns a harmonic function, which is two valued on the cycle
+	 * (constant 0 on the left and 1 on the right side).
 	 * 
 	 * @param <V>
 	 * @param <E>
@@ -239,6 +266,25 @@ public class DiscreteRiemannUtility {
 		
 	}
 
+	/**
+	 * Returns a harmonic function on the surface cut along the given cycle. The
+	 * cycle splits in a left and a right side, where boundary conditions can be
+	 * specified. Tau is the identification map to obtain the surface given by
+	 * the hds.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param hds
+	 * @param adapters
+	 * @param cycle
+	 * @param tau
+	 * @param boundaryCondition1
+	 *            (left side)
+	 * @param boundaryCondition2
+	 *            (right side)
+	 * @return
+	 */
 	public static <
 		V extends Vertex<V, E, F>, 
 		E extends Edge<V, E, F>, 
@@ -258,7 +304,7 @@ public class DiscreteRiemannUtility {
 		Vector bc = new DenseVector(n);
 
 		for (V v : vertexSet) {
-			int i= v.getIndex();
+			int i = v.getIndex();
 			bc.set(i, boundaryCondition1[i]);
 			bc.set(tau.get(i), boundaryCondition2[i]);
 		}
@@ -270,7 +316,8 @@ public class DiscreteRiemannUtility {
 		try {
 			solver.solve(laplaceop, bc, x);
 		} catch (IterativeSolverNotConvergedException e) {
-			System.err.println("Iterative solver failed to converge");
+			System.err
+					.println("Iterative solver failed to converge: Couldn't get harmonic function.");
 		}
 
 		double[] H = new double[n];
@@ -294,7 +341,11 @@ public class DiscreteRiemannUtility {
 	 * @param cycle
 	 * @return
 	 */
-	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> Map<Integer, Integer> getIdentificationMap(
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> Map<Integer, Integer> getIdentificationMap(
 			HalfEdgeDataStructure<V, E, F> hds, Set<E> cycle) {
 		Map<Integer, Integer> map = new HashMap<Integer, Integer>(100);
 
@@ -321,7 +372,11 @@ public class DiscreteRiemannUtility {
 	 * @param cycle
 	 * @return
 	 */
-	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> Set<V> getVertexSet(
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> Set<V> getVertexSet(
 			HalfEdgeDataStructure<V, E, F> hds, Set<E> cycle) {
 		Set<V> vertexSet = new HashSet<V>(cycle.size());
 		for (E e:cycle) {
@@ -331,7 +386,7 @@ public class DiscreteRiemannUtility {
 	}
 
 	/**
-	 * Returns the matrix of the cotan laplacian corresponding to the surface
+	 * Returns the matrix of the cotan laplace operator corresponding to the surface
 	 * obtained by cutting hds along the given cycle.
 	 * 
 	 * @param <V>
@@ -347,65 +402,58 @@ public class DiscreteRiemannUtility {
 		V extends Vertex<V, E, F>, 
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>
-	> Matrix getLaplacian(
-			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
-			Set<E> cycle, Map<Integer, Integer> tau) {
-
-		CotanAdapter ca = new CotanAdapter();
-		adapters.add(ca);
+	> Matrix getLaplacian(HalfEdgeDataStructure<V, E, F> hds, 
+			AdapterSet adapters, Set<E> cycle, Map<Integer, Integer> tau) {
 
 		Set<V> boundaryVertexSet = getVertexSet(hds, cycle);
 
 		DoubleMatrixFactory dmf = new DoubleMatrixFactory(hds.numVertices()+cycle.size(),
 				hds.numVertices()+cycle.size());
-		int i, j;
+		
+		EdgeStatus status;
 		double weight;
+		int i, j;
 
-		// TODO: Implement correctly
+		CotanAdapter ca = new CotanAdapter();
+		adapters.add(ca);
+		
+		// TODO: Check implementation!
 		for (E e : hds.getEdges()) {
-			int k= adapters.get(EdgeIndex.class, e,Integer.class);
-			EdgeStatus status= getEdgeStatus(e, cycle, boundaryVertexSet);
-				
-//			switch (status) {
-//			case StartsAtRightSide:
-//				dh[k] = h[e.getTargetVertex().getIndex()]
-//							- h[tau.get(e.getStartVertex().getIndex())];
-//				break;
-//			case EndsAtRightSide:
-//				dh[k] = h[tau.get(e.getTargetVertex().getIndex())]
-//							- h[e.getStartVertex().getIndex()];
-//				break;
-//			case liesOnTheCycle:
-//				dmf.set(e.getStartVertex().getIndex(), e.getStartVertex().getIndex(), 1.);
-//				dmf.set(tau.get(e.getStartVertex().getIndex()), e.getStartVertex().getIndex(), 1.);
-//			default:
-//				i = e.getStartVertex().getIndex();
-//				j = e.getTargetVertex().getIndex();
-//			break;
-//			}
-//			weight = getCotanWeight(e, adapters);
-//			dmf.set(i, j, weight);
-//			dmf.add(i, i, -weight);
-			if (boundaryVertexSet.contains(e.getStartVertex())) {
+			status= getEdgeStatus(e, cycle, boundaryVertexSet);
+			weight = getCotanWeight(e, adapters);
+			switch (status) {
+			case liesOnLeftCycle:
 				i = e.getStartVertex().getIndex();
-				j = tau.get(e.getStartVertex().getIndex());
 				dmf.set(i, i, 1.);
-				dmf.set(j, j, 1.);
-			} else {
-				i = e.getStartVertex().getIndex();
-				if (boundaryVertexSet.contains(e.getTargetVertex())
-						&& !cycle.contains(e.getNextEdge()))
-					j = tau.get(e.getTargetVertex().getIndex());
-				else
-					j = e.getTargetVertex().getIndex();
-				weight = getCotanWeight(e, adapters);
+				break;
+			case liesOnRightCycle:
+				i = tau.get(e.getStartVertex().getIndex());
+				dmf.set(i, i, 1.);
+				break;
+			case startsAtRightCycle:
+				i = tau.get(e.getStartVertex().getIndex());
+				j = e.getTargetVertex().getIndex();
 				dmf.set(i, j, weight);
 				dmf.add(i, i, -weight);
+				break;
+			case endsAtRightCycle:
+				i = e.getStartVertex().getIndex();
+				j = tau.get(e.getTargetVertex().getIndex());
+				dmf.set(i, j, weight);
+				dmf.add(i, i, -weight);
+				break;
+			default:
+				i = e.getStartVertex().getIndex();
+				j = e.getTargetVertex().getIndex();
+				dmf.set(i, j, weight);
+				dmf.add(i, i, -weight);
+				break;
 			}
 		}
 		
-		dmf.update();
 		adapters.remove(ca);
+		
+		dmf.update();
 		return dmf.getMatrix();
 
 	}
@@ -413,23 +461,6 @@ public class DiscreteRiemannUtility {
 	private static double getCotanWeight(Edge<?, ?, ?> e, AdapterSet adapters) {
 		return adapters.get(Weight.class, e, Double.class)
 				+ adapters.get(Weight.class, e.getOppositeEdge(), Double.class);
-	}
-
-	/**
-	 * This method shall return whether a given vertex lies on the boundary of
-	 * the surface it belongs to.
-	 * 
-	 * @param v
-	 * @return isBoundaryVertex
-	 */
-	private static boolean isBoundaryVertex(Vertex<?, ?, ?> v) {
-		Edge<?, ?, ?> currEdge = v.getIncomingEdge();
-		do {
-			if (HalfEdgeUtilsExtra.isBoundaryEdge(currEdge))
-				return true;
-			currEdge = currEdge.getNextEdge().getOppositeEdge();
-		} while (currEdge.equals(v.getIncomingEdge()));
-		return false;
 	}
 
 }
