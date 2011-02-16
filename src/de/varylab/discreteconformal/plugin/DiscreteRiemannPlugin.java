@@ -14,15 +14,20 @@ import javax.swing.JButton;
 
 import de.jreality.plugin.basic.View;
 import de.jreality.ui.LayoutFactory;
+import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
+import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Color;
+import de.jtem.halfedgetools.adapter.type.EdgeIndex;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
-import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.varylab.discreteconformal.adapter.EuclideanLengthWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.util.DiscreteRiemannUtility;
 import de.varylab.discreteconformal.util.HomologyUtility;
 
 public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionListener {
@@ -40,6 +45,54 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		calculateButton.addActionListener(this);
 	}
 	
+	
+	private class HarmonicDifferentialAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, Double> {
+
+		private double[] 
+		    dh = null;
+		
+		public HarmonicDifferentialAdapter(double[] dh) {
+			super(null, CoEdge.class, null, Double.class, true, false);
+			this.dh = dh;
+		}
+		
+		public Double getEdgeValue(CoEdge e, AdapterSet a) {
+			int index = a.get(EdgeIndex.class, e, Integer.class);
+			return dh[index];
+		};
+		
+		@Override
+		public String toString() {
+			return "Harmonic Differential";
+		}
+		
+	}
+	
+	@Color
+	private class HarmonicDifferentialColor extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
+
+		private double[] 
+		    dh = null;
+		
+		public HarmonicDifferentialColor(double[] dh) {
+			super(null, CoEdge.class, null, double[].class, true, false);
+			this.dh = dh;
+		}
+		
+		public double[] getEdgeValue(CoEdge e, AdapterSet a) {
+			int index = a.get(EdgeIndex.class, e, Integer.class);
+			double val = Math.abs(dh[index]);
+			return new double[] {val*10, 0, 0};
+		};
+		
+		@Override
+		public String toString() {
+			return "Harmonic Differential";
+		}
+		
+	}
+	
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		CoHDS S = hif.get(new CoHDS());
@@ -51,20 +104,25 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 			);
 			return;
 		}
-		CoVertex root = S.getVertex(0);
-		EuclideanLengthWeightAdapter w = new EuclideanLengthWeightAdapter(null);
-		List<Set<CoEdge>> paths = HomologyUtility.getGeneratorPaths(root, w);
-		System.out.println("Got " + paths.size() + " paths");
-		HalfedgeSelection s = new HalfedgeSelection();
-		for (Set<CoEdge> path : paths) {
-			s.addAll(path);
+		AdapterSet a = hif.getAdapters();
+		EuclideanLengthWeightAdapter wa = new EuclideanLengthWeightAdapter(null);
+		double[][] dhs = DiscreteRiemannUtility.getHarmonicDifferentials(S, a, wa);
+		
+		for (double[] dh : dhs) {
+			hif.addLayerAdapter(new HarmonicDifferentialColor(dh), false);
 		}
+		hif.update();
+
+		// add itrospection adapters
+		for (double[] dh : dhs) {
+			hif.addLayerAdapter(new HarmonicDifferentialAdapter(dh), false);
+		}
+		CoVertex root = S.getVertex(0);
+		List<Set<CoEdge>> paths = HomologyUtility.getGeneratorPaths(root, wa);
 		for (Set<CoEdge> path : paths) {
 			EdgeVectorAdapter eva = new EdgeVectorAdapter(path, "Homology Path " + path.size());
 			hif.addLayerAdapter(eva, false);
 		}
-		
-		hif.setSelection(s);
 	}
 	
 	@Override

@@ -1,7 +1,7 @@
 package de.varylab.matrix.sparse.factory;
 
-import de.jreality.math.Quaternion;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
+import de.jreality.math.Quaternion;
 
 public class MatrixRepresentationFactory {
 

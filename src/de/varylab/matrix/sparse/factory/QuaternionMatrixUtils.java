@@ -1,10 +1,10 @@
 package de.varylab.matrix.sparse.factory;
 
-import de.jreality.math.Quaternion;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.sparse.IterativeSolver;
 import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
+import de.jreality.math.Quaternion;
 
 public class QuaternionMatrixUtils {
 

@@ -5,7 +5,7 @@ public class MatrixProductFactoryException extends Exception {
 	private int columns, rows;
 	
 	@SuppressWarnings("unchecked")
-	public MatrixProductFactoryException(BlockMatrixFactory A,BlockMatrixFactory B) {
+	public MatrixProductFactoryException(BlockMatrixFactory A, BlockMatrixFactory B) {
 		this.columns= A.numColBlocks;
 		this.rows = B.numRowBlocks;
 	}

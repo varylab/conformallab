@@ -9,8 +9,8 @@ import java.util.Set;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
+import no.uib.cipr.matrix.sparse.BiCG;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
-import no.uib.cipr.matrix.sparse.GMRES;
 import no.uib.cipr.matrix.sparse.IterativeSolver;
 import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
 import no.uib.cipr.matrix.sparse.OutputIterationReporter;
@@ -73,17 +73,31 @@ public class DiscreteRiemannUtility {
 
 	}	
 
+	/**
+	 * Calculates 2*g harmonic differentials on hds. The weight Adapter is used to
+	 * find a basis of the homology that are short with respect to the weight in wa
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param hds
+	 * @param adapters
+	 * @param wa
+	 * @return
+	 */
 	public static <
-		V extends Vertex<V, E, F>, 
-		E extends Edge<V, E, F>, 
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> double[][] getHarmonicDifferentials(HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters) {
+	> double[][] getHarmonicDifferentials(
+		HalfEdgeDataStructure<V, E, F> hds, 
+		AdapterSet adapters,
+		WeightAdapter<E> wa
+	) {
 		// First make clear that we are working with a delaunay triangulation.
 		DelaunayLengthAdapter la = Delaunay.constructDelaunay(hds, adapters);
 
 		// Get the homology basis of the surface.
 		V rootV = hds.getVertex(0);
-		WeightAdapter<E> wa = new Search.DefaultWeightAdapter<E>();
 		List<Set<E>> basis = HomologyUtility.getGeneratorPaths(rootV, wa);
 
 		// For each cycle in the basis we get a corresponding harmonic
@@ -161,7 +175,7 @@ public class DiscreteRiemannUtility {
 			return EdgeStatus.liesOnRightCycle;
 		V v = outpointing ? e.getStartVertex() : e.getTargetVertex();
 		E curr = getNextEdgeClockwise(e, v);
-		while (curr == e) {
+		while (curr != e) {
 			if (edgeCycle.contains(curr)) {
 				if (outpointing)
 					return EdgeStatus.startsAtRightCycle;
@@ -174,7 +188,7 @@ public class DiscreteRiemannUtility {
 				else
 					return EdgeStatus.endsAtRightCycle;
 			}
-			curr = getNextEdgeClockwise(e, v);
+			curr = getNextEdgeClockwise(curr, v);
 		}
 
 		return EdgeStatus.noConnection;
@@ -303,13 +317,15 @@ public class DiscreteRiemannUtility {
 		Vector x = new DenseVector(n);
 		Vector bc = new DenseVector(n);
 
+		int bcIndex = 0;
 		for (V v : vertexSet) {
 			int i = v.getIndex();
-			bc.set(i, boundaryCondition1[i]);
-			bc.set(tau.get(i), boundaryCondition2[i]);
+			bc.set(i, boundaryCondition1[bcIndex]);
+			bc.set(tau.get(i), boundaryCondition2[bcIndex]);
+			bcIndex++;
 		}
 
-		IterativeSolver solver = new GMRES(x);
+		IterativeSolver solver = new BiCG(x);
 		solver.getIterationMonitor().setIterationReporter(
 				new OutputIterationReporter());
 
@@ -442,6 +458,7 @@ public class DiscreteRiemannUtility {
 				dmf.set(i, j, weight);
 				dmf.add(i, i, -weight);
 				break;
+			case endsAtLeftCycle:
 			default:
 				i = e.getStartVertex().getIndex();
 				j = e.getTargetVertex().getIndex();
