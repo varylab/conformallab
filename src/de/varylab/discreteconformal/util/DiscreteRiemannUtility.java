@@ -11,9 +11,11 @@ import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.BiCG;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
+import no.uib.cipr.matrix.sparse.ILU;
 import no.uib.cipr.matrix.sparse.IterativeSolver;
 import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
 import no.uib.cipr.matrix.sparse.OutputIterationReporter;
+import no.uib.cipr.matrix.sparse.Preconditioner;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -31,6 +33,9 @@ import de.varylab.matrix.sparse.factory.DoubleMatrixFactory;
 
 public class DiscreteRiemannUtility {
 
+	/**
+	 * Adapter returns the cotan weight of a given edge.
+	 */
 	@Weight
 	private static class CotanAdapter extends AbstractAdapter<Double> {
 
@@ -71,11 +76,13 @@ public class DiscreteRiemannUtility {
 			return Edge.class.isAssignableFrom(nodeClass);
 		}
 
-	}	
+	}
 
 	/**
-	 * Calculates 2*g harmonic differentials on hds. The weight Adapter is used to
-	 * find a basis of the homology that are short with respect to the weight in wa
+	 * Calculates 2*g harmonic differentials on hds. The weight Adapter is used
+	 * to find a basis of the homology that are short with respect to the weight
+	 * given by wa.
+	 * 
 	 * @param <V>
 	 * @param <E>
 	 * @param <F>
@@ -88,7 +95,7 @@ public class DiscreteRiemannUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> double[][] getHarmonicDifferentials(
+	> double[][] getHarmonicForms(
 		HalfEdgeDataStructure<V, E, F> hds, 
 		AdapterSet adapters,
 		WeightAdapter<E> wa
@@ -100,15 +107,294 @@ public class DiscreteRiemannUtility {
 		V rootV = hds.getVertex(0);
 		List<Set<E>> basis = HomologyUtility.getGeneratorPaths(rootV, wa);
 
+		// use the private method
+		return getHarmonicForms(hds, basis, adapters, la, wa);
+	}
+	
+	/**
+	 * Returns a basis of holomorphic differentials on the surface hds. 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param hds
+	 * @param adapters
+	 * @param wa
+	 * @return
+	 */
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double[][] getHolomorphicForms(
+		HalfEdgeDataStructure<V, E, F> hds, 
+		AdapterSet adapters,
+		WeightAdapter<E> wa){
+		
+		// First make clear that we are working with a delaunay triangulation.
+		DelaunayLengthAdapter la = Delaunay.constructDelaunay(hds, adapters);
+
+		// Get the homology basis of the surface.
+		V rootV = hds.getVertex(0);
+		List<Set<E>> basis = HomologyUtility.getGeneratorPaths(rootV, wa);
+
+		// use the private method
+		return getHolomorphicForms(hds, basis, adapters, la, wa);
+	}
+
+	/**
+	 * Returns a basis of holomorphic differentials on the surface, which is
+	 * normalized with respect to the given homology basis. The surface has to
+	 * be Delaunay triangulated.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param delaunay
+	 * @param homologyBasis
+	 * @param adapters
+	 * @param la
+	 * @param wa
+	 * @return
+	 */
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double[][] getHolomorphicForms(
+		HalfEdgeDataStructure<V, E, F> delaunay,
+		List<Set<E>> homologyBasis,
+		AdapterSet adapters,
+		DelaunayLengthAdapter la,
+		WeightAdapter<E> wa){
+		
+		// TODO: implement me!
+
+		double[][] dh = getHarmonicForms(delaunay, homologyBasis, adapters, la,
+				wa);
+		double[][] dhStar = getStarOfForms(delaunay, adapters, dh);
+
+		List<Set<E>> acycles = getACycles(delaunay, homologyBasis);
+		List<Set<E>> dualACycles = getDualPaths(delaunay, acycles);
+		CompRowMatrix A = getCoefficientMatrix(dh, dhStar, acycles,
+				dualACycles, adapters);
+
+		DenseVector x = new DenseVector(dh.length);
+
+		IterativeSolver solver = new BiCG(x);
+
+		Preconditioner pre = new ILU(A);
+		pre.setMatrix(A);
+		solver.setPreconditioner(pre);
+
+		solver.getIterationMonitor().setIterationReporter(
+				new OutputIterationReporter());
+
+		for (int i = 0; i < acycles.size(); i++) {
+			DenseVector bc = new DenseVector(2 * acycles.size());
+			bc.set(i, 1);
+			try {
+				solver.solve(A, bc, x);
+			} catch (IterativeSolverNotConvergedException e) {
+				System.err
+						.println("Iterative solver failed to converge: Couldn't get harmonic function.");
+			}
+
+			// TODO: build linear combinations of the harmonic differentials
+			// using the obtained coefficients, etc
+
+		}
+
+		return null;
+	}
+	
+	/**
+	 * Returns a paths in the dual surface which are homotopic to the given
+	 * ones.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param hds
+	 * @param cycles
+	 * @return
+	 */
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> List<Set<E>> getDualPaths(HalfEdgeDataStructure<V,E,F> hds, List<Set<E>> cycles){
+		List<Set<E>> dualCycles= new java.util.Vector<Set<E>>();
+		for (int i = 0; i < cycles.size(); i++) {
+			dualCycles.add(getDualPath(hds,cycles.get(i)));
+		}
+		return dualCycles;
+	}
+	
+	/**
+	 * Returns a path in the dual surface which is homotopic to the given one.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param hds
+	 * @param cycles
+	 * @return
+	 */
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> Set<E> getDualPath(HalfEdgeDataStructure<V,E,F> hds, Set<E> cycles){
+		// TODO: Implement me!
+		return null;
+	}
+	
+	/**
+	 * Returns a matrix needed to build the normalized holomorphic differentials.
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param dh
+	 * @param dhStar
+	 * @param acycles
+	 * @param dualACycles
+	 * @param adapters
+	 * @return
+	 */
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> CompRowMatrix getCoefficientMatrix(
+			double[][] dh, double[][] dhStar, 
+			List<Set<E>> acycles, List<Set<E>> dualACycles, 
+			AdapterSet adapters){
+		// TODO: Implement me!
+		return null;
+	}
+	
+	/**
+	 * Returns g cycles of the homology basis representing the a cycles.
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param hds
+	 * @param homologyBasis
+	 * @return
+	 */
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> List<Set<E>> getACycles(HalfEdgeDataStructure<V,E,F> hds, List<Set<E>> homologyBasis){
+		// TODO: Choose the a cycles and return them.
+		return null;
+	}
+	
+	/**
+	 * Applies the Hodge star operator to an array of forms on the surface and
+	 * returns the result.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param delaunay
+	 * @param adapters
+	 * @param forms
+	 * @return
+	 */
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double[][] getStarOfForms(
+		HalfEdgeDataStructure<V, E, F> delaunay,
+		AdapterSet adapters,
+		double[][] forms){
+		double[][] formsStar = new double[forms.length][];
+		for (int i = 0; i < formsStar.length; i++) {
+			formsStar[i] = getStarOfForm(delaunay, adapters, forms[i]);
+		}
+		return formsStar;
+	}
+	
+	/**
+	 * Applies the Hodge star operator to a form on the surface and
+	 * returns the result.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param delaunay
+	 * @param adapters
+	 * @param form
+	 * @return
+	 */
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double[] getStarOfForm(
+		HalfEdgeDataStructure<V, E, F> delaunay,
+		AdapterSet adapters,
+		double[] form){
+		
+		double[] formStar = new double[form.length];
+
+		CotanAdapter ca = new CotanAdapter();
+
+		double ratio;
+		int id;
+
+		for (E e : delaunay.getPositiveEdges()) {
+			// TODO: Check! Is the cotan weight the ratio of the edge length and
+			// its dual edge length?
+			ratio = ca.getE(e, adapters);
+			id = adapters.get(EdgeIndex.class, e, Integer.class);
+			formStar[id] = ratio * form[id];
+		}
+
+		return formStar;
+	}
+	
+
+	/**
+	 * Calculates 2*g harmonic differentials on on a Delaunay triangulated
+	 * surface hds corresponding to a specified homology basis. The weight
+	 * Adapter is used to find a basis of the homology that are short with
+	 * respect to the weight given by wa.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param delaunay
+	 * @param homologyBasis
+	 * @param adapters
+	 * @param la
+	 * @param wa
+	 * @return
+	 */
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double[][] getHarmonicForms(
+		HalfEdgeDataStructure<V, E, F> delaunay, 
+		List<Set<E>> homologyBasis,
+		AdapterSet adapters, DelaunayLengthAdapter la,
+		WeightAdapter<E> wa
+	) {
+		
 		// For each cycle in the basis we get a corresponding harmonic
 		// differential (closed but not exact, its integral differs by one on
 		// the cycle).
-		double[][] dh = new double[basis.size()][];
+		double[][] dh = new double[homologyBasis.size()][];
 
 		// For each cycle construct the corresponding harmonic differential.
 		adapters.add(la); // delaunay lengths
-		for (int i = 0; i < basis.size(); i++) {
-			dh[i] = getStandardHarmonicDifferential(hds, adapters, basis.get(i));
+		for (int i = 0; i < homologyBasis.size(); i++) {
+			dh[i] = getStandardHarmonicForm(delaunay, adapters,
+					homologyBasis.get(i));
 		}
 		adapters.remove(la);
 		return dh;
@@ -163,7 +449,7 @@ public class DiscreteRiemannUtility {
 	 * @param vertexCycle
 	 * @return
 	 */
-	public static <
+	private static <
 		V extends Vertex<V, E, F>, 
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>
@@ -210,7 +496,7 @@ public class DiscreteRiemannUtility {
 		V extends Vertex<V, E, F>, 
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>
-	> double[] getStandardHarmonicDifferential(HalfEdgeDataStructure<V, E, F> hds, 
+	> double[] getStandardHarmonicForm(HalfEdgeDataStructure<V, E, F> hds, 
 		AdapterSet adapters, Set<E> cycle) {
 
 		Map<Integer, Integer> tau = getIdentificationMap(hds, cycle);
@@ -326,6 +612,11 @@ public class DiscreteRiemannUtility {
 		}
 
 		IterativeSolver solver = new BiCG(x);
+		
+		Preconditioner pre= new ILU(laplaceop);
+		pre.setMatrix(laplaceop);
+		solver.setPreconditioner(pre);
+		
 		solver.getIterationMonitor().setIterationReporter(
 				new OutputIterationReporter());
 
@@ -357,7 +648,7 @@ public class DiscreteRiemannUtility {
 	 * @param cycle
 	 * @return
 	 */
-	public static <
+	private static <
 		V extends Vertex<V, E, F>, 
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>
@@ -388,7 +679,7 @@ public class DiscreteRiemannUtility {
 	 * @param cycle
 	 * @return
 	 */
-	public static <
+	private static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
@@ -414,7 +705,7 @@ public class DiscreteRiemannUtility {
 	 * @param tau
 	 * @return
 	 */
-	public static <
+	private static <
 		V extends Vertex<V, E, F>, 
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>

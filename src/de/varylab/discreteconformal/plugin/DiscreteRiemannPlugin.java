@@ -82,7 +82,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		public double[] getEdgeValue(CoEdge e, AdapterSet a) {
 			int index = a.get(EdgeIndex.class, e, Integer.class);
 			double val = Math.abs(dh[index]);
-			return new double[] {val*10, 0, 0};
+			return new double[] {val, 0, 0};
 		};
 		
 		@Override
@@ -106,7 +106,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		}
 		AdapterSet a = hif.getAdapters();
 		EuclideanLengthWeightAdapter wa = new EuclideanLengthWeightAdapter(null);
-		double[][] dhs = DiscreteRiemannUtility.getHarmonicDifferentials(S, a, wa);
+		double[][] dhs = DiscreteRiemannUtility.getHarmonicForms(S, a, wa);
 		
 		for (double[] dh : dhs) {
 			hif.addLayerAdapter(new HarmonicDifferentialColor(dh), false);
