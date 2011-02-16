@@ -17,6 +17,8 @@
 	<classpathentry kind="lib" path="lib/netlib-java.jar"/>
 	<classpathentry kind="lib" path="lib/optimization.jar"/>
 	<classpathentry kind="lib" path="lib/parallelcolt-0.9.4.jar"/>
+	<classpathentry kind="lib" path="lib/arpack-combo.jar"/>
+	<classpathentry kind="lib" path="lib/csparsej.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/MTJOptimization"/>
