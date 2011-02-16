@@ -6,16 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.Matrix;
-import no.uib.cipr.matrix.Vector;
-import no.uib.cipr.matrix.sparse.BiCG;
-import no.uib.cipr.matrix.sparse.CompRowMatrix;
-import no.uib.cipr.matrix.sparse.ILU;
-import no.uib.cipr.matrix.sparse.IterativeSolver;
-import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
-import no.uib.cipr.matrix.sparse.OutputIterationReporter;
-import no.uib.cipr.matrix.sparse.Preconditioner;
+import cern.colt.matrix.tdouble.DoubleFactory1D;
+import cern.colt.matrix.tdouble.DoubleFactory2D;
+import cern.colt.matrix.tdouble.DoubleMatrix1D;
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import cern.colt.matrix.tdouble.algo.solver.DefaultDoubleIterationMonitor;
+import cern.colt.matrix.tdouble.algo.solver.DoubleBiCGstab;
+import cern.colt.matrix.tdouble.algo.solver.IterativeSolverDoubleNotConvergedException;
+
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -29,7 +27,6 @@ import de.jtem.halfedgetools.adapter.type.Weight;
 import de.jtem.halfedgetools.algorithm.triangulation.Delaunay;
 import de.jtem.halfedgetools.algorithm.triangulation.DelaunayLengthAdapter;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
-import de.varylab.matrix.sparse.factory.DoubleMatrixFactory;
 
 public class DiscreteRiemannUtility {
 
@@ -171,32 +168,27 @@ public class DiscreteRiemannUtility {
 
 		double[][] dh = getHarmonicForms(delaunay, homologyBasis, adapters, la,
 				wa);
-		double[][] dhStar = getStarOfForms(delaunay, adapters, dh);
+		double[][] dhStar = getDualForms(delaunay, adapters, dh);
 
 		List<Set<E>> acycles = getACycles(delaunay, homologyBasis);
 		List<Set<E>> dualACycles = getDualPaths(delaunay, acycles);
-		CompRowMatrix A = getCoefficientMatrix(dh, dhStar, acycles,
+		DoubleMatrix2D A = getCoefficientMatrix(dh, dhStar, acycles,
 				dualACycles, adapters);
 
-		DenseVector x = new DenseVector(dh.length);
+		DoubleMatrix1D x = DoubleFactory1D.dense.make(dh.length);
 
-		IterativeSolver solver = new BiCG(x);
-
-		Preconditioner pre = new ILU(A);
-		pre.setMatrix(A);
-		solver.setPreconditioner(pre);
-
-		solver.getIterationMonitor().setIterationReporter(
-				new OutputIterationReporter());
+		DoubleBiCGstab solver = new DoubleBiCGstab(x);
+		solver.setIterationMonitor(new DefaultDoubleIterationMonitor());
 
 		for (int i = 0; i < acycles.size(); i++) {
-			DenseVector bc = new DenseVector(2 * acycles.size());
+			DoubleMatrix1D bc = DoubleFactory1D.dense.make(2 * acycles.size());
 			bc.set(i, 1);
 			try {
 				solver.solve(A, bc, x);
-			} catch (IterativeSolverNotConvergedException e) {
+			} catch (IterativeSolverDoubleNotConvergedException e) {
 				System.err
-						.println("Iterative solver failed to converge: Couldn't get harmonic function.");
+						.println("Iterative solver failed to converge: Couldn't get holomorphic form.");
+				e.printStackTrace();
 			}
 
 			// TODO: build linear combinations of the harmonic differentials
@@ -265,7 +257,7 @@ public class DiscreteRiemannUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> CompRowMatrix getCoefficientMatrix(
+	> DoubleMatrix2D getCoefficientMatrix(
 			double[][] dh, double[][] dhStar, 
 			List<Set<E>> acycles, List<Set<E>> dualACycles, 
 			AdapterSet adapters){
@@ -307,13 +299,13 @@ public class DiscreteRiemannUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> double[][] getStarOfForms(
+	> double[][] getDualForms(
 		HalfEdgeDataStructure<V, E, F> delaunay,
 		AdapterSet adapters,
 		double[][] forms){
 		double[][] formsStar = new double[forms.length][];
 		for (int i = 0; i < formsStar.length; i++) {
-			formsStar[i] = getStarOfForm(delaunay, adapters, forms[i]);
+			formsStar[i] = getDualForm(delaunay, adapters, forms[i]);
 		}
 		return formsStar;
 	}
@@ -334,7 +326,7 @@ public class DiscreteRiemannUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> double[] getStarOfForm(
+	> double[] getDualForm(
 		HalfEdgeDataStructure<V, E, F> delaunay,
 		AdapterSet adapters,
 		double[] form){
@@ -356,7 +348,6 @@ public class DiscreteRiemannUtility {
 
 		return formStar;
 	}
-	
 
 	/**
 	 * Calculates 2*g harmonic differentials on on a Delaunay triangulated
@@ -520,16 +511,16 @@ public class DiscreteRiemannUtility {
 			switch (status) {
 			case startsAtRightCycle:
 				dh[k] = h[e.getTargetVertex().getIndex()]
-							- h[tau.get(e.getStartVertex().getIndex())];
+						- h[tau.get(e.getStartVertex().getIndex())];
 				break;
 			case endsAtRightCycle:
 				dh[k] = h[tau.get(e.getTargetVertex().getIndex())]
-							- h[e.getStartVertex().getIndex()];
+						- h[e.getStartVertex().getIndex()];
 				break;
 			default:
-				dh[k]= h[e.getTargetVertex().getIndex()]
-					- h[e.getStartVertex().getIndex()];
-			break;
+				dh[k] = h[e.getTargetVertex().getIndex()]
+						- h[e.getStartVertex().getIndex()];
+				break;
 			}
 		}
 
@@ -560,7 +551,7 @@ public class DiscreteRiemannUtility {
 		double[] bc1 = new double[tau.size()];
 		double[] bc2 = new double[tau.size()];
 		for (int i = 0; i < bc2.length; i++) {
-			bc2[i] = 1.;
+			bc2[i] = 10.;
 		}
 		return getHarmonicFunction(hds, adapters, cycle, tau, bc1, bc2);
 		
@@ -595,36 +586,32 @@ public class DiscreteRiemannUtility {
 			double[] boundaryCondition1, double[] boundaryCondition2) {
 
 		int n = hds.numVertices() + cycle.size();
-		CompRowMatrix laplaceop = (CompRowMatrix) getLaplacian(hds, adapters,
-				cycle, tau);
+		DoubleMatrix2D laplaceop = getLaplacian(hds, adapters, cycle, tau);
 
 		Set<V> vertexSet = getVertexSet(hds, cycle);
 
-		Vector x = new DenseVector(n);
-		Vector bc = new DenseVector(n);
+		DoubleMatrix1D x = DoubleFactory1D.dense.make(n);
 
+		double[] bcond = new double[n];
 		int bcIndex = 0;
 		for (V v : vertexSet) {
-			int i = v.getIndex();
-			bc.set(i, boundaryCondition1[bcIndex]);
-			bc.set(tau.get(i), boundaryCondition2[bcIndex]);
+			int id = v.getIndex();
+			bcond[id] = boundaryCondition1[bcIndex];
+			bcond[tau.get(id)] = boundaryCondition2[bcIndex];
 			bcIndex++;
 		}
 
-		IterativeSolver solver = new BiCG(x);
-		
-		Preconditioner pre= new ILU(laplaceop);
-		pre.setMatrix(laplaceop);
-		solver.setPreconditioner(pre);
-		
-		solver.getIterationMonitor().setIterationReporter(
-				new OutputIterationReporter());
+		DoubleMatrix1D b = DoubleFactory1D.dense.make(bcond);
+
+		DoubleBiCGstab solver = new DoubleBiCGstab(x);
+		solver.setIterationMonitor(new DefaultDoubleIterationMonitor());
 
 		try {
-			solver.solve(laplaceop, bc, x);
-		} catch (IterativeSolverNotConvergedException e) {
+			solver.solve(laplaceop, b, x);
+		} catch (IterativeSolverDoubleNotConvergedException e) {
 			System.err
 					.println("Iterative solver failed to converge: Couldn't get harmonic function.");
+			e.printStackTrace();
 		}
 
 		double[] H = new double[n];
@@ -709,12 +696,12 @@ public class DiscreteRiemannUtility {
 		V extends Vertex<V, E, F>, 
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>
-	> Matrix getLaplacian(HalfEdgeDataStructure<V, E, F> hds, 
+	> DoubleMatrix2D getLaplacian(HalfEdgeDataStructure<V, E, F> hds, 
 			AdapterSet adapters, Set<E> cycle, Map<Integer, Integer> tau) {
 
 		Set<V> boundaryVertexSet = getVertexSet(hds, cycle);
 
-		DoubleMatrixFactory dmf = new DoubleMatrixFactory(hds.numVertices()+cycle.size(),
+		DoubleMatrix2D M= DoubleFactory2D.sparse.make(hds.numVertices()+cycle.size(),
 				hds.numVertices()+cycle.size());
 		
 		EdgeStatus status;
@@ -724,45 +711,42 @@ public class DiscreteRiemannUtility {
 		CotanAdapter ca = new CotanAdapter();
 		adapters.add(ca);
 		
-		// TODO: Check implementation!
 		for (E e : hds.getEdges()) {
 			status= getEdgeStatus(e, cycle, boundaryVertexSet);
 			weight = getCotanWeight(e, adapters);
 			switch (status) {
 			case liesOnLeftCycle:
 				i = e.getStartVertex().getIndex();
-				dmf.set(i, i, 1.);
+				M.set(i, i, 1.);
 				break;
 			case liesOnRightCycle:
 				i = tau.get(e.getStartVertex().getIndex());
-				dmf.set(i, i, 1.);
+				M.set(i, i, 1.);
 				break;
 			case startsAtRightCycle:
 				i = tau.get(e.getStartVertex().getIndex());
 				j = e.getTargetVertex().getIndex();
-				dmf.set(i, j, weight);
-				dmf.add(i, i, -weight);
+				M.set(i, j, weight);
+				M.set(i, i, M.get(i, i) - weight);
 				break;
 			case endsAtRightCycle:
 				i = e.getStartVertex().getIndex();
 				j = tau.get(e.getTargetVertex().getIndex());
-				dmf.set(i, j, weight);
-				dmf.add(i, i, -weight);
+				M.set(i, j, weight);
+				M.set(i, i, M.get(i, i) - weight);
 				break;
 			case endsAtLeftCycle:
 			default:
 				i = e.getStartVertex().getIndex();
 				j = e.getTargetVertex().getIndex();
-				dmf.set(i, j, weight);
-				dmf.add(i, i, -weight);
+				M.set(i, j, weight);
+				M.set(i, i, M.get(i, i) - weight);
 				break;
 			}
 		}
 		
 		adapters.remove(ca);
-		
-		dmf.update();
-		return dmf.getMatrix();
+		return M;
 
 	}
 
