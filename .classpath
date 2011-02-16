@@ -3,11 +3,20 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="src-test"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedge"/>
-	<classpathentry kind="lib" path="lib/mtj.jar"/>
+	<classpathentry kind="lib" path="lib/mtj.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="http://matrix-toolkits-java.googlecode.com/svn/branches/0.9.13/javadoc"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="lib" path="lib/vecmath.jar"/>
 	<classpathentry kind="lib" path="lib/jPETScTaoV1.7jPETScTao.jar"/>
 	<classpathentry kind="lib" path="lib/jopt-simple-3.2.jar"/>
 	<classpathentry kind="lib" path="lib/JLink.jar"/>
+	<classpathentry kind="lib" path="lib/jplasma.jar"/>
+	<classpathentry kind="lib" path="lib/jtransforms.jar"/>
+	<classpathentry kind="lib" path="lib/netlib-java.jar"/>
+	<classpathentry kind="lib" path="lib/optimization.jar"/>
+	<classpathentry kind="lib" path="lib/parallelcolt-0.9.4.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/MTJOptimization"/>
@@ -15,5 +24,9 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedgetools"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/mfc"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/projgeom"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/java2d"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/java2dx"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/beans"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/modelling"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

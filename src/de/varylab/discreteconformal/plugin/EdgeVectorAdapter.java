@@ -24,6 +24,7 @@ public class EdgeVectorAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, Co
 		this.name = name;
 	}
 	
+	@Override
 	public double[] getEdgeValue(CoEdge e, AdapterSet a) {
 		if (selectedEdged.contains(e)) {
 			return a.getD(EdgeVector.class, e);

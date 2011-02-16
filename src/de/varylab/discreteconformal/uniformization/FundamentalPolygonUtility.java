@@ -16,9 +16,6 @@ import java.util.TreeSet;
 
 import de.jreality.math.Matrix;
 import de.jreality.math.P2;
-import de.jtem.projgeom.Biquaternion;
-import de.jtem.projgeom.Biquaternion.Metric;
-import de.jtem.projgeom.IsometryAxis;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoVertex;
@@ -323,15 +320,16 @@ public class FundamentalPolygonUtility {
 	 * @return
 	 */
 	private static double calculateLinkedPairCost(BigDecimal[] T1, BigDecimal[] T2) {
-		double[] T1d = RnBig.toDouble(null, T1);
-		double[] T2d = RnBig.toDouble(null, T2);
-		IsometryAxis ia1 = new IsometryAxis(T1d, Metric.HYPERBOLIC);
-		IsometryAxis ia2 = new IsometryAxis(T2d, Metric.HYPERBOLIC);
-        Biquaternion angle1 = ia1.getAngle();
-        Biquaternion angle2 = ia2.getAngle();
-        double dist1 = 2*angle1.getDualPart().re;
-        double dist2 = 2*angle2.getDualPart().re;
-        return dist1 + dist2;
+//		double[] T1d = RnBig.toDouble(null, T1);
+//		double[] T2d = RnBig.toDouble(null, T2);
+//		IsometryAxis ia1 = new IsometryAxis(T1d, Metric.HYPERBOLIC);
+//		IsometryAxis ia2 = new IsometryAxis(T2d, Metric.HYPERBOLIC);
+//        Biquaternion angle1 = ia1.getAngle();
+//        Biquaternion angle2 = ia2.getAngle();
+//        double dist1 = 2*angle1.getDualPart().re;
+//        double dist2 = 2*angle2.getDualPart().re;
+//        return dist1 + dist2;
+		return 0;
 	}
 	
 	
