@@ -10,6 +10,7 @@ import cern.colt.matrix.tdouble.DoubleFactory1D;
 import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.algo.solver.DefaultDoubleIterationMonitor;
 import cern.colt.matrix.tdouble.algo.solver.DoubleBiCGstab;
 import cern.colt.matrix.tdouble.algo.solver.IterativeSolverDoubleNotConvergedException;
@@ -26,6 +27,7 @@ import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.Weight;
 import de.jtem.halfedgetools.algorithm.triangulation.Delaunay;
 import de.jtem.halfedgetools.algorithm.triangulation.DelaunayLengthAdapter;
+import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class DiscreteRiemannUtility {
@@ -107,9 +109,13 @@ public class DiscreteRiemannUtility {
 		// use the private method
 		return getHarmonicForms(hds, basis, adapters, la, wa);
 	}
-	
+
 	/**
-	 * Returns a basis of holomorphic differentials on the surface hds. 
+	 * Returns a basis of holomorphic differentials on the surface hds. The rows
+	 * represent holomorphic forms. In the i-th column the value on the positive
+	 * oriented edge with edgeIndex i is saved. The real part correspond to the
+	 * edge the imaginary to its dual.
+	 * 
 	 * @param <V>
 	 * @param <E>
 	 * @param <F>
@@ -122,7 +128,7 @@ public class DiscreteRiemannUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> double[][] getHolomorphicForms(
+	> Complex[][] getHolomorphicForms(
 		HalfEdgeDataStructure<V, E, F> hds, 
 		AdapterSet adapters,
 		WeightAdapter<E> wa){
@@ -141,7 +147,10 @@ public class DiscreteRiemannUtility {
 	/**
 	 * Returns a basis of holomorphic differentials on the surface, which is
 	 * normalized with respect to the given homology basis. The surface has to
-	 * be Delaunay triangulated.
+	 * be Delaunay triangulated. The forms are saved as rows. The real part of
+	 * the value in the i-th row corresponds to the value of the differential on
+	 * the positive oriented edge with edgeIndex i, the imaginary part to the
+	 * value of its dual edge.
 	 * 
 	 * @param <V>
 	 * @param <E>
@@ -157,32 +166,71 @@ public class DiscreteRiemannUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> double[][] getHolomorphicForms(
+	> Complex[][] getHolomorphicForms(
 		HalfEdgeDataStructure<V, E, F> delaunay,
 		List<Set<E>> homologyBasis,
 		AdapterSet adapters,
 		DelaunayLengthAdapter la,
 		WeightAdapter<E> wa){
-		
-		// TODO: implement me!
 
+		// the forms are defined on the positive oriented edges
+		int numEdges = delaunay.numEdges()/2;
+
+		// Get the harmonic differentials on the surface and its dual. The
+		// format of the matrices is 2g*numEdges
 		double[][] dh = getHarmonicForms(delaunay, homologyBasis, adapters, la,
 				wa);
 		double[][] dhStar = getDualForms(delaunay, adapters, dh);
 
+		// needed to multiply colt matrices
+		DenseDoubleAlgebra dalgebra = new DenseDoubleAlgebra();
+
+		// We want to have matrices each column of which corresponds to one
+		// harmonic differential. So we can build linear combinations of the
+		// harmonic differentials simply by matrix multiplication. TODO: Check,
+		// whether, transpose is perhaps too expensive?
+		DoubleMatrix2D dhTransposed = dalgebra.transpose(DoubleFactory2D.dense
+				.make(dh));
+		DoubleMatrix2D dhStarTransposed = dalgebra
+				.transpose(DoubleFactory2D.dense.make(dhStar));
+
+		// to normalize the differentials we need the a periods and its dual
+		// cycles
 		List<Set<E>> acycles = getACycles(delaunay, homologyBasis);
 		List<Set<E>> dualACycles = getDualPaths(delaunay, acycles);
+
+		// g is simply the genus of the surface
+		int g = acycles.size();
+
+		// an array to save the forms: The real part corresponds to the
+		// differential on the primal mesh and the imaginary part to the
+		// differentials on the dual mesh. 
+		Complex[][] OMEGA= new Complex[g][numEdges];
+		
+		// The holomorphic forms omega are linear combinations of 2g harmonic
+		// forms dh_j plus i times its duals (star)dh_j: omega= sum(x_j*(dh_j+
+		// i*(star)dh_j)). They are normalized iff they satisfy a linear system.
+		// A is the coefficient matrix.
 		DoubleMatrix2D A = getCoefficientMatrix(dh, dhStar, acycles,
 				dualACycles, adapters);
 
-		DoubleMatrix1D x = DoubleFactory1D.dense.make(dh.length);
+		// The number of harmonic forms on the surface is 2g, so we need 2g
+		// coefficients.
+		DoubleMatrix1D x = DoubleFactory1D.dense.make(2 * g);
 
+		// Iterative solver
 		DoubleBiCGstab solver = new DoubleBiCGstab(x);
 		solver.setIterationMonitor(new DefaultDoubleIterationMonitor());
 
-		for (int i = 0; i < acycles.size(); i++) {
-			DoubleMatrix1D bc = DoubleFactory1D.dense.make(2 * acycles.size());
+		// For each a-cycle find the holomorphic form which is 1 along this
+		// cycle, i.e. gives one for the primal cycle and 0 for its dual cycle. 
+		for (int i = 0; i < g; i++) {
+			
+			// set up the conditions 
+			DoubleMatrix1D bc = DoubleFactory1D.dense.make(2 * g);
 			bc.set(i, 1);
+			
+			// solve the system
 			try {
 				solver.solve(A, bc, x);
 			} catch (IterativeSolverDoubleNotConvergedException e) {
@@ -191,16 +239,21 @@ public class DiscreteRiemannUtility {
 				e.printStackTrace();
 			}
 
-			// TODO: build linear combinations of the harmonic differentials
-			// using the obtained coefficients, etc
-
+			// Build linear combinations of the harmonic differentials
+			// using the obtained coefficients. 
+			DoubleMatrix1D omega= dalgebra.mult(dhTransposed, x);
+			DoubleMatrix1D omegaStar= dalgebra.mult(dhStarTransposed, x);
+			
+			for (int j = 0; j < numEdges; j++) {
+				OMEGA[i][j]= new Complex(omega.get(j),omegaStar.get(j));
+			}
 		}
 
-		return null;
+		return OMEGA;
 	}
 	
 	/**
-	 * Returns a paths in the dual surface which are homotopic to the given
+	 * Returns paths in the dual surface which are homotopic to the given
 	 * ones.
 	 * 
 	 * @param <V>
@@ -216,8 +269,9 @@ public class DiscreteRiemannUtility {
 		F extends Face<V, E, F>
 	> List<Set<E>> getDualPaths(HalfEdgeDataStructure<V,E,F> hds, List<Set<E>> cycles){
 		List<Set<E>> dualCycles= new java.util.Vector<Set<E>>();
+		// for each cycle
 		for (int i = 0; i < cycles.size(); i++) {
-			dualCycles.add(getDualPath(hds,cycles.get(i)));
+			dualCycles.add(getDualPath(hds, cycles.get(i)));
 		}
 		return dualCycles;
 	}
@@ -240,15 +294,22 @@ public class DiscreteRiemannUtility {
 		// TODO: Implement me!
 		return null;
 	}
-	
+
 	/**
-	 * Returns a matrix needed to build the normalized holomorphic differentials.
+	 * Returns a matrix A needed to build the normalized holomorphic
+	 * differentials. The matrix has format 2g*2g. There are 2g harmonic
+	 * differentials dH_j= dh_j+i*(star)dh_j. The first g rows are filled with
+	 * its a-periods, the second g rows with its values on the a-cycles of dual
+	 * surface. That means in the upper g rows of Ax stands the real part and
+	 * in the lower the imaginary part of the a-periods of the holomorphic
+	 * differential omega=sum(x_j*dH_j).
+	 * 
 	 * @param <V>
 	 * @param <E>
 	 * @param <F>
 	 * @param dh
 	 * @param dhStar
-	 * @param acycles
+	 * @param aCycles
 	 * @param dualACycles
 	 * @param adapters
 	 * @return
@@ -259,10 +320,64 @@ public class DiscreteRiemannUtility {
 		F extends Face<V, E, F>
 	> DoubleMatrix2D getCoefficientMatrix(
 			double[][] dh, double[][] dhStar, 
-			List<Set<E>> acycles, List<Set<E>> dualACycles, 
+			List<Set<E>> aCycles, List<Set<E>> dualACycles, 
 			AdapterSet adapters){
-		// TODO: Implement me!
-		return null;
+		
+		// The genus equals the number of a-cycles
+		int g= aCycles.size();
+
+		// The matrix has to have the format 2g*2g. TODO: Check whether the
+		// matrix should better be defined dense. 
+		DoubleMatrix2D M= DoubleFactory2D.sparse.make(2*g, 2*g);
+		
+		// for each cycle and each differential
+		for (int i = 0; i < g; i++) {
+			for (int j = 0; j < 2 * g; j++) {
+				// fill the upper g rows with a-periods of the primal mesh
+				M.set(i, j, integrateFormOverCycle(dh[j], aCycles.get(i),
+						adapters));
+				// and the lower g rows with the a-periods of the dual mesh
+				M.set(i + g, j, integrateFormOverCycle(dhStar[j], dualACycles
+						.get(i), adapters));
+			}
+		}
+		
+		return M;
+	}
+
+	/**
+	 * Returns the integral of the differential over the given cycle.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param form
+	 * @param cycle
+	 * @param adapters
+	 * @return
+	 */
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double integrateFormOverCycle(
+			double[] form, 
+			Set<E> cycle,
+			AdapterSet adapters){
+		// init with zero
+		double integral = 0;
+		int id;
+		// for each edge of the cycle
+		for (E e : cycle) {
+			// get global index
+			id = adapters.get(EdgeIndex.class, e, Integer.class);
+			if (e.isPositive()) // if the edge is positive add
+				integral += form[id];
+			else
+				// if negative subtract the value of the form on the edge
+				integral -= form[id];
+		}
+		return integral;
 	}
 	
 	/**
