@@ -293,7 +293,7 @@ public class DiscreteRiemannUtility {
 		F extends Face<V, E, F>
 	> Set<E> getDualPath(HalfEdgeDataStructure<V,E,F> hds, Set<E> cycle){
 		Set<E> dualPath = new HashSet<E>();
-		Set<V> vertices = getVertexSet(hds, cycle);
+		Set<V> vertices = getVertexSet(cycle);
 		for (V v : vertices) {
 			List<E> star = HalfEdgeUtilsExtra.getEdgeStar(v);
 			for (E e : star) {
@@ -407,6 +407,57 @@ public class DiscreteRiemannUtility {
 	> List<Set<E>> getACycles(HalfEdgeDataStructure<V,E,F> hds, List<Set<E>> homologyBasis){
 		// TODO: Choose the a cycles and return them.
 		return null;
+	}
+	
+	/**
+	 * Returns the intersection number of two oriented cycles.
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param cycle1
+	 * @param cycle2
+	 * @return
+	 */
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> int getIntersectionNumber(Set<E> cycle1, Set<E> cycle2) {
+		// get the number of positive intersections of the first cycle with the
+		// second
+		int numPositiveIntersections = countEdgesWithStatus(cycle1, cycle2,
+				EdgeStatus.startsAtLeftCycle);
+		// get the number of negative intersections of the first cycle with the
+		// second
+		int numNegativeIntersections = countEdgesWithStatus(cycle1, cycle2,
+				EdgeStatus.endsAtLeftCycle);
+		return numPositiveIntersections - numNegativeIntersections;
+	}
+
+	/**
+	 * Count the edges in a given set having a specified status with respect to
+	 * a given cycle.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param cycle
+	 * @param set
+	 * @param status
+	 * @return
+	 */
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> int countEdgesWithStatus(Set<E> cycle, Set<E> set, EdgeStatus status){
+		int count = 0;
+		Set<V> vertexSet= getVertexSet(cycle);
+		for(E e:set){
+			if(getEdgeStatus(e, cycle,vertexSet)== status)
+				count++;
+		}
+		return count;
 	}
 	
 	/**
@@ -626,7 +677,7 @@ public class DiscreteRiemannUtility {
 
 		// The differential of h can be defined on hds.
 		double[] dh = new double[hds.numEdges() / 2];
-		Set<V> boundaryVertexSet = getVertexSet(hds, cycle);
+		Set<V> boundaryVertexSet = getVertexSet(cycle);
 
 		// build the differences for each edge
 		for (E e : hds.getPositiveEdges()) {
@@ -714,7 +765,7 @@ public class DiscreteRiemannUtility {
 		int n = hds.numVertices() + cycle.size();
 		DoubleMatrix2D laplaceop = getLaplacian(hds, adapters, cycle, tau);
 
-		Set<V> vertexSet = getVertexSet(hds, cycle);
+		Set<V> vertexSet = getVertexSet(cycle);
 
 		DoubleMatrix1D x = DoubleFactory1D.dense.make(n);
 
@@ -770,7 +821,7 @@ public class DiscreteRiemannUtility {
 		Map<Integer, Integer> map = new HashMap<Integer, Integer>(100);
 
 		// Get the vertices contained in the cycle.
-		Set<V> vertexSet = getVertexSet(hds, cycle);
+		Set<V> vertexSet = getVertexSet(cycle);
 		int n = hds.numVertices();
 
 		// Build up the map.
@@ -796,8 +847,7 @@ public class DiscreteRiemannUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> Set<V> getVertexSet(
-			HalfEdgeDataStructure<V, E, F> hds, Set<E> cycle) {
+	> Set<V> getVertexSet(Set<E> cycle) {
 		Set<V> vertexSet = new HashSet<V>(cycle.size());
 		for (E e:cycle) {
 			vertexSet.add(e.getStartVertex());
@@ -825,7 +875,7 @@ public class DiscreteRiemannUtility {
 	> DoubleMatrix2D getLaplacian(HalfEdgeDataStructure<V, E, F> hds, 
 			AdapterSet adapters, Set<E> cycle, Map<Integer, Integer> tau) {
 
-		Set<V> boundaryVertexSet = getVertexSet(hds, cycle);
+		Set<V> boundaryVertexSet = getVertexSet(cycle);
 
 		DoubleMatrix2D M= DoubleFactory2D.sparse.make(hds.numVertices()+cycle.size(),
 				hds.numVertices()+cycle.size());
