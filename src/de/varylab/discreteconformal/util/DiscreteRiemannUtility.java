@@ -124,11 +124,11 @@ public class DiscreteRiemannUtility {
 		V rootV = hds.getVertex(0);
 		List<Set<E>> basis = HomologyUtility.getGeneratorPaths(rootV, wa);
 
-		List<Set<E>> acycles = getACycles(hds, basis);
-		
-		for (Set<E> c: acycles) {
-			System.err.println(c);
-		}
+		// List<Set<E>> acycles = getACycles(hds, basis);
+		//
+		// for (Set<E> c: acycles) {
+		// System.err.println(c);
+		// }
 		
 		// use the private method
 		return getHarmonicForms(hds, basis, adapters, la, wa);
@@ -466,7 +466,7 @@ public class DiscreteRiemannUtility {
 				for (Set<E> a : aCycles) {
 					// if the intersection number is not equal to zero, c is
 					// intersecting and has to be left out
-					if (!(getIntersectionNumber(c, a) == 0)) {
+					if (getIntersectionNumber(c, a) != 0) {
 						nonintersecting = false;
 						break;
 					}
@@ -588,15 +588,13 @@ public class DiscreteRiemannUtility {
 		
 		double[] formStar = new double[form.length];
 
-		CotanAdapter ca = new CotanAdapter();
-
 		double ratio;
 		int id;
 
 		for (E e : delaunay.getPositiveEdges()) {
 			// TODO: Check! Is the cotan weight the ratio of the edge length and
 			// its dual edge length?
-			ratio = ca.getE(e, adapters);
+			ratio = getCotanWeight(e, adapters);
 			id = adapters.get(EdgeIndex.class, e, Integer.class);
 			formStar[id] = ratio * form[id];
 		}
@@ -1014,8 +1012,8 @@ public class DiscreteRiemannUtility {
 	}
 
 	private static double getCotanWeight(Edge<?, ?, ?> e, AdapterSet adapters) {
-		return adapters.get(Weight.class, e, Double.class)
-				+ adapters.get(Weight.class, e.getOppositeEdge(), Double.class);
+		return .5 * (adapters.get(Weight.class, e, Double.class) + adapters
+				.get(Weight.class, e.getOppositeEdge(), Double.class));
 	}
 
 }
