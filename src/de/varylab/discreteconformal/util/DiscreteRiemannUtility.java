@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 
 import cern.colt.matrix.tdouble.DoubleFactory1D;
 import cern.colt.matrix.tdouble.DoubleFactory2D;
@@ -123,6 +124,12 @@ public class DiscreteRiemannUtility {
 		V rootV = hds.getVertex(0);
 		List<Set<E>> basis = HomologyUtility.getGeneratorPaths(rootV, wa);
 
+		List<Set<E>> acycles = getACycles(hds, basis);
+		
+		for (Set<E> c: acycles) {
+			System.err.println(c);
+		}
+		
 		// use the private method
 		return getHarmonicForms(hds, basis, adapters, la, wa);
 	}
@@ -414,9 +421,13 @@ public class DiscreteRiemannUtility {
 		}
 		return integral;
 	}
-	
+
 	/**
-	 * Returns g cycles of the homology basis representing the a cycles.
+	 * Returns g cycles of the homology basis representing the a cycles. TODO:
+	 * Needs a canonical basis? It's not clear whether this really works in
+	 * general. Why there shall be always g such cycles for an arbitrary basis.
+	 * Would be good to visualize the returned cycles on the surface.
+	 * 
 	 * @param <V>
 	 * @param <E>
 	 * @param <F>
@@ -429,8 +440,51 @@ public class DiscreteRiemannUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> List<Set<E>> getACycles(HalfEdgeDataStructure<V,E,F> hds, List<Set<E>> homologyBasis){
-		// TODO: Choose the a cycles and return them.
-		return null;
+		
+		// the genus has to be one at least
+		if (homologyBasis.size() < 1)
+			return null;
+
+		// a basis contains 2g cycles
+		int g = homologyBasis.size() / 2;
+
+		// g non-intersecting cycles shall be labeled as a-cycles
+		List<Set<E>> aCycles = new Vector<Set<E>>(g);
+		aCycles.add(homologyBasis.get(0));
+
+		// try to find g cycles, which does not intersect
+		for (int i = 1; i < g; i++) {
+			// try to find a new cycle with intersection number 0
+			for (Set<E> c : homologyBasis) {
+				// if the cycle is already in the list, ignore it
+				if (aCycles.contains(c))
+					continue;
+				// say c is non-intersecting
+				boolean nonintersecting = true;
+				// check the intersection number with each cycle already
+				// collected
+				for (Set<E> a : aCycles) {
+					// if the intersection number is not equal to zero, c is
+					// intersecting and has to be left out
+					if (!(getIntersectionNumber(c, a) == 0)) {
+						nonintersecting = false;
+						break;
+					}
+				}
+				// if c is not intersecting any of the already collected cycles
+				// add it to the list
+				if (nonintersecting) {
+					aCycles.add(c);
+					break;
+				}
+			}
+		}
+
+		if (aCycles.size() != g)
+			throw new RuntimeException(
+					"Couldn't find g non-intersecting cycles.");
+
+		return aCycles;
 	}
 	
 	/**
