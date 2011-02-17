@@ -27,6 +27,7 @@ import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.Weight;
 import de.jtem.halfedgetools.algorithm.triangulation.Delaunay;
 import de.jtem.halfedgetools.algorithm.triangulation.DelaunayLengthAdapter;
+import de.jtem.halfedgetools.util.HalfEdgeUtilsExtra;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
@@ -283,16 +284,26 @@ public class DiscreteRiemannUtility {
 	 * @param <E>
 	 * @param <F>
 	 * @param hds
-	 * @param cycles
+	 * @param cycle
 	 * @return
 	 */
 	private static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> Set<E> getDualPath(HalfEdgeDataStructure<V,E,F> hds, Set<E> cycles){
-		// TODO: Implement me!
-		return null;
+	> Set<E> getDualPath(HalfEdgeDataStructure<V,E,F> hds, Set<E> cycle){
+		Set<E> dualPath = new HashSet<E>();
+		Set<V> vertices = getVertexSet(hds, cycle);
+		for (V v : vertices) {
+			List<E> star = HalfEdgeUtilsExtra.getEdgeStar(v);
+			for (E e : star) {
+				EdgeStatus status = getEdgeStatus(e, cycle, vertices);
+				if (status == EdgeStatus.endsAtLeftCycle
+						|| status == EdgeStatus.startsAtLeftCycle)
+					dualPath.add(e);
+			}
+		}
+		return dualPath;
 	}
 
 	/**
