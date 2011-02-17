@@ -13,6 +13,7 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.algo.solver.DefaultDoubleIterationMonitor;
 import cern.colt.matrix.tdouble.algo.solver.DoubleBiCGstab;
+import cern.colt.matrix.tdouble.algo.solver.DoubleIterationReporter;
 import cern.colt.matrix.tdouble.algo.solver.IterativeSolverDoubleNotConvergedException;
 
 import de.jtem.halfedge.Edge;
@@ -78,6 +79,21 @@ public class DiscreteRiemannUtility {
 
 	}
 
+	private static DoubleIterationReporter reporter = new DoubleIterationReporter() {
+		
+		@Override
+		public void monitor(double arg0, DoubleMatrix1D arg1, int arg2) {
+			monitor(arg0, arg2);
+		}
+		
+		@Override
+		public void monitor(double arg0, int arg1) {
+			System.err.println("iteration = "+arg1+", value = "+arg0);
+		}
+	};
+	
+	private static double eps= 1E-10;
+	
 	/**
 	 * Calculates 2*g harmonic differentials on hds. The weight Adapter is used
 	 * to find a basis of the homology that are short with respect to the weight
@@ -221,7 +237,15 @@ public class DiscreteRiemannUtility {
 
 		// Iterative solver
 		DoubleBiCGstab solver = new DoubleBiCGstab(x);
-		solver.setIterationMonitor(new DefaultDoubleIterationMonitor());
+		DefaultDoubleIterationMonitor monitor= new DefaultDoubleIterationMonitor();
+		
+		// configure monitor
+		monitor.setMaxIterations(100000);
+		monitor.setAbsoluteTolerance(eps);
+		monitor.setRelativeTolerance(eps);
+		monitor.setIterationReporter(reporter);
+		
+		solver.setIterationMonitor(monitor);
 
 		// For each a-cycle find the holomorphic form which is 1 along this
 		// cycle, i.e. gives one for the primal cycle and 0 for its dual cycle. 
@@ -781,7 +805,15 @@ public class DiscreteRiemannUtility {
 		DoubleMatrix1D b = DoubleFactory1D.dense.make(bcond);
 
 		DoubleBiCGstab solver = new DoubleBiCGstab(x);
-		solver.setIterationMonitor(new DefaultDoubleIterationMonitor());
+		DefaultDoubleIterationMonitor monitor= new DefaultDoubleIterationMonitor();
+		
+		// configure monitor
+		monitor.setMaxIterations(100000);
+		monitor.setAbsoluteTolerance(eps);
+		monitor.setRelativeTolerance(eps);
+		monitor.setIterationReporter(reporter);
+		
+		solver.setIterationMonitor(monitor);
 
 		try {
 			solver.solve(laplaceop, b, x);
@@ -790,6 +822,7 @@ public class DiscreteRiemannUtility {
 					.println("Iterative solver failed to converge: Couldn't get harmonic function.");
 			e.printStackTrace();
 		}
+		System.err.println();
 
 		double[] H = new double[n];
 
