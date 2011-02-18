@@ -123,12 +123,6 @@ public class DiscreteRiemannUtility {
 		// Get the homology basis of the surface.
 		V rootV = hds.getVertex(0);
 		List<Set<E>> basis = HomologyUtility.getGeneratorPaths(rootV, wa);
-
-		// List<Set<E>> acycles = getACycles(hds, basis);
-		//
-		// for (Set<E> c: acycles) {
-		// System.err.println(c);
-		// }
 		
 		// use the private method
 		return getHarmonicForms(hds, basis, adapters, la, wa);
@@ -324,11 +318,16 @@ public class DiscreteRiemannUtility {
 		F extends Face<V, E, F>
 	> Set<E> getDualPath(HalfEdgeDataStructure<V,E,F> hds, Set<E> cycle){
 		Set<E> dualPath = new HashSet<E>();
+		// get vertices contained in the primal cycle
 		Set<V> vertices = getVertexSet(cycle);
+		// for each vertex in the cycle
 		for (V v : vertices) {
+			// get the edge star
 			List<E> star = HalfEdgeUtilsExtra.getEdgeStar(v);
+			// and test each edge in it
 			for (E e : star) {
 				EdgeStatus status = getEdgeStatus(e, cycle, vertices);
+				// if the edge is on the left side put it to the dual path
 				if (status == EdgeStatus.endsAtLeftCycle
 						|| status == EdgeStatus.startsAtLeftCycle)
 					dualPath.add(e);
@@ -804,7 +803,7 @@ public class DiscreteRiemannUtility {
 		double[] bc1 = new double[tau.size()];
 		double[] bc2 = new double[tau.size()];
 		for (int i = 0; i < bc2.length; i++) {
-			bc2[i] = 10.;
+			bc2[i] = 1.;
 		}
 		return getHarmonicFunction(hds, adapters, cycle, tau, bc1, bc2);
 		
