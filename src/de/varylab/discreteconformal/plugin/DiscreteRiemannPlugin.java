@@ -12,6 +12,7 @@ import java.util.Set;
 
 import javax.swing.JButton;
 
+import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.basic.View;
 import de.jreality.ui.LayoutFactory;
 import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
@@ -56,6 +57,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 			this.dh = dh;
 		}
 		
+		@Override
 		public Double getEdgeValue(CoEdge e, AdapterSet a) {
 			int index = a.get(EdgeIndex.class, e, Integer.class);
 			return dh[index];
@@ -79,6 +81,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 			this.dh = dh;
 		}
 		
+		@Override
 		public double[] getEdgeValue(CoEdge e, AdapterSet a) {
 			int index = a.get(EdgeIndex.class, e, Integer.class);
 			double val = Math.abs(dh[index]);
@@ -135,5 +138,18 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 	public Class<? extends SideContainerPerspective> getPerspectivePluginClass() {
 		return View.class;
 	}
+	
+	
+	
+	public static void main(String[] args) {
+		JRViewer v = new JRViewer();
+		v.addContentUI();
+		v.addBasicUI();
+		v.registerPlugin(new DiscreteRiemannPlugin());
+		v.startup();
+	}
+	
+
+	
 
 }
