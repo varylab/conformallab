@@ -7,16 +7,14 @@ import static java.lang.Math.sin;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
@@ -31,10 +29,11 @@ import de.jreality.plugin.basic.View;
 import de.jreality.ui.LayoutFactory;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Position;
-import de.jtem.halfedgetools.adapter.type.generic.Position3d;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
+import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.algorithm.generator.RandomSphereGenerator;
+import de.jtem.halfedgetools.plugin.algorithm.topology.VertexRemoverPlugin;
 import de.jtem.java2dx.beans.Viewer2DWithInspector;
 import de.jtem.java2dx.modelling.GraphicsModeller2D;
 import de.jtem.java2dx.modelling.SimpleModeller2D;
@@ -65,17 +64,15 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 	private JSpinner
 		genusSpinner = new JSpinner(genusModel);
 	
-	
 	private Random
 		rnd = new Random();
 	
-	
-	private List<Complex>
-		fixPointsA = new LinkedList<Complex>(),
-		fixPointsB = new LinkedList<Complex>(),
-		muList = new LinkedList<Complex>();
+//	
+//	private List<Complex>
+//		fixPointsA = new LinkedList<Complex>(),
+//		fixPointsB = new LinkedList<Complex>(),
+//		muList = new LinkedList<Complex>();
 		
-	
 	public DiscreteSchottkyGenerator() {
 		GridBagConstraints c1 = LayoutFactory.createLeftConstraint();
 		GridBagConstraints c2 = LayoutFactory.createRightConstraint();
@@ -91,8 +88,6 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 		genusSpinner.addChangeListener(this);
 	}
 	
-	
-	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		generate();
@@ -104,7 +99,7 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 	}
 	
 	
-		private class Circle {
+	private class Circle {
 		boolean orientation = true;
 		Complex c = new Complex();
 		double r = 1.0;
@@ -124,10 +119,14 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 				return d.abs() > r;
 			}
 		}
+		
 	}
 	
 	
 	private double[] inverseStereographic(Complex Z) {
+		if (Z.re == Double.POSITIVE_INFINITY) {
+			return new double[] {0,0,1};
+		}
 		double X = Z.getRe();
 		double Y = Z.getIm();
 		double d = 1 + X*X + Y*Y;
@@ -138,23 +137,29 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 	}
 	
 	
-	private double[] liftToR3(Complex z) {
-		return new double[] {z.re, z.im, 0};
-	}
-	
-	
-	
 	private Complex stereographic(double[] p) {
 		return new Complex(p[0] / (1 - p[2]), p[1] / (1 - p[2]));
+	}
+	
+	private Complex getOrientedCenter(Circle c) {
+		if (c.orientation) {
+			return c.c;
+		} else { // invert
+			// TODO fix this to be general
+			return c.c.invert();
+		}
 	}
 	
 	
 	private void generate() {
 		AdapterSet a = hif.getAdapters();
 		CoHDS hds = new CoHDS();
-		double zScale = 1.0; 
-		int numExtraPoints = 200;
+		double zScale = 5.0; 
+		int numExtraPoints = 300;
 		int circleRes = 20;
+		
+		Map<CoVertex, CoVertex> sMap = new HashMap<CoVertex, CoVertex>();
+		Set<CoVertex> centerPoints = new HashSet<CoVertex>();
 		
 		// create extra points
 		Set<Complex> extraPoints = new HashSet<Complex>(); 
@@ -174,7 +179,6 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 		Complex centerOfMappedCircle = new Complex();
 		double sr = s.getRadiusOfMappedCircle(c.c, c.r, centerOfMappedCircle);
 		Circle sc = new Circle(centerOfMappedCircle, sr, true);
-		
 		
 		// exclude extra vertices from the circles
 		for (Complex ez : new HashSet<Complex>(extraPoints)) {
@@ -197,10 +201,22 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 			double[] zPos = inverseStereographic(z.times(zScale));
 			double[] szPos = inverseStereographic(sz.times(zScale));
 			CoVertex v = hds.addNewVertex();
-			CoVertex vs = hds.addNewVertex();
+			CoVertex sv = hds.addNewVertex();
 			a.set(Position.class, v, zPos);
-			a.set(Position.class, vs, szPos);
+			a.set(Position.class, sv, szPos);
+			sMap.put(v, sv);
 		}
+		// add the projected circle centers to act as handles
+		CoVertex cv = hds.addNewVertex();
+		CoVertex scv = hds.addNewVertex();
+		Complex oCenter1 = getOrientedCenter(c);
+		Complex oCenter2 = getOrientedCenter(sc);
+		double[] cPos = inverseStereographic(oCenter1.times(zScale));
+		double[] scPos = inverseStereographic(oCenter2.times(zScale));
+		a.set(Position.class, cv, cPos);
+		a.set(Position.class, scv, scPos);
+		centerPoints.add(cv);
+		centerPoints.add(scv);
 		
 		for (Complex e : extraPoints) {
 			double[] ePos = inverseStereographic(e);
@@ -210,13 +226,17 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 		
 		ConvexHull.convexHull(hds, a, 1E-8);
 		
+		// remove circles from the triangulation
+		for (CoVertex v : centerPoints) {
+			TopologyAlgorithms.removeVertex(v);
+		}
+		
 		hif.set(hds);
 	}
 	
 	
 	
 	private void resetViewer() {
-		int g = genusModel.getNumber().intValue();
 	}
 
 	@Override
@@ -242,6 +262,8 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 		v.addBasicUI();
 		DiscreteSchottkyGenerator dsg = new DiscreteSchottkyGenerator();
 		v.registerPlugin(dsg);
+		v.registerPlugin(new VertexRemoverPlugin());
+		v.registerPlugin(new RandomSphereGenerator());
 		v.startup();
 	}
 	

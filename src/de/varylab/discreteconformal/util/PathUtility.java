@@ -9,48 +9,10 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
-import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class PathUtility {
 
-	
-	/**
-	 * Test whether two paths are intersecting. A path intersects another path
-	 * if there are edges of one path on both sides of the other path. 
-	 * @param <V>
-	 * @param <E>
-	 * @param <F>
-	 * @param path1
-	 * @param path2
-	 * @return
-	 */
-	public static <
-		V extends Vertex<V, E, F>,
-		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>
-	> boolean pathsIntersect(Set<E> path1, Set<E> path2) {
-		Set<V> vPath1 = getVerticesOnPath(path1);
-		Set<V> vPath2 = getVerticesOnPath(path2);
-		Set<V> checkSet = new HashSet<V>();
-		for (V v : vPath1) {
-			if (vPath2.contains(v)) { 
-				checkSet.add(v);
-			} 
-		}
-		// TODO complete
-		boolean isOnLeftSide = false;
-		boolean isOnRightSide = false;
-		for (V v : checkSet) {
-			for (E e : HalfEdgeUtils.incomingEdges(v)) {
-				
-			}
-		}
-		
-		return isOnLeftSide && isOnRightSide;
-	}
-	
-	
 	
 	/**
 	 * Returns a path which does not include opposite edges of each edge.
