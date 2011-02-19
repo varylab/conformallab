@@ -12,6 +12,28 @@ import de.jtem.halfedge.Vertex;
 public class SurgeryUtility {
 
 	
+	/**
+	 * Identifies the vertices on the given boundaries. The vertices
+	 * of boundary one are retained
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param b1
+	 * @param b2
+	 */
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> void identifyBoundaries(List<E> b1, List<E> b2) {
+		
+		
+	}
+	
+	
+	
+	
+	
 	public static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,

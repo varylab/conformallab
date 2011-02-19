@@ -27,6 +27,7 @@ import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.basic.View;
 import de.jreality.ui.LayoutFactory;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
@@ -42,6 +43,8 @@ import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.mfc.field.Complex;
 import de.jtem.mfc.group.Moebius;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
@@ -154,12 +157,13 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 	private void generate() {
 		AdapterSet a = hif.getAdapters();
 		CoHDS hds = new CoHDS();
-		double zScale = 5.0; 
+		double zScale = 1.0; 
 		int numExtraPoints = 300;
 		int circleRes = 20;
 		
 		Map<CoVertex, CoVertex> sMap = new HashMap<CoVertex, CoVertex>();
-		Set<CoVertex> centerPoints = new HashSet<CoVertex>();
+		Map<CoVertex, CoVertex> centerMap = new HashMap<CoVertex, CoVertex>();
+		Map<CoFace, CoFace> sfMap = new HashMap<CoFace, CoFace>();
 		
 		// create extra points
 		Set<Complex> extraPoints = new HashSet<Complex>(); 
@@ -171,9 +175,9 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 		}
 		
 		
-		Complex A = new Complex(0, 0);
-		Complex B = new Complex(0.2, 0.2);
-		Complex m = new Complex(0.4);
+		Complex A = new Complex(-0.2, 0);
+		Complex B = new Complex(0.0, 0);
+		Complex m = new Complex(0.3);
 		Moebius s = new Moebius(A, B, m);
 		Circle c = new Circle(A, 1.0, false);
 		Complex centerOfMappedCircle = new Complex();
@@ -209,14 +213,13 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 		// add the projected circle centers to act as handles
 		CoVertex cv = hds.addNewVertex();
 		CoVertex scv = hds.addNewVertex();
+		centerMap.put(cv, scv);
 		Complex oCenter1 = getOrientedCenter(c);
 		Complex oCenter2 = getOrientedCenter(sc);
 		double[] cPos = inverseStereographic(oCenter1.times(zScale));
 		double[] scPos = inverseStereographic(oCenter2.times(zScale));
 		a.set(Position.class, cv, cPos);
 		a.set(Position.class, scv, scPos);
-		centerPoints.add(cv);
-		centerPoints.add(scv);
 		
 		for (Complex e : extraPoints) {
 			double[] ePos = inverseStereographic(e);
@@ -227,10 +230,30 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 		ConvexHull.convexHull(hds, a, 1E-8);
 		
 		// remove circles from the triangulation
-		for (CoVertex v : centerPoints) {
-			TopologyAlgorithms.removeVertex(v);
+		for (CoVertex v : centerMap.keySet()) {
+			CoVertex sv = centerMap.get(v);
+			CoFace f = TopologyAlgorithms.removeVertexFill(v);
+			CoFace sf = TopologyAlgorithms.removeVertexFill(sv);
+			sfMap.put(f, sf);
 		}
 		
+		// identify circles
+		for (CoFace f : sfMap.keySet()) {
+			CoFace sf = sfMap.get(f);
+			CoEdge se = sf.getBoundaryEdge();
+			CoEdge e = null;
+			for (CoEdge be : HalfEdgeUtils.boundaryEdges(f)) {
+				CoVertex vv = sMap.get(be.getTargetVertex());
+				if (vv == se.getStartVertex()) {
+					e = be;
+				}
+			}
+			assert e != null;
+			// TODO this algo is not working!
+			TopologyAlgorithms.glueFacesAlongCycle(f, sf, e, se);
+		}
+		
+		System.out.println("Generated surface of genus " + HalfEdgeUtils.getGenus(hds));
 		hif.set(hds);
 	}
 	
