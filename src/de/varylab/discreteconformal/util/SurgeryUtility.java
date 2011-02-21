@@ -1,7 +1,13 @@
 package de.varylab.discreteconformal.util;
 
+import static de.jtem.halfedge.util.HalfEdgeUtils.boundaryEdges;
+import static de.jtem.halfedge.util.HalfEdgeUtils.boundaryVertices;
+import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
+
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import de.jtem.halfedge.Edge;
@@ -25,9 +31,67 @@ public class SurgeryUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> void identifyBoundaries(List<E> b1, List<E> b2) {
+	> void glueAlongFaces(F f1, F f2, V v1, V v2) {
+		HalfEdgeDataStructure<V, E, F> hds = f1.getHalfEdgeDataStructure();
+		List<E> b1 = boundaryEdges(f1);
+		List<E> b2 = boundaryEdges(f2);
+		List<V> vb1 = boundaryVertices(f1);
+		List<V> vb2 = boundaryVertices(f2);
+		if (!vb1.contains(v1) || !vb2.contains(v2)) {
+			throw new RuntimeException("Vertex not on boundary in glueAlongFaces()");
+		}
+		if (vb1.size() != vb2.size()) {
+			throw new RuntimeException("Face boundaries have different lengths in glueAlongFaces()");
+		}
 		
+		// find first edges to glue
+		E be1 = null;
+		E be2 = null;
+		for (E e : incomingEdges(v1)) {
+			if (e.getLeftFace() == f1) {
+				be1 = e;
+			}
+		}
+		for (E e : incomingEdges(v2)) {
+			if (e.getLeftFace() == f2) {
+				be2 = e.getNextEdge();
+			}
+		}
+		assert be1 != null && be2 != null : "bundary corrupt";
+		assert be1.getTargetVertex() == v1 && be2.getStartVertex() == v2 : "wrong vertices";
 		
+		// collect data to link
+		Map<E, E> oppMap = new HashMap<E, E>(); // new opposites
+		Map<V, List<E>> targetMap = new HashMap<V, List<E>>(); // new targets
+		E e1 = be1;
+		E e2 = be2;
+		do {
+			oppMap.put(e1.getOppositeEdge(), e2.getOppositeEdge());
+			List<E> v2Star = incomingEdges(e2.getStartVertex());
+			targetMap.put(e1.getTargetVertex(), v2Star);
+			e1 = e1.getNextEdge();
+			e2 = e2.getPreviousEdge();
+		} while (e1 != be1 && e2 != be2);
+		assert e1 == be1 && e2 == be2 : "cycles are not completed";
+		
+		// re-link
+		for (E e : oppMap.keySet()) {
+			E opp = oppMap.get(e);
+			e.linkOppositeEdge(opp);
+		}
+		// set targets
+		for (V v : targetMap.keySet()) {
+			for (E e : targetMap.get(v)) {
+				e.setTargetVertex(v);
+			}
+		}
+			
+		// remove waste
+		for (E e : b1) hds.removeEdge(e);
+		for (E e : b2) hds.removeEdge(e);
+		for (V v : vb2) hds.removeVertex(v);
+		hds.removeFace(f1);
+		hds.removeFace(f2);
 	}
 	
 	
