@@ -196,14 +196,14 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 		double sr = s.getRadiusOfMappedCircle(circle.c, circle.r, centerOfMappedCircle);
 		Circle sCircle = new Circle(centerOfMappedCircle, sr, true);
 		SchottkyPair pair = new SchottkyPair(s, circle, sCircle);
-		pairs.add(pair);
+//		pairs.add(pair);
 		
 		// define transformation 2
 		A = new Complex(0.5, 0.0);
 		B = new Complex(-0.5, 0.0);
-		m = new Complex(1.1, 1.2);
+		m = new Complex(0.0, 0.2);
 		s = new Moebius(A, B, m);
-		center = new Complex(-0.1, 0.0);
+		center = new Complex(0.4, 0.0);
 		circle = new Circle(center, 0.05, true);
 		centerOfMappedCircle = new Complex();
 		sr = s.getRadiusOfMappedCircle(circle.c, circle.r, centerOfMappedCircle);
@@ -230,39 +230,39 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 		Map<CoEdge, CoEdge> edgeMap = new HashMap<CoEdge, CoEdge>();
 		Map<CoEdge, SchottkyPair> edgePairMap = new HashMap<CoEdge, SchottkyPair>();
 		Map<CoEdge, SchottkyPair> edgePairInvMap = new HashMap<CoEdge, SchottkyPair>();
-		
-		// create extra grid points
-		Set<Complex> extraPoints = new HashSet<Complex>(); 
-		for (int i = 0; i < extraPointRes + 1; i++) {
-			for (int j = 0; j < extraPointRes + 1; j++) {
-				Complex z = new Complex(i / (0.5*extraPointRes) - 1, j / (0.5*extraPointRes) - 1);
-				extraPoints.add(z);
-			}
-		}
-		
-		// create circle density points
-		for (Circle c : getAllCircles(pairs)) {
-			for (int i = 1; i < 2; i++) {
-				int ringRes = circleRes * 3 / (i + 4);
-				for (int j = 0; j < ringRes; j++) {
-					double o = c.orientation ? 1.0 : -1.0;
-					double phi = 2*j*PI / ringRes;
-					double x = (c.r + o*c.r*i/10.0) * cos(phi) + c.c.re;
-					double y = (c.r + o*c.r*i/10.0) * sin(phi) + c.c.im;
-					Complex z = new Complex(x, y);
-					extraPoints.add(z);
-				}
-			}
-		}
-		
-		// exclude extra vertices from the circles
-		for (Complex ez : new HashSet<Complex>(extraPoints)) {
-			for (Circle c : getAllCircles(pairs)) {
-				if (c.isInside(ez, c.r*0.05)) {
-					extraPoints.remove(ez);
-				}
-			}
-		}
+//		
+//		// create extra grid points
+//		Set<Complex> extraPoints = new HashSet<Complex>(); 
+//		for (int i = 0; i < extraPointRes + 1; i++) {
+//			for (int j = 0; j < extraPointRes + 1; j++) {
+//				Complex z = new Complex(i / (0.5*extraPointRes) - 1, j / (0.5*extraPointRes) - 1);
+//				extraPoints.add(z);
+//			}
+//		}
+//		
+//		// create circle density points
+//		for (Circle c : getAllCircles(pairs)) {
+//			for (int i = 1; i < 2; i++) {
+//				int ringRes = circleRes * 3 / (i + 4);
+//				for (int j = 0; j < ringRes; j++) {
+//					double o = c.orientation ? 1.0 : -1.0;
+//					double phi = 2*j*PI / ringRes;
+//					double x = (c.r + o*c.r*i/10.0) * cos(phi) + c.c.re;
+//					double y = (c.r + o*c.r*i/10.0) * sin(phi) + c.c.im;
+//					Complex z = new Complex(x, y);
+//					extraPoints.add(z);
+//				}
+//			}
+//		}
+//		
+//		// exclude extra vertices from the circles
+//		for (Complex ez : new HashSet<Complex>(extraPoints)) {
+//			for (Circle c : getAllCircles(pairs)) {
+//				if (c.isInside(ez, c.r*0.05)) {
+//					extraPoints.remove(ez);
+//				}
+//			}
+//		}
 		
 		// add the vertices on the source and target circles
 		for (SchottkyPair p : pairs) {
@@ -284,6 +284,13 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 				vertexPairMap.put(v, p);
 				vertexPairInvMap.put(sv, p);
 			}
+			CoVertex center = hds.addNewVertex();
+			CoVertex sCenter = hds.addNewVertex();
+			double[] cPos = new double[] {p.source.c.re, p.source.c.im, 0};
+			Complex mappedCenter = p.s.applyTo(p.source.c);
+			double[] cPosMapped = new double[] {mappedCenter.re, mappedCenter.im, 0};
+			a.set(Position.class, center, cPos);
+			a.set(Position.class, sCenter, cPosMapped);
 		}
 //		// add the projected circle centers to act as handles
 //		for (SchottkyPair p : pairs) {
