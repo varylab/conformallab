@@ -17,6 +17,61 @@ import de.jtem.halfedge.Vertex;
 
 public class SurgeryUtility {
 
+	/**
+	 * Glue surface along boundary components starting with
+	 * edges e1 and e2 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param e1
+	 * @param e2
+	 */
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> void glueAlongBoundaries(E be1, E be2) {
+		HalfEdgeDataStructure<V, E, F> hds = be1.getHalfEdgeDataStructure();
+		List<E> b1 = boundaryEdges(be1);
+		List<E> b2 = boundaryEdges(be2);
+		Set<V> vb2 = PathUtility.getVerticesOnPath(b2);
+		if (b1.size() != b2.size()) {
+			throw new RuntimeException("Boundary components have different lengths in glueAlongBoundaries()");
+		}
+		// collect data to link
+		Map<E, E> oppMap = new HashMap<E, E>(); // new opposites
+		Map<V, List<E>> targetMap = new HashMap<V, List<E>>(); // new targets
+		E e1 = be1;
+		E e2 = be2;
+		do {
+			oppMap.put(e1.getOppositeEdge(), e2.getOppositeEdge());
+			List<E> v2Star = incomingEdges(e2.getStartVertex());
+			targetMap.put(e1.getTargetVertex(), v2Star);
+			e1 = e1.getNextEdge();
+			e2 = e2.getPreviousEdge();
+		} while (e1 != be1 && e2 != be2);
+		assert e1 == be1 && e2 == be2 : "cycles are not completed";
+		
+		// re-link
+		for (E e : oppMap.keySet()) {
+			E opp = oppMap.get(e);
+			e.linkOppositeEdge(opp);
+		}
+		// set targets
+		for (V v : targetMap.keySet()) {
+			for (E e : targetMap.get(v)) {
+				e.setTargetVertex(v);
+			}
+		}
+			
+		// remove waste
+		for (E e : b1) hds.removeEdge(e);
+		for (E e : b2) hds.removeEdge(e);
+		for (V v : vb2) hds.removeVertex(v);
+
+	} 
+
+	
 	
 	/**
 	 * Identifies the vertices on the given boundaries. The vertices

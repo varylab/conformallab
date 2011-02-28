@@ -10,8 +10,11 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,6 +34,7 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.generic.Position3d;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
+import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.java2dx.beans.Viewer2DWithInspector;
 import de.jtem.java2dx.modelling.GraphicsModeller2D;
@@ -42,11 +46,11 @@ import de.jtem.mfc.field.Complex;
 import de.jtem.mfc.group.Moebius;
 import de.jtem.numericalMethods.geometry.meshGeneration.ruppert.Ruppert;
 import de.varylab.discreteconformal.heds.CoEdge;
-import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
+import de.varylab.discreteconformal.util.SurgeryUtility;
 
 public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements ActionListener, ChangeListener {
 
@@ -123,15 +127,6 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 				return d.abs() < r + tol;
 			} else {
 				return d.abs() > r - tol;
-			}
-		}
-		
-		public Complex getOrientedCenter() {
-			if (orientation) {
-				return c;
-			} else { // invert
-				// TODO fix this to be general
-				return c.invert();
 			}
 		}
 		
@@ -271,13 +266,21 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 	
 	
 	
-	private static void cutIdentificationHoles(CoHDS hds, Set<Set<CoVertex>> circles) {
-		for (Set<CoVertex> circle : circles) {
-			for (CoVertex v : circle) {
-				for (CoEdge e : incomingEdges(v)) {
-//					if (e.getStartVertex()) {
-//						
-//					}
+	private static void cutIdentificationHoles(CoHDS hds, List<ArrayList<CoVertex>> circles) {
+		for (ArrayList<CoVertex> circle : circles) {
+			int len = circle.size();
+			for (int i = 0; i < len; i++) {
+				CoVertex pre = circle.get((i + len - 1) % len);
+				CoVertex act = circle.get((i + len + 0) % len);
+				CoVertex pos = circle.get((i + len + 1) % len);
+				List<CoEdge> star = incomingEdges(act);
+				for (CoEdge e : star) {
+					if (!e.isValid()) continue;
+					if (e.getStartVertex() == pre) continue;
+					if (e.getStartVertex() == pos) continue;
+					if (circle.contains(e.getStartVertex())) {
+						TopologyAlgorithms.removeEdge(e);
+					}
 				}
 			}
 		}
@@ -288,58 +291,26 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 	
 	private static CoHDS generate(AdapterSet a, Set<SchottkyPair> pairs) {
 		CoHDS hds = new CoHDS();
-		int extraPointRes = 10;
 		int circleRes = 10;
 		
 		Map<CoVertex, CoVertex> sMap = new HashMap<CoVertex, CoVertex>();
 		Map<CoVertex, CoVertex> sInvMap = new HashMap<CoVertex, CoVertex>();
-		Map<CoVertex, CoVertex> centerMap = new HashMap<CoVertex, CoVertex>();
-		Map<CoFace, CoFace> sfMap = new HashMap<CoFace, CoFace>();
 		Map<CoVertex, SchottkyPair> vertexPairMap = new HashMap<CoVertex, SchottkyPair>(); 
 		Map<CoVertex, SchottkyPair> vertexPairInvMap = new HashMap<CoVertex, SchottkyPair>(); 
 		Map<CoEdge, CoEdge> edgeMap = new HashMap<CoEdge, CoEdge>();
 		Map<CoEdge, SchottkyPair> edgePairMap = new HashMap<CoEdge, SchottkyPair>();
 		Map<CoEdge, SchottkyPair> edgePairInvMap = new HashMap<CoEdge, SchottkyPair>();
 		
-//		// create extra grid points
-//		Set<Complex> extraPoints = new HashSet<Complex>(); 
-//		for (int i = 0; i < extraPointRes + 1; i++) {
-//			for (int j = 0; j < extraPointRes + 1; j++) {
-//				Complex z = new Complex(i / (0.5*extraPointRes) - 1, j / (0.5*extraPointRes) - 1);
-//				extraPoints.add(z);
-//			}
-//		}
-//		
-//		// create circle density points
-//		for (Circle c : getAllCircles(pairs)) {
-//			for (int i = 1; i < 2; i++) {
-//				int ringRes = circleRes * 3 / (i + 4);
-//				for (int j = 0; j < ringRes; j++) {
-//					double o = c.orientation ? 1.0 : -1.0;
-//					double phi = 2*j*PI / ringRes;
-//					double x = (c.r + o*c.r*i/10.0) * cos(phi) + c.c.re;
-//					double y = (c.r + o*c.r*i/10.0) * sin(phi) + c.c.im;
-//					Complex z = new Complex(x, y);
-//					extraPoints.add(z);
-//				}
-//			}
-//		}
-//		
-//		// exclude extra vertices from the circles
-//		for (Complex ez : new HashSet<Complex>(extraPoints)) {
-//			for (Circle c : getAllCircles(pairs)) {
-//				if (c.isInside(ez, c.r*0.05)) {
-//					extraPoints.remove(ez);
-//				}
-//			}
-//		}
-		
-		
 		double[][] polygons = new double[pairs.size() * 2][circleRes * 2];
+		List<ArrayList<CoVertex>> vertexCircles = new LinkedList<ArrayList<CoVertex>>();
 		
 		// add the vertices on the source and target circles
 		int polygonIndex = 0;
 		for (SchottkyPair p : pairs) {
+			ArrayList<CoVertex> sourceCircle = new ArrayList<CoVertex>();
+			ArrayList<CoVertex> targetCircle = new ArrayList<CoVertex>();
+			vertexCircles.add(sourceCircle);
+			vertexCircles.add(targetCircle);
 			for (int i = 0; i < circleRes; i++) {
 				Circle c = p.source;
 				double phi = 2*i*PI / circleRes;
@@ -351,6 +322,8 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 				double[] szPos = new double[] {sz.re, sz.im, 0};
 				CoVertex v = hds.addNewVertex();
 				CoVertex sv = hds.addNewVertex();
+				sourceCircle.add(v);
+				targetCircle.add(sv);
 				a.set(Position.class, v, zPos);
 				a.set(Position.class, sv, szPos);
 				sMap.put(v, sv);
@@ -363,14 +336,6 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 				polygons[polygonIndex + 1][i * 2 + 1] = sz.im;
 			}
 			polygonIndex += 2;
-//			Complex z = p.source.c;
-//			Complex sz = p.target.c;
-//			double[] zPos = new double[] {z.re, z.im, 0};
-//			double[] szPos = new double[] {sz.re, sz.im, 0};
-//			CoVertex v = hds.addNewVertex();
-//			CoVertex sv = hds.addNewVertex();
-//			a.set(Position.class, v, zPos);
-//			a.set(Position.class, sv, szPos);
 		}
 		
 		Ruppert ruppert = new StereographicRuppert(polygons);
@@ -401,31 +366,12 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 			}
 		}
 		
-		
-		
-//		// add the projected circle centers to act as handles
-//		for (SchottkyPair p : pairs) {
-//			CoVertex cv = hds.addNewVertex();
-//			CoVertex scv = hds.addNewVertex();
-//			centerMap.put(cv, scv);
-//			Complex z = p.source.getOrientedCenter();
-//			Complex sz = p.target.getOrientedCenter();
-//			double[] zPos = new double[] {z.re, z.im, 0};
-//			double[] szPos = new double[] {sz.re, sz.im, 0};
-//			a.set(Position.class, cv, zPos);
-//			a.set(Position.class, scv, szPos);
-//		}
-//		// add extra point vertices
-//		for (Complex z : extraPoints) {
-//			double[] zPos = new double[] {z.re, z.im, 0};
-//			CoVertex v = hds.addNewVertex();
-//			a.set(Position.class, v, zPos);	
-//		}
-//		
 		// scale and project 
+		Map<CoVertex, Complex> zMap = new HashMap<CoVertex, Complex>();
 		for (CoVertex v : hds.getVertices()) {
 			double[] p = a.getD(Position3d.class, v);
 			Complex z = new Complex(p[0], p[1]);
+			zMap.put(v, z); // store original positions
 			z = z.times(zScale);
 			double[] pProjected = inverseStereographic(z);
 			a.set(Position.class, v, pProjected);
@@ -433,155 +379,123 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 		
 		// create triangulation
 		ConvexHull.convexHull(hds, a, 1E-8);
+		cutIdentificationHoles(hds, vertexCircles);
+
 		
-//		// scale and project 
-//		for (CoVertex v : hds.getVertices()) {
-//			double[] p = a.getD(Position3d.class, v);
-//			Complex z = stereographic(p);
-//			z = z.times(1 / zScale);
-//			a.set(Position.class, v, new double[]{z.re, z.im, 0});
-//		}
+		// build edge identification opposites maps
+		for (CoVertex vt : sMap.keySet()) {
+			CoVertex svt = sMap.get(vt);
+			for (CoEdge e : incomingEdges(vt)) {
+				CoVertex vs = e.getStartVertex();
+				if (sMap.containsKey(vs)) {
+					CoVertex svs = sMap.get(vs);
+					for (CoEdge se : incomingEdges(svs)) {
+						if (se.getStartVertex() == svt) {
+							SchottkyPair p = vertexPairMap.get(vt);
+							edgeMap.put(e, se);
+							edgeMap.put(e.getOppositeEdge(), se.getOppositeEdge());
+							edgeMap.put(se, e);
+							edgeMap.put(se.getOppositeEdge(), e.getOppositeEdge());
+							edgePairMap.put(e, p);
+							edgePairMap.put(e.getOppositeEdge(), p);
+							edgePairInvMap.put(se, p);
+							edgePairInvMap.put(se.getOppositeEdge(), p);
+						}
+					}
+				}
+			}
+		}
+		// we know how many edges there are on the circles
+		assert edgeMap.size() == 2 * pairs.size() * circleRes * 2 : "lengths of cycles";
 		
-//		
-//		// build edge identification opposites maps
-//		for (CoVertex vt : sMap.keySet()) {
-//			CoVertex svt = sMap.get(vt);
-//			for (CoEdge e : incomingEdges(vt)) {
-//				CoVertex vs = e.getStartVertex();
-//				if (sMap.containsKey(vs)) {
-//					CoVertex svs = sMap.get(vs);
-//					for (CoEdge se : incomingEdges(svs)) {
-//						if (se.getStartVertex() == svt) {
-//							SchottkyPair p = vertexPairMap.get(vt);
-//							edgeMap.put(e, se);
-//							edgeMap.put(e.getOppositeEdge(), se.getOppositeEdge());
-//							edgeMap.put(se, e);
-//							edgeMap.put(se.getOppositeEdge(), e.getOppositeEdge());
-//							edgePairMap.put(e, p);
-//							edgePairMap.put(e.getOppositeEdge(), p);
-//							edgePairInvMap.put(se, p);
-//							edgePairInvMap.put(se.getOppositeEdge(), p);
-//						}
-//					}
-//				}
-//			}
-//		}
-//		// we know how many edges there are on the circles
-//		assert edgeMap.size() == 2 * pairs.size() * circleRes * 2 : "lengths of cycles";
-//		
-//		// calculate length cross ratios
-//		Map<CoEdge, Double> crMap = new HashMap<CoEdge, Double>();
-//		for (CoEdge e : hds.getEdges()) {
-//			CoVertex vi = e.getStartVertex();
-//			CoVertex vj = e.getTargetVertex();
-//			CoVertex vl = e.getNextEdge().getTargetVertex();
-//			CoVertex vk = e.getOppositeEdge().getNextEdge().getTargetVertex();
-//			Complex zi = stereographic(a.getD(Position3d.class, vi));
-//			Complex zj = stereographic(a.getD(Position3d.class, vj));
-//			Complex zl = stereographic(a.getD(Position3d.class, vl));
-//			Complex zk = stereographic(a.getD(Position3d.class, vk));
-//			
-//			Moebius pullTransform = null;
-//			boolean invertCrossRatio = false;
-//			// check if we have to pull a vertex position
-//			if (edgePairMap.containsKey(e)) {
-//				assert centerMap.containsKey(vl) || centerMap.containsKey(vk);
-//				// we are at a source circle edge
-//				SchottkyPair pair = edgePairMap.get(e);
-//				pullTransform = pair.s.invert();
-//			} 
-//			if (edgePairInvMap.containsKey(e)) {
-//				assert centerMap.containsValue(vl) || centerMap.containsValue(vk);
-//				// we are at a target circle edge
-//				SchottkyPair pair = edgePairInvMap.get(e);
-//				pullTransform = pair.s;
-//				invertCrossRatio = true;
-//			}
-//			// pull one vertex from a different domain
-//			if (pullTransform != null) {
-//				CoEdge se = edgeMap.get(e);
-//				CoVertex v1 = se.getOppositeEdge().getNextEdge().getTargetVertex();
-//				CoVertex v2 = se.getNextEdge().getTargetVertex();
-//				if (centerMap.containsKey(vl) || centerMap.containsValue(vl)) {
-//					CoVertex mappedL = centerMap.containsKey(v1) || centerMap.containsValue(v1) ? v2 : v1;
-//					assert !centerMap.containsKey(mappedL) && !centerMap.containsValue(mappedL);
-//					zl = stereographic(a.getD(Position3d.class, mappedL));
-//					zl = zl.times(1 / zScale);
-//					zl = pullTransform.applyTo(zl);
-//					zl = zl.times(zScale);
-//				} else {
-//					assert centerMap.containsKey(vk) || centerMap.containsValue(vk);
-//					CoVertex mappedL = centerMap.containsKey(v1) || centerMap.containsValue(v1) ? v2 : v1;
-//					assert !centerMap.containsKey(mappedL) && !centerMap.containsValue(mappedL);
-//					zk = stereographic(a.getD(Position3d.class, mappedL));
-//					zk = zk.times(1 / zScale);
-//					zk = pullTransform.applyTo(zk);
-//					zk = zk.times(zScale);
-//				}
-//			}
-//			
-//			double l_ik = zi.dist(zk); 
-//			double l_kj = zk.dist(zj); 
-//			double l_jl = zj.dist(zl); 
-//			double l_li = zl.dist(zi); 
-//			double cr = (l_kj * l_li) / (l_ik * l_jl);
-//			if (invertCrossRatio) {
-//				cr = 1 / cr;
-//			}
-//			// store the cross ratio
-//			crMap.put(e, cr);
-//		}
-//
-//		// remove circles from the triangulation
-//		for (CoVertex v : centerMap.keySet()) {
-//			CoVertex sv = centerMap.get(v);
-//			CoFace f = TopologyAlgorithms.removeVertexFill(v);
-//			CoFace sf = TopologyAlgorithms.removeVertexFill(sv);
-//			sfMap.put(f, sf);
-//		}
-//		
-//		// identify circles
-//		try {
-//			for (CoFace f : sfMap.keySet()) {
-//				CoFace sf = sfMap.get(f);
-//				CoVertex v = f.getBoundaryEdge().getTargetVertex();
-//				CoVertex sv = sMap.get(v);
-//				try {
-//					SurgeryUtility.glueAlongFaces(f, sf, v, sv);
-//				} catch (RuntimeException e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		} catch (Exception e) {
-//			System.err.println("Invalid Schottky configuration.");
-//		}
-//		
-//		// check if identification was correct
-//		for (CoEdge e : edgeMap.keySet()) {
-//			if (!e.isValid()) continue;
-//			CoEdge se = edgeMap.get(e);
-//			assert e == se.getOppositeEdge() : "opposite";
-//		}
-//		
-//		// assert mapped and opposite cross ratios are the same
-//		for (CoEdge e : edgeMap.keySet()) {
-//			if (!e.isValid()) continue;
-//			CoEdge se = edgeMap.get(e);
-//			double cr = crMap.get(e);
-//			double scr = crMap.get(se);
-//			assert cr - scr < 1E-8 : "Mapped cross ratio: " + cr + " - " + scr;
-//		}
-//		int count = 0;
-//		for (CoEdge e : hds.getEdges()) {
-//			if (!e.isValid()) continue;
-//			CoEdge opp = e.getOppositeEdge();
-//			double cr = crMap.get(e);
-//			double scr = crMap.get(opp);
-////			assert cr - scr < 1E-8 : "Opposite cross ratios: " + cr + " - " + scr;
-//			if (cr - scr > 1E-8) count++;
-//		}
-//		System.out.println("wring opposite cross ratio counter " + count);
+		// calculate length cross ratios
+		Map<CoEdge, Double> crMap = new HashMap<CoEdge, Double>();
+		for (CoEdge e : hds.getEdges()) {
+			CoVertex vi = e.getStartVertex();
+			CoVertex vj = e.getTargetVertex();
+			CoVertex vl = e.getNextEdge().getTargetVertex();
+			CoVertex vk = e.getOppositeEdge().getNextEdge().getTargetVertex();
+			Complex zi = stereographic(a.getD(Position3d.class, vi));
+			Complex zj = stereographic(a.getD(Position3d.class, vj));
+			Complex zl = stereographic(a.getD(Position3d.class, vl));
+			Complex zk = stereographic(a.getD(Position3d.class, vk));
+			
+			Moebius pullTransform = null;
+			// check if we have to pull a vertex position
+			if (edgePairMap.containsKey(e)) {
+				assert e.getLeftFace() == null || e.getRightFace() == null;
+				// we are at a source circle edge
+				SchottkyPair pair = edgePairMap.get(e);
+				pullTransform = pair.s.invert();
+			} 
+			if (edgePairInvMap.containsKey(e)) {
+				assert e.getLeftFace() == null || e.getRightFace() == null;
+				// we are at a target circle edge
+				SchottkyPair pair = edgePairInvMap.get(e);
+				pullTransform = pair.s;
+			}
+			// pull one vertex from a different domain
+			if (pullTransform != null) {
+				CoEdge se = edgeMap.get(e);
+				if (se.getLeftFace() == null) {
+					CoVertex mappedL = se.getOppositeEdge().getNextEdge().getTargetVertex();
+					zl = stereographic(a.getD(Position3d.class, mappedL));
+					zl = zl.times(1 / zScale);
+					zl = pullTransform.applyTo(zl);
+					zl = zl.times(zScale);
+				} else {
+					CoVertex mappedL = se.getNextEdge().getTargetVertex();
+					zk = stereographic(a.getD(Position3d.class, mappedL));
+					zk = zk.times(1 / zScale);
+					zk = pullTransform.applyTo(zk);
+					zk = zk.times(zScale);
+				}
+			}
+			double l_ik = zi.dist(zk); 
+			double l_kj = zk.dist(zj); 
+			double l_jl = zj.dist(zl); 
+			double l_li = zl.dist(zi); 
+			double cr = (l_kj * l_li) / (l_ik * l_jl);
+			// store the cross ratio
+			crMap.put(e, cr);
+		}
+
+		// identify circles
+		try {
+			for (CoEdge e : edgeMap.keySet()) {
+				if (!e.isValid() || e.getLeftFace() != null) {
+					continue;
+				}
+				CoEdge se = edgeMap.get(e);
+				try {
+					SurgeryUtility.glueAlongBoundaries(e, se);
+				} catch (RuntimeException re) {
+					re.printStackTrace();
+				}
+			}
+		} catch (Exception e) {
+			System.err.println("Invalid Schottky configuration.");
+		}
 		
+		// check if identification was correct
+		for (CoEdge e : edgeMap.keySet()) {
+			if (!e.isValid()) continue;
+			CoEdge se = edgeMap.get(e);
+			assert e == se.getOppositeEdge() : "opposite";
+		}
+		// assert mapped and opposite cross ratios are the same
+		for (CoEdge e : edgeMap.keySet()) {
+			CoEdge se = edgeMap.get(e);
+			double cr = crMap.get(e);
+			double scr = crMap.get(se);
+			assert cr - scr < 1E-8 : "Mapped cross ratio: " + cr + " - " + scr;
+		}
+		for (CoEdge e : hds.getEdges()) {
+			CoEdge opp = e.getOppositeEdge();
+			double cr = crMap.get(e);
+			double scr = crMap.get(opp);
+			assert cr - scr < 1E-8 : "Opposite cross ratios: " + cr + " - " + scr;
+		}
 		
 		System.out.println("Generated surface of genus " + HalfEdgeUtils.getGenus(hds));
 		return hds;
