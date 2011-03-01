@@ -2,12 +2,12 @@ package de.varylab.discreteconformal.plugin;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static java.lang.Math.PI;
+import static java.lang.Math.abs;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
+import static java.lang.Math.sqrt;
 
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -17,10 +17,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
@@ -30,15 +29,14 @@ import de.jreality.math.Rn;
 import de.jreality.plugin.basic.View;
 import de.jreality.ui.LayoutFactory;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.generic.Position3d;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
-import de.jtem.java2dx.beans.Viewer2DWithInspector;
-import de.jtem.java2dx.modelling.GraphicsModeller2D;
-import de.jtem.java2dx.modelling.SimpleModeller2D;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
@@ -46,22 +44,24 @@ import de.jtem.mfc.field.Complex;
 import de.jtem.mfc.group.Moebius;
 import de.jtem.numericalMethods.geometry.meshGeneration.ruppert.Ruppert;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
+import de.varylab.discreteconformal.util.NodeIndexComparator;
 import de.varylab.discreteconformal.util.SurgeryUtility;
 
 public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements ActionListener, ChangeListener {
 
 	private HalfedgeInterface
 		hif = null;
-	private SimpleModeller2D
-		moddeller = new GraphicsModeller2D();
-	private Viewer2DWithInspector
-		viewer = moddeller.getViewer();
-	private JScrollPane 
-		protectorPane = new JScrollPane(viewer); 
+//	private SimpleModeller2D
+//		moddeller = new GraphicsModeller2D();
+//	private Viewer2DWithInspector
+//		viewer = moddeller.getViewer();
+//	private JScrollPane 
+//		protectorPane = new JScrollPane(viewer); 
 	private JButton
 		generateButton = new JButton("Generate Surface");
 	private SpinnerNumberModel
@@ -79,25 +79,52 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 //		muList = new LinkedList<Complex>();
 		
 	public DiscreteSchottkyGenerator() {
-		GridBagConstraints c1 = LayoutFactory.createLeftConstraint();
+//		GridBagConstraints c1 = LayoutFactory.createLeftConstraint();
 		GridBagConstraints c2 = LayoutFactory.createRightConstraint();
-		viewer.setPreferredSize(new Dimension(200, 200));
-		viewer.setMinimumSize(viewer.getPreferredSize());
-		shrinkPanel.setLayout(new GridBagLayout());
-		shrinkPanel.add(new JLabel("Genus"), c1);
-		shrinkPanel.add(genusSpinner, c2);
-		shrinkPanel.add(protectorPane, c2);
+//		viewer.setPreferredSize(new Dimension(200, 200));
+//		viewer.setMinimumSize(viewer.getPreferredSize());
+//		shrinkPanel.setLayout(new GridBagLayout());
+//		shrinkPanel.add(new JLabel("Genus"), c1);
+//		shrinkPanel.add(genusSpinner, c2);
+//		shrinkPanel.add(protectorPane, c2);
 		shrinkPanel.add(generateButton, c2);
 
 		generateButton.addActionListener(this);
 		genusSpinner.addChangeListener(this);
 	}
 	
+	
+	@Length
+	public class SchottkyLengthAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, Double> {
+
+		private Map<CoEdge, Double>
+			lMap = null;
+		
+		public SchottkyLengthAdapter(Map<CoEdge, Double> map) {
+			super(null, CoEdge.class, null, Double.class, true, false);
+			lMap = map;
+		}
+		
+		@Override
+		public Double getEdgeValue(CoEdge e, AdapterSet a) {
+			return lMap.get(e);
+		}	
+		
+		@Override
+		public double getPriority() {
+			return 10;
+		}
+		
+	}
+	
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		Set<SchottkyPair> pairs = getSchottkyPairs();
-		CoHDS hds = generate(hif.getAdapters(), pairs);
+		List<SchottkyPair> pairs = getSchottkyPairs();
+		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
+		CoHDS hds = generate(hif.getAdapters(), pairs, lMap);
 		hif.set(hds);
+		hif.addLayerAdapter(new SchottkyLengthAdapter(lMap), false);
 	}
 	
 	@Override
@@ -177,8 +204,8 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 	}
 	
 	
-	private static Set<Circle> getAllCircles(Set<SchottkyPair> pairs) {
-		Set<Circle> r = new HashSet<DiscreteSchottkyGenerator.Circle>();
+	private static List<Circle> getAllCircles(List<SchottkyPair> pairs) {
+		List<Circle> r = new LinkedList<Circle>();
 		for (SchottkyPair p : pairs) {
 			r.add(p.source);
 			r.add(p.target);
@@ -187,12 +214,12 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 	}
 	
 	
-	private static Set<SchottkyPair> getSchottkyPairs() {
-		Set<SchottkyPair> pairs = new HashSet<SchottkyPair>();
+	private static List<SchottkyPair> getSchottkyPairs() {
+		List<SchottkyPair> pairs = new LinkedList<SchottkyPair>();
 		// define transformation 1
 		Complex A = new Complex(-1.5, -1.5);
-		Complex B = new Complex(0.4, 0.4);
-		Complex m = new Complex(0.04);
+		Complex B = new Complex(0.0, 0.0);
+		Complex m = new Complex(0.01);
 		Moebius s = new Moebius(A, B, m);
 		Complex center = new Complex();
 		Circle circle = new Circle(center, 1.0, false);
@@ -203,16 +230,29 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 		pairs.add(pair);
 		
 		// define transformation 2
-		A = new Complex(0.5, 0.0);
-		B = new Complex(-0.5, 0.0);
-		m = new Complex(0.01, 0.01);
+		A = new Complex(0.23, 0.1);
+		B = new Complex(-0.23, 0.1);
+		m = new Complex(0.005);
 		s = new Moebius(A, B, m);
-		circle = new Circle(A, 0.1, true);
+		circle = new Circle(A, 0.05, true);
 		centerOfMappedCircle = new Complex();
 		sr = s.getRadiusOfMappedCircle(circle.c, circle.r, centerOfMappedCircle);
 		sCircle = new Circle(centerOfMappedCircle, sr, true);
 		pair = new SchottkyPair(s, circle, sCircle);
 		pairs.add(pair);
+		
+		// define transformation 3
+		A = new Complex(0.1, 0.1);
+		B = new Complex(0.1, -0.1);
+		m = new Complex(0.01);
+		s = new Moebius(A, B, m);
+		circle = new Circle(A, 0.01, true);
+		centerOfMappedCircle = new Complex();
+		sr = s.getRadiusOfMappedCircle(circle.c, circle.r, centerOfMappedCircle);
+		sCircle = new Circle(centerOfMappedCircle, sr, true);
+		pair = new SchottkyPair(s, circle, sCircle);
+		pairs.add(pair);
+		
 		return pairs;
 	}
 	
@@ -289,9 +329,10 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 	
 	
 	
-	private static CoHDS generate(AdapterSet a, Set<SchottkyPair> pairs) {
+	private static CoHDS generate(AdapterSet a, List<SchottkyPair> pairs, Map<CoEdge, Double> lMap) {
 		CoHDS hds = new CoHDS();
-		int circleRes = 10;
+		int circleRes = 20;
+		double ruppertArea = 0.05;
 		
 		Map<CoVertex, CoVertex> sMap = new HashMap<CoVertex, CoVertex>();
 		Map<CoVertex, CoVertex> sInvMap = new HashMap<CoVertex, CoVertex>();
@@ -337,10 +378,10 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 			}
 			polygonIndex += 2;
 		}
-		
+//		if (polygonIndex == 4) return hds;
 		Ruppert ruppert = new StereographicRuppert(polygons);
-		ruppert.setAreaConstraint(0.1);
-		ruppert.setMaximalNumberOfTriangles(2000);
+		ruppert.setAreaConstraint(ruppertArea);
+		ruppert.setMaximalNumberOfTriangles(100000);
 		ruppert.refine();
 		double[] verts = ruppert.getPoints();
 		
@@ -462,12 +503,15 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 
 		// identify circles
 		try {
-			for (CoEdge e : edgeMap.keySet()) {
+			Set<CoEdge> mappedEdgesSet = new TreeSet<CoEdge>(new NodeIndexComparator<CoEdge>());
+			mappedEdgesSet.addAll(edgeMap.keySet());
+			for (CoEdge e : mappedEdgesSet) {
 				if (!e.isValid() || e.getLeftFace() != null) {
 					continue;
 				}
 				CoEdge se = edgeMap.get(e);
 				try {
+					System.out.println("Identify " + e + " " + se);
 					SurgeryUtility.glueAlongBoundaries(e, se);
 				} catch (RuntimeException re) {
 					re.printStackTrace();
@@ -488,18 +532,53 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 			CoEdge se = edgeMap.get(e);
 			double cr = crMap.get(e);
 			double scr = crMap.get(se);
-			assert cr - scr < 1E-8 : "Mapped cross ratio: " + cr + " - " + scr;
+			assert abs(cr - scr) < 1E-8 : "Mapped cross ratio: " + cr + " - " + scr;
 		}
 		for (CoEdge e : hds.getEdges()) {
 			CoEdge opp = e.getOppositeEdge();
 			double cr = crMap.get(e);
 			double scr = crMap.get(opp);
-			assert cr - scr < 1E-8 : "Opposite cross ratios: " + cr + " - " + scr;
+			assert abs(cr - scr) < 1E-8 : "Opposite cross ratios: " + cr + " - " + scr;
+		}
+		// check cross-ratio product around each vertex
+		for (CoVertex v : hds.getVertices()) {
+			double pr = 1.0;
+			for (CoEdge e : incomingEdges(v)) {
+				pr *= crMap.get(e);
+			}
+			assert abs(pr - 1.0) < 1E-8 : "Cross-ratio product around vertex not 1.0";
+		}
+		
+		
+		// define lengths from cross-ratios
+		Map<CoEdge, Double> aMap = new HashMap<CoEdge, Double>();
+		for (CoVertex v : hds.getVertices()) {
+			double ai = 1.0;
+			for (CoEdge e : incomingEdges(v)) {
+				double q = crMap.get(e);
+				ai *= q;
+				aMap.put(e, ai);
+			}
+		}
+		for (CoEdge e : hds.getEdges()) {
+			double ai = aMap.get(e);
+			double aj = aMap.get(e.getPreviousEdge());
+			double l = sqrt(1 / (ai * aj));
+			lMap.put(e, l);
+		}
+		
+		// check opposite lengths
+		for (CoEdge e : hds.getEdges()) {
+			double l = lMap.get(e);
+			double lo = lMap.get(e.getOppositeEdge());
+			assert abs(l - lo) < 1E-8 : "lengths";
 		}
 		
 		System.out.println("Generated surface of genus " + HalfEdgeUtils.getGenus(hds));
 		return hds;
 	}
+	
+	
 	
 	
 	
@@ -523,12 +602,14 @@ public class DiscreteSchottkyGenerator extends ShrinkPanelPlugin implements Acti
 
 	
 	
+	
 	public static void main(String[] args) {
 		AdapterSet a = AdapterSet.createGenericAdapters();
 		a.add(new CoPositionAdapter());
 		a.add(new CoTexturePositionAdapter(true));
-		Set<SchottkyPair> pairs = DiscreteSchottkyGenerator.getSchottkyPairs();
-		DiscreteSchottkyGenerator.generate(a, pairs);
+		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
+		List<SchottkyPair> pairs = DiscreteSchottkyGenerator.getSchottkyPairs();
+		DiscreteSchottkyGenerator.generate(a, pairs, lMap);
 		
 //		NativePathUtility.set("native");
 //		JRViewer v = new JRViewer();

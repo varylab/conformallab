@@ -93,9 +93,8 @@ public class RnBig {
 			out = dst;
 		}
 		_matrixTimesVectorSafe(out, m, src, context);
-		assert dst != null;
 		if (rewrite) {
-			System.arraycopy(out, 0, dst, 0, dst.length);
+			System.arraycopy(out, 0, dst, 0, out.length);
 			return dst;
 		}
 		return out;

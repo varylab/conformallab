@@ -28,7 +28,7 @@ import de.jtem.halfedgetools.adapter.type.EdgeIndex;
 import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.Weight;
 import de.jtem.halfedgetools.algorithm.triangulation.Delaunay;
-import de.jtem.halfedgetools.algorithm.triangulation.DelaunayLengthAdapter;
+import de.jtem.halfedgetools.algorithm.triangulation.MappedLengthAdapter;
 import de.jtem.halfedgetools.util.HalfEdgeUtilsExtra;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
@@ -118,7 +118,7 @@ public class DiscreteRiemannUtility {
 		WeightAdapter<E> wa
 	) {
 		// First make clear that we are working with a delaunay triangulation.
-		DelaunayLengthAdapter la = Delaunay.constructDelaunay(hds, adapters);
+		MappedLengthAdapter la = Delaunay.constructDelaunay(hds, adapters);
 
 		// Get the homology basis of the surface.
 		V rootV = hds.getVertex(0);
@@ -152,7 +152,7 @@ public class DiscreteRiemannUtility {
 		WeightAdapter<E> wa){
 		
 		// First make clear that we are working with a delaunay triangulation.
-		DelaunayLengthAdapter la = Delaunay.constructDelaunay(hds, adapters);
+		MappedLengthAdapter la = Delaunay.constructDelaunay(hds, adapters);
 
 		// Get the homology basis of the surface.
 		V rootV = hds.getVertex(0);
@@ -188,7 +188,7 @@ public class DiscreteRiemannUtility {
 		HalfEdgeDataStructure<V, E, F> delaunay,
 		List<Set<E>> homologyBasis,
 		AdapterSet adapters,
-		DelaunayLengthAdapter la,
+		MappedLengthAdapter la,
 		WeightAdapter<E> wa){
 
 		// the forms are defined on the positive oriented edges
@@ -624,7 +624,7 @@ public class DiscreteRiemannUtility {
 	> double[][] getHarmonicForms(
 		HalfEdgeDataStructure<V, E, F> delaunay, 
 		List<Set<E>> homologyBasis,
-		AdapterSet adapters, DelaunayLengthAdapter la,
+		AdapterSet adapters, MappedLengthAdapter la,
 		WeightAdapter<E> wa
 	) {
 		

@@ -148,7 +148,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		lastConformalU = null; 
 
 	private MetricErrorAdapter
-		edgeLengthAdapter = new MetricErrorAdapter();
+		metricErrorAdapter = new MetricErrorAdapter();
 	private CoTexturePositionAdapter
 		texturePositionAdapter = new CoTexturePositionAdapter();
 	private CoTexturePositionPositionAdapter
@@ -436,8 +436,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			}
 			genus = unwrapper.genus;
 			lastConformalU = unwrapper.getResultU();
-			edgeLengthAdapter.setLengthMap(unwrapper.lengthMap);
-			edgeLengthAdapter.setSignature(Pn.EUCLIDEAN);
+			metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
+			metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
 			if (genus > 0) {
 				cutInfo = unwrapper.cutInfo;
 				cutColorAdapter.setContext(cutInfo);
@@ -459,7 +459,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				System.out.println(canonicalPolygon);
 				canonicalPolygon.checkRelation();
 				updatePolygonTexture(getSelectedModel(), coverRecursion, coverResolution);
-				edgeLengthAdapter.setSignature(Pn.HYPERBOLIC);
+				metricErrorAdapter.setSignature(Pn.HYPERBOLIC);
 			}
 			if (genus == 0) {
 				kleinButton.setSelected(true);
@@ -640,7 +640,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		texturePositionAdapter.setProjective(useProjectiveTexture.isSelected());
 		texturePositionAdapter.setModel(getSelectedModel());
 		texCoordPositionAdapter.setModel(getSelectedModel());
-		hif.addGlobalAdapter(edgeLengthAdapter, false);
+		hif.addGlobalAdapter(metricErrorAdapter, false);
 		if (showUnwrapped.isSelected()) {
 			hif.addGlobalAdapter(texCoordPositionAdapter, false);	
 		}
