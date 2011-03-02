@@ -20,11 +20,11 @@ import de.jtem.jrworkspace.plugin.lnfswitch.plugin.SystemLookAndFeel;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
-import de.varylab.discreteconformal.plugin.DiscreteSchottkyGenerator;
 import de.varylab.discreteconformal.plugin.EllipticImageGemerator;
 import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutToDiskPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.FindPathPlugin;
+import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
 import de.varylab.discreteconformal.plugin.visualizer.ThetaVisualizer;
 
 
@@ -34,7 +34,7 @@ public class ConformalLab {
 		Set<Plugin> s = new HashSet<Plugin>();
 		s.add(new DiscreteConformalPlugin());
 		s.add(new DiscreteRiemannPlugin());
-		s.add(new DiscreteSchottkyGenerator());
+		s.add(new SchottkyPlugin());
 		s.add(new ThetaVisualizer());
 		s.add(new EllipticImageGemerator());
 		s.add(new ConsolePlugin());
