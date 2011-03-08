@@ -82,6 +82,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	public SchottkyPlugin() {
 		GridBagConstraints c1 = LayoutFactory.createLeftConstraint();
 		GridBagConstraints c2 = LayoutFactory.createRightConstraint();
+		shrinkPanel.setTitle("Schottky Modeller");
 		shrinkPanel.setFillSpace(true);
 		viewer.setPreferredSize(new Dimension(500, 300));
 		viewer.setMinimumSize(viewer.getPreferredSize());
@@ -283,7 +284,16 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		double[][] polygons = new double[pairs.size() * 2 + 1][];
 		List<ArrayList<CoVertex>> vertexCircles = new LinkedList<ArrayList<CoVertex>>();
 		
-		//TODO add outer triangle
+		//TODO add outer quad
+		polygons[0] = new double[8];
+		polygons[0][0] = 10.0;
+		polygons[0][1] = 10.0;
+		polygons[0][2] = -10.0;
+		polygons[0][3] = 10.0;
+		polygons[0][4] = -10.0;
+		polygons[0][5] = -10.0;
+		polygons[0][6] = 10.0;
+		polygons[0][7] = -10.0;
 		
 		// add the vertices on the source and target circles
 		int polygonIndex = 1; // first polygon is the boundary triangle
@@ -320,7 +330,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			}
 			polygonIndex += 2;
 		}
-//		if (polygonIndex == 4) return hds;
+
 		Ruppert ruppert = new StereographicRuppert(polygons);
 		ruppert.setAreaConstraint(ruppertArea);
 		ruppert.setMaximalNumberOfTriangles(100000);
@@ -348,6 +358,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				}
 			}
 		}
+		
 		
 		// scale and project 
 		Map<CoVertex, Complex> zMap = new HashMap<CoVertex, Complex>();
