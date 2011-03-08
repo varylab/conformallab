@@ -1,107 +1,87 @@
 package de.varylab.discreteconformal.plugin.schottky;
 
-import static de.jtem.java2d.Annotation.SOUTHWEST;
-import de.jtem.java2d.Annotation;
-import de.jtem.java2d.DragListener;
-import de.jtem.java2d.SceneComponent;
-import de.jtem.java2d.TransformedMouseEvent;
-import de.jtem.java2d.Viewer2D;
 import de.jtem.mfc.field.Complex;
 import de.jtem.mfc.group.Moebius;
 
 class SchottkyGenerator {
 	
-	private Moebius 
-		s = null;
-	private SchottkyCircle 
-		source,
-		target;
-	private SceneComponent
-		editor = new SceneComponent();
-	private String 
-		label = "1";
+	private static final long 
+		serialVersionUID = 1L;
+	private Complex
+		A = new Complex(-1),
+		B = new Complex(1),
+		m = new Complex(0.05);
+	private SchottkyCircle
+		cycle = new SchottkyCircle(new Complex(-1), 0.5, true);
+	
+	public SchottkyGenerator() {
+	}
+	
+	public SchottkyGenerator(SchottkyGenerator G) {
+		this(G.A, G.B, G.m, G.cycle);
+	}
 		
-	public SchottkyGenerator(Moebius s, SchottkyCircle source, SchottkyCircle target, String label) {
-		super();
-		this.s = s;
-		this.source = source;
-		this.target = target;
-		updateEditor();
+	public SchottkyGenerator(Complex A, Complex B, Complex m, SchottkyCircle cycle) {
+		setFixPoints(A, B);
+		setMu(m);
 	}
 
-	public Moebius getS() {
-		return s;
-	}
-	public void setS(Moebius s) {
-		this.s = s;
+	public Moebius getMoebius() {
+		return new Moebius(A, B, m);
 	}
 
-	public SchottkyCircle getSource() {
-		return source;
+	public void setFixPoints(Complex A, Complex B) {
+		this.A.assign(A);
+		this.B.assign(B);
 	}
-	public void setSource(SchottkyCircle source) {
-		this.source = source;
+	
+	public void setA(Complex a) {
+		A = a;
+	}
+	public Complex getA() {
+		return A;
+	}
+	public void setB(Complex b) {
+		B = b;
+	}
+	public Complex getB() {
+		return B;
 	}
 
-	public SchottkyCircle getTarget() {
-		return target;
+	public Complex getMu() {
+		return m;
 	}
-	public void setTarget(SchottkyCircle target) {
-		this.target = target;
-	}
-	
-	public void updateEditor() {
-		editor.removeAllChildren();
-		SceneComponent sEditor = source.getEditor();
-		SceneComponent tEditor = target.getEditor();
-		sEditor.addDragListener(new DragListener() {
-			@Override
-			public void dragStart(TransformedMouseEvent e) {
-			}
-			@Override
-			public void dragEnd(TransformedMouseEvent e) {
-			}
-			@Override
-			public void drag(TransformedMouseEvent e) {
-				SchottkyCircle circle = new SchottkyCircle(source.getCenter(), source.getRadius(), source.getOrientation());
-				Complex centerOfMappedCircle = new Complex();
-				double sr = s.getRadiusOfMappedCircle(circle.getCenter(), circle.getRadius(), centerOfMappedCircle);
-				target.setCenter(centerOfMappedCircle);
-				target.setRadius(sr);
-				target.updateEditor();
-				((Viewer2D)e.getMouseEvent().getSource()).repaint();
-			}
-		});
-		tEditor.addDragListener(new DragListener() {
-			@Override
-			public void dragStart(TransformedMouseEvent e) {
-			}
-			@Override
-			public void dragEnd(TransformedMouseEvent e) {
-			}
-			@Override
-			public void drag(TransformedMouseEvent e) {
-				SchottkyCircle circle = new SchottkyCircle(target.getCenter(), target.getRadius(), target.getOrientation());
-				Complex centerOfMappedCircle = new Complex();
-				Moebius t = s.invert();
-				double sr = t.getRadiusOfMappedCircle(circle.getCenter(), circle.getRadius(), centerOfMappedCircle);
-				source.setCenter(centerOfMappedCircle);
-				source.setRadius(sr);
-				source.updateEditor();
-				((Viewer2D)e.getMouseEvent().getSource()).repaint();
-			}
-		});
-		sEditor.getAnnotations().clear();
-		sEditor.getAnnotations().add(new Annotation("S" + label, 0, 0, SOUTHWEST));
-		tEditor.getAnnotations().clear();
-		tEditor.getAnnotations().add(new Annotation("T" + label, 0, 0, SOUTHWEST));
-		editor.addChild(sEditor);
-		editor.addChild(tEditor);
+	public void setMu(Complex m) {
+		this.m.assign(m);
 	}
 	
+	public SchottkyCircle getCycle() {
+		return cycle;
+	}
+	public void setCycle(SchottkyCircle cycle) {
+		this.cycle = cycle;
+	}
 	
-	public SceneComponent getEditor() {
-		return editor;
+	public Complex mapPoint(Complex z) {
+		return getMoebius().applyTo(z);
+	}
+	
+	public SchottkyCircle mapCircle(SchottkyCircle c) {
+		Moebius T = getMoebius();
+		Complex center = new Complex().invert(); 
+		double R = T.getRadiusOfMappedCircle(c.getCenter(), c.getRadius(), center);
+		return new SchottkyCircle(center, R, c.getOrientation());
+	}
+	
+	public Complex unmapPoint(Complex z) {
+		return getMoebius().applyTo(z);
+	}
+	
+	public SchottkyCircle unmapCircle(SchottkyCircle c) {
+		Moebius T = getMoebius().invert();
+		Complex center = new Complex(); 
+		double R = T.getRadiusOfMappedCircle(c.getCenter(), c.getRadius(), center);
+		return new SchottkyCircle(center, R, c.getOrientation());
 	}
 	
 }

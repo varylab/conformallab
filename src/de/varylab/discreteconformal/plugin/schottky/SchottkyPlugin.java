@@ -1,21 +1,17 @@
 package de.varylab.discreteconformal.plugin.schottky;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
-import static de.jtem.java2d.Annotation.SOUTHEAST;
-import static java.awt.geom.AffineTransform.getTranslateInstance;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
 
-import java.awt.BasicStroke;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,8 +26,6 @@ import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
@@ -45,16 +39,7 @@ import de.jtem.halfedgetools.adapter.type.generic.Position3d;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
-import de.jtem.halfedgetools.plugin.algorithm.generator.RandomSphereGenerator;
-import de.jtem.halfedgetools.plugin.algorithm.topology.VertexRemoverPlugin;
-import de.jtem.java2d.Annotation;
-import de.jtem.java2d.DragListener;
-import de.jtem.java2d.SceneComponent;
-import de.jtem.java2d.TransformedMouseEvent;
-import de.jtem.java2dx.Ellipse2DDouble;
-import de.jtem.java2dx.beans.Viewer2DWithInspector;
-import de.jtem.java2dx.modelling.GraphicsModeller2D;
-import de.jtem.java2dx.modelling.SimpleModeller2D;
+import de.jtem.java2d.Viewer2D;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
@@ -69,136 +54,65 @@ import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.util.NodeIndexComparator;
 import de.varylab.discreteconformal.util.SurgeryUtility;
 
-public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener, ChangeListener {
+public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener {
 
 	private HalfedgeInterface
 		hif = null;
-	private SimpleModeller2D
-		moddeller = new GraphicsModeller2D();
-	private Viewer2DWithInspector
-		viewer = moddeller.getViewer();
+	private SchottkyModeller
+		schottkyModeller = new SchottkyModeller();
+	private Viewer2D
+		viewer = schottkyModeller.getViewer();
 	private JScrollPane 
 		protectorPane = new JScrollPane(viewer);
 	private JButton
 		generateButton = new JButton("Generate Surface");
 	private static SpinnerNumberModel
-		genusModel = new SpinnerNumberModel(2, 0, 20, 1),
 		stereographicScaleModel = new SpinnerNumberModel(7.0, 0.01, 100.0, 0.01),
 		cirleResModel = new SpinnerNumberModel(20, 3, 1000, 1),
 		delaunayAreaModel = new SpinnerNumberModel(0.05, 0.001, 10, 0.01);
 	private JSpinner
-		genusSpinner = new JSpinner(genusModel),
 		delaunayAreaSpinner = new JSpinner(delaunayAreaModel),
 		circleResSpinner = new JSpinner(cirleResModel),
 		stereographicScaleSpinner = new JSpinner(stereographicScaleModel);
-	private SceneComponent
-		root = new SceneComponent();
 	
 	private static double 
 		zScale = 7.0; 
 	
 	
-	private class FixPointComponent extends SceneComponent {
-		
-		public FixPointComponent(double x, double y, int index, boolean isSource) {
-			setTransform(AffineTransform.getTranslateInstance(x, y));
-			setShape(new Ellipse2DDouble(-0.1, -0.1, 0.2, 0.2));
-			setStroke(new BasicStroke(2));
-			setOutlineDragEnabled(true);
-			setAreaDragEnabled(true);
-			setAnnotated(true);
-			setAnnotationDragEnabled(false);
-			String label = (isSource ? "A" : "B") + index;
-			Annotation ann = new Annotation(label, 0, 0, SOUTHEAST);
-			getAnnotations().add(ann);
-			addDragListener(new DragListener() {
-				double lastX, lastY;
-				@Override
-				public void dragStart(TransformedMouseEvent e) {
-					lastX = e.getX();
-					lastY = e.getY();
-				}
-				
-				@Override
-				public void dragEnd(TransformedMouseEvent e) {
-				}
-				
-				@Override
-				public void drag(TransformedMouseEvent e) {
-					AffineTransform T = getTransform();
-					double dx = e.getX() - lastX;
-					double dy = e.getY() - lastY;
-					T.concatenate(getTranslateInstance(dx, dy));
-					setTransform(T);
-					lastX = e.getX();
-					lastY = e.getY();
-					viewer.repaint();
-				}
-			});
-		}
-
-		@Override
-		public AffineTransform getTransform() {
-			if (super.getTransform() == null) {
-				setTransform(new AffineTransform());
-			}
-			return super.getTransform();
-		}
-		
-	}
-
-	
-	
-	private class CircleComponent extends SceneComponent {
-		
-		public CircleComponent() {
-			
-		}
-		
-	}
-	
-		
 	public SchottkyPlugin() {
 		GridBagConstraints c1 = LayoutFactory.createLeftConstraint();
 		GridBagConstraints c2 = LayoutFactory.createRightConstraint();
-		viewer.setPreferredSize(new Dimension(200, 200));
+		shrinkPanel.setFillSpace(true);
+		viewer.setPreferredSize(new Dimension(500, 300));
 		viewer.setMinimumSize(viewer.getPreferredSize());
 		shrinkPanel.setLayout(new GridBagLayout());
-		shrinkPanel.add(new JLabel("Genus"), c1);
-		shrinkPanel.add(genusSpinner, c2);
 		shrinkPanel.add(new JLabel("Max Triangle Area"), c1);
 		shrinkPanel.add(delaunayAreaSpinner, c2);
 		shrinkPanel.add(new JLabel("Stereographic Factor"), c1);
 		shrinkPanel.add(stereographicScaleSpinner, c2);
 		shrinkPanel.add(new JLabel("Circle Resolution"), c1);
 		shrinkPanel.add(circleResSpinner, c2);
+		c2.weighty = 1.0;
 		shrinkPanel.add(protectorPane, c2);
+		c2.weighty = 0.0;
 		shrinkPanel.add(generateButton, c2);
 
 		generateButton.addActionListener(this);
-		genusSpinner.addChangeListener(this);
 		
-		moddeller.addScene(root);
 		viewer.setScaleToolEnabled(true);
 		viewer.setTranslateToolEnabled(true);
-		viewer.setMenuToolEnabled(false);
+		viewer.setMenuToolEnabled(true);
 	}
 	
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		List<SchottkyGenerator> pairs = getSchottkyPairs();
+		List<SchottkyGenerator> pairs = schottkyModeller.getGenerators();
 		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
 		CoHDS hds = generate(hif.getAdapters(), pairs, lMap);
 		hif.set(hds);
 		hif.addLayerAdapter(new SchottkyLengthAdapter(lMap), false);
 	}
-	
-	@Override
-	public void stateChanged(ChangeEvent e) {
-		resetViewer();
-	}
-	
 	
 	private static double[] inverseStereographic(Complex Z, double[]... result) {
 		if (Z.re == Double.POSITIVE_INFINITY) {
@@ -228,54 +142,56 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener,
 	private static List<SchottkyCircle> getAllCircles(List<SchottkyGenerator> pairs) {
 		List<SchottkyCircle> r = new LinkedList<SchottkyCircle>();
 		for (SchottkyGenerator p : pairs) {
-			r.add(p.getSource());
-			r.add(p.getTarget());
+			SchottkyCircle sCircle = p.getCycle();
+			SchottkyCircle tCircle = p.mapCircle(sCircle);
+			r.add(sCircle);
+			r.add(tCircle);
 		}
 		return r;
 	}
 	
 	
-	private static List<SchottkyGenerator> getSchottkyPairs() {
-		List<SchottkyGenerator> pairs = new LinkedList<SchottkyGenerator>();
-		// define transformation 1
-		Complex A = new Complex(-1.5, -1.5);
-		Complex B = new Complex(0.0, 0.0);
-		Complex m = new Complex(0.01);
-		Moebius s = new Moebius(A, B, m);
-		Complex center = new Complex();
-		SchottkyCircle circle = new SchottkyCircle(center, 1.0, false);
-		Complex centerOfMappedCircle = new Complex();
-		double sr = s.getRadiusOfMappedCircle(circle.getCenter(), circle.getRadius(), centerOfMappedCircle);
-		SchottkyCircle sCircle = new SchottkyCircle(centerOfMappedCircle, sr, true);
-		SchottkyGenerator pair = new SchottkyGenerator(s, circle, sCircle, "0");
-		pairs.add(pair);
-		
-		// define transformation 2
-		A = new Complex(0.23, 0.1);
-		B = new Complex(-0.23, 0.1);
-		m = new Complex(0.005);
-		s = new Moebius(A, B, m);
-		circle = new SchottkyCircle(A, 0.05, true);
-		centerOfMappedCircle = new Complex();
-		sr = s.getRadiusOfMappedCircle(circle.getCenter(), circle.getRadius(), centerOfMappedCircle);
-		sCircle = new SchottkyCircle(centerOfMappedCircle, sr, true);
-		pair = new SchottkyGenerator(s, circle, sCircle, "1");
-		pairs.add(pair);
-		
-		// define transformation 3
-		A = new Complex(0.1, 0.1);
-		B = new Complex(0.1, -0.1);
-		m = new Complex(0.01);
-		s = new Moebius(A, B, m);
-		circle = new SchottkyCircle(A, 0.01, true);
-		centerOfMappedCircle = new Complex();
-		sr = s.getRadiusOfMappedCircle(circle.getCenter(), circle.getRadius(), centerOfMappedCircle);
-		sCircle = new SchottkyCircle(centerOfMappedCircle, sr, true);
-		pair = new SchottkyGenerator(s, circle, sCircle, "2");
-		pairs.add(pair);
-		
-		return pairs;
-	}
+//	private static List<SchottkyGenerator> getSchottkyPairs() {
+//		List<SchottkyGenerator> pairs = new LinkedList<SchottkyGenerator>();
+//		// define transformation 1
+//		Complex A = new Complex(-1.5, -1.5);
+//		Complex B = new Complex(0.0, 0.0);
+//		Complex m = new Complex(0.01);
+//		Moebius s = new Moebius(A, B, m);
+//		Complex center = new Complex();
+//		SchottkyCircle circle = new SchottkyCircle(center, 1.0, false);
+//		Complex centerOfMappedCircle = new Complex();
+//		double sr = s.getRadiusOfMappedCircle(circle.getCenter(), circle.getRadius(), centerOfMappedCircle);
+//		SchottkyCircle sCircle = new SchottkyCircle(centerOfMappedCircle, sr, true);
+//		SchottkyGenerator pair = new SchottkyGenerator(s, circle, sCircle, "0");
+//		pairs.add(pair);
+//		
+//		// define transformation 2
+//		A = new Complex(0.23, 0.1);
+//		B = new Complex(-0.23, 0.1);
+//		m = new Complex(0.005);
+//		s = new Moebius(A, B, m);
+//		circle = new SchottkyCircle(A, 0.05, true);
+//		centerOfMappedCircle = new Complex();
+//		sr = s.getRadiusOfMappedCircle(circle.getCenter(), circle.getRadius(), centerOfMappedCircle);
+//		sCircle = new SchottkyCircle(centerOfMappedCircle, sr, true);
+//		pair = new SchottkyGenerator(s, circle, sCircle, "1");
+//		pairs.add(pair);
+//		
+//		// define transformation 3
+//		A = new Complex(0.1, 0.1);
+//		B = new Complex(0.1, -0.1);
+//		m = new Complex(0.01);
+//		s = new Moebius(A, B, m);
+//		circle = new SchottkyCircle(A, 0.01, true);
+//		centerOfMappedCircle = new Complex();
+//		sr = s.getRadiusOfMappedCircle(circle.getCenter(), circle.getRadius(), centerOfMappedCircle);
+//		sCircle = new SchottkyCircle(centerOfMappedCircle, sr, true);
+//		pair = new SchottkyGenerator(s, circle, sCircle, "2");
+//		pairs.add(pair);
+//		
+//		return pairs;
+//	}
 	
 	
 	private static class StereographicRuppert extends Ruppert {
@@ -364,23 +280,27 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener,
 		Map<CoEdge, SchottkyGenerator> edgePairMap = new HashMap<CoEdge, SchottkyGenerator>();
 		Map<CoEdge, SchottkyGenerator> edgePairInvMap = new HashMap<CoEdge, SchottkyGenerator>();
 		
-		double[][] polygons = new double[pairs.size() * 2][circleRes * 2];
+		double[][] polygons = new double[pairs.size() * 2 + 1][];
 		List<ArrayList<CoVertex>> vertexCircles = new LinkedList<ArrayList<CoVertex>>();
 		
+		//TODO add outer triangle
+		
 		// add the vertices on the source and target circles
-		int polygonIndex = 0;
+		int polygonIndex = 1; // first polygon is the boundary triangle
 		for (SchottkyGenerator p : pairs) {
+			polygons[polygonIndex] = new double[circleRes * 2];
+			polygons[polygonIndex + 1] = new double[circleRes * 2];
 			ArrayList<CoVertex> sourceCircle = new ArrayList<CoVertex>();
 			ArrayList<CoVertex> targetCircle = new ArrayList<CoVertex>();
 			vertexCircles.add(sourceCircle);
 			vertexCircles.add(targetCircle);
 			for (int i = 0; i < circleRes; i++) {
-				SchottkyCircle c = p.getSource();
+				SchottkyCircle c = p.getCycle();
 				double phi = 2*i*PI / circleRes;
 				double x = c.getRadius() * cos(phi) + c.getCenter().re;
 				double y = c.getRadius() * sin(phi) + c.getCenter().im;
 				Complex z = new Complex(x, y);
-				Complex sz = p.getS().applyTo(z);
+				Complex sz = p.getMoebius().applyTo(z);
 				double[] zPos = new double[] {z.re, z.im, 0};
 				double[] szPos = new double[] {sz.re, sz.im, 0};
 				CoVertex v = hds.addNewVertex();
@@ -489,13 +409,13 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener,
 				assert e.getLeftFace() == null || e.getRightFace() == null;
 				// we are at a source circle edge
 				SchottkyGenerator pair = edgePairMap.get(e);
-				pullTransform = pair.getS().invert();
+				pullTransform = pair.getMoebius().invert();
 			} 
 			if (edgePairInvMap.containsKey(e)) {
 				assert e.getLeftFace() == null || e.getRightFace() == null;
 				// we are at a target circle edge
 				SchottkyGenerator pair = edgePairInvMap.get(e);
-				pullTransform = pair.getS();
+				pullTransform = pair.getMoebius();
 			}
 			// pull one vertex from a different domain
 			if (pullTransform != null) {
@@ -600,44 +520,21 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener,
 		return hds;
 	}
 	
-	
-	
-	
-	
-	private void resetViewer() {
-		root.removeAllChildren();
-		for (SchottkyGenerator g : getSchottkyPairs()) {
-			root.addChild(g.getEditor());
-		}
-		viewer.encompass(viewer.getViewport());
-	}
-
 	@Override
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
 		hif.addGlobalAdapter(new CoPositionAdapter(), true);
 		hif.addGlobalAdapter(new CoTexturePositionAdapter(true), true);
-		resetViewer();
 	}
-	
 	
 	@Override
 	public Class<? extends SideContainerPerspective> getPerspectivePluginClass() {
 		return View.class;
 	}
-
-	
 	
 	
 	public static void main(String[] args) {
-//		AdapterSet a = AdapterSet.createGenericAdapters();
-//		a.add(new CoPositionAdapter());
-//		a.add(new CoTexturePositionAdapter(true));
-//		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
-//		List<SchottkyPair> pairs = DiscreteSchottkyGenerator.getSchottkyPairs();
-//		DiscreteSchottkyGenerator.generate(a, pairs, lMap);
-		
 		NativePathUtility.set("native");
 		JRViewer v = new JRViewer();
 		v.setPropertiesFile("Schottky.jrw");
@@ -645,8 +542,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener,
 		v.addContentUI();
 		v.addBasicUI();
 		v.registerPlugin(SchottkyPlugin.class);
-		v.registerPlugin(new VertexRemoverPlugin());
-		v.registerPlugin(new RandomSphereGenerator());
 		v.startup();
 	}
 	
