@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
@@ -70,12 +71,15 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		stereographicScaleModel = new SpinnerNumberModel(7.0, 0.01, 100.0, 0.01),
 		cirleResModel = new SpinnerNumberModel(20, 3, 1000, 1),
 		delaunayAreaModel = new SpinnerNumberModel(0.05, 0.001, 10, 0.01);
+	private JCheckBox
+		debugProjectChecker = new JCheckBox("Project", true),
+		debugDoRuppertChecker = new JCheckBox("Ruppert", true),
+		debugIdentifyChecker = new JCheckBox("Identify", true);
 	private JSpinner
 		delaunayAreaSpinner = new JSpinner(delaunayAreaModel),
 		circleResSpinner = new JSpinner(cirleResModel),
 		stereographicScaleSpinner = new JSpinner(stereographicScaleModel);
-	
-	private static double 
+	private double 
 		zScale = 7.0; 
 	
 	
@@ -93,6 +97,9 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		shrinkPanel.add(stereographicScaleSpinner, c2);
 		shrinkPanel.add(new JLabel("Circle Resolution"), c1);
 		shrinkPanel.add(circleResSpinner, c2);
+		shrinkPanel.add(debugProjectChecker, c2);
+		shrinkPanel.add(debugDoRuppertChecker, c2);
+		shrinkPanel.add(debugIdentifyChecker, c2);
 		c2.weighty = 1.0;
 		shrinkPanel.add(protectorPane, c2);
 		c2.weighty = 0.0;
@@ -115,7 +122,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		hif.addLayerAdapter(new SchottkyLengthAdapter(lMap), false);
 	}
 	
-	private static double[] inverseStereographic(Complex Z, double[]... result) {
+	private double[] inverseStereographic(Complex Z, double[]... result) {
 		if (Z.re == Double.POSITIVE_INFINITY) {
 			return new double[] {0,0,1};
 		}
@@ -135,12 +142,12 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	}
 	
 	
-	private static Complex stereographic(double[] p) {
+	private Complex stereographic(double[] p) {
 		return new Complex(p[0] / (1 - p[2]), p[1] / (1 - p[2]));
 	}
 	
 	
-	private static List<SchottkyCircle> getAllCircles(List<SchottkyGenerator> pairs) {
+	private List<SchottkyCircle> getAllCircles(List<SchottkyGenerator> pairs) {
 		List<SchottkyCircle> r = new LinkedList<SchottkyCircle>();
 		for (SchottkyGenerator p : pairs) {
 			SchottkyCircle sCircle = p.getCycle();
@@ -152,50 +159,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	}
 	
 	
-//	private static List<SchottkyGenerator> getSchottkyPairs() {
-//		List<SchottkyGenerator> pairs = new LinkedList<SchottkyGenerator>();
-//		// define transformation 1
-//		Complex A = new Complex(-1.5, -1.5);
-//		Complex B = new Complex(0.0, 0.0);
-//		Complex m = new Complex(0.01);
-//		Moebius s = new Moebius(A, B, m);
-//		Complex center = new Complex();
-//		SchottkyCircle circle = new SchottkyCircle(center, 1.0, false);
-//		Complex centerOfMappedCircle = new Complex();
-//		double sr = s.getRadiusOfMappedCircle(circle.getCenter(), circle.getRadius(), centerOfMappedCircle);
-//		SchottkyCircle sCircle = new SchottkyCircle(centerOfMappedCircle, sr, true);
-//		SchottkyGenerator pair = new SchottkyGenerator(s, circle, sCircle, "0");
-//		pairs.add(pair);
-//		
-//		// define transformation 2
-//		A = new Complex(0.23, 0.1);
-//		B = new Complex(-0.23, 0.1);
-//		m = new Complex(0.005);
-//		s = new Moebius(A, B, m);
-//		circle = new SchottkyCircle(A, 0.05, true);
-//		centerOfMappedCircle = new Complex();
-//		sr = s.getRadiusOfMappedCircle(circle.getCenter(), circle.getRadius(), centerOfMappedCircle);
-//		sCircle = new SchottkyCircle(centerOfMappedCircle, sr, true);
-//		pair = new SchottkyGenerator(s, circle, sCircle, "1");
-//		pairs.add(pair);
-//		
-//		// define transformation 3
-//		A = new Complex(0.1, 0.1);
-//		B = new Complex(0.1, -0.1);
-//		m = new Complex(0.01);
-//		s = new Moebius(A, B, m);
-//		circle = new SchottkyCircle(A, 0.01, true);
-//		centerOfMappedCircle = new Complex();
-//		sr = s.getRadiusOfMappedCircle(circle.getCenter(), circle.getRadius(), centerOfMappedCircle);
-//		sCircle = new SchottkyCircle(centerOfMappedCircle, sr, true);
-//		pair = new SchottkyGenerator(s, circle, sCircle, "2");
-//		pairs.add(pair);
-//		
-//		return pairs;
-//	}
-	
-	
-	private static class StereographicRuppert extends Ruppert {
+	public class StereographicRuppert extends Ruppert {
 
 		private static final long serialVersionUID = 1L;
 		private boolean inited = false;
@@ -244,7 +208,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	
 	
 	
-	private static void cutIdentificationHoles(CoHDS hds, List<ArrayList<CoVertex>> circles) {
+	private void cutIdentificationHoles(CoHDS hds, List<ArrayList<CoVertex>> circles) {
 		for (ArrayList<CoVertex> circle : circles) {
 			int len = circle.size();
 			for (int i = 0; i < len; i++) {
@@ -267,7 +231,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	
 	
 	
-	private static CoHDS generate(AdapterSet a, List<SchottkyGenerator> pairs, Map<CoEdge, Double> lMap) {
+	private CoHDS generate(AdapterSet a, List<SchottkyGenerator> pairs, Map<CoEdge, Double> lMap) {
 		zScale = stereographicScaleModel.getNumber().doubleValue();
 		int circleRes = cirleResModel.getNumber().intValue();
 		double ruppertArea = delaunayAreaModel.getNumber().doubleValue();
@@ -331,10 +295,13 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			polygonIndex += 2;
 		}
 
+		
 		Ruppert ruppert = new StereographicRuppert(polygons);
 		ruppert.setAreaConstraint(ruppertArea);
 		ruppert.setMaximalNumberOfTriangles(100000);
-		ruppert.refine();
+		if (debugDoRuppertChecker.isSelected()) {
+			ruppert.refine();
+		}
 		double[] verts = ruppert.getPoints();
 		
 		for (int i = 0; i < verts.length; i+=2) {
@@ -343,7 +310,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			CoVertex v = hds.addNewVertex();
 			a.set(Position.class, v, zPos);
 		}
-		
 		
 		// exclude extra vertices from the circles
 		for (CoVertex v : new HashSet<CoVertex>(hds.getVertices())) {
@@ -359,6 +325,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			}
 		}
 		
+		
+		if (!debugProjectChecker.isSelected()) return hds;
 		
 		// scale and project 
 		Map<CoVertex, Complex> zMap = new HashMap<CoVertex, Complex>();
@@ -454,6 +422,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			crMap.put(e, cr);
 		}
 
+		if (!debugIdentifyChecker.isSelected()) return hds;
+		
 		// identify circles
 		try {
 			Set<CoEdge> mappedEdgesSet = new TreeSet<CoEdge>(new NodeIndexComparator<CoEdge>());
