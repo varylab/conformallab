@@ -245,22 +245,22 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		Map<CoEdge, SchottkyGenerator> edgePairMap = new HashMap<CoEdge, SchottkyGenerator>();
 		Map<CoEdge, SchottkyGenerator> edgePairInvMap = new HashMap<CoEdge, SchottkyGenerator>();
 		
-		double[][] polygons = new double[pairs.size() * 2 + 1][];
+		double[][] polygons = new double[pairs.size() * 2][];
 		List<ArrayList<CoVertex>> vertexCircles = new LinkedList<ArrayList<CoVertex>>();
 		
 		//TODO add outer quad
-		polygons[0] = new double[8];
-		polygons[0][0] = 10.0;
-		polygons[0][1] = 10.0;
-		polygons[0][2] = -10.0;
-		polygons[0][3] = 10.0;
-		polygons[0][4] = -10.0;
-		polygons[0][5] = -10.0;
-		polygons[0][6] = 10.0;
-		polygons[0][7] = -10.0;
+//		polygons[0] = new double[8];
+//		polygons[0][0] = 10.0;
+//		polygons[0][1] = 10.0;
+//		polygons[0][2] = -10.0;
+//		polygons[0][3] = 10.0;
+//		polygons[0][4] = -10.0;
+//		polygons[0][5] = -10.0;
+//		polygons[0][6] = 10.0;
+//		polygons[0][7] = -10.0;
 		
 		// add the vertices on the source and target circles
-		int polygonIndex = 1; // first polygon is the boundary triangle
+		int polygonIndex = 0; // first polygon is the boundary triangle
 		for (SchottkyGenerator p : pairs) {
 			polygons[polygonIndex] = new double[circleRes * 2];
 			polygons[polygonIndex + 1] = new double[circleRes * 2];
