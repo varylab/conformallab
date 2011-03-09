@@ -41,12 +41,12 @@ public class HomotopyUtility {
 				} else {
 					cycle = HomologyUtility.findCycle(tree1, bridge);
 				}
-				Set<V> vCycle = PathUtility.getVerticesOnPath(cycle);
-				if (!vCycle.contains(start)) { 
-					// cycle does not visit root, we have to add the connection manually
-					List<E> connectPath = Search.bFS(tree1, start, vCycle, true, null);
-					cycle.addAll(PathUtility.getFullPath(connectPath));
-				}
+//				Set<V> vCycle = PathUtility.getVerticesOnPath(cycle);
+//				if (!vCycle.contains(start)) { 
+//					// cycle does not visit root, we have to add the connection manually
+//					List<E> connectPath = Search.bFS(tree1, start, vCycle, true, null);
+//					cycle.addAll(PathUtility.getFullPath(connectPath));
+//				}
 				result.add(cycle);
 			}
 		}

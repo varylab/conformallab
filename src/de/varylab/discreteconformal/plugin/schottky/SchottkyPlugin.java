@@ -68,7 +68,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	private JButton
 		generateButton = new JButton("Generate Surface");
 	private static SpinnerNumberModel
-		stereographicScaleModel = new SpinnerNumberModel(7.0, 0.01, 100.0, 0.01),
 		cirleResModel = new SpinnerNumberModel(20, 3, 1000, 1),
 		delaunayAreaModel = new SpinnerNumberModel(0.05, 0.001, 10, 0.01);
 	private JCheckBox
@@ -77,10 +76,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		debugIdentifyChecker = new JCheckBox("Identify", true);
 	private JSpinner
 		delaunayAreaSpinner = new JSpinner(delaunayAreaModel),
-		circleResSpinner = new JSpinner(cirleResModel),
-		stereographicScaleSpinner = new JSpinner(stereographicScaleModel);
-	private double 
-		zScale = 7.0; 
+		circleResSpinner = new JSpinner(cirleResModel);
 	
 	
 	public SchottkyPlugin() {
@@ -93,8 +89,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		shrinkPanel.setLayout(new GridBagLayout());
 		shrinkPanel.add(new JLabel("Max Triangle Area"), c1);
 		shrinkPanel.add(delaunayAreaSpinner, c2);
-		shrinkPanel.add(new JLabel("Stereographic Factor"), c1);
-		shrinkPanel.add(stereographicScaleSpinner, c2);
 		shrinkPanel.add(new JLabel("Circle Resolution"), c1);
 		shrinkPanel.add(circleResSpinner, c2);
 		shrinkPanel.add(debugProjectChecker, c2);
@@ -192,9 +186,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			Complex z1 = new Complex(v1[0], v1[1]);
 			Complex z2 = new Complex(v2[0], v2[1]);
 			Complex z3 = new Complex(v3[0], v3[1]);
-			z1 = z1.times(zScale);
-			z2 = z2.times(zScale);
-			z3 = z3.times(zScale);
 			inverseStereographic(z1, vp1);
 			inverseStereographic(z2, vp2);
 			inverseStereographic(z3, vp3);
@@ -232,9 +223,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	
 	
 	private CoHDS generate(AdapterSet a, List<SchottkyGenerator> pairs, Map<CoEdge, Double> lMap) {
-		zScale = stereographicScaleModel.getNumber().doubleValue();
 		int circleRes = cirleResModel.getNumber().intValue();
-		double ruppertArea = delaunayAreaModel.getNumber().doubleValue();
+//		double ruppertArea = delaunayAreaModel.getNumber().doubleValue();
 		
 		CoHDS hds = new CoHDS();
 		Map<CoVertex, CoVertex> sMap = new HashMap<CoVertex, CoVertex>();
@@ -246,9 +236,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		Map<CoEdge, SchottkyGenerator> edgePairInvMap = new HashMap<CoEdge, SchottkyGenerator>();
 		
 		double[][] polygons = new double[pairs.size() * 2][];
-		List<ArrayList<CoVertex>> vertexCircles = new LinkedList<ArrayList<CoVertex>>();
-		
-		//TODO add outer quad
+//		//TODO add outer quad
 //		polygons[0] = new double[8];
 //		polygons[0][0] = 10.0;
 //		polygons[0][1] = 10.0;
@@ -259,15 +247,22 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 //		polygons[0][6] = 10.0;
 //		polygons[0][7] = -10.0;
 		
+		
+		CoVertex root = hds.addNewVertex();
+		a.set(Position.class, root, new double[]{0,0,0});
+		
+		
 		// add the vertices on the source and target circles
 		int polygonIndex = 0; // first polygon is the boundary triangle
+		List<ArrayList<CoVertex>> sourceVertexCircles = new ArrayList<ArrayList<CoVertex>>();
+		List<ArrayList<CoVertex>> targetVertexCircles = new ArrayList<ArrayList<CoVertex>>();
 		for (SchottkyGenerator p : pairs) {
 			polygons[polygonIndex] = new double[circleRes * 2];
 			polygons[polygonIndex + 1] = new double[circleRes * 2];
 			ArrayList<CoVertex> sourceCircle = new ArrayList<CoVertex>();
 			ArrayList<CoVertex> targetCircle = new ArrayList<CoVertex>();
-			vertexCircles.add(sourceCircle);
-			vertexCircles.add(targetCircle);
+			sourceVertexCircles.add(sourceCircle);
+			targetVertexCircles.add(targetCircle);
 			for (int i = 0; i < circleRes; i++) {
 				SchottkyCircle c = p.getCycle();
 				double phi = 2*i*PI / circleRes;
@@ -296,20 +291,20 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		}
 
 		
-		Ruppert ruppert = new StereographicRuppert(polygons);
-		ruppert.setAreaConstraint(ruppertArea);
-		ruppert.setMaximalNumberOfTriangles(100000);
-		if (debugDoRuppertChecker.isSelected()) {
-			ruppert.refine();
-		}
-		double[] verts = ruppert.getPoints();
-		
-		for (int i = 0; i < verts.length; i+=2) {
-			Complex z = new Complex(verts[i], verts[i+1]);
-			double[] zPos = new double[] {z.re, z.im, 0};
-			CoVertex v = hds.addNewVertex();
-			a.set(Position.class, v, zPos);
-		}
+//		Ruppert ruppert = new StereographicRuppert(polygons);
+////		ruppert.setAreaConstraint(ruppertArea);
+////		ruppert.setMaximalNumberOfTriangles(100000);
+////		if (debugDoRuppertChecker.isSelected()) {
+////			ruppert.refine();
+////		}
+//		double[] verts = ruppert.getPoints();
+//		
+//		for (int i = 0; i < verts.length; i+=2) {
+//			Complex z = new Complex(verts[i], verts[i+1]);
+//			double[] zPos = new double[] {z.re, z.im, 0};
+//			CoVertex v = hds.addNewVertex();
+//			a.set(Position.class, v, zPos);
+//		}
 		
 		// exclude extra vertices from the circles
 		for (CoVertex v : new HashSet<CoVertex>(hds.getVertices())) {
@@ -334,39 +329,47 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			double[] p = a.getD(Position3d.class, v);
 			Complex z = new Complex(p[0], p[1]);
 			zMap.put(v, z); // store original positions
-			z = z.times(zScale);
 			double[] pProjected = inverseStereographic(z);
 			a.set(Position.class, v, pProjected);
 		}
 		
 		// create triangulation
 		ConvexHull.convexHull(hds, a, 1E-8);
+		List<ArrayList<CoVertex>> vertexCircles = new LinkedList<ArrayList<CoVertex>>();
+		vertexCircles.addAll(sourceVertexCircles);
+		vertexCircles.addAll(targetVertexCircles);
 		cutIdentificationHoles(hds, vertexCircles);
 
 		
 		// build edge identification opposites maps
-		for (CoVertex vt : sMap.keySet()) {
-			CoVertex svt = sMap.get(vt);
-			for (CoEdge e : incomingEdges(vt)) {
-				CoVertex vs = e.getStartVertex();
-				if (sMap.containsKey(vs)) {
-					CoVertex svs = sMap.get(vs);
-					for (CoEdge se : incomingEdges(svs)) {
-						if (se.getStartVertex() == svt) {
-							SchottkyGenerator p = vertexPairMap.get(vt);
-							edgeMap.put(e, se);
-							edgeMap.put(e.getOppositeEdge(), se.getOppositeEdge());
-							edgeMap.put(se, e);
-							edgeMap.put(se.getOppositeEdge(), e.getOppositeEdge());
-							edgePairMap.put(e, p);
-							edgePairMap.put(e.getOppositeEdge(), p);
-							edgePairInvMap.put(se, p);
-							edgePairInvMap.put(se.getOppositeEdge(), p);
+		for (List<CoVertex> circle : sourceVertexCircles) {
+			Set<CoVertex> vSet = new HashSet<CoVertex>(circle);
+			for (CoVertex vt : circle) {
+				CoVertex svt = sMap.get(vt);
+				for (CoEdge e : incomingEdges(vt)) {
+					CoVertex vs = e.getStartVertex();
+					if (vSet.contains(vs)) {
+						CoVertex svs = sMap.get(vs);
+						for (CoEdge se : incomingEdges(svs)) {
+							if (se.getStartVertex() == svt) {
+								SchottkyGenerator p = vertexPairMap.get(vt);
+								edgeMap.put(e, se);
+								edgeMap.put(e.getOppositeEdge(), se.getOppositeEdge());
+								edgeMap.put(se, e);
+								edgeMap.put(se.getOppositeEdge(), e.getOppositeEdge());
+								edgePairMap.put(e, p);
+								edgePairMap.put(e.getOppositeEdge(), p);
+								edgePairInvMap.put(se, p);
+								edgePairInvMap.put(se.getOppositeEdge(), p);
+							}
 						}
 					}
 				}
 			}
 		}
+		
+		//if (true) return hds;
+		
 		// we know how many edges there are on the circles
 		assert edgeMap.size() == 2 * pairs.size() * circleRes * 2 : "lengths of cycles";
 		
@@ -402,15 +405,11 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				if (se.getLeftFace() == null) {
 					CoVertex mappedL = se.getOppositeEdge().getNextEdge().getTargetVertex();
 					zl = stereographic(a.getD(Position3d.class, mappedL));
-					zl = zl.times(1 / zScale);
 					zl = pullTransform.applyTo(zl);
-					zl = zl.times(zScale);
 				} else {
 					CoVertex mappedL = se.getNextEdge().getTargetVertex();
 					zk = stereographic(a.getD(Position3d.class, mappedL));
-					zk = zk.times(1 / zScale);
 					zk = pullTransform.applyTo(zk);
-					zk = zk.times(zScale);
 				}
 			}
 			double l_ik = zi.dist(zk); 
@@ -476,7 +475,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		// define lengths from cross-ratios
 		Map<CoEdge, Double> aMap = new HashMap<CoEdge, Double>();
 		for (CoVertex v : hds.getVertices()) {
-			double ai = 1.0;
+			double ai = 100.0;
 			for (CoEdge e : incomingEdges(v)) {
 				double q = crMap.get(e);
 				ai *= q;
@@ -495,6 +494,11 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			double l = lMap.get(e);
 			double lo = lMap.get(e.getOppositeEdge());
 			assert abs(l - lo) < 1E-8 : "lengths";
+		}
+
+		System.out.println("Lengths: ");
+		for (CoEdge e : lMap.keySet()) {
+			System.out.println(e + "->" + lMap.get(e));
 		}
 		
 		System.out.println("Generated surface of genus " + HalfEdgeUtils.getGenus(hds));

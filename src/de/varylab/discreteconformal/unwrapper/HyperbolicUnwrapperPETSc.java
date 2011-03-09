@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.unwrapper;
 
 import static de.varylab.discreteconformal.util.SparseUtility.getPETScNonZeros;
 import static de.varylab.jpetsc.PETSc.PETSC_DEFAULT;
+import static de.varylab.jtao.ConvergenceFlags.CONVERGED_ATOL;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -42,6 +43,9 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper{
 		optimizer.setMaximumIterates(maxIterations);
 		System.out.println("Using grad tolerance " + gradTolerance);
 		optimizer.solve();
+		if (optimizer.getSolutionStatus().reason != CONVERGED_ATOL) {
+			throw new RuntimeException("Optinizer did not converge: \n" + optimizer.getSolutionStatus());
+		}
 		System.out.println(optimizer.getSolutionStatus());
 		DenseVector result = new DenseVector(u.getArray());
 		u.restoreArray();

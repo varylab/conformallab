@@ -446,6 +446,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				pointColorAdapter.setContext(cutInfo);
 			}
 			if (genus > 1) {
+				try {
 				System.out.println("Constructing fundamental cut polygon...");
 				cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo);
 				System.out.println(cuttedPolygon);
@@ -460,6 +461,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				canonicalPolygon.checkRelation();
 				updatePolygonTexture(getSelectedModel(), coverRecursion, coverResolution);
 				metricErrorAdapter.setSignature(Pn.HYPERBOLIC);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 			if (genus == 0) {
 				kleinButton.setSelected(true);

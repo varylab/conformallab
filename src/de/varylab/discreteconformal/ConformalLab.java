@@ -6,7 +6,6 @@ import java.util.Set;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
 import de.jreality.plugin.basic.ConsolePlugin;
-import de.jreality.plugin.experimental.WebContentLoader;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedgetools.JRHalfedgeViewer;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -57,7 +56,7 @@ public class ConformalLab {
 		v.setPropertiesFile("ConformalLab.jrw");
 		v.setPropertiesResource(ConformalLab.class, "ConformalLab.jrw");
 		v.getController().setManageLookAndFeel(true);
-		v.registerPlugin(new WebContentLoader());
+//		v.registerPlugin(new WebContentLoader());
 		v.registerPlugin(new LookAndFeelSwitch());
 		v.registerPlugin(new CrossPlatformLnF());
 		v.registerPlugin(new NimbusLnF());
