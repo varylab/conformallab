@@ -1,11 +1,14 @@
 package de.varylab.discreteconformal.plugin.schottky;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
+import static de.varylab.discreteconformal.adapter.HyperbolicModel.Poincaré;
+import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
+import static javax.swing.JOptionPane.WARNING_MESSAGE;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -18,16 +21,19 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
+import no.uib.cipr.matrix.Vector;
 import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.basic.View;
@@ -48,11 +54,19 @@ import de.jtem.mfc.field.Complex;
 import de.jtem.mfc.group.Moebius;
 import de.jtem.numericalMethods.geometry.meshGeneration.ruppert.Ruppert;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoTexturePositionPositionAdapter;
+import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
+import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapperPETSc;
+import de.varylab.discreteconformal.unwrapper.Unwrapper;
+import de.varylab.discreteconformal.util.CuttingUtility;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.NodeIndexComparator;
+import de.varylab.discreteconformal.util.PathUtility;
 import de.varylab.discreteconformal.util.SurgeryUtility;
 
 public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener {
@@ -66,17 +80,20 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	private JScrollPane 
 		protectorPane = new JScrollPane(viewer);
 	private JButton
-		generateButton = new JButton("Generate Surface");
-	private static SpinnerNumberModel
-		cirleResModel = new SpinnerNumberModel(20, 3, 1000, 1),
-		delaunayAreaModel = new SpinnerNumberModel(0.05, 0.001, 10, 0.01);
+		generateButton = new JButton("Generate Surface"),
+		toFuchsianButton = new JButton("Fuchsian Uniformization");
+	private SpinnerNumberModel
+		cirleResModel = new SpinnerNumberModel(20, 4, 1000, 1),
+		extraPointsModel = new SpinnerNumberModel(0, 0, 10000, 1);
 	private JCheckBox
 		debugProjectChecker = new JCheckBox("Project", true),
 		debugDoRuppertChecker = new JCheckBox("Ruppert", true),
 		debugIdentifyChecker = new JCheckBox("Identify", true);
 	private JSpinner
-		delaunayAreaSpinner = new JSpinner(delaunayAreaModel),
+		extraPointsSpinner = new JSpinner(extraPointsModel),
 		circleResSpinner = new JSpinner(cirleResModel);
+	private Random
+		rnd = new Random();
 	
 	
 	public SchottkyPlugin() {
@@ -88,7 +105,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		viewer.setMinimumSize(viewer.getPreferredSize());
 		shrinkPanel.setLayout(new GridBagLayout());
 		shrinkPanel.add(new JLabel("Max Triangle Area"), c1);
-		shrinkPanel.add(delaunayAreaSpinner, c2);
+		shrinkPanel.add(extraPointsSpinner, c2);
 		shrinkPanel.add(new JLabel("Circle Resolution"), c1);
 		shrinkPanel.add(circleResSpinner, c2);
 		shrinkPanel.add(debugProjectChecker, c2);
@@ -98,8 +115,10 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		shrinkPanel.add(protectorPane, c2);
 		c2.weighty = 0.0;
 		shrinkPanel.add(generateButton, c2);
+		shrinkPanel.add(toFuchsianButton, c2);
 
 		generateButton.addActionListener(this);
+		toFuchsianButton.addActionListener(this);
 		
 		viewer.setScaleToolEnabled(true);
 		viewer.setTranslateToolEnabled(true);
@@ -108,12 +127,87 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	
 	
 	@Override
-	public void actionPerformed(ActionEvent e) {
-		List<SchottkyGenerator> pairs = schottkyModeller.getGenerators();
-		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
-		CoHDS hds = generate(hif.getAdapters(), pairs, lMap);
-		hif.set(hds);
-		hif.addLayerAdapter(new SchottkyLengthAdapter(lMap), false);
+	public void actionPerformed(ActionEvent event) {
+		if (generateButton == event.getSource()) {
+			List<SchottkyGenerator> pairs = schottkyModeller.getGenerators();
+			Complex root = schottkyModeller.getBasePoint();
+			Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
+			Set<Set<CoEdge>> cylces = new HashSet<Set<CoEdge>>();
+			CoHDS hds = generate(pairs, root, lMap, cylces);
+			
+			hif.set(hds);
+			hif.addLayerAdapter(new SchottkyLengthAdapter(lMap), false);
+		}
+		if (toFuchsianButton == event.getSource()) {
+			List<SchottkyGenerator> pairs = schottkyModeller.getGenerators();
+			Complex root = schottkyModeller.getBasePoint();
+			Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
+			Set<Set<CoEdge>> cylces = new HashSet<Set<CoEdge>>();
+			CoHDS hds = generate(pairs, root, lMap, cylces);
+			AdapterSet aSet = hif.getAdapters();
+			aSet.add(new SchottkyLengthAdapter(lMap));
+			
+			int genus = HalfEdgeUtils.getGenus(hds);
+			System.out.println("unwrapping surface of genus " + genus + "...");
+			Unwrapper unwrapper = new HyperbolicUnwrapperPETSc();
+			unwrapper.setGradientTolerance(1E-8);
+			unwrapper.setMaxIterations(200);
+			Vector u = null;
+			try {
+				u = unwrapper.unwrap(hds, aSet);
+			} catch (Exception e1) {
+				JOptionPane.showMessageDialog(shrinkPanel, e1.getMessage(), "Optimizer error", WARNING_MESSAGE);
+				e1.printStackTrace();
+				return;
+			}
+//			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
+			SchottkyWeightAdapter swa = new SchottkyWeightAdapter(cylces);
+			CoVertex cutRoot = hds.getVertex(1);
+			
+			for (Set<CoEdge> cycle : cylces) {
+				CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+				CuttingUtility.cutAlongPath(cycle, cutInfo);
+			}
+			
+			List<List<CoEdge>> bc = HalfEdgeUtils.boundaryComponents(hds);
+			
+			while (bc.size() > 1) {
+				List<Set<CoVertex>> vbc = new LinkedList<Set<CoVertex>>();
+				for (List<CoEdge> b : bc) {
+					vbc.add(PathUtility.getVerticesOnPath(b));
+				}
+				for (CoEdge e : hds.getEdges()) {
+					CoVertex s = e.getStartVertex();
+					CoVertex t = e.getTargetVertex();
+					Set<CoVertex> sSet = null;
+					Set<CoVertex> tSet = null;
+					for (Set<CoVertex> b : vbc) {
+						if (b.contains(s)) {
+							sSet = b;
+						}
+						if (b.contains(t)) {
+							tSet = b;
+						}
+					}
+					if (sSet != null && tSet != null && sSet != tSet) {
+						CuttingUtility.cutAtEdge(e);
+						break;
+					}
+				}				
+				bc = HalfEdgeUtils.boundaryComponents(hds);
+			}
+			
+			
+//			System.out.println("Genus: " + HalfEdgeUtils.getGenus(hds));
+//			
+//			cutManifoldToDisk(hds, cutRoot, swa);
+			CoVertex layoutRoot = hds.getVertex(0);
+			layoutRoot = HyperbolicLayout.doLayout(hds, layoutRoot, u);
+////			
+			
+			hif.addGlobalAdapter(new CoTexturePositionPositionAdapter(Poincaré), false);
+			hif.set(hds);
+		}
 	}
 	
 	private double[] inverseStereographic(Complex Z, double[]... result) {
@@ -222,9 +316,11 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	
 	
 	
-	private CoHDS generate(AdapterSet a, List<SchottkyGenerator> pairs, Map<CoEdge, Double> lMap) {
+	private CoHDS generate(List<SchottkyGenerator> pairs, Complex rootPos, Map<CoEdge, Double> lMap, Set<Set<CoEdge>> cyclesReturn) {
+		AdapterSet a = AdapterSet.createGenericAdapters();
+		a.add(new CoPositionAdapter());
 		int circleRes = cirleResModel.getNumber().intValue();
-//		double ruppertArea = delaunayAreaModel.getNumber().doubleValue();
+		int numExtraPoints = extraPointsModel.getNumber().intValue();
 		
 		CoHDS hds = new CoHDS();
 		Map<CoVertex, CoVertex> sMap = new HashMap<CoVertex, CoVertex>();
@@ -235,30 +331,13 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		Map<CoEdge, SchottkyGenerator> edgePairMap = new HashMap<CoEdge, SchottkyGenerator>();
 		Map<CoEdge, SchottkyGenerator> edgePairInvMap = new HashMap<CoEdge, SchottkyGenerator>();
 		
-		double[][] polygons = new double[pairs.size() * 2][];
-//		//TODO add outer quad
-//		polygons[0] = new double[8];
-//		polygons[0][0] = 10.0;
-//		polygons[0][1] = 10.0;
-//		polygons[0][2] = -10.0;
-//		polygons[0][3] = 10.0;
-//		polygons[0][4] = -10.0;
-//		polygons[0][5] = -10.0;
-//		polygons[0][6] = 10.0;
-//		polygons[0][7] = -10.0;
-		
-		
 		CoVertex root = hds.addNewVertex();
-		a.set(Position.class, root, new double[]{0,0,0});
-		
+		a.set(Position.class, root, new double[]{rootPos.re, rootPos.im, 0});
 		
 		// add the vertices on the source and target circles
-		int polygonIndex = 0; // first polygon is the boundary triangle
 		List<ArrayList<CoVertex>> sourceVertexCircles = new ArrayList<ArrayList<CoVertex>>();
 		List<ArrayList<CoVertex>> targetVertexCircles = new ArrayList<ArrayList<CoVertex>>();
 		for (SchottkyGenerator p : pairs) {
-			polygons[polygonIndex] = new double[circleRes * 2];
-			polygons[polygonIndex + 1] = new double[circleRes * 2];
 			ArrayList<CoVertex> sourceCircle = new ArrayList<CoVertex>();
 			ArrayList<CoVertex> targetCircle = new ArrayList<CoVertex>();
 			sourceVertexCircles.add(sourceCircle);
@@ -282,29 +361,18 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				sInvMap.put(sv, v);
 				vertexPairMap.put(v, p);
 				vertexPairInvMap.put(sv, p);
-				polygons[polygonIndex][i * 2] = z.re;
-				polygons[polygonIndex][i * 2 + 1] = z.im;
-				polygons[polygonIndex + 1][i * 2] = sz.re;
-				polygons[polygonIndex + 1][i * 2 + 1] = sz.im;
 			}
-			polygonIndex += 2;
 		}
 
 		
-//		Ruppert ruppert = new StereographicRuppert(polygons);
-////		ruppert.setAreaConstraint(ruppertArea);
-////		ruppert.setMaximalNumberOfTriangles(100000);
-////		if (debugDoRuppertChecker.isSelected()) {
-////			ruppert.refine();
-////		}
-//		double[] verts = ruppert.getPoints();
-//		
-//		for (int i = 0; i < verts.length; i+=2) {
-//			Complex z = new Complex(verts[i], verts[i+1]);
-//			double[] zPos = new double[] {z.re, z.im, 0};
-//			CoVertex v = hds.addNewVertex();
-//			a.set(Position.class, v, zPos);
-//		}
+		for (int i = 0; i < numExtraPoints; i++) {
+			CoVertex v = hds.addNewVertex();
+			double[] vPos = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
+			Rn.normalize(vPos, vPos);
+			Complex z = stereographic(vPos);
+			a.set(Position.class, v, new double[] {z.re, z.im, 0});
+		}
+		
 		
 		// exclude extra vertices from the circles
 		for (CoVertex v : new HashSet<CoVertex>(hds.getVertices())) {
@@ -434,7 +502,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				CoEdge se = edgeMap.get(e);
 				try {
 					System.out.println("Identify " + e + " " + se);
-					SurgeryUtility.glueAlongBoundaries(e, se);
+					Set<CoEdge> cycle = SurgeryUtility.glueAlongBoundaries(e, se);
+					cyclesReturn.add(cycle);
 				} catch (RuntimeException re) {
 					re.printStackTrace();
 				}

@@ -344,9 +344,14 @@ public class UnwrapUtility {
 	public static int prepareInvariantDataHyperbolic(CoHDS hds, AdapterSet a) {
 		// set initial lambdas
 		for (final CoEdge e : hds.getPositiveEdges()) {
+			try {
 			double l = a.get(Length.class, e, Double.class);
 			e.setLambda(2*log(l));
 			e.getOppositeEdge().setLambda(e.getLambda());
+			} catch (Exception e1) {
+				System.out
+						.println("UnwrapUtility.prepareInvariantDataHyperbolic()");
+			}
 		}
 		
 		// set thetas and solver indices

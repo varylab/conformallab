@@ -6,12 +6,16 @@ import java.util.List;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import de.jtem.java2dx.Point2DDouble;
+import de.jtem.mfc.field.Complex;
 import de.jtem.modelling.ModelContainer;
 
 public class SchottkyModelContainer implements ModelContainer {
 
 	private List<SchottkyGenerator>
 		generators = new LinkedList<SchottkyGenerator>();
+	private Point2DDouble
+		basePoint = new Point2DDouble();
 	private LinkedList<ChangeListener>
 		listeners = new LinkedList<ChangeListener>();
 
@@ -19,16 +23,32 @@ public class SchottkyModelContainer implements ModelContainer {
 		return generators;
 	}
 	
+	public Complex getBasePoint() {
+		return new Complex(basePoint.x, basePoint.y);
+	}
+	
 	@Override
 	public boolean addModel(Object model, String modelType) {
-		generators.add((SchottkyGenerator)model);
+		if (modelType == null) return false;
+		if (modelType.equals("schottky generator")) {
+			generators.add((SchottkyGenerator)model);
+		}
+		if (modelType.equals("schottky base point")) {
+			basePoint = (Point2DDouble)model;
+		}
 		fireStateChanged(this);
 		return true;
 	}
 
 	@Override
 	public void removeModel(Object model, String modelType) {
-		generators.remove(model);
+		if (modelType == null) return;
+		if (modelType.equals("schottky generator")) {
+			generators.remove(model);
+		}
+		if (modelType.equals("schottky base point")) {
+			throw new RuntimeException("Cannot remove base point");
+		}
 		fireStateChanged(this);
 	}
 

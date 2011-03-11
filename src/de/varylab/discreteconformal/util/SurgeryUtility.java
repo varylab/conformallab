@@ -19,7 +19,7 @@ public class SurgeryUtility {
 
 	/**
 	 * Glue surface along boundary components starting with
-	 * edges e1 and e2 
+	 * edges e1 and e2.  
 	 * @param <V>
 	 * @param <E>
 	 * @param <F>
@@ -30,11 +30,12 @@ public class SurgeryUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> void glueAlongBoundaries(E be1, E be2) {
+	> Set<E> glueAlongBoundaries(E be1, E be2) {
 		HalfEdgeDataStructure<V, E, F> hds = be1.getHalfEdgeDataStructure();
 		List<E> b1 = boundaryEdges(be1);
 		List<E> b2 = boundaryEdges(be2);
 		Set<V> vb2 = PathUtility.getVerticesOnPath(b2);
+		Set<E> edgeCycle = new HashSet<E>();
 		if (b1.size() != b2.size()) {
 			throw new RuntimeException("Boundary components have different lengths in glueAlongBoundaries()");
 		}
@@ -56,6 +57,8 @@ public class SurgeryUtility {
 		for (E e : oppMap.keySet()) {
 			E opp = oppMap.get(e);
 			e.linkOppositeEdge(opp);
+			edgeCycle.add(e);
+			edgeCycle.add(opp);
 		}
 		// set targets
 		for (V v : targetMap.keySet()) {
@@ -68,7 +71,7 @@ public class SurgeryUtility {
 		for (E e : b1) hds.removeEdge(e);
 		for (E e : b2) hds.removeEdge(e);
 		for (V v : vb2) hds.removeVertex(v);
-
+		return edgeCycle;
 	} 
 
 	

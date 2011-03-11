@@ -581,7 +581,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				case Minimal:
 					l.addTemporaryGeometry(minimalCoverRoot);
 					break;
-					
 				case Canonical:
 					l.addTemporaryGeometry(canonicalCoverRoot);
 					break;

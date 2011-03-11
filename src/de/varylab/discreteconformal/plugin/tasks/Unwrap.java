@@ -167,9 +167,9 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 				cutRoot = selectedVertices.iterator().next();
 			}
 			cutInfo = cutManifoldToDisk(surface, cutRoot, hypWa);
-			CoVertex layoutRoot = surface.getVertex(getMaxUIndex(u));
+//			CoVertex layoutRoot = surface.getVertex(getMaxUIndex(u));
 			lengthMap = HyperbolicLayout.getLengthMap(surface, u);
-			layoutRoot = HyperbolicLayout.doLayout(surface, layoutRoot, u);
+			layoutRoot = HyperbolicLayout.doLayout(surface, null, u);
 			layoutTime = System.currentTimeMillis();
 			setProgress(100);
 			break;

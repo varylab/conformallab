@@ -14,7 +14,7 @@ import de.jtem.java2dx.modelling.DraggablePoint2D;
 import de.jtem.java2dx.modelling.ModellingTool2D;
 import de.jtem.mfc.field.Complex;
 
-public class SchottkyModellingTool extends ModellingTool2D implements ChangeListener {
+public class SchottkyGeneratorTool extends ModellingTool2D implements ChangeListener {
 
 	private static final long 
 		serialVersionUID = 1L;
@@ -30,17 +30,20 @@ public class SchottkyModellingTool extends ModellingTool2D implements ChangeList
 		rnd = new Random();
 	
 	
-	public SchottkyModellingTool(SchottkyGenerator G) {
+	public SchottkyGeneratorTool(SchottkyGenerator G) {
+		this();
 		this.generator = G;
 	}
 	
-	public SchottkyModellingTool(SchottkyModellingTool tool) {
+	public SchottkyGeneratorTool(SchottkyGeneratorTool tool) {
 		this();
 		SchottkyGenerator G = tool.getModel();
 		generator = new SchottkyGenerator(G);
 	}
 	
-	public SchottkyModellingTool() {
+	public SchottkyGeneratorTool() {
+		setName("Generator");
+		setModelType("schottky generator");
 		SceneComponent view = getViewScene();
 		view.setStroke(new BasicStroke(3));
 //		view.setPaint(new Color(0.3f, 0.6f, 0.0f, 0.5f));
@@ -153,7 +156,7 @@ public class SchottkyModellingTool extends ModellingTool2D implements ChangeList
 
 	@Override
 	public ModellingTool2D clone() {
-		return new SchottkyModellingTool(this);
+		return new SchottkyGeneratorTool(this);
 	}
 	
 

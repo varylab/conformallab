@@ -132,7 +132,12 @@ public class HyperbolicLayout {
 		final Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		final Queue<CoEdge> Qe = new LinkedList<CoEdge>();
 		// start
-		final CoVertex v1 = guessRootVertex(hds, lMap, 200);
+		final CoVertex v1;
+		if (root != null) {
+			v1 = root;
+		} else {
+			v1 = guessRootVertex(hds, lMap, 200);
+		}
 		final CoEdge e1 = v1.getIncomingEdge();
 		final CoEdge e0 = e1.getOppositeEdge();
 		final CoVertex v2 = e0.getTargetVertex();
@@ -176,14 +181,7 @@ public class HyperbolicLayout {
 					double dCheck = lMap.get(next);
 					double[] A = aVertex.T;
 					double[] B = bVertex.T;
-					
-					double[] C = null;
-					try {
-						C = layoutTriangle(A, B, alpha, d, dCheck);
-					} catch (Exception e2) {
-						System.out.print(".");
-						//e2.printStackTrace();
-					}
+					double[] C = layoutTriangle(A, B, alpha, d, dCheck);
 					if (C != null) {
 						cVertex.T = C;
 						visited.add(cVertex);
@@ -194,13 +192,15 @@ public class HyperbolicLayout {
 				e = e.getOppositeEdge().getNextEdge();
 			}
 		}
-		
+		if (visited.size() != hds.numVertices()) {
+			throw new RuntimeException("Skipped vertices during layout.");
+		}
 		return v1;
 	}
 	
 	
 	
-	private static double[] layoutTriangle(double[] A, double[] B, double alpha, double d, double dP) throws Exception {
+	private static double[] layoutTriangle(double[] A, double[] B, double alpha, double d, double dP) {
 		// calculation is in RP2
 		// project to RP2 
 		double[] A3 = {A[0], A[1], A[3]};
