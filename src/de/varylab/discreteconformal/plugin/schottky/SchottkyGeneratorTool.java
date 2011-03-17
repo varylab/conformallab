@@ -74,12 +74,10 @@ public class SchottkyGeneratorTool extends ModellingTool2D implements ChangeList
 
 	@Override
 	public void storeModelState() {
-		System.out.println("SchottkyGenerator.storeModelState()");
 	}
 
 	@Override
 	public void recallModelState() {
-		System.out.println("SchottkyGenerator.recallModelState()");
 	}
 
 	@Override
@@ -95,7 +93,6 @@ public class SchottkyGeneratorTool extends ModellingTool2D implements ChangeList
 		generator.getB().im += y;
 		generator.getCycle().getCenter().re += x;
 		generator.getCycle().getCenter().im += y;
-		System.out.println("SchottkyGenerator.translate(): " + x + ", " + y);
 	}
 
 	@Override
@@ -127,7 +124,6 @@ public class SchottkyGeneratorTool extends ModellingTool2D implements ChangeList
 		sourceCircle.getViewScene().fireAppearanceChange();
 		targetCircle.getViewScene().fireAppearanceChange();
 		getViewScene().fireAppearanceChange();
-		System.out.println("SchottkyModellingTool.updateFromModel()");
 	}
 	
 	protected void updateModelFromController(boolean source) {
@@ -151,7 +147,6 @@ public class SchottkyGeneratorTool extends ModellingTool2D implements ChangeList
 			generator.setCycle(aCircle);
 		}
 		updateFromModel();
-		System.out.println("SchottkyModellingTool.updateModelFromController()");
 	}
 
 	@Override
