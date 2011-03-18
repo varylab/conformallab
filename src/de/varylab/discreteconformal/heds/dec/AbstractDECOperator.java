@@ -11,8 +11,14 @@ package de.varylab.discreteconformal.heds.dec;
  * @param <B>
  */
 @SuppressWarnings("rawtypes")
-public interface DECOperator<A extends AbstractDECObject, B extends AbstractDECObject> {
+public abstract class AbstractDECOperator<A extends AbstractDECObject, B extends AbstractDECObject>
+extends AbstractDECObject<Number>
+{
 
-	public B apply(A obj);
+	public AbstractDECOperator(Type type) {
+		super(type);
+	}
 
+	public abstract B apply(A obj);
+	
 }

@@ -25,7 +25,9 @@ public class DEC <
 	}
 	
 	public Chain<V> make0Chain() {
-		return new Chain<V>(Type.VERTEX);
+		Chain<V> c = new Chain<V>(Type.VERTEX);
+		c.setDimension(hds.numVertices());
+		return c;
 	}
 	
 	public Chain<E> make1Chain() {

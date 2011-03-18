@@ -1,7 +1,7 @@
 package de.varylab.discreteconformal.heds.dec;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import de.jtem.halfedge.HalfEdgeDataStructure;
 
@@ -16,11 +16,11 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
  */
 public abstract class AbstractDECObject<W extends Number> {
 
-	// the half edge data structure the objects operates on
+	// the half edge data structure the objects operate on
 	protected HalfEdgeDataStructure<?, ?, ?> hds;
-	protected List<W> weights = new ArrayList<W>();
+	protected Map<Integer, W> weights = new HashMap<Integer, W>();
 
-	// the type says where the chain lives on
+	// the type says where the object lives on
 	public static enum Type {
 		VERTEX, EDGE, FACE
 	};
@@ -83,16 +83,14 @@ public abstract class AbstractDECObject<W extends Number> {
 	 * @param weight
 	 */
 	public void setWeight(int index, W weight) {
-		this.weights.set(index, weight);
+		this.weights.put(index, weight);
 	}
 
 	/**
 	 * Returns an array of all weights.
-	 * 
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public W[] getWeights() {
-		return (W[]) weights.toArray();
+	public Map<Integer, W> getWeights() {
+		return weights;
 	}
 }
