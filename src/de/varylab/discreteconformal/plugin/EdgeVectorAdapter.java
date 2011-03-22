@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.plugin;
 
+import java.util.List;
 import java.util.Set;
 
 import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
@@ -13,14 +14,14 @@ import de.varylab.discreteconformal.heds.CoVertex;
 @VectorField
 public class EdgeVectorAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
 
-	private Set<CoEdge>
+	private List<CoEdge>
 		selectedEdged = null;
 	private String
 		name = "Edge Vectors";
 	
-	public EdgeVectorAdapter(Set<CoEdge> selEdges, String name) {
+	public EdgeVectorAdapter(List<CoEdge> path, String name) {
 		super(null, CoEdge.class, null, double[].class, true, false);
-		this.selectedEdged = selEdges;
+		this.selectedEdged = path;
 		this.name = name;
 	}
 	

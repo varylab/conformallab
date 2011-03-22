@@ -219,7 +219,7 @@ public class DiscreteRiemannUtility {
 	 * @param wa
 	 * @return
 	 */
-	private static <
+	public static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
@@ -243,18 +243,18 @@ public class DiscreteRiemannUtility {
 
 		DoubleMatrix2D S = DoubleFactory2D.sparse.make(dimension, dimension);
 
+		for (int i = 0; i < dimension; i++) {
+			for (int j = i + 1; j < dimension; j++) {
+				int s = getIntersectionNumber(homologyBasis.get(i),
+						homologyBasis.get(j));
+				if (s != 0) {
+					S.set(i, j, s);
+					S.set(j, i, -s);
+				}
+			}
+		}
+
 		// // TEST: show intersection number for initial basis
-		// 
-		// for (int i = 0; i < dimension; i++) {
-		// for (int j = i+1; j < dimension; j++) {
-		// int s = getIntersectionNumber(homologyBasis.get(i),
-		// homologyBasis.get(j));
-		// if (s != 0){
-		// S.set(i, j, s);
-		// S.set(j, i, -s);
-		// }
-		// }
-		// }
 		// print(S, 0);
 		
 		// number of positive edges
@@ -262,7 +262,7 @@ public class DiscreteRiemannUtility {
 		int posEdgeId; double currval;
 		
 		// create a matrix to store the basis vectors
-		DoubleMatrix2D Basis= DoubleFactory2D.dense.make(numOfPosEdges,dimension);
+		DoubleMatrix2D Basis= DoubleFactory2D.sparse.make(numOfPosEdges,dimension);
 		
 		// for each path
 		for (int d= 0 ; d<dimension; d++) {
@@ -593,8 +593,6 @@ public class DiscreteRiemannUtility {
 		int g = a.rows();
 
 		// get a-period-matrix of the harmonic differentials DH
-		// TODO: check whether dalgbra is too slow and we should better use
-		// smpdoubleblas
 		DoubleMatrix2D aPeriods = dalgebra.mult(a, DH);
 		DoubleMatrix2D dualAPeriods = dalgebra.mult(dualA, dualDH);
 
@@ -614,134 +612,64 @@ public class DiscreteRiemannUtility {
 		return M;
 	}
 
-	// private static <
-	// V extends Vertex<V, E, F>,
-	// E extends Edge<V, E, F>,
-	// F extends Face<V, E, F>
-	// > DoubleMatrix2D getCoefficientMatrix(
-	// double[][] dh, double[][] dhStar,
-	// List<List<E>> aCycles, List<List<E>> dualACycles,
-	// AdapterSet adapters){
-	//
-	// // The genus equals the number of a-cycles
-	// int g= aCycles.size();
-	//
-	// // The matrix has to have the format 2g*2g. TODO: Check whether the
-	// // matrix should better be defined dense.
-	// DoubleMatrix2D M= DoubleFactory2D.sparse.make(2*g, 2*g);
-	//
-	// // for each cycle and each differential
-	// for (int i = 0; i < g; i++) {
-	// for (int j = 0; j < 2 * g; j++) {
-	// // fill the upper g rows with a-periods of the primal mesh
-	// M.set(i, j, integrateFormOverCycle(dh[j], aCycles.get(i),
-	// adapters));
-	// // and the lower g rows with the a-periods of the dual mesh
-	// M.set(i + g, j, integrateFormOverCycle(dhStar[j], dualACycles
-	// .get(i), adapters));
-	// }
-	// }
-	//
-	// return M;
-	// }
-	
-
-	// /**
-	// * Returns the integral of the differential over the given cycle.
-	// *
-	// * @param <V>
-	// * @param <E>
-	// * @param <F>
-	// * @param form
-	// * @param cycle
-	// * @param adapters
-	// * @return
-	// */
-	// private static <
-	// V extends Vertex<V, E, F>,
-	// E extends Edge<V, E, F>,
-	// F extends Face<V, E, F>
-	// > double integrateFormOverCycle(
-	// double[] form,
-	// List<E> cycle,
-	// AdapterSet adapters){
-	// // init with zero
-	// double integral = 0;
-	// int id;
-	// // for each edge of the cycle
-	// for (E e : cycle) {
-	// // get global index
-	// id = adapters.get(EdgeIndex.class, e, Integer.class);
-	// if (e.isPositive()) // if the edge is positive add
-	// integral += form[id];
-	// else
-	// // if negative subtract the value of the form on the edge
-	// integral -= form[id];
-	// }
-	// return integral;
-	// }
-
 	/**
-	 * Returns g cycles of the homology basis representing the a cycles. TODO:
-	 * Needs a canonical basis? It's not clear whether this really works in
-	 * general. Why there shall be always g such cycles for an arbitrary basis.
-	 * Would be good to visualize the returned cycles on the surface.
+	 * Gets canonical homology basis and returns g cycles of the homology basis
+	 * representing the a cycles, i.e. the first g cycles.
 	 * 
 	 * @param <V>
 	 * @param <E>
 	 * @param <F>
 	 * @param hds
-	 * @param homologyBasis
+	 * @param canonicalHomologyBasis
 	 * @return
 	 */
 	private static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> List<List<E>> getACycles(HalfEdgeDataStructure<V,E,F> hds, List<List<E>> homologyBasis){
+	> List<List<E>> getACycles(List<List<E>> canonicalHomologyBasis){
 		
 		// the genus has to be one at least
-		if (homologyBasis.size() < 1)
+		if (canonicalHomologyBasis.size() < 1)
 			return null;
 
-		// a basis contains 2g cycles
-		int g = homologyBasis.size() / 2;
-
 		// g non-intersecting cycles shall be labeled as a-cycles
-		List<List<E>> aCycles = new Vector<List<E>>(g);
-		aCycles.add(homologyBasis.get(0));
-
-		// try to find g cycles, which does not intersect
-		for (int i = 1; i < g; i++) {
-			// try to find a new cycle with intersection number 0
-			for (List<E> c : homologyBasis) {
-				// if the cycle is already in the list, ignore it
-				if (aCycles.contains(c))
-					continue;
-				// say c is non-intersecting
-				boolean nonintersecting = true;
-				// check the intersection number with each cycle already
-				// collected
-				for (List<E> a : aCycles) {
-					// if the intersection number is not equal to zero, c is
-					// intersecting and has to be left out
-					if (getIntersectionNumber(c, a) != 0) {
-						nonintersecting = false;
-						break;
-					}
-				}
-				// if c is not intersecting any of the already collected cycles
-				// add it to the list
-				if (nonintersecting) {
-					aCycles.add(c);
-					break;
-				}
-			}
+		List<List<E>> aCycles = new Vector<List<E>>();
+		
+		for (int i= 0; i< canonicalHomologyBasis.size()/2; i++) {
+			aCycles.set(i, canonicalHomologyBasis.get(i));
 		}
 
-		if (aCycles.size() != g)
-			throw new RuntimeException(
-					"Couldn't find g non-intersecting cycles.");
+		return aCycles;
+	}
+	
+	/**
+	 * Gets canonical homology basis and returns g cycles of the homology basis
+	 * representing the a cycles, i.e. the second g cycles.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param hds
+	 * @param canonicalHomologyBasis
+	 * @return
+	 */
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> List<List<E>> getBCycles(List<List<E>> canonicalHomologyBasis){
+		
+		// the genus has to be one at least
+		if (canonicalHomologyBasis.size() < 1)
+			return null;
+
+		// g non-intersecting cycles shall be labeled as a-cycles
+		List<List<E>> aCycles = new Vector<List<E>>();
+		
+		for (int i= 0; i< canonicalHomologyBasis.size()/2; i++) {
+			aCycles.set(i, canonicalHomologyBasis.get(i));
+		}
 
 		return aCycles;
 	}
@@ -924,7 +852,7 @@ public class DiscreteRiemannUtility {
 	 * @param <E>
 	 * @param <F>
 	 * @param delaunay
-	 * @param homologyBasis
+	 * @param canonicalHomologyBasis
 	 * @param adapters
 	 * @param la
 	 * @param wa
@@ -936,7 +864,7 @@ public class DiscreteRiemannUtility {
 		F extends Face<V, E, F>
 	> Complex[][] getHolomorphicForms(
 		HalfEdgeDataStructure<V, E, F> delaunay,
-		List<List<E>> homologyBasis,
+		List<List<E>> canonicalHomologyBasis,
 		AdapterSet adapters,
 		MappedLengthAdapter la,
 		WeightAdapter<E> wa){
@@ -945,18 +873,17 @@ public class DiscreteRiemannUtility {
 		int numPosEdges = delaunay.numEdges() / 2;
 		
 		// g is simply the genus of the surface
-		int g = homologyBasis.size() / 2;
+		int g = canonicalHomologyBasis.size() / 2;
 
 		// Get the harmonic differentials on the surface and its dual. The
 		// format of the matrices is 2g*numEdges
-		double[][] dh = getHarmonicForms(delaunay, homologyBasis, adapters, la,
+		double[][] dh = getHarmonicForms(delaunay, canonicalHomologyBasis, adapters, la,
 				wa);
 		double[][] dhStar = getDualForms(delaunay, adapters, dh);
 
 		// We want to have matrices each column of which corresponds to one
 		// harmonic differential. So we can build linear combinations of the
-		// harmonic differentials simply by matrix multiplication. TODO: Check,
-		// whether, transpose is perhaps too expensive?
+		// harmonic differentials simply by matrix multiplication.
 		DoubleMatrix2D DH = dalgebra.transpose(DoubleFactory2D.dense
 				.make(dh));
 		DoubleMatrix2D dualDH = dalgebra
@@ -964,7 +891,7 @@ public class DiscreteRiemannUtility {
 
 		// to normalize the differentials we need the a-periods and its dual
 		// cycles
-		List<List<E>> acycles = getACycles(delaunay, homologyBasis);
+		List<List<E>> acycles = getACycles(canonicalHomologyBasis);
 		List<List<E>> dualACycles = getDualPaths(delaunay, acycles);
 
 		// initialize two matrices to encode the cycles

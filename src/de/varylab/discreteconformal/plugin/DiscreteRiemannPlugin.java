@@ -85,7 +85,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		public double[] getEdgeValue(CoEdge e, AdapterSet a) {
 			int index = a.get(EdgeIndex.class, e, Integer.class);
 			double val = Math.abs(dh[index]);
-			return new double[] {val, 0, 0};
+			return new double[] {100*val, 0, 0};
 		};
 		
 		@Override
@@ -121,8 +121,8 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 			hif.addLayerAdapter(new HarmonicDifferentialAdapter(dh), false);
 		}
 		CoVertex root = S.getVertex(0);
-		List<Set<CoEdge>> paths = HomologyUtility.getGeneratorPaths(root, wa);
-		for (Set<CoEdge> path : paths) {
+		List<List<CoEdge>> paths = DiscreteRiemannUtility.getCanonicalHomologyBasis(root, a, wa);
+		for (List<CoEdge> path : paths) {
 			EdgeVectorAdapter eva = new EdgeVectorAdapter(path, "Homology Path " + path.size());
 			hif.addLayerAdapter(eva, false);
 		}
