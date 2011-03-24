@@ -18,8 +18,11 @@ import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.algo.solver.DefaultDoubleIterationMonitor;
+import cern.colt.matrix.tdouble.algo.solver.DoubleBiCG;
 import cern.colt.matrix.tdouble.algo.solver.DoubleBiCGstab;
+import cern.colt.matrix.tdouble.algo.solver.DoubleCGLS;
 import cern.colt.matrix.tdouble.algo.solver.DoubleIterationReporter;
+import cern.colt.matrix.tdouble.algo.solver.DoubleIterativeSolver;
 import cern.colt.matrix.tdouble.algo.solver.IterativeSolverDoubleNotConvergedException;
 import cern.colt.matrix.tdouble.impl.SparseDoubleMatrix2D;
 
@@ -43,6 +46,9 @@ import de.varylab.discreteconformal.util.Search.WeightAdapter;
 /**
  * Class to calculate harmonic differentials corresponding to a cycle of the
  * homology basis and holomorphic differentials in the sense of mercat.
+ * 
+ * By convention all the forms are saved as rows and all the cycles as columns.
+ * (For private methods we always use colt matrices.)
  * 
  * @author knoeppel
  * 
@@ -100,20 +106,20 @@ public class DiscreteRiemannUtility {
 		public void monitor(double arg0, DoubleMatrix1D arg1, int arg2) {
 			monitor(arg0, arg2);
 		}
-		
+
 		@Override
 		public void monitor(double arg0, int arg1) {
-			System.err.println("iteration = "+arg1+", value = "+arg0);
+			 System.err.println("iteration = "+arg1+", value = "+arg0);
 		}
 	};
 	
 	private static DenseDoubleAlgebra dalgebra = new DenseDoubleAlgebra();
-	private static double eps = 1E-10;
+	private static double eps = 1E-5;
 	
 	/**
 	 * Calculates 2*g harmonic differentials on hds. The weight Adapter is used
 	 * to find a basis of the homology that are short with respect to the weight
-	 * given by wa.
+	 * given by wa. The forms are stored in the rows.
 	 * 
 	 * @param <V>
 	 * @param <E>
@@ -139,8 +145,12 @@ public class DiscreteRiemannUtility {
 		V rootV = hds.getVertex(0);
 		List<List<E>> basis = getCanonicalHomologyBasis(rootV,adapters, wa);
 		
+		DoubleMatrix2D dh= getHarmonicForms(hds, basis, adapters, la, wa);
+		
+		print(dalgebra.mult(dh, cyclesToMatrix(adapters, hds,basis)), 4);
+		
 		// use the private method
-		return getHarmonicForms(hds, basis, adapters, la, wa);
+		return dh.toArray();
 	}
 
 	/**
@@ -172,9 +182,19 @@ public class DiscreteRiemannUtility {
 		// Get the homology basis of the surface.
 		V rootV = hds.getVertex(0);
 		List<List<E>> basis = getCanonicalHomologyBasis(rootV,adapters, wa);
+		
+		DoubleMatrix2D[] omega= getHolomorphicForms(hds, basis, adapters, la, wa);
 
+		int m= omega[0].rows(); int n= omega[0].columns();
+		Complex[][] array= new Complex[m][n];
+		for (int i = 0; i < m; i++) {
+			for (int j = 0; j < n; j++) {
+				array[i][j]= new Complex(omega[0].get(i, j),omega[1].get(i, j)); 
+			}
+		}
+		
 		// use the private method
-		return getHolomorphicForms(hds, basis, adapters, la, wa);
+		return array; 
 	}
 	
 	/**
@@ -211,7 +231,7 @@ public class DiscreteRiemannUtility {
 	}
 
 	/**
-	 * Calculates a canonical homology basis.
+	 * Calculates a canonical homology basis {a_1,...,a_g,b_1,...,b_g}.
 	 * @param <V>
 	 * @param <E>
 	 * @param <F>
@@ -254,31 +274,9 @@ public class DiscreteRiemannUtility {
 			}
 		}
 
-		// // TEST: show intersection number for initial basis
 		// print(S, 0);
-		
-		// number of positive edges
-		int numOfPosEdges= root.getHalfEdgeDataStructure().numEdges()/2;
-		int posEdgeId; double currval;
-		
-		// create a matrix to store the basis vectors
-		DoubleMatrix2D Basis= DoubleFactory2D.sparse.make(numOfPosEdges,dimension);
-		
-		// for each path
-		for (int d= 0 ; d<dimension; d++) {
-			for (E e : homologyBasis.get(d)) {
-				posEdgeId = adapters.get(EdgeIndex.class, e, Integer.class);
-				// get current value
-				currval = Basis.get(posEdgeId,d);
-				// add + or -1
-				if (e.isPositive())
-					currval++;
-				else
-					currval--;
-				// set weight
-				Basis.set(posEdgeId,d, currval);
-			}
-		}
+		 
+		DoubleMatrix2D Basis= cyclesToMatrix(adapters, root.getHalfEdgeDataStructure(), homologyBasis);
 		
 		// get coordinates of a canonical basis
 		DoubleMatrix2D coords = canonicalBasisCoords(new BilinearForm(S));
@@ -288,46 +286,28 @@ public class DiscreteRiemannUtility {
 		// calculate basis vectors
 		DoubleMatrix2D BPrime = dalgebra.mult(Basis, coords);
 
-		// initialize empty list of cycles
-		List<List<E>> newHomologyBasis = new Vector<List<E>>(dimension);
-		for (int i = 0; i < dimension; i++) {
-			newHomologyBasis.add(new Vector<E>());
-		}
+		// convert to list representation
+		List<List<E>> newHomologyBasis = matrixToCycles(adapters, root.getHalfEdgeDataStructure(), BPrime);
 
-		// iterate over positive edges to build up the new cycles
-		for (E e : root.getHalfEdgeDataStructure().getPositiveEdges()) {
-			// get positive edge index
-			posEdgeId = adapters.get(EdgeIndex.class, e, Integer.class);
-			// add edge with this index to the cycles
-			for (int i = 0; i < dimension; i++) {
-				currval = BPrime.get(posEdgeId, i);
-				// add the positive edge if the weight is positive else the
-				// opposite edge
-				E currEdge = (currval > 0) ? e : e.getOppositeEdge();
-				// as many times as the weight says
-				for (int count = 0; count < Math.abs(currval); count++)
-					newHomologyBasis.get(i).add(currEdge);
-			}
-		}
-
-		// TEST: show intersection number for canonical basis
-		System.out
-				.println("Intersection matrix for canonical homology basis:");
-		S = DoubleFactory2D.sparse.make(dimension, dimension);
-		for (int i = 0; i < dimension; i++) {
-			for (int j = i + 1; j < dimension; j++) {
-				int s = getIntersectionNumber(newHomologyBasis.get(i),
-						newHomologyBasis.get(j));
-				if (s != 0) {
-					S.set(i, j, s);
-					S.set(j, i, -s);
-				}
-			}
-		}
-
-		print(S, 0);
+		// // TEST: show intersection number for canonical basis
+		// System.out
+		// .println("Intersection matrix for canonical homology basis:");
+		// S = DoubleFactory2D.sparse.make(dimension, dimension);
+		// for (int i = 0; i < dimension; i++) {
+		// for (int j = i + 1; j < dimension; j++) {
+		// int s = getIntersectionNumber(newHomologyBasis.get(i),
+		// newHomologyBasis.get(j));
+		// if (s != 0) {
+		// S.set(i, j, s);
+		// S.set(j, i, -s);
+		// }
+		// }
+		// }
+		//
+		// print(S, 0);
 		
 		return newHomologyBasis;
+		
 	}
 	
 	/**
@@ -360,6 +340,7 @@ public class DiscreteRiemannUtility {
 			// get the smallest projection != 0
 			Integer I = todo.pop();
 			Integer J = getIndexOfSmallest(B, coords, I);
+			
 			if (J == -1)
 				break;
 
@@ -386,37 +367,16 @@ public class DiscreteRiemannUtility {
 									coords.viewColumn(k)));
 				}
 			}
-
-			// // Show step result
-			// System.out.println("Transformation:");
-			// print(T, 2);
-			// System.out.println();
-			// System.out.println("Coords:");
-
 			coords = dalgebra.mult(coords, T);
 
-			// print(coords, 2);
-
-//			DoubleMatrix2D A = DoubleFactory2D.dense.make(dimension, dimension);
-//			for (int k = 0; k < dimension; k++) {
-//				for (int l = 0; l < dimension; l++) {
-//					A.set(k,
-//							l,
-//							B.brackets(coords.viewColumn(k),
-//									coords.viewColumn(l)));
-//				}
-//			}
-
-			// System.out.println();
-			// System.out.println("A=");
-			// print(A, 2);
-			//
-			// System.out.println();
+			// System.err.println("new coords = ");
+			// print(coords, 0);
+			// System.err.println();
 		}
-
-		DoubleMatrix2D S= DoubleFactory2D.sparse.make(dimension,dimension);
+		
 		DoubleMatrix2D finalCoords= DoubleFactory2D.dense.make(dimension,dimension);
 		
+		DoubleMatrix2D S= DoubleFactory2D.sparse.make(dimension,dimension);
 		for (int k = 0; k < dimension; k++) {
 			for (int l = k + 1; l < dimension; l++) {
 				double val = B.brackets(coords.viewColumn(k),
@@ -425,6 +385,10 @@ public class DiscreteRiemannUtility {
 				S.set(l, k, -val);
 			}
 		}
+		
+
+		// System.err.println("intersection matrix (not ordered)");
+		//		print(S, 0);
 		
 		IntArrayList rows= new IntArrayList();
 		IntArrayList cols= new IntArrayList();
@@ -438,18 +402,20 @@ public class DiscreteRiemannUtility {
 			}
 		}
 		
-		// DoubleMatrix2D A = DoubleFactory2D.dense.make(dimension, dimension);
+
+		// S= DoubleFactory2D.sparse.make(dimension,dimension);
 		// for (int k = 0; k < dimension; k++) {
-		// for (int l = 0; l < dimension; l++) {
-		// A.set(k,
-		// l,
-		// B.brackets(finalCoords.viewColumn(k),
-		// finalCoords.viewColumn(l)));
+		// for (int l = k + 1; l < dimension; l++) {
+		// double val = B.brackets(finalCoords.viewColumn(k),
+		// finalCoords.viewColumn(l));
+		// S.set(k, l, val);
+		// S.set(l, k, -val);
 		// }
 		// }
 		//
-		// print(A,2);
-		
+		// System.err.println("intersection matrix = ");
+		// print(S,0);
+	
 		return finalCoords;
 	}
 	
@@ -509,6 +475,39 @@ public class DiscreteRiemannUtility {
 	
 	
 	/**
+	 * Print method for colt vector
+	 * @param V
+	 * @param noOfFractionDigits
+	 */
+	private static void print(DoubleMatrix1D V, int noOfFractionDigits) {
+
+		NumberFormat numberFormat = NumberFormat.getInstance(Locale.ENGLISH);
+
+		numberFormat.setMinimumFractionDigits(noOfFractionDigits);
+		numberFormat.setMaximumFractionDigits(noOfFractionDigits);
+		String tmp;
+
+		System.out.print("| ");
+		for (int i = 0; i < V.size(); i++) {
+			if (V.get(i) == 0)
+				tmp = " " + numberFormat.format(0.);
+			else {
+				tmp = V.get(i) >= 0 ? "+" : "";
+				tmp += numberFormat.format(V.get(i));
+			}
+			System.out.print(tmp);
+			if (i < V.size() - 1) {
+				System.out.print(" , ");
+			} else {
+				System.out.println(" |");
+			}
+		}
+
+		System.out.println();
+	}
+	
+	
+	/**
 	 * Returns paths in the dual surface which are homotopic to the given
 	 * ones.
 	 * 
@@ -534,7 +533,7 @@ public class DiscreteRiemannUtility {
 	
 	/**
 	 * Returns a path in the dual surface which is homotopic to the given one.
-	 * Set	
+	 * 	
 	 * @param <V>
 	 * @param <E>
 	 * @param <F>
@@ -571,8 +570,8 @@ public class DiscreteRiemannUtility {
 	 * differentials. The matrix has format 2g*2g. There are 2g harmonic
 	 * differentials dH_j= dh_j+i*(star)dh_j. The first g rows are filled with
 	 * its a-periods, the second g rows with its values on the a-cycles of dual
-	 * surface. That means in the upper g rows of Ax stands the real part and
-	 * in the lower the imaginary part of the a-periods of the holomorphic
+	 * surface. That means in the upper g rows of Ax stands the real part and in
+	 * the lower the imaginary part of the a-periods of the holomorphic
 	 * differential omega=sum(x_j*dH_j).
 	 * 
 	 * @param <V>
@@ -585,36 +584,40 @@ public class DiscreteRiemannUtility {
 	 * @param adapters
 	 * @return
 	 */
-	private static DoubleMatrix2D getCoefficientMatrix(
+	private static DoubleMatrix2D getHarmonicPeriodsMatrix(
 			DoubleMatrix2D DH, DoubleMatrix2D dualDH, DoubleMatrix2D a,
 			DoubleMatrix2D dualA) {
 
-		// The genus equals the number of a-cycles equals the number of rows of a
-		int g = a.rows();
+		// TODO: CHECK THE METHOD
+		
+		// The genus equals the number of a-cycles equals the number of columns of a
+		int g = a.columns();
 
 		// get a-period-matrix of the harmonic differentials DH
-		DoubleMatrix2D aPeriods = dalgebra.mult(a, DH);
-		DoubleMatrix2D dualAPeriods = dalgebra.mult(dualA, dualDH);
+		DoubleMatrix2D aPeriods = dalgebra.mult(DH,a);
+		DoubleMatrix2D dualAPeriods = dalgebra.mult(dualDH,dualA);
 
 		// The matrix has to have the format 2g*2g. 
-		DoubleMatrix2D M = DoubleFactory2D.dense.make(2 * g, 2 * g);
+		DoubleMatrix2D M = DoubleFactory2D.sparse.make(2 * g, 2 * g);
 
 		// for each cycle and each differential
 		for (int i = 0; i < g; i++) {
 			for (int j = 0; j < 2 * g; j++) {
 				// fill the upper g rows with a-periods of the primal mesh
-				M.set(i, j, aPeriods.get(i, j));
+				M.set(i, j, aPeriods.get(j, i));
 				// and the lower g rows with the a-periods of the dual mesh
-				M.set(i + g, j, dualAPeriods.get(i, j));
+				M.set(i + g, j, dualAPeriods.get(j, i));
 			}
 		}
 
+		print(M, 4);
+		
 		return M;
 	}
 
 	/**
 	 * Gets canonical homology basis and returns g cycles of the homology basis
-	 * representing the a cycles, i.e. the first g cycles.
+	 * representing the a-cycles, i.e. the first g cycles.
 	 * 
 	 * @param <V>
 	 * @param <E>
@@ -637,7 +640,7 @@ public class DiscreteRiemannUtility {
 		List<List<E>> aCycles = new Vector<List<E>>();
 		
 		for (int i= 0; i< canonicalHomologyBasis.size()/2; i++) {
-			aCycles.set(i, canonicalHomologyBasis.get(i));
+			aCycles.add(i, canonicalHomologyBasis.get(i));
 		}
 
 		return aCycles;
@@ -645,7 +648,7 @@ public class DiscreteRiemannUtility {
 	
 	/**
 	 * Gets canonical homology basis and returns g cycles of the homology basis
-	 * representing the a cycles, i.e. the second g cycles.
+	 * representing the b-cycles, i.e. the second g cycles.
 	 * 
 	 * @param <V>
 	 * @param <E>
@@ -665,13 +668,13 @@ public class DiscreteRiemannUtility {
 			return null;
 
 		// g non-intersecting cycles shall be labeled as a-cycles
-		List<List<E>> aCycles = new Vector<List<E>>();
+		List<List<E>> bCycles = new Vector<List<E>>();
 		
 		for (int i= 0; i< canonicalHomologyBasis.size()/2; i++) {
-			aCycles.set(i, canonicalHomologyBasis.get(i));
+			bCycles.add(i, canonicalHomologyBasis.get(i+canonicalHomologyBasis.size()/2));
 		}
 
-		return aCycles;
+		return bCycles;
 	}
 	
 	/**
@@ -727,7 +730,7 @@ public class DiscreteRiemannUtility {
 	
 	/**
 	 * Applies the Hodge star operator to an array of forms on the surface and
-	 * returns the result.
+	 * returns the result (forms are stored as rows).
 	 * 
 	 * @param <V>
 	 * @param <E>
@@ -737,19 +740,22 @@ public class DiscreteRiemannUtility {
 	 * @param forms
 	 * @return
 	 */
-	public static <
+	private static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> double[][] getDualForms(
+	> DoubleMatrix2D getDualForms(
 		HalfEdgeDataStructure<V, E, F> delaunay,
 		AdapterSet adapters,
-		double[][] forms){
+		DoubleMatrix2D forms){
 		
-		
-		double[][] formsStar = new double[forms.length][];
-		for (int i = 0; i < formsStar.length; i++) {
-			formsStar[i] = getDualForm(delaunay, adapters, forms[i]);
+		DoubleMatrix2D formsStar = DoubleFactory2D.dense.make(forms.rows(), forms.columns());
+		DoubleMatrix1D row;
+		for (int i = 0; i < formsStar.rows(); i++) {
+			row= getDualForm(delaunay, adapters, forms.viewRow(i));
+			for (int j = 0; j < forms.columns(); j++) {
+				formsStar.set(i, j, row.get(j));	
+			}
 		}
 		
 		return formsStar;
@@ -767,16 +773,16 @@ public class DiscreteRiemannUtility {
 	 * @param form
 	 * @return
 	 */
-	public static <
+	private static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> double[] getDualForm(
+	> DoubleMatrix1D getDualForm(
 		HalfEdgeDataStructure<V, E, F> delaunay,
 		AdapterSet adapters,
-		double[] form){
+		DoubleMatrix1D form){
 		
-		double[] formStar = new double[form.length];
+		DoubleMatrix1D formStar = DoubleFactory1D.dense.make((int)form.size());
 
 		// for the construction of the dual forms the cotan weights are needed
 		CotanAdapter ca = new CotanAdapter();
@@ -788,7 +794,7 @@ public class DiscreteRiemannUtility {
 		for (E e : delaunay.getPositiveEdges()) {
 			ratio = getCotanWeight(e, adapters);
 			id = adapters.get(EdgeIndex.class, e, Integer.class);
-			formStar[id] = ratio * form[id];
+			formStar.set(id, ratio * form.get(id));
 		}
 
 		adapters.remove(ca);
@@ -817,7 +823,7 @@ public class DiscreteRiemannUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> double[][] getHarmonicForms(
+	> DoubleMatrix2D getHarmonicForms(
 		HalfEdgeDataStructure<V, E, F> delaunay, 
 		List<List<E>> homologyBasis,
 		AdapterSet adapters, MappedLengthAdapter la,
@@ -827,26 +833,32 @@ public class DiscreteRiemannUtility {
 		// For each cycle in the basis we get a corresponding harmonic
 		// differential (closed but not exact, its integral differs by one on
 		// the cycle).
-		double[][] dh = new double[homologyBasis.size()][];
+		DoubleMatrix2D dh = DoubleFactory2D.sparse.make(homologyBasis.size(),
+				delaunay.numEdges() / 2);
 
 		// For each cycle construct the corresponding harmonic differential.
 		adapters.add(la); // delaunay lengths
+		
+		DoubleMatrix1D form;
 		for (int i = 0; i < homologyBasis.size(); i++) {
-			dh[i] = getStandardHarmonicForm(delaunay, adapters,
+			form= getStandardHarmonicForm(delaunay, adapters,
 					homologyBasis.get(i));
+			for (int j = 0; j < form.size(); j++) {
+				if (form.get(j) != 0)
+					dh.set(i, j, form.get(j));
+			}
 		}
 		adapters.remove(la);
 		
 		return dh;
 	}
-	
+
 	/**
 	 * Returns a basis of holomorphic differentials on the surface, which is
-	 * normalized with respect to the given homology basis. The surface has to
-	 * be Delaunay triangulated. The forms are saved as rows. The real part of
-	 * the value in the i-th row corresponds to the value of the differential on
-	 * the positive oriented edge with edgeIndex i, the imaginary part to the
-	 * value of its dual edge.
+	 * normalized with respect to the given homology basis (canonical).
+	 * The forms are returned as a two-array of matrices, the first entry of
+	 * which belongs to the real and the second to the imaginary part. The
+	 * surface has to be Delaunay triangulated. The forms are stored as rows.
 	 * 
 	 * @param <V>
 	 * @param <E>
@@ -862,7 +874,7 @@ public class DiscreteRiemannUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> Complex[][] getHolomorphicForms(
+	> DoubleMatrix2D[] getHolomorphicForms(
 		HalfEdgeDataStructure<V, E, F> delaunay,
 		List<List<E>> canonicalHomologyBasis,
 		AdapterSet adapters,
@@ -877,67 +889,31 @@ public class DiscreteRiemannUtility {
 
 		// Get the harmonic differentials on the surface and its dual. The
 		// format of the matrices is 2g*numEdges
-		double[][] dh = getHarmonicForms(delaunay, canonicalHomologyBasis, adapters, la,
+		DoubleMatrix2D dh = getHarmonicForms(delaunay, canonicalHomologyBasis, adapters, la,
 				wa);
-		double[][] dhStar = getDualForms(delaunay, adapters, dh);
-
-		// We want to have matrices each column of which corresponds to one
-		// harmonic differential. So we can build linear combinations of the
-		// harmonic differentials simply by matrix multiplication.
-		DoubleMatrix2D DH = dalgebra.transpose(DoubleFactory2D.dense
-				.make(dh));
-		DoubleMatrix2D dualDH = dalgebra
-				.transpose(DoubleFactory2D.dense.make(dhStar));
+		DoubleMatrix2D dhStar = getDualForms(delaunay, adapters, dh);
 
 		// to normalize the differentials we need the a-periods and its dual
 		// cycles
 		List<List<E>> acycles = getACycles(canonicalHomologyBasis);
-		List<List<E>> dualACycles = getDualPaths(delaunay, acycles);
+		List<List<E>> dualacycles = getDualPaths(delaunay, acycles);
 
-		// initialize two matrices to encode the cycles
-		DoubleMatrix2D A = new SparseDoubleMatrix2D(g, numPosEdges);
-		DoubleMatrix2D dualA = new SparseDoubleMatrix2D(g, numPosEdges);
-
-		// needed to fill the matrices
-		int currEdgeId;
-		double currval;
-
-		// fill the matrix of a-cycles
-		for (int i = 0; i < acycles.size(); i++) {
-			for (E e : acycles.get(i)) {
-				currEdgeId = adapters.get(EdgeIndex.class, e, Integer.class);
-				currval = A.get(i, currEdgeId);
-				if (e.isPositive()) {
-					A.set(i, currEdgeId, currval + 1);
-				} else {
-					A.set(i, currEdgeId, currval - 1);
-				}
-			}
-		}
+		// write cycles to matrices
+		DoubleMatrix2D A = cyclesToMatrix(adapters, delaunay, acycles);
+		DoubleMatrix2D dualA = cyclesToMatrix(adapters, delaunay, dualacycles);
 		
-		// fill the matrix of dual a-cycles
-		for (int i = 0; i < dualACycles.size(); i++) {
-			for (E e : dualACycles.get(i)) {
-				currEdgeId = adapters.get(EdgeIndex.class, e, Integer.class);
-				currval = A.get(i, currEdgeId);
-				if (e.isPositive()) {
-					dualA.set(i, currEdgeId, currval + 1);
-				} else {
-					dualA.set(i, currEdgeId, currval - 1);
-				}
-			}
-		}
-
 		// an array to save the forms: The real part corresponds to the
 		// differential on the primal mesh and the imaginary part to the
 		// differentials on the dual mesh. 
-		Complex[][] OMEGA= new Complex[g][numPosEdges];
-		
+		DoubleMatrix2D[] OMEGA = new DoubleMatrix2D[2];
+		for (int i = 0; i < OMEGA.length; i++)
+			OMEGA[i] = DoubleFactory2D.dense.make(g, numPosEdges);
+
 		// The holomorphic forms omega are linear combinations of 2g harmonic
 		// forms dh_j plus i times its duals (star)dh_j: omega= sum(x_j*(dh_j+
 		// i*(star)dh_j)). They are normalized iff they satisfy a linear system.
 		// A is the coefficient matrix.
-		DoubleMatrix2D M = getCoefficientMatrix(DH, dualDH,A,dualA);
+		DoubleMatrix2D M = getHarmonicPeriodsMatrix(dh, dhStar,A,dualA);
 
 		// The number of harmonic forms on the surface is 2g, so we need 2g
 		// coefficients.
@@ -954,6 +930,18 @@ public class DiscreteRiemannUtility {
 		monitor.setIterationReporter(reporter);
 		
 		solver.setIterationMonitor(monitor);
+		
+		// to normalize the differentials we need the a-periods and its dual
+		// cycles
+		List<List<E>> bcycles = getBCycles(canonicalHomologyBasis);
+		List<List<E>> dualbcycles = getDualPaths(delaunay, acycles);
+
+		// write cycles to matrices
+		DoubleMatrix2D B = cyclesToMatrix(adapters, delaunay, acycles);
+		DoubleMatrix2D dualB = cyclesToMatrix(adapters, delaunay, dualacycles);
+		
+		DoubleMatrix2D Re= DoubleFactory2D.dense.make(g,g);
+		DoubleMatrix2D Im= DoubleFactory2D.dense.make(g,g);
 
 		// For each a-cycle find the holomorphic form which is 1 along this
 		// cycle, i.e. gives one for the primal cycle and 0 for its dual cycle. 
@@ -974,17 +962,128 @@ public class DiscreteRiemannUtility {
 
 			// Build linear combinations of the harmonic differentials
 			// using the obtained coefficients. 
-			DoubleMatrix1D omega= dalgebra.mult(DH, x);
-			DoubleMatrix1D omegaStar= dalgebra.mult(dualDH, x);
+			DoubleMatrix1D omega= dalgebra.mult(dalgebra.transpose(dh), x);
+			DoubleMatrix1D omegaStar= dalgebra.mult(dalgebra.transpose(dhStar), x);
+			
+			for (int j = 0; j < g; j++) {
+				Re.set(i, j, dalgebra.mult(omega, A.viewRow(j)));
+				Im.set(i, j, dalgebra.mult(omegaStar, dualA.viewRow(j)));
+			}
 			
 			for (int j = 0; j < numPosEdges; j++) {
-				OMEGA[i][j]= new Complex(omega.get(j),omegaStar.get(j));
+				OMEGA[0].set(i, j, omega.get(j));
+				OMEGA[1].set(i, j, omegaStar.get(j));
 			}
 		}
+		
+		
+		// TODO: repair
+		System.err.println();
+		System.err.println("PERIOD MATRIX:");
+		System.out.println("real part:");
+		print(Re, 4);
+		System.err.println();
+		System.out.println("imaginary part:");
+		print(Im, 4);
+		System.err.println();
 		
 		adapters.remove(la);
 
 		return OMEGA;
+	}
+
+	/**
+	 * Method gets a list of cycles and writes them into the columns of a matrix.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param adapters
+	 * @param delaunay
+	 * @param cycles
+	 * @return
+	 */
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> DoubleMatrix2D cyclesToMatrix(
+			AdapterSet adapters, HalfEdgeDataStructure<V, E, F> delaunay,
+			List<List<E>> cycles) {
+		
+		// initialize two matrices to encode the cycles
+		DoubleMatrix2D A = new SparseDoubleMatrix2D(delaunay.numEdges() / 2,
+				cycles.size());
+
+		// needed to fill the matrices
+		int currEdgeId;
+		double currval;
+
+		// fill the matrix of a-cycles
+		for (int i = 0; i < cycles.size(); i++) {
+			for (E e : cycles.get(i)) {
+				currEdgeId = adapters.get(EdgeIndex.class, e, Integer.class);
+				currval = A.get(currEdgeId, i);
+				if (e.isPositive())
+					currval++;
+				else
+					currval--;
+				A.set(currEdgeId, i, currval);
+			}
+		}
+//		print(A, 0);
+
+		return A;
+	}
+	
+	/**
+	 * Method gets a matrix of cycles and returns them as a list.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param adapters
+	 * @param delaunay
+	 * @param cycles
+	 * @return
+	 */
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> List<List<E>> matrixToCycles(
+			AdapterSet adapters, HalfEdgeDataStructure<V, E, F> delaunay,
+			DoubleMatrix2D cycles) {
+		
+		// initialize two matrices to encode the cycles
+		List<List<E>> A = new Vector<List<E>>();
+		
+		int n= cycles.columns();
+		for (int i = 0; i < n; i++) {
+			A.add(new Vector<E>());
+		}
+
+		// needed to fill the matrices
+		int posEdgeId;
+		double currval;
+
+		// iterate over positive edges to build up the new cycles
+		for (E e : delaunay.getPositiveEdges()) {
+			// get positive edge index
+			posEdgeId = adapters.get(EdgeIndex.class, e, Integer.class);
+			// add edge with this index to the cycles
+			for (int i = 0; i < n; i++) {
+				currval = cycles.get(posEdgeId, i);
+				// add the positive edge if the weight is positive else the
+				// opposite edge
+				E currEdge = (currval > 0) ? e : e.getOppositeEdge();
+				// as many times as the weight says
+				for (int count = 0; count < Math.abs(currval); count++)
+					A.get(i).add(currEdge);
+			}
+		}
+
+		return A;
 	}
 	
 		
@@ -1084,7 +1183,7 @@ public class DiscreteRiemannUtility {
 		V extends Vertex<V, E, F>, 
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>
-	> double[] getStandardHarmonicForm(HalfEdgeDataStructure<V, E, F> hds, 
+	> DoubleMatrix1D getStandardHarmonicForm(HalfEdgeDataStructure<V, E, F> hds, 
 		AdapterSet adapters, List<E> cycle) {
 
 		Map<Integer, Integer> tau = getIdentificationMap(hds, cycle);
@@ -1093,30 +1192,34 @@ public class DiscreteRiemannUtility {
 		// cycles of another surface M via the map above. On this surface we can
 		// get a harmonic function with boundary conditions 0 and 1 constant on
 		// the identified cycles.
-		double[] h = getStandardHarmonicFunction(hds, adapters, cycle, tau);
+		DoubleMatrix1D h = getStandardHarmonicFunction(hds, adapters, cycle,
+				tau);
 
 		// The differential of h can be defined on hds.
-		double[] dh = new double[hds.numEdges() / 2];
+		DoubleMatrix1D dh = DoubleFactory1D.dense.make(hds.numEdges() / 2);
 		Set<V> boundaryVertexSet = getVertexSet(cycle);
 
 		// build the differences for each edge
 		for (E e : hds.getPositiveEdges()) {
-			
-			int k= adapters.get(EdgeIndex.class, e,Integer.class);
-			EdgeStatus status= getEdgeStatus(e, cycle, boundaryVertexSet);
-				
+
+			int k = adapters.get(EdgeIndex.class, e, Integer.class);
+			EdgeStatus status = getEdgeStatus(e, cycle, boundaryVertexSet);
+
 			switch (status) {
 			case startsAtRightCycle:
-				dh[k] = h[e.getTargetVertex().getIndex()]
-						- h[tau.get(e.getStartVertex().getIndex())];
+				dh.set(k,
+						h.get(e.getTargetVertex().getIndex())
+								- h.get(tau.get(e.getStartVertex().getIndex())));
 				break;
 			case endsAtRightCycle:
-				dh[k] = h[tau.get(e.getTargetVertex().getIndex())]
-						- h[e.getStartVertex().getIndex()];
+				dh.set(k,
+						h.get(tau.get(e.getTargetVertex().getIndex()))
+								- h.get(e.getStartVertex().getIndex()));
 				break;
 			default:
-				dh[k] = h[e.getTargetVertex().getIndex()]
-						- h[e.getStartVertex().getIndex()];
+				dh.set(k,
+						h.get(e.getTargetVertex().getIndex())
+								- h.get(e.getStartVertex().getIndex()));
 				break;
 			}
 		}
@@ -1141,13 +1244,13 @@ public class DiscreteRiemannUtility {
 		V extends Vertex<V, E, F>, 
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>
-	> double[] getStandardHarmonicFunction(
+	> DoubleMatrix1D getStandardHarmonicFunction(
 			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
 			List<E> cycle, Map<Integer, Integer> tau) {
 	
 		double[] bc1 = new double[tau.size()];
 		double[] bc2 = new double[tau.size()];
-		for (int i = 0; i < bc2.length; i++) {
+		for (int i = 0; i < tau.size(); i++) {
 			bc2[i] = 1.;
 		}
 		return getHarmonicFunction(hds, adapters, cycle, tau, bc1, bc2);
@@ -1173,17 +1276,20 @@ public class DiscreteRiemannUtility {
 	 *            (right side)
 	 * @return
 	 */
-	public static <
+	private static <
 		V extends Vertex<V, E, F>, 
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>
-	> double[] getHarmonicFunction(
+	> DoubleMatrix1D getHarmonicFunction(
 			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
 			List<E> cycle, Map<Integer, Integer> tau,
 			double[] boundaryCondition1, double[] boundaryCondition2) {
 
 		int n = hds.numVertices() + cycle.size();
 		DoubleMatrix2D laplaceop = getLaplacian(hds, adapters, cycle, tau);
+		
+		// TODO: finally comment out
+		print(laplaceop, 2);
 
 		Set<V> vertexSet = getVertexSet(cycle);
 
@@ -1199,16 +1305,23 @@ public class DiscreteRiemannUtility {
 		}
 
 		DoubleMatrix1D b = DoubleFactory1D.dense.make(bcond);
-
-		DoubleBiCGstab solver = new DoubleBiCGstab(x);
-		DefaultDoubleIterationMonitor monitor= new DefaultDoubleIterationMonitor();
 		
+		// finally comment out
+		print(b,2);
+
+		DoubleIterativeSolver solver;
+//		solver = new DoubleBiCG(x);
+		solver = new DoubleBiCGstab(x);
+		
+		
+		DefaultDoubleIterationMonitor monitor = new DefaultDoubleIterationMonitor();
+
 		// configure monitor
 		monitor.setMaxIterations(100000);
 		monitor.setAbsoluteTolerance(eps);
 		monitor.setRelativeTolerance(eps);
 		monitor.setIterationReporter(reporter);
-		
+
 		solver.setIterationMonitor(monitor);
 
 		try {
@@ -1220,10 +1333,14 @@ public class DiscreteRiemannUtility {
 		}
 		System.err.println();
 
-		double[] H = new double[n];
+		DoubleMatrix1D H = DoubleFactory1D.dense.make(n);
 
-		for (int i = 0; i < hds.numVertices(); i++) {
-			H[i] = x.get(i);
+		for (int i = 0; i < n; i++) {
+			H.set(i, x.get(i));
+		}
+		
+		for (Integer I: tau.keySet()) {
+			System.err.println("h+ = "+ H.get(I)+ " ; h- = "+H.get(tau.get(I)));
 		}
 
 		return H;
@@ -1317,22 +1434,12 @@ public class DiscreteRiemannUtility {
 		adapters.add(ca);
 		
 		for (E e : hds.getEdges()) {
-			status= getEdgeStatus(e, cycle, boundaryVertexSet);
+			status = getEdgeStatus(e, cycle, boundaryVertexSet);
 			weight = getCotanWeight(e, adapters);
 			switch (status) {
 			case liesOnLeftCycle:
-				i = e.getStartVertex().getIndex();
-				M.set(i, i, 1.);
 				break;
 			case liesOnRightCycle:
-				i = tau.get(e.getStartVertex().getIndex());
-				M.set(i, i, 1.);
-				break;
-			case startsAtRightCycle:
-				i = tau.get(e.getStartVertex().getIndex());
-				j = e.getTargetVertex().getIndex();
-				M.set(i, j, weight);
-				M.set(i, i, M.get(i, i) - weight);
 				break;
 			case endsAtRightCycle:
 				i = e.getStartVertex().getIndex();
@@ -1340,12 +1447,19 @@ public class DiscreteRiemannUtility {
 				M.set(i, j, weight);
 				M.set(i, i, M.get(i, i) - weight);
 				break;
-			case endsAtLeftCycle:
+			case startsAtRightCycle:
+				i = tau.get(e.getStartVertex().getIndex());
+				M.set(i, i, 111.);
+				break;
+			case startsAtLeftCycle:
+				i = e.getStartVertex().getIndex();
+				M.set(i, i, 111.);
+				break;
 			default:
 				i = e.getStartVertex().getIndex();
 				j = e.getTargetVertex().getIndex();
-				M.set(i, j, weight);
 				M.set(i, i, M.get(i, i) - weight);
+				M.set(i, j, weight);
 				break;
 			}
 		}
