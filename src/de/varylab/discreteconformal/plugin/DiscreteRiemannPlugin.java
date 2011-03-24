@@ -8,7 +8,6 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
-import java.util.Set;
 
 import javax.swing.JButton;
 
@@ -23,13 +22,13 @@ import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
+import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.adapter.EuclideanLengthWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.util.DiscreteRiemannUtility;
-import de.varylab.discreteconformal.util.HomologyUtility;
 
 public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionListener {
 
@@ -70,6 +69,66 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 	}
 	
+	private class HolomorphicDifferentialAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, Double> {
+
+		private Complex[] 
+		    dh = null;
+		private boolean
+			showReal = false;
+		private String
+			name = "";
+		
+		public HolomorphicDifferentialAdapter(Complex[] dh, boolean showReal, String name) {
+			super(null, CoEdge.class, null, Double.class, true, false);
+			this.dh = dh;
+			this.showReal = showReal;
+			this.name = name;
+		}
+		
+		@Override
+		public Double getEdgeValue(CoEdge e, AdapterSet a) {
+			int index = a.get(EdgeIndex.class, e, Integer.class);
+			return showReal ? dh[index].re : dh[index].im;
+		};
+		
+		@Override
+		public String toString() {
+			return "Holomorphic Differential " + name;
+		}
+		
+	}
+	
+	@Color
+	private class HolomorphicDifferentialColorAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
+
+		private Complex[] 
+		    dh = null;
+		private boolean
+			showReal = false;
+		private String
+			name = "";
+		
+		public HolomorphicDifferentialColorAdapter(Complex[] dh, boolean showReal, String name) {
+			super(null, CoEdge.class, null, double[].class, true, false);
+			this.dh = dh;
+			this.showReal = showReal;
+			this.name = name;
+		}
+		
+		@Override
+		public double[] getEdgeValue(CoEdge e, AdapterSet a) {
+			int index = a.get(EdgeIndex.class, e, Integer.class);
+			double val = showReal ? dh[index].re : dh[index].im;
+			return new double[] {10*val, 0, 0};
+		};
+		
+		@Override
+		public String toString() {
+			return "Holomorphic Differential " + name;
+		}
+		
+	}
+	
 	@Color
 	private class HarmonicDifferentialColor extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
 
@@ -85,7 +144,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		public double[] getEdgeValue(CoEdge e, AdapterSet a) {
 			int index = a.get(EdgeIndex.class, e, Integer.class);
 			double val = Math.abs(dh[index]);
-			return new double[] {100*val, 0, 0};
+			return new double[] {10*val, 0, 0};
 		};
 		
 		@Override
@@ -109,16 +168,23 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		}
 		AdapterSet a = hif.getAdapters();
 		EuclideanLengthWeightAdapter wa = new EuclideanLengthWeightAdapter(null);
-		double[][] dhs = DiscreteRiemannUtility.getHarmonicForms(S, a, wa);
+//		double[][] dhs = DiscreteRiemannUtility.getHarmonicForms(S, a, wa);
+		Complex[][] dhs = DiscreteRiemannUtility.getHolomorphicForms(S, a, wa);
 		
-		for (double[] dh : dhs) {
-			hif.addLayerAdapter(new HarmonicDifferentialColor(dh), false);
+//		for (Complex[] dh : dhs) {
+//			hif.addLayerAdapter(new HarmonicDifferentialColor(dh), false);
+//		}
+		int index = 0;
+		for (Complex[] dh : dhs) {
+			hif.addLayerAdapter(new HolomorphicDifferentialColorAdapter(dh, true, "dHRe" + index), false);
+			hif.addLayerAdapter(new HolomorphicDifferentialColorAdapter(dh, false, "dHIm" + index++), false);
 		}
 		hif.update();
-
 		// add itrospection adapters
-		for (double[] dh : dhs) {
-			hif.addLayerAdapter(new HarmonicDifferentialAdapter(dh), false);
+		index = 0;
+		for (Complex[] dh : dhs) {
+			hif.addLayerAdapter(new HolomorphicDifferentialAdapter(dh, true, "dHRe" + index), false);
+			hif.addLayerAdapter(new HolomorphicDifferentialAdapter(dh, false, "dHIm" + index++), false);
 		}
 		CoVertex root = S.getVertex(0);
 		List<List<CoEdge>> paths = DiscreteRiemannUtility.getCanonicalHomologyBasis(root, a, wa);

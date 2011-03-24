@@ -12,15 +12,19 @@ import java.util.Vector;
 
 import cern.colt.list.tdouble.DoubleArrayList;
 import cern.colt.list.tint.IntArrayList;
+import cern.colt.matrix.Norm;
 import cern.colt.matrix.tdouble.DoubleFactory1D;
 import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
+import cern.colt.matrix.tdouble.algo.solver.CGLSDoubleIterationMonitor;
 import cern.colt.matrix.tdouble.algo.solver.DefaultDoubleIterationMonitor;
 import cern.colt.matrix.tdouble.algo.solver.DoubleBiCG;
 import cern.colt.matrix.tdouble.algo.solver.DoubleBiCGstab;
 import cern.colt.matrix.tdouble.algo.solver.DoubleCGLS;
+import cern.colt.matrix.tdouble.algo.solver.DoubleGMRES;
+import cern.colt.matrix.tdouble.algo.solver.DoubleIterationMonitor;
 import cern.colt.matrix.tdouble.algo.solver.DoubleIterationReporter;
 import cern.colt.matrix.tdouble.algo.solver.DoubleIterativeSolver;
 import cern.colt.matrix.tdouble.algo.solver.IterativeSolverDoubleNotConvergedException;
@@ -114,7 +118,7 @@ public class DiscreteRiemannUtility {
 	};
 	
 	private static DenseDoubleAlgebra dalgebra = new DenseDoubleAlgebra();
-	private static double eps = 1E-5;
+	private static double eps = 1E-10;
 	
 	/**
 	 * Calculates 2*g harmonic differentials on hds. The weight Adapter is used
@@ -473,7 +477,6 @@ public class DiscreteRiemannUtility {
 		System.out.println();
 	}
 	
-	
 	/**
 	 * Print method for colt vector
 	 * @param V
@@ -505,8 +508,7 @@ public class DiscreteRiemannUtility {
 
 		System.out.println();
 	}
-	
-	
+
 	/**
 	 * Returns paths in the dual surface which are homotopic to the given
 	 * ones.
@@ -610,7 +612,7 @@ public class DiscreteRiemannUtility {
 			}
 		}
 
-		print(M, 4);
+//		print(M, 4);
 		
 		return M;
 	}
@@ -914,13 +916,15 @@ public class DiscreteRiemannUtility {
 		// i*(star)dh_j)). They are normalized iff they satisfy a linear system.
 		// A is the coefficient matrix.
 		DoubleMatrix2D M = getHarmonicPeriodsMatrix(dh, dhStar,A,dualA);
+		
+//		print(M, 2);
 
 		// The number of harmonic forms on the surface is 2g, so we need 2g
 		// coefficients.
 		DoubleMatrix1D x = DoubleFactory1D.dense.make(2 * g);
 
 		// Iterative solver
-		DoubleBiCGstab solver = new DoubleBiCGstab(x);
+		DoubleIterativeSolver solver = new DoubleGMRES(x);
 		DefaultDoubleIterationMonitor monitor= new DefaultDoubleIterationMonitor();
 		
 		// configure monitor
@@ -928,6 +932,8 @@ public class DiscreteRiemannUtility {
 		monitor.setAbsoluteTolerance(eps);
 		monitor.setRelativeTolerance(eps);
 		monitor.setIterationReporter(reporter);
+		
+		monitor.setDivergenceTolerance(1);
 		
 		solver.setIterationMonitor(monitor);
 		
@@ -937,8 +943,8 @@ public class DiscreteRiemannUtility {
 		List<List<E>> dualbcycles = getDualPaths(delaunay, acycles);
 
 		// write cycles to matrices
-		DoubleMatrix2D B = cyclesToMatrix(adapters, delaunay, acycles);
-		DoubleMatrix2D dualB = cyclesToMatrix(adapters, delaunay, dualacycles);
+		DoubleMatrix2D B = cyclesToMatrix(adapters, delaunay,bcycles);
+		DoubleMatrix2D dualB = cyclesToMatrix(adapters, delaunay, dualbcycles);
 		
 		DoubleMatrix2D Re= DoubleFactory2D.dense.make(g,g);
 		DoubleMatrix2D Im= DoubleFactory2D.dense.make(g,g);
@@ -949,7 +955,7 @@ public class DiscreteRiemannUtility {
 			
 			// set up the conditions 
 			DoubleMatrix1D bc = DoubleFactory1D.dense.make(2 * g);
-			bc.set(i, 1);
+			bc.set(g+i, 2*Math.PI);
 			
 			// solve the system
 			try {
@@ -965,26 +971,20 @@ public class DiscreteRiemannUtility {
 			DoubleMatrix1D omega= dalgebra.mult(dalgebra.transpose(dh), x);
 			DoubleMatrix1D omegaStar= dalgebra.mult(dalgebra.transpose(dhStar), x);
 			
-			for (int j = 0; j < g; j++) {
-				Re.set(i, j, dalgebra.mult(omega, A.viewRow(j)));
-				Im.set(i, j, dalgebra.mult(omegaStar, dualA.viewRow(j)));
-			}
-			
 			for (int j = 0; j < numPosEdges; j++) {
 				OMEGA[0].set(i, j, omega.get(j));
 				OMEGA[1].set(i, j, omegaStar.get(j));
 			}
 		}
 		
-		
 		// TODO: repair
 		System.err.println();
 		System.err.println("PERIOD MATRIX:");
 		System.out.println("real part:");
-		print(Re, 4);
+		print(dalgebra.mult(OMEGA[0], B), 4);
 		System.err.println();
 		System.out.println("imaginary part:");
-		print(Im, 4);
+		print(dalgebra.mult(OMEGA[1], dualB), 4);
 		System.err.println();
 		
 		adapters.remove(la);
@@ -1287,9 +1287,11 @@ public class DiscreteRiemannUtility {
 
 		int n = hds.numVertices() + cycle.size();
 		DoubleMatrix2D laplaceop = getLaplacian(hds, adapters, cycle, tau);
-		
+
 		// TODO: finally comment out
-		print(laplaceop, 2);
+		// print(laplaceop, 2);
+
+		// System.err.println("Determinat: "+ dalgebra.det(laplaceop));
 
 		Set<V> vertexSet = getVertexSet(cycle);
 
@@ -1305,21 +1307,29 @@ public class DiscreteRiemannUtility {
 		}
 
 		DoubleMatrix1D b = DoubleFactory1D.dense.make(bcond);
-		
+
 		// finally comment out
-		print(b,2);
+		// print(b,2);
 
 		DoubleIterativeSolver solver;
-//		solver = new DoubleBiCG(x);
+		solver = new DoubleBiCG(x);
 		solver = new DoubleBiCGstab(x);
-		
-		
+		// solver= new DoubleCGLS();
+		solver = new DoubleGMRES(x);
+
 		DefaultDoubleIterationMonitor monitor = new DefaultDoubleIterationMonitor();
 
+		// DoubleIterationMonitor monitor= new CGLSDoubleIterationMonitor();
 		// configure monitor
+		// TODO: tune!
 		monitor.setMaxIterations(100000);
 		monitor.setAbsoluteTolerance(eps);
 		monitor.setRelativeTolerance(eps);
+
+		monitor.setDivergenceTolerance(1);
+
+		monitor.setNormType(Norm.Two);
+
 		monitor.setIterationReporter(reporter);
 
 		solver.setIterationMonitor(monitor);
@@ -1338,10 +1348,11 @@ public class DiscreteRiemannUtility {
 		for (int i = 0; i < n; i++) {
 			H.set(i, x.get(i));
 		}
-		
-		for (Integer I: tau.keySet()) {
-			System.err.println("h+ = "+ H.get(I)+ " ; h- = "+H.get(tau.get(I)));
-		}
+
+//		for (Integer I : tau.keySet()) {
+//			System.err.println("h+ = " + H.get(I) + " ; h- = "
+//					+ H.get(tau.get(I)));
+//		}
 
 		return H;
 	}
@@ -1371,10 +1382,8 @@ public class DiscreteRiemannUtility {
 		int n = hds.numVertices();
 
 		// Build up the map.
-		int i=0;
 		for (V v:vertexSet) {
-			map.put(v.getIndex(), n + i);
-			i++;
+			map.put(v.getIndex(), n++);
 		}
 		return map;
 	}
@@ -1438,8 +1447,12 @@ public class DiscreteRiemannUtility {
 			weight = getCotanWeight(e, adapters);
 			switch (status) {
 			case liesOnLeftCycle:
+				i = e.getStartVertex().getIndex();
+				M.set(i, i, 1.);
 				break;
 			case liesOnRightCycle:
+				i = tau.get(e.getStartVertex().getIndex());
+				M.set(i, i, 1.);
 				break;
 			case endsAtRightCycle:
 				i = e.getStartVertex().getIndex();
@@ -1447,15 +1460,17 @@ public class DiscreteRiemannUtility {
 				M.set(i, j, weight);
 				M.set(i, i, M.get(i, i) - weight);
 				break;
+			case endsAtLeftCycle:
+				i = e.getStartVertex().getIndex();
+				j = e.getTargetVertex().getIndex();
+				M.set(i, i, M.get(i, i) - weight);
+				M.set(i, j, weight);
+				break;
 			case startsAtRightCycle:
-				i = tau.get(e.getStartVertex().getIndex());
-				M.set(i, i, 111.);
 				break;
 			case startsAtLeftCycle:
-				i = e.getStartVertex().getIndex();
-				M.set(i, i, 111.);
 				break;
-			default:
+			case noConnection:
 				i = e.getStartVertex().getIndex();
 				j = e.getTargetVertex().getIndex();
 				M.set(i, i, M.get(i, i) - weight);

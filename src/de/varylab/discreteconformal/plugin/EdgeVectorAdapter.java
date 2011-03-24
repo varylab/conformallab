@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.plugin;
 
 import java.util.List;
-import java.util.Set;
 
 import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
