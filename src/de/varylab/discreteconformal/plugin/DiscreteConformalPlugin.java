@@ -643,9 +643,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		texturePositionAdapter.setProjective(useProjectiveTexture.isSelected());
 		texturePositionAdapter.setModel(getSelectedModel());
 		texCoordPositionAdapter.setModel(getSelectedModel());
-		hif.addGlobalAdapter(metricErrorAdapter, false);
+		hif.addAdapter(metricErrorAdapter, false);
 		if (showUnwrapped.isSelected()) {
-			hif.addGlobalAdapter(texCoordPositionAdapter, false);	
+			hif.addAdapter(texCoordPositionAdapter, false);	
 		}
 		hif.set(surface);
 	}
@@ -679,8 +679,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
-		hif.addGlobalAdapter(new CoPositionAdapter(), true);
-		hif.addGlobalAdapter(texturePositionAdapter, true);
+		hif.addAdapter(new CoPositionAdapter(), true);
+		hif.addAdapter(texturePositionAdapter, true);
 		hif.addSelectionListener(this);
 		contentAppearance = c.getPlugin(ContentAppearance.class);
 	}

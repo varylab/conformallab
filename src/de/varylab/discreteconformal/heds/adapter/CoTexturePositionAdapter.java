@@ -69,19 +69,10 @@ public class CoTexturePositionAdapter extends AbstractTypedAdapter<CoVertex, CoE
 	@Override
 	public void setVertexValue(CoVertex v, double[] value, AdapterSet a) {
 		double[] t = v.T;
-		if (value.length == 2) {
-			t[0] = value[0];
-			t[1] = value[1];
-			t[2] = 0.0;
-			t[3] = 1.0;
-		} else if (value.length == 3) {
-			t[0] = value[0];
-			t[1] = value[1];
-			t[2] = value[2];
-			t[3] = 1.0;
-		} else {
-			t = value;
-		}
+		t[0] = value[0];
+		t[1] = value[1];
+		t[2] = value.length > 2 ? value[2] : 0.0;
+		t[3] = value.length > 3 ? value[3] : 0.0;
 	}
 	
 	

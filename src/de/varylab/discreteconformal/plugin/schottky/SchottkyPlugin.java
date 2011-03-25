@@ -205,7 +205,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			layoutRoot = HyperbolicLayout.doLayout(hds, layoutRoot, u);
 ////			
 			
-			hif.addGlobalAdapter(new CoTexturePositionPositionAdapter(Poincaré), false);
+			hif.addAdapter(new CoTexturePositionPositionAdapter(Poincaré), false);
 			hif.set(hds);
 		}
 	}
@@ -578,8 +578,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
-		hif.addGlobalAdapter(new CoPositionAdapter(), true);
-		hif.addGlobalAdapter(new CoTexturePositionAdapter(true), true);
+		hif.addAdapter(new CoPositionAdapter(), true);
+		hif.addAdapter(new CoTexturePositionAdapter(true), true);
 	}
 	
 	@Override
