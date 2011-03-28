@@ -168,28 +168,32 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		}
 		AdapterSet a = hif.getAdapters();
 		EuclideanLengthWeightAdapter wa = new EuclideanLengthWeightAdapter(null);
-//		double[][] dhs = DiscreteRiemannUtility.getHarmonicForms(S, a, wa);
 		Complex[][] dhs = DiscreteRiemannUtility.getHolomorphicForms(S, a, wa);
 		
-//		for (Complex[] dh : dhs) {
-//			hif.addLayerAdapter(new HarmonicDifferentialColor(dh), false);
-//		}
 		int index = 0;
 		for (Complex[] dh : dhs) {
 			hif.addLayerAdapter(new HolomorphicDifferentialColorAdapter(dh, true, "dHRe" + index), false);
 			hif.addLayerAdapter(new HolomorphicDifferentialColorAdapter(dh, false, "dHIm" + index++), false);
 		}
 		hif.update();
+		
 		// add itrospection adapters
 		index = 0;
 		for (Complex[] dh : dhs) {
 			hif.addLayerAdapter(new HolomorphicDifferentialAdapter(dh, true, "dHRe" + index), false);
 			hif.addLayerAdapter(new HolomorphicDifferentialAdapter(dh, false, "dHIm" + index++), false);
 		}
+		
 		CoVertex root = S.getVertex(0);
 		List<List<CoEdge>> paths = DiscreteRiemannUtility.getCanonicalHomologyBasis(root, a, wa);
 		for (List<CoEdge> path : paths) {
 			EdgeVectorAdapter eva = new EdgeVectorAdapter(path, "Homology Path " + path.size());
+			hif.addLayerAdapter(eva, false);
+		}
+		
+		List<List<CoEdge>> dualpaths = DiscreteRiemannUtility.getDualPaths(S,paths);
+		for (List<CoEdge> path : dualpaths) {
+			EdgeVectorAdapter eva = new EdgeVectorAdapter(path, "Dual Homology Path " + path.size());
 			hif.addLayerAdapter(eva, false);
 		}
 	}
