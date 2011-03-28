@@ -20,6 +20,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.unwrapper.ConesUtility;
 import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapper;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
@@ -110,9 +111,12 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
+			
 			u = unwrapper.unwrap(surface, aSet);
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
+			
+			cutInfo = ConesUtility.cutMesh(surface);
 			lengthMap = EuclideanLayout.getLengthMap(surface, u);
 			layoutRoot = EuclideanLayout.doLayout(surface, u);
 			layoutTime = System.currentTimeMillis();
@@ -195,18 +199,18 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		return index;
 	}
 	
-	private int getMaxUIndex(Vector u) {
-		int index = 0;
-		double iVal = u.get(0);
-		for (int i = 1; i < u.size(); i++) {
-			double val = u.get(i);
-			if (iVal > val) {
-				index = i;
-				iVal = i;
-			}
-		}
-		return index;
-	}
+//	private int getMaxUIndex(Vector u) {
+//		int index = 0;
+//		double iVal = u.get(0);
+//		for (int i = 1; i < u.size(); i++) {
+//			double val = u.get(i);
+//			if (iVal > val) {
+//				index = i;
+//				iVal = i;
+//			}
+//		}
+//		return index;
+//	}
 
 
 	public CoHDS getSurface() {

@@ -1,18 +1,17 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
+import static de.jtem.halfedge.util.HalfEdgeUtils.boundaryEdges;
+import static de.jtem.halfedge.util.HalfEdgeUtils.boundaryVertices;
 import static de.varylab.discreteconformal.unwrapper.EuclideanLayout.calculateAngleSum;
+import static de.varylab.discreteconformal.util.PathUtility.getIncomingEdges;
 import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
-import static java.lang.Math.exp;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import no.uib.cipr.matrix.DenseVector;
@@ -23,88 +22,63 @@ import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.discreteconformal.util.CuttingUtility;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.Search;
-import de.varylab.discreteconformal.util.Search.WeightAdapter;
 import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
 
 public class ConesUtility {
 
+	
+	public static List<CoVertex> getCones(CoHDS hds) {
+		List<CoVertex> r = new LinkedList<CoVertex>();
+		for (CoVertex v : hds.getVertices()) {
+			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
+			if (v.getTheta() != 2*Math.PI) {
+				r.add(v);
+			}
+		}
+		return r;
+	}
+	
+	
 	
 	/**
 	 * Cuts the mesh along paths from the vertices of cones to the boundary
 	 * @param hds the mesh
 	 * @param cones the cones
 	 */
-	public static void cutMesh(CoHDS hds, Collection<CoVertex> cones, Vector u) {
-		if (cones.isEmpty()) return;
+	public static CuttingInfo<CoVertex, CoEdge, CoFace> cutMesh(CoHDS hds) {
+		List<CoVertex> cones = getCones(hds);
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+		if (cones.isEmpty()) return cutInfo;
 
+		Set<CoEdge> validEdges = new HashSet<CoEdge>(hds.getEdges());
+		validEdges.removeAll(boundaryEdges(hds));
+		
+		Set<CoVertex> targetVertices = new HashSet<CoVertex>(boundaryVertices(hds));
+		
 		for (CoVertex c : cones) {
-			// get boundary set
-			Set<CoVertex> bSet = new HashSet<CoVertex>();
-			for (CoVertex v : hds.getVertices()){
-				if (isBoundaryVertex(v)) {
-					bSet.add(v);
-				}
-			}
-			// find path to boundary
-			List<CoEdge> path = Search.getShortestPath(c, bSet, new EdgeLengthAdapter(u));
-			// cut
-			for (CoEdge e : path) {
-				CoEdge eOpp = e.getOppositeEdge();
-				Map<CoVertex, CoVertex> vMap = CuttingUtility.cutAtEdge(e);
-				for (CoVertex v : vMap.keySet()) {
-					CoVertex nV = vMap.get(v);
-					nV.setSolverIndex(v.getSolverIndex());
-					nV.setTheta(v.getTheta());
-					nV.P = v.P.clone();
-				}
-				e.getOppositeEdge().setLambda(e.getLambda());
-				eOpp.getOppositeEdge().setLambda(eOpp.getLambda());
-			}
-		}
-
-	}
-	
-	
-	protected static class EdgeLengthAdapter implements WeightAdapter<CoEdge> {
-
-		private Vector
-			u = null;
-		
-		public EdgeLengthAdapter(Vector u) {
-			this.u = u;
+			if (HalfEdgeUtils.isBoundaryVertex(c)) continue; 
+			List<CoEdge> path = Search.bFS(validEdges, c, targetVertices, true, null);
+			validEdges.removeAll(getIncomingEdges(path));
+			CuttingUtility.cutAlongPath(path, cutInfo);
 		}
 		
-		@Override
-		public double getWeight(CoEdge e) {
-			CoVertex v1 = e.getStartVertex();
-			CoVertex v2 = e.getTargetVertex();
-			Double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
-			Double u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0;
-			Double lambda = e.getLambda();
-			return exp(lambda + u1 + u2);
+		for (CoEdge e : cutInfo.edgeCutMap.keySet()) {
+			e.getOppositeEdge().setLambda(e.getLambda());
 		}
-		
-	}
-	
-	
-	protected static class LambdaEdgeComparatore implements Comparator<CoEdge> {
-
-		@Override
-		public int compare(CoEdge o1, CoEdge o2) {
-			return o1.getLambda() < o2.getLambda() ? -1 : 1;
-		}
-		
+		return cutInfo;
 	}
 	
 	
 	/**
 	 * calculates the possibly best cone points in hds and sets up new solver indices.
-	 * Needs an invariant data prepared CHDS
+	 * Needs an invariant data prepared CoHDS
 	 * @param hds
 	 * @param numAutomaticCones
 	 */

@@ -1,5 +1,7 @@
 package de.varylab.discreteconformal.util;
 
+import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
@@ -13,6 +15,22 @@ import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class PathUtility {
 
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> Set<E> getIncomingEdges(Iterable<E> path) {
+		Set<E> result = new HashSet<E>();
+		for (E e : path) {
+			V s = e.getStartVertex();
+			V t = e.getTargetVertex();
+			result.addAll(incomingEdges(s));
+			result.addAll(incomingEdges(t));
+		}
+		return result;
+	}
+	
 	
 	/**
 	 * Returns a path which does not include opposite edges of each edge.

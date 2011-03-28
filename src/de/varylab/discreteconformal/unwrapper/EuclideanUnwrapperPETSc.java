@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.unwrapper;
 import static de.varylab.discreteconformal.util.SparseUtility.getPETScNonZeros;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
@@ -34,12 +35,15 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 
 	public static double
 		lastGNorm = 0;
+
+	private Collection<CoVertex>
+		cones = new HashSet<CoVertex>();
 	
 	@Override
 	public Vector unwrap(CoHDS surface, AdapterSet aSet) throws Exception {
 		UnwrapUtility.prepareInvariantDataEuclidean(surface, boundaryMode, boundaryQuantMode, aSet);
 		// cones
-		Collection<CoVertex> cones = ConesUtility.setUpCones(surface, numCones); 
+		cones = ConesUtility.setUpCones(surface, numCones); 
 		// optimization
 		Vec u;
 		Mat H;
@@ -92,8 +96,6 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 					throw new UnwrapException("Cone quantization did not succeed: " + status);
 				}
 			}
-			double [] uValues = u.getArray();
-			ConesUtility.cutMesh(surface, cones, new DenseVector(uValues));
 		}
 		
 		// layout
@@ -101,6 +103,10 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		DenseVector result = new DenseVector(uValues);
 		u.restoreArray();
 		return result; 
+	}
+	
+	public Collection<CoVertex> getCones() {
+		return cones;
 	}
 	
 	public void setNumCones(int numCones) {

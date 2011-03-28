@@ -67,7 +67,6 @@ public class EuclideanUnwrapper implements Unwrapper{
 					throw new UnwrapException("Cone quantization did not succeed: " + e.getMessage());
 				}
 			}
-			ConesUtility.cutMesh(surface, cones, u);
 		}
 		return u;
 	}
