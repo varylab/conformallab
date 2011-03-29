@@ -28,7 +28,9 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.util.CanonicalBasisUtility;
 import de.varylab.discreteconformal.util.DiscreteRiemannUtility;
+import de.varylab.discreteconformal.util.DualityUtility;
 
 public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionListener {
 
@@ -185,13 +187,13 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		}
 		
 		CoVertex root = S.getVertex(0);
-		List<List<CoEdge>> paths = DiscreteRiemannUtility.getCanonicalHomologyBasis(root, a, wa);
+		List<List<CoEdge>> paths = CanonicalBasisUtility.getCanonicalHomologyBasis(root, a, wa);
 		for (List<CoEdge> path : paths) {
 			EdgeVectorAdapter eva = new EdgeVectorAdapter(path, "Homology Path " + path.size());
 			hif.addLayerAdapter(eva, false);
 		}
 		
-		List<List<CoEdge>> dualpaths = DiscreteRiemannUtility.getDualPaths(S,paths);
+		List<List<CoEdge>> dualpaths = DualityUtility.getDualPaths(S,paths);
 		for (List<CoEdge> path : dualpaths) {
 			EdgeVectorAdapter eva = new EdgeVectorAdapter(path, "Dual Homology Path " + path.size());
 			hif.addLayerAdapter(eva, false);
