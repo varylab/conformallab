@@ -47,7 +47,6 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		calculateButton.addActionListener(this);
 	}
 	
-	
 	private class HarmonicDifferentialAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, Double> {
 
 		private double[] 
@@ -179,7 +178,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		}
 		hif.update();
 		
-		// add itrospection adapters
+		// add introspection adapters
 		index = 0;
 		for (Complex[] dh : dhs) {
 			hif.addLayerAdapter(new HolomorphicDifferentialAdapter(dh, true, "dHRe" + index), false);
@@ -211,8 +210,6 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		return View.class;
 	}
 	
-	
-	
 	public static void main(String[] args) {
 		JRViewer v = new JRViewer();
 		v.addContentUI();
@@ -220,8 +217,5 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		v.registerPlugin(new DiscreteRiemannPlugin());
 		v.startup();
 	}
-	
-
-	
 
 }

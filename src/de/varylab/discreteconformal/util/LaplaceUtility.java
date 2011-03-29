@@ -141,6 +141,9 @@ public class LaplaceUtility {
 				M.set(i, i, 1.);
 				break;
 			case liesOnRightCycle:
+				// TODO: still not fixed completely: there are still some null
+				// pointer exceptions (i guess, if the mesh is not fine enough,
+				// see genus 2 coarse)
 				j = tau.get(e.getRightFace().getIndex());
 				M.set(j, j, 1.);
 				break;

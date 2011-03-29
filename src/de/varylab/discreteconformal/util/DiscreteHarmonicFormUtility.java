@@ -56,6 +56,7 @@ public class DiscreteHarmonicFormUtility {
 	
 	private static DenseDoubleAlgebra dalgebra = new DenseDoubleAlgebra();
 	private static double eps = 1E-10;
+	private static int maxIterations= 100000000;
 	
 	/**
 	 * Calculates 2*g harmonic differentials on hds. The weight Adapter is used
@@ -565,7 +566,7 @@ public class DiscreteHarmonicFormUtility {
 
 		// DoubleIterationMonitor monitor= new CGLSDoubleIterationMonitor();
 		// configure monitor
-		monitor.setMaxIterations(100000);
+		monitor.setMaxIterations(maxIterations);
 		monitor.setAbsoluteTolerance(eps);
 		monitor.setRelativeTolerance(eps);
 
@@ -664,7 +665,7 @@ public class DiscreteHarmonicFormUtility {
 		// DoubleIterationMonitor monitor= new CGLSDoubleIterationMonitor();
 		 
 		// configure monitor
-		monitor.setMaxIterations(100000);
+		monitor.setMaxIterations(maxIterations);
 		monitor.setAbsoluteTolerance(eps);
 		monitor.setRelativeTolerance(eps);
 
@@ -683,6 +684,7 @@ public class DiscreteHarmonicFormUtility {
 					.println("Iterative solver failed to converge: Couldn't get harmonic function.");
 			e.printStackTrace();
 		}
+		System.err.println();
 
 		DoubleMatrix1D H = DoubleFactory1D.dense.make(n);
 

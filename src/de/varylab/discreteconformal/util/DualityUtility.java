@@ -40,7 +40,7 @@ public class DualityUtility {
 	 * @param <E>
 	 * @param <F>
 	 * @param hds
-	 * @param cycles
+	 * @param primalcycles
 	 * @return
 	 */
 	public static <
@@ -48,14 +48,40 @@ public class DualityUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> List<List<E>> getDualPaths(
-				HalfEdgeDataStructure<V, E, F> hds, List<List<E>> cycles) {
+				HalfEdgeDataStructure<V, E, F> hds, List<List<E>> primalcycles) {
 		
-		List<List<E>> dualCycles = new java.util.Vector<List<E>>();
+		List<List<E>> dualcycles = new java.util.Vector<List<E>>();
 		// for each cycle
-		for (int i = 0; i < cycles.size(); i++) {
-			dualCycles.add(getDualPath(hds, cycles.get(i)));
+		for (int i = 0; i < primalcycles.size(); i++) {
+			dualcycles.add(getDualPath(hds, primalcycles.get(i)));
 		}
-		return dualCycles;
+		return dualcycles;
+	}
+	
+	/**
+	 * Returns paths in the primal surface which are homotopic to the given
+	 * ones.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param hds
+	 * @param dualcycles
+	 * @return
+	 */
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> List<List<E>> getPrimalPaths(
+				HalfEdgeDataStructure<V, E, F> hds, List<List<E>> dualcycles) {
+		
+		List<List<E>> primalcycles = new java.util.Vector<List<E>>();
+		// for each cycle
+		for (int i = 0; i < dualcycles.size(); i++) {
+			primalcycles.add(getPrimalPath(hds, dualcycles.get(i)));
+		}
+		return primalcycles;
 	}
 	
 	/**
@@ -96,6 +122,46 @@ public class DualityUtility {
 		}
 		EdgeUtility.removeEdgePairs(dualPath);
 		return dualPath;
+	}
+	
+	/**
+	 * Returns a path in the primal surface which is homotopic to the given one.
+	 * 	
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param hds
+	 * @param dualcycle
+	 * @return
+	 */
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> List<E> getPrimalPath(
+				HalfEdgeDataStructure<V, E, F> hds, List<E> dualcycle) {
+		
+		List<E> primalpath = new Vector<E>();
+		// get vertices contained in the primal cycle
+		Set<F> vertices = EdgeUtility.getDualVertexSet(dualcycle);
+		// for each vertex in the cycle
+		for (F f : vertices) {
+			// get the edge star
+			List<E> star = HalfEdgeUtilsExtra.getBoundary(f);
+			// and test each edge in it
+			for (E e : star) {
+				EdgeStatus status = EdgeUtility.getDualEdgeStatus(e, dualcycle, vertices);
+				// if the edge is on the left side put it to the dual path
+				// and points to the vertex
+				if (status == EdgeStatus.endsAtLeftCycle)
+					primalpath.add(e);
+//				else if (status == EdgeStatus.startsAtLeftCycle)
+//					dualPath.add(e.getOppositeEdge());
+				// dualPath.add(e);
+			}
+		}
+		EdgeUtility.removeEdgePairs(primalpath);
+		return primalpath;
 	}
 	
 	/**

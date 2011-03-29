@@ -35,6 +35,7 @@ public class DiscreteHolomorphicFormUtility {
 	
 	private static DenseDoubleAlgebra dalgebra = new DenseDoubleAlgebra();
 	private static double eps = 1E-10;
+	private static int maxIterations= 100000000;
 
 	/**
 	 * Returns a basis of holomorphic differentials on the surface, which is
@@ -114,7 +115,7 @@ public class DiscreteHolomorphicFormUtility {
 		DefaultDoubleIterationMonitor monitor = new DefaultDoubleIterationMonitor();
 
 		// configure monitor
-		monitor.setMaxIterations(100000);
+		monitor.setMaxIterations(maxIterations);
 		monitor.setAbsoluteTolerance(eps);
 		monitor.setRelativeTolerance(eps);
 		monitor.setIterationReporter(reporter);
@@ -188,26 +189,28 @@ public class DiscreteHolomorphicFormUtility {
 		// g is simply the genus of the surface
 		int g = canonicalHomologyBasis.size() / 2;
 
+		List<List<E>> dualBasis = DualityUtility.getDualPaths(delaunay,
+				canonicalHomologyBasis);
+
 		// Get the harmonic differentials on the surface and its dual. The
 		// format of the matrices is 2g*numEdges
 		DoubleMatrix2D dhStar = DiscreteHarmonicFormUtility
-				.getHarmonicFormsOfDualMesh(delaunay, canonicalHomologyBasis,
+				.getHarmonicFormsOfDualMesh(delaunay, dualBasis,
 						adapters, la, wa);
 		DoubleMatrix2D dhStarStar = DualityUtility.getDualOfDualForms(delaunay,
 				adapters, dhStar);
 
 		// to normalize the differentials we need the a-periods and its dual
 		// cycles
-		List<List<E>> acycles = CanonicalBasisUtility
+		List<List<E>> dualacycles = CanonicalBasisUtility.getACycles(dualBasis);
+		List<List<E>> primalacycles = CanonicalBasisUtility
 				.getACycles(canonicalHomologyBasis);
-		List<List<E>> dualacycles = DualityUtility.getDualPaths(delaunay,
-				acycles);
 
 		// write cycles to matrices
-		DoubleMatrix2D A = EdgeUtility.cyclesToMatrix(adapters, delaunay,
-				acycles);
 		DoubleMatrix2D dualA = EdgeUtility.cyclesToMatrix(adapters, delaunay,
 				dualacycles);
+		DoubleMatrix2D primalA = EdgeUtility.cyclesToMatrix(adapters, delaunay,
+				primalacycles);
 
 		// an array to save the forms: The real part corresponds to the
 		// differential on the primal mesh and the imaginary part to the
@@ -221,9 +224,7 @@ public class DiscreteHolomorphicFormUtility {
 		// i*(star)dh_j)). They are normalized iff they satisfy a linear system.
 		// A is the coefficient matrix.
 		DoubleMatrix2D M = DiscreteHarmonicFormUtility
-				.getHarmonicPeriodsMatrix(dhStarStar, dhStar, dualA, A);
-
-		// print(M, 2);
+				.getHarmonicPeriodsMatrix(dhStar, dhStarStar, dualA, primalA);
 
 		// The number of harmonic forms on the surface is 2g, so we need 2g
 		// coefficients.
@@ -234,7 +235,7 @@ public class DiscreteHolomorphicFormUtility {
 		DefaultDoubleIterationMonitor monitor = new DefaultDoubleIterationMonitor();
 
 		// configure monitor
-		monitor.setMaxIterations(100000);
+		monitor.setMaxIterations(maxIterations);
 		monitor.setAbsoluteTolerance(eps);
 		monitor.setRelativeTolerance(eps);
 		monitor.setIterationReporter(reporter);
@@ -242,27 +243,14 @@ public class DiscreteHolomorphicFormUtility {
 		monitor.setDivergenceTolerance(1);
 
 		solver.setIterationMonitor(monitor);
-
-		// to normalize the differentials we need the a-periods and its dual
-		// cycles
-		List<List<E>> bcycles = CanonicalBasisUtility
-				.getBCycles(canonicalHomologyBasis);
-		List<List<E>> dualbcycles = DualityUtility.getDualPaths(delaunay,
-				acycles);
-
-		// write cycles to matrices
-		DoubleMatrix2D B = EdgeUtility.cyclesToMatrix(adapters, delaunay,
-				bcycles);
-		DoubleMatrix2D dualB = EdgeUtility.cyclesToMatrix(adapters, delaunay,
-				dualbcycles);
-
+		
 		// For each a-cycle find the holomorphic form which is 1 along this
 		// cycle, i.e. gives one for the primal cycle and 0 for its dual cycle.
 		for (int i = 0; i < g; i++) {
 
 			// set up the conditions
 			DoubleMatrix1D bc = DoubleFactory1D.dense.make(2 * g);
-			bc.set(g + i, 2 * Math.PI);
+			bc.set(i, 2 * Math.PI);
 
 			// solve the system
 			try {
@@ -284,15 +272,6 @@ public class DiscreteHolomorphicFormUtility {
 				OMEGA[1].set(i, j, omegaStar.get(j));
 			}
 		}
-
-		System.err.println();
-		System.err.println("PERIOD MATRIX:");
-		System.out.println("real part:");
-		SimpleMatrixPrintUtility.print(dalgebra.mult(OMEGA[0], dualB), 4);
-		System.err.println();
-		System.out.println("imaginary part:");
-		SimpleMatrixPrintUtility.print(dalgebra.mult(OMEGA[1], B), 4);
-		System.err.println();
 
 		adapters.remove(la);
 
