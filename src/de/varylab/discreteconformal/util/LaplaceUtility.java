@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.util;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import cern.colt.matrix.tdouble.DoubleFactory2D;
@@ -25,6 +24,88 @@ import de.varylab.discreteconformal.util.EdgeUtility.EdgeStatus;
 public class LaplaceUtility {
 	
 	/**
+	 * Returns the matrix of the cotan laplace operator corresponding to the surface.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param hds
+	 * @param adapters
+	 * @param cycle
+	 * @param tau
+	 * @return
+	 */
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> DoubleMatrix2D getPrimalLaplacian(HalfEdgeDataStructure<V, E, F> hds, 
+			AdapterSet adapters) {
+
+		DoubleMatrix2D M= DoubleFactory2D.sparse.make(hds.numVertices(),
+				hds.numVertices());
+		
+		CotanWeightAdapter ca= new CotanWeightAdapter();
+		adapters.add(ca);
+		
+		double weight;
+		int i, j;
+		
+		for (E e : hds.getEdges()) {
+			weight = adapters.get(Weight.class, e, Double.class);
+			i = e.getStartVertex().getIndex();
+			j = e.getTargetVertex().getIndex();
+			M.set(i, i, M.get(i, i) - weight);
+			M.set(i, j, weight);
+		}
+		
+		adapters.remove(ca);
+		return M;
+
+	}
+
+	/**
+	 * Returns the matrix of the cotan laplace operator corresponding to the dual surface.
+	 * 
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param hds
+	 * @param adapters
+	 * @param cycle
+	 * @param tau
+	 * @return
+	 */
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> DoubleMatrix2D getDualLaplacian(HalfEdgeDataStructure<V, E, F> hds, 
+			AdapterSet adapters) {
+
+		DoubleMatrix2D M= DoubleFactory2D.sparse.make(hds.numFaces(),
+				hds.numFaces());
+		
+		CotanWeightAdapter ca = new CotanWeightAdapter();
+		adapters.add(ca);
+		
+		double weight;
+		int i, j;
+	
+		for (E e : hds.getEdges()) {
+			weight = 1. / adapters.get(Weight.class, e, Double.class);
+			i = e.getRightFace().getIndex();
+			j = e.getLeftFace().getIndex();
+			M.set(i, i, M.get(i, i) - weight);
+			M.set(i, j, weight);
+		}
+		
+		adapters.remove(ca);
+		return M;
+
+	}
+	
+	/**
 	 * Returns the matrix of the cotan laplace operator corresponding to the surface
 	 * obtained by cutting hds along the given cycle.
 	 * 
@@ -42,58 +123,41 @@ public class LaplaceUtility {
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>
 	> DoubleMatrix2D getPrimalLaplacian(HalfEdgeDataStructure<V, E, F> hds, 
-			AdapterSet adapters, List<E> cycle, Map<Integer, Integer> tau) {
+			AdapterSet adapters, List<E> cycle) {
 
 		Set<V> boundaryVertexSet = EdgeUtility.getPrimalVertexSet(cycle);
 
-		DoubleMatrix2D M= DoubleFactory2D.sparse.make(hds.numVertices()+tau.size(),
-				hds.numVertices()+tau.size());
+		DoubleMatrix2D M= getPrimalLaplacian(hds, adapters);
 		
 		CotanWeightAdapter ca= new CotanWeightAdapter();
 		adapters.add(ca);
 		
 		EdgeStatus status;
 		double weight;
-		int i, j;
+		int start, end;
+		
+		E connection= null;
 		
 		for (E e : hds.getEdges()) {
 			status = EdgeUtility.getPrimalEdgeStatus(e, cycle, boundaryVertexSet);
 			weight = adapters.get(Weight.class, e, Double.class);
+			start = e.getStartVertex().getIndex();
+			end = e.getStartVertex().getIndex();
 			switch (status) {
-			case liesOnLeftCycle:
-				i = e.getStartVertex().getIndex();
-				M.set(i, i, 1.);
-				break;
-			case liesOnRightCycle:
-				i = tau.get(e.getStartVertex().getIndex());
-				M.set(i, i, 1.);
-				break;
-			case endsAtRightCycle:
-				i = e.getStartVertex().getIndex();
-				j = tau.get(e.getTargetVertex().getIndex());
-				M.set(i, j, weight);
-				M.set(i, i, M.get(i, i) - weight);
+			case startsAtLeftCycle:
+				if(connection==null && start==cycle.get(0).getStartVertex().getIndex())
+					connection= e;
+				M.set(start, start, M.get(start, start) + weight);
+				M.set(start, end, M.get(start, end) - weight);
 				break;
 			case endsAtLeftCycle:
-				i = e.getStartVertex().getIndex();
-				j = e.getTargetVertex().getIndex();
-				M.set(i, i, M.get(i, i) - weight);
-				M.set(i, j, weight);
-				break;
-			case startsAtRightCycle:
-				break;
-			case startsAtLeftCycle:
-				break;
-			case noConnection:
-				i = e.getStartVertex().getIndex();
-				j = e.getTargetVertex().getIndex();
-				M.set(i, i, M.get(i, i) - weight);
-				M.set(i, j, weight);
+				if(connection==null && end==cycle.get(0).getStartVertex().getIndex())
+					connection= e;
+				M.set(start, start, M.get(start, start) - weight);
+				M.set(start, end, M.get(start, end) - weight);
 				break;
 			}
 		}
-		
-		normalize(M);
 		
 		adapters.remove(ca);
 		return M;
@@ -118,87 +182,61 @@ public class LaplaceUtility {
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>
 	> DoubleMatrix2D getDualLaplacian(HalfEdgeDataStructure<V, E, F> hds, 
-			AdapterSet adapters, List<E> cycle, Map<Integer, Integer> tau) {
+			AdapterSet adapters, List<E> cycle) {
 		
 		Set<F> boundaryVertexSet = EdgeUtility.getDualVertexSet(cycle);
 
-		DoubleMatrix2D M= DoubleFactory2D.sparse.make(hds.numFaces()+tau.size(),
-				hds.numFaces()+tau.size());
+		DoubleMatrix2D M= getDualLaplacian(hds, adapters);
 		
-		CotanWeightAdapter ca = new CotanWeightAdapter();
+		CotanWeightAdapter ca= new CotanWeightAdapter();
 		adapters.add(ca);
 		
 		EdgeStatus status;
 		double weight;
-		int i, j;
-	
+		int start, end;
+		
 		for (E e : hds.getEdges()) {
 			status = EdgeUtility.getDualEdgeStatus(e, cycle, boundaryVertexSet);
-			weight = 1./adapters.get(Weight.class, e, Double.class);
+			weight = adapters.get(Weight.class, e, Double.class);
+			start = e.getStartVertex().getIndex();
+			end = e.getStartVertex().getIndex();
 			switch (status) {
-			case liesOnLeftCycle:
-				i = e.getRightFace().getIndex();
-				M.set(i, i, 1.);
-				break;
-			case liesOnRightCycle:
-				// TODO: still not fixed completely: there are still some null
-				// pointer exceptions (i guess, if the mesh is not fine enough,
-				// see genus 2 coarse)
-				j = tau.get(e.getRightFace().getIndex());
-				M.set(j, j, 1.);
-				break;
-			case endsAtRightCycle:
-				i = e.getRightFace().getIndex();
-				j = tau.get(e.getLeftFace().getIndex());
-				M.set(i, j, weight);
-				M.set(i, i, M.get(i, i) - weight);
+			case startsAtLeftCycle:
+				M.set(start, start, M.get(start, start) + weight);
+				M.set(start, end, M.get(start, end) - weight);
 				break;
 			case endsAtLeftCycle:
-				i = e.getRightFace().getIndex();
-				j = e.getLeftFace().getIndex();
-				M.set(i, i, M.get(i, i) - weight);
-				M.set(i, j, weight);
-				break;
-			case startsAtRightCycle:
-				break;
-			case startsAtLeftCycle:
-				break;
-			case noConnection:
-				i = e.getRightFace().getIndex();
-				j = e.getLeftFace().getIndex();
-				M.set(i, i, M.get(i, i) - weight);
-				M.set(i, j, weight);
+				M.set(start, start, M.get(start, start) - weight);
+				M.set(start, end, M.get(start, end) - weight);
 				break;
 			}
 		}
-		
-		normalize(M);
 		
 		adapters.remove(ca);
 		return M;
 
 	}
 
-	/**
-	 * Normalizes max-norm of the rows to 1.
-	 * @param M
-	 */
-	private static void normalize(DoubleMatrix2D M) {
-		double curr;
-		for(int m= 0; m<M.rows(); m++){
-			double max=0;
-			for (int n = 0; n < M.columns(); n++) {
-				if(Math.abs(M.get(m, n))>Math.abs(max))
-					max=M.get(m, n);
-			}
-			if (max == 0)
-				throw new RuntimeException(
-						"ERROR: The Laplace matrix has to have a non-zero coefficient in each row!");
-			for (int n = 0; n < M.columns(); n++) {
-				curr= M.get(m, n)/max;
-				M.set(m, n, curr);
-			}
-		}
-	}
+	// /**
+	// * Normalizes max-norm of the rows to 1.
+	// * @param M
+	// */
+	// private static void normalize(DoubleMatrix2D M) {
+	// double curr;
+	// for(int m= 0; m<M.rows(); m++){
+	// double max=0;
+	// for (int n = 0; n < M.columns(); n++) {
+	// if(Math.abs(M.get(m, n))>Math.abs(max))
+	// max=M.get(m, n);
+	// }
+	// if (max == 0)
+	// throw new RuntimeException(
+	// "ERROR: The Laplace matrix has to have a non-zero coefficient in each row!");
+	// for (int n = 0; n < M.columns(); n++) {
+	// curr= M.get(m, n)/max;
+	// M.set(m, n, curr);
+	// }
+	// }
+	// }
 
 }

@@ -73,7 +73,7 @@ public class DiscreteHolomorphicFormUtility {
 		// format of the matrices is 2g*numEdges
 		DoubleMatrix2D dh = DiscreteHarmonicFormUtility
 				.getHarmonicFormsOfPrimalMesh(delaunay, canonicalHomologyBasis,
-						adapters, la, wa);
+						adapters, la);
 		DoubleMatrix2D dhStar = DualityUtility.getDualOfPrimalForms(delaunay,
 				adapters, dh);
 
@@ -196,7 +196,7 @@ public class DiscreteHolomorphicFormUtility {
 		// format of the matrices is 2g*numEdges
 		DoubleMatrix2D dhStar = DiscreteHarmonicFormUtility
 				.getHarmonicFormsOfDualMesh(delaunay, dualBasis,
-						adapters, la, wa);
+						adapters, la);
 		DoubleMatrix2D dhStarStar = DualityUtility.getDualOfDualForms(delaunay,
 				adapters, dhStar);
 
