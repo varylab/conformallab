@@ -25,7 +25,7 @@ import de.varylab.discreteconformal.util.EdgeUtility.EdgeStatus;
  * homology basis and holomorphic differentials in the sense of mercat.
  * 
  * By convention all the forms are saved as rows and all the cycles as columns.
- * (For public methods we always use colt matrices.)
+ * (For private methods we always use colt matrices.)
  * 
  * @author knoeppel
  * 
@@ -94,7 +94,7 @@ public class DualityUtility {
 	 * @param cycle
 	 * @return
 	 */
-	public static <
+	private static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
@@ -113,8 +113,11 @@ public class DualityUtility {
 				EdgeStatus status = EdgeUtility.getPrimalEdgeStatus(e, cycle, vertices);
 				// if the edge is on the left side put it to the dual path
 				// and points to the vertex
-				if(status == EdgeStatus.endsAtLeftCycle)
+				if (status == EdgeStatus.endsAtLeftCycle)
 					dualPath.add(e);
+//				else if (status == EdgeStatus.startsAtLeftCycle)
+//					dualPath.add(e.getOppositeEdge());
+				// dualPath.add(e);
 			}
 		}
 		EdgeUtility.removeEdgePairs(dualPath);
@@ -131,7 +134,7 @@ public class DualityUtility {
 	 * @param dualcycle
 	 * @return
 	 */
-	public static <
+	private static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
@@ -237,7 +240,7 @@ public class DualityUtility {
 	 * @param form
 	 * @return
 	 */
-	public static <
+	private static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
@@ -277,7 +280,7 @@ public class DualityUtility {
 	 * @param form
 	 * @return
 	 */
-	public static <
+	private static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>

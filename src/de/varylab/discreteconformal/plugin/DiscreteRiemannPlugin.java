@@ -29,10 +29,8 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.util.CanonicalBasisUtility;
-import de.varylab.discreteconformal.util.DiscreteHarmonicFormUtility;
 import de.varylab.discreteconformal.util.DiscreteRiemannUtility;
 import de.varylab.discreteconformal.util.DualityUtility;
-import de.varylab.discreteconformal.util.ParallelPathUtility;
 
 public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionListener {
 
@@ -133,12 +131,12 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 	}
 	
 	@Color
-	private class HarmonicDifferentialColorAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
+	private class HarmonicDifferentialColor extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
 
 		private double[] 
 		    dh = null;
 		
-		public HarmonicDifferentialColorAdapter(double[] dh) {
+		public HarmonicDifferentialColor(double[] dh) {
 			super(null, CoEdge.class, null, double[].class, true, false);
 			this.dh = dh;
 		}
@@ -171,21 +169,21 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		}
 		AdapterSet a = hif.getAdapters();
 		EuclideanLengthWeightAdapter wa = new EuclideanLengthWeightAdapter(null);
-////		Complex[][] dhs = DiscreteRiemannUtility.getHolomorphicForms(S, a, wa);
-//		double[][] dhs= DiscreteHarmonicFormUtility.getHarmonicFormsOnPrimalMesh(S, a, wa);
-//		
-//		int index = 0;
-//		for (double[] dh : dhs) {
-//			hif.addLayerAdapter(new HarmonicDifferentialColorAdapter(dh), false);
-//		}
-//		hif.update();
-//		
-//		// add introspection adapters
-//		index = 0;
-//		for (double[] dh : dhs) {
-//			hif.addLayerAdapter(new HarmonicDifferentialAdapter(dh), false);
-//			hif.addLayerAdapter(new HarmonicDifferentialAdapter(dh), false);
-//		}
+		Complex[][] dhs = DiscreteRiemannUtility.getHolomorphicForms(S, a, wa);
+		
+		int index = 0;
+		for (Complex[] dh : dhs) {
+			hif.addLayerAdapter(new HolomorphicDifferentialColorAdapter(dh, true, "dHRe" + index), false);
+			hif.addLayerAdapter(new HolomorphicDifferentialColorAdapter(dh, false, "dHIm" + index++), false);
+		}
+		hif.update();
+		
+		// add introspection adapters
+		index = 0;
+		for (Complex[] dh : dhs) {
+			hif.addLayerAdapter(new HolomorphicDifferentialAdapter(dh, true, "dHRe" + index), false);
+			hif.addLayerAdapter(new HolomorphicDifferentialAdapter(dh, false, "dHIm" + index++), false);
+		}
 		
 		CoVertex root = S.getVertex(0);
 		List<List<CoEdge>> paths = CanonicalBasisUtility.getCanonicalHomologyBasis(root, a, wa);
@@ -197,12 +195,6 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		List<List<CoEdge>> dualpaths = DualityUtility.getDualPaths(S,paths);
 		for (List<CoEdge> path : dualpaths) {
 			EdgeVectorAdapter eva = new EdgeVectorAdapter(path, "Dual Homology Path " + path.size());
-			hif.addLayerAdapter(eva, false);
-		}
-		
-		List<List<CoEdge>> parallelpaths = ParallelPathUtility.getLeftParallelPaths(S,paths);
-		for (List<CoEdge> path : parallelpaths) {
-			EdgeVectorAdapter eva = new EdgeVectorAdapter(path, "Parallel Homology Path " + path.size());
 			hif.addLayerAdapter(eva, false);
 		}
 	}
