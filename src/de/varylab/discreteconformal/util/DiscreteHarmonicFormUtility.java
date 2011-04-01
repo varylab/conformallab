@@ -1,9 +1,6 @@
 package de.varylab.discreteconformal.util;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import cern.colt.matrix.Norm;
 import cern.colt.matrix.tdouble.DoubleFactory1D;
 import cern.colt.matrix.tdouble.DoubleFactory2D;
@@ -21,10 +18,11 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.EdgeIndex;
+import de.jtem.halfedgetools.adapter.type.Weight;
 import de.jtem.halfedgetools.algorithm.triangulation.Delaunay;
 import de.jtem.halfedgetools.algorithm.triangulation.MappedLengthAdapter;
 import de.jtem.halfedgetools.util.HalfEdgeUtilsExtra;
-import de.varylab.discreteconformal.util.EdgeUtility.EdgeStatus;
+import de.varylab.discreteconformal.adapter.CotanWeightAdapter;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 
@@ -88,10 +86,11 @@ public class DiscreteHarmonicFormUtility {
 		List<List<E>> basis = CanonicalBasisUtility.getCanonicalHomologyBasis(
 				rootV, adapters, wa);
 
-		DoubleMatrix2D dh= getHarmonicFormsOfPrimalMesh(hds, basis, adapters, la, wa);
+		DoubleMatrix2D dh= getHarmonicFormsOfPrimalMesh(hds, basis, adapters, la);
 
-		// print(dalgebra.mult(dh, cyclesToMatrix(adapters, hds,basis)), 4);
-		
+		SimpleMatrixPrintUtility.print(dalgebra.mult(dh, EdgeUtility
+				.cyclesToMatrix(adapters, hds, basis)), 4);
+
 		// use the private method
 		return dh.toArray();
 	}
@@ -127,10 +126,12 @@ public class DiscreteHarmonicFormUtility {
 				CanonicalBasisUtility.getCanonicalHomologyBasis(rootV,
 						adapters, wa));
 
-		DoubleMatrix2D dh = getHarmonicFormsOfDualMesh(hds, dualbasis, adapters, la, wa);
+		DoubleMatrix2D dh = getHarmonicFormsOfDualMesh(hds, dualbasis,
+				adapters, la);
 
-		// print(dalgebra.mult(dh, cyclesToMatrix(adapters, hds,basis)), 4);
-		
+		SimpleMatrixPrintUtility.print(dalgebra.mult(dh, EdgeUtility
+				.cyclesToMatrix(adapters, hds, dualbasis)), 4);
+
 		// use the private method
 		return dh.toArray();
 	}
@@ -182,40 +183,6 @@ public class DiscreteHarmonicFormUtility {
 
 		return M;
 	}
-	
-	/**
-	 * Returns how harmonic a differential is. //TODO: find the right criterion,
-	 * which is also easy to evaluate
-	 * 
-	 * @param <V>
-	 * @param <E>
-	 * @param <F>
-	 * @param hds
-	 * @param adapters
-	 * @param form
-	 * @return
-	 */
-	public static <
-		V extends Vertex<V, E, F>,
-		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>
-	> double howHarmonic(HalfEdgeDataStructure<V,E,F> hds, AdapterSet adapters, DoubleMatrix1D form){
-		double abssum= 0;
-		int id;
-		for (V v: hds.getVertices()) {
-			List<E> star= HalfEdgeUtilsExtra.getEdgeStar(v);
-			double val= 0;
-			for (E e: star) {
-				id= adapters.get(EdgeIndex.class, e,Integer.class);
-				if(e.isPositive())
-					val+= form.get(id);
-				else
-					val-= form.get(id);
-			}
-			abssum+=Math.abs(val);
-		}
-		return abssum;
-	}
 
 	/**
 	 * Calculates 2*g harmonic differentials on on a Delaunay triangulated
@@ -241,7 +208,7 @@ public class DiscreteHarmonicFormUtility {
 	> DoubleMatrix2D getHarmonicFormsOfPrimalMesh(
 				HalfEdgeDataStructure<V, E, F> delaunay,
 				List<List<E>> homologyBasis, AdapterSet adapters,
-				MappedLengthAdapter la, WeightAdapter<E> wa) {
+				MappedLengthAdapter la) {
 		
 		// For each cycle in the basis we get a corresponding harmonic
 		// differential (closed but not exact, its integral differs by one on
@@ -261,6 +228,7 @@ public class DiscreteHarmonicFormUtility {
 					dh.set(i, j, form.get(j));
 			}
 		}
+
 		adapters.remove(la);
 		
 		return dh;
@@ -290,7 +258,7 @@ public class DiscreteHarmonicFormUtility {
 	> DoubleMatrix2D getHarmonicFormsOfDualMesh(
 				HalfEdgeDataStructure<V, E, F> delaunay,
 				List<List<E>> dualHomologyBasis, AdapterSet adapters,
-				MappedLengthAdapter la, WeightAdapter<E> wa) {
+				MappedLengthAdapter la) {
 		
 		// For each cycle in the basis we get a corresponding harmonic
 		// differential (closed but not exact, its integral differs by one on
@@ -310,12 +278,9 @@ public class DiscreteHarmonicFormUtility {
 					dh.set(i, j, form.get(j));
 			}
 		}
-		
-		DoubleMatrix2D Cycles= EdgeUtility.cyclesToMatrix(adapters, delaunay, dualHomologyBasis);
-		SimpleMatrixPrintUtility.print(dalgebra.mult(dh, Cycles),4);
-		
+
 		adapters.remove(la);
-		
+
 		return dh;
 	}
 	
@@ -340,43 +305,34 @@ public class DiscreteHarmonicFormUtility {
 				HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
 				List<E> cycle) {
 
-		Map<Integer, Integer> tau = getIdentificationMapOnPrimalMesh(hds, cycle);
-
+		// get dual cycle, this is the chain of all edges ending at the left of the given cycle
+		List<E> edgesEndingAtLeft= DualityUtility.getDualPath(hds, cycle);
+		
 		// Consider the surface hds being obtained by identifying two boundary
 		// cycles of another surface M via the map above. On this surface we can
 		// get a harmonic function with boundary conditions 0 and 1 constant on
 		// the identified cycles.
-		DoubleMatrix1D h = getStandardHarmonicFunctionOnPrimalMesh(hds, adapters, cycle,
-				tau);
+		DoubleMatrix1D h = getStandardHarmonicFunctionOnPrimalMesh(hds, adapters, cycle, edgesEndingAtLeft);
 
 		// The differential of h can be defined on hds.
 		DoubleMatrix1D dh = DoubleFactory1D.dense.make(hds.numEdges() / 2);
-		Set<V> boundaryVertexSet = EdgeUtility.getPrimalVertexSet(cycle);
 
 		// build the differences for each edge
 		for (E e : hds.getPositiveEdges()) {
-
 			int k = adapters.get(EdgeIndex.class, e, Integer.class);
-			EdgeStatus status = EdgeUtility.getPrimalEdgeStatus(e, cycle,boundaryVertexSet);
-
-			switch (status) {
-			case startsAtRightCycle:
-				dh.set(k,
-						h.get(e.getTargetVertex().getIndex())
-								- h.get(tau.get(e.getStartVertex().getIndex())));
-				break;
-			case endsAtRightCycle:
-				dh.set(k,
-						h.get(tau.get(e.getTargetVertex().getIndex()))
-								- h.get(e.getStartVertex().getIndex()));
-				break;
-			default:
-				dh.set(k,
-						h.get(e.getTargetVertex().getIndex())
-								- h.get(e.getStartVertex().getIndex()));
-				break;
+			if (edgesEndingAtLeft.contains(e.getOppositeEdge())) {
+				dh.set(k, h.get(e.getTargetVertex().getIndex()) + 1
+						- h.get(e.getStartVertex().getIndex()));
+			} else if (edgesEndingAtLeft.contains(e)) {
+				dh.set(k, h.get(e.getTargetVertex().getIndex())
+						- h.get(e.getStartVertex().getIndex()) - 1);
+			} else {
+				dh.set(k, h.get(e.getTargetVertex().getIndex())
+						- h.get(e.getStartVertex().getIndex()));
 			}
 		}
+		
+		howHarmonicIsPrimalForm(hds, adapters, dh);
 
 		return dh;
 	}
@@ -402,50 +358,107 @@ public class DiscreteHarmonicFormUtility {
 				HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
 				List<E> cycle) {
 
-		Map<Integer, Integer> tau = getIdentificationMapOnDualMesh(hds, cycle);
-
+		// get dual cycle, this is the chain of all edges ending at the left of the given cycle
+		List<E> edgesEndingAtLeft= DualityUtility.getPrimalPath(hds, cycle);
+		
 		// Consider the surface hds being obtained by identifying two boundary
 		// cycles of another surface M via the map above. On this surface we can
 		// get a harmonic function with boundary conditions 0 and 1 constant on
 		// the identified cycles.
-		DoubleMatrix1D h = getStandardHarmonicFunctionOnDualMesh(hds, adapters, cycle,
-				tau);
+		DoubleMatrix1D h = getStandardHarmonicFunctionOnDualMesh(hds, adapters,
+				cycle,edgesEndingAtLeft);
 
 		// The differential of h can be defined on hds.
 		DoubleMatrix1D dh = DoubleFactory1D.dense.make(hds.numEdges() / 2);
-		Set<F> boundaryVertexSet = EdgeUtility.getDualVertexSet(cycle);
 
 		// build the differences for each edge
 		for (E e : hds.getPositiveEdges()) {
-
 			int k = adapters.get(EdgeIndex.class, e, Integer.class);
-			EdgeStatus status = EdgeUtility.getDualEdgeStatus(e, cycle,boundaryVertexSet);
-
-			switch (status) {
-			case startsAtRightCycle:
-				dh.set(k,
-						h.get(e.getLeftFace().getIndex())
-								- h.get(tau.get(e.getRightFace().getIndex())));
-				break;
-			case endsAtRightCycle:
-				dh.set(k,
-						h.get(tau.get(e.getLeftFace().getIndex()))
-								- h.get(e.getRightFace().getIndex()));
-				break;
-			default:
-				dh.set(k,
-						h.get(e.getLeftFace().getIndex())
-								- h.get(e.getRightFace().getIndex()));
-				break;
+			if (edgesEndingAtLeft.contains(e.getOppositeEdge())) {
+				dh.set(k, h.get(e.getLeftFace().getIndex()) + 1
+						- h.get(e.getRightFace().getIndex()));
+			} else if (edgesEndingAtLeft.contains(e)) {
+				dh.set(k, h.get(e.getLeftFace().getIndex())
+						- h.get(e.getRightFace().getIndex()) - 1);
+			} else {
+				dh.set(k, h.get(e.getLeftFace().getIndex())
+						- h.get(e.getRightFace().getIndex()));
 			}
 		}
+		
+		howHarmonicIsDualForm(hds, adapters, dh);
 
 		return dh;
 	}
+	
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> double howHarmonicIsPrimalForm(
+			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
+			DoubleMatrix1D form) {
+		
+		int id;
+		double weight, res = 0;
+		CotanWeightAdapter ca = new CotanWeightAdapter();
+		adapters.add(ca);
+		int counter=0;
+		for (V v : hds.getVertices()) {
+			List<E> star = HalfEdgeUtilsExtra.getEdgeStar(v);
+			double curr = 0;
+			for (E e : star) {
+				weight = adapters.get(Weight.class, e, Double.class);
+				id = adapters.get(EdgeIndex.class, e, Integer.class);
+				if(e.isPositive())
+					curr += weight * form.get(id);
+				else
+					curr -= weight * form.get(id);
+			}
+			if (Math.abs(curr) > 0.001)
+				System.out.println((counter++)+" Vertex " + v.getIndex() + ": Value = "
+						+ curr);
+			res += Math.abs(curr);
+		}
+		adapters.remove(ca);
+		return res;
+	}
 
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> double howHarmonicIsDualForm(
+			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
+			DoubleMatrix1D form) {
+		
+		int id;
+		double weight, res = 0;
+		CotanWeightAdapter ca = new CotanWeightAdapter();
+		adapters.add(ca);
+		int counter=0;
+		for (F f : hds.getFaces()) {
+			List<E> star = HalfEdgeUtilsExtra.getBoundary(f);
+			double curr = 0;
+			for (E e : star) {
+				weight = 1./adapters.get(Weight.class, e, Double.class);
+				id = adapters.get(EdgeIndex.class, e, Integer.class);
+				if(e.isPositive())
+					curr -= weight * form.get(id);
+				else
+					curr += weight * form.get(id);
+			}
+			if (Math.abs(curr) > 0.001)
+				System.out.println((counter++)+" Face " + f.getIndex() + ": Value = "
+						+ curr);
+			res += Math.abs(curr);
+		}
+		adapters.remove(ca);
+		return res;
+	}
+	
 	/**
-	 * Returns a harmonic function, which is two valued on the cycle (constant 0
-	 * on the left and 1 on the right side).
+	 * Returns a harmonic function on the primal mesh which has a jump of 1 on the cycle.
 	 * 
 	 * @param <V>
 	 * @param <E>
@@ -453,29 +466,56 @@ public class DiscreteHarmonicFormUtility {
 	 * @param hds
 	 * @param adapters
 	 * @param cycle
-	 * @param tau
+	 * @param edgesEndingAtLeftOfCycle
 	 * @return
 	 */
-	public static <
+	private static <
 		V extends Vertex<V, E, F>, 
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>
 	> DoubleMatrix1D getStandardHarmonicFunctionOnPrimalMesh(
 			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
-			List<E> cycle, Map<Integer, Integer> tau) {
-	
-		double[] bc1 = new double[tau.size()];
-		double[] bc2 = new double[tau.size()];
-		for (int i = 0; i < tau.size(); i++) {
-			bc2[i] = 1.;
+			List<E> cycle, List<E> edgesEndingAtLeftOfCycle) {
+
+		// the dimension of the linear system
+		int n = hds.numVertices();
+
+		DoubleMatrix2D laplaceop = LaplaceUtility.getPrimalLaplacian(hds,
+				adapters);
+
+		DoubleMatrix1D x = DoubleFactory1D.dense.make(n);
+
+		double[] bcond = new double[n];
+		double weight;
+
+		CotanWeightAdapter ca = new CotanWeightAdapter();
+		adapters.add(ca);
+
+		// the function shall have a jump of 1 crossing the cycle
+		for (E e : edgesEndingAtLeftOfCycle) {
+			weight = adapters.get(Weight.class, e, Double.class);
+			bcond[e.getStartVertex().getIndex()] += weight;
+			bcond[e.getTargetVertex().getIndex()] -= weight;
 		}
-		return getPrimalHarmonicFunction(hds, adapters, cycle, tau, bc1, bc2);
+
+		adapters.remove(ca);
+
+		DoubleMatrix1D b = DoubleFactory1D.dense.make(bcond);
+
+		solve(laplaceop, x, b);
+
+		DoubleMatrix1D H = DoubleFactory1D.dense.make(n);
+
+		for (int i = 0; i < n; i++) {
+			H.set(i, x.get(i));
+		}
+
+		return H;
 		
 	}
 
 	/**
-	 * Returns a harmonic function on the dual surface, which is two valued on
-	 * the cycle (constant 0 on the left and 1 on the right side).
+	 * Returns a harmonic function on the dual mesh which has a jump of 1 on the cycle.
 	 * 
 	 * @param <V>
 	 * @param <E>
@@ -483,7 +523,7 @@ public class DiscreteHarmonicFormUtility {
 	 * @param hds
 	 * @param adapters
 	 * @param cycle
-	 * @param tau
+	 * @param edgesEndingAtLeftOfCycle
 	 * @return
 	 */
 	public static <
@@ -492,280 +532,76 @@ public class DiscreteHarmonicFormUtility {
 		F extends Face<V, E, F>
 	> DoubleMatrix1D getStandardHarmonicFunctionOnDualMesh(
 			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
-			List<E> cycle, Map<Integer, Integer> tau) {
-	
-		double[] bc1 = new double[tau.size()];
-		double[] bc2 = new double[tau.size()];
-		for (int i = 0; i < tau.size(); i++) {
-			bc2[i] = 1.;
-		}
-		return getDualHarmonicFunction(hds, adapters, cycle, tau, bc1, bc2);
+			List<E> cycle, List<E> edgesEndingAtLeftOfCycle) {
 		
-	}
-
-	/**
-	 * Returns a harmonic function on the surface cut along the given cycle. The
-	 * cycle splits in a left and a right side, where boundary conditions can be
-	 * specified. Tau is the identification map to obtain the surface given by
-	 * the hds.
-	 * 
-	 * @param <V>
-	 * @param <E>
-	 * @param <F>
-	 * @param hds
-	 * @param adapters
-	 * @param cycle
-	 * @param tau
-	 * @param boundaryCondition1
-	 *            (left side)
-	 * @param boundaryCondition2
-	 *            (right side)
-	 * @return
-	 */
-	private static <
-		V extends Vertex<V, E, F>, 
-		E extends Edge<V, E, F>, 
-		F extends Face<V, E, F>
-	> DoubleMatrix1D getPrimalHarmonicFunction(
-			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
-			List<E> cycle, Map<Integer, Integer> tau,
-			double[] boundaryCondition1, double[] boundaryCondition2) {
-
-		Set<V> vertexSet = EdgeUtility.getPrimalVertexSet(cycle);
-		
-		int n = hds.numVertices() + vertexSet.size();
-		DoubleMatrix2D laplaceop = LaplaceUtility.getPrimalLaplacian(hds, adapters, cycle, tau);
-
-		DoubleMatrix1D x = DoubleFactory1D.dense.make(n);
-
-		double[] bcond = new double[n];
-		int bcIndex = 0;
-		for (V v : vertexSet) {
-			int id = v.getIndex();
-			bcond[id] = boundaryCondition1[bcIndex];
-			bcond[tau.get(id)] = boundaryCondition2[bcIndex];
-			bcIndex++;
-		}
-
-		DoubleMatrix1D b = DoubleFactory1D.dense.make(bcond);
-
-		// finally comment out
-		// SimpleMatrixPrintUtility.print(laplaceop,2);
-		// System.err.println();
-		// System.err.println("determinant: "+dalgebra.det(laplaceop));
-		// System.err.println();
-		// SimpleMatrixPrintUtility.print(b,2);
-
-		DoubleIterativeSolver solver;
-		// solver = new DoubleBiCG(x);
-		// solver = new DoubleBiCGstab(x);
-		// solver= new DoubleCGLS();
-		solver = new DoubleGMRES(x);
-
-		DefaultDoubleIterationMonitor monitor = new DefaultDoubleIterationMonitor();
-
-		// DoubleIterationMonitor monitor= new CGLSDoubleIterationMonitor();
-		// configure monitor
-		monitor.setMaxIterations(maxIterations);
-		monitor.setAbsoluteTolerance(eps);
-		monitor.setRelativeTolerance(eps);
-
-		monitor.setDivergenceTolerance(1);
-
-		monitor.setNormType(Norm.Two);
-
-		monitor.setIterationReporter(reporter);
-
-		solver.setIterationMonitor(monitor);
-
-		try {
-			solver.solve(laplaceop, b, x);
-		} catch (IterativeSolverDoubleNotConvergedException e) {
-			System.err
-					.println("Iterative solver failed to converge: Couldn't get harmonic function.");
-			e.printStackTrace();
-		}
-		System.err.println();
-
-		DoubleMatrix1D H = DoubleFactory1D.dense.make(n);
-
-		for (int i = 0; i < n; i++) {
-			H.set(i, x.get(i));
-		}
-
-		// for (Integer I : tau.keySet()) {
-		// System.err.println("h+ = " + H.get(I) + " ; h- = "
-		// + H.get(tau.get(I)));
-		// }
-
-		return H;
-	}
-
-	/**
-	 * Returns a harmonic function on the dual surface cut along the given cycle. The
-	 * cycle splits in a left and a right side, where boundary conditions can be
-	 * specified. Tau is the identification map to obtain the surface given by
-	 * the dual hds.
-	 * 
-	 * @param <V>
-	 * @param <E>
-	 * @param <F>
-	 * @param hds
-	 * @param adapters
-	 * @param cycle
-	 * @param tau
-	 * @param boundaryCondition1
-	 *            (left side)
-	 * @param boundaryCondition2
-	 *            (right side)
-	 * @return
-	 */
-	private static <
-		V extends Vertex<V, E, F>, 
-		E extends Edge<V, E, F>, 
-		F extends Face<V, E, F>
-	> DoubleMatrix1D getDualHarmonicFunction(
-			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
-			List<E> cycle, Map<Integer, Integer> tau,
-			double[] boundaryCondition1, double[] boundaryCondition2) {
-
-		Set<F> vertexSet = EdgeUtility.getDualVertexSet(cycle);
-		int n = hds.numFaces() + vertexSet.size();
-		
-		DoubleMatrix2D laplaceop = LaplaceUtility.getDualLaplacian(hds, adapters, cycle, tau);
-
-		DoubleMatrix1D x = DoubleFactory1D.dense.make(n);
-
-		double[] bcond = new double[n];
-		int bcIndex = 0;
-		for (F f : vertexSet) {
-			int id = f.getIndex();
-			bcond[id] = boundaryCondition1[bcIndex];
-			bcond[tau.get(id)] = boundaryCondition2[bcIndex];
-			bcIndex++;
-		}
-
-		DoubleMatrix1D b = DoubleFactory1D.dense.make(bcond);
-
-		// // finally comment out
-		// SimpleMatrixPrintUtility.print(laplaceop,2);
-		// System.err.println();
-		// System.err.println("determinant: "+dalgebra.det(laplaceop));
-		// System.err.println();
-		// SimpleMatrixPrintUtility.print(b,2);
-
-		DoubleIterativeSolver solver;
-		// solver = new DoubleBiCG(x);
-		// solver = new DoubleBiCGstab(x);
-		// solver= new DoubleCGLS();
-		solver = new DoubleGMRES(x);
-
-		DefaultDoubleIterationMonitor monitor = new DefaultDoubleIterationMonitor();
-
-		// DoubleIterationMonitor monitor= new CGLSDoubleIterationMonitor();
-		 
-		// configure monitor
-		monitor.setMaxIterations(maxIterations);
-		monitor.setAbsoluteTolerance(eps);
-		monitor.setRelativeTolerance(eps);
-
-		monitor.setDivergenceTolerance(1);
-
-		monitor.setNormType(Norm.Two);
-
-		monitor.setIterationReporter(reporter);
-
-		solver.setIterationMonitor(monitor);
-
-		try {
-			solver.solve(laplaceop, b, x);
-		} catch (IterativeSolverDoubleNotConvergedException e) {
-			System.err
-					.println("Iterative solver failed to converge: Couldn't get harmonic function.");
-			e.printStackTrace();
-		}
-		System.err.println();
-
-		DoubleMatrix1D H = DoubleFactory1D.dense.make(n);
-
-		for (int i = 0; i < n; i++) {
-			H.set(i, x.get(i));
-		}
-
-		// for (Integer I : tau.keySet()) {
-		// System.err.println("h+ = " + H.get(I) + " ; h- = "
-		// + H.get(tau.get(I)));
-		// }
-
-		return H;
-	}
-
-	/**
-	 * Returns a map which maps the indices of the vertices v0,v1,... contained
-	 * in the cycle to the integers n,n+1,... , where n is the number of
-	 * vertices of the surface.
-	 * 
-	 * @param <V>
-	 * @param <E>
-	 * @param <F>
-	 * @param hds
-	 * @param cycle
-	 * @return
-	 */
-	private static <
-		V extends Vertex<V, E, F>, 
-		E extends Edge<V, E, F>, 
-		F extends Face<V, E, F>
-	> Map<Integer, Integer> getIdentificationMapOnPrimalMesh(
-				HalfEdgeDataStructure<V, E, F> hds, List<E> cycle) {
-			
-		Map<Integer, Integer> map = new HashMap<Integer, Integer>(100);
-
-		// Get the vertices contained in the cycle.
-		Set<V> vertexSet = EdgeUtility.getPrimalVertexSet(cycle);
-		int n = hds.numVertices();
-
-		// Build up the map.
-		for (V v:vertexSet) {
-			map.put(v.getIndex(), n++);
-		}
-		return map;
-	}
-
-	/**
-	 * Returns a map which maps the indices of the vertices v0,v1,... contained
-	 * in the cycle to the integers n,n+1,... , where n is the number of
-	 * vertices of the dual surface (i.e. faces).
-	 * 
-	 * @param <V>
-	 * @param <E>
-	 * @param <F>
-	 * @param hds
-	 * @param cycle
-	 * @return
-	 */
-	private static <
-		V extends Vertex<V, E, F>, 
-		E extends Edge<V, E, F>, 
-		F extends Face<V, E, F>
-	> Map<Integer, Integer> getIdentificationMapOnDualMesh(
-				HalfEdgeDataStructure<V, E, F> hds, List<E> cycle) {
-			
-		Map<Integer, Integer> map = new HashMap<Integer, Integer>(100);
-
-		// Get the vertices contained in the cycle.
-		Set<F> vertexSet = EdgeUtility.getDualVertexSet(cycle);
-		// for (F f : vertexSet) {
-		// System.err.print(f.getIndex() + ", ");
-		// }
-		// System.err.println();
 		int n = hds.numFaces();
+		
+		DoubleMatrix2D laplaceop = LaplaceUtility.getDualLaplacian(hds, adapters);
 
-		// Build up the map.
-		for (F f:vertexSet) {
-			map.put(f.getIndex(), n++);
+		DoubleMatrix1D x = DoubleFactory1D.dense.make(n);
+
+		double[] bcond = new double[n];
+		double weight;
+
+		CotanWeightAdapter ca = new CotanWeightAdapter();
+		adapters.add(ca);
+
+		// the function shall have a jump of 1 crossing the cycle
+		for (E e : edgesEndingAtLeftOfCycle) {
+			weight = 1./adapters.get(Weight.class, e, Double.class);
+			bcond[e.getRightFace().getIndex()] += weight;
+			bcond[e.getLeftFace().getIndex()] -= weight;
 		}
-		return map;
+
+		adapters.remove(ca);
+
+		DoubleMatrix1D b = DoubleFactory1D.dense.make(bcond);
+		
+		solve(laplaceop, x, b);
+
+		DoubleMatrix1D H = DoubleFactory1D.dense.make(n);
+
+		for (int i = 0; i < n; i++) {
+			H.set(i, x.get(i));
+		}
+
+		return H;
 	}
+
+	/**
+	 * Solves Ax=b and writes the result in the vector x.
+	 * 
+	 * @param A
+	 * @param x
+	 * @param b
+	 */
+	private static void solve(DoubleMatrix2D A, DoubleMatrix1D x,
+			DoubleMatrix1D b) {
+		
+		DoubleIterativeSolver solver;
+		solver = new DoubleGMRES(x);
+
+		DefaultDoubleIterationMonitor monitor = new DefaultDoubleIterationMonitor();
+
+		// configure monitor
+		monitor.setMaxIterations(maxIterations);
+		monitor.setAbsoluteTolerance(eps);
+		monitor.setRelativeTolerance(eps);
+		monitor.setDivergenceTolerance(1);
+		monitor.setNormType(Norm.Two);
+		monitor.setIterationReporter(reporter);
+
+		solver.setIterationMonitor(monitor);
+
+		try {
+			solver.solve(A, b, x);
+		} catch (IterativeSolverDoubleNotConvergedException e) {
+			System.err
+					.println("Iterative solver failed to converge: Couldn't get harmonic function.");
+			e.printStackTrace();
+		}
+		System.err.println();
+	}
+
 
 }

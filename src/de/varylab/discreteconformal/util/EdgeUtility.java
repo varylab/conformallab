@@ -34,8 +34,8 @@ public class EdgeUtility {
 		startsAtLeftCycle,
 		endsAtRightCycle,
 		startsAtRightCycle,
-		liesOnLeftCycle,
-		liesOnRightCycle,
+		liesOnCycle,
+		liesOnInverseCycle,
 		noConnection
 	}
 
@@ -257,10 +257,10 @@ public class EdgeUtility {
 	> E getNextPrimalEdgeClockwise(E e, V v) {
 		
 		if (e.getStartVertex() == v) {
-			return e.getPreviousEdge().getOppositeEdge();
+			return e.getOppositeEdge().getNextEdge();
 		}
 		if (e.getTargetVertex() == v) {
-			return e.getOppositeEdge().getPreviousEdge();
+			return e.getNextEdge().getOppositeEdge();
 		}
 		throw new IllegalArgumentException(
 				"Edge does not contain vertex in getNextEdgeClockwise()");
@@ -308,24 +308,24 @@ public class EdgeUtility {
 	> EdgeStatus getPrimalEdgeStatus(E e, List<E> edgeCycle, Set<V> vertexCycle) {
 		
 		if (edgeCycle.contains(e))
-			return EdgeStatus.liesOnLeftCycle;
+			return EdgeStatus.liesOnCycle;
 		if (edgeCycle.contains(e.getOppositeEdge()))
-			return EdgeStatus.liesOnRightCycle;
+			return EdgeStatus.liesOnInverseCycle;
 		boolean outpointing = vertexCycle.contains(e.getStartVertex());
 		V v = outpointing ? e.getStartVertex() : e.getTargetVertex();
 		E curr = getNextPrimalEdgeClockwise(e, v);
 		while (curr != e) {
 			if (edgeCycle.contains(curr)) {
 				if (outpointing)
-					return EdgeStatus.startsAtRightCycle;
-				else
-					return EdgeStatus.endsAtLeftCycle;
-			}
-			if (edgeCycle.contains(curr.getOppositeEdge())) {
-				if (outpointing)
 					return EdgeStatus.startsAtLeftCycle;
 				else
 					return EdgeStatus.endsAtRightCycle;
+			}
+			if (edgeCycle.contains(curr.getOppositeEdge())) {
+				if (outpointing)
+					return EdgeStatus.startsAtRightCycle;
+				else
+					return EdgeStatus.endsAtLeftCycle;
 			}
 			curr = getNextPrimalEdgeClockwise(curr, v);
 		}
@@ -350,9 +350,9 @@ public class EdgeUtility {
 	> EdgeStatus getDualEdgeStatus(E e, List<E> edgeCycle, Set<F> dualVertexCycle) {
 		
 		if (edgeCycle.contains(e))
-			return EdgeStatus.liesOnLeftCycle;
+			return EdgeStatus.liesOnCycle;
 		if (edgeCycle.contains(e.getOppositeEdge()))
-			return EdgeStatus.liesOnRightCycle;
+			return EdgeStatus.liesOnInverseCycle;
 		boolean outpointing = dualVertexCycle.contains(e.getRightFace());
 		F f = outpointing ? e.getRightFace() : e.getLeftFace();
 		E curr = getNextDualEdgeClockwise(e, f);
