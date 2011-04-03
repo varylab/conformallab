@@ -1,12 +1,15 @@
 package de.varylab.discreteconformal.util;
 
 import java.util.List;
+
+import cern.colt.matrix.Norm;
 import cern.colt.matrix.tdouble.DoubleFactory1D;
 import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.algo.solver.DefaultDoubleIterationMonitor;
+import cern.colt.matrix.tdouble.algo.solver.DoubleBiCGstab;
 import cern.colt.matrix.tdouble.algo.solver.DoubleGMRES;
 import cern.colt.matrix.tdouble.algo.solver.DoubleIterationReporter;
 import cern.colt.matrix.tdouble.algo.solver.DoubleIterativeSolver;
@@ -34,9 +37,7 @@ public class DiscreteHolomorphicFormUtility {
 	private static DoubleIterationReporter reporter = new ColtIterationReporterImpl();
 	
 	private static DenseDoubleAlgebra dalgebra = new DenseDoubleAlgebra();
-	private static double eps = 1E-10;
-	private static int maxIterations= 100000000;
-
+	
 	/**
 	 * Returns a basis of holomorphic differentials on the surface, which is
 	 * normalized with respect to the given homology basis (canonical).
@@ -109,21 +110,7 @@ public class DiscreteHolomorphicFormUtility {
 		// The number of harmonic forms on the surface is 2g, so we need 2g
 		// coefficients.
 		DoubleMatrix1D x = DoubleFactory1D.dense.make(2 * g);
-
-		// Iterative solver
-		DoubleIterativeSolver solver = new DoubleGMRES(x);
-		DefaultDoubleIterationMonitor monitor = new DefaultDoubleIterationMonitor();
-
-		// configure monitor
-		monitor.setMaxIterations(maxIterations);
-		monitor.setAbsoluteTolerance(eps);
-		monitor.setRelativeTolerance(eps);
-		monitor.setIterationReporter(reporter);
 		
-		monitor.setDivergenceTolerance(1);
-		
-		solver.setIterationMonitor(monitor);
-				
 		// For each a-cycle find the holomorphic form which is 1 along this
 		// cycle, i.e. gives one for the primal cycle and 0 for its dual cycle. 
 		for (int i = 0; i < g; i++) {
@@ -133,13 +120,7 @@ public class DiscreteHolomorphicFormUtility {
 			bc.set(g+i, 2*Math.PI);
 			
 			// solve the system
-			try {
-				solver.solve(M, bc, x);
-			} catch (IterativeSolverDoubleNotConvergedException e) {
-				System.err
-						.println("Iterative solver failed to converge: Couldn't get holomorphic form.");
-				e.printStackTrace();
-			}
+			solve(M, x, bc);
 
 			// Build linear combinations of the harmonic differentials
 			// using the obtained coefficients. 
@@ -230,36 +211,16 @@ public class DiscreteHolomorphicFormUtility {
 		// coefficients.
 		DoubleMatrix1D x = DoubleFactory1D.dense.make(2 * g);
 
-		// Iterative solver
-		DoubleIterativeSolver solver = new DoubleGMRES(x);
-		DefaultDoubleIterationMonitor monitor = new DefaultDoubleIterationMonitor();
-
-		// configure monitor
-		monitor.setMaxIterations(maxIterations);
-		monitor.setAbsoluteTolerance(eps);
-		monitor.setRelativeTolerance(eps);
-		monitor.setIterationReporter(reporter);
-
-		monitor.setDivergenceTolerance(1);
-
-		solver.setIterationMonitor(monitor);
-		
 		// For each a-cycle find the holomorphic form which is 1 along this
 		// cycle, i.e. gives one for the primal cycle and 0 for its dual cycle.
 		for (int i = 0; i < g; i++) {
 
 			// set up the conditions
 			DoubleMatrix1D bc = DoubleFactory1D.dense.make(2 * g);
-			bc.set(i, 2 * Math.PI);
+			bc.set(g+i, 2 * Math.PI);
 
 			// solve the system
-			try {
-				solver.solve(M, bc, x);
-			} catch (IterativeSolverDoubleNotConvergedException e) {
-				System.err
-						.println("Iterative solver failed to converge: Couldn't get holomorphic form.");
-				e.printStackTrace();
-			}
+			solve(M, x, bc);
 
 			// Build linear combinations of the harmonic differentials
 			// using the obtained coefficients.
@@ -276,6 +237,45 @@ public class DiscreteHolomorphicFormUtility {
 		adapters.remove(la);
 
 		return OMEGA;
+	}
+	
+	private static double eps = 1E-20;
+	private static int maxIterations= 100000000;
+	
+	/**
+	 * Solves Ax=b and writes the result in the vector x.
+	 * 
+	 * @param A
+	 * @param x
+	 * @param b
+	 */
+	private static void solve(DoubleMatrix2D A, DoubleMatrix1D x,
+			DoubleMatrix1D b) {
+		
+		DoubleIterativeSolver solver;
+//		solver = new DoubleGMRES(x);
+		solver = new DoubleBiCGstab(x);
+
+		DefaultDoubleIterationMonitor monitor = new DefaultDoubleIterationMonitor();
+
+		// configure monitor
+		monitor.setMaxIterations(maxIterations);
+		monitor.setAbsoluteTolerance(eps);
+		monitor.setRelativeTolerance(eps);
+//		monitor.setDivergenceTolerance(1);
+		monitor.setNormType(Norm.Infinity);
+		monitor.setIterationReporter(reporter);
+
+		solver.setIterationMonitor(monitor);
+
+		try {
+			solver.solve(A, b, x);
+		} catch (IterativeSolverDoubleNotConvergedException e) {
+			System.err
+					.println("Iterative solver failed to converge: Couldn't get harmonic function.");
+			e.printStackTrace();
+		}
+		System.err.println();
 	}
 
 }

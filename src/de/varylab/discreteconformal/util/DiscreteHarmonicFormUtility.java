@@ -8,6 +8,7 @@ import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.algo.solver.DefaultDoubleIterationMonitor;
+import cern.colt.matrix.tdouble.algo.solver.DoubleBiCGstab;
 import cern.colt.matrix.tdouble.algo.solver.DoubleGMRES;
 import cern.colt.matrix.tdouble.algo.solver.DoubleIterationReporter;
 import cern.colt.matrix.tdouble.algo.solver.DoubleIterativeSolver;
@@ -38,23 +39,8 @@ import de.varylab.discreteconformal.util.Search.WeightAdapter;
  */
 public class DiscreteHarmonicFormUtility {
 
-	private static DoubleIterationReporter reporter = new DoubleIterationReporter() {
-		
-		@Override
-		public void monitor(double arg0, DoubleMatrix1D arg1, int arg2) {
-			monitor(arg0, arg2);
-		}
-
-		@Override
-		public void monitor(double arg0, int arg1) {
-			if (arg1 % 100 == 0)
-				System.err.println("iteration = " + arg1 + ", value = " + arg0);
-		}
-	};
-	
+	private static DoubleIterationReporter reporter = new ColtIterationReporterImpl();	
 	private static DenseDoubleAlgebra dalgebra = new DenseDoubleAlgebra();
-	private static double eps = 1E-10;
-	private static int maxIterations= 100000000;
 	
 	/**
 	 * Calculates 2*g harmonic differentials on hds. The weight Adapter is used
@@ -332,8 +318,9 @@ public class DiscreteHarmonicFormUtility {
 			}
 		}
 		
-		howHarmonicIsPrimalForm(hds, adapters, dh);
-
+		System.out.println("Harmonic error: "+howHarmonicIsPrimalForm(hds, adapters, dh));
+		System.out.println();
+		
 		return dh;
 	}
 
@@ -386,7 +373,8 @@ public class DiscreteHarmonicFormUtility {
 			}
 		}
 		
-		howHarmonicIsDualForm(hds, adapters, dh);
+		System.out.println("Harmonic error: "+howHarmonicIsDualForm(hds, adapters, dh));
+		System.out.println();
 
 		return dh;
 	}
@@ -403,7 +391,7 @@ public class DiscreteHarmonicFormUtility {
 		double weight, res = 0;
 		CotanWeightAdapter ca = new CotanWeightAdapter();
 		adapters.add(ca);
-		int counter=0;
+		// int counter=0;
 		for (V v : hds.getVertices()) {
 			List<E> star = HalfEdgeUtilsExtra.getEdgeStar(v);
 			double curr = 0;
@@ -415,9 +403,10 @@ public class DiscreteHarmonicFormUtility {
 				else
 					curr -= weight * form.get(id);
 			}
-			if (Math.abs(curr) > 0.001)
-				System.out.println((counter++)+" Vertex " + v.getIndex() + ": Value = "
-						+ curr);
+			// if (Math.abs(curr) > 0.001)
+			// System.out.println((counter++)+" Vertex " + v.getIndex() +
+			// ": Value = "
+			// + curr);
 			res += Math.abs(curr);
 		}
 		adapters.remove(ca);
@@ -436,7 +425,7 @@ public class DiscreteHarmonicFormUtility {
 		double weight, res = 0;
 		CotanWeightAdapter ca = new CotanWeightAdapter();
 		adapters.add(ca);
-		int counter=0;
+		// int counter=0;
 		for (F f : hds.getFaces()) {
 			List<E> star = HalfEdgeUtilsExtra.getBoundary(f);
 			double curr = 0;
@@ -448,9 +437,10 @@ public class DiscreteHarmonicFormUtility {
 				else
 					curr += weight * form.get(id);
 			}
-			if (Math.abs(curr) > 0.001)
-				System.out.println((counter++)+" Face " + f.getIndex() + ": Value = "
-						+ curr);
+			// if (Math.abs(curr) > 0.001)
+			// System.out.println((counter++)+" Face " + f.getIndex() +
+			// ": Value = "
+			//		+ curr);
 			res += Math.abs(curr);
 		}
 		adapters.remove(ca);
@@ -482,7 +472,12 @@ public class DiscreteHarmonicFormUtility {
 
 		DoubleMatrix2D laplaceop = LaplaceUtility.getPrimalLaplacian(hds,
 				adapters);
-
+		
+		DoubleMatrix1D diag= DoubleFactory1D.dense.make(n);
+		for (int i = 0; i < n; i++) {
+			diag.set(i, laplaceop.get(i, i));
+		}
+		
 		DoubleMatrix1D x = DoubleFactory1D.dense.make(n);
 
 		double[] bcond = new double[n];
@@ -501,6 +496,29 @@ public class DiscreteHarmonicFormUtility {
 		adapters.remove(ca);
 
 		DoubleMatrix1D b = DoubleFactory1D.dense.make(bcond);
+
+		int J = -1;
+		for (int i = 0; i < n; i++) {
+			if(diag.get(i)!=0){
+				for (int j = 0; j < n; j++) {
+					if(laplaceop.get(i, j)!=0)
+						laplaceop.set(i, j, laplaceop.get(i, j)/diag.get(i));
+				}
+				b.set(i, b.get(i)/diag.get(i));
+			}
+			if(J<0&&b.get(i)==0)
+				J=i;
+		}
+		
+		// since the function is only unique up to constants we can fix the 0th value to 1
+		for (int i = 0; i < n; i++) {
+			if(i==J)
+				laplaceop.set(J, i, 1);
+			else
+				laplaceop.set(J, i, 0);
+		}
+		b.set(J, 1);
+		// System.err.println("determinant: "+ dalgebra.det(laplaceop));
 
 		solve(laplaceop, x, b);
 
@@ -537,6 +555,11 @@ public class DiscreteHarmonicFormUtility {
 		int n = hds.numFaces();
 		
 		DoubleMatrix2D laplaceop = LaplaceUtility.getDualLaplacian(hds, adapters);
+		
+		DoubleMatrix1D diag= DoubleFactory1D.dense.make(n);
+		for (int i = 0; i < n; i++) {
+			diag.set(i, laplaceop.get(i, i));
+		}
 
 		DoubleMatrix1D x = DoubleFactory1D.dense.make(n);
 
@@ -557,6 +580,30 @@ public class DiscreteHarmonicFormUtility {
 
 		DoubleMatrix1D b = DoubleFactory1D.dense.make(bcond);
 		
+		int J= -1;
+		for (int i = 0; i < n; i++) {
+			if(diag.get(i)!=0){
+				for (int j = 0; j < n; j++) {
+					if(laplaceop.get(i, j)!=0)
+						laplaceop.set(i, j, laplaceop.get(i, j)/diag.get(i));
+				}
+				b.set(i, b.get(i)/diag.get(i));
+				if(J<0&&b.get(i)==0)
+					J=i;
+			}
+		}
+		
+		// since the function is only unique up to constants we can fix the 0th value to 1
+		for (int i = 0; i < n; i++) {
+			if(i==J)
+				laplaceop.set(J, i, 1);
+			else
+				laplaceop.set(J, i, 0);
+		}
+		b.set(J, 1);
+		
+		// System.err.println("determinant: "+ dalgebra.det(laplaceop));
+		
 		solve(laplaceop, x, b);
 
 		DoubleMatrix1D H = DoubleFactory1D.dense.make(n);
@@ -567,6 +614,9 @@ public class DiscreteHarmonicFormUtility {
 
 		return H;
 	}
+	
+	private static double eps = 1E-20;
+	private static int maxIterations= 100000000;
 
 	/**
 	 * Solves Ax=b and writes the result in the vector x.
@@ -579,7 +629,8 @@ public class DiscreteHarmonicFormUtility {
 			DoubleMatrix1D b) {
 		
 		DoubleIterativeSolver solver;
-		solver = new DoubleGMRES(x);
+//		solver = new DoubleGMRES(x);
+		solver = new DoubleBiCGstab(x);
 
 		DefaultDoubleIterationMonitor monitor = new DefaultDoubleIterationMonitor();
 
@@ -587,7 +638,7 @@ public class DiscreteHarmonicFormUtility {
 		monitor.setMaxIterations(maxIterations);
 		monitor.setAbsoluteTolerance(eps);
 		monitor.setRelativeTolerance(eps);
-		monitor.setDivergenceTolerance(1);
+//		monitor.setDivergenceTolerance(1);
 		monitor.setNormType(Norm.Two);
 		monitor.setIterationReporter(reporter);
 

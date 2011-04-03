@@ -150,7 +150,7 @@ public class DualityUtility {
 				EdgeStatus status = EdgeUtility.getDualEdgeStatus(e, dualcycle, vertices);
 				// if the edge is on the left side put it to the dual path
 				// and points to the vertex
-				if (status == EdgeStatus.endsAtLeftCycle)
+				if (status == EdgeStatus.endsAtRightCycle)
 					primalpath.add(e);
 //				else if (status == EdgeStatus.startsAtLeftCycle)
 //					dualPath.add(e.getOppositeEdge());
