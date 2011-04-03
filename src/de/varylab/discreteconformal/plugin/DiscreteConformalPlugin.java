@@ -14,6 +14,7 @@ import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.WHITE;
 import static java.lang.Math.PI;
+import static java.lang.Math.atan2;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
 import static javax.swing.JOptionPane.showMessageDialog;
@@ -57,11 +58,12 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import no.uib.cipr.matrix.Vector;
-
 import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
+import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Pn;
+import de.jreality.math.Rn;
 import de.jreality.plugin.basic.View;
 import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.scene.Appearance;
@@ -73,6 +75,8 @@ import de.jreality.ui.AppearanceInspector;
 import de.jreality.ui.TextureInspector;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.TexturePosition;
+import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
@@ -176,7 +180,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	private JButton
 		coverToTextureButton = new JButton("Texture"),
 		checkGaussBonnetBtn = new JButton("Check Gauß-Bonnet"),
-		unwrapBtn = new JButton("Unwrap");
+		unwrapBtn = new JButton("Unwrap"),
+		quantizeToQuads = new JButton("Quads");
 	private JComboBox
 		domainCombo = new JComboBox(Domain.values());
 	private ShrinkPanel
@@ -185,7 +190,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		boundaryPanel = new ShrinkPanel("Boundary"),
 		coneConfigPanel = new ShrinkPanel("Automatic Cones"),
 		modelPanel = new ShrinkPanel("Hyperbolic Model"),
-		visualizationPanel = new ShrinkPanel("Visualization");
+		visualizationPanel = new ShrinkPanel("Visualization"),
+		texQuantizationPanel = new ShrinkPanel("Cone Texture Quantization");
 	private SpinnerNumberModel
 		customThetaModel = new SpinnerNumberModel(360.0, 0.0, 1000.0, 1.0),
 		numConesModel = new SpinnerNumberModel(0, 0, 100, 1),
@@ -232,6 +238,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		domainCombo.addActionListener(this);
 		useProjectiveTexture.addActionListener(this);
 		coverToTextureButton.addActionListener(this);
+		quantizeToQuads.addActionListener(this);
 		
 		ButtonGroup modelGroup = new ButtonGroup();
 		modelGroup.add(kleinButton);
@@ -339,12 +346,14 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		customThetaSpinner.addChangeListener(this);
 		shrinkPanel.add(customVertexPanel, c2);
 		
+		texQuantizationPanel.add(quantizeToQuads, c2);
+		shrinkPanel.add(texQuantizationPanel, c2);
+		
 		visualizationPanel.setLayout(new GridBagLayout());
 		visualizationPanel.add(showUnwrapped, c2);
 		visualizationPanel.add(showUniversalCover, c1);
 		visualizationPanel.add(domainCombo, c2);
 		visualizationPanel.add(coverToTextureButton, c2);
-		
 		visualizationPanel.add(useProjectiveTexture, c2);
 		visualizationPanel.setShrinked(true);
 		shrinkPanel.add(visualizationPanel, c2);
@@ -561,6 +570,86 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				Window w = getWindowAncestor(shrinkPanel);
 				showMessageDialog(w, e1.getMessage(), "Error", ERROR_MESSAGE);
 			}
+		}
+		if (quantizeToQuads == s) {
+			AdapterSet a = hif.getAdapters();
+			HalfedgeSelection sel = hif.getSelection();
+			List<CoVertex> cones = new LinkedList<CoVertex>();
+			CoHDS hds = hif.get(new CoHDS());
+			for (CoVertex v : hds.getVertices()) {
+				if (v.info != null && v.info.useCustomTheta) {
+					cones.add(v);
+				}
+			}
+			if (cones.size() > 2) throw new RuntimeException("More than two cones not supported");
+			Matrix T = contentAppearance.getAppearanceInspector().getTextureMatrix();
+			Matrix Ti = new Matrix(T); Ti.invert();
+			if (cones.size() == 0) return;
+			if (cones.size() == 1) { // translation only
+				CoVertex cv = cones.get(0);
+				double[] texpos = a.getD(TexturePosition4d.class, cv);
+				double[] quantPos = texpos.clone();
+				T.transformVector(quantPos);
+				Pn.dehomogenize(quantPos, quantPos);
+				double offset = sel.isSelected(cv) ? 0.25 : 0;
+				double difX = (quantPos[0] + offset) % 0.5;
+				double difY = (quantPos[1] + offset) % 0.5;
+				double[] difVec = {difX, difY, 0, 0};
+				Ti.transformVector(difVec);
+				Matrix QT = MatrixBuilder.euclidean().translate(-difVec[0], -difVec[1], 0).getMatrix();
+				for (CoVertex v : hds.getVertices()) {
+					double[] tp = hif.getAdapters().getD(TexturePosition4d.class, v);
+					double[] qtp = tp.clone();
+					QT.transformVector(qtp);
+					a.set(TexturePosition.class, v, qtp);
+				}
+			}
+			if (cones.size() == 2) { // affine transform
+				// TODO fix this!
+				CoVertex cv1 = cones.get(0);
+				CoVertex cv2 = cones.get(1);
+				double[] texpos1 = a.getD(TexturePosition4d.class, cv1);
+				double[] texpos2 = a.getD(TexturePosition4d.class, cv2);
+				double[] quantPos1 = texpos1.clone();
+				double[] quantPos2 = texpos2.clone();
+				T.transformVector(quantPos1);
+				T.transformVector(quantPos2);
+				Pn.dehomogenize(quantPos1, quantPos1);
+				Pn.dehomogenize(quantPos2, quantPos2);
+				double dist = Rn.euclideanDistance(quantPos1, quantPos2);
+				double sDist = dist;
+				double distOffset = (!sel.isSelected(cv2) && sel.isSelected(cv1)) || (sel.isSelected(cv2) && !sel.isSelected(cv1)) ? 0.25 : 0;
+				dist -= (dist + distOffset) % 0.5;
+				dist = Math.max(dist, 0.5);
+				double angle = atan2(quantPos1[1] - quantPos2[1], quantPos1[0] - quantPos2[0]) % PI/2;
+				double offset = sel.isSelected(cv1) ? 0.25 : 0;
+				double difX1 = (quantPos1[0] + offset) % 0.5;
+				double difY1 = (quantPos1[1] + offset) % 0.5;
+				
+				MatrixBuilder PivotB = MatrixBuilder.euclidean();
+				PivotB.translate(quantPos1[0], quantPos1[1], 0);
+				
+				MatrixBuilder QB = MatrixBuilder.euclidean();
+				QB.scale(dist / sDist);
+				QB.rotate(-angle, new double[]{0,0,1});
+				QB.conjugateBy(PivotB.getMatrix().getArray());
+				QB.translate(-difX1, -difY1, 0);				
+				Matrix QT = QB.getMatrix();
+				QT.transformVector(quantPos1);
+				QT.transformVector(quantPos2);
+				System.out.println("new dist: " + Rn.euclideanDistance(quantPos1, quantPos2));
+				System.out.println("new angle: " + atan2(quantPos1[1] - quantPos2[1], quantPos1[0] - quantPos2[0]) % 2*PI);
+				QT = Matrix.conjugate(QT, Ti);
+				for (CoVertex v : hds.getVertices()) {
+					double[] tp = hif.getAdapters().getD(TexturePosition4d.class, v);
+					double[] qtp = tp.clone();
+					QT.transformVector(qtp);
+					Pn.dehomogenize(qtp, qtp);
+					a.set(TexturePosition.class, v, qtp);
+				}
+			}
+			System.out.println("Quantizing texture cones: " + cones);
+			hif.update();
 		}
 	}
 	
