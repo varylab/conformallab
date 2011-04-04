@@ -2,7 +2,6 @@ package de.varylab.discreteconformal.plugin.schottky;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Poincaré;
-import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.cos;
@@ -58,8 +57,8 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
-import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionPositionAdapter;
+import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
@@ -161,8 +160,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				return;
 			}
 //			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
-			SchottkyWeightAdapter swa = new SchottkyWeightAdapter(cylces);
-			CoVertex cutRoot = hds.getVertex(1);
+//			SchottkyWeightAdapter swa = new SchottkyWeightAdapter(cylces);
+//			CoVertex cutRoot = hds.getVertex(1);
 			
 			for (Set<CoEdge> cycle : cylces) {
 				CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
@@ -578,8 +577,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
-		hif.addAdapter(new CoPositionAdapter(), true);
-		hif.addAdapter(new CoTexturePositionAdapter(true), true);
+		c.getPlugin(DiscreteConformalPlugin.class);
 	}
 	
 	@Override
