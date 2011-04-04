@@ -614,7 +614,7 @@ public class DiscreteHarmonicFormUtility {
 		return H;
 	}
 	
-	private static double eps = 1E-40;
+	private static double eps = 1E-20;
 	private static int maxIterations= 100000000;
 
 	/**

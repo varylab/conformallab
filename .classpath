@@ -31,5 +31,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/beans"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/modelling"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/numericalMethods"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/riemann"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/blas"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

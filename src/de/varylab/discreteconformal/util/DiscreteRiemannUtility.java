@@ -5,6 +5,7 @@ import java.util.List;
 import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
+import de.jtem.blas.ComplexMatrix;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -13,6 +14,7 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.algorithm.triangulation.Delaunay;
 import de.jtem.halfedgetools.algorithm.triangulation.MappedLengthAdapter;
 import de.jtem.mfc.field.Complex;
+import de.jtem.riemann.theta.SiegelReduction;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 
@@ -170,6 +172,13 @@ public class DiscreteRiemannUtility {
 						+ omega2[0].get(i, j));
 			}
 		}
+		
+		System.out.println("Apply Siegel Reduction:");
+		final ComplexMatrix PeriodMatrix= new ComplexMatrix(realPeriods.toArray(),imagPeriods.toArray());
+		SiegelReduction siegel= new SiegelReduction(PeriodMatrix);
+		ComplexMatrix normalizedPeriodMatrix= siegel.getPeriodMatrix();
+		
+		normalizedPeriodMatrix.print("Normalized Period Matrix;");
 
 		// use the private method
 		return array;
