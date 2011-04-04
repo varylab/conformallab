@@ -10,7 +10,6 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.algo.solver.DefaultDoubleIterationMonitor;
 import cern.colt.matrix.tdouble.algo.solver.DoubleBiCGstab;
-import cern.colt.matrix.tdouble.algo.solver.DoubleGMRES;
 import cern.colt.matrix.tdouble.algo.solver.DoubleIterationReporter;
 import cern.colt.matrix.tdouble.algo.solver.DoubleIterativeSolver;
 import cern.colt.matrix.tdouble.algo.solver.IterativeSolverDoubleNotConvergedException;

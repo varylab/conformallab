@@ -14,6 +14,34 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
  */
 public class SimpleMatrixPrintUtility {
 
+	
+	/**
+	 * Print method for colt matrices
+	 * @param M
+	 */
+	public static void print(DoubleMatrix2D M) {
+		
+		String tmp;
+		for (int i = 0; i < M.rows(); i++) {
+			System.out.print("| ");
+			for (int j = 0; j < M.columns(); j++) {
+				if (M.get(i, j) == 0)
+					tmp = " " + 0;
+				else {
+					tmp = M.get(i, j) >= 0 ? "+" : "";
+					tmp += M.get(i, j);
+				}
+				System.out.print(tmp);
+				if (j < M.columns() - 1) {
+					System.out.print(" , ");
+				} else {
+					System.out.println(" |");
+				}
+			}
+		}
+		System.out.println();
+	}
+	
 	/**
 	 * Print method for colt matrices
 	 * @param M

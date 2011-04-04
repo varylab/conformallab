@@ -134,12 +134,30 @@ public class DiscreteRiemannUtility {
 			}
 		}
 
+		DoubleMatrix2D realsymm= DoubleFactory2D.dense.make(realPeriods.rows(),realPeriods.columns());
+		DoubleMatrix2D imagsymm= DoubleFactory2D.dense.make(imagPeriods.rows(),imagPeriods.columns());
+		for (int i=0 ; i< realPeriods.rows();i++){
+			for (int j = i; j < realPeriods.columns(); j++){
+				realsymm.set(i,j, realPeriods.get(i, j)-realPeriods.get(j, i));
+				realsymm.set(j,i, realPeriods.get(j, i)-realPeriods.get(i, j));
+				imagsymm.set(i,j, imagPeriods.get(i, j)-imagPeriods.get(j, i));
+				imagsymm.set(j,i, imagPeriods.get(j, i)-imagPeriods.get(i, j));
+			}
+		}
+			
 		// TODO: matrix is still not symmetric: get out why!
 		System.out.println("PERIOD MATRIX (mean):");
 		System.out.println("real part:");
-		SimpleMatrixPrintUtility.print(realPeriods, 2);
+		SimpleMatrixPrintUtility.print(realPeriods, 4);
+		System.out.println();
+		System.out.println("symmetry:");
+		SimpleMatrixPrintUtility.print(realsymm);
+		System.out.println();
 		System.out.println("imaginary part:");
-		SimpleMatrixPrintUtility.print(imagPeriods, 2);
+		SimpleMatrixPrintUtility.print(imagPeriods, 4);
+		System.out.println();
+		System.out.println("symmetry:");
+		SimpleMatrixPrintUtility.print(imagsymm);
 		System.out.println();
 
 		int m = omega1[0].rows();

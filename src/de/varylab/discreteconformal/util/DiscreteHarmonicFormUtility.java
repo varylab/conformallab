@@ -9,7 +9,6 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.algo.solver.DefaultDoubleIterationMonitor;
 import cern.colt.matrix.tdouble.algo.solver.DoubleBiCGstab;
-import cern.colt.matrix.tdouble.algo.solver.DoubleGMRES;
 import cern.colt.matrix.tdouble.algo.solver.DoubleIterationReporter;
 import cern.colt.matrix.tdouble.algo.solver.DoubleIterativeSolver;
 import cern.colt.matrix.tdouble.algo.solver.IterativeSolverDoubleNotConvergedException;
@@ -615,7 +614,7 @@ public class DiscreteHarmonicFormUtility {
 		return H;
 	}
 	
-	private static double eps = 1E-20;
+	private static double eps = 1E-40;
 	private static int maxIterations= 100000000;
 
 	/**
