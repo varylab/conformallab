@@ -47,7 +47,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		calculateButton.addActionListener(this);
 	}
 	
-	private class HarmonicDifferentialAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, Double> {
+	public class HarmonicDifferentialAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, Double> {
 
 		private double[] 
 		    dh = null;
@@ -70,7 +70,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 	}
 	
-	private class HolomorphicDifferentialAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, Double> {
+	public class HolomorphicDifferentialAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, Double> {
 
 		private Complex[] 
 		    dh = null;
@@ -100,7 +100,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 	}
 	
 	@Color
-	private class HolomorphicDifferentialColorAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
+	public class HolomorphicDifferentialColorAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
 
 		private Complex[] 
 		    dh = null;
@@ -131,7 +131,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 	}
 	
 	@Color
-	private class HarmonicDifferentialColor extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
+	public class HarmonicDifferentialColor extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
 
 		private double[] 
 		    dh = null;
