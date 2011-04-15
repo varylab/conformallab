@@ -18,6 +18,7 @@ import de.jtem.jrworkspace.plugin.lnfswitch.plugin.NimbusLnF;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.SystemLookAndFeel;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
+import de.varylab.discreteconformal.plugin.DiscreteCurvatureLines;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
 import de.varylab.discreteconformal.plugin.EllipticImageGemerator;
 import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
@@ -40,6 +41,7 @@ public class ConformalLab {
 		s.add(new CutToDiskPlugin());
 		s.add(new CutAtEdgePlugin());
 		s.add(new FindPathPlugin());
+		s.add(new DiscreteCurvatureLines());
 		return s;
 	}
 	
