@@ -16,7 +16,7 @@ public class Curve extends HyperEllipticCurve {
 	private static final long serialVersionUID = 1L;
 
 	private List<CurveChangeListener> listeners = new Vector<CurveChangeListener>();
-
+	
 	public void addCurveChangeListener(
 			CurveChangeListener listener) {
 		listeners.add(listener);

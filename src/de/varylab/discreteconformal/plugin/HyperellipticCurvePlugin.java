@@ -93,12 +93,13 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 	}
 
 	private ComplexMatrix getNormalizedPeriodMatrix() {
-		final ComplexMatrix PeriodMatrix = editor.getCurve().getPeriodMatrix();
+		final ComplexMatrix PeriodMatrix = editor.getCurve().getPeriodMatrix().copy();
 		SiegelReduction siegel = new SiegelReduction(PeriodMatrix);
-		return siegel.getPeriodMatrix();
+		return siegel.getReducedPeriodMatrix();
 	}
 
 	public void update() {
+		editor.getCurve().setEps(1E-16);
 		editor.update();
 	}
 
