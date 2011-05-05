@@ -4,6 +4,7 @@ import java.text.NumberFormat;
 import java.util.Locale;
 import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import de.jtem.blas.ComplexMatrix;
 
 
 /**
@@ -73,6 +74,48 @@ public class SimpleMatrixPrintUtility {
 			}
 		}
 		System.out.println();
+	}
+	
+	/**
+	 * Print method for complex matrices
+	 * @param M
+	 * @param noOfFractionDigits
+	 */
+	public static void print(ComplexMatrix M, int noOfFractionDigits) {
+		System.out.println(toString(M, noOfFractionDigits));
+		System.out.println();
+	}
+	
+	/**
+	 * Print method for complex matrices
+	 * @param M
+	 * @param noOfFractionDigits
+	 */
+	public static String toString(ComplexMatrix M, int noOfFractionDigits) {
+		
+		NumberFormat numberFormat = NumberFormat.getInstance(Locale.ENGLISH);
+		
+		numberFormat.setMinimumFractionDigits(noOfFractionDigits);
+		numberFormat.setMaximumFractionDigits(noOfFractionDigits);
+		
+		String newline = System.getProperty("line.separator");
+		
+		String tmp="";
+		for (int i = 0; i < M.getNumRows(); i++) {
+			tmp+="| ";
+			for (int j = 0; j < M.getNumCols(); j++) {
+				tmp += M.get(i, j).re >= 0 ? "+" : "";
+				tmp += numberFormat.format(M.get(i, j).re);
+				tmp += M.get(i, j).im >= 0 ? "+" : "";
+				tmp += numberFormat.format(M.get(i, j).im)+"i";
+				if (j < M.getNumCols() - 1) {
+					tmp+=" , ";
+				} else {
+					tmp+=" |"+newline;
+				}
+			}
+		}
+		return tmp;
 	}
 	
 	/**

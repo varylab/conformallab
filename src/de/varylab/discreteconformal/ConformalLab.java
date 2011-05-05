@@ -21,6 +21,7 @@ import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteCurvatureLines;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
 import de.varylab.discreteconformal.plugin.EllipticImageGemerator;
+import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutToDiskPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.FindPathPlugin;
@@ -67,6 +68,7 @@ public class ConformalLab {
 //		v.registerPlugin(new HalfedgeDebuggerPlugin());
 		v.registerPlugins(createConformalPlugins());
 		v.registerPlugins(HalfedgePluginFactory.createPlugins());
+		v.registerPlugin(new HyperellipticCurvePlugin());
 		v.startup();
 		v.getPlugin(HalfedgeInterface.class).set(new CoHDS());
 	} 
