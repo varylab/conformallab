@@ -9,6 +9,8 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmCategory;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmPlugin;
+import de.jtem.jrworkspace.plugin.PluginInfo;
+import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.util.CuttingUtility;
 
 public class CutAtEdgePlugin extends AlgorithmPlugin {
@@ -23,6 +25,13 @@ public class CutAtEdgePlugin extends AlgorithmPlugin {
 		return "Cut At Edge";
 	}
 
+	@Override
+	public PluginInfo getPluginInfo() {
+		PluginInfo info = super.getPluginInfo();
+		info.icon = ImageHook.getIcon("cut.png");
+		return info;
+	}
+	
 	@Override
 	public <
 		V extends Vertex<V, E, F>, 
