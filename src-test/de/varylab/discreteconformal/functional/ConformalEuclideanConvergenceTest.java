@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.functional;
 
+import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.CustomEdgeInfo;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
@@ -56,6 +58,8 @@ public class ConformalEuclideanConvergenceTest  {
 		ReaderOBJ reader = new ReaderOBJ();
 		SceneGraphComponent c = null;
 		IndexedFaceSet ifs = null;
+		AdapterSet a = AdapterSet.createGenericAdapters();
+		a.add(new CoPositionAdapter());
 		CoHDS hds = new CoHDS(); 
 		try {
 			Input in = new Input("Obj File", ConformalEuclideanConvergenceTest.class.getResourceAsStream("cathead.obj"));
@@ -63,15 +67,26 @@ public class ConformalEuclideanConvergenceTest  {
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds converter = new ConverterJR2Heds();
 			hds = new CoHDS();
-			AdapterSet a = new AdapterSet(new CoPositionAdapter());
 			converter.ifs2heds(ifs, hds, a, null);
+			hds.normalizeCoordinates();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds, new AdapterSet());
+		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds, a);
 		Random rnd = new Random(); 
 		rnd.setSeed(1);
+		
+//		 one edge is circular
+		for (CoEdge e : hds.getPositiveEdges()) {
+			CoVertex s = e.getStartVertex();
+			CoVertex t = e.getTargetVertex();
+			if (isBoundaryVertex(s) || isBoundaryVertex(t)) {
+				continue;
+			}
+			e.info = new CustomEdgeInfo();
+			e.info.holeEdge = true;
+			break;
+		}
 		
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
 		// optimization
@@ -79,9 +94,9 @@ public class ConformalEuclideanConvergenceTest  {
 		Matrix H = new CompRowMatrix(n,n,makeNonZeros(hds));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
-		optimizer.setSolver(Solver.CGS);
+		optimizer.setSolver(Solver.CG);
 		optimizer.setError(1E-13);
-		optimizer.setMaxIterations(20);
+		optimizer.setMaxIterations(200);
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {

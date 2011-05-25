@@ -35,7 +35,7 @@ public class ConformalHyperbolicFunctional <
 	F extends Face<V, E, F>
 > implements Functional<V, E, F> {
 
-	private Variable<V> 
+	private Variable<V, E> 
 		var = null;
 	private Theta<V> 
 		theta = null;
@@ -48,7 +48,7 @@ public class ConformalHyperbolicFunctional <
 	
 	
 	public ConformalHyperbolicFunctional(
-		Variable<V> var,
+		Variable<V, E> var,
 		Theta<V> theta,
 		Lambda<E> lambda,
 		Alpha<E> alpha,

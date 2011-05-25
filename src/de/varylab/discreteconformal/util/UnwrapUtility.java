@@ -285,8 +285,16 @@ public class UnwrapUtility {
 				e = e.getNextEdge();
 			} while (true);
 		}
-		
 		System.out.println("Gauss-Bonnet sum: " + (bSum / PI));
+
+		// circular quad edges
+		for (CoEdge e : hds.getPositiveEdges()) {
+			if (e.info != null && e.info.holeEdge) {
+				int index = dim++;
+				e.setSolverIndex(index);
+				e.getOppositeEdge().setSolverIndex(index);
+			}
+		}
 		
 		// initial Euclidean energy
 		ZeroU zeroU = new ZeroU();

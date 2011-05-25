@@ -52,12 +52,12 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		CEuclideanApplication app = new CEuclideanApplication(surface);
 		int n = app.getDomainDimension();
 		u = new Vec(n);
-		H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(surface));
-		H.assemble();
+//		H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(surface));
+//		H.assemble();
 		app.setInitialSolutionVec(u);
-		app.setHessianMat(H, H);	
+//		app.setHessianMat(H, H);	
 		
-		optimizer = new Tao(Tao.Method.NTR);
+		optimizer = new Tao(Tao.Method.LMVM);
 		optimizer.setApplication(app);
 		optimizer.setTolerances(0, 0, 0, 0);
 		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance);

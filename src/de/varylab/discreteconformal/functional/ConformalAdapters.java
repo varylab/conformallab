@@ -6,9 +6,14 @@ import de.jtem.halfedge.Vertex;
 
 public interface ConformalAdapters {
 
-	public static interface Variable <V extends Vertex<V, ?, ?>> {
+	public static interface Variable <
+		V extends Vertex<V, E, ?>,
+		E extends Edge<V, E, ?>
+	> {
 		public boolean isVariable(V v);
 		public int getVarIndex(V v);
+		public boolean isVariable(E e);
+		public int getVarIndex(E e);
 	}
 	
 	public static interface Alpha <E extends Edge<?, E, ?>> {

@@ -32,10 +32,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.ButtonGroup;
@@ -73,6 +71,7 @@ import de.jreality.shader.Texture2D;
 import de.jreality.shader.TextureUtility;
 import de.jreality.ui.AppearanceInspector;
 import de.jreality.ui.TextureInspector;
+import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
@@ -92,6 +91,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.CustomEdgeInfo;
 import de.varylab.discreteconformal.heds.CustomVertexInfo;
 import de.varylab.discreteconformal.heds.adapter.BranchPointColorAdapter;
 import de.varylab.discreteconformal.heds.adapter.BranchPointRadiusAdapter;
@@ -136,6 +136,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		cutInfo = null;
 	private List<CoVertex>
 		customVertices = new LinkedList<CoVertex>();
+	private List<CoEdge>
+		customEdges = new LinkedList<CoEdge>();	
 	private FundamentalPolygon 
 		cuttedPolygon = null,
 		minimalPolygon = null,
@@ -186,7 +188,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		domainCombo = new JComboBox(Domain.values());
 	private ShrinkPanel
 		metricPreprocessPanel = new ShrinkPanel("Metric Preprocessing"),
-		customVertexPanel = new ShrinkPanel("Custom Vertices"),
+		customNodePanel = new ShrinkPanel("Custom Vertices"),
 		boundaryPanel = new ShrinkPanel("Boundary"),
 		coneConfigPanel = new ShrinkPanel("Automatic Cones"),
 		modelPanel = new ShrinkPanel("Hyperbolic Model"),
@@ -203,8 +205,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		toleranceExpSpinner = new JSpinner(toleranceExpModel),
 		maxIterationsSpinner = new JSpinner(maxIterationsModel);
 	private JCheckBox
+		circularEdgeChecker = new JCheckBox("Is Circular Edge"), 
 		useInverseFlatMetricChecker = new JCheckBox("Use inverse last metric"),
-		useCurvatureMatricChecker = new JCheckBox("Use Curvature Metric"),
+		useCurvatureMetricChecker = new JCheckBox("Use Curvature Metric"),
 		useDistanceToCanonicalize = new JCheckBox("Use Isometry Distances"),
 		useCustomThetaChecker = new JCheckBox("Custom Theta"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
@@ -222,9 +225,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		poincareButton = new JRadioButton("Poincaré", true),
 		halfplaneButton = new JRadioButton("Half-Plane"); 
 	private JList
-		selectedVertexList = new JList();
+		selectedNodesList = new JList();
 	private JScrollPane
-		selectionScroller = new JScrollPane(selectedVertexList);
+		selectionScroller = new JScrollPane(selectedNodesList);
 		
 	public DiscreteConformalPlugin() {
 		createLayout();
@@ -317,7 +320,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		shrinkPanel.add(boundaryPanel, c2);
 		
 		metricPreprocessPanel.setLayout(new GridBagLayout());
-		metricPreprocessPanel.add(useCurvatureMatricChecker, c2);
+		metricPreprocessPanel.add(useCurvatureMetricChecker, c2);
 		metricPreprocessPanel.add(useInverseFlatMetricChecker, c2);
 		shrinkPanel.add(metricPreprocessPanel, c2);
 		
@@ -329,22 +332,24 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		coneConfigPanel.setShrinked(true);
 		shrinkPanel.add(coneConfigPanel, c2);
 		
-		customVertexPanel.add(selectionScroller, c2);
+		customNodePanel.add(selectionScroller, c2);
 		selectionScroller.setPreferredSize(new Dimension(10, 70));
 		selectionScroller.setMinimumSize(new Dimension(10, 70));
-		customVertexPanel.add(useCustomThetaChecker, c1);
-		customVertexPanel.add(customThetaSpinner, c2);
-		customVertexPanel.add(new JLabel("Mode"), c1);
-		customVertexPanel.add(customModeCombo, c2);
-		customVertexPanel.add(new JLabel("Quantization"), c1);
-		customVertexPanel.add(customQuantizationCombo, c2);
-		selectedVertexList.getSelectionModel().addListSelectionListener(this);
+		customNodePanel.add(useCustomThetaChecker, c1);
+		customNodePanel.add(customThetaSpinner, c2);
+		customNodePanel.add(new JLabel("Mode"), c1);
+		customNodePanel.add(customModeCombo, c2);
+		customNodePanel.add(new JLabel("Quantization"), c1);
+		customNodePanel.add(customQuantizationCombo, c2);
+		customNodePanel.add(circularEdgeChecker, c2);
+		selectedNodesList.getSelectionModel().addListSelectionListener(this);
 		customModeCombo.addActionListener(this);
 		customQuantizationCombo.addActionListener(this);
-		customVertexPanel.setShrinked(true);
+		customNodePanel.setShrinked(true);
 		useCustomThetaChecker.addActionListener(this);
 		customThetaSpinner.addChangeListener(this);
-		shrinkPanel.add(customVertexPanel, c2);
+		circularEdgeChecker.addActionListener(this);
+		shrinkPanel.add(customNodePanel, c2);
 		
 		texQuantizationPanel.add(quantizeToQuads, c2);
 		shrinkPanel.add(texQuantizationPanel, c2);
@@ -369,8 +374,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	
 	@Override
 	public void selectionChanged(HalfedgeSelection s, HalfedgeInterface hif) {
-		Set<CoVertex> oldSelection = new HashSet<CoVertex>(customVertices);
 		customVertices.clear();
+		customEdges.clear();
 		for (Vertex<?,?,?> v : s.getVertices()) {
 			if (v instanceof CoVertex) {
 				CoVertex cov = (CoVertex)v;
@@ -380,34 +385,51 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				customVertices.add(cov);
 			}
 		}
-		Set<CoVertex> newSelection = new HashSet<CoVertex>(customVertices);
-		newSelection.removeAll(oldSelection);
+		for (Edge<?,?,?> e : s.getEdges()) {
+			if (e instanceof CoEdge) {
+				CoEdge coe = (CoEdge)e;
+				if (coe.info == null) {
+					coe.info = new CustomEdgeInfo();
+					coe.getOppositeEdge().info = coe.info;
+				}
+				customEdges.add(coe);
+			}
+		}
 		DefaultListModel model = new DefaultListModel();
 		for (CoVertex v : customVertices) {
 			model.addElement(v);
 		}
-		selectedVertexList.setModel(model);
-		if (!newSelection.isEmpty()) {
-			CoVertex v = newSelection.iterator().next();
-			selectedVertexList.setSelectedValue(v, true);
+		for (CoEdge edge : customEdges) {
+			if (edge.isPositive()) {
+				model.addElement(edge);
+			}
 		}
+		selectedNodesList.setModel(model);
 	}
 
 	
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
-		if (selectedVertexList.getSelectedValue() == null) return;
-		CoVertex v = (CoVertex)selectedVertexList.getSelectedValue();
-		customModeCombo.setSelectedItem(v.info.boundaryMode);
-		customQuantizationCombo.setSelectedItem(v.info.quantizationMode);
-		useCustomThetaChecker.setSelected(v.info.useCustomTheta);
-		customThetaModel.setValue(Math.toDegrees(v.info.theta));
+		if (selectedNodesList.getSelectedValue() == null) return;
+		Object val = selectedNodesList.getSelectedValue();
+		if (val instanceof CoVertex) {
+			CoVertex v = (CoVertex)val;
+			customModeCombo.setSelectedItem(v.info.boundaryMode);
+			customQuantizationCombo.setSelectedItem(v.info.quantizationMode);
+			useCustomThetaChecker.setSelected(v.info.useCustomTheta);
+			customThetaModel.setValue(Math.toDegrees(v.info.theta));
+		}
+		if (val instanceof CoEdge) {
+			CoEdge edge = (CoEdge)val;
+			circularEdgeChecker.setSelected(edge.info.holeEdge);
+		}
 	}
 	
 	@Override
 	public void stateChanged(ChangeEvent e) {
-		if (selectedVertexList.getSelectedValue() == null) return;
-		for (Object s : selectedVertexList.getSelectedValues()) {
+		if (selectedNodesList.getSelectedValue() == null) return;
+		for (Object s : selectedNodesList.getSelectedValues()) {
+			if (!(s instanceof CoVertex)) continue;
 			CoVertex v = (CoVertex)s;
 			double thetaDeg = customThetaModel.getNumber().doubleValue();
 			v.info.theta = Math.toRadians(thetaDeg);
@@ -509,7 +531,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			CoHDS surface = getLoaderGeometry();
 			surface.normalizeCoordinates();
 			AdapterSet aSet = hif.getAdapters();
-			if (useCurvatureMatricChecker.isSelected()) {
+			if (useCurvatureMetricChecker.isSelected()) {
 				aSet.add(new CurvatureLengthAdapter());
 			} else if (useInverseFlatMetricChecker.isSelected() && lastConformalU != null) {
 				aSet.add(new InversePlanarMetricAdapter(lastConformalU));
@@ -538,21 +560,31 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			updateStates();
 		}
 		if (customModeCombo == s) {
-			for (Object sel : selectedVertexList.getSelectedValues()) {
+			for (Object sel : selectedNodesList.getSelectedValues()) {
+				if (!(sel instanceof CoVertex)) continue;
 				CoVertex v = (CoVertex)sel;
 				v.info.boundaryMode = (BoundaryMode)customModeCombo.getSelectedItem();
 			}
 		}
 		if (customQuantizationCombo == s) {
-			for (Object sel : selectedVertexList.getSelectedValues()) {
+			for (Object sel : selectedNodesList.getSelectedValues()) {
+				if (!(sel instanceof CoVertex)) continue;
 				CoVertex v = (CoVertex)sel;
 				v.info.quantizationMode = (QuantizationMode)customQuantizationCombo.getSelectedItem();
 			}
 		}
 		if (useCustomThetaChecker == s) {
-			for (Object sel : selectedVertexList.getSelectedValues()) {
+			for (Object sel : selectedNodesList.getSelectedValues()) {
+				if (!(sel instanceof CoVertex)) continue;
 				CoVertex v = (CoVertex)sel;
 				v.info.useCustomTheta = useCustomThetaChecker.isSelected(); 
+			}
+		}
+		if (circularEdgeChecker == s) {
+			for (Object sel : selectedNodesList.getSelectedValues()) {
+				if (!(sel instanceof CoEdge)) continue;
+				CoEdge edge = (CoEdge)sel;
+				edge.info.holeEdge = circularEdgeChecker.isSelected();
 			}
 		}
 		if (checkGaussBonnetBtn == s) {
@@ -817,7 +849,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		coneConfigPanel.setShrinked(c.getProperty(getClass(), "conesPanelShrinked", true));
 		visualizationPanel.setShrinked(c.getProperty(getClass(), "visualizationPanelShrinked", true));
 		modelPanel.setShrinked(c.getProperty(getClass(), "modelPanelShrinked", true));
-		customVertexPanel.setShrinked(c.getProperty(getClass(), "customVertexPanelShrinked", customVertexPanel.isShrinked()));
+		customNodePanel.setShrinked(c.getProperty(getClass(), "customVertexPanelShrinked", customNodePanel.isShrinked()));
 	}
 	
 	

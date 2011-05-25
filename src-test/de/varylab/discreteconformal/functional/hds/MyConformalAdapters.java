@@ -10,7 +10,7 @@ import de.varylab.discreteconformal.functional.ConformalAdapters.Variable;
 public abstract class MyConformalAdapters {
 
 
-	public static class CVariable implements Variable<MyConformalVertex> {
+	public static class CVariable implements Variable<MyConformalVertex, MyConformalEdge> {
 		@Override
 		public boolean isVariable(MyConformalVertex v) {
 			return getVarIndex(v) >= 0;
@@ -18,6 +18,15 @@ public abstract class MyConformalAdapters {
 		@Override
 		public int getVarIndex(MyConformalVertex v) {
 			return v.getSolverIndex();
+		}
+		
+		@Override
+		public boolean isVariable(MyConformalEdge e) {
+			return getVarIndex(e) >= 0;
+		}
+		@Override
+		public int getVarIndex(MyConformalEdge e) {
+			return e.getSolverIndex();
 		}
 	}
 	

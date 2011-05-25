@@ -12,7 +12,7 @@ import de.varylab.discreteconformal.heds.CoVertex;
 public abstract class Adapters {
 
 
-	public static class CVariable implements Variable<CoVertex> {
+	public static class CVariable implements Variable<CoVertex, CoEdge> {
 		@Override
 		public boolean isVariable(CoVertex v) {
 			return getVarIndex(v) >= 0;
@@ -21,6 +21,16 @@ public abstract class Adapters {
 		public int getVarIndex(CoVertex v) {
 			return v.getSolverIndex();
 		}
+		
+		@Override
+		public boolean isVariable(CoEdge e) {
+			return getVarIndex(e) >= 0;
+		}
+		@Override
+		public int getVarIndex(CoEdge e) {
+			return e.getSolverIndex();
+		}
+		
 	}
 	
 	public static class CAlpha implements Alpha<CoEdge> {

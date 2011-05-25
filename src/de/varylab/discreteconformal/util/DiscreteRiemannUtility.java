@@ -176,7 +176,7 @@ public class DiscreteRiemannUtility {
 		System.out.println("Apply Siegel Reduction:");
 		final ComplexMatrix PeriodMatrix= new ComplexMatrix(realPeriods.toArray(),imagPeriods.toArray());
 		SiegelReduction siegel= new SiegelReduction(PeriodMatrix);
-		ComplexMatrix normalizedPeriodMatrix= siegel.getPeriodMatrix();
+		ComplexMatrix normalizedPeriodMatrix= siegel.getReducedPeriodMatrix();
 		
 		normalizedPeriodMatrix.print("Normalized Period Matrix;");
 

@@ -11,7 +11,16 @@ public class ConformalEdge <
     private double
     	lambda = 1.0,
     	alpha = 0.0;
-    
+	private Integer
+		solverIndex = -1;
+	
+	public Integer getSolverIndex() {
+		return solverIndex;
+	}
+	public void setSolverIndex(Integer solverIndex) {
+		this.solverIndex = solverIndex;
+	}
+
 	public double getLambda() {
 		return lambda;
 	}

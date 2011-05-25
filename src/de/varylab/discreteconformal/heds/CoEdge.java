@@ -5,6 +5,9 @@ import de.varylab.discreteconformal.functional.node.ConformalEdge;
 
 public class CoEdge extends ConformalEdge<CoVertex, CoEdge, CoFace> {
 
+	public CustomEdgeInfo
+		info = null;
+	
 	public double getLength() {
 		double[] s = getStartVertex().P;
 		double[] t = getTargetVertex().P;

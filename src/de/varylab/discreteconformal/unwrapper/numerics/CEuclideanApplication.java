@@ -5,7 +5,7 @@ import static de.varylab.jtao.TaoAppAddHess.PreconditionerType.SAME_NONZERO_PATT
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
-import de.varylab.discreteconformal.functional.ConformalEuclideanFunctional;
+import de.varylab.discreteconformal.functional.CoHolesEuclideanFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -36,8 +36,10 @@ public class CEuclideanApplication extends TaoApplication implements
 		energy = new CInitialEnergy();
 	private CAlpha
 		alpha = new CAlpha();
-	private ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>
-		functional = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+//	private ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>
+//		functional = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	private CoHolesEuclideanFunctional<CoVertex, CoEdge, CoFace>
+		functional = new CoHolesEuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 		
 
 	public CEuclideanApplication(CoHDS hds) {
@@ -165,6 +167,11 @@ public class CEuclideanApplication extends TaoApplication implements
 		int dim = 0;
 		for (CoVertex v : hds.getVertices()) {
 			if (v.getSolverIndex() >= 0) {
+				dim++;
+			}
+		}
+		for (CoEdge e : hds.getPositiveEdges()) {
+			if (e.getSolverIndex() >= 0) {
 				dim++;
 			}
 		}
