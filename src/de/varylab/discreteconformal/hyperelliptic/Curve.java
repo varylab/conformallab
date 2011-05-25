@@ -84,8 +84,8 @@ public class Curve extends HyperEllipticCurve {
 	}
 
 	public Curve(BranchPoint[] branchPoints) {
-
 		super(branchPoints, null, getInitDistinguishedPoints(), getInitOrigin());
+		setSymmetrizePeriodMatrix(false);
 	}
 
 	public void update() {

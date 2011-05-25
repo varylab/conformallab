@@ -64,6 +64,9 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 	}
 
 	public void setCurve(Curve curve) {
+
+		curve.setEps(1E-15);
+		
 		if (editor != null) {
 			curve.setCurveChangeListeners(getCurve().getCurveChangeListeners());
 			editor.setCurve(curve);
@@ -107,6 +110,8 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		matrixfield.setText("" + SimpleMatrixPrintUtility.toString(
 				getNormalizedPeriodMatrix(), 4));
 		matrixfield.repaint();
+		System.out.println("" + SimpleMatrixPrintUtility.toString(
+				getNormalizedPeriodMatrix(), 20));
 	}
 
 	@Override
