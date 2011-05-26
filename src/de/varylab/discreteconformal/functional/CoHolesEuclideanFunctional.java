@@ -310,6 +310,7 @@ public class CoHolesEuclideanFunctional <
 			E.add(a1*x23 + a2*x31 + a3*x12);
 			E.add(2*lob(a1) + 2*lob(a2) + 2*lob(a3));
 			E.add(- PI * (x12 + x23 + x31) / 2);
+			E.add(- energy.getInitialEnergy(f));
 		}
 		alpha.setAlpha(e1, a2);
 		alpha.setAlpha(e2, a3);

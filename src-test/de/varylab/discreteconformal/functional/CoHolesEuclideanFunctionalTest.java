@@ -28,7 +28,7 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 
-public class ConformalEuclideanFunctionalTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
+public class CoHolesEuclideanFunctionalTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
 
 	private CTheta
 		theta = new CTheta();
@@ -40,8 +40,8 @@ public class ConformalEuclideanFunctionalTest extends FunctionalTest<CoVertex, C
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	public ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>
-		functional = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	public CoHolesEuclideanFunctional<CoVertex, CoEdge, CoFace>
+		functional = new CoHolesEuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 	
 	@Override
 	public void init() {
@@ -52,7 +52,7 @@ public class ConformalEuclideanFunctionalTest extends FunctionalTest<CoVertex, C
 		a.add(new CoPositionAdapter());
 		CoHDS hds = new CoHDS(); 
 		try {
-			Input in = new Input("Obj File", ConformalEuclideanFunctionalTest.class.getResourceAsStream("square01.obj"));
+			Input in = new Input("Obj File", CoHolesEuclideanFunctionalTest.class.getResourceAsStream("cathead.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds converter = new ConverterJR2Heds();
@@ -62,7 +62,7 @@ public class ConformalEuclideanFunctionalTest extends FunctionalTest<CoVertex, C
 			e.printStackTrace();
 		}
 		
-//		 one edge is circular
+		// one edge is circular
 		for (CoEdge e : hds.getPositiveEdges()) {
 			CoVertex s = e.getStartVertex();
 			CoVertex t = e.getTargetVertex();

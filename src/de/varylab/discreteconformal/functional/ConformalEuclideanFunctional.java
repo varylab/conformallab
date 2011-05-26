@@ -144,11 +144,12 @@ public class ConformalEuclideanFunctional <
 					if (var.isVariable(e1) || var.isVariable(e2)) {
 						if (!var.isVariable(e1)) {
 							G.add(v1i, alpha.getAlpha(e1));
+							G.add(v1i, -PI);
 						}
 						if (!var.isVariable(e2)) {
 							G.add(v1i, alpha.getAlpha(e2));
+							G.add(v1i, -PI);
 						}
-						G.add(v1i, -PI/2);
 					} else {
 						G.add(v1i, -alpha.getAlpha(e3));
 					}
@@ -157,11 +158,12 @@ public class ConformalEuclideanFunctional <
 					if (var.isVariable(e2) || var.isVariable(e3)) {
 						if (!var.isVariable(e2)) {
 							G.add(v2i, alpha.getAlpha(e2));
+							G.add(v2i, -PI);
 						}
 						if (!var.isVariable(e3)) {
 							G.add(v2i, alpha.getAlpha(e3));
+							G.add(v2i, -PI);
 						}
-						G.add(v2i, -PI/2);
 					} else {
 						G.add(v2i, -alpha.getAlpha(e1));
 					}
@@ -170,11 +172,12 @@ public class ConformalEuclideanFunctional <
 					if (var.isVariable(e1) || var.isVariable(e3)) {
 						if (!var.isVariable(e1)) {
 							G.add(v3i, alpha.getAlpha(e1));
+							G.add(v3i, -PI);
 						}
 						if (!var.isVariable(e3)) {
 							G.add(v3i, alpha.getAlpha(e3));
+							G.add(v3i, -PI);
 						}
-						G.add(v3i, -PI/2);
 					} else {
 						G.add(v3i, -alpha.getAlpha(e2));
 					}	
@@ -280,9 +283,9 @@ public class ConformalEuclideanFunctional <
 			λ2 = var.isVariable(e2) ? u.get(var.getVarIndex(e2)) : lambda.getLambda(e2),
 			λ3 = var.isVariable(e3) ? u.get(var.getVarIndex(e3)) : lambda.getLambda(e3);
 		final double 
-			x12 = λ2 + (var.isVariable(e2) ? 0 : u1+u2 - 2*umean),
-			x23 = λ3 + (var.isVariable(e3) ? 0 : u2+u3 - 2*umean),
-			x31 = λ1 + (var.isVariable(e1) ? 0 : u3+u1 - 2*umean);
+			x12 = λ2 + (var.isVariable(e2) ? 0 : u1 + u2 - 2*umean),
+			x23 = λ3 + (var.isVariable(e3) ? 0 : u2 + u3 - 2*umean),
+			x31 = λ1 + (var.isVariable(e1) ? 0 : u3 + u1 - 2*umean);
 		final double 
 			l12 = exp(x12),
 			l23 = exp(x23),
