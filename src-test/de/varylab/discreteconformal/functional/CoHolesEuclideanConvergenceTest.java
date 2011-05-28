@@ -19,7 +19,6 @@ import de.jreality.scene.SceneGraphComponent;
 import de.jreality.util.Input;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
-import de.varylab.discreteconformal.functional.ConformalEuclideanFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
