@@ -10,9 +10,9 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.MyEnergy;
-import de.varylab.discreteconformal.functional.ConformalEuclideanFunctional;
-import de.varylab.discreteconformal.functional.ConformalHyperbolicFunctional;
-import de.varylab.discreteconformal.functional.ConformalAdapters.InitialEnergy;
+import de.varylab.discreteconformal.functional.EuclideanFunctional;
+import de.varylab.discreteconformal.functional.HyperbolicFunctional;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
 import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CAlpha;
 import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CLambda;
 import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CTheta;
@@ -81,7 +81,7 @@ public class ConformalHDS extends HalfEdgeDataStructure<MyConformalVertex, MyCon
 		CTheta theta = new CTheta();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		MyEnergy E = new MyEnergy();
-		ConformalEuclideanFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace> func = new ConformalEuclideanFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace>(var, theta, lambda, alpha, zeroEnergy);
+		EuclideanFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace> func = new EuclideanFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace>(var, theta, lambda, alpha, zeroEnergy);
 		for (final MyConformalFace f : getFaces()) {
 			E.setZero();
 			func.triangleEnergyAndAlphas(this, zeroU, f, E);
@@ -121,7 +121,7 @@ public class ConformalHDS extends HalfEdgeDataStructure<MyConformalVertex, MyCon
 		CAlpha alpha = new CAlpha();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		MyEnergy E = new MyEnergy();
-		ConformalHyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace> func = new ConformalHyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace>(var, theta, lambda, alpha, zeroEnergy);
+		HyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace> func = new HyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace>(var, theta, lambda, alpha, zeroEnergy);
 		for (final MyConformalFace f : getFaces()) {
 			E.setZero();
 			func.triangleEnergyAndAlphas(zeroU, f, E);

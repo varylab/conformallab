@@ -11,6 +11,7 @@ import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.util.Input;
+import de.jreality.util.NativePathUtility;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
@@ -54,6 +55,7 @@ public class HyperbolicFunctionalTest {
 		a.add(new CoTexturePositionAdapter());
 		UnwrapUtility.prepareInvariantDataHyperbolic(hds, a);
 		
+		NativePathUtility.set("native");
 		Tao.Initialize();
 		Tao optimizer = new Tao(Method.CG);
 		

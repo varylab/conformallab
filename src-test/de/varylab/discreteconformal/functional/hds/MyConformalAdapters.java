@@ -1,10 +1,10 @@
 package de.varylab.discreteconformal.functional.hds;
 
-import de.varylab.discreteconformal.functional.ConformalAdapters.Alpha;
-import de.varylab.discreteconformal.functional.ConformalAdapters.InitialEnergy;
-import de.varylab.discreteconformal.functional.ConformalAdapters.Lambda;
-import de.varylab.discreteconformal.functional.ConformalAdapters.Theta;
-import de.varylab.discreteconformal.functional.ConformalAdapters.Variable;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Lambda;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Theta;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
 
 
 public abstract class MyConformalAdapters {

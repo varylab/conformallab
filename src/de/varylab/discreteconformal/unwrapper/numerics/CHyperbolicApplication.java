@@ -5,7 +5,7 @@ import static de.varylab.jtao.TaoAppAddHess.PreconditionerType.SAME_NONZERO_PATT
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
-import de.varylab.discreteconformal.functional.ConformalHyperbolicFunctional;
+import de.varylab.discreteconformal.functional.HyperbolicFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -36,8 +36,8 @@ public class CHyperbolicApplication extends TaoApplication implements
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	private ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace> 
-		functional = new ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	private HyperbolicFunctional<CoVertex, CoEdge, CoFace> 
+		functional = new HyperbolicFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 		
 
 	public CHyperbolicApplication(CoHDS hds) {

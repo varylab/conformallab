@@ -14,6 +14,7 @@ import de.jreality.util.Input;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.jpetsc.Vec;
@@ -47,7 +48,11 @@ public class EuclideanFunctionalTest {
 	
 	@Test
 	public void testGradient() throws Exception {
-		UnwrapUtility.prepareInvariantDataEuclidean(hds, new AdapterSet());
+		AdapterSet a = AdapterSet.createGenericAdapters();
+		a.add(new CoPositionAdapter());
+		a.add(new CoPositionAdapter());
+		a.add(new CoTexturePositionAdapter());
+		UnwrapUtility.prepareInvariantDataEuclidean(hds, a);
 		
 		Tao.Initialize();
 		Tao optimizer = new Tao(Method.CG);
@@ -63,7 +68,11 @@ public class EuclideanFunctionalTest {
 	
 	@Test
 	public void testHessian() throws Exception {
-		UnwrapUtility.prepareInvariantDataEuclidean(hds, new AdapterSet());
+		AdapterSet a = AdapterSet.createGenericAdapters();
+		a.add(new CoPositionAdapter());
+		a.add(new CoPositionAdapter());
+		a.add(new CoTexturePositionAdapter());
+		UnwrapUtility.prepareInvariantDataEuclidean(hds, a);
 		
 		Tao.Initialize();
 		Tao optimizer = new Tao(Method.CG);

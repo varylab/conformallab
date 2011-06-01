@@ -4,7 +4,7 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.Vertex;
 
-public interface ConformalAdapters {
+public interface FunctionalAdapters {
 
 	public static interface Variable <
 		V extends Vertex<V, E, ?>,

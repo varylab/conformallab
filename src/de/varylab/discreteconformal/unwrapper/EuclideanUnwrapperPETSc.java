@@ -1,13 +1,16 @@
 package de.varylab.discreteconformal.unwrapper;
 
 import static de.varylab.discreteconformal.util.SparseUtility.getPETScNonZeros;
+import static de.varylab.jpetsc.InsertMode.INSERT_VALUES;
 
 import java.util.Collection;
 import java.util.HashSet;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
@@ -52,12 +55,22 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		CEuclideanApplication app = new CEuclideanApplication(surface);
 		int n = app.getDomainDimension();
 		u = new Vec(n);
-		H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(surface));
-		H.assemble();
+		// set variable lambda start values
+		boolean hasCircularEdges = false;
+		for (CoEdge e : surface.getPositiveEdges()) {
+			if (e.getSolverIndex() >= 0) {
+				u.setValue(e.getSolverIndex(), e.getLambda(), INSERT_VALUES);
+				hasCircularEdges = true;
+			}
+		}
 		app.setInitialSolutionVec(u);
-		app.setHessianMat(H, H);	
+		if (!hasCircularEdges) {
+			H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(surface));
+			H.assemble();
+			app.setHessianMat(H, H);
+		}
 		
-		optimizer = new Tao(Tao.Method.NTR);
+		optimizer = new Tao(hasCircularEdges ? Tao.Method.LMVM : Tao.Method.NTR);
 		optimizer.setApplication(app);
 		optimizer.setTolerances(0, 0, 0, 0);
 		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance);
@@ -100,6 +113,14 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		
 		// layout
 		double [] uValues = u.getArray();
+		
+		for (CoVertex v : surface.getVertices()) {
+			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
+			double a = EuclideanLayout.calculateAngleSum(v);
+			System.out.println(a);
+		}
+		
+		
 		DenseVector result = new DenseVector(uValues);
 		u.restoreArray();
 		return result; 

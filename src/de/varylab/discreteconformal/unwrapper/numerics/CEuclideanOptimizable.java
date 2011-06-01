@@ -7,7 +7,7 @@ import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
-import de.varylab.discreteconformal.functional.ConformalEuclideanFunctional;
+import de.varylab.discreteconformal.functional.EuclideanFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -33,8 +33,8 @@ public class CEuclideanOptimizable implements Optimizable {
 		energy = new CInitialEnergy();
 	private CAlpha
 		alpha = new CAlpha();
-	private ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>
-		functional = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	private EuclideanFunctional<CoVertex, CoEdge, CoFace>
+		functional = new EuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 
 	public CEuclideanOptimizable(CoHDS hds) {
 		this.hds = hds;

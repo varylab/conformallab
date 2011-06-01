@@ -23,13 +23,13 @@ import de.jtem.halfedgetools.functional.Energy;
 import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
-import de.varylab.discreteconformal.functional.ConformalAdapters.Alpha;
-import de.varylab.discreteconformal.functional.ConformalAdapters.InitialEnergy;
-import de.varylab.discreteconformal.functional.ConformalAdapters.Lambda;
-import de.varylab.discreteconformal.functional.ConformalAdapters.Theta;
-import de.varylab.discreteconformal.functional.ConformalAdapters.Variable;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Lambda;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Theta;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
 
-public class ConformalHyperbolicFunctional <
+public class HyperbolicFunctional <
 	V extends Vertex<V, E, F>,
 	E extends Edge<V, E, F>,
 	F extends Face<V, E, F>
@@ -47,7 +47,7 @@ public class ConformalHyperbolicFunctional <
 		energy = null;
 	
 	
-	public ConformalHyperbolicFunctional(
+	public HyperbolicFunctional(
 		Variable<V, E> var,
 		Theta<V> theta,
 		Lambda<E> lambda,

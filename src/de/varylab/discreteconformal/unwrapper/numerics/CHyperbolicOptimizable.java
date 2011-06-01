@@ -7,7 +7,7 @@ import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
-import de.varylab.discreteconformal.functional.ConformalHyperbolicFunctional;
+import de.varylab.discreteconformal.functional.HyperbolicFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -33,8 +33,8 @@ public class CHyperbolicOptimizable implements Optimizable {
 		energy = new CInitialEnergy();
 	private CAlpha
 		alpha = new CAlpha();
-	private ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace>
-		functional = new ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	private HyperbolicFunctional<CoVertex, CoEdge, CoFace>
+		functional = new HyperbolicFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 
 	public CHyperbolicOptimizable(CoHDS hds) {
 		this.hds = hds;

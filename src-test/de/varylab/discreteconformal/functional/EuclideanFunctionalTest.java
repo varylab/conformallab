@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.functional;
 
-import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
+import static de.jreality.util.SceneGraphUtility.getFirstGeometry;
 
 import java.io.IOException;
 import java.util.Random;
@@ -11,6 +11,7 @@ import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.util.Input;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
@@ -28,7 +29,7 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 
-public class ConformalEuclideanFunctionalTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
+public class EuclideanFunctionalTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
 
 	private CTheta
 		theta = new CTheta();
@@ -40,8 +41,8 @@ public class ConformalEuclideanFunctionalTest extends FunctionalTest<CoVertex, C
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	public ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>
-		functional = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	public EuclideanFunctional<CoVertex, CoEdge, CoFace>
+		functional = new EuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 	
 	@Override
 	public void init() {
@@ -52,9 +53,9 @@ public class ConformalEuclideanFunctionalTest extends FunctionalTest<CoVertex, C
 		a.add(new CoPositionAdapter());
 		CoHDS hds = new CoHDS(); 
 		try {
-			Input in = new Input("Obj File", ConformalEuclideanFunctionalTest.class.getResourceAsStream("square01.obj"));
+			Input in = new Input("Obj File", EuclideanFunctionalTest.class.getResourceAsStream("square01.obj"));
 			c =reader.read(in);
-			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
+			ifs = (IndexedFaceSet)getFirstGeometry(c);
 			ConverterJR2Heds converter = new ConverterJR2Heds();
 			hds = new CoHDS();
 			converter.ifs2heds(ifs, hds, a, null);
@@ -63,14 +64,19 @@ public class ConformalEuclideanFunctionalTest extends FunctionalTest<CoVertex, C
 		}
 		
 //		 one edge is circular
-		for (CoEdge e : hds.getPositiveEdges()) {
-			CoVertex s = e.getStartVertex();
-			CoVertex t = e.getTargetVertex();
-			if (isBoundaryVertex(s) || isBoundaryVertex(t)) {
-				continue;
-			}
-			e.info = new CustomEdgeInfo();
-			e.info.holeEdge = true;
+		for (CoFace f : hds.getFaces()) {
+			if (!HalfEdgeUtils.isInteriorFace(f)) continue;
+			CoEdge e1 = f.getBoundaryEdge();
+			CoEdge e2 = e1.getNextEdge();
+			CoEdge e3 = e2.getNextEdge();
+			CustomEdgeInfo info = new CustomEdgeInfo();
+			info.holeEdge = true;
+			e1.info = info;
+			e2.info = info;
+			e3.info = info;
+			e1.getOppositeEdge().info = info;
+			e2.getOppositeEdge().info = info;
+			e3.getOppositeEdge().info = info;
 			break;
 		}
 		

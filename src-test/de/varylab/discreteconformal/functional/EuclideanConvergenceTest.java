@@ -19,7 +19,7 @@ import de.jreality.scene.SceneGraphComponent;
 import de.jreality.util.Input;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
-import de.varylab.discreteconformal.functional.ConformalEuclideanFunctional;
+import de.varylab.discreteconformal.functional.EuclideanFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -38,7 +38,7 @@ import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
 import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
-public class ConformalEuclideanConvergenceTest  {
+public class EuclideanConvergenceTest  {
 
 	private CTheta
 		theta = new CTheta();
@@ -50,8 +50,8 @@ public class ConformalEuclideanConvergenceTest  {
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	public ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>
-		functional = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	public EuclideanFunctional<CoVertex, CoEdge, CoFace>
+		functional = new EuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 	
 	@Test
 	public void testEuclideanConvergence() {
@@ -62,7 +62,7 @@ public class ConformalEuclideanConvergenceTest  {
 		a.add(new CoPositionAdapter());
 		CoHDS hds = new CoHDS(); 
 		try {
-			Input in = new Input("Obj File", ConformalEuclideanConvergenceTest.class.getResourceAsStream("cathead.obj"));
+			Input in = new Input("Obj File", EuclideanConvergenceTest.class.getResourceAsStream("cathead.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds converter = new ConverterJR2Heds();

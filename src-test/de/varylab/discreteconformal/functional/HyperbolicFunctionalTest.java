@@ -6,7 +6,7 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
-import de.varylab.discreteconformal.functional.ConformalHyperbolicFunctional;
+import de.varylab.discreteconformal.functional.HyperbolicFunctional;
 import de.varylab.discreteconformal.functional.hds.ConformalHDS;
 import de.varylab.discreteconformal.functional.hds.MyConformalEdge;
 import de.varylab.discreteconformal.functional.hds.MyConformalFace;
@@ -17,7 +17,7 @@ import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CLambda;
 import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CTheta;
 import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CVariable;
 
-public class ConformalHyperbolicFunctionalTest extends FunctionalTest<MyConformalVertex, MyConformalEdge, MyConformalFace> {
+public class HyperbolicFunctionalTest extends FunctionalTest<MyConformalVertex, MyConformalEdge, MyConformalFace> {
 
 	public static final Double
 		eps = 1E-5,
@@ -32,8 +32,8 @@ public class ConformalHyperbolicFunctionalTest extends FunctionalTest<MyConforma
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	private ConformalHyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace>
-		functional = new ConformalHyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace>(variable, theta, lambda, alpha, energy);
+	private HyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace>
+		functional = new HyperbolicFunctional<MyConformalVertex, MyConformalEdge, MyConformalFace>(variable, theta, lambda, alpha, energy);
 	
 	
 	@Override

@@ -18,9 +18,9 @@ import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.Normal;
 import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.halfedgetools.functional.DomainValue;
-import de.varylab.discreteconformal.functional.ConformalAdapters.InitialEnergy;
-import de.varylab.discreteconformal.functional.ConformalEuclideanFunctional;
-import de.varylab.discreteconformal.functional.ConformalHyperbolicFunctional;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
+import de.varylab.discreteconformal.functional.EuclideanFunctional;
+import de.varylab.discreteconformal.functional.HyperbolicFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -293,6 +293,9 @@ public class UnwrapUtility {
 				int index = dim++;
 				e.setSolverIndex(index);
 				e.getOppositeEdge().setSolverIndex(index);
+			} else {
+				e.setSolverIndex(-1);
+				e.getOppositeEdge().setSolverIndex(-1);
 			}
 		}
 		
@@ -304,7 +307,7 @@ public class UnwrapUtility {
 		CTheta theta = new CTheta();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		ConformalEnergy E = new ConformalEnergy();
-		ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace> func = new ConformalEuclideanFunctional<CoVertex, CoEdge, CoFace>(var, theta, lambda, alpha, zeroEnergy);
+		EuclideanFunctional<CoVertex, CoEdge, CoFace> func = new EuclideanFunctional<CoVertex, CoEdge, CoFace>(var, theta, lambda, alpha, zeroEnergy);
 		for (final CoFace f : hds.getFaces()) {
 			E.setZero();
 			func.triangleEnergyAndAlphas(hds, zeroU, f, E);
@@ -376,7 +379,7 @@ public class UnwrapUtility {
 		CAlpha alpha = new CAlpha();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		ConformalEnergy E = new ConformalEnergy();
-		ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace> func = new ConformalHyperbolicFunctional<CoVertex, CoEdge, CoFace>(var, theta, lambda, alpha, zeroEnergy);
+		HyperbolicFunctional<CoVertex, CoEdge, CoFace> func = new HyperbolicFunctional<CoVertex, CoEdge, CoFace>(var, theta, lambda, alpha, zeroEnergy);
 		for (final CoFace f : hds.getFaces()) {
 			E.setZero();
 			func.triangleEnergyAndAlphas(zeroU, f, E);

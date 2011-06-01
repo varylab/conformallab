@@ -156,7 +156,6 @@ public class EuclideanLayout {
 		Double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
 		Double u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0;
 		double l2 = e.getSolverIndex() >= 0 ? u.get(e.getSolverIndex()) : e.getLambda() + u1 + u2;
-//		return exp(l2/2);
 		return exp(l2);
 	}
 	
