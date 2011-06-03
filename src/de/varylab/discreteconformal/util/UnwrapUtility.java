@@ -97,7 +97,7 @@ public class UnwrapUtility {
 		TypedAdapterSet<double[]> da = aSet.querySet(double[].class);
 		for (final CoEdge e : hds.getPositiveEdges()) {
 			double l = aSet.get(Length.class, e, Double.class);
-			e.setLambda(log(l));
+			e.setLambda(2 * log(l));
 			e.getOppositeEdge().setLambda(e.getLambda());
 		}
 		Collection<CoVertex> vertexBoundary = HalfEdgeUtils.boundaryVertices(hds);

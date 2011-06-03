@@ -8,7 +8,6 @@ import java.util.HashSet;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
-import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -113,14 +112,6 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		
 		// layout
 		double [] uValues = u.getArray();
-		
-		for (CoVertex v : surface.getVertices()) {
-			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
-			double a = EuclideanLayout.calculateAngleSum(v);
-			System.out.println(a);
-		}
-		
-		
 		DenseVector result = new DenseVector(uValues);
 		u.restoreArray();
 		return result; 

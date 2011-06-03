@@ -225,26 +225,26 @@ public class EuclideanCircularHolesFunctional <
 			triangleHessian(hds, u, t, cotE, cotV);
 			// edge hessian
 			if (var.isVariable(v1) && var.isVariable(v3)) {
-				H.add(v1i, v3i, -cotE[0]);
-				H.add(v3i, v1i, -cotE[0]);
+				H.add(v1i, v3i, -cotE[0] / 2);
+				H.add(v3i, v1i, -cotE[0] / 2);
 			}
 			if (var.isVariable(v2) && var.isVariable(v1)) {
-				H.add(v2i, v1i, -cotE[1]);
-				H.add(v1i, v2i, -cotE[1]);
+				H.add(v2i, v1i, -cotE[1] / 2);
+				H.add(v1i, v2i, -cotE[1] / 2);
 			}
 			if (var.isVariable(v3) && var.isVariable(v2)) {
-				H.add(v2i, v3i, -cotE[2]);
-				H.add(v3i, v2i, -cotE[2]);
+				H.add(v2i, v3i, -cotE[2] / 2);
+				H.add(v3i, v2i, -cotE[2] / 2);
 			}
 			// vertex hessian
 			if (var.isVariable(v1)) {
-				H.add(v1i, v1i, cotV[0]);
+				H.add(v1i, v1i, cotV[0] / 2);
 			}
 			if (var.isVariable(v2)) {
-				H.add(v2i, v2i, cotV[1]);
+				H.add(v2i, v2i, cotV[1] / 2);
 			}
 			if (var.isVariable(v3)) {
-				H.add(v3i, v3i, cotV[2]);
+				H.add(v3i, v3i, cotV[2] / 2);
 			}
 		}
 	}
@@ -275,15 +275,20 @@ public class EuclideanCircularHolesFunctional <
 		final double 
 			u1 = var.isVariable(v1) ? u.get(var.getVarIndex(v1)) : 0.0,
 			u2 = var.isVariable(v2) ? u.get(var.getVarIndex(v2)) : 0.0,
-			u3 = var.isVariable(v3) ? u.get(var.getVarIndex(v3)) : 0.0;
+			u3 = var.isVariable(v3) ? u.get(var.getVarIndex(v3)) : 0.0,
+			umean = (u1 + u2 + u3) / 3;
 		final double
 			λ1 = var.isVariable(e1) ? u.get(var.getVarIndex(e1)) : lambda.getLambda(e1),
 			λ2 = var.isVariable(e2) ? u.get(var.getVarIndex(e2)) : lambda.getLambda(e2),
 			λ3 = var.isVariable(e3) ? u.get(var.getVarIndex(e3)) : lambda.getLambda(e3);
 		final double 
-			x12 = λ2 + (var.isVariable(e2) ? 0 : u1 + u2),
-			x23 = λ3 + (var.isVariable(e3) ? 0 : u2 + u3),
-			x31 = λ1 + (var.isVariable(e1) ? 0 : u3 + u1);
+			λt1 = λ2 + (var.isVariable(e2) ? 0 : u1 + u2),
+			λt2 = λ3 + (var.isVariable(e3) ? 0 : u2 + u3),
+			λt3 = λ1 + (var.isVariable(e1) ? 0 : u3 + u1);
+		final double 
+			x12 = λ2 + (var.isVariable(e2) ? 0 : u1 + u2) - 2*umean,
+			x23 = λ3 + (var.isVariable(e3) ? 0 : u2 + u3) - 2*umean,
+			x31 = λ1 + (var.isVariable(e1) ? 0 : u3 + u1) - 2*umean;
 		final double 
 			l12 = exp(x12/2),
 			l23 = exp(x23/2),
@@ -307,9 +312,9 @@ public class EuclideanCircularHolesFunctional <
 			a3 = PI;
 		}
 		if (E != null) {
-			E.add(a1*x23 + a2*x31 + a3*x12);
+			E.add(a1*λt2 + a2*λt3 + a3*λt1);
 			E.add(2*lob(a1) + 2*lob(a2) + 2*lob(a3));
-			E.add(- PI * (x12 + x23 + x31) / 2);
+			E.add(- PI * (λt1 + λt2 + λt3) / 2);
 			E.add(- energy.getInitialEnergy(f));
 		}
 		alpha.setAlpha(e1, a2);
@@ -349,9 +354,9 @@ public class EuclideanCircularHolesFunctional <
 		final double 
 			xmean = (x12 + x23 + x31) / 3;
 		final double 
-			l12 = exp(x12 - xmean),
-			l23 = exp(x23 - xmean),
-			l31 = exp(x31 - xmean);
+			l12 = exp((x12 - xmean) / 2),
+			l23 = exp((x23 - xmean) / 2),
+			l31 = exp((x31 - xmean) / 2);
 		final double
 			t31 = +l12+l23-l31,
 			t23 = +l12-l23+l31,

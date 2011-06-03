@@ -11,7 +11,6 @@ import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.util.Input;
-import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
@@ -20,7 +19,6 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.CustomEdgeInfo;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
@@ -64,21 +62,21 @@ public class EuclideanFunctionalTest extends FunctionalTest<CoVertex, CoEdge, Co
 		}
 		
 //		 one edge is circular
-		for (CoFace f : hds.getFaces()) {
-			if (!HalfEdgeUtils.isInteriorFace(f)) continue;
-			CoEdge e1 = f.getBoundaryEdge();
-			CoEdge e2 = e1.getNextEdge();
-			CoEdge e3 = e2.getNextEdge();
-			CustomEdgeInfo info = new CustomEdgeInfo();
-			info.holeEdge = true;
-			e1.info = info;
-			e2.info = info;
-			e3.info = info;
-			e1.getOppositeEdge().info = info;
-			e2.getOppositeEdge().info = info;
-			e3.getOppositeEdge().info = info;
-			break;
-		}
+//		for (CoFace f : hds.getFaces()) {
+//			if (!HalfEdgeUtils.isInteriorFace(f)) continue;
+//			CoEdge e1 = f.getBoundaryEdge();
+//			CoEdge e2 = e1.getNextEdge();
+//			CoEdge e3 = e2.getNextEdge();
+//			CustomEdgeInfo info = new CustomEdgeInfo();
+//			info.holeEdge = true;
+//			e1.info = info;
+//			e2.info = info;
+//			e3.info = info;
+//			e1.getOppositeEdge().info = info;
+//			e2.getOppositeEdge().info = info;
+//			e3.getOppositeEdge().info = info;
+//			break;
+//		}
 		
 		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds, a);
 		Random rnd = new Random(); 
@@ -93,7 +91,7 @@ public class EuclideanFunctionalTest extends FunctionalTest<CoVertex, CoEdge, Co
 		setFuctional(functional);
 		setHDS(hds);
 		setXGradient(u);
-//		setXHessian(u);
+		setXHessian(u);
 	}
 	
 	

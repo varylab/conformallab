@@ -49,7 +49,7 @@ public class EuclideanCircularHolesFunctionalTest extends FunctionalTest<CoVerte
 		a.add(new CoPositionAdapter());
 		CoHDS hds = new CoHDS(); 
 		try {
-			Input in = new Input("Obj File", EuclideanCircularHolesFunctionalTest.class.getResourceAsStream("cathead.obj"));
+			Input in = new Input("Obj File", EuclideanCircularHolesFunctionalTest.class.getResourceAsStream("square01.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds converter = new ConverterJR2Heds();
@@ -59,15 +59,20 @@ public class EuclideanCircularHolesFunctionalTest extends FunctionalTest<CoVerte
 			e.printStackTrace();
 		}
 		
-		// one edge is circular
-//		for (CoEdge e : hds.getPositiveEdges()) {
-//			CoVertex s = e.getStartVertex();
-//			CoVertex t = e.getTargetVertex();
-//			if (isBoundaryVertex(s) || isBoundaryVertex(t)) {
-//				continue;
-//			}
-//			e.info = new CustomEdgeInfo();
-//			e.info.holeEdge = true;
+		// one triangle of edges is circular
+//		for (CoFace f : hds.getFaces()) {
+//			if (!HalfEdgeUtils.isInteriorFace(f)) continue;
+//			CoEdge e1 = f.getBoundaryEdge();
+//			CoEdge e2 = e1.getNextEdge();
+//			CoEdge e3 = e2.getNextEdge();
+//			CustomEdgeInfo info = new CustomEdgeInfo();
+//			info.holeEdge = true;
+//			e1.info = info;
+//			e2.info = info;
+//			e3.info = info;
+//			e1.getOppositeEdge().info = info;
+//			e2.getOppositeEdge().info = info;
+//			e3.getOppositeEdge().info = info;
 //			break;
 //		}
 		
@@ -84,7 +89,7 @@ public class EuclideanCircularHolesFunctionalTest extends FunctionalTest<CoVerte
 		setFuctional(functional);
 		setHDS(hds);
 		setXGradient(u);
-//		setXHessian(u);
+		setXHessian(u);
 	}
 	
 	
