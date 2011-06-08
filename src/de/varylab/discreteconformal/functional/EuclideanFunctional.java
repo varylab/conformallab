@@ -87,11 +87,6 @@ public class EuclideanFunctional <
 				dim++;
 			}
 		}
-		for (E e : hds.getPositiveEdges()) {
-			if (var.isVariable(e)) {
-				dim++;
-			}
-		}
 		return dim;
 	}
 
@@ -141,54 +136,14 @@ public class EuclideanFunctional <
 			triangleEnergyAndAlphas(hds, u, t, E);
 			if (G != null) {
 				if (var.isVariable(v1)) {
-					if (var.isVariable(e1) || var.isVariable(e2)) {
-						if (!var.isVariable(e1)) {
-							G.add(v1i, alpha.getAlpha(e1));
-						}
-						if (!var.isVariable(e2)) {
-							G.add(v1i, alpha.getAlpha(e2));
-						}
-						G.add(v1i, -PI);
-					} else {
-						G.add(v1i, -alpha.getAlpha(e3));
-					}
+					G.add(v1i, -alpha.getAlpha(e3));
 				}
 				if (var.isVariable(v2)) {
-					if (var.isVariable(e2) || var.isVariable(e3)) {
-						if (!var.isVariable(e2)) {
-							G.add(v2i, alpha.getAlpha(e2));
-						}
-						if (!var.isVariable(e3)) {
-							G.add(v2i, alpha.getAlpha(e3));
-						}
-						G.add(v2i, -PI);
-					} else {
-						G.add(v2i, -alpha.getAlpha(e1));
-					}
+					G.add(v2i, -alpha.getAlpha(e1));
 				}
 				if (var.isVariable(v3)) {
-					if (var.isVariable(e1) || var.isVariable(e3)) {
-						if (!var.isVariable(e1)) {
-							G.add(v3i, alpha.getAlpha(e1));
-						}
-						if (!var.isVariable(e3)) {
-							G.add(v3i, alpha.getAlpha(e3));
-						}
-						G.add(v3i, -PI);
-					} else {
-						G.add(v3i, -alpha.getAlpha(e2));
-					}	
+					G.add(v3i, -alpha.getAlpha(e2));
 				}
-			}
-		}
-		// Circular Edges Gradient
-		if (G != null) {
-			for (final E e : hds.getPositiveEdges()) {
-				if (!var.isVariable(e)) continue;
-				int i = var.getVarIndex(e);
-				double αk = alpha.getAlpha(e);
-				double αl = alpha.getAlpha(e.getOppositeEdge());
-				G.add(i, αk + αl - PI);
 			}
 		}
 	}
@@ -275,16 +230,10 @@ public class EuclideanFunctional <
 			u3 = var.isVariable(v3) ? u.get(var.getVarIndex(v3)) : 0.0;
 		final double 
 			umean = (u1+u2+u3)/3;
-		final double
-			λ1 = var.isVariable(e1) ? u.get(var.getVarIndex(e1)) : lambda.getLambda(e1),
-			λ2 = var.isVariable(e2) ? u.get(var.getVarIndex(e2)) : lambda.getLambda(e2),
-			λ3 = var.isVariable(e3) ? u.get(var.getVarIndex(e3)) : lambda.getLambda(e3);
 		final double 
-			λSum = λ1 + λ2 + λ3;
-		final double 
-			x12 = λ2 + (var.isVariable(e2) ? 0 : u1 + u2) - 2*umean,
-			x23 = λ3 + (var.isVariable(e3) ? 0 : u2 + u3) - 2*umean,
-			x31 = λ1 + (var.isVariable(e1) ? 0 : u3 + u1) - 2*umean;
+			x12 = lambda.getLambda(e2) + (u1+u2 - 2*umean),
+			x23 = lambda.getLambda(e3) + (u2+u3 - 2*umean),
+			x31 = lambda.getLambda(e1) + (u3+u1 - 2*umean);
 		final double 
 			l12 = exp(x12),
 			l23 = exp(x23),
@@ -310,9 +259,7 @@ public class EuclideanFunctional <
 		if (E != null) {
 			E.add(a1*x23 + a2*x31 + a3*x12);
 			E.add(lob(a1) + lob(a2) + lob(a3));
-			E.add(-PI * umean);
-			E.add(-PI * λSum / 2);
-			E.add(-energy.getInitialEnergy(f));
+			E.add(- PI * umean - energy.getInitialEnergy(f));
 		}
 		alpha.setAlpha(e1, a2);
 		alpha.setAlpha(e2, a3);
