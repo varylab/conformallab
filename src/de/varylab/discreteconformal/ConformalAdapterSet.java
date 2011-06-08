@@ -15,4 +15,4 @@ public class ConformalAdapterSet extends AdapterSet {
 		addAll(AdapterSet.createGenericAdapters());
 	}
 	
-}
+}  
