@@ -21,7 +21,6 @@
 	<classpathentry kind="lib" path="lib/vecmath.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/MTJOptimization"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jreality"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedgetools"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/mfc"/>
@@ -33,5 +32,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/numericalMethods"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/riemann"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/blas"/>
+	<classpathentry kind="lib" path="lib/MTJOptimization.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
