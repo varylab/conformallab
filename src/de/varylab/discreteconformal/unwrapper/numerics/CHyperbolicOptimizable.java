@@ -4,9 +4,6 @@ import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
-import de.jtem.halfedgetools.functional.DomainValue;
-import de.jtem.halfedgetools.functional.Gradient;
-import de.jtem.halfedgetools.functional.Hessian;
 import de.varylab.discreteconformal.functional.HyperbolicFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -40,105 +37,9 @@ public class CHyperbolicOptimizable implements Optimizable {
 		this.hds = hds;
 	}
 	
-	private class MTJU implements DomainValue {
-
-		private Vector
-			u = null;
-		
-		public MTJU(Vector u) {
-			this.u = u;
-		}
-		
-		@Override
-		public void add(int i, double value) {
-			u.add(i, value);
-		}
-
-		@Override
-		public void set(int i, double value) {
-			u.set(i, value);
-		}
-
-		@Override
-		public void setZero() {
-			u.zero();
-		}
-		
-		@Override
-		public double get(int i) {
-			return u.get(i);
-		}
-		
-	}
-	
-	
-	private class MTJGradient implements Gradient {
-
-		private Vector
-			G = null;
-		
-		public MTJGradient(Vector G) {
-			this.G = G;
-		}
-		
-		@Override
-		public void add(int i, double value) {
-			G.add(i, value);
-		}
-
-		@Override
-		public void set(int i, double value) {
-			G.set(i, value);
-		}
-		
-		@Override
-		public void setZero() {
-			G.zero();
-		}
-		
-		@Override
-		public double get(int i) {
-			return G.get(i);
-		}
-		
-	}
-	
-	
-	private class MTJHessian implements Hessian {
-		
-		private Matrix
-			H = null;
-		
-		public MTJHessian(Matrix H) {
-			this.H = H;
-		}
-
-		@Override
-		public void add(int i, int j, double value) {
-			H.add(i, j, value);
-		}
-
-		@Override
-		public void set(int i, int j, double value) {
-			H.set(i, j, value);
-		}
-		
-		@Override
-		public void setZero() {
-			H.zero();
-		}
-		
-		@Override
-		public double get(int i, int j) {
-			return H.get(i, j);
-		}
-		
-	}
-	
-	
 	@Override
 	public Double evaluate(Vector x, Vector gradient, Matrix hessian) {
-		MTJU u = new MTJU(x);
+		MTJDomain u = new MTJDomain(x);
 		MTJGradient G = new MTJGradient(gradient);
 		MTJHessian H = new MTJHessian(hessian);
 		ConformalEnergy E = new ConformalEnergy();
@@ -148,7 +49,7 @@ public class CHyperbolicOptimizable implements Optimizable {
 
 	@Override
 	public Double evaluate(Vector x, Vector gradient) {
-		MTJU u = new MTJU(x);
+		MTJDomain u = new MTJDomain(x);
 		MTJGradient G = new MTJGradient(gradient);
 		ConformalEnergy E = new ConformalEnergy();
 		functional.evaluate(hds, u, E, G, null);
@@ -157,7 +58,7 @@ public class CHyperbolicOptimizable implements Optimizable {
 
 	@Override
 	public Double evaluate(Vector x, Matrix hessian) {
-		MTJU u = new MTJU(x);
+		MTJDomain u = new MTJDomain(x);
 		MTJHessian H = new MTJHessian(hessian);
 		ConformalEnergy E = new ConformalEnergy();
 		functional.evaluate(hds, u, E, null, H);
@@ -166,7 +67,7 @@ public class CHyperbolicOptimizable implements Optimizable {
 
 	@Override
 	public Double evaluate(Vector x) {
-		MTJU u = new MTJU(x);
+		MTJDomain u = new MTJDomain(x);
 		ConformalEnergy E = new ConformalEnergy();
 		functional.evaluate(hds, u, E, null, null);
 		return E.get();

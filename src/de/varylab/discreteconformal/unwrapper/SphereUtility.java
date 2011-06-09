@@ -8,9 +8,9 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication.TaoGradient;
-import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication.TaoU;
 import de.varylab.discreteconformal.unwrapper.numerics.ConformalEnergy;
+import de.varylab.discreteconformal.unwrapper.numerics.TaoDomain;
+import de.varylab.discreteconformal.unwrapper.numerics.TaoGradient;
 import de.varylab.jpetsc.InsertMode;
 import de.varylab.jpetsc.Vec;
 import de.varylab.jtao.Tao;
@@ -37,7 +37,7 @@ public class SphereUtility {
 
 		@Override
 		public double evaluateObjectiveAndGradient(Vec x, Vec g) {
-			TaoU u = new TaoU(x);
+			TaoDomain u = new TaoDomain(x);
 			TaoGradient G = new TaoGradient(g);
 			ConformalEnergy E = new ConformalEnergy();
 			fun.evaluate(hds, u, E, G, null);

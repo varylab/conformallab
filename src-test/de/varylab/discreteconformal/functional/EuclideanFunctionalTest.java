@@ -88,7 +88,7 @@ public class EuclideanFunctionalTest extends FunctionalTest<CoVertex, CoEdge, Co
 		}
 		MyDomainValue u = new MyDomainValue(x);
 		
-		setFuctional(functional);
+		setFunctional(functional);
 		setHDS(hds);
 		setXGradient(u);
 		setXHessian(u);

@@ -53,7 +53,7 @@ public class HyperbolicFunctionalTest extends FunctionalTest<MyConformalVertex, 
 		}
 		MyDomainValue u = new MyDomainValue(x);
 		
-		setFuctional(functional);
+		setFunctional(functional);
 		setHDS(hds);
 		setXGradient(u);
 		setXHessian(u);

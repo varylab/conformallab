@@ -1,11 +1,11 @@
 package de.varylab.discreteconformal.functional;
 
+import static de.jreality.math.Pn.HYPERBOLIC;
+import static de.jreality.math.Pn.innerProduct;
 import static de.jtem.halfedgetools.functional.FunctionalUtils.addRowToHessian;
 import static de.jtem.halfedgetools.functional.FunctionalUtils.addVectorToGradient;
-import static de.jtem.halfedgetools.functional.FunctionalUtils.subtractRowFromHessian;
-import static de.jtem.halfedgetools.functional.FunctionalUtils.subtractVectorFromGradient;
 import static java.lang.Math.log;
-import static java.lang.Math.sqrt;
+import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -40,7 +40,8 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 		Hessian H
 	) {
 		double[] p = {x.get(0), x.get(1), x.get(2), x.get(3)};
-		double pp = dot4(p, p);
+		System.out.println(Pn.norm(p, Pn.EUCLIDEAN));
+		double pp = innerProduct(p, p, HYPERBOLIC);
 		if (E != null) {
 			E.setZero();
 		}
@@ -52,37 +53,33 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 		}
 		for (CoVertex v : hds.getVertices()) {
 			double[] vp = aSet.getD(Position4d.class, v);
-			double vpp = dot4(vp, p);
+			double vpp = innerProduct(vp, p, HYPERBOLIC);
 			if (E != null) {
-				E.add(log(vpp / sqrt(pp)));
+				E.add(-log(vpp / pp));
 			}
 			if (G != null) {
-				Rn.copy(g1, p);
-				Rn.copy(g2, vp);
-				g1[3] *= pp;
-				g2[3] *= vpp;
+				Rn.times(g1, 2/pp, p);
+				Rn.times(g2, -1/vpp, vp);
+				g1[3] *= -1;
+				g2[3] *= -1;
 				addVectorToGradient(G, 0, g1);
-				subtractVectorFromGradient(G, 0, g2);
+				addVectorToGradient(G, 0, g2);
 			}
 			if (H != null) {
 				for (int i = 0; i < 4; i++) {
 					Rn.times(g1, p[i], p);
 					Rn.times(g2, vp[i], vp);
-					g1[3] *= pp*pp/2;
-					g2[3] *= vpp*vpp;
+					Rn.times(g1, pp*pp, g1);
+					Rn.times(g2, -vpp*vpp, g2);
+					g1[3] *= -1;
+					g2[3] *= -1;
 					addRowToHessian(H, i, g1);
-					subtractRowFromHessian(H, i, g2);
+					addRowToHessian(H, i, g2);
 				}
-				H.add(3, 3, pp);
 			}
 		}
 	}
 
-	public double dot4(double[] u, double[] v) {
-		return u[3]*v[3] - u[2]*v[2] - u[1]*v[1] - u[2]*v[2];
-	}
-	
-	
 	@Override
 	public boolean hasHessian() {
 		return true;

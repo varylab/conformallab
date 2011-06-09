@@ -1,10 +1,6 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
-import static de.varylab.jpetsc.InsertMode.INSERT_VALUES;
 import static de.varylab.jtao.TaoAppAddHess.PreconditionerType.SAME_NONZERO_PATTERN;
-import de.jtem.halfedgetools.functional.DomainValue;
-import de.jtem.halfedgetools.functional.Gradient;
-import de.jtem.halfedgetools.functional.Hessian;
 import de.varylab.discreteconformal.functional.EuclideanCircularHolesFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -46,106 +42,9 @@ public class CEuclideanApplication extends TaoApplication implements
 		this.hds = hds;
 	}
 
-
-	public static class TaoU implements DomainValue {
-
-		private Vec
-			u = null;
-		
-		public TaoU(Vec u) {
-			this.u = u;
-		}
-
-		@Override
-		public void add(int i, double value) {
-			u.add(i, value);
-		}
-
-		@Override
-		public void set(int i, double value) {
-			u.setValue(i, value, INSERT_VALUES);
-		}
-
-		@Override
-		public void setZero() {
-			u.zeroEntries();
-		}
-
-		@Override
-		public double get(int i) {
-			return u.getValue(i);
-		}
-		
-	}
-	
-	
-	public static class TaoGradient implements Gradient {
-
-		private Vec
-			G = null;
-		
-		public TaoGradient(Vec G) {
-			this.G = G;
-		}
-		
-		@Override
-		public void add(int i, double value) {
-			G.add(i, value);
-		}
-
-		@Override
-		public void set(int i, double value) {
-			G.setValue(i, value, INSERT_VALUES);
-		}
-		
-		@Override
-		public void setZero() {
-			G.zeroEntries();
-		}
-
-		@Override
-		public double get(int i) {
-			return G.getValue(i);
-		}
-		
-	}
-	
-	
-	public static class TaoHessian implements Hessian {
-		
-		private Mat
-			H = null;
-		
-		public TaoHessian(Mat H) {
-			this.H = H;
-		}
-
-		@Override
-		public void add(int i, int j, double value) {
-			H.add(i, j, value);
-		}
-
-		@Override
-		public void setZero() {
-			H.zeroEntries();
-		}
-
-		@Override
-		public void set(int i, int j, double value) {
-			H.setValue(i, j, value, INSERT_VALUES);
-		}
-		
-		@Override
-		public double get(int i, int j) {
-			return H.getValue(i, j);
-		}
-		
-	}
-	
-
 	@Override
 	public double evaluateObjectiveAndGradient(Vec x, Vec g) {
-		TaoU u = new TaoU(x);
+		TaoDomain u = new TaoDomain(x);
 		TaoGradient G = new TaoGradient(g);
 		ConformalEnergy E = new ConformalEnergy();
 		functional.evaluate(hds, u, E, G, null);
@@ -155,7 +54,7 @@ public class CEuclideanApplication extends TaoApplication implements
 
 	@Override
 	public PreconditionerType evaluateHessian(Vec x, Mat H, Mat Hpre) {
-		TaoU u = new TaoU(x);
+		TaoDomain u = new TaoDomain(x);
 		TaoHessian taoHess = new TaoHessian(H);
 		functional.evaluate(hds, u, null, null, taoHess);
 		H.assemble();
@@ -164,6 +63,7 @@ public class CEuclideanApplication extends TaoApplication implements
 
 	
 	public int getDomainDimension() {
+		// TODO: use method from functional
 		int dim = 0;
 		for (CoVertex v : hds.getVertices()) {
 			if (v.getSolverIndex() >= 0) {
