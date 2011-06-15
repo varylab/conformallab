@@ -289,7 +289,7 @@ public class UnwrapUtility {
 
 		// circular quad edges
 		for (CoEdge e : hds.getPositiveEdges()) {
-			if (e.info != null && e.info.holeEdge) {
+			if (e.info != null && e.info.circularHoleEdge) {
 				int index = dim++;
 				e.setSolverIndex(index);
 				e.getOppositeEdge().setSolverIndex(index);
@@ -371,6 +371,20 @@ public class UnwrapUtility {
 			v.setTheta(2 * PI);
 			v.setSolverIndex(dim++);
 		}
+		
+		// circular quad edges
+		for (CoEdge e : hds.getPositiveEdges()) {
+			if (e.info != null && e.info.circularHoleEdge) {
+				int index = dim++;
+				e.setSolverIndex(index);
+				e.getOppositeEdge().setSolverIndex(index);
+			} else {
+				e.setSolverIndex(-1);
+				e.getOppositeEdge().setSolverIndex(-1);
+			}
+		}
+		
+		
 		// initial hyperbolic energy
 		ZeroU zeroU = new ZeroU();
 		CVariable var = new CVariable();

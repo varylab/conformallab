@@ -1,11 +1,13 @@
 package de.varylab.discreteconformal.unwrapper;
 
 import static de.varylab.discreteconformal.util.SparseUtility.getPETScNonZeros;
+import static de.varylab.jpetsc.InsertMode.INSERT_VALUES;
 import static de.varylab.jpetsc.PETSc.PETSC_DEFAULT;
 import static de.varylab.jtao.ConvergenceFlags.CONVERGED_ATOL;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicApplication;
 import de.varylab.discreteconformal.util.UnwrapUtility;
@@ -28,15 +30,24 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper{
 		Tao.Initialize();
 		CHyperbolicApplication app = new CHyperbolicApplication(surface);
 		int n = app.getDomainDimension(); 
-		
 		Vec u = new Vec(n);
-		Mat H = Mat.createSeqAIJ(n, n, PETSC_DEFAULT, getPETScNonZeros(surface));
-		H.assemble();
 		
+		// set variable lambda start values
+		boolean hasCircularEdges = false;
+		for (CoEdge e : surface.getPositiveEdges()) {
+			if (e.getSolverIndex() >= 0) {
+				u.setValue(e.getSolverIndex(), e.getLambda(), INSERT_VALUES);
+				hasCircularEdges = true;
+			}
+		}
 		app.setInitialSolutionVec(u);
-		app.setHessianMat(H, H);	
+		if (!hasCircularEdges) {
+			Mat H = Mat.createSeqAIJ(n, n, PETSC_DEFAULT, getPETScNonZeros(surface));
+			H.assemble();
+			app.setHessianMat(H, H);
+		}
 		
-		Tao optimizer = new Tao(Tao.Method.NLS);
+		Tao optimizer = new Tao(hasCircularEdges ? Tao.Method.LMVM : Tao.Method.NLS);
 		optimizer.setApplication(app);
 		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance); 
 		optimizer.setTolerances(0, 0, 0, 0);

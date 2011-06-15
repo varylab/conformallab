@@ -278,9 +278,8 @@ public class HyperbolicLayout {
 		CoVertex v2 = e.getTargetVertex();
 		Double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
 		Double u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0;
-		Double lambda = e.getLambda();
-		Double lambdaNew = lambda + u1 + u2;
-		return 2 * arsinh( exp(lambdaNew / 2) );
+		Double lambda = e.getSolverIndex() >= 0 ? u.get(e.getSolverIndex()) : e.getLambda() + u1 + u2;
+		return 2 * arsinh( exp(lambda / 2) );
 	}
 	
 	

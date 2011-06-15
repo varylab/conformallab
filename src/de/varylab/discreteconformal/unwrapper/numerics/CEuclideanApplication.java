@@ -63,19 +63,7 @@ public class CEuclideanApplication extends TaoApplication implements
 
 	
 	public int getDomainDimension() {
-		// TODO: use method from functional
-		int dim = 0;
-		for (CoVertex v : hds.getVertices()) {
-			if (v.getSolverIndex() >= 0) {
-				dim++;
-			}
-		}
-		for (CoEdge e : hds.getPositiveEdges()) {
-			if (e.getSolverIndex() >= 0) {
-				dim++;
-			}
-		}
-		return dim;
+		return functional.getDimension(hds);
 	}
 	
 	

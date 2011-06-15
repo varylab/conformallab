@@ -14,4 +14,12 @@ public class CoEdge extends ConformalEdge<CoVertex, CoEdge, CoFace> {
 		return Pn.distanceBetween(s, t, Pn.EUCLIDEAN);
 	}
 	
+	@Override
+	public void copyData(CoEdge e) {
+		super.copyData(e);
+		if (e.info != null) {
+			info = new CustomEdgeInfo(e.info);
+		}
+	}
+	
 }

@@ -84,7 +84,7 @@ public class EuclideanConvergenceTest  {
 				continue;
 			}
 			e.info = new CustomEdgeInfo();
-			e.info.holeEdge = true;
+			e.info.circularHoleEdge = true;
 			break;
 		}
 		

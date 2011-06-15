@@ -421,7 +421,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		}
 		if (val instanceof CoEdge) {
 			CoEdge edge = (CoEdge)val;
-			circularEdgeChecker.setSelected(edge.info.holeEdge);
+			circularEdgeChecker.setSelected(edge.info.circularHoleEdge);
 		}
 	}
 	
@@ -584,7 +584,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			for (Object sel : selectedNodesList.getSelectedValues()) {
 				if (!(sel instanceof CoEdge)) continue;
 				CoEdge edge = (CoEdge)sel;
-				edge.info.holeEdge = circularEdgeChecker.isSelected();
+				edge.info.circularHoleEdge = circularEdgeChecker.isSelected();
 			}
 		}
 		if (checkGaussBonnetBtn == s) {

@@ -3,14 +3,14 @@ package de.varylab.discreteconformal.heds;
 public class CustomEdgeInfo {
 
 	public boolean 
-		holeEdge = false;
+		circularHoleEdge = false;
 	
 	public CustomEdgeInfo() {
 	}
 
 	public CustomEdgeInfo(CustomEdgeInfo ei) {
 		super();
-		this.holeEdge = ei.holeEdge;
+		this.circularHoleEdge = ei.circularHoleEdge;
 	}
 	
 }

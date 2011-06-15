@@ -83,7 +83,7 @@ public class EuclideanCircularHolesConvergenceTest  {
 				continue;
 			}
 			e.info = new CustomEdgeInfo();
-			e.info.holeEdge = true;
+			e.info.circularHoleEdge = true;
 			break;
 		}
 		

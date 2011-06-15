@@ -41,6 +41,7 @@ public class ConformalEdge <
 	public void copyData(E e) {
 		lambda = e.lambda;
 		alpha = e.alpha;
+		solverIndex = e.solverIndex;
 	};
 	
 }
