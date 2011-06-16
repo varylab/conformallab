@@ -5,7 +5,8 @@ import static de.varylab.discreteconformal.uniformization.FundamentalPolygonUtil
 import static java.awt.BasicStroke.CAP_SQUARE;
 import static java.awt.BasicStroke.JOIN_ROUND;
 import static java.awt.Color.BLACK;
-import static java.awt.Color.ORANGE;
+import static java.awt.RenderingHints.KEY_ANTIALIASING;
+import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
 import static java.awt.geom.Arc2D.OPEN;
 import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 import static java.lang.Math.cos;
@@ -16,7 +17,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.RenderingHints;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
@@ -39,7 +39,7 @@ public class VisualizationUtility {
 	private static BigDecimal 
 		HALF = new BigDecimal(0.5);
 	private static double 
-		eps = 1E-4;
+		eps = 1E-15;
 
 	
 	public static Image drawUniversalCoverImage(
@@ -52,7 +52,7 @@ public class VisualizationUtility {
 		float ls = res / 500f; // line scale
 		BufferedImage image = new BufferedImage(res, res, TYPE_INT_ARGB);
 		Graphics2D g = (Graphics2D)image.getGraphics();
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
 		g.setColor(new Color(255, 255, 255, 0));
 		g.fillRect(0, 0, res, res);
 		
@@ -60,15 +60,15 @@ public class VisualizationUtility {
 		g.translate(res, -res);
 		
 		g.setColor(BLACK);
-		g.setStroke(new BasicStroke(2 * ls));
+		g.setStroke(new BasicStroke(1.5f * ls));
 		drawUniversalCover(poly, depth + 1, g, model, res);
 		
 		g.setStroke(new BasicStroke(4 * ls));
 		g.setColor(rootColor);
 		drawPolygon(poly, model, g, res);
 		
-		g.setStroke(new BasicStroke(3 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
-		g.setColor(ORANGE);
+		g.setStroke(new BasicStroke(5 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
+		g.setColor(Color.BLUE);
 		drawPolygonAxes(poly, model, g, res);
 		
 		return image;

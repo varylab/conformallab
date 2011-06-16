@@ -33,6 +33,9 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
 import no.uib.cipr.matrix.Vector;
+import de.jreality.math.Matrix;
+import de.jreality.math.MatrixBuilder;
+import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.basic.View;
@@ -42,6 +45,7 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.generic.Position3d;
+import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -103,7 +107,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		viewer.setPreferredSize(new Dimension(500, 300));
 		viewer.setMinimumSize(viewer.getPreferredSize());
 		shrinkPanel.setLayout(new GridBagLayout());
-		shrinkPanel.add(new JLabel("Max Triangle Area"), c1);
+		shrinkPanel.add(new JLabel("Num Extra Points"), c1);
 		shrinkPanel.add(extraPointsSpinner, c2);
 		shrinkPanel.add(new JLabel("Circle Resolution"), c1);
 		shrinkPanel.add(circleResSpinner, c2);
@@ -163,8 +167,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 //			SchottkyWeightAdapter swa = new SchottkyWeightAdapter(cylces);
 //			CoVertex cutRoot = hds.getVertex(1);
 			
+			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
 			for (Set<CoEdge> cycle : cylces) {
-				CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
 				CuttingUtility.cutAlongPath(cycle, cutInfo);
 			}
 			
@@ -189,7 +193,10 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 						}
 					}
 					if (sSet != null && tSet != null && sSet != tSet) {
-						CuttingUtility.cutAtEdge(e);
+						cutInfo.edgeCutMap.put(e, e.getOppositeEdge());
+						cutInfo.edgeCutMap.put(e.getOppositeEdge(), e);
+						Map<CoVertex, CoVertex> copyMap = CuttingUtility.cutAtEdge(e);
+						cutInfo.vertexCopyMap.putAll(copyMap);
 						break;
 					}
 				}				
@@ -206,6 +213,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			
 			hif.addAdapter(new CoTexturePositionPositionAdapter(Poincaré), false);
 			hif.set(hds);
+//			discreteConformalPlugin.createVisualization(hds, genus, cutInfo);
 		}
 	}
 	
@@ -488,7 +496,21 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			crMap.put(e, cr);
 		}
 
-		if (!debugIdentifyChecker.isSelected()) return hds;
+		if (!debugIdentifyChecker.isSelected()) {
+			MatrixBuilder mb = MatrixBuilder.euclidean();
+			mb.rotateX(Math.PI);
+			Matrix T = mb.getMatrix();
+			for (CoVertex v : hds.getVertices()) {
+				double[] p = a.getD(Position4d.class, v);
+				T.transformVector(p);
+				Pn.dehomogenize(p, p);
+				Complex z = stereographic(p);
+//				Complex z = zMap.get(v);
+				double[] p2 = {z.getRe(), z.getIm(), 0};
+				a.set(Position.class, v, p2);
+			}
+			return hds;
+		}
 		
 		// identify circles
 		try {

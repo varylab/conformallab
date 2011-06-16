@@ -132,8 +132,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	// data section ---------------------
 	private CoHDS
 		surface = null;
-	private CuttingInfo<CoVertex, CoEdge, CoFace> 
-		cutInfo = null;
 	private List<CoVertex>
 		customVertices = new LinkedList<CoVertex>();
 	private List<CoEdge>
@@ -469,40 +467,47 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			lastConformalU = unwrapper.getResultU();
 			metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
 			metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
-			if (genus > 0) {
-				cutInfo = unwrapper.cutInfo;
-				cutColorAdapter.setContext(cutInfo);
-				cutRadiusAdapter.setContext(cutInfo);
-				pointRadiusAdapter.setContext(cutInfo);
-				pointColorAdapter.setContext(cutInfo);
-			}
-			if (genus > 1) {
-				try {
-				System.out.println("Constructing fundamental cut polygon...");
-				cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo);
-				System.out.println(cuttedPolygon);
-				FundamentalVertex root = cuttedPolygon.getMaxValenceVertex();
-				System.out.println("Constructing minimal polygon...");
-				minimalPolygon = FundamentalPolygonUtility.minimize(cuttedPolygon, root);
-				System.out.println(minimalPolygon);
-				minimalPolygon.checkRelation();
-				System.out.println("Constructing fast canonical polygon...");
-				canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon, useDistanceToCanonicalize.isSelected());
-				System.out.println(canonicalPolygon);
-				canonicalPolygon.checkRelation();
-				updatePolygonTexture(getSelectedModel(), coverRecursion, coverResolution);
-				metricErrorAdapter.setSignature(Pn.HYPERBOLIC);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			if (genus == 0) {
-				kleinButton.setSelected(true);
-				cutInfo = null;
-				cuttedPolygon = null;
-			}
+
+			createVisualization(surface, genus, unwrapper.cutInfo);
 			updateSurface();
 			updateStates();
+		}
+	}
+	
+	
+	public void createVisualization(CoHDS surface, int genus, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		this.genus = genus;
+		this.surface = surface;
+		if (genus > 0) {
+			cutColorAdapter.setContext(cutInfo);
+			cutRadiusAdapter.setContext(cutInfo);
+			pointRadiusAdapter.setContext(cutInfo);
+			pointColorAdapter.setContext(cutInfo);
+		}
+		if (genus > 1) {
+			try {
+			System.out.println("Constructing fundamental cut polygon...");
+			cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo);
+			System.out.println(cuttedPolygon);
+			FundamentalVertex root = cuttedPolygon.getMaxValenceVertex();
+			System.out.println("Constructing minimal polygon...");
+			minimalPolygon = FundamentalPolygonUtility.minimize(cuttedPolygon, root);
+			System.out.println(minimalPolygon);
+			minimalPolygon.checkRelation();
+			System.out.println("Constructing fast canonical polygon...");
+			canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon, useDistanceToCanonicalize.isSelected());
+			System.out.println(canonicalPolygon);
+			canonicalPolygon.checkRelation();
+			updatePolygonTexture(getSelectedModel(), coverRecursion, coverResolution);
+			metricErrorAdapter.setSignature(Pn.HYPERBOLIC);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		if (genus == 0) {
+			kleinButton.setSelected(true);
+			cutInfo = null;
+			cuttedPolygon = null;
 		}
 	}
 	

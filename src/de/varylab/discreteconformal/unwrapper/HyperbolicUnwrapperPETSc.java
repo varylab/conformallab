@@ -47,7 +47,7 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper{
 			app.setHessianMat(H, H);
 		}
 		
-		Tao optimizer = new Tao(hasCircularEdges ? Tao.Method.LMVM : Tao.Method.NLS);
+		Tao optimizer = new Tao(hasCircularEdges ? Tao.Method.LMVM : Tao.Method.NTR);
 		optimizer.setApplication(app);
 		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance); 
 		optimizer.setTolerances(0, 0, 0, 0);

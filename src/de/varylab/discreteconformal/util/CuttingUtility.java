@@ -136,9 +136,12 @@ public class CuttingUtility {
 	>  void cutAlongPath(Collection<E> path, CuttingInfo<V, E, F> context) {
 		for (E e : path) { 
 			if (isInteriorEdge(e)) {
-				context.edgeCutMap.put(e, e.getOppositeEdge());
-				context.edgeCutMap.put(e.getOppositeEdge(), e);
+				E eop = e.getOppositeEdge();
+				context.edgeCutMap.put(e, eop);
+				context.edgeCutMap.put(eop, e);
 				Map<V, V> vMap = cutAtEdge(e);
+				context.edgeCutMap.put(e.getOppositeEdge(), eop.getOppositeEdge());
+				context.edgeCutMap.put(eop.getOppositeEdge(), e.getOppositeEdge());
 				for (V v : vMap.keySet()) {
 					V copy = vMap.get(v);
 					if (context.vertexCopyMap.keySet().contains(v)) {
@@ -174,7 +177,7 @@ public class CuttingUtility {
 		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
 		context.cutRoot = root;
 		for(Set<E> path : HomotopyUtility.getGeneratorPaths(root, wa)) {
-			context.paths.add(path) ;
+			context.paths.add(path);
 		}
 		Set<E> masterPath = new TreeSet<E>(new NodeIndexComparator<E>());
 		for (Set<E> path : context.paths) {
