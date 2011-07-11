@@ -129,10 +129,10 @@ public class DiscreteRiemannUtility {
 				.rows(), primalImag.columns());
 		for (int i = 0; i < primalReal.rows(); i++) {
 			for (int j = 0; j < primalReal.columns(); j++) {
-				realPeriods.set(i, j, .5 * (primalReal.get(i, j) + dualReal
-						.get(i, j)));
-				imagPeriods.set(i, j, .5 * (primalImag.get(i, j) + dualImag
-						.get(i, j)));
+				realPeriods.setQuick(i, j, .5 * (primalReal.getQuick(i, j) + dualReal
+						.getQuick(i, j)));
+				imagPeriods.setQuick(i, j, .5 * (primalImag.getQuick(i, j) + dualImag
+						.getQuick(i, j)));
 			}
 		}
 
@@ -140,14 +140,13 @@ public class DiscreteRiemannUtility {
 		DoubleMatrix2D imagsymm= DoubleFactory2D.dense.make(imagPeriods.rows(),imagPeriods.columns());
 		for (int i=0 ; i< realPeriods.rows();i++){
 			for (int j = i; j < realPeriods.columns(); j++){
-				realsymm.set(i,j, realPeriods.get(i, j)-realPeriods.get(j, i));
-				realsymm.set(j,i, realPeriods.get(j, i)-realPeriods.get(i, j));
-				imagsymm.set(i,j, imagPeriods.get(i, j)-imagPeriods.get(j, i));
-				imagsymm.set(j,i, imagPeriods.get(j, i)-imagPeriods.get(i, j));
+				realsymm.setQuick(i,j, realPeriods.getQuick(i, j)-realPeriods.getQuick(j, i));
+				realsymm.setQuick(j,i, realPeriods.getQuick(j, i)-realPeriods.getQuick(i, j));
+				imagsymm.setQuick(i,j, imagPeriods.getQuick(i, j)-imagPeriods.getQuick(j, i));
+				imagsymm.setQuick(j,i, imagPeriods.getQuick(j, i)-imagPeriods.getQuick(i, j));
 			}
 		}
 			
-		// TODO: matrix is still not symmetric: get out why!
 		System.out.println("PERIOD MATRIX (mean):");
 		System.out.println("real part:");
 		SimpleMatrixPrintUtility.print(realPeriods, 4);
@@ -167,9 +166,9 @@ public class DiscreteRiemannUtility {
 		Complex[][] array = new Complex[m][n];
 		for (int i = 0; i < m; i++) {
 			for (int j = 0; j < n; j++) {
-				array[i][j] = new Complex(omega1[0].get(i, j)
-						+ omega2[1].get(i, j), omega1[1].get(i, j)
-						+ omega2[0].get(i, j));
+				array[i][j] = new Complex(omega1[0].getQuick(i, j)
+						+ omega2[1].getQuick(i, j), omega1[1].getQuick(i, j)
+						+ omega2[0].getQuick(i, j));
 			}
 		}
 		

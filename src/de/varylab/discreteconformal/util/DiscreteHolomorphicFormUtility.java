@@ -2,17 +2,19 @@ package de.varylab.discreteconformal.util;
 
 import java.util.List;
 
-import cern.colt.matrix.Norm;
+//import cern.colt.matrix.Norm;
 import cern.colt.matrix.tdouble.DoubleFactory1D;
 import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
-import cern.colt.matrix.tdouble.algo.solver.DefaultDoubleIterationMonitor;
-import cern.colt.matrix.tdouble.algo.solver.DoubleBiCGstab;
-import cern.colt.matrix.tdouble.algo.solver.DoubleIterationReporter;
-import cern.colt.matrix.tdouble.algo.solver.DoubleIterativeSolver;
-import cern.colt.matrix.tdouble.algo.solver.IterativeSolverDoubleNotConvergedException;
+import cern.colt.matrix.tdouble.algo.decomposition.SparseDoubleLUDecomposition;
+ //import cern.colt.matrix.tdouble.algo.solver.DefaultDoubleIterationMonitor;
+//import cern.colt.matrix.tdouble.algo.solver.DoubleBiCGstab;
+//import cern.colt.matrix.tdouble.algo.solver.DoubleIterationReporter;
+//import cern.colt.matrix.tdouble.algo.solver.DoubleIterativeSolver;
+//import cern.colt.matrix.tdouble.algo.solver.IterativeSolverDoubleNotConvergedException;
+import cern.colt.matrix.tdouble.impl.SparseDoubleMatrix2D;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -20,7 +22,6 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.algorithm.triangulation.MappedLengthAdapter;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
-
 
 /**
  * Class to calculate holomorphic differentials in the sense of mercat.
@@ -33,16 +34,16 @@ import de.varylab.discreteconformal.util.Search.WeightAdapter;
  */
 public class DiscreteHolomorphicFormUtility {
 
-	private static DoubleIterationReporter reporter = new ColtIterationReporterImpl();
-	
+	//	private static DoubleIterationReporter reporter = new ColtIterationReporterImpl();
+
 	private static DenseDoubleAlgebra dalgebra = new DenseDoubleAlgebra();
-	
+
 	/**
 	 * Returns a basis of holomorphic differentials on the surface, which is
-	 * normalized with respect to the given homology basis (canonical).
-	 * The forms are returned as a two-array of matrices, the first entry of
-	 * which belongs to the real and the second to the imaginary part. The
-	 * surface has to be Delaunay triangulated. The forms are stored as rows.
+	 * normalized with respect to the given homology basis (canonical). The
+	 * forms are returned as a two-array of matrices, the first entry of which
+	 * belongs to the real and the second to the imaginary part. The surface has
+	 * to be Delaunay triangulated. The forms are stored as rows.
 	 * 
 	 * @param <V>
 	 * @param <E>
@@ -54,18 +55,14 @@ public class DiscreteHolomorphicFormUtility {
 	 * @param wa
 	 * @return
 	 */
-	public static <
-		V extends Vertex<V, E, F>,
-		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>
-	> DoubleMatrix2D[] getHolomorphicFormsOnPrimalMesh(
-				HalfEdgeDataStructure<V, E, F> delaunay,
-				List<List<E>> canonicalHomologyBasis, AdapterSet adapters,
-				MappedLengthAdapter la, WeightAdapter<E> wa) {
+	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> DoubleMatrix2D[] getHolomorphicFormsOnPrimalMesh(
+			HalfEdgeDataStructure<V, E, F> delaunay,
+			List<List<E>> canonicalHomologyBasis, AdapterSet adapters,
+			MappedLengthAdapter la, WeightAdapter<E> wa) {
 
 		// the forms are defined on the positive oriented edges
 		int numPosEdges = delaunay.numEdges() / 2;
-		
+
 		// g is simply the genus of the surface
 		int g = canonicalHomologyBasis.size() / 2;
 
@@ -109,34 +106,35 @@ public class DiscreteHolomorphicFormUtility {
 		// The number of harmonic forms on the surface is 2g, so we need 2g
 		// coefficients.
 		DoubleMatrix1D x = DoubleFactory1D.dense.make(2 * g);
-		
+
 		// For each a-cycle find the holomorphic form which is 1 along this
-		// cycle, i.e. gives one for the primal cycle and 0 for its dual cycle. 
+		// cycle, i.e. gives one for the primal cycle and 0 for its dual cycle.
 		for (int i = 0; i < g; i++) {
-			
-			// set up the conditions 
+
+			// set up the conditions
 			DoubleMatrix1D bc = DoubleFactory1D.dense.make(2 * g);
-			bc.set(g+i, 2*Math.PI);
-			
+			bc.setQuick(g + i, 2 * Math.PI);
+
 			// solve the system
 			solve(M, x, bc);
 
 			// Build linear combinations of the harmonic differentials
-			// using the obtained coefficients. 
-			DoubleMatrix1D omega= dalgebra.mult(dalgebra.transpose(dh), x);
-			DoubleMatrix1D omegaStar= dalgebra.mult(dalgebra.transpose(dhStar), x);
-			
+			// using the obtained coefficients.
+			DoubleMatrix1D omega = dalgebra.mult(dalgebra.transpose(dh), x);
+			DoubleMatrix1D omegaStar = dalgebra.mult(
+					dalgebra.transpose(dhStar), x);
+
 			for (int j = 0; j < numPosEdges; j++) {
-				OMEGA[0].set(i, j, omega.get(j));
-				OMEGA[1].set(i, j, omegaStar.get(j));
+				OMEGA[0].setQuick(i, j, omega.getQuick(j));
+				OMEGA[1].setQuick(i, j, omegaStar.getQuick(j));
 			}
 		}
-		
+
 		adapters.remove(la);
 
 		return OMEGA;
 	}
-	
+
 	/**
 	 * Returns a basis of holomorphic differentials on the dual of the surface,
 	 * which is normalized with respect to the given homology basis (canonical).
@@ -154,14 +152,10 @@ public class DiscreteHolomorphicFormUtility {
 	 * @param wa
 	 * @return
 	 */
-	public static <
-		V extends Vertex<V, E, F>,
-		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>
-	> DoubleMatrix2D[] getHolomorphicFormsOnDualMesh(
-				HalfEdgeDataStructure<V, E, F> delaunay,
-				List<List<E>> canonicalHomologyBasis, AdapterSet adapters,
-				MappedLengthAdapter la, WeightAdapter<E> wa) {
+	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> DoubleMatrix2D[] getHolomorphicFormsOnDualMesh(
+			HalfEdgeDataStructure<V, E, F> delaunay,
+			List<List<E>> canonicalHomologyBasis, AdapterSet adapters,
+			MappedLengthAdapter la, WeightAdapter<E> wa) {
 
 		// the forms are defined on the positive oriented edges
 		int numPosEdges = delaunay.numEdges() / 2;
@@ -175,8 +169,7 @@ public class DiscreteHolomorphicFormUtility {
 		// Get the harmonic differentials on the surface and its dual. The
 		// format of the matrices is 2g*numEdges
 		DoubleMatrix2D dhStar = DiscreteHarmonicFormUtility
-				.getHarmonicFormsOfDualMesh(delaunay, dualBasis,
-						adapters, la);
+				.getHarmonicFormsOfDualMesh(delaunay, dualBasis, adapters, la);
 		DoubleMatrix2D dhStarStar = DualityUtility.getDualOfDualForms(delaunay,
 				adapters, dhStar);
 
@@ -216,7 +209,7 @@ public class DiscreteHolomorphicFormUtility {
 
 			// set up the conditions
 			DoubleMatrix1D bc = DoubleFactory1D.dense.make(2 * g);
-			bc.set(g+i, 2 * Math.PI);
+			bc.setQuick(g + i, 2 * Math.PI);
 
 			// solve the system
 			solve(M, x, bc);
@@ -224,12 +217,12 @@ public class DiscreteHolomorphicFormUtility {
 			// Build linear combinations of the harmonic differentials
 			// using the obtained coefficients.
 			DoubleMatrix1D omega = dalgebra.mult(dalgebra.transpose(dhStar), x);
-			DoubleMatrix1D omegaStar = dalgebra.mult(
-					dalgebra.transpose(dhStarStar), x);
+			DoubleMatrix1D omegaStar = dalgebra.mult(dalgebra
+					.transpose(dhStarStar), x);
 
 			for (int j = 0; j < numPosEdges; j++) {
-				OMEGA[0].set(i, j, omega.get(j));
-				OMEGA[1].set(i, j, omegaStar.get(j));
+				OMEGA[0].setQuick(i, j, omega.getQuick(j));
+				OMEGA[1].setQuick(i, j, omegaStar.getQuick(j));
 			}
 		}
 
@@ -237,10 +230,10 @@ public class DiscreteHolomorphicFormUtility {
 
 		return OMEGA;
 	}
-	
-	private static double eps = 1E-20;
-	private static int maxIterations= 100000000;
-	
+
+	// private static double eps = 1E-20;
+	// private static int maxIterations = 100000000;
+
 	/**
 	 * Solves Ax=b and writes the result in the vector x.
 	 * 
@@ -250,31 +243,47 @@ public class DiscreteHolomorphicFormUtility {
 	 */
 	private static void solve(DoubleMatrix2D A, DoubleMatrix1D x,
 			DoubleMatrix1D b) {
-		
-		DoubleIterativeSolver solver;
-//		solver = new DoubleGMRES(x);
-		solver = new DoubleBiCGstab(x);
 
-		DefaultDoubleIterationMonitor monitor = new DefaultDoubleIterationMonitor();
+		// DoubleIterativeSolver solver;
+		// // solver = new DoubleGMRES(x);
+		// solver = new DoubleBiCGstab(x);
+		//
+		// DefaultDoubleIterationMonitor monitor = new
+		// DefaultDoubleIterationMonitor();
+		//
+		// // configure monitor
+		// monitor.setMaxIterations(maxIterations);
+		// monitor.setAbsoluteTolerance(eps);
+		// monitor.setRelativeTolerance(eps);
+		// // monitor.setDivergenceTolerance(1);
+		// monitor.setNormType(Norm.Infinity);
+		// monitor.setIterationReporter(reporter);
+		//
+		// solver.setIterationMonitor(monitor);
+		//
+		// try {
+		// solver.solve(A, b, x);
+		// } catch (IterativeSolverDoubleNotConvergedException e) {
+		// System.err
+		// .println("Iterative solver failed to converge: Couldn't get harmonic function.");
+		// e.printStackTrace();
+		// }
+		// System.err.println();
 
-		// configure monitor
-		monitor.setMaxIterations(maxIterations);
-		monitor.setAbsoluteTolerance(eps);
-		monitor.setRelativeTolerance(eps);
-//		monitor.setDivergenceTolerance(1);
-		monitor.setNormType(Norm.Infinity);
-		monitor.setIterationReporter(reporter);
+		System.out.println("Start solving");
+		long startingtime = System.currentTimeMillis();
 
-		solver.setIterationMonitor(monitor);
-
-		try {
-			solver.solve(A, b, x);
-		} catch (IterativeSolverDoubleNotConvergedException e) {
-			System.err
-					.println("Iterative solver failed to converge: Couldn't get harmonic function.");
-			e.printStackTrace();
+		for (int i = 0; i < b.size(); i++) {
+			x.setQuick(i, b.getQuick(i));
 		}
-		System.err.println();
+
+		SparseDoubleLUDecomposition lu = new SparseDoubleLUDecomposition(
+				((SparseDoubleMatrix2D) A).getColumnCompressed(false), 1, false);
+		lu.solve(x);
+
+		System.out.println("time: "
+				+ (System.currentTimeMillis() - startingtime));
+
 	}
 
 }
