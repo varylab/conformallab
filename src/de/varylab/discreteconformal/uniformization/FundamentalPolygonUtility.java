@@ -424,12 +424,11 @@ public class FundamentalPolygonUtility {
 			return R;
 		}
 		FundamentalEdge lastHandle = null;
-		int cost = 0;
 		while (link != null) {
 			FundamentalEdge a = link[0];
 			FundamentalEdge b = link[1];
 			System.out.println("Collecting handle --- " + a + " :: " + b);
-			cost += gatherHandleFast(a, b);
+			gatherHandleFast(a, b);
 			link = findMinimalLinkableEdges(R, useDistance);
 			lastHandle = a;
 		};

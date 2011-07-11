@@ -5,8 +5,6 @@ import de.jtem.mfc.group.Moebius;
 
 class SchottkyGenerator {
 	
-	private static final long 
-		serialVersionUID = 1L;
 	private Complex
 		A = new Complex(-1),
 		B = new Complex(1),

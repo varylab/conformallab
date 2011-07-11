@@ -110,6 +110,7 @@ public class DiscreteCurvatureLines extends ShrinkPanelPlugin implements ActionL
 
 //				e = e.getNextEdge();
 			}
+			System.out.println("bSum for face " + f + ": " + bSum);
 		}
 	}
 	

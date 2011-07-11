@@ -79,7 +79,7 @@ public abstract class ConvergenceSeries {
 			throw new RuntimeException("Unknown series method");
 		}
 		
-		ConvergenceSeries series = null;
+		ConvergenceSeries series = new ConvergenceQuality();
 		switch (method) {
 		case Quality:
 			series = new ConvergenceQuality();
