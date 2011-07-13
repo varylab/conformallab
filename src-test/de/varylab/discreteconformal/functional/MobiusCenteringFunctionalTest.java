@@ -39,7 +39,7 @@ public class MobiusCenteringFunctionalTest extends FunctionalTest<CoVertex, CoEd
 		hds = new CoHDS();
 	
 	@Before
-	public void ceate() {
+	public void create() {
 		for (int i = 0; i < 100; i++) {
 			CoVertex v = hds.addNewVertex();
 			v.P[0] = rnd.nextGaussian();
