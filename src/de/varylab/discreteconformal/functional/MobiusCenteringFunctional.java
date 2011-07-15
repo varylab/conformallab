@@ -34,14 +34,14 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 	@Override
 	public <HDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace>> void evaluate(
 		HDS hds, 
-		DomainValue x, 
+		DomainValue d, 
 		Energy E, 
 		Gradient G, 
 		Hessian H
 	) {
-		double[] p = {x.get(0), x.get(1), x.get(2), x.get(3)};
-		System.out.println(Pn.norm(p, Pn.EUCLIDEAN));
-		double pp = innerProduct(p, p, HYPERBOLIC);
+		double[] x = {d.get(0), d.get(1), d.get(2), d.get(3)};
+		System.out.println(Pn.norm(x, Pn.EUCLIDEAN));
+		double xx = innerProduct(x, x, HYPERBOLIC);
 		if (E != null) {
 			E.setZero();
 		}
@@ -52,14 +52,14 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 			H.setZero();
 		}
 		for (CoVertex v : hds.getVertices()) {
-			double[] vp = aSet.getD(Position4d.class, v);
-			double vpp = innerProduct(vp, p, HYPERBOLIC);
+			double[] p = aSet.getD(Position4d.class, v);
+			double xp = innerProduct(p, x, HYPERBOLIC);
 			if (E != null) {
-				E.add(-log(vpp / pp));
+				E.add(-log(xp / xx));
 			}
 			if (G != null) {
-				Rn.times(g1, 2/pp, p);
-				Rn.times(g2, -1/vpp, vp);
+				Rn.times(g1, 2/xx, x);
+				Rn.times(g2, -1/xp, p);
 				g1[3] *= -1;
 				g2[3] *= -1;
 				addVectorToGradient(G, 0, g1);
@@ -67,14 +67,10 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 			}
 			if (H != null) {
 				for (int i = 0; i < 4; i++) {
-					Rn.times(g1, p[i], p);
-					Rn.times(g2, vp[i], vp);
-					Rn.times(g1, pp*pp, g1);
-					Rn.times(g2, -vpp*vpp, g2);
-					g1[3] *= -1;
-					g2[3] *= -1;
+					Rn.times(g1, p[i] / (xp*xp), p);
 					addRowToHessian(H, i, g1);
-					addRowToHessian(H, i, g2);
+					double sign = i == 3 ? -1 : 1;
+					H.add(i, i, sign * 2 / xx - 4*x[i]*x[i]/(xx*xx));
 				}
 			}
 		}
