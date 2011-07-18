@@ -116,7 +116,13 @@ public class SurgeryUtility {
 			}
 		}
 		assert be1 != null && be2 != null : "bundary corrupt";
+		if (be1 == null || be2 == null) {
+			throw new RuntimeException("corrupt boundary in glueAlongFaces().");
+		}
 		assert be1.getTargetVertex() == v1 && be2.getStartVertex() == v2 : "wrong vertices";
+		if (be1.getTargetVertex() != v1 || be2.getStartVertex() != v2) {
+			throw new RuntimeException("wrong vertices in glueAlongFaces().");
+		}
 		
 		// collect data to link
 		Map<E, E> oppMap = new HashMap<E, E>(); // new opposites

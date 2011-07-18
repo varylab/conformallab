@@ -60,17 +60,19 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 			if (G != null) {
 				Rn.times(g1, 2/xx, x);
 				Rn.times(g2, -1/xp, p);
-				g1[3] *= -1;
-				g2[3] *= -1;
+				g1[3] *= -1; g2[3] *= -1;
 				addVectorToGradient(G, 0, g1);
 				addVectorToGradient(G, 0, g2);
 			}
 			if (H != null) {
 				for (int i = 0; i < 4; i++) {
-					Rn.times(g1, p[i] / (xp*xp), p);
-					addRowToHessian(H, i, g1);
 					double sign = i == 3 ? -1 : 1;
-					H.add(i, i, sign * 2 / xx - 4*x[i]*x[i]/(xx*xx));
+					Rn.times(g1, sign * p[i] / (xp*xp), p);
+					Rn.times(g2, -sign * 4*x[i]/(xx*xx), x);
+					g1[3] *= -1; g2[3] *= -1;
+					addRowToHessian(H, i, g2);
+					addRowToHessian(H, i, g1);
+					H.add(i, i, sign * 2 / xx);
 				}
 			}
 		}

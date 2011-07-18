@@ -584,7 +584,9 @@ public class FundamentalPolygonUtility {
 				break;
 			}
 		}
-		assert rootEdge != null;
+		if (rootEdge == null) {
+			throw new RuntimeException("Cannot find a suitable root edge in constructFundamentalPolygon()");
+		}
 		
 		// create fundamental vertices and partition the branch set
 		Map<CoVertex, FundamentalVertex> branchMap = new HashMap<CoVertex, FundamentalVertex>();
@@ -684,8 +686,9 @@ public class FundamentalPolygonUtility {
 			visited.add(eActive);
 			eActive = eActive.getNextEdge();
 		}
-		assert lastFunE != null;
-		assert firstFunE != null;
+		if (lastFunE == null || firstFunE == null) {
+			throw new RuntimeException("Cannot find matching last and first edge in constructFundamentalPolygon()");
+		}		
 		lastFunE.nextEdge = firstFunE;
 		firstFunE.prevEdge = lastFunE;
 		return new FundamentalPolygon(edgeList);

@@ -54,6 +54,7 @@ public class MobiusCenteringFunctionalTest extends FunctionalTest<CoVertex, CoEd
 	
 	@Override
 	public void init() {
+		rnd.setSeed(100);
 		MyDomainValue x = new MyDomainValue(new DenseVector(4));
 		x.set(0, rnd.nextDouble() - 0.5);
 		x.set(1, rnd.nextDouble() - 0.5);
@@ -119,6 +120,8 @@ public class MobiusCenteringFunctionalTest extends FunctionalTest<CoVertex, CoEd
 				return E.get();
 			}
 		}; 
+		min.setMaxIterations(100);
+		min.setError(1E-15);
 		min.minimize(x, opt);
 		System.out.println("x " + x);
 	}
