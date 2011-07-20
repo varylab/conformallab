@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.hyperelliptic;
+package de.varylab.discreteconformal.plugin.hyperelliptic;
 
 import java.util.List;
 import java.util.Vector;
@@ -9,7 +9,7 @@ import de.jtem.riemann.surface.BranchPoint;
 import de.jtem.riemann.surface.DistinguishedPoint;
 import de.jtem.riemann.surface.Origin;
 import de.jtem.riemann.surface.hyperElliptic.HyperEllipticCurve;
-import de.varylab.discreteconformal.hyperelliptic.CurveChangeEvent.EventType;
+import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeEvent.EventType;
 
 public class Curve extends HyperEllipticCurve {
 

@@ -62,6 +62,7 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionPositionAdapter;
+import de.varylab.discreteconformal.math.ComplexUtility;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapperPETSc;
@@ -217,31 +218,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		}
 	}
 	
-	private double[] inverseStereographic(Complex Z, double[]... result) {
-		if (Z.re == Double.POSITIVE_INFINITY) {
-			return new double[] {0,0,1};
-		}
-		double X = Z.getRe();
-		double Y = Z.getIm();
-		double d = 1 + X*X + Y*Y;
-		double x = 2*X / d;
-		double y = 2*Y / d;
-		double z = (X*X + Y*Y - 1) / d;
-		if (result.length != 0) {
-			result[0][0] = x;
-			result[0][1] = y;
-			result[0][2] = z;
-			return result[0];
-		}
-		return new double[] {x, y, z};
-	}
-	
-	
-	private Complex stereographic(double[] p) {
-		return new Complex(p[0] / (1 - p[2]), p[1] / (1 - p[2]));
-	}
-	
-	
 	private List<SchottkyCircle> getAllCircles(List<SchottkyGenerator> pairs) {
 		List<SchottkyCircle> r = new LinkedList<SchottkyCircle>();
 		for (SchottkyGenerator p : pairs) {
@@ -287,9 +263,9 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			Complex z1 = new Complex(v1[0], v1[1]);
 			Complex z2 = new Complex(v2[0], v2[1]);
 			Complex z3 = new Complex(v3[0], v3[1]);
-			inverseStereographic(z1, vp1);
-			inverseStereographic(z2, vp2);
-			inverseStereographic(z3, vp3);
+			ComplexUtility.inverseStereographic(z1, vp1);
+			ComplexUtility.inverseStereographic(z2, vp2);
+			ComplexUtility.inverseStereographic(z3, vp3);
 			Rn.subtract(vec1, vp2, vp1);
 			Rn.subtract(vec2, vp3, vp1);
 			Rn.crossProduct(cross, vec1, vec2);
@@ -376,7 +352,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			CoVertex v = hds.addNewVertex();
 			double[] vPos = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
 			Rn.normalize(vPos, vPos);
-			Complex z = stereographic(vPos);
+			Complex z = ComplexUtility.stereographic(vPos);
 			a.set(Position.class, v, new double[] {z.re, z.im, 0});
 		}
 		
@@ -404,7 +380,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			double[] p = a.getD(Position3d.class, v);
 			Complex z = new Complex(p[0], p[1]);
 			zMap.put(v, z); // store original positions
-			double[] pProjected = inverseStereographic(z);
+			double[] pProjected = ComplexUtility.inverseStereographic(z);
 			a.set(Position.class, v, pProjected);
 		}
 		
@@ -455,10 +431,10 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			CoVertex vj = e.getTargetVertex();
 			CoVertex vl = e.getNextEdge().getTargetVertex();
 			CoVertex vk = e.getOppositeEdge().getNextEdge().getTargetVertex();
-			Complex zi = stereographic(a.getD(Position3d.class, vi));
-			Complex zj = stereographic(a.getD(Position3d.class, vj));
-			Complex zl = stereographic(a.getD(Position3d.class, vl));
-			Complex zk = stereographic(a.getD(Position3d.class, vk));
+			Complex zi = ComplexUtility.stereographic(a.getD(Position3d.class, vi));
+			Complex zj = ComplexUtility.stereographic(a.getD(Position3d.class, vj));
+			Complex zl = ComplexUtility.stereographic(a.getD(Position3d.class, vl));
+			Complex zk = ComplexUtility.stereographic(a.getD(Position3d.class, vk));
 			
 			Moebius pullTransform = null;
 			// check if we have to pull a vertex position
@@ -479,11 +455,11 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				CoEdge se = edgeMap.get(e);
 				if (se.getLeftFace() == null) {
 					CoVertex mappedL = se.getOppositeEdge().getNextEdge().getTargetVertex();
-					zl = stereographic(a.getD(Position3d.class, mappedL));
+					zl = ComplexUtility.stereographic(a.getD(Position3d.class, mappedL));
 					zl = pullTransform.applyTo(zl);
 				} else {
 					CoVertex mappedL = se.getNextEdge().getTargetVertex();
-					zk = stereographic(a.getD(Position3d.class, mappedL));
+					zk = ComplexUtility.stereographic(a.getD(Position3d.class, mappedL));
 					zk = pullTransform.applyTo(zk);
 				}
 			}
@@ -504,7 +480,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				double[] p = a.getD(Position4d.class, v);
 				T.transformVector(p);
 				Pn.dehomogenize(p, p);
-				Complex z = stereographic(p);
+				Complex z = ComplexUtility.stereographic(p);
 //				Complex z = zMap.get(v);
 				double[] p2 = {z.getRe(), z.getIm(), 0};
 				a.set(Position.class, v, p2);

@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.hyperelliptic;
+package de.varylab.discreteconformal.plugin.hyperelliptic;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -24,7 +24,7 @@ import de.jtem.java2d.SceneComponent;
 import de.jtem.java2d.TransformedMouseEvent;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.surface.BranchPoint;
-import de.varylab.discreteconformal.hyperelliptic.CurveChangeEvent.EventType;
+import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeEvent.EventType;
 
 @SuppressWarnings("serial")
 public class CurveEditor extends Editor implements CurveChangeListener {

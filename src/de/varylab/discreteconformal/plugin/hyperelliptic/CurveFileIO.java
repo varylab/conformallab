@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.hyperelliptic;
+package de.varylab.discreteconformal.plugin.hyperelliptic;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.hyperelliptic;
+package de.varylab.discreteconformal.plugin.hyperelliptic;
 
 import java.awt.Dimension;
 import java.awt.GridBagLayout;

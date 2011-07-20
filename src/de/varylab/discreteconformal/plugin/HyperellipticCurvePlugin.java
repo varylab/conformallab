@@ -1,62 +1,115 @@
 package de.varylab.discreteconformal.plugin;
 
+import static de.jreality.ui.LayoutFactory.createLeftConstraint;
+import static de.jreality.ui.LayoutFactory.createRightConstraint;
+import static de.varylab.discreteconformal.math.ComplexUtility.inverseStereographic;
+
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTextArea;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.text.JTextComponent;
 
+import de.jreality.math.Pn;
 import de.jreality.plugin.basic.View;
-import de.jreality.ui.LayoutFactory;
 import de.jtem.blas.ComplexMatrix;
+import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Position;
+import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.plugin.HalfedgeSelection;
+import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.surface.BranchPoint;
 import de.jtem.riemann.theta.SiegelReduction;
-import de.varylab.discreteconformal.hyperelliptic.Curve;
-import de.varylab.discreteconformal.hyperelliptic.CurveChangeEvent;
-import de.varylab.discreteconformal.hyperelliptic.CurveChangeEvent.EventType;
-import de.varylab.discreteconformal.hyperelliptic.CurveChangeListener;
-import de.varylab.discreteconformal.hyperelliptic.CurveEditor;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.plugin.hyperelliptic.Curve;
+import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeEvent;
+import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeEvent.EventType;
+import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeListener;
+import de.varylab.discreteconformal.plugin.hyperelliptic.CurveEditor;
+import de.varylab.discreteconformal.plugin.image.ImageHook;
+import de.varylab.discreteconformal.unwrapper.SphereUtility;
+import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 import de.varylab.discreteconformal.util.SimpleMatrixPrintUtility;
 
 public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
-		CurveChangeListener {
+		CurveChangeListener, ActionListener {
 
-	private JTextComponent matrixfield = new JTextArea();
-
+	private HalfedgeInterface
+		hif = null;
+	private Random
+		rnd = new Random();
+	
+	private JTextComponent 
+		matrixfield = new JTextArea();
 	private CurveEditor editor;
 	private JScrollPane protectorPane;
-
+	
+	private JPanel
+		geometryPanel = new JPanel();
+	private SpinnerNumberModel
+		extraPointsModel = new SpinnerNumberModel(100, 0, 10000, 1),
+		equalizationIterationsModel = new SpinnerNumberModel(10, 0, 100, 1);
+	private JSpinner
+		equalizationIterationsSpinner = new JSpinner(equalizationIterationsModel),
+		extraPointsSpinner = new JSpinner(extraPointsModel);
+	private JButton
+		createButton = new JButton("Create Triangulated Surface");
+	
 	public CurveEditor getEditor() {
 		return editor;
 	}
 
 	public HyperellipticCurvePlugin() {
-
 		Curve c = new Curve(1);
 		c.update();
-
 		setCurve(c);
 
 		editor.setPreferredSize(new Dimension(300, 300));
-		
 		protectorPane = new JScrollPane(editor);
 		protectorPane.setMinimumSize(editor.getPreferredSize());
 		
 		initViewMatrixPanel();
 
 		setInitialPosition(SHRINKER_RIGHT);
-		GridBagConstraints constraint = LayoutFactory.createRightConstraint();
+		GridBagConstraints c1 = createLeftConstraint();
+		GridBagConstraints c2 = createRightConstraint();
 		shrinkPanel.setTitle("Hyperelliptic Curve Plugin");
-		constraint.weighty = 1.0;
-		shrinkPanel.add(protectorPane, constraint);
-		constraint.weighty = 0.0;
-		shrinkPanel.add(matrixfield, constraint);
-
-		shrinkPanel.setShrinked(false);
+		c2.weighty = 1.0;
+		shrinkPanel.add(protectorPane, c2);
+		c2.weighty = 0.0;
+		shrinkPanel.add(matrixfield, c2);
+		
+		geometryPanel.setBorder(BorderFactory.createTitledBorder("Triangulated Surface"));
+		geometryPanel.setLayout(new GridBagLayout());
+		geometryPanel.add(new JLabel("Extra Random Points"), c1);
+		geometryPanel.add(extraPointsSpinner, c2);
+		geometryPanel.add(new JLabel("Point Equalizer Iterations"), c1);
+		geometryPanel.add(equalizationIterationsSpinner, c2);
+		geometryPanel.add(createButton, c2);
+		shrinkPanel.add(geometryPanel, c2);
+		
+		createButton.addActionListener(this);
 	}
 
 	public Curve getCurve() {
@@ -82,6 +135,47 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 
 	}
 
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		AdapterSet a = hif.getAdapters();
+		// create a triangulated surface for the active curve
+		if (createButton == e.getSource()) {
+			CoHDS hds = new CoHDS();
+			Set<CoVertex> branchVertices = new HashSet<CoVertex>();
+			for (Complex z : getBranchPoints()) {
+				double[] p = inverseStereographic(z);
+				CoVertex v = hds.addNewVertex();
+				a.set(Position.class, v, p);
+				branchVertices.add(v);
+			}
+			int numextra = extraPointsModel.getNumber().intValue();
+			List<CoVertex> extraVertices = new LinkedList<CoVertex>();
+			// additional points
+			for (int j = 0; j < numextra; j++) {
+				CoVertex v = hds.addNewVertex();
+				double[] p = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian(), 1.0};
+				Pn.setToLength(p, p, 1, Pn.EUCLIDEAN);
+				a.set(Position.class, v, p);
+				extraVertices.add(v);
+			}
+			// equalization
+			int numIterations = equalizationIterationsModel.getNumber().intValue();
+			if (numIterations > 0) {
+				SphereUtility.equalizeSphereVertices(hds, branchVertices, numIterations, 1E-6);
+			}
+			Set<CoEdge> glueSet = new HashSet<CoEdge>();
+			int[] branchIndices = new int[branchVertices.size()];
+			int i = 0;
+			for (CoVertex bv : branchVertices) {
+				branchIndices[i++] = bv.getIndex();
+			}
+			DiscreteEllipticUtility.generateEllipticImage(hds, 0, glueSet, branchIndices);
+			hif.set(hds);
+			HalfedgeSelection branchSelection = new HalfedgeSelection(branchVertices);
+			hif.setSelection(branchSelection);
+		}
+	}
+	
 	@Override
 	public void curveChanged(CurveChangeEvent e) {
 		if (e.type == EventType.CURVE_CHANGED)
@@ -115,11 +209,18 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 	}
 
 	@Override
+	public void install(Controller c) throws Exception {
+		super.install(c);
+		hif = c.getPlugin(HalfedgeInterface.class);
+	}
+	
+	@Override
 	public PluginInfo getPluginInfo() {
 		PluginInfo info = super.getPluginInfo();
 		info.name = "Curve";
 		info.vendorName = "";
 		info.isDynamic = true;
+		info.icon = ImageHook.getIcon("wenteTorus16.png");
 		return info;
 	}
 

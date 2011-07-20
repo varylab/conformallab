@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.hyperelliptic;
+package de.varylab.discreteconformal.plugin.hyperelliptic;
 
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.constrainedComplex.Constrain;
