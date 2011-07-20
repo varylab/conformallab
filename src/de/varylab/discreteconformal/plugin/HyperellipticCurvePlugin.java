@@ -17,6 +17,7 @@ import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -73,6 +74,8 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 	private JSpinner
 		equalizationIterationsSpinner = new JSpinner(equalizationIterationsModel),
 		extraPointsSpinner = new JSpinner(extraPointsModel);
+	private JCheckBox
+		normalizerBranchPointPositionsChecker = new JCheckBox("Normalize Branch Points (Does not work yet!)");
 	private JButton
 		createButton = new JButton("Create Triangulated Surface");
 	
@@ -106,6 +109,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		geometryPanel.add(extraPointsSpinner, c2);
 		geometryPanel.add(new JLabel("Point Equalizer Iterations"), c1);
 		geometryPanel.add(equalizationIterationsSpinner, c2);
+		geometryPanel.add(normalizerBranchPointPositionsChecker, c2);
 		geometryPanel.add(createButton, c2);
 		shrinkPanel.add(geometryPanel, c2);
 		
