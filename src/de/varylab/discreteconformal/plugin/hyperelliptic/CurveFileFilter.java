@@ -5,6 +5,7 @@ import javax.swing.filechooser.*;
 
 public class CurveFileFilter extends FileFilter {
 
+	@Override
 	public boolean accept(File f) {
 		if (f.isDirectory()) {
 			return true;
@@ -23,6 +24,7 @@ public class CurveFileFilter extends FileFilter {
 	}
 
 	// The description of this filter
+	@Override
 	public String getDescription() {
 		return "Just Hyperelliptic Curves";
 	}

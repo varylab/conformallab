@@ -13,8 +13,8 @@ public class CoVertex extends ConformalVertex<CoVertex, CoEdge, CoFace> {
 	@Override
 	public void copyData(CoVertex v) {
 		super.copyData(v);
-		P = (double[])v.P.clone();
-		T = (double[])v.T.clone();
+		P = v.P.clone();
+		T = v.T.clone();
 		if (v.info != null) {
 			info = new CustomVertexInfo(v.info);
 		}

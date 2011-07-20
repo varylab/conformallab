@@ -54,6 +54,7 @@ public class CurveEditor extends Editor implements CurveChangeListener {
 
 	private void initViewer() {
 		addMouseListener(new MouseListener() {
+			@Override
 			public void mouseClicked(MouseEvent arg0) {
 				if (arg0.getButton() == MouseEvent.BUTTON2
 						&& arg0.getClickCount() == 2) {
@@ -71,15 +72,19 @@ public class CurveEditor extends Editor implements CurveChangeListener {
 				}
 			}
 
+			@Override
 			public void mouseEntered(MouseEvent arg0) {
 			}
 
+			@Override
 			public void mouseExited(MouseEvent arg0) {
 			}
 
+			@Override
 			public void mousePressed(MouseEvent arg0) {
 			}
 
+			@Override
 			public void mouseReleased(MouseEvent arg0) {
 			}
 		});
@@ -118,6 +123,7 @@ public class CurveEditor extends Editor implements CurveChangeListener {
 		setCurve(newCurve);
 	}
 
+	@Override
 	protected void initScene() {
 
 		scene = new SceneComponent();
@@ -136,6 +142,7 @@ public class CurveEditor extends Editor implements CurveChangeListener {
 			private double oldX, oldY;
 			private int id, IDofCoordFrame;
 
+			@Override
 			public void dragStart(TransformedMouseEvent e) {
 				id = e.getIndexOfHitPart();
 				double x = points.get(id).x;
@@ -157,6 +164,7 @@ public class CurveEditor extends Editor implements CurveChangeListener {
 					ChangeListener listener = new ChangeListener() {
 						final int ID = IDofCoordFrame;
 
+						@Override
 						public void stateChanged(ChangeEvent e) {
 							Complex z = new Complex((Double) coordFrame
 									.getX_Spinner().getValue(),
@@ -180,6 +188,7 @@ public class CurveEditor extends Editor implements CurveChangeListener {
 				}
 			}
 
+			@Override
 			public void drag(TransformedMouseEvent e) {
 				if (e.getMouseEvent().getClickCount() == 2)
 					return;
@@ -199,6 +208,7 @@ public class CurveEditor extends Editor implements CurveChangeListener {
 				fireEditChangeEvent();
 			}
 
+			@Override
 			public void dragEnd(TransformedMouseEvent e) {
 			}
 
@@ -216,6 +226,7 @@ public class CurveEditor extends Editor implements CurveChangeListener {
 		}
 	}
 
+	@Override
 	public void update() {
 		updatePoints();
 		repaint();
@@ -263,6 +274,7 @@ public class CurveEditor extends Editor implements CurveChangeListener {
 		loadMenuItem.getAccessibleContext().setAccessibleDescription(
 				"load surface");
 		loadMenuItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				JFrame f = new JFrame();
 				f.setAlwaysOnTop(true);
@@ -279,6 +291,7 @@ public class CurveEditor extends Editor implements CurveChangeListener {
 		saveMenuItem.getAccessibleContext().setAccessibleDescription(
 				"save surface");
 		saveMenuItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				JFrame f = new JFrame();
 				f.setAlwaysOnTop(true);

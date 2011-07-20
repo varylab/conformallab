@@ -22,6 +22,7 @@ public abstract class Editor extends Viewer2D{
 		final CoordinateGrid grid = new CoordinateGrid();
 
 		addViewportChangeListener(new ViewportChangeListener() {
+			@Override
 			public void viewportChange(ViewportChangeEvent event) {
 				grid.setRectangle(event.getViewport());
 				grid.fireAppearanceChange();

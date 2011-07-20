@@ -139,7 +139,7 @@ public class PnBig {
 	}
 
 	public static BigDecimal[] polarize(BigDecimal[] polar, BigDecimal[] p, int metric)	{
-		if (polar == null)	polar = (BigDecimal[]) p.clone();
+		if (polar == null)	polar = p.clone();
 		else System.arraycopy(p,0,polar, 0, p.length);
 		// last element is multiplied by the metric!
 		switch (metric)	{

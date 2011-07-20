@@ -88,6 +88,7 @@ public class Curve extends HyperEllipticCurve {
 		setSymmetrizePeriodMatrix(false);
 	}
 
+	@Override
 	public void update() {
 		super.update();
 		CurveChangeEvent e = new CurveChangeEvent(this, this,
