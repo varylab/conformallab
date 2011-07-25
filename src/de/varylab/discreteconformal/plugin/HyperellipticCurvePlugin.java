@@ -152,6 +152,12 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 				a.set(Position.class, v, p);
 				branchVertices.add(v);
 			}
+			// add north pole if needed
+			if (branchVertices.size() % 2 == 1) {
+				CoVertex v = hds.addNewVertex();
+				a.set(Position.class, v, new double[] {0, 0, 1});
+				branchVertices.add(v);
+			}
 			int numextra = extraPointsModel.getNumber().intValue();
 			List<CoVertex> extraVertices = new LinkedList<CoVertex>();
 			// additional points

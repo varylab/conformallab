@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.plugin.tasks;
 
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
+import static java.lang.Math.PI;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -12,9 +13,11 @@ import java.util.Set;
 import javax.swing.SwingWorker;
 
 import no.uib.cipr.matrix.Vector;
+import de.jtem.blas.ComplexMatrix;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.mfc.field.Complex;
+import de.jtem.riemann.theta.SiegelReduction;
 import de.varylab.discreteconformal.adapter.HyperbolicLengthWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -143,10 +146,15 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			layoutTime = System.currentTimeMillis();
 			try {
 				Complex tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(cutInfo);
+				Complex piNormalizedTau = new Complex(0, 2 * PI);
+				piNormalizedTau = piNormalizedTau.times(tau);
+				final ComplexMatrix PeriodMatrix = new ComplexMatrix(new Complex[][] {{piNormalizedTau}});
+				SiegelReduction siegel = new SiegelReduction(PeriodMatrix);
 				System.out.println("Tau Re " + tau.re);
 				System.out.println("Tau Im " + tau.im);
 				System.out.println("Tau Abs " + tau.abs());
 				System.out.println("Tau Arg " + tau.arg());
+				System.out.println("After Siegel: " +  siegel.getReducedPeriodMatrix());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

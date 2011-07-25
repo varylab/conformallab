@@ -87,6 +87,11 @@ public class CuttingUtility {
 		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
 		List<Set<E>> paths = HomotopyUtility.getGeneratorPaths(root, wa);
 		Set<E> path0 = paths.get(0);
+		for (Set<E> path : paths) {
+			if (path.size() < path0.size()) {
+				path0 = path;
+			}
+		}
 		context.paths.add(path0);
 		cutAlongPath(path0, context);
 
