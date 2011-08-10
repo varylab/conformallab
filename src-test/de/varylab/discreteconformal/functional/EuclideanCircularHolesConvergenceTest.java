@@ -93,8 +93,8 @@ public class EuclideanCircularHolesConvergenceTest  {
 		Matrix H = new CompRowMatrix(n,n,makeNonZeros(hds));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
-		optimizer.setSolver(Solver.CG);
-		optimizer.setError(1E-13);
+		optimizer.setSolver(Solver.CGS);
+		optimizer.setError(1E-11);
 		optimizer.setMaxIterations(200);
 		try {
 			optimizer.minimize(u, opt);

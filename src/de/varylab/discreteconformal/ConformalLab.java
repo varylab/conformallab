@@ -31,6 +31,12 @@ import de.varylab.discreteconformal.plugin.visualizer.ThetaVisualizer;
 
 public class ConformalLab {
 
+	public static void staticSetup() {
+		JRHalfedgeViewer.initHalfedgeFronted();
+		NativePathUtility.set("native");
+	}
+	
+	
 	public static Set<Plugin> createConformalPlugins() {
 		Set<Plugin> s = new HashSet<Plugin>();
 		s.add(new DiscreteConformalPlugin());
@@ -48,8 +54,7 @@ public class ConformalLab {
 	
 	
 	public static void main(String[] args) {
-		JRHalfedgeViewer.initHalfedgeFronted();
-		NativePathUtility.set("native");
+		staticSetup();
 		JRViewer v = new JRViewer();
 		v.addBasicUI();
 		v.addContentUI();

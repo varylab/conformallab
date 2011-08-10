@@ -1,7 +1,8 @@
 package de.varylab.discreteconformal.plugin.hyperelliptic;
 
 import java.io.File;
-import javax.swing.filechooser.*;
+
+import javax.swing.filechooser.FileFilter;
 
 public class CurveFileFilter extends FileFilter {
 

@@ -46,7 +46,7 @@ public class SearchTest {
 		SceneGraphComponent c = null;
 		IndexedFaceSet ifs = null;
 		try {
-			Input in = new Input("Obj File", EuclideanLayoutTest.class.getResourceAsStream("brezel.obj"));
+			Input in = new Input("Obj File", SearchTest.class.getResourceAsStream("brezel.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds converter = new ConverterJR2Heds();

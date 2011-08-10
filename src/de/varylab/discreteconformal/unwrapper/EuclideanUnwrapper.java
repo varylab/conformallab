@@ -46,7 +46,7 @@ public class EuclideanUnwrapper implements Unwrapper{
 		Matrix H = new CompRowMatrix(n,n,makeNonZeros(surface));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
-		optimizer.setSolver(Solver.CG);
+		optimizer.setSolver(Solver.CGS);
 		optimizer.setError(gradTolerance);
 		optimizer.setMaxIterations(maxIterations);
 		try {

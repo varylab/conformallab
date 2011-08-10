@@ -19,7 +19,6 @@ import de.jreality.scene.SceneGraphComponent;
 import de.jreality.util.Input;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
-import de.varylab.discreteconformal.functional.EuclideanFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -94,9 +93,9 @@ public class EuclideanConvergenceTest  {
 		Matrix H = new CompRowMatrix(n,n,makeNonZeros(hds));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
-		optimizer.setSolver(Solver.CG);
-		optimizer.setError(1E-13);
-		optimizer.setMaxIterations(200);
+		optimizer.setSolver(Solver.CGS);
+		optimizer.setError(1E-11);
+		optimizer.setMaxIterations(500);
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {

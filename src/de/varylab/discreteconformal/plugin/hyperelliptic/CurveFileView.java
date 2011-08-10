@@ -1,8 +1,10 @@
 package de.varylab.discreteconformal.plugin.hyperelliptic;
 
 import java.io.File;
-import javax.swing.*;
-import javax.swing.filechooser.*;
+
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.filechooser.FileView;
 
 public class CurveFileView extends FileView {
 	ImageIcon icon = new ImageIcon(getClass().getResource(

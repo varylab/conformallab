@@ -3,6 +3,11 @@ package de.varylab.discreteconformal.unwrapper;
 import java.util.Set;
 
 import de.jreality.math.Pn;
+import de.jtem.jpetsc.InsertMode;
+import de.jtem.jpetsc.Vec;
+import de.jtem.jtao.Tao;
+import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
+import de.jtem.jtao.TaoApplication;
 import de.varylab.discreteconformal.functional.ElectrostaticSphereFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -11,11 +16,6 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.ConformalEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.TaoDomain;
 import de.varylab.discreteconformal.unwrapper.numerics.TaoGradient;
-import de.varylab.jpetsc.InsertMode;
-import de.varylab.jpetsc.Vec;
-import de.varylab.jtao.Tao;
-import de.varylab.jtao.TaoAppAddCombinedObjectiveAndGrad;
-import de.varylab.jtao.TaoApplication;
 
 public class SphereUtility {
 

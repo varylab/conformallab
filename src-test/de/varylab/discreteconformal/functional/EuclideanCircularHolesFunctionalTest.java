@@ -89,7 +89,7 @@ public class EuclideanCircularHolesFunctionalTest extends FunctionalTest<CoVerte
 		setFunctional(functional);
 		setHDS(hds);
 		setXGradient(u);
-		setXHessian(u);
+//		setXHessian(u);
 	}
 	
 	

@@ -79,7 +79,7 @@ public class HyperbolicCircularHolesFunctionalTest extends FunctionalTest<CoVert
 		setFunctional(functional);
 		setHDS(hds);
 		setXGradient(u);
-		setXHessian(u);
+//		setXHessian(u);
 		setEps(eps);
 		setError(error);
 	}

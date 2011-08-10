@@ -1,8 +1,8 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
-import static de.varylab.jpetsc.InsertMode.INSERT_VALUES;
 import de.jtem.halfedgetools.functional.Gradient;
-import de.varylab.jpetsc.Vec;
+import de.jtem.jpetsc.InsertMode;
+import de.jtem.jpetsc.Vec;
 
 public class TaoGradient implements Gradient {
 
@@ -20,7 +20,7 @@ public class TaoGradient implements Gradient {
 
 	@Override
 	public void set(int i, double value) {
-		G.setValue(i, value, INSERT_VALUES);
+		G.setValue(i, value, InsertMode.INSERT_VALUES);
 	}
 	
 	@Override

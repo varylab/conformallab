@@ -1,19 +1,19 @@
 package de.varylab.discreteconformal.unwrapper;
 
 import static de.varylab.discreteconformal.util.SparseUtility.getPETScNonZeros;
-import static de.varylab.jpetsc.InsertMode.INSERT_VALUES;
-import static de.varylab.jpetsc.PETSc.PETSC_DEFAULT;
-import static de.varylab.jtao.ConvergenceFlags.CONVERGED_ATOL;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.jpetsc.InsertMode;
+import de.jtem.jpetsc.Mat;
+import de.jtem.jpetsc.PETSc;
+import de.jtem.jpetsc.Vec;
+import de.jtem.jtao.ConvergenceFlags;
+import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicApplication;
 import de.varylab.discreteconformal.util.UnwrapUtility;
-import de.varylab.jpetsc.Mat;
-import de.varylab.jpetsc.Vec;
-import de.varylab.jtao.Tao;
 
 public class HyperbolicUnwrapperPETSc implements Unwrapper{
 
@@ -36,13 +36,13 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper{
 		boolean hasCircularEdges = false;
 		for (CoEdge e : surface.getPositiveEdges()) {
 			if (e.getSolverIndex() >= 0) {
-				u.setValue(e.getSolverIndex(), e.getLambda(), INSERT_VALUES);
+				u.setValue(e.getSolverIndex(), e.getLambda(), InsertMode.INSERT_VALUES);
 				hasCircularEdges = true;
 			}
 		}
 		app.setInitialSolutionVec(u);
 		if (!hasCircularEdges) {
-			Mat H = Mat.createSeqAIJ(n, n, PETSC_DEFAULT, getPETScNonZeros(surface));
+			Mat H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(surface));
 			H.assemble();
 			app.setHessianMat(H, H);
 		}
@@ -54,7 +54,7 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper{
 		optimizer.setMaximumIterates(maxIterations);
 		System.out.println("Using grad tolerance " + gradTolerance);
 		optimizer.solve();
-		if (optimizer.getSolutionStatus().reason != CONVERGED_ATOL) {
+		if (optimizer.getSolutionStatus().reason != ConvergenceFlags.CONVERGED_ATOL) {
 			throw new RuntimeException("Optinizer did not converge: \n" + optimizer.getSolutionStatus());
 		}
 		System.out.println(optimizer.getSolutionStatus());

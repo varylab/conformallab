@@ -50,7 +50,7 @@ public class HomologyTest {
 		SceneGraphComponent c = null;
 		IndexedFaceSet ifs = null;
 		try {
-			Input in = new Input("Obj File", EuclideanLayoutTest.class.getResourceAsStream("brezel2.obj"));
+			Input in = new Input("Obj File", HomologyTest.class.getResourceAsStream("brezel2.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds converter = new ConverterJR2Heds();

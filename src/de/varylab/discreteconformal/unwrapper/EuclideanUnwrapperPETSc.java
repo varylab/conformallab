@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.unwrapper;
 
 import static de.varylab.discreteconformal.util.SparseUtility.getPETScNonZeros;
-import static de.varylab.jpetsc.InsertMode.INSERT_VALUES;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -9,6 +8,12 @@ import java.util.HashSet;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.jpetsc.InsertMode;
+import de.jtem.jpetsc.Mat;
+import de.jtem.jpetsc.PETSc;
+import de.jtem.jpetsc.Vec;
+import de.jtem.jtao.Tao;
+import de.jtem.jtao.Tao.GetSolutionStatusResult;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
@@ -16,11 +21,6 @@ import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.discreteconformal.util.UnwrapUtility.BoundaryMode;
 import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
-import de.varylab.jpetsc.Mat;
-import de.varylab.jpetsc.PETSc;
-import de.varylab.jpetsc.Vec;
-import de.varylab.jtao.Tao;
-import de.varylab.jtao.Tao.GetSolutionStatusResult;
 
 public class EuclideanUnwrapperPETSc implements Unwrapper {
 
@@ -58,7 +58,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		boolean hasCircularEdges = false;
 		for (CoEdge e : surface.getPositiveEdges()) {
 			if (e.getSolverIndex() >= 0) {
-				u.setValue(e.getSolverIndex(), e.getLambda(), INSERT_VALUES);
+				u.setValue(e.getSolverIndex(), e.getLambda(), InsertMode.INSERT_VALUES);
 				hasCircularEdges = true;
 			}
 		}

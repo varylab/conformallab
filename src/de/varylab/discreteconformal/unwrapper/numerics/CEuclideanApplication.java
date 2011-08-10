@@ -1,6 +1,10 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
-import static de.varylab.jtao.TaoAppAddHess.PreconditionerType.SAME_NONZERO_PATTERN;
+import de.jtem.jpetsc.Mat;
+import de.jtem.jpetsc.Vec;
+import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
+import de.jtem.jtao.TaoAppAddHess;
+import de.jtem.jtao.TaoApplication;
 import de.varylab.discreteconformal.functional.EuclideanCircularHolesFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -11,11 +15,6 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
-import de.varylab.jpetsc.Mat;
-import de.varylab.jpetsc.Vec;
-import de.varylab.jtao.TaoAppAddCombinedObjectiveAndGrad;
-import de.varylab.jtao.TaoAppAddHess;
-import de.varylab.jtao.TaoApplication;
 
 public class CEuclideanApplication extends TaoApplication implements
 		TaoAppAddCombinedObjectiveAndGrad, TaoAppAddHess {
@@ -58,7 +57,7 @@ public class CEuclideanApplication extends TaoApplication implements
 		TaoHessian taoHess = new TaoHessian(H);
 		functional.evaluate(hds, u, null, null, taoHess);
 		H.assemble();
-		return SAME_NONZERO_PATTERN;
+		return PreconditionerType.SAME_NONZERO_PATTERN;
 	}
 
 	

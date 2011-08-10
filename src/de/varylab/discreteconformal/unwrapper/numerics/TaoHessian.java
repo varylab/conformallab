@@ -1,8 +1,8 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
-import static de.varylab.jpetsc.InsertMode.INSERT_VALUES;
 import de.jtem.halfedgetools.functional.Hessian;
-import de.varylab.jpetsc.Mat;
+import de.jtem.jpetsc.InsertMode;
+import de.jtem.jpetsc.Mat;
 
 public class TaoHessian implements Hessian {
 	
@@ -25,7 +25,7 @@ public class TaoHessian implements Hessian {
 
 	@Override
 	public void set(int i, int j, double value) {
-		H.setValue(i, j, value, INSERT_VALUES);
+		H.setValue(i, j, value, InsertMode.INSERT_VALUES);
 	}
 	
 	@Override

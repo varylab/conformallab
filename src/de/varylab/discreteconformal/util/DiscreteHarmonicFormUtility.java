@@ -1,18 +1,13 @@
 package de.varylab.discreteconformal.util;
 
 import java.util.List;
-//import cern.colt.matrix.Norm;
+
 import cern.colt.matrix.tdouble.DoubleFactory1D;
 import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra;
 import cern.colt.matrix.tdouble.algo.decomposition.SparseDoubleLUDecomposition;
- //import cern.colt.matrix.tdouble.algo.solver.DefaultDoubleIterationMonitor;
-//import cern.colt.matrix.tdouble.algo.solver.DoubleBiCGstab;
-//import cern.colt.matrix.tdouble.algo.solver.DoubleIterationReporter;
-//import cern.colt.matrix.tdouble.algo.solver.DoubleIterativeSolver;
-//import cern.colt.matrix.tdouble.algo.solver.IterativeSolverDoubleNotConvergedException;
 import cern.colt.matrix.tdouble.impl.SparseDoubleMatrix2D;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;

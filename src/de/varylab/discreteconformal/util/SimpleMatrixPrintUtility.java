@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.util;
 
 import java.text.NumberFormat;
 import java.util.Locale;
+
 import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import de.jtem.blas.ComplexMatrix;

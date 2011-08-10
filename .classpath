@@ -8,7 +8,6 @@
 			<attribute name="javadoc_location" value="http://matrix-toolkits-java.googlecode.com/svn/branches/0.9.13/javadoc"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/jPETScTaoV1.7jPETScTao.jar"/>
 	<classpathentry kind="lib" path="lib/jopt-simple-3.2.jar"/>
 	<classpathentry kind="lib" path="lib/JLink.jar"/>
 	<classpathentry kind="lib" path="lib/jplasma.jar"/>
@@ -33,5 +32,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/riemann"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/blas"/>
 	<classpathentry kind="lib" path="lib/MTJOptimization.jar"/>
+	<classpathentry kind="lib" path="lib/jPETScTao.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
