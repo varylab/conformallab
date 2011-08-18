@@ -5,7 +5,6 @@ import static de.jreality.math.Pn.innerProduct;
 import static de.jtem.halfedgetools.functional.FunctionalUtils.addRowToHessian;
 import static de.jtem.halfedgetools.functional.FunctionalUtils.addVectorToGradient;
 import static java.lang.Math.log;
-import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -40,7 +39,6 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 		Hessian H
 	) {
 		double[] x = {d.get(0), d.get(1), d.get(2), d.get(3)};
-		System.out.println(Pn.norm(x, Pn.EUCLIDEAN));
 		double xx = innerProduct(x, x, HYPERBOLIC);
 		if (E != null) {
 			E.setZero();
@@ -56,6 +54,7 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 			double xp = innerProduct(p, x, HYPERBOLIC);
 			if (E != null) {
 				E.add(-log(xp / xx));
+				E.add(xx);
 			}
 			if (G != null) {
 				Rn.times(g1, 2/xx, x);
@@ -63,6 +62,9 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 				g1[3] *= -1; g2[3] *= -1;
 				addVectorToGradient(G, 0, g1);
 				addVectorToGradient(G, 0, g2);
+				Rn.times(g1, 2, x);
+				g1[3] *= -1;
+				addVectorToGradient(G, 0, g1);
 			}
 			if (H != null) {
 				for (int i = 0; i < 4; i++) {
@@ -73,6 +75,7 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 					addRowToHessian(H, i, g2);
 					addRowToHessian(H, i, g1);
 					H.add(i, i, sign * 2 / xx);
+					H.add(i, i, sign * 2);
 				}
 			}
 		}

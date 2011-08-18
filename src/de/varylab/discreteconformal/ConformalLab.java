@@ -20,7 +20,7 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteCurvatureLines;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
-import de.varylab.discreteconformal.plugin.EllipticImageGemerator;
+import de.varylab.discreteconformal.plugin.EllipticImageGenerator;
 import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutToDiskPlugin;
@@ -43,7 +43,7 @@ public class ConformalLab {
 		s.add(new DiscreteRiemannPlugin());
 		s.add(new SchottkyPlugin());
 		s.add(new ThetaVisualizer());
-		s.add(new EllipticImageGemerator());
+		s.add(new EllipticImageGenerator());
 		s.add(new ConsolePlugin());
 		s.add(new CutToDiskPlugin());
 		s.add(new CutAtEdgePlugin());

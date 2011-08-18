@@ -6,12 +6,15 @@ import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
+import no.uib.cipr.matrix.Vector.Norm;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import de.jreality.math.Pn;
+import de.jreality.math.Rn;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
 import de.varylab.discreteconformal.ConformalAdapterSet;
@@ -47,14 +50,12 @@ public class MobiusCenteringFunctionalTest extends FunctionalTest<CoVertex, CoEd
 			v.P[2] = rnd.nextGaussian() * 5; // unbalance
 			v.P[3] = 1.0;
 			Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
-			System.out.println(Pn.norm(v.P, Pn.EUCLIDEAN));
 		}
 	}
 	
 	
 	@Override
 	public void init() {
-		rnd.setSeed(100);
 		MyDomainValue x = new MyDomainValue(new DenseVector(4));
 		x.set(0, rnd.nextDouble() - 0.5);
 		x.set(1, rnd.nextDouble() - 0.5);
@@ -120,10 +121,30 @@ public class MobiusCenteringFunctionalTest extends FunctionalTest<CoVertex, CoEd
 				return E.get();
 			}
 		}; 
-		min.setMaxIterations(100);
-		min.setError(1E-15);
-		min.minimize(x, opt);
+		
+		DenseVector g = new DenseVector(4);
+		opt.evaluate(x, g);
 		System.out.println("x " + x);
+		System.out.println(g.norm(Norm.Two));
+		
+		min.setMaxIterations(100);
+		min.setError(1E-13);
+		min.minimize(x, opt);
+		
+		double xp[] = {x.get(0), x.get(1), x.get(2), x.get(3)};
+		double scale = 1 / Math.sqrt(-Pn.innerProduct(xp, xp, Pn.HYPERBOLIC));
+		Rn.times(xp, scale, xp);
+		System.out.println("sqrt(-<x,x>): " + Pn.norm(xp, Pn.HYPERBOLIC));
+		x = new DenseVector(xp);
+		
+		opt.evaluate(x, g);
+		System.out.println("x " + x);
+		System.out.println(g.norm(Norm.Two));
+		
+		for (CoVertex v : hds.getVertices()) {
+			double[] pv = aSet.getD(Position4d.class, v);
+			
+		}
 	}
 	
 	

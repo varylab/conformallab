@@ -16,6 +16,9 @@ import java.util.Queue;
 import java.util.Set;
 
 import no.uib.cipr.matrix.Vector;
+
+import org.junit.Assert;
+
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
@@ -33,6 +36,7 @@ public class EuclideanLayout {
 	 * @param angleMapParam may be null
 	 */
 	public static CoVertex doLayout(CoHDS hds, Vector u) {
+		System.out.println("U: " + u);
 		Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
 		Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		Queue<CoEdge> Qe = new LinkedList<CoEdge>();
@@ -107,6 +111,14 @@ public class EuclideanLayout {
 			double e = exp( -uv );
 			Pn.dehomogenize(t, t);
 			Rn.times(t, e, t);
+		}
+		
+		for (CoEdge e : hds.getEdges()) {
+			CoVertex s = e.getStartVertex();
+			CoVertex t = e.getTargetVertex();
+			double l1 = Pn.distanceBetween(s.P, t.P, Pn.EUCLIDEAN);
+			double l2 = Pn.distanceBetween(s.T, t.T, Pn.EUCLIDEAN);
+			System.out.println(e + " dif: " + l1 + ", " + l2);
 		}
 		
 		assert (visited.size() == hds.numVertices());

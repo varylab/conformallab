@@ -24,7 +24,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 
-public class EllipticImageGemerator extends AlgorithmPlugin {
+public class EllipticImageGenerator extends AlgorithmPlugin {
 	
 	@Override
 	public AlgorithmCategory getAlgorithmCategory() {
