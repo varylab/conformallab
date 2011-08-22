@@ -20,7 +20,6 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Energy;
-import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
@@ -33,7 +32,7 @@ public class HyperbolicFunctional <
 	V extends Vertex<V, E, F>,
 	E extends Edge<V, E, F>,
 	F extends Face<V, E, F>
-> implements Functional<V, E, F> {
+> implements ConformalFunctional<V, E, F> {
 
 	private Variable<V, E> 
 		var = null;
@@ -44,7 +43,7 @@ public class HyperbolicFunctional <
 	private Alpha<E> 
 		alpha = null;
 	private InitialEnergy<F> 
-		energy = null;
+		initE = null;
 	
 	
 	public HyperbolicFunctional(
@@ -58,7 +57,7 @@ public class HyperbolicFunctional <
 		this.theta = theta;
 		this.lambda = lambda;
 		this.alpha = alpha;
-		this.energy = energy;
+		this.initE = energy;
 	}
 	
 
@@ -134,7 +133,7 @@ public class HyperbolicFunctional <
 				vi = eij.getStartVertex(),
 				vj = ejk.getStartVertex(),
 				vk = eki.getStartVertex();
-			triangleEnergyAndAlphas(u, t, E);
+			triangleEnergyAndAlphas(u, t, E, initE);
 			if (G != null) {
 				if (var.isVariable(vi)) {
 					G.add(var.getVarIndex(vi), -alpha.getAlpha(ejk));
@@ -163,7 +162,7 @@ public class HyperbolicFunctional <
 			double cot = 0.0;
 			if (e.getLeftFace() != null) {
 				E ek = e;
-				boolean valid = triangleEnergyAndAlphas(u, ek.getLeftFace(), null); 
+				boolean valid = triangleEnergyAndAlphas(u, ek.getLeftFace(), null, initE); 
 				if (valid) {
 					final double
 						αi = alpha.getAlpha(ek.getPreviousEdge()),
@@ -176,7 +175,7 @@ public class HyperbolicFunctional <
 			}
 			if (e.getRightFace() != null) {
 				E el = e.getOppositeEdge();
-				boolean valid = triangleEnergyAndAlphas(u, el.getLeftFace(), null);
+				boolean valid = triangleEnergyAndAlphas(u, el.getLeftFace(), null, initE);
 				if (valid) {
 					final double
 						αi = alpha.getAlpha(el.getPreviousEdge()),
@@ -220,13 +219,14 @@ public class HyperbolicFunctional <
 	}
 	
 	
-	
+	@Override
 	public boolean triangleEnergyAndAlphas(
 		// input	
 			final DomainValue u, 
 			final F f, 
 		// output
-			final Energy E
+			final Energy E,
+			final InitialEnergy<F> initialEnergy
 	) {
 		final E 
 			eij = f.getBoundaryEdge(),
@@ -284,7 +284,7 @@ public class HyperbolicFunctional <
 			E.add(βi*lambda.getLambda(ejk) + βj*lambda.getLambda(eki) + βk*lambda.getLambda(eij));
 			E.add(+ lob(αi) + lob(αj) + lob(αk) + lob(βi) + lob(βj) + lob(βk));
 			E.add(+ lob(0.5 * (PI - αi - αj - αk)));
-			E.add(-energy.getInitialEnergy(f));
+			E.add(-initialEnergy.getInitialEnergy(f));
 		}
 		if (alpha != null) {
 			alpha.setAlpha(eij, αk);
@@ -336,6 +336,14 @@ public class HyperbolicFunctional <
 		return true;
 	}
 	
+	@Override
+	public double getLambda(double length) {
+		return 2 * log(length);
+	}
+	@Override
+	public double getLength(double lambda) {
+		return exp(lambda / 2);
+	}
 	
 }
 

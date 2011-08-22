@@ -1,13 +1,22 @@
 package de.varylab.discreteconformal.unwrapper;
 
+import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
+
+import java.util.Map;
+
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.varylab.discreteconformal.adapter.HyperbolicLengthWeightAdapter;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicOptimizable;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
@@ -20,13 +29,23 @@ public class HyperbolicUnwrapper implements Unwrapper{
 		gradTolerance = 1E-8;
 	private int
 		maxIterations = 150;
+	private CoVertex
+		cutRoot = null;
+	
+	public CoVertex
+		layoutRoot = null;
+	public CuttingInfo<CoVertex, CoEdge, CoFace> 
+		cutInfo = null;
+	public Map<CoEdge, Double>
+		lengthMap = null;
+	
 	
 	@Override
-	public Vector unwrap(CoHDS surface, AdapterSet aSet) throws Exception {
-		UnwrapUtility.prepareInvariantDataHyperbolic(surface, aSet);
-		
+	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
 		CHyperbolicOptimizable opt = new CHyperbolicOptimizable(surface);
 		int n = opt.getDomainDimension();
+		
+		UnwrapUtility.prepareInvariantDataHyperbolic(opt.getFunctional(), surface, aSet);
 		
 		// optimization
 		DenseVector u = new DenseVector(n);
@@ -39,20 +58,58 @@ public class HyperbolicUnwrapper implements Unwrapper{
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
-//			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
+			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
 		}
-		return u;
+
+		HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
+		if (cutRoot == null) {
+			cutRoot = surface.getVertex(getMinUIndex(u));
+		}
+		cutInfo = cutManifoldToDisk(surface, cutRoot, hypWa);
+		lengthMap = HyperbolicLayout.getLengthMap(surface, u);
+		layoutRoot = HyperbolicLayout.doLayout(surface, null, u);
 	}
+	
+
+	protected static int getMinUIndex(Vector u) {
+		int index = 0;
+		double iVal = u.get(0);
+		for (int i = 1; i < u.size(); i++) {
+			double val = u.get(i);
+			if (iVal < val) {
+				index = i;
+				iVal = i;
+			}
+		}
+		return index;
+	}
+	
 	
 	@Override
 	public void setGradientTolerance(double tol) {
 		gradTolerance = tol;
 	}
-	
 	@Override
 	public void setMaxIterations(int maxIterations) {
 		this.maxIterations = maxIterations;
 	}
+	@Override
+	public void setCutRoot(CoVertex root) {
+		this.cutRoot = root;
+	}
 	
+
+	@Override
+	public CuttingInfo<CoVertex, CoEdge, CoFace> getCutInfo() {
+		return cutInfo;
+	}
+	@Override
+	public Map<CoEdge, Double> getlengthMap() {
+		return lengthMap;
+	}
+	@Override
+	public CoVertex getLayoutRoot() {
+		return layoutRoot;
+	}
 
 }

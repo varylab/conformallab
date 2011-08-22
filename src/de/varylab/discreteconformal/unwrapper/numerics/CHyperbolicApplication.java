@@ -38,6 +38,10 @@ public class CHyperbolicApplication extends TaoApplication implements
 		this.hds = hds;
 	}
 	
+	public HyperbolicCircularHolesFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
+		return functional;
+	}
+	
 	@Override
 	public double evaluateObjectiveAndGradient(Vec x, Vec g) {
 		TaoDomain u = new TaoDomain(x);

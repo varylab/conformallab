@@ -1,6 +1,5 @@
 package de.varylab.discreteconformal.plugin.tasks;
 
-import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 import static java.lang.Math.PI;
 
 import java.text.DecimalFormat;
@@ -12,29 +11,22 @@ import java.util.Set;
 
 import javax.swing.SwingWorker;
 
-import no.uib.cipr.matrix.Vector;
 import de.jtem.blas.ComplexMatrix;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.theta.SiegelReduction;
-import de.varylab.discreteconformal.adapter.HyperbolicLengthWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.ConesUtility;
-import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapper;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
-import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
-import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
-import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
 import de.varylab.discreteconformal.util.UnwrapUtility.BoundaryMode;
 import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
 
@@ -58,8 +50,6 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		maxIterations = 150;
 	private double
 		toleranceExp = -8;
-	private Vector
-		u = null;
 	
 	// result values -------
 	public int 
@@ -115,13 +105,13 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
 			
-			u = unwrapper.unwrap(surface, aSet);
+			unwrapper.unwrap(surface, genus, aSet);
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
 			
-			cutInfo = ConesUtility.cutMesh(surface);
-			lengthMap = EuclideanLayout.getLengthMap(surface, u);
-			layoutRoot = EuclideanLayout.doLayout(surface, u);
+			cutInfo = unwrapper.getCutInfo();
+			lengthMap = unwrapper.getlengthMap();
+			layoutRoot = unwrapper.getLayoutRoot();
 			layoutTime = System.currentTimeMillis();
 			setProgress(100);
 			break;
@@ -135,14 +125,13 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
-			u = unwrapper.unwrap(surface, aSet);
+			unwrapper.unwrap(surface, genus, aSet);
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
-			DefaultWeightAdapter<CoEdge> constantWeight = new DefaultWeightAdapter<CoEdge>();
-			CoVertex cutRoot = surface.getVertex(0);
-			cutInfo = CuttingUtility.cutTorusToDisk(surface, cutRoot, constantWeight);
-			lengthMap = HyperbolicLayout.getLengthMap(surface, u);
-			layoutRoot = EuclideanLayout.doLayout(surface, u);
+			
+			cutInfo = unwrapper.getCutInfo();
+			lengthMap = unwrapper.getlengthMap();
+			layoutRoot = unwrapper.getLayoutRoot();
 			layoutTime = System.currentTimeMillis();
 			try {
 				Complex tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(cutInfo);
@@ -164,24 +153,28 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		default:
 			System.out.println("unwrapping surface of genus " + genus + "...");
 			if (usePetsc) {
-				unwrapper = new HyperbolicUnwrapperPETSc();
+				HyperbolicUnwrapperPETSc uw = new HyperbolicUnwrapperPETSc();
+				if (!selectedVertices.isEmpty()) {
+					CoVertex cutRoot = selectedVertices.iterator().next();
+					uw.setCutRoot(cutRoot);
+				}
+				unwrapper = uw;
 			} else {
-				unwrapper = new HyperbolicUnwrapper();
+				HyperbolicUnwrapper uw = new HyperbolicUnwrapper();
+				if (!selectedVertices.isEmpty()) {
+					CoVertex cutRoot = selectedVertices.iterator().next();
+					uw.setCutRoot(cutRoot);
+				}
+				unwrapper = uw;
 			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
-			u = unwrapper.unwrap(surface, aSet);
+			unwrapper.unwrap(surface, genus, aSet);
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
-			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
-			cutRoot = surface.getVertex(getMinUIndex(u));
-			if (!selectedVertices.isEmpty()) {
-				cutRoot = selectedVertices.iterator().next();
-			}
-			cutInfo = cutManifoldToDisk(surface, cutRoot, hypWa);
-//			CoVertex layoutRoot = surface.getVertex(getMaxUIndex(u));
-			lengthMap = HyperbolicLayout.getLengthMap(surface, u);
-			layoutRoot = HyperbolicLayout.doLayout(surface, null, u);
+			cutInfo = unwrapper.getCutInfo();
+			lengthMap = unwrapper.getlengthMap();
+			layoutRoot = unwrapper.getLayoutRoot();
 			layoutTime = System.currentTimeMillis();
 			setProgress(100);
 			break;
@@ -191,60 +184,26 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		System.out.println("layout took " + nf.format((layoutTime - unwrapTime) / 1000.0) + "sec.");
 		return surface;
 	}
-
 	
-
-	private int getMinUIndex(Vector u) {
-		int index = 0;
-		double iVal = u.get(0);
-		for (int i = 1; i < u.size(); i++) {
-			double val = u.get(i);
-			if (iVal < val) {
-				index = i;
-				iVal = i;
-			}
-		}
-		return index;
-	}
-	
-//	private int getMaxUIndex(Vector u) {
-//		int index = 0;
-//		double iVal = u.get(0);
-//		for (int i = 1; i < u.size(); i++) {
-//			double val = u.get(i);
-//			if (iVal > val) {
-//				index = i;
-//				iVal = i;
-//			}
-//		}
-//		return index;
-//	}
-
-
 	public CoHDS getSurface() {
 		return surface;
 	}
-
 
 	public void setSurface(CoHDS surface) {
 		this.surface = surface;
 	}
 
-
 	public boolean isUsePetsc() {
 		return usePetsc;
 	}
-
 
 	public void setUsePetsc(boolean usePetsc) {
 		this.usePetsc = usePetsc;
 	}
 
-
 	public int getNumCones() {
 		return numCones;
 	}
-
 
 	public void setNumCones(int numCones) {
 		this.numCones = numCones;
@@ -276,10 +235,6 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 	
 	public void setSelectedVertices(Set<CoVertex> selectedVertices) {
 		this.selectedVertices = selectedVertices;
-	}
-	
-	public Vector getResultU() {
-		return u;
 	}
 
 }

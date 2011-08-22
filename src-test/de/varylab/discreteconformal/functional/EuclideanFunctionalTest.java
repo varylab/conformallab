@@ -78,7 +78,7 @@ public class EuclideanFunctionalTest extends FunctionalTest<CoVertex, CoEdge, Co
 //			break;
 //		}
 		
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds, a);
+		int n = UnwrapUtility.prepareInvariantDataEuclidean(functional, hds, a);
 		Random rnd = new Random(); 
 		rnd.setSeed(1);
 		

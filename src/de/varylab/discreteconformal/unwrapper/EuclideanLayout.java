@@ -16,13 +16,12 @@ import java.util.Queue;
 import java.util.Set;
 
 import no.uib.cipr.matrix.Vector;
-
-import org.junit.Assert;
-
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.varylab.discreteconformal.functional.ConformalFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 
@@ -35,8 +34,7 @@ public class EuclideanLayout {
 	 * @param u new metric
 	 * @param angleMapParam may be null
 	 */
-	public static CoVertex doLayout(CoHDS hds, Vector u) {
-		System.out.println("U: " + u);
+	public static CoVertex doLayout(CoHDS hds, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector u) {
 		Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
 		Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		Queue<CoEdge> Qe = new LinkedList<CoEdge>();
@@ -61,7 +59,7 @@ public class EuclideanLayout {
 		Qa.offer(0.0);
 
 		// vertices
-		Double l = getNewLength(e0, u);
+		Double l = getNewLength(e0, fun, u);
 		v1.T = new double[] {0,0,0,1};
 		v2.T = new double[] {l,0,0,1};
 		visited.add(v1);
@@ -93,7 +91,7 @@ public class EuclideanLayout {
 					Qe.offer(e);	
 					Qa.offer(globalAngle);
 
-					l = getNewLength(e, u);
+					l = getNewLength(e, fun, u);
 					double[] dif = {cos(globalAngle), sin(globalAngle), 0.0, 1.0};
 					Rn.times(dif, l, dif);
 					double[] t = Rn.add(null, tp, dif);
@@ -111,14 +109,6 @@ public class EuclideanLayout {
 			double e = exp( -uv );
 			Pn.dehomogenize(t, t);
 			Rn.times(t, e, t);
-		}
-		
-		for (CoEdge e : hds.getEdges()) {
-			CoVertex s = e.getStartVertex();
-			CoVertex t = e.getTargetVertex();
-			double l1 = Pn.distanceBetween(s.P, t.P, Pn.EUCLIDEAN);
-			double l2 = Pn.distanceBetween(s.T, t.T, Pn.EUCLIDEAN);
-			System.out.println(e + " dif: " + l1 + ", " + l2);
 		}
 		
 		assert (visited.size() == hds.numVertices());
@@ -145,10 +135,10 @@ public class EuclideanLayout {
 	}
 	
 	
-	public static Map<CoEdge, Double> getLengthMap(CoHDS hds, Vector u) {
+	public static Map<CoEdge, Double> getLengthMap(CoHDS hds, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector u) {
 		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
 		for (CoEdge e : hds.getPositiveEdges()) {
-			double l = getNewLength(e, u);
+			double l = getNewLength(e, fun, u);
 			lMap.put(e, l);
 			lMap.put(e.getOppositeEdge(), l);
 		}
@@ -162,13 +152,13 @@ public class EuclideanLayout {
 	 * @param u
 	 * @return the new edge length
 	 */
-	public static Double getNewLength(CoEdge e, Vector u) {
+	public static Double getNewLength(CoEdge e, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector u) {
 		CoVertex v1 = e.getStartVertex();
 		CoVertex v2 = e.getTargetVertex();
 		Double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
 		Double u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0;
 		double l2 = e.getSolverIndex() >= 0 ? u.get(e.getSolverIndex()) : e.getLambda() + u1 + u2;
-		return exp(l2 / 2);
+		return fun.getLength(l2);
 	}
 	
 	

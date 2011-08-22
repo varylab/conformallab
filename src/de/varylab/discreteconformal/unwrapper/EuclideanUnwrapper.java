@@ -3,15 +3,20 @@ package de.varylab.discreteconformal.unwrapper;
 import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 
 import java.util.Collection;
+import java.util.Map;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
-import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
+import de.varylab.discreteconformal.util.CuttingUtility;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.discreteconformal.util.UnwrapUtility.BoundaryMode;
 import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
@@ -20,7 +25,7 @@ import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
 import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
-public class EuclideanUnwrapper implements Unwrapper{
+public class EuclideanUnwrapper implements Unwrapper {
 
 	private QuantizationMode
 		conesMode = QuantizationMode.AllAngles,
@@ -33,14 +38,20 @@ public class EuclideanUnwrapper implements Unwrapper{
 	private double
 		gradTolerance = 1E-8;
 	
+	public CoVertex
+		layoutRoot = null;
+	public CuttingInfo<CoVertex, CoEdge, CoFace> 
+		cutInfo = null;
+	public Map<CoEdge, Double>
+		lengthMap = null;
 	
 	@Override
-	public Vector unwrap(CoHDS surface, AdapterSet aSet) throws Exception {
-		UnwrapUtility.prepareInvariantDataEuclidean(surface, boundaryMode, boundaryQuantMode, aSet);
+	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
+		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
+		UnwrapUtility.prepareInvariantDataEuclidean(opt.getFunctional(), surface, boundaryMode, boundaryQuantMode, aSet);
 		// cones
 		Collection<CoVertex> cones = ConesUtility.setUpCones(surface, numCones); 
 		// optimization
-		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
 		int n = opt.getDomainDimension();
 		DenseVector u = new DenseVector(n);
 		Matrix H = new CompRowMatrix(n,n,makeNonZeros(surface));
@@ -68,33 +79,58 @@ public class EuclideanUnwrapper implements Unwrapper{
 				}
 			}
 		}
-		return u;
+		
+		switch (genus) {
+		case 0:
+			cutInfo = ConesUtility.cutMesh(surface);
+			break;
+		case 1:
+			CoVertex cutRoot = surface.getVertex(0);
+			DefaultWeightAdapter<CoEdge> constantWeight = new DefaultWeightAdapter<CoEdge>();
+			cutInfo = CuttingUtility.cutTorusToDisk(surface, cutRoot, constantWeight);
+			break;
+		default:
+			throw new RuntimeException("Cannot work on higher genus");
+		}
+		lengthMap = EuclideanLayout.getLengthMap(surface, opt.getFunctional(), u);
+		layoutRoot = EuclideanLayout.doLayout(surface, opt.getFunctional(), u);
 	}
 	
 	public void setNumCones(int numCones) {
 		this.numCones = numCones;
 	}
-
 	public void setConeMode(QuantizationMode quantizationMode) {
 		this.conesMode = quantizationMode;
 	}
-
 	@Override
 	public void setGradientTolerance(double tol) {
 		gradTolerance = tol;
 	}
-	
 	@Override
 	public void setMaxIterations(int maxIterations) {
 		this.maxIterations = maxIterations;
 	}
-
 	public void setBoundaryQuantMode(QuantizationMode boundaryQuantMode) {
 		this.boundaryQuantMode = boundaryQuantMode;
 	}
-	
 	public void setBoundaryMode(BoundaryMode boundaryMode) {
 		this.boundaryMode = boundaryMode;
+	}
+	@Override
+	public void setCutRoot(CoVertex root) {
+	}
+
+	@Override
+	public CuttingInfo<CoVertex, CoEdge, CoFace> getCutInfo() {
+		return cutInfo;
+	}
+	@Override
+	public Map<CoEdge, Double> getlengthMap() {
+		return lengthMap;
+	}
+	@Override
+	public CoVertex getLayoutRoot() {
+		return layoutRoot;
 	}
 	
 }

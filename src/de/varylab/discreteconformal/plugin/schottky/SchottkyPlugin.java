@@ -66,7 +66,6 @@ import de.varylab.discreteconformal.math.ComplexUtility;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapperPETSc;
-import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.NodeIndexComparator;
@@ -153,12 +152,12 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			
 			int genus = HalfEdgeUtils.getGenus(hds);
 			System.out.println("unwrapping surface of genus " + genus + "...");
-			Unwrapper unwrapper = new HyperbolicUnwrapperPETSc();
+			HyperbolicUnwrapperPETSc unwrapper = new HyperbolicUnwrapperPETSc();
+			unwrapper.setCutAndLayout(false);
 			unwrapper.setGradientTolerance(1E-8);
 			unwrapper.setMaxIterations(200);
-			Vector u = null;
 			try {
-				u = unwrapper.unwrap(hds, aSet);
+				unwrapper.unwrap(hds, genus, aSet);
 			} catch (Exception e1) {
 				JOptionPane.showMessageDialog(shrinkPanel, e1.getMessage(), "Optimizer error", WARNING_MESSAGE);
 				e1.printStackTrace();
@@ -167,7 +166,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 //			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
 //			SchottkyWeightAdapter swa = new SchottkyWeightAdapter(cylces);
 //			CoVertex cutRoot = hds.getVertex(1);
-			
+
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
 			for (Set<CoEdge> cycle : cylces) {
 				CuttingUtility.cutAlongPath(cycle, cutInfo);
@@ -208,6 +207,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 //			System.out.println("Genus: " + HalfEdgeUtils.getGenus(hds));
 //			
 //			cutManifoldToDisk(hds, cutRoot, swa);
+			Vector u = unwrapper.getUResult();
 			CoVertex layoutRoot = hds.getVertex(0);
 			layoutRoot = HyperbolicLayout.doLayout(hds, layoutRoot, u);
 ////			

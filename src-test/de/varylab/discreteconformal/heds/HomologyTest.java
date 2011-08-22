@@ -7,12 +7,15 @@ import static de.jreality.shader.CommonAttributes.POLYGON_SHADER;
 import static de.jreality.shader.CommonAttributes.TUBE_RADIUS;
 import static de.jreality.shader.CommonAttributes.TUBE_RADIUS_DEFAULT;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
+import static de.varylab.discreteconformal.util.HomologyUtility.getGeneratorPaths;
 import static java.awt.Color.LIGHT_GRAY;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+
+import junit.framework.Assert;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -65,13 +68,8 @@ public class HomologyTest {
 	
 	@Test
 	public void testHomology() throws Exception{
-		System.out.println("HomologyTest.testHomology()");
-		System.out.println(hds);
-		List<Set<CoEdge>> paths = HomologyUtility.getGeneratorPaths(hds.getVertex(0), new DefaultWeightAdapter<CoEdge>());
-		System.out.println("Found " + paths.size() + " generator paths:");
-		for (Set<CoEdge> path : paths) {
-			System.out.println("Path: length=" + path.size());
-		}
+		List<Set<CoEdge>> paths = getGeneratorPaths(hds.getVertex(0), new DefaultWeightAdapter<CoEdge>());
+		Assert.assertEquals(4, paths.size());
 	}
 	
 	

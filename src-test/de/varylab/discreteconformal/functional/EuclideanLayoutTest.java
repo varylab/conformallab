@@ -14,21 +14,40 @@ import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.util.Input;
+import de.jreality.util.SceneGraphUtility;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
-import de.varylab.discreteconformal.ConformalLab;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class EuclideanLayoutTest {
 
 	private static CoHDS 	
 		hds = null;
+	private CTheta
+		theta = new CTheta();
+	private CVariable
+		variable = new CVariable();
+	private CLambda
+		lambda = new CLambda();
+	private CAlpha
+		alpha = new CAlpha();
+	private CInitialEnergy
+		energy = new CInitialEnergy();
+	public EuclideanFunctional<CoVertex, CoEdge, CoFace>
+		fun = new EuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -39,9 +58,9 @@ public class EuclideanLayoutTest {
 		a.add(new CoPositionAdapter());
 		a.add(new CoTexturePositionAdapter());
 		try {
-			Input in = new Input("Obj File", EuclideanLayoutTest.class.getResourceAsStream("planar01.obj"));
-			c =reader.read(in);
-			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
+			Input in = new Input("Obj File", EuclideanLayoutTest.class.getResourceAsStream("tetraflat.obj"));
+			c = reader.read(in);
+			ifs = (IndexedFaceSet)SceneGraphUtility.getFirstGeometry(c);
 			ConverterJR2Heds converter = new ConverterJR2Heds();
 			hds = new CoHDS();
 			converter.ifs2heds(ifs, hds, a, null);;
@@ -55,16 +74,16 @@ public class EuclideanLayoutTest {
 		AdapterSet a = AdapterSet.createGenericAdapters();
 		a.add(new CoPositionAdapter());
 		a.add(new CoTexturePositionAdapter());
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds, a);
+		hds.normalizeCoordinates();
+		int n = UnwrapUtility.prepareInvariantDataEuclidean(fun, hds, a);
 		Vector u = new SparseVector(n);
-		EuclideanLayout.doLayout(hds, u);
+		EuclideanLayout.doLayout(hds, fun, u);
 		for (CoEdge e : hds.getEdges()) {
 			CoVertex s = e.getStartVertex();
 			CoVertex t = e.getTargetVertex();
 			double l1 = Pn.distanceBetween(s.P, t.P, Pn.EUCLIDEAN);
 			double l2 = Pn.distanceBetween(s.T, t.T, Pn.EUCLIDEAN);
-			System.out.println(e + " dif: " + l1 + ", " + l2);
-//			Assert.assertEquals(l1, l2, 1E-6);
+			Assert.assertEquals(l1, l2, 1E-11);
 		}
 	}
 	

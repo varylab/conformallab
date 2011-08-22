@@ -11,6 +11,7 @@ import static de.jreality.shader.CommonAttributes.TEXTURE_2D;
 import static de.jreality.shader.CommonAttributes.TRANSPARENCY;
 import static de.jreality.shader.CommonAttributes.TRANSPARENCY_ENABLED;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
+import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.WHITE;
 import static java.lang.Math.PI;
@@ -55,7 +56,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import no.uib.cipr.matrix.Vector;
 import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
@@ -87,6 +87,12 @@ import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.jrworkspace.plugin.sidecontainer.widget.ShrinkPanel;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
+import de.varylab.discreteconformal.functional.EuclideanFunctional;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Lambda;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Theta;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -106,8 +112,12 @@ import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility;
 import de.varylab.discreteconformal.uniformization.FundamentalVertex;
 import de.varylab.discreteconformal.uniformization.VisualizationUtility;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
-import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.discreteconformal.util.UnwrapUtility.BoundaryMode;
 import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
 
@@ -148,8 +158,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		canonicalCoverImage = null;
 	private int
 		genus = -1;
-	private Vector
-		lastConformalU = null; 
 
 	private MetricErrorAdapter
 		metricErrorAdapter = new MetricErrorAdapter();
@@ -185,7 +193,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	private JComboBox
 		domainCombo = new JComboBox(Domain.values());
 	private ShrinkPanel
-		metricPreprocessPanel = new ShrinkPanel("Metric Preprocessing"),
 		customNodePanel = new ShrinkPanel("Custom Vertices"),
 		boundaryPanel = new ShrinkPanel("Boundary"),
 		coneConfigPanel = new ShrinkPanel("Automatic Cones"),
@@ -204,8 +211,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		maxIterationsSpinner = new JSpinner(maxIterationsModel);
 	private JCheckBox
 		circularEdgeChecker = new JCheckBox("Is Circular Edge"), 
-		useInverseFlatMetricChecker = new JCheckBox("Use inverse last metric"),
-		useCurvatureMetricChecker = new JCheckBox("Use Curvature Metric"),
 		useDistanceToCanonicalize = new JCheckBox("Use Isometry Distances"),
 		useCustomThetaChecker = new JCheckBox("Custom Theta"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
@@ -316,11 +321,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		boundaryPanel.add(boundaryQuantizationCombo, c2);
 		boundaryPanel.setShrinked(true);
 		shrinkPanel.add(boundaryPanel, c2);
-		
-		metricPreprocessPanel.setLayout(new GridBagLayout());
-		metricPreprocessPanel.add(useCurvatureMetricChecker, c2);
-		metricPreprocessPanel.add(useInverseFlatMetricChecker, c2);
-		shrinkPanel.add(metricPreprocessPanel, c2);
 		
 		coneConfigPanel.setLayout(new GridBagLayout());
 		coneConfigPanel.add(new JLabel("Cones"), c1);
@@ -464,7 +464,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				unwrapper.getSurface().revertNormalization();
 			}
 			genus = unwrapper.genus;
-			lastConformalU = unwrapper.getResultU();
 			metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
 			metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
 
@@ -536,11 +535,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			CoHDS surface = getLoaderGeometry();
 			surface.normalizeCoordinates();
 			AdapterSet aSet = hif.getAdapters();
-			if (useCurvatureMetricChecker.isSelected()) {
-				aSet.add(new CurvatureLengthAdapter());
-			} else if (useInverseFlatMetricChecker.isSelected() && lastConformalU != null) {
-				aSet.add(new InversePlanarMetricAdapter(lastConformalU));
-			}
 			Unwrap uw = new Unwrap(surface, aSet);
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());
 			uw.setMaxIterations(maxIterationsModel.getNumber().intValue());
@@ -597,12 +591,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			BoundaryMode boundaryMode = (BoundaryMode)boundaryModeCombo.getSelectedItem();
 			QuantizationMode boundaryQuantMode = (QuantizationMode)boundaryQuantizationCombo.getSelectedItem();
 			try {
-				UnwrapUtility.prepareInvariantDataEuclidean(
-					hds, 
-					boundaryMode, 
-					boundaryQuantMode, 
-					hif.getAdapters()
-				);
+				Theta<CoVertex> theta = new CTheta();
+				Variable<CoVertex, CoEdge> variable = new CVariable();
+				Lambda<CoEdge> lambda = new CLambda();
+				Alpha<CoEdge> alpha = new CAlpha();
+				InitialEnergy<CoFace> initE = new CInitialEnergy();
+				EuclideanFunctional<CoVertex, CoEdge, CoFace> fun = new EuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, initE);
+				prepareInvariantDataEuclidean(fun, hds, boundaryMode, boundaryQuantMode, hif.getAdapters());
 			} catch (Exception e1) {
 				Window w = getWindowAncestor(shrinkPanel);
 				showMessageDialog(w, e1.getMessage(), "Error", ERROR_MESSAGE);

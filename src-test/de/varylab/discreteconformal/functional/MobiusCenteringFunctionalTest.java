@@ -14,7 +14,6 @@ import org.junit.Test;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
 import de.varylab.discreteconformal.ConformalAdapterSet;
@@ -47,7 +46,7 @@ public class MobiusCenteringFunctionalTest extends FunctionalTest<CoVertex, CoEd
 			CoVertex v = hds.addNewVertex();
 			v.P[0] = rnd.nextGaussian();
 			v.P[1] = rnd.nextGaussian();
-			v.P[2] = rnd.nextGaussian() * 5; // unbalance
+			v.P[2] = rnd.nextGaussian() * 2; // unbalance
 			v.P[3] = 1.0;
 			Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 		}
@@ -141,10 +140,6 @@ public class MobiusCenteringFunctionalTest extends FunctionalTest<CoVertex, CoEd
 		System.out.println("x " + x);
 		System.out.println(g.norm(Norm.Two));
 		
-		for (CoVertex v : hds.getVertices()) {
-			double[] pv = aSet.getD(Position4d.class, v);
-			
-		}
 	}
 	
 	

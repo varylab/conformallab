@@ -4,9 +4,9 @@ import static de.varylab.discreteconformal.util.SparseUtility.getPETScNonZeros;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 
 import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.Mat;
@@ -15,9 +15,13 @@ import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
 import de.jtem.jtao.Tao.GetSolutionStatusResult;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
+import de.varylab.discreteconformal.util.CuttingUtility;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.discreteconformal.util.UnwrapUtility.BoundaryMode;
 import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
@@ -37,21 +41,30 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 
 	public static double
 		lastGNorm = 0;
-
 	private Collection<CoVertex>
 		cones = new HashSet<CoVertex>();
 	
+	public CoVertex
+		layoutRoot = null;
+	public CuttingInfo<CoVertex, CoEdge, CoFace> 
+		cutInfo = null;
+	public Map<CoEdge, Double>
+		lengthMap = null;
+	
+	static {
+		Tao.Initialize();		
+	}
+	
 	@Override
-	public Vector unwrap(CoHDS surface, AdapterSet aSet) throws Exception {
-		UnwrapUtility.prepareInvariantDataEuclidean(surface, boundaryMode, boundaryQuantMode, aSet);
+	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
+		CEuclideanApplication app = new CEuclideanApplication(surface);
+		UnwrapUtility.prepareInvariantDataEuclidean(app.getFunctional(), surface, boundaryMode, boundaryQuantMode, aSet);
 		// cones
 		cones = ConesUtility.setUpCones(surface, numCones); 
 		// optimization
 		Vec u;
 		Mat H;
 		Tao optimizer;
-		Tao.Initialize();
-		CEuclideanApplication app = new CEuclideanApplication(surface);
 		int n = app.getDomainDimension();
 		u = new Vec(n);
 		// set variable lambda start values
@@ -109,42 +122,65 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 				}
 			}
 		}
-		
-		// layout
 		double [] uValues = u.getArray();
-		DenseVector result = new DenseVector(uValues);
+		DenseVector uVec = new DenseVector(uValues);
 		u.restoreArray();
-		return result; 
+
+		switch (genus) {
+		case 0:
+			cutInfo = ConesUtility.cutMesh(surface);
+			break;
+		case 1:
+			CoVertex cutRoot = surface.getVertex(0);
+			DefaultWeightAdapter<CoEdge> constantWeight = new DefaultWeightAdapter<CoEdge>();
+			cutInfo = CuttingUtility.cutTorusToDisk(surface, cutRoot, constantWeight);
+			break;
+		default:
+			throw new RuntimeException("Cannot work on higher genus");
+		}
+		lengthMap = EuclideanLayout.getLengthMap(surface, app.getFunctional(), uVec);
+		layoutRoot = EuclideanLayout.doLayout(surface, app.getFunctional(), uVec);
 	}
 	
 	public Collection<CoVertex> getCones() {
 		return cones;
 	}
-	
 	public void setNumCones(int numCones) {
 		this.numCones = numCones;
 	}
-	
 	public void setConeMode(QuantizationMode quantizationMode) {
 		this.conesMode = quantizationMode;
 	}
-	
 	@Override
 	public void setGradientTolerance(double tol) {
 		gradTolerance = tol;
 	}
-	
 	@Override
 	public void setMaxIterations(int maxIterations) {
 		this.maxIterations = maxIterations;
 	}
-	
 	public void setBoundaryQuantMode(QuantizationMode boundaryQuantMode) {
 		this.boundaryQuantMode = boundaryQuantMode;
 	}
-	
 	public void setBoundaryMode(BoundaryMode boundaryMode) {
 		this.boundaryMode = boundaryMode;
+	}
+	@Override
+	public void setCutRoot(CoVertex root) {
+	}
+	
+
+	@Override
+	public CuttingInfo<CoVertex, CoEdge, CoFace> getCutInfo() {
+		return cutInfo;
+	}
+	@Override
+	public Map<CoEdge, Double> getlengthMap() {
+		return lengthMap;
+	}
+	@Override
+	public CoVertex getLayoutRoot() {
+		return layoutRoot;
 	}
 	
 }

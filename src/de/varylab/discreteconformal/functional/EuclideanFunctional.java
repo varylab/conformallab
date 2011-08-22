@@ -5,6 +5,7 @@ import static de.varylab.discreteconformal.functional.Clausen.lob;
 import static java.lang.Math.PI;
 import static java.lang.Math.atan2;
 import static java.lang.Math.exp;
+import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
 
 import java.util.LinkedList;
@@ -16,7 +17,6 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Energy;
-import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
@@ -29,7 +29,7 @@ public class EuclideanFunctional <
 	V extends Vertex<V, E, F>,
 	E extends Edge<V, E, F>,
 	F extends Face<V, E, F>
-> implements Functional<V, E, F> {
+> implements ConformalFunctional<V, E, F> {
 	
 	private Variable<V, E> 
 		var = null;
@@ -40,7 +40,7 @@ public class EuclideanFunctional <
 	private Alpha<E> 
 		alpha = null;
 	private InitialEnergy<F> 
-		energy = null;
+		initE = null;
 	
 	
 	public EuclideanFunctional(
@@ -54,7 +54,7 @@ public class EuclideanFunctional <
 		this.theta = theta;
 		this.lambda = lambda;
 		this.alpha = alpha;
-		this.energy = energy;
+		this.initE = energy;
 	}
 	
 	
@@ -133,7 +133,7 @@ public class EuclideanFunctional <
 				v1i = var.getVarIndex(v1),
 				v2i = var.getVarIndex(v2),
 				v3i = var.getVarIndex(v3);
-			triangleEnergyAndAlphas(hds, u, t, E);
+			triangleEnergyAndAlphas(u, t, E, initE);
 			if (G != null) {
 				if (var.isVariable(v1)) {
 					G.add(v1i, -alpha.getAlpha(e3));
@@ -202,15 +202,14 @@ public class EuclideanFunctional <
 	}
 	
 	
-	
-	public void triangleEnergyAndAlphas(
-		// combinatorics	
-			final HalfEdgeDataStructure<V, E, F> hds,
+	@Override
+	public boolean triangleEnergyAndAlphas(
 		// input	
 			final DomainValue u, 
 			final F f,
 		// output
-			final Energy E
+			final Energy E,
+			final InitialEnergy<F> initialEnergy
 	) {
 		final E 
 			e1 = f.getBoundaryEdge(),
@@ -259,11 +258,12 @@ public class EuclideanFunctional <
 		if (E != null) {
 			E.add(a1*x23 + a2*x31 + a3*x12);
 			E.add(lob(a1) + lob(a2) + lob(a3));
-			E.add(- PI * umean - energy.getInitialEnergy(f));
+			E.add(- PI * umean - initialEnergy.getInitialEnergy(f));
 		}
 		alpha.setAlpha(e1, a2);
 		alpha.setAlpha(e2, a3);
 		alpha.setAlpha(e3, a1);
+		return true;
 	}
 	
 	
@@ -358,6 +358,14 @@ public class EuclideanFunctional <
 	@Override
 	public boolean hasHessian() {
 		return true;
+	}
+	
+	public double getLambda(double length) {
+		return log(length);
+	}
+	@Override
+	public double getLength(double lambda) {
+		return exp(lambda);
 	}
 	
 }

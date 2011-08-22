@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import no.uib.cipr.matrix.Vector;
-
 import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 import com.wolfram.jlink.MathLinkFactory;
@@ -27,11 +25,9 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
-import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
 
 
 public class DiscreteEllipticUtility {
@@ -90,17 +86,13 @@ public class DiscreteEllipticUtility {
 		Unwrapper unwrapper = new EuclideanUnwrapperPETSc();
 		unwrapper.setGradientTolerance(tol);
 		unwrapper.setMaxIterations(500);
-		Vector u = null;
 		try {
-			u = unwrapper.unwrap(hds, new AdapterSet());
+			unwrapper.unwrap(hds, 1, new AdapterSet());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new Complex();
 		}
-		DefaultWeightAdapter<CoEdge> w = new DefaultWeightAdapter<CoEdge>();
-		CoVertex cutRoot = hds.getVertex(0);
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = CuttingUtility.cutTorusToDisk(hds, cutRoot, w);
-		EuclideanLayout.doLayout(hds, u);
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = unwrapper.getCutInfo();
 		return calculateHalfPeriodRatio(cutInfo);
 	}
 

@@ -71,7 +71,7 @@ public class EuclideanConvergenceTest  {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds, a);
+		int n = UnwrapUtility.prepareInvariantDataEuclidean(functional, hds, a);
 		Random rnd = new Random(); 
 		rnd.setSeed(1);
 		
@@ -94,7 +94,7 @@ public class EuclideanConvergenceTest  {
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
 		optimizer.setSolver(Solver.CGS);
-		optimizer.setError(1E-11);
+		optimizer.setError(1E-13);
 		optimizer.setMaxIterations(500);
 		try {
 			optimizer.minimize(u, opt);

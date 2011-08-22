@@ -45,7 +45,7 @@ public class HyperbolicFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 		createCube(hds, aSet);
 		hds.removeFace(hds.getFace(0));
 		
-		UnwrapUtility.prepareInvariantDataHyperbolic(hds, aSet);
+		UnwrapUtility.prepareInvariantDataHyperbolic(functional, hds, aSet);
 		
 		int n = functional.getDimension(hds);
 		Random rnd = new Random(); 

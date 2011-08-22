@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.functional;
 import java.io.IOException;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.jreality.plugin.JRViewer;
@@ -43,7 +44,7 @@ public class HyperbolicLayoutTest {
 		}
 	}
 
-	@Test
+	@Test@Ignore
 	public void testDoLayout() {
 		throw new RuntimeException("Not implemented correctly yet!");
 //		System.out.println("CLayoutTest.testDoLayout()");

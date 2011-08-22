@@ -1,6 +1,10 @@
 package de.varylab.discreteconformal.unwrapper;
 
+import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 import static de.varylab.discreteconformal.util.SparseUtility.getPETScNonZeros;
+
+import java.util.Map;
+
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -10,27 +14,46 @@ import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.ConvergenceFlags;
 import de.jtem.jtao.Tao;
+import de.varylab.discreteconformal.adapter.HyperbolicLengthWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicApplication;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 
-public class HyperbolicUnwrapperPETSc implements Unwrapper{
+public class HyperbolicUnwrapperPETSc implements Unwrapper {
 
 	private double
 		gradTolerance = 1E-8;
 	private int
 		maxIterations = 150;
+	private CoVertex
+		cutRoot = null;
+	private boolean
+		cutAndLayout = true;
 	
+	private CoVertex
+		layoutRoot = null;
+	private CuttingInfo<CoVertex, CoEdge, CoFace> 
+		cutInfo = null;
+	private Map<CoEdge, Double>
+		lengthMap = null;
+	private Vector
+		uVec = null;
+	
+	static {
+		Tao.Initialize();		
+	}
 	
 	@Override
-	public Vector unwrap(CoHDS surface, AdapterSet aSet) throws Exception {
-		UnwrapUtility.prepareInvariantDataHyperbolic(surface, aSet);
-		
-		Tao.Initialize();
+	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
 		CHyperbolicApplication app = new CHyperbolicApplication(surface);
 		int n = app.getDomainDimension(); 
 		Vec u = new Vec(n);
+		
+		UnwrapUtility.prepareInvariantDataHyperbolic(app.getFunctional(), surface, aSet);
 		
 		// set variable lambda start values
 		boolean hasCircularEdges = false;
@@ -58,20 +81,55 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper{
 			throw new RuntimeException("Optinizer did not converge: \n" + optimizer.getSolutionStatus());
 		}
 		System.out.println(optimizer.getSolutionStatus());
-		DenseVector result = new DenseVector(u.getArray());
+		uVec = new DenseVector(u.getArray());
 		u.restoreArray();
-		return result;
+
+		if (cutAndLayout) {
+			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(uVec);
+			if (cutRoot == null) {
+				cutRoot = surface.getVertex(HyperbolicUnwrapper.getMinUIndex(uVec));
+			}
+			cutInfo = cutManifoldToDisk(surface, cutRoot, hypWa);
+			lengthMap = HyperbolicLayout.getLengthMap(surface, uVec);
+			layoutRoot = HyperbolicLayout.doLayout(surface, null, uVec);
+		}
 	}
 
 	
+	public Vector getUResult() {
+		return uVec;
+	}
+	
+	public boolean isCutAndLayout() {
+		return cutAndLayout;
+	}
+	public void setCutAndLayout(boolean cutAndLayout) {
+		this.cutAndLayout = cutAndLayout;
+	}
 	@Override
 	public void setGradientTolerance(double tol) {
 		gradTolerance = tol;
 	}
-	
 	@Override
 	public void setMaxIterations(int maxIterations) {
 		this.maxIterations = maxIterations;
+	}
+	@Override
+	public void setCutRoot(CoVertex root) {
+		this.cutRoot = root;
+	}
+
+	@Override
+	public CuttingInfo<CoVertex, CoEdge, CoFace> getCutInfo() {
+		return cutInfo;
+	}
+	@Override
+	public Map<CoEdge, Double> getlengthMap() {
+		return lengthMap;
+	}
+	@Override
+	public CoVertex getLayoutRoot() {
+		return layoutRoot;
 	}
 	
 }

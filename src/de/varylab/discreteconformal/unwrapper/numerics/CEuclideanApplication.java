@@ -40,6 +40,10 @@ public class CEuclideanApplication extends TaoApplication implements
 	public CEuclideanApplication(CoHDS hds) {
 		this.hds = hds;
 	}
+	
+	public EuclideanCircularHolesFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
+		return functional;
+	}
 
 	@Override
 	public double evaluateObjectiveAndGradient(Vec x, Vec g) {

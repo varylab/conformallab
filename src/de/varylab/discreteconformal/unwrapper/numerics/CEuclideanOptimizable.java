@@ -4,7 +4,7 @@ import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
-import de.varylab.discreteconformal.functional.EuclideanFunctional;
+import de.varylab.discreteconformal.functional.EuclideanCircularHolesFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -30,11 +30,15 @@ public class CEuclideanOptimizable implements Optimizable {
 		energy = new CInitialEnergy();
 	private CAlpha
 		alpha = new CAlpha();
-	private EuclideanFunctional<CoVertex, CoEdge, CoFace>
-		functional = new EuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	private EuclideanCircularHolesFunctional<CoVertex, CoEdge, CoFace>
+		functional = new EuclideanCircularHolesFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 
 	public CEuclideanOptimizable(CoHDS hds) {
 		this.hds = hds;
+	}
+	
+	public EuclideanCircularHolesFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
+		return functional;
 	}
 	
 	@Override

@@ -20,7 +20,6 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Energy;
-import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
@@ -33,7 +32,7 @@ public class HyperbolicCircularHolesFunctional <
 	V extends Vertex<V, E, F>,
 	E extends Edge<V, E, F>,
 	F extends Face<V, E, F>
-> implements Functional<V, E, F> {
+> implements ConformalFunctional<V, E, F> {
 
 	private Variable<V, E> 
 		var = null;
@@ -44,7 +43,7 @@ public class HyperbolicCircularHolesFunctional <
 	private Alpha<E> 
 		alpha = null;
 	private InitialEnergy<F> 
-		energy = null;
+		initE = null;
 	
 	
 	public HyperbolicCircularHolesFunctional(
@@ -58,7 +57,7 @@ public class HyperbolicCircularHolesFunctional <
 		this.theta = theta;
 		this.lambda = lambda;
 		this.alpha = alpha;
-		this.energy = energy;
+		this.initE = energy;
 	}
 	
 
@@ -142,7 +141,7 @@ public class HyperbolicCircularHolesFunctional <
 				ivi = var.getVarIndex(vi),
 				ivj = var.getVarIndex(vj),
 				ivk = var.getVarIndex(vk);
-			triangleEnergyAndAlphas(u, t, E);
+			triangleEnergyAndAlphas(u, t, E, initE);
 			final double
 				αi = alpha.getAlpha(ejk),
 				αj = alpha.getAlpha(eki),
@@ -224,7 +223,7 @@ public class HyperbolicCircularHolesFunctional <
 			double cot = 0.0;
 			if (e.getLeftFace() != null) {
 				E ek = e;
-				boolean valid = triangleEnergyAndAlphas(u, ek.getLeftFace(), null); 
+				boolean valid = triangleEnergyAndAlphas(u, ek.getLeftFace(), null, initE); 
 				if (valid) {
 					final double
 						αi = alpha.getAlpha(ek.getPreviousEdge()),
@@ -237,7 +236,7 @@ public class HyperbolicCircularHolesFunctional <
 			}
 			if (e.getRightFace() != null) {
 				E el = e.getOppositeEdge();
-				boolean valid = triangleEnergyAndAlphas(u, el.getLeftFace(), null);
+				boolean valid = triangleEnergyAndAlphas(u, el.getLeftFace(), null, initE);
 				if (valid) {
 					final double
 						αi = alpha.getAlpha(el.getPreviousEdge()),
@@ -281,13 +280,14 @@ public class HyperbolicCircularHolesFunctional <
 	}
 	
 	
-	
+	@Override
 	public boolean triangleEnergyAndAlphas(
 		// input	
 			final DomainValue u, 
 			final F f, 
 		// output
-			final Energy E
+			final Energy E,
+			final InitialEnergy<F> initialEnergy
 	) {
 		final E 
 			eij = f.getBoundaryEdge(),
@@ -349,7 +349,7 @@ public class HyperbolicCircularHolesFunctional <
 			E.add(+ lob(αi) + lob(αj) + lob(αk) + lob(βi) + lob(βj) + lob(βk));
 			E.add(+ lob(0.5 * (PI - αi - αj - αk)));
 			E.add(-0.5 * PI * (λjk + λki + λij));
-			E.add(-energy.getInitialEnergy(f));
+			E.add(-initialEnergy.getInitialEnergy(f));
 		}
 		if (alpha != null) {
 			alpha.setAlpha(eij, αk);
@@ -401,6 +401,14 @@ public class HyperbolicCircularHolesFunctional <
 		return true;
 	}
 	
+	@Override
+	public double getLambda(double length) {
+		return 2 * log(length);
+	}
+	@Override
+	public double getLength(double lambda) {
+		return exp(lambda / 2);
+	}
 	
 }
 

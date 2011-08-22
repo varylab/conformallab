@@ -71,7 +71,10 @@ public class EuclideanCircularHolesConvergenceTest  {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(hds, a);
+		
+		CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
+		
+		int n = UnwrapUtility.prepareInvariantDataEuclidean(opt.getFunctional(), hds, a);
 		Random rnd = new Random(); 
 		rnd.setSeed(1);
 		
@@ -87,15 +90,14 @@ public class EuclideanCircularHolesConvergenceTest  {
 			break;
 		}
 		
-		CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
 		// optimization
 		DenseVector u = new DenseVector(n);
 		Matrix H = new CompRowMatrix(n,n,makeNonZeros(hds));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
-		optimizer.setSolver(Solver.CGS);
-		optimizer.setError(1E-11);
-		optimizer.setMaxIterations(200);
+		optimizer.setSolver(Solver.GMRES);
+		optimizer.setError(1E-13);
+		optimizer.setMaxIterations(5);
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {

@@ -2,7 +2,6 @@ package de.varylab.discreteconformal.util;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
-import static java.lang.Math.log;
 import static java.lang.Math.signum;
 
 import java.util.Collection;
@@ -18,17 +17,12 @@ import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.Normal;
 import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.halfedgetools.functional.DomainValue;
-import de.varylab.discreteconformal.functional.EuclideanFunctional;
+import de.varylab.discreteconformal.functional.ConformalFunctional;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
-import de.varylab.discreteconformal.functional.HyperbolicFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
-import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
-import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
-import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 import de.varylab.discreteconformal.unwrapper.numerics.ConformalEnergy;
 
 public class UnwrapUtility {
@@ -81,8 +75,8 @@ public class UnwrapUtility {
 	 * @param boundary the boundary vertices which do not belong to the solver system
 	 * @return the dimension of the parameter space
 	 */
-	public static int prepareInvariantDataEuclidean(CoHDS hds, AdapterSet aSet) {
-		return prepareInvariantDataEuclidean(hds, BoundaryMode.Isometric, QuantizationMode.AllAngles, aSet);
+	public static int prepareInvariantDataEuclidean(ConformalFunctional<CoVertex, CoEdge, CoFace> fun, CoHDS hds, AdapterSet aSet) {
+		return prepareInvariantDataEuclidean(fun, hds, BoundaryMode.Isometric, QuantizationMode.AllAngles, aSet);
 	}
 	
 	
@@ -92,12 +86,13 @@ public class UnwrapUtility {
 	 * @param boundary the boundary vertices which do not belong to the solver system
 	 * @return the dimension of the parameter space
 	 */
-	public static int prepareInvariantDataEuclidean(CoHDS hds, BoundaryMode bm, QuantizationMode qm, AdapterSet aSet) {
+	public static int prepareInvariantDataEuclidean(ConformalFunctional<CoVertex, CoEdge, CoFace> fun, CoHDS hds, BoundaryMode bm, QuantizationMode qm, AdapterSet aSet) {
 		// set initial lambdas
 		TypedAdapterSet<double[]> da = aSet.querySet(double[].class);
 		for (final CoEdge e : hds.getPositiveEdges()) {
 			double l = aSet.get(Length.class, e, Double.class);
-			e.setLambda(2 * log(l));
+			double lambda = fun.getLambda(l);
+			e.setLambda(lambda);
 			e.getOppositeEdge().setLambda(e.getLambda());
 		}
 		Collection<CoVertex> vertexBoundary = HalfEdgeUtils.boundaryVertices(hds);
@@ -221,13 +216,6 @@ public class UnwrapUtility {
 		}
 		
 		if (bm == BoundaryMode.ConformalCurvature && bSize != 0) {
-//			CoFace f0 = hds.getFace(0);
-//			double[] f01 = da.get(EdgeVector.class, f0.getBoundaryEdge());
-//			double[] f02 = da.get(EdgeVector.class, f0.getBoundaryEdge().getPreviousEdge().getOppositeEdge());
-//			double[] f0N = da.get(Normal.class, f0);
-//			double[][] f0B = {f01, f02, f0N};
-//			double surfaceOrientation = signum(Rn.determinant(f0B));
-//			System.out.println("surface orientation is " + surfaceOrientation);
 			Adapter<double[]> cVec = da.query(CurvatureField.class, hds.getEdgeClass());
 			if (cVec == null) throw new RuntimeException("No curvature vector field on edges found");
 			Collection<CoEdge> bList = HalfEdgeUtils.boundaryEdges(hds);
@@ -243,17 +231,14 @@ public class UnwrapUtility {
 				double[][] B = {nVec, eVec, xVec};
 				double sign = Math.signum(Rn.determinant(B));
 				double alpha = normalizeAngle(Rn.euclideanAngle(eVec, xVec) * sign);
-				
 				if (alphaP != null) { // check if we must flip viVec
 					double th = 0.0;
 					for (CoEdge edge : HalfEdgeUtils.incomingEdges(v)) {
 						if (edge.getLeftFace() == null) continue;
 						th += getAngle(edge, aSet);
 					}
-//					th *= surfaceOrientation;
 					double gamma =  normalizeAngle(th - alphaP + alpha);
 					if(abs(gamma) > PI/2) { // flip x
-//						System.out.println("flip at " + v.getIndex());
 						alpha += PI;
 						normalizeAngle(alpha);
 						Rn.times(xVec, -1, xVec); // flip vector
@@ -265,11 +250,6 @@ public class UnwrapUtility {
 						theta = 2*PI - theta;
 					}
 					theta = abs(theta);
-//					System.out.println("sum theta: " + th);
-//					System.out.println("gamma: " + gamma);
-//					System.out.println("a: " + alpha + "   ap: " + alphaP);
-//					System.out.println("Theta at " + v.getIndex() + ": " + theta);
-//					System.out.println("");
 					bSum += Math.PI - theta;
 					v.setTheta(theta);
 					v.setSolverIndex(dim++);
@@ -301,22 +281,15 @@ public class UnwrapUtility {
 		
 		// initial Euclidean energy
 		ZeroU zeroU = new ZeroU();
-		CVariable var = new CVariable();
-		CLambda lambda = new CLambda();
-		CAlpha alpha = new CAlpha();
-		CTheta theta = new CTheta();
-		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		ConformalEnergy E = new ConformalEnergy();
-		EuclideanFunctional<CoVertex, CoEdge, CoFace> func = new EuclideanFunctional<CoVertex, CoEdge, CoFace>(var, theta, lambda, alpha, zeroEnergy);
+		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		for (final CoFace f : hds.getFaces()) {
 			E.setZero();
-			func.triangleEnergyAndAlphas(hds, zeroU, f, E);
+			fun.triangleEnergyAndAlphas(zeroU, f, E, zeroEnergy);
 			f.setInitialEnergy(E.get());
 		}
 		return dim;
 	}
-	
-	
 	
 	private static double normalizeAngle(double a) {
 		a %= 2*PI;
@@ -325,9 +298,6 @@ public class UnwrapUtility {
 		}
 		return a;
 	}
-	
-	
-	
 	
 	/**
 	 * Calculate the angle at the target vertex of e
@@ -344,20 +314,18 @@ public class UnwrapUtility {
 	}
 	
 	
-	
-	
-	
 	/**
 	 * Compute algorithm invariant data
 	 * @param boundary the boundary vertices which do not belong to the solver system
 	 * @return the dimension of the parameter space
 	 */
-	public static int prepareInvariantDataHyperbolic(CoHDS hds, AdapterSet a) {
+	public static int prepareInvariantDataHyperbolic(ConformalFunctional<CoVertex, CoEdge, CoFace> fun, CoHDS hds, AdapterSet a) {
 		// set initial lambdas
 		for (final CoEdge e : hds.getPositiveEdges()) {
 			try {
 			double l = a.get(Length.class, e, Double.class);
-			e.setLambda(2*log(l));
+			double lambda = fun.getLambda(l);
+			e.setLambda(lambda);
 			e.getOppositeEdge().setLambda(e.getLambda());
 			} catch (Exception e1) {
 				System.out
@@ -387,16 +355,11 @@ public class UnwrapUtility {
 		
 		// initial hyperbolic energy
 		ZeroU zeroU = new ZeroU();
-		CVariable var = new CVariable();
-		CLambda lambda = new CLambda();
-		CTheta theta = new CTheta();
-		CAlpha alpha = new CAlpha();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		ConformalEnergy E = new ConformalEnergy();
-		HyperbolicFunctional<CoVertex, CoEdge, CoFace> func = new HyperbolicFunctional<CoVertex, CoEdge, CoFace>(var, theta, lambda, alpha, zeroEnergy);
 		for (final CoFace f : hds.getFaces()) {
 			E.setZero();
-			func.triangleEnergyAndAlphas(zeroU, f, E);
+			fun.triangleEnergyAndAlphas(zeroU, f, E, zeroEnergy);
 			f.setInitialEnergy(E.get());
 		}
 		return dim;
