@@ -5,7 +5,8 @@ import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
 import de.jtem.jtao.TaoAppAddHess;
 import de.jtem.jtao.TaoApplication;
-import de.varylab.discreteconformal.functional.EuclideanCircularHolesFunctional;
+import de.varylab.discreteconformal.functional.ConformalFunctional;
+import de.varylab.discreteconformal.functional.EuclideanNewFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -33,15 +34,15 @@ public class CEuclideanApplication extends TaoApplication implements
 		alpha = new CAlpha();
 //	private EuclideanFunctional<CoVertex, CoEdge, CoFace>
 //		functional = new EuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
-	private EuclideanCircularHolesFunctional<CoVertex, CoEdge, CoFace>
-		functional = new EuclideanCircularHolesFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	private EuclideanNewFunctional<CoVertex, CoEdge, CoFace>
+		functional = new EuclideanNewFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 		
 
 	public CEuclideanApplication(CoHDS hds) {
 		this.hds = hds;
 	}
 	
-	public EuclideanCircularHolesFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
+	public ConformalFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
 		return functional;
 	}
 

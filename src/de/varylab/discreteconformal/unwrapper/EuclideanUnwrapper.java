@@ -54,6 +54,12 @@ public class EuclideanUnwrapper implements Unwrapper {
 		// optimization
 		int n = opt.getDomainDimension();
 		DenseVector u = new DenseVector(n);
+		// set variable lambda start values
+		for (CoEdge e : surface.getPositiveEdges()) {
+			if (e.getSolverIndex() >= 0) {
+				u.set(e.getSolverIndex(), e.getLambda());
+			}
+		}
 		Matrix H = new CompRowMatrix(n,n,makeNonZeros(surface));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
