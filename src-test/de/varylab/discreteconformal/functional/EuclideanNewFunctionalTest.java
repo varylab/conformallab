@@ -51,7 +51,7 @@ public class EuclideanNewFunctionalTest extends FunctionalTest<CoVertex, CoEdge,
 		a.add(new CoPositionAdapter());
 		CoHDS hds = new CoHDS(); 
 		try {
-			Input in = new Input("Obj File", EuclideanNewFunctionalTest.class.getResourceAsStream("cathead.obj"));
+			Input in = new Input("Obj File", EuclideanNewFunctionalTest.class.getResourceAsStream("square01.obj"));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
 			ConverterJR2Heds converter = new ConverterJR2Heds();

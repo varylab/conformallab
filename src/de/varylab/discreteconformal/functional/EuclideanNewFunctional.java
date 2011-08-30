@@ -186,6 +186,10 @@ public class EuclideanNewFunctional <
 				v1i = var.getVarIndex(v1),
 				v2i = var.getVarIndex(v2),
 				v3i = var.getVarIndex(v3);
+			final int
+				e1i = var.getVarIndex(e1),
+				e2i = var.getVarIndex(e2),
+				e3i = var.getVarIndex(e3);
 			final double[] 
 			     cotE = {0, 0, 0},
 			     cotV = {0, 0, 0};
@@ -374,6 +378,13 @@ public class EuclideanNewFunctional <
 			for (Integer index : nzList) {
 				nz[i][j++] = index;
 			}
+		}
+		for (E e : hds.getPositiveEdges()) {
+			if (!var.isVariable(e)) {
+				continue;
+			}
+			int i = var.getVarIndex(e);
+			nz[i] = new int[0];
 		}
 		return nz;
 	}
