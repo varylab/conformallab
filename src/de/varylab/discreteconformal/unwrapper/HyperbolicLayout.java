@@ -4,11 +4,8 @@ import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static java.lang.Math.PI;
 import static java.lang.Math.cos;
 import static java.lang.Math.cosh;
-import static java.lang.Math.exp;
-import static java.lang.Math.log;
 import static java.lang.Math.sin;
 import static java.lang.Math.sinh;
-import static java.lang.Math.sqrt;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,9 +22,12 @@ import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.adapter.LengthMapWeightAdapter;
+import de.varylab.discreteconformal.functional.ConformalFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
 import de.varylab.discreteconformal.util.NodeIndexComparator;
 import de.varylab.discreteconformal.util.PathUtility;
 import de.varylab.discreteconformal.util.Search;
@@ -103,30 +103,18 @@ public class HyperbolicLayout {
 		return root;
 	}
 	
-	
-	public static Map<CoEdge, Double> getLengthMap(CoHDS hds, Vector u) {
-		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
-		for (CoEdge e : hds.getPositiveEdges()) {
-			double l = getNewLength(e, u);
-			lMap.put(e, l);
-			lMap.put(e.getOppositeEdge(), l);
-		}
-		return lMap;
-	}
-	
-	
 	/** 
 	 * Do flat layout for a HDS and a metric vector u
 	 * @param hds mesh
 	 * @param u new metric
 	 * @param angleMapParam may be null
 	 */
-	public static CoVertex doLayout(CoHDS hds, CoVertex root, Vector u) {
+	public static CoVertex doLayout(CoHDS hds, CoVertex root, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector u) {
 //		System.out.println("Layout --------------------");
 //		for (CoVertex v : hds.getVertices()) {
 //			System.out.println("sum " + v.getIndex() + ": " + getAngleSum(v));
 //		}
-		final Map<CoEdge, Double> lMap = getLengthMap(hds, u);
+		final Map<CoEdge, Double> lMap = getLengthMap(hds, fun, u);
 		
 		final Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
 		final Queue<CoVertex> Qv = new LinkedList<CoVertex>();
@@ -267,26 +255,26 @@ public class HyperbolicLayout {
 	}
 	
 	
+	public static Map<CoEdge, Double> getLengthMap(CoHDS hds, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector uVec) {
+		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
+		MTJDomain u = new MTJDomain(uVec);
+		for (CoEdge e : hds.getPositiveEdges()) {
+			double l = fun.getNewLength(e, u);
+			lMap.put(e, l);
+			lMap.put(e.getOppositeEdge(), l);
+		}
+		return lMap;
+	}
+	
 	/**
 	 * Calculate the edge length for the flat metric
 	 * @param e
 	 * @param u
 	 * @return the new edge length
 	 */
-	public static Double getNewLength(CoEdge e, Vector u) {
-		CoVertex v1 = e.getStartVertex();
-		CoVertex v2 = e.getTargetVertex();
-		Double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
-		Double u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0;
-		Double lambda = e.getSolverIndex() >= 0 ? u.get(e.getSolverIndex()) : e.getLambda() + u1 + u2;
-		return 2 * arsinh( exp(lambda / 2) );
+	public static Double getNewLength(CoEdge e, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector uVec) {
+		MTJDomain u = new MTJDomain(uVec);
+		return fun.getNewLength(e, u);
 	}
-	
-	
-	private static double arsinh(double x) {
-		double r = x + sqrt(x*x + 1);
-		return log(r);
-	}
-	
 	
 }

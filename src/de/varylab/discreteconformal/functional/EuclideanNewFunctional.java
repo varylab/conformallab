@@ -217,6 +217,69 @@ public class EuclideanNewFunctional <
 			if (var.isVariable(v3)) {
 				H.add(v3i, v3i, cotV[2] / 2);
 			}
+			
+			// quadratic lambda terms
+			if (var.isVariable(e1)) {
+				H.add(e1i, e1i, cotV[1] / 2);
+			}
+			if (var.isVariable(e2)) {
+				H.add(e2i, e2i, cotV[2] / 2);
+			}
+			if (var.isVariable(e3)) {
+				H.add(e3i, e3i, cotV[0] / 2);
+			}
+			if (var.isVariable(e1) && var.isVariable(e2)) {
+				H.add(e1i, e2i, -cotE[2] / 2);
+				H.add(e2i, e1i, -cotE[2] / 2);
+			}
+			if (var.isVariable(e2) && var.isVariable(e3)) {
+				H.add(e2i, e3i, -cotE[0] / 2);
+				H.add(e3i, e2i, -cotE[0] / 2);
+			}			
+			if (var.isVariable(e3) && var.isVariable(e1)) {
+				H.add(e3i, e1i, -cotE[1] / 2);
+				H.add(e1i, e3i, -cotE[1] / 2);
+			}	
+			
+			// mixed terms
+			if (var.isVariable(v1) && var.isVariable(e1)) {
+				H.add(v1i, e1i, cotE[1] / 2);
+				H.add(e1i, v1i, cotE[1] / 2);
+			}
+			if (var.isVariable(v1) && var.isVariable(e2)) {
+				H.add(v1i, e2i, cotE[0] / 2);
+				H.add(e2i, v1i, cotE[0] / 2);
+			}			
+			if (var.isVariable(v2) && var.isVariable(e2)) {
+				H.add(v2i, e2i, cotE[2] / 2);
+				H.add(e2i, v2i, cotE[2] / 2);
+			}
+			if (var.isVariable(v2) && var.isVariable(e3)) {
+				H.add(v2i, e3i, cotE[1] / 2);
+				H.add(e3i, v2i, cotE[1] / 2);
+			}	
+			if (var.isVariable(v3) && var.isVariable(e3)) {
+				H.add(v3i, e3i, cotE[0] / 2);
+				H.add(e3i, v3i, cotE[0] / 2);
+			}
+			if (var.isVariable(v3) && var.isVariable(e1)) {
+				H.add(v3i, e1i, cotE[2] / 2);
+				H.add(e1i, v3i, cotE[2] / 2);
+			}
+			
+			if (var.isVariable(v1) && var.isVariable(e3)) {
+				H.add(v1i, e3i, -cotV[0] / 2);
+				H.add(e3i, v1i, -cotV[0] / 2);
+			}
+			if (var.isVariable(v2) && var.isVariable(e1)) {
+				H.add(v2i, e1i, -cotV[1] / 2);
+				H.add(e1i, v2i, -cotV[1] / 2);
+			}
+			if (var.isVariable(v3) && var.isVariable(e2)) {
+				H.add(v3i, e2i, -cotV[2] / 2);
+				H.add(e2i, v3i, -cotV[2] / 2);
+			}
+			
 		}
 	}
 	
@@ -318,10 +381,14 @@ public class EuclideanNewFunctional <
 			u1 = var.isVariable(v1) ? u.get(var.getVarIndex(v1)) : 0.0,
 			u2 = var.isVariable(v2) ? u.get(var.getVarIndex(v2)) : 0.0,
 			u3 = var.isVariable(v3) ? u.get(var.getVarIndex(v3)) : 0.0;
-		final double 
-			x12 = lambda.getLambda(e2) + u1 + u2,
-			x23 = lambda.getLambda(e3) + u2 + u3,
-			x31 = lambda.getLambda(e1) + u3 + u1;
+		final double
+			λ1 = var.isVariable(e1) ? u.get(var.getVarIndex(e1)) : lambda.getLambda(e1),
+			λ2 = var.isVariable(e2) ? u.get(var.getVarIndex(e2)) : lambda.getLambda(e2),
+			λ3 = var.isVariable(e3) ? u.get(var.getVarIndex(e3)) : lambda.getLambda(e3);
+		final double
+			x12 = λ2 + u1 + u2,
+			x23 = λ3 + u2 + u3,
+			x31 = λ1 + u3 + u1;
 		final double 
 			xmean = (x12 + x23 + x31) / 3;
 		final double 
@@ -372,6 +439,12 @@ public class EuclideanNewFunctional <
 				if (var.isVariable(sv)) {
 					nzList.add(var.getVarIndex(sv));
 				}
+				if (var.isVariable(e)) {
+					nzList.add(var.getVarIndex(e));
+				}
+				if (var.isVariable(e.getPreviousEdge())) {
+					nzList.add(var.getVarIndex(e.getPreviousEdge()));
+				}
 			}
 			nz[i] = new int[nzList.size()];
 			int j = 0;
@@ -384,7 +457,37 @@ public class EuclideanNewFunctional <
 				continue;
 			}
 			int i = var.getVarIndex(e);
-			nz[i] = new int[0];
+			List<Integer> nzList = new LinkedList<Integer>();
+			nzList.add(var.getVarIndex(e));
+			if (var.isVariable(e.getNextEdge())) {
+				nzList.add(var.getVarIndex(e.getNextEdge()));
+			}
+			if (var.isVariable(e.getPreviousEdge())) {
+				nzList.add(var.getVarIndex(e.getPreviousEdge()));
+			}
+			if (var.isVariable(e.getOppositeEdge().getNextEdge())) {
+				nzList.add(var.getVarIndex(e.getOppositeEdge().getNextEdge()));
+			}
+			if (var.isVariable(e.getOppositeEdge().getPreviousEdge())) {
+				nzList.add(var.getVarIndex(e.getOppositeEdge().getPreviousEdge()));
+			}
+			if (var.isVariable(e.getStartVertex())) {
+				nzList.add(var.getVarIndex(e.getStartVertex()));
+			}
+			if (var.isVariable(e.getTargetVertex())) {
+				nzList.add(var.getVarIndex(e.getTargetVertex()));
+			}
+			if (var.isVariable(e.getNextEdge().getTargetVertex())) {
+				nzList.add(var.getVarIndex(e.getNextEdge().getTargetVertex()));
+			}
+			if (var.isVariable(e.getOppositeEdge().getNextEdge().getTargetVertex())) {
+				nzList.add(var.getVarIndex(e.getOppositeEdge().getNextEdge().getTargetVertex()));
+			}		
+			nz[i] = new int[nzList.size()];
+			int j = 0;
+			for (Integer index : nzList) {
+				nz[i][j++] = index;
+			}
 		}
 		return nz;
 	}
@@ -401,6 +504,18 @@ public class EuclideanNewFunctional <
 	@Override
 	public double getLength(double lambda) {
 		return exp(lambda / 2);
+	}
+	
+	public double getNewLength(E e, DomainValue u) {
+		V v1 = e.getStartVertex();
+		V v2 = e.getTargetVertex();
+		int i1 = var.getVarIndex(v1);
+		int i2 = var.getVarIndex(v2);
+		int ei = var.getVarIndex(e);
+		Double u1 = var.isVariable(v1) ? u.get(i1) : 0.0; 
+		Double u2 = var.isVariable(v2) ? u.get(i2) : 0.0;
+		double l2 = (var.isVariable(e) ? u.get(ei) : lambda.getLambda(e)) + u1 + u2;
+		return getLength(l2);
 	}
 	
 }

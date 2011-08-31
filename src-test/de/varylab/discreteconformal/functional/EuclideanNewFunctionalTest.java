@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.functional;
 
 import java.io.IOException;
-import java.util.Random;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
@@ -79,12 +78,11 @@ public class EuclideanNewFunctionalTest extends FunctionalTest<CoVertex, CoEdge,
 		}
 		
 		int n = UnwrapUtility.prepareInvariantDataEuclidean(functional, hds, a);
-		Random rnd = new Random(); 
-		rnd.setSeed(1);
-		
 		Vector x = new DenseVector(n);
-		for (Integer i = 0; i < x.size(); i++) {
-			x.set(i, rnd.nextDouble() - 0.5);
+		for (CoEdge e : hds.getPositiveEdges()) {
+			if (e.getSolverIndex() >= 0) {
+				x.set(e.getSolverIndex(), e.getLambda());
+			}
 		}
 		MyDomainValue u = new MyDomainValue(x);
 		

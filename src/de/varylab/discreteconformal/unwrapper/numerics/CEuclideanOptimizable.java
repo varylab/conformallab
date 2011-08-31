@@ -1,10 +1,9 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
-import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
-import de.varylab.discreteconformal.functional.EuclideanCircularHolesFunctional;
+import de.varylab.discreteconformal.functional.EuclideanNewFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -30,14 +29,14 @@ public class CEuclideanOptimizable implements Optimizable {
 		energy = new CInitialEnergy();
 	private CAlpha
 		alpha = new CAlpha();
-	private EuclideanCircularHolesFunctional<CoVertex, CoEdge, CoFace>
-		functional = new EuclideanCircularHolesFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	private EuclideanNewFunctional<CoVertex, CoEdge, CoFace>
+		functional = new EuclideanNewFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 
 	public CEuclideanOptimizable(CoHDS hds) {
 		this.hds = hds;
 	}
 	
-	public EuclideanCircularHolesFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
+	public EuclideanNewFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
 		return functional;
 	}
 	
@@ -85,7 +84,7 @@ public class CEuclideanOptimizable implements Optimizable {
 	@Override
 	public Matrix getHessianTemplate() {
 		int dim = getDomainDimension();
-		return new CompRowMatrix(dim, dim, makeNonZeros(hds));
+		return new CompRowMatrix(dim, dim, functional.getNonZeroPattern(hds));
 	}
 
 }

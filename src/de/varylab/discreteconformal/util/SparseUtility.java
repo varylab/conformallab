@@ -12,10 +12,18 @@ import de.varylab.discreteconformal.heds.CoVertex;
 public class SparseUtility {
 
 	
+	public static int[] getPETScNonZeros(int[][] sparseStucture){
+		int [] nnz = new int[sparseStucture.length];
+		for(int i = 0; i < nnz.length; i++){
+			nnz[i] = sparseStucture[i].length;
+		}
+		return nnz;
+	}
+	
 	
 	public static int[] getPETScNonZeros(CoHDS hds){
-		int [][] sparseStucture = makeNonZeros(hds);
-		int [] nnz = new int[sparseStucture.length];
+		int[][] sparseStucture = makeNonZeros(hds);
+		int[] nnz = new int[sparseStucture.length];
 		for(int i = 0; i < nnz.length; i++){
 			nnz[i] = sparseStucture[i].length;
 		}

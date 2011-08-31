@@ -61,23 +61,6 @@ public class EuclideanFunctionalTest extends FunctionalTest<CoVertex, CoEdge, Co
 			e.printStackTrace();
 		}
 		
-//		 one edge is circular
-//		for (CoFace f : hds.getFaces()) {
-//			if (!HalfEdgeUtils.isInteriorFace(f)) continue;
-//			CoEdge e1 = f.getBoundaryEdge();
-//			CoEdge e2 = e1.getNextEdge();
-//			CoEdge e3 = e2.getNextEdge();
-//			CustomEdgeInfo info = new CustomEdgeInfo();
-//			info.holeEdge = true;
-//			e1.info = info;
-//			e2.info = info;
-//			e3.info = info;
-//			e1.getOppositeEdge().info = info;
-//			e2.getOppositeEdge().info = info;
-//			e3.getOppositeEdge().info = info;
-//			break;
-//		}
-		
 		int n = UnwrapUtility.prepareInvariantDataEuclidean(functional, hds, a);
 		Random rnd = new Random(); 
 		rnd.setSeed(1);

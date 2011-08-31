@@ -56,6 +56,7 @@ import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.mfc.field.Complex;
 import de.jtem.mfc.group.Moebius;
 import de.jtem.numericalMethods.geometry.meshGeneration.ruppert.Ruppert;
+import de.varylab.discreteconformal.functional.ConformalFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -207,9 +208,10 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 //			System.out.println("Genus: " + HalfEdgeUtils.getGenus(hds));
 //			
 //			cutManifoldToDisk(hds, cutRoot, swa);
-			Vector u = unwrapper.getUResult();
 			CoVertex layoutRoot = hds.getVertex(0);
-			layoutRoot = HyperbolicLayout.doLayout(hds, layoutRoot, u);
+			ConformalFunctional<CoVertex, CoEdge, CoFace> fun = unwrapper.getFunctional();
+			Vector u = unwrapper.getUResult();
+			layoutRoot = HyperbolicLayout.doLayout(hds, layoutRoot, fun,  u);
 ////			
 			
 			hif.addAdapter(new CoTexturePositionPositionAdapter(Poincaré), false);

@@ -1,14 +1,12 @@
 package de.varylab.discreteconformal.unwrapper;
 
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
-import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 
 import java.util.Map;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
-import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.adapter.HyperbolicLengthWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -43,13 +41,12 @@ public class HyperbolicUnwrapper implements Unwrapper{
 	@Override
 	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
 		CHyperbolicOptimizable opt = new CHyperbolicOptimizable(surface);
-		int n = opt.getDomainDimension();
-		
 		UnwrapUtility.prepareInvariantDataHyperbolic(opt.getFunctional(), surface, aSet);
 		
 		// optimization
+		int n = opt.getDomainDimension();
 		DenseVector u = new DenseVector(n);
-		Matrix H = new CompRowMatrix(n,n,makeNonZeros(surface));
+		Matrix H = opt.getHessianTemplate();
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
 		optimizer.setSolver(Solver.BiCGstab); 
@@ -66,8 +63,8 @@ public class HyperbolicUnwrapper implements Unwrapper{
 			cutRoot = surface.getVertex(getMinUIndex(u));
 		}
 		cutInfo = cutManifoldToDisk(surface, cutRoot, hypWa);
-		lengthMap = HyperbolicLayout.getLengthMap(surface, u);
-		layoutRoot = HyperbolicLayout.doLayout(surface, null, u);
+		lengthMap = HyperbolicLayout.getLengthMap(surface, opt.getFunctional(), u);
+		layoutRoot = HyperbolicLayout.doLayout(surface, null, opt.getFunctional(), u);
 	}
 	
 

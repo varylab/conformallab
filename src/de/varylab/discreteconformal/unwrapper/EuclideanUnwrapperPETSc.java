@@ -1,7 +1,5 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.varylab.discreteconformal.util.SparseUtility.getPETScNonZeros;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -10,7 +8,6 @@ import no.uib.cipr.matrix.DenseVector;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.Mat;
-import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
 import de.jtem.jtao.Tao.GetSolutionStatusResult;
@@ -63,26 +60,20 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		cones = ConesUtility.setUpCones(surface, numCones); 
 		// optimization
 		Vec u;
-		Mat H;
 		Tao optimizer;
 		int n = app.getDomainDimension();
 		u = new Vec(n);
 		// set variable lambda start values
-		boolean hasCircularEdges = false;
 		for (CoEdge e : surface.getPositiveEdges()) {
 			if (e.getSolverIndex() >= 0) {
 				u.setValue(e.getSolverIndex(), e.getLambda(), InsertMode.INSERT_VALUES);
-				hasCircularEdges = true;
 			}
 		}
 		app.setInitialSolutionVec(u);
-		if (!hasCircularEdges) {
-			H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(surface));
-			H.assemble();
-			app.setHessianMat(H, H);
-		}
-		
-		optimizer = new Tao(hasCircularEdges ? Tao.Method.LMVM : Tao.Method.NTR);
+		Mat H = app.getHessianTemplate();
+		app.setHessianMat(H, H);
+
+		optimizer = new Tao(Tao.Method.NTR);
 		optimizer.setApplication(app);
 		optimizer.setTolerances(0, 0, 0, 0);
 		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance);
@@ -105,8 +96,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 				n = app2.getDomainDimension();
 	
 				u = new Vec(n);
-				H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(surface));
-				H.assemble();
+				H = app.getHessianTemplate();
 				
 				app2.setInitialSolutionVec(u);
 				app2.setHessianMat(H, H);

@@ -410,5 +410,17 @@ public class HyperbolicCircularHolesFunctional <
 		return exp(lambda / 2);
 	}
 	
+	public double getNewLength(E e, DomainValue u) {
+		V v1 = e.getStartVertex();
+		V v2 = e.getTargetVertex();
+		int i1 = var.getVarIndex(v1);
+		int i2 = var.getVarIndex(v2);
+		int ei = var.getVarIndex(e);
+		Double u1 = var.isVariable(v1) ? u.get(i1) : 0.0; 
+		Double u2 = var.isVariable(v2) ? u.get(i2) : 0.0;
+		double l2 = var.isVariable(e) ? u.get(ei) : lambda.getLambda(e) + u1 + u2;
+		return 2 * arsinh( exp(l2 / 2) );
+	}
+	
 }
 

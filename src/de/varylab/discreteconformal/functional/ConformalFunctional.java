@@ -26,4 +26,7 @@ public interface ConformalFunctional <
 	public double getLambda(double length);
 	public double getLength(double lambda);
 	
+	
+	public double getNewLength(E e, DomainValue u);
+	
 }

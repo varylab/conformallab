@@ -533,6 +533,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		}
 		if (unwrapBtn == s) {
 			CoHDS surface = getLoaderGeometry();
+			if (surface == null) return;
 			surface.normalizeCoordinates();
 			AdapterSet aSet = hif.getAdapters();
 			Unwrap uw = new Unwrap(surface, aSet);

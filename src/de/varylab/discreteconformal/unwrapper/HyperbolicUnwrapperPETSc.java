@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.unwrapper;
 
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
-import static de.varylab.discreteconformal.util.SparseUtility.getPETScNonZeros;
 
 import java.util.Map;
 
@@ -10,11 +9,11 @@ import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.Mat;
-import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.ConvergenceFlags;
 import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.adapter.HyperbolicLengthWeightAdapter;
+import de.varylab.discreteconformal.functional.ConformalFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -42,6 +41,8 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper {
 		lengthMap = null;
 	private Vector
 		uVec = null;
+	private CHyperbolicApplication
+		app = null;
 	
 	static {
 		Tao.Initialize();		
@@ -49,12 +50,11 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper {
 	
 	@Override
 	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
-		CHyperbolicApplication app = new CHyperbolicApplication(surface);
-		int n = app.getDomainDimension(); 
-		Vec u = new Vec(n);
-		
+		app = new CHyperbolicApplication(surface);
 		UnwrapUtility.prepareInvariantDataHyperbolic(app.getFunctional(), surface, aSet);
 		
+		int n = app.getDomainDimension(); 
+		Vec u = new Vec(n);
 		// set variable lambda start values
 		boolean hasCircularEdges = false;
 		for (CoEdge e : surface.getPositiveEdges()) {
@@ -65,8 +65,7 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper {
 		}
 		app.setInitialSolutionVec(u);
 		if (!hasCircularEdges) {
-			Mat H = Mat.createSeqAIJ(n, n, PETSc.PETSC_DEFAULT, getPETScNonZeros(surface));
-			H.assemble();
+			Mat H = app.getHessianTemplate();
 			app.setHessianMat(H, H);
 		}
 		
@@ -90,11 +89,16 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper {
 				cutRoot = surface.getVertex(HyperbolicUnwrapper.getMinUIndex(uVec));
 			}
 			cutInfo = cutManifoldToDisk(surface, cutRoot, hypWa);
-			lengthMap = HyperbolicLayout.getLengthMap(surface, uVec);
-			layoutRoot = HyperbolicLayout.doLayout(surface, null, uVec);
+			lengthMap = HyperbolicLayout.getLengthMap(surface, app.getFunctional(), uVec);
+			layoutRoot = HyperbolicLayout.doLayout(surface, null, app.getFunctional(), uVec);
 		}
 	}
 
+	
+	public ConformalFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
+		return app.getFunctional();
+	}
+	
 	
 	public Vector getUResult() {
 		return uVec;

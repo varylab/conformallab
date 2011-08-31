@@ -1,6 +1,5 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
-import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
@@ -81,11 +80,11 @@ public class CHyperbolicOptimizable implements Optimizable {
 	public Integer getDomainDimension() {
 		return functional.getDimension(hds);
 	}
-
+	
 	@Override
 	public Matrix getHessianTemplate() {
 		int dim = getDomainDimension();
-		return new CompRowMatrix(dim, dim, makeNonZeros(hds));
+		return new CompRowMatrix(dim, dim, functional.getNonZeroPattern(hds));
 	}
 
 }

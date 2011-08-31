@@ -24,6 +24,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
 
 public class EuclideanLayout {
 
@@ -135,31 +136,21 @@ public class EuclideanLayout {
 	}
 	
 	
-	public static Map<CoEdge, Double> getLengthMap(CoHDS hds, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector u) {
+	public static Map<CoEdge, Double> getLengthMap(CoHDS hds, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector uVec) {
+		MTJDomain u = new MTJDomain(uVec);
 		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
 		for (CoEdge e : hds.getPositiveEdges()) {
-			double l = getNewLength(e, fun, u);
+			double l = fun.getNewLength(e, u);
 			lMap.put(e, l);
 			lMap.put(e.getOppositeEdge(), l);
 		}
 		return lMap;
 	}
 	
-	
-	/**
-	 * Calculate the edge length for the flat metric
-	 * @param e
-	 * @param u
-	 * @return the new edge length
-	 */
-	public static Double getNewLength(CoEdge e, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector u) {
-		CoVertex v1 = e.getStartVertex();
-		CoVertex v2 = e.getTargetVertex();
-		Double u1 = v1.getSolverIndex() >= 0 ? u.get(v1.getSolverIndex()) : 0.0; 
-		Double u2 = v2.getSolverIndex() >= 0 ? u.get(v2.getSolverIndex()) : 0.0;
-		double l2 = e.getSolverIndex() >= 0 ? u.get(e.getSolverIndex()) : e.getLambda() + u1 + u2;
-		return fun.getLength(l2);
+	public static double getNewLength(CoEdge e, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector uVec) {
+		MTJDomain u = new MTJDomain(uVec);
+		return fun.getNewLength(e, u);
 	}
-	
+
 	
 }

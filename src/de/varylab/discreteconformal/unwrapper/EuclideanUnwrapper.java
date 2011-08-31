@@ -1,13 +1,10 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
-
 import java.util.Collection;
 import java.util.Map;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
-import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -60,10 +57,10 @@ public class EuclideanUnwrapper implements Unwrapper {
 				u.set(e.getSolverIndex(), e.getLambda());
 			}
 		}
-		Matrix H = new CompRowMatrix(n,n,makeNonZeros(surface));
+		Matrix H = opt.getHessianTemplate();
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
-		optimizer.setSolver(Solver.CGS);
+		optimizer.setSolver(Solver.BiCGstab);
 		optimizer.setError(gradTolerance);
 		optimizer.setMaxIterations(maxIterations);
 		try {
@@ -76,7 +73,7 @@ public class EuclideanUnwrapper implements Unwrapper {
 				cones = ConesUtility.quantizeCones(surface, cones, conesMode);
 				n = opt.getDomainDimension();
 				u = new DenseVector(n);
-				H = new CompRowMatrix(n,n,makeNonZeros(surface));
+				H = opt.getHessianTemplate();
 				optimizer.setHessianTemplate(H);
 				try {
 					optimizer.minimize(u, opt);

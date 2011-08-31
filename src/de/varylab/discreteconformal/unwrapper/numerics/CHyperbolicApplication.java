@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
 import de.jtem.jpetsc.Mat;
+import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
 import de.jtem.jtao.TaoAppAddHess;
@@ -15,6 +16,7 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
+import de.varylab.discreteconformal.util.SparseUtility;
 
 public class CHyperbolicApplication extends TaoApplication implements
 		TaoAppAddCombinedObjectiveAndGrad, TaoAppAddHess {
@@ -67,5 +69,13 @@ public class CHyperbolicApplication extends TaoApplication implements
 		return functional.getDimension(hds);
 	}
 	
+	public Mat getHessianTemplate() {
+		int dim = getDomainDimension();
+		int[][] sparceStructure = functional.getNonZeroPattern(hds);
+		int[] nonZeros = SparseUtility.getPETScNonZeros(sparceStructure);
+		Mat H = Mat.createSeqAIJ(dim, dim, PETSc.PETSC_DEFAULT, nonZeros);
+		H.assemble();
+		return H;
+	}
 	
 }
