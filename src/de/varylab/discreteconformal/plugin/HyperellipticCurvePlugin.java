@@ -43,6 +43,7 @@ import de.jtem.riemann.theta.SiegelReduction;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.plugin.EllipticImageGenerator.PathVisualizer;
 import de.varylab.discreteconformal.plugin.hyperelliptic.Curve;
 import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeEvent;
 import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeEvent.EventType;
@@ -50,7 +51,7 @@ import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeListener;
 import de.varylab.discreteconformal.plugin.hyperelliptic.CurveEditor;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.unwrapper.SphereUtility;
-import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
+import de.varylab.discreteconformal.util.HyperellipticUtility;
 import de.varylab.discreteconformal.util.SimpleMatrixPrintUtility;
 
 public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
@@ -75,6 +76,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		equalizationIterationsSpinner = new JSpinner(equalizationIterationsModel),
 		extraPointsSpinner = new JSpinner(extraPointsModel);
 	private JCheckBox
+		showcutPathsChecker = new JCheckBox("Show Cut Paths"),
 		normalizerBranchPointPositionsChecker = new JCheckBox("Normalize Branch Points (Does not work yet!)");
 	private JButton
 		createButton = new JButton("Create Triangulated Surface");
@@ -109,6 +111,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		geometryPanel.add(extraPointsSpinner, c2);
 		geometryPanel.add(new JLabel("Point Equalizer Iterations"), c1);
 		geometryPanel.add(equalizationIterationsSpinner, c2);
+		geometryPanel.add(showcutPathsChecker, c2);
 		geometryPanel.add(normalizerBranchPointPositionsChecker, c2);
 		geometryPanel.add(createButton, c2);
 		shrinkPanel.add(geometryPanel, c2);
@@ -179,7 +182,17 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 			for (CoVertex bv : branchVertices) {
 				branchIndices[i++] = bv.getIndex();
 			}
-			DiscreteEllipticUtility.generateEllipticImage(hds, 0, glueSet, branchIndices);
+//			DiscreteEllipticUtility.generateEllipticImage(hds, 0, glueSet, branchIndices);
+			HyperellipticUtility.generateHyperellipticImage(hds, 0, glueSet, branchIndices);
+			if (showcutPathsChecker.isSelected()) {
+				PathVisualizer pathVisualizer = new PathVisualizer();
+				for (CoEdge pe : glueSet) {
+					pathVisualizer.add(pe);
+					pathVisualizer.add(pe.getOppositeEdge());
+				}
+				// show the result
+				hif.addLayerAdapter(pathVisualizer, true);
+			}
 			hif.set(hds);
 			HalfedgeSelection branchSelection = new HalfedgeSelection(branchVertices);
 			hif.setSelection(branchSelection);

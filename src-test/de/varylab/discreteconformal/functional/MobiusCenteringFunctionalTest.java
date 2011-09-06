@@ -2,9 +2,7 @@ package de.varylab.discreteconformal.functional;
 
 import java.util.Random;
 
-import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.Vector.Norm;
 
@@ -21,10 +19,6 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.numerics.ConformalEnergy;
-import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
-import de.varylab.discreteconformal.unwrapper.numerics.MTJGradient;
-import de.varylab.discreteconformal.unwrapper.numerics.MTJHessian;
 import de.varylab.mtjoptimization.Optimizable;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 
@@ -72,55 +66,8 @@ public class MobiusCenteringFunctionalTest extends FunctionalTest<CoVertex, CoEd
 	public void testConvergence() throws Exception {
 		NewtonOptimizer min = new NewtonOptimizer();
 		Vector x = new DenseVector(new double[] {0,0,0,1});
-		Optimizable opt = new Optimizable() {
-			
-			@Override
-			public Matrix getHessianTemplate() {
-				return new DenseMatrix(4, 4);
-			}
-			
-			@Override
-			public Integer getDomainDimension() {
-				return 4;
-			}
-			
-			@Override
-			public Double evaluate(Vector x, Vector gradient, Matrix hessian) {
-				MTJDomain u = new MTJDomain(x);
-				MTJGradient G = new MTJGradient(gradient);
-				MTJHessian H = new MTJHessian(hessian);
-				ConformalEnergy E = new ConformalEnergy();
-				fun.evaluate(hds, u, E, G, H);
-				return E.get();
-			}
-
-			@Override
-			public Double evaluate(Vector x, Vector gradient) {
-				MTJDomain u = new MTJDomain(x);
-				MTJGradient G = new MTJGradient(gradient);
-				ConformalEnergy E = new ConformalEnergy();
-				fun.evaluate(hds, u, E, G, null);
-				return E.get();
-			}
-
-			@Override
-			public Double evaluate(Vector x, Matrix hessian) {
-				MTJDomain u = new MTJDomain(x);
-				MTJHessian H = new MTJHessian(hessian);
-				ConformalEnergy E = new ConformalEnergy();
-				fun.evaluate(hds, u, E, null, H);
-				return E.get();
-			}
-
-			@Override
-			public Double evaluate(Vector x) {
-				MTJDomain u = new MTJDomain(x);
-				ConformalEnergy E = new ConformalEnergy();
-				fun.evaluate(hds, u, E, null, null);
-				return E.get();
-			}
-		}; 
 		
+		Optimizable opt = fun.getOptimizatble(hds); 
 		DenseVector g = new DenseVector(4);
 		opt.evaluate(x, g);
 		System.out.println("x " + x);
@@ -139,8 +86,14 @@ public class MobiusCenteringFunctionalTest extends FunctionalTest<CoVertex, CoEd
 		opt.evaluate(x, g);
 		System.out.println("x " + x);
 		System.out.println(g.norm(Norm.Two));
-		
 	}
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	

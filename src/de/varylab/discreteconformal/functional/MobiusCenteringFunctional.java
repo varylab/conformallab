@@ -5,6 +5,11 @@ import static de.jreality.math.Pn.innerProduct;
 import static de.jtem.halfedgetools.functional.FunctionalUtils.addRowToHessian;
 import static de.jtem.halfedgetools.functional.FunctionalUtils.addVectorToGradient;
 import static java.lang.Math.log;
+import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.Matrix;
+import no.uib.cipr.matrix.Vector;
+import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -16,7 +21,15 @@ import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.unwrapper.numerics.ConformalEnergy;
+import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
+import de.varylab.discreteconformal.unwrapper.numerics.MTJGradient;
+import de.varylab.discreteconformal.unwrapper.numerics.MTJHessian;
+import de.varylab.mtjoptimization.NotConvergentException;
+import de.varylab.mtjoptimization.Optimizable;
+import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 
 public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, CoFace> {
 
@@ -29,6 +42,80 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 	public MobiusCenteringFunctional(AdapterSet a) {
 		this.aSet = a;
 	}
+	
+	
+	public Optimizable getOptimizatble(final CoHDS hds) {
+		return new Optimizable() {
+			
+			@Override
+			public Matrix getHessianTemplate() {
+				return new DenseMatrix(4, 4);
+			}
+			
+			@Override
+			public Integer getDomainDimension() {
+				return 4;
+			}
+			
+			@Override
+			public Double evaluate(Vector x, Vector gradient, Matrix hessian) {
+				MTJDomain u = new MTJDomain(x);
+				MTJGradient G = new MTJGradient(gradient);
+				MTJHessian H = new MTJHessian(hessian);
+				ConformalEnergy E = new ConformalEnergy();
+				MobiusCenteringFunctional.this.evaluate(hds, u, E, G, H);
+				return E.get();
+			}
+
+			@Override
+			public Double evaluate(Vector x, Vector gradient) {
+				MTJDomain u = new MTJDomain(x);
+				MTJGradient G = new MTJGradient(gradient);
+				ConformalEnergy E = new ConformalEnergy();
+				MobiusCenteringFunctional.this.evaluate(hds, u, E, G, null);
+				return E.get();
+			}
+
+			@Override
+			public Double evaluate(Vector x, Matrix hessian) {
+				MTJDomain u = new MTJDomain(x);
+				MTJHessian H = new MTJHessian(hessian);
+				ConformalEnergy E = new ConformalEnergy();
+				MobiusCenteringFunctional.this.evaluate(hds, u, E, null, H);
+				return E.get();
+			}
+
+			@Override
+			public Double evaluate(Vector x) {
+				MTJDomain u = new MTJDomain(x);
+				ConformalEnergy E = new ConformalEnergy();
+				MobiusCenteringFunctional.this.evaluate(hds, u, E, null, null);
+				return E.get();
+			}
+		}; 
+	}
+
+	
+	public void normalizeVertices(CoHDS hds) {
+		Optimizable opt = getOptimizatble(hds);
+		Vector x = new DenseVector(new double[] {0,0,0,1});
+		NewtonOptimizer min = new NewtonOptimizer();
+		min.setMaxIterations(100);
+		min.setError(1E-13);
+		try {
+			min.minimize(x, opt);
+		} catch (NotConvergentException e) {
+			e.printStackTrace();
+			return;
+		}
+		double xp[] = {x.get(0), x.get(1), x.get(2), x.get(3)};
+		double scale = 1 / Math.sqrt(-Pn.innerProduct(xp, xp, Pn.HYPERBOLIC));
+		Rn.times(xp, scale, xp);
+		System.out.println("sqrt(-<x,x>): " + Pn.norm(xp, Pn.HYPERBOLIC));
+		x = new DenseVector(xp);
+		
+	}
+	
 	
 	@Override
 	public <HDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace>> void evaluate(

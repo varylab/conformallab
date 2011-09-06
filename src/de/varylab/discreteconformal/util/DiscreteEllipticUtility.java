@@ -17,7 +17,6 @@ import de.jreality.math.Pn;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.TypedAdapterSet;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.ConformalAdapterSet;
@@ -140,8 +139,7 @@ public class DiscreteEllipticUtility {
 		
 		// convex hull
 		ConformalAdapterSet a = new ConformalAdapterSet();
-		TypedAdapterSet<double[]> da = a.querySet(double[].class);
-		ConvexHull.convexHull(hds, da, 1E-8);
+		ConvexHull.convexHull(hds, a, 1E-8);
 		int vOffset = hds.numVertices();
 		int eOffset = hds.numEdges();
 		HalfEdgeUtils.copy(hds, hds);

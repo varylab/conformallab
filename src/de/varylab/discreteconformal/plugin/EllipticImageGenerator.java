@@ -22,7 +22,7 @@ import de.jtem.halfedgetools.plugin.algorithm.AlgorithmCategory;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmPlugin;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
-import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
+import de.varylab.discreteconformal.util.HyperellipticUtility;
 
 public class EllipticImageGenerator extends AlgorithmPlugin {
 	
@@ -49,17 +49,15 @@ public class EllipticImageGenerator extends AlgorithmPlugin {
 		if (numString == null) return;
 		int extraPoints = Integer.parseInt(numString);
 		HalfedgeSelection sel = hif.getSelection();
-		int[] branchIndices = {};
-		if (sel.getVertices().size() == 4) {
-			branchIndices = new int[4];
-			int i = 0;
-			for (V v : sel.getVertices(h)) {
-				branchIndices[i++] = v.getIndex();
-			}
+		int[] branchIndices = new int[sel.getVertices().size()];
+		int i = 0;
+		for (V v : sel.getVertices(h)) {
+			branchIndices[i++] = v.getIndex();
 		}
 		CoHDS hds = hif.get(new CoHDS());
 		Set<CoEdge> glueSet = new HashSet<CoEdge>();
-		DiscreteEllipticUtility.generateEllipticImage(hds, extraPoints, glueSet, branchIndices);
+//		DiscreteEllipticUtility.generateEllipticImage(hds, extraPoints, glueSet, branchIndices);
+		HyperellipticUtility.generateHyperellipticImage(hds, extraPoints, glueSet, branchIndices);
 		PathVisualizer pathVisualizer = new PathVisualizer();
 		for (CoEdge e : glueSet) {
 			pathVisualizer.add(e);
@@ -72,7 +70,7 @@ public class EllipticImageGenerator extends AlgorithmPlugin {
 	
 	
 	@Color
-	private static class PathVisualizer extends AbstractAdapter<double[]> {
+	public static class PathVisualizer extends AbstractAdapter<double[]> {
 
 		private Set<CoEdge>
 			edges = new HashSet<CoEdge>();
