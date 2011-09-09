@@ -51,7 +51,7 @@ public class VisualizationUtility {
 	) {
 		float ls = res / 500f; // line scale
 		BufferedImage image = new BufferedImage(res, res, TYPE_INT_ARGB);
-		Graphics2D g = (Graphics2D)image.getGraphics();
+		Graphics2D g = image.createGraphics();
 		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
 		g.setColor(new Color(255, 255, 255, 0));
 		g.fillRect(0, 0, res, res);
