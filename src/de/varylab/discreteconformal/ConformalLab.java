@@ -6,6 +6,7 @@ import java.util.Set;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
 import de.jreality.plugin.basic.ConsolePlugin;
+import de.jreality.ui.JRealitySplashScreen;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedgetools.JRHalfedgeViewer;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -49,6 +50,9 @@ public class ConformalLab {
 	
 	public static void main(String[] args) {
 		JRViewer v = new JRViewer();
+		JRealitySplashScreen splash = new JRealitySplashScreen();
+		splash.setVisible(true);
+		v.setSplashScreen(splash);
 		JRHalfedgeViewer.initHalfedgeFronted();
 		NativePathUtility.set("native");
 		v.addBasicUI();
@@ -70,7 +74,9 @@ public class ConformalLab {
 		v.registerPlugins(HalfedgePluginFactory.createPlugins());
 		v.registerPlugin(new HyperellipticCurvePlugin());
 		v.startup();
+		splash.setVisible(false);
 		v.getPlugin(HalfedgeInterface.class).set(new CoHDS());
+		v.getPlugin(HalfedgeInterface.class).setTemplateHDS(new CoHDS());
 	} 
 
 }

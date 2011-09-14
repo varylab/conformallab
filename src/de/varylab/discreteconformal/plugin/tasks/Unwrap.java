@@ -62,6 +62,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		lengthMap = null;
 	
 	
+	
 	public Unwrap(CoHDS surface, AdapterSet aSet) {
 		this.surface = surface;
 		this.aSet = aSet;
@@ -74,6 +75,9 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		long unwrapTime = -1;
 		long layoutTime = -1;
 		setProgress(0);
+		if (!HalfEdgeUtils.isValidSurface(surface, true)) {
+			throw new RuntimeException("Surface is not valid");
+		}
 		genus = HalfEdgeUtils.getGenus(surface);
 		double gradTolerance = Math.pow(10, toleranceExp);
 		switch (genus) {
