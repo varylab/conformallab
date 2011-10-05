@@ -1,5 +1,9 @@
 package de.varylab.discreteconformal.util;
 
+import static de.varylab.discreteconformal.util.DiscreteHarmonicFormUtility.getHarmonicFormsOfDualMesh;
+import static de.varylab.discreteconformal.util.DiscreteHarmonicFormUtility.getHarmonicFormsOfPrimalMesh;
+import static de.varylab.discreteconformal.util.DualityUtility.getDualOfDualForms;
+
 import java.util.List;
 
 import cern.colt.matrix.tdouble.DoubleFactory1D;
@@ -14,8 +18,6 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.algorithm.triangulation.MappedLengthAdapter;
-import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 /**
  * Class to calculate holomorphic differentials in the sense of mercat.
@@ -49,11 +51,15 @@ public class DiscreteHolomorphicFormUtility {
 	 * @param wa
 	 * @return
 	 */
-	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> DoubleMatrix2D[] getHolomorphicFormsOnPrimalMesh(
-			HalfEdgeDataStructure<V, E, F> delaunay,
-			List<List<E>> canonicalHomologyBasis, AdapterSet adapters,
-			MappedLengthAdapter la, WeightAdapter<E> wa) {
-
+	public static 
+		<V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> DoubleMatrix2D[] getHolomorphicFormsOnPrimalMesh(
+		HalfEdgeDataStructure<V, E, F> delaunay,
+		List<List<E>> canonicalHomologyBasis, 
+		AdapterSet adapters
+	) {
 		// the forms are defined on the positive oriented edges
 		int numPosEdges = delaunay.numEdges() / 2;
 
@@ -62,9 +68,7 @@ public class DiscreteHolomorphicFormUtility {
 
 		// Get the harmonic differentials on the surface and its dual. The
 		// format of the matrices is 2g*numEdges
-		DoubleMatrix2D dh = DiscreteHarmonicFormUtility
-				.getHarmonicFormsOfPrimalMesh(delaunay, canonicalHomologyBasis,
-						adapters, la);
+		DoubleMatrix2D dh = getHarmonicFormsOfPrimalMesh(delaunay, canonicalHomologyBasis, adapters);
 		DoubleMatrix2D dhStar = DualityUtility.getDualOfPrimalForms(delaunay,
 				adapters, dh);
 
@@ -124,8 +128,6 @@ public class DiscreteHolomorphicFormUtility {
 			}
 		}
 
-		adapters.remove(la);
-
 		return OMEGA;
 	}
 
@@ -146,11 +148,15 @@ public class DiscreteHolomorphicFormUtility {
 	 * @param wa
 	 * @return
 	 */
-	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> DoubleMatrix2D[] getHolomorphicFormsOnDualMesh(
-			HalfEdgeDataStructure<V, E, F> delaunay,
-			List<List<E>> canonicalHomologyBasis, AdapterSet adapters,
-			MappedLengthAdapter la, WeightAdapter<E> wa) {
-
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> DoubleMatrix2D[] getHolomorphicFormsOnDualMesh(
+		HalfEdgeDataStructure<V, E, F> delaunay,
+		List<List<E>> canonicalHomologyBasis, 
+		AdapterSet adapters
+	) {
 		// the forms are defined on the positive oriented edges
 		int numPosEdges = delaunay.numEdges() / 2;
 
@@ -162,10 +168,8 @@ public class DiscreteHolomorphicFormUtility {
 
 		// Get the harmonic differentials on the surface and its dual. The
 		// format of the matrices is 2g*numEdges
-		DoubleMatrix2D dhStar = DiscreteHarmonicFormUtility
-				.getHarmonicFormsOfDualMesh(delaunay, dualBasis, adapters, la);
-		DoubleMatrix2D dhStarStar = DualityUtility.getDualOfDualForms(delaunay,
-				adapters, dhStar);
+		DoubleMatrix2D dhStar = getHarmonicFormsOfDualMesh(delaunay, dualBasis, adapters);
+		DoubleMatrix2D dhStarStar = getDualOfDualForms(delaunay, adapters, dhStar);
 
 		// to normalize the differentials we need the a-periods and its dual
 		// cycles
@@ -219,8 +223,6 @@ public class DiscreteHolomorphicFormUtility {
 				OMEGA[1].setQuick(i, j, omegaStar.getQuick(j));
 			}
 		}
-
-		adapters.remove(la);
 
 		return OMEGA;
 	}

@@ -1,6 +1,9 @@
 package de.varylab.discreteconformal.plugin;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.getGenus;
+import static de.jtem.halfedgetools.algorithm.triangulation.Delaunay.constructDelaunay;
+import static de.varylab.discreteconformal.util.DiscreteRiemannUtility.getHolomorphicForms;
+import static de.varylab.discreteconformal.util.LaplaceUtility.calculateCotanWeights;
 import static javax.swing.JOptionPane.showMessageDialog;
 
 import java.awt.GridBagConstraints;
@@ -18,18 +21,21 @@ import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Color;
 import de.jtem.halfedgetools.adapter.type.EdgeIndex;
+import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
+import de.jtem.halfedgetools.algorithm.triangulation.MappedLengthAdapter;
+import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.adapter.EuclideanLengthWeightAdapter;
+import de.varylab.discreteconformal.adapter.MappedWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.util.CanonicalBasisUtility;
-import de.varylab.discreteconformal.util.DiscreteRiemannUtility;
 import de.varylab.discreteconformal.util.DualityUtility;
 
 public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionListener {
@@ -169,7 +175,19 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		}
 		AdapterSet a = hif.getAdapters();
 		EuclideanLengthWeightAdapter wa = new EuclideanLengthWeightAdapter(null);
-		Complex[][] dhs = DiscreteRiemannUtility.getHolomorphicForms(S, a, wa);
+		
+		// First make clear that we are working with a delaunay triangulation.
+		List<CoEdge> newEdges = Triangulator.triangulate(S);
+		MappedLengthAdapter la = constructDelaunay(S, a);
+		a.add(la);
+		MappedWeightAdapter cotanWeights = calculateCotanWeights(S, a);
+		a.add(cotanWeights);
+		for (CoEdge edge : newEdges) {
+			if (edge.isValid()) {
+				TopologyAlgorithms.removeEdgeFill(edge);
+			}
+		}
+		Complex[][] dhs = getHolomorphicForms(S, a, wa);
 		
 		int index = 0;
 		for (Complex[] dh : dhs) {

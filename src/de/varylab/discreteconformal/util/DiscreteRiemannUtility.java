@@ -1,5 +1,9 @@
 package de.varylab.discreteconformal.util;
 
+import static de.varylab.discreteconformal.util.CanonicalBasisUtility.getCanonicalHomologyBasis;
+import static de.varylab.discreteconformal.util.DiscreteHolomorphicFormUtility.getHolomorphicFormsOnDualMesh;
+import static de.varylab.discreteconformal.util.DiscreteHolomorphicFormUtility.getHolomorphicFormsOnPrimalMesh;
+
 import java.util.List;
 
 import cern.colt.matrix.tdouble.DoubleFactory2D;
@@ -11,8 +15,6 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.algorithm.triangulation.Delaunay;
-import de.jtem.halfedgetools.algorithm.triangulation.MappedLengthAdapter;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.theta.SiegelReduction;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
@@ -51,21 +53,15 @@ public class DiscreteRiemannUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> Complex[][] getHolomorphicForms(
-			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
-			WeightAdapter<E> wa) {
-
-		// First make clear that we are working with a delaunay triangulation.
-		MappedLengthAdapter la = Delaunay.constructDelaunay(hds, adapters);
-
+		HalfEdgeDataStructure<V, E, F> hds, 
+		AdapterSet adapters,
+		WeightAdapter<E> wa
+	) {
 		// Get the homology basis of the surface.
 		V rootV = hds.getVertex(0);
-		List<List<E>> basis = CanonicalBasisUtility.getCanonicalHomologyBasis(
-				rootV, adapters, wa);
-
-		DoubleMatrix2D[] omega1 = DiscreteHolomorphicFormUtility
-				.getHolomorphicFormsOnPrimalMesh(hds, basis, adapters, la, wa);
-		DoubleMatrix2D[] omega2 = DiscreteHolomorphicFormUtility
-				.getHolomorphicFormsOnDualMesh(hds, basis, adapters, la, wa);
+		List<List<E>> basis = getCanonicalHomologyBasis(rootV, adapters, wa);
+		DoubleMatrix2D[] omega1 = getHolomorphicFormsOnPrimalMesh(hds, basis, adapters);
+		DoubleMatrix2D[] omega2 = getHolomorphicFormsOnDualMesh(hds, basis, adapters);
 
 		// to normalize the differentials we need the a-periods and its dual
 		// cycles
@@ -74,8 +70,7 @@ public class DiscreteRiemannUtility {
 
 		// write cycles to matrices
 		DoubleMatrix2D A = EdgeUtility.cyclesToMatrix(adapters, hds, acycles);
-		DoubleMatrix2D dualA = EdgeUtility.cyclesToMatrix(adapters, hds,
-				dualacycles);
+		DoubleMatrix2D dualA = EdgeUtility.cyclesToMatrix(adapters, hds, dualacycles);
 
 		System.out.println("A - PERIODS:");
 		System.out.println("real part of primal construction:");

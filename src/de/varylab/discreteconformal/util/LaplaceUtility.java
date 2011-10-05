@@ -1,5 +1,8 @@
 package de.varylab.discreteconformal.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import de.jtem.halfedge.Edge;
@@ -7,8 +10,10 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.Weight;
 import de.varylab.discreteconformal.adapter.CotanWeightAdapter;
+import de.varylab.discreteconformal.adapter.MappedWeightAdapter;
 
 /**
  * Class to calculate Laplace operator of a given half edge data structure or its dual.
@@ -17,6 +22,40 @@ import de.varylab.discreteconformal.adapter.CotanWeightAdapter;
  * 
  */
 public class LaplaceUtility {
+	
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> MappedWeightAdapter calculateCotanWeights(HDS hds, AdapterSet a) {
+		Map<Edge<?,?,?>, Double> map = new HashMap<Edge<?,?,?>, Double>();
+		for (E e : hds.getEdges()) {
+			double leftcotanalpha = getLeftWeight(e, a);
+			double rightcotanalpha = getLeftWeight(e.getOppositeEdge(), a);
+			double w = 0.5 * (leftcotanalpha + rightcotanalpha);
+			map.put(e, w);
+		}
+		MappedWeightAdapter result = new MappedWeightAdapter(map);
+		return result;
+	}
+	
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double getLeftWeight(E e, AdapterSet aSet) {
+		double a = aSet.get(Length.class, e, Double.class);
+		double b = aSet.get(Length.class, e.getNextEdge(), Double.class);
+		double c = aSet.get(Length.class, e.getNextEdge().getNextEdge(), Double.class);
+		if (!e.getNextEdge().getNextEdge().getNextEdge().equals(e)) {
+			throw new RuntimeException("Face is not a triangle.");
+		}
+		double cosalpha = (b * b + c * c - a * a) / (2 * b * c);
+		double cotanalpha = cosalpha / (Math.sqrt(1 - cosalpha * cosalpha));
+		return cotanalpha;
+	};
+	
 	
 	/**
 	 * Returns the matrix of the cotan laplace operator corresponding to the surface.

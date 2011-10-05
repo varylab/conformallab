@@ -1,5 +1,8 @@
 package de.varylab.discreteconformal.util;
 
+import static de.varylab.discreteconformal.util.CanonicalBasisUtility.getCanonicalHomologyBasis;
+import static de.varylab.discreteconformal.util.DualityUtility.getDualPaths;
+
 import java.util.List;
 
 import cern.colt.matrix.tdouble.DoubleFactory1D;
@@ -16,8 +19,6 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.EdgeIndex;
 import de.jtem.halfedgetools.adapter.type.Weight;
-import de.jtem.halfedgetools.algorithm.triangulation.Delaunay;
-import de.jtem.halfedgetools.algorithm.triangulation.MappedLengthAdapter;
 import de.jtem.halfedgetools.util.HalfEdgeUtilsExtra;
 import de.varylab.discreteconformal.adapter.CotanWeightAdapter;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
@@ -50,22 +51,23 @@ public class DiscreteHarmonicFormUtility {
 	 * @param wa
 	 * @return
 	 */
-	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> double[][] getHarmonicFormsOnPrimalMesh(
-			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
-			WeightAdapter<E> wa) {
-		// First make clear that we are working with a delaunay triangulation.
-		MappedLengthAdapter la = Delaunay.constructDelaunay(hds, adapters);
-
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> double[][] getHarmonicFormsOnPrimalMesh(
+		HalfEdgeDataStructure<V, E, F> hds, 
+		AdapterSet adapters,
+		WeightAdapter<E> wa
+	) {
 		// Get the homology basis of the surface.
 		V rootV = hds.getVertex(0);
-		List<List<E>> basis = CanonicalBasisUtility.getCanonicalHomologyBasis(
-				rootV, adapters, wa);
+		List<List<E>> basis = getCanonicalHomologyBasis(rootV, adapters, wa);
 
-		DoubleMatrix2D dh = getHarmonicFormsOfPrimalMesh(hds, basis, adapters,
-				la);
-
-		SimpleMatrixPrintUtility.print(dalgebra.mult(dh, EdgeUtility
-				.cyclesToMatrix(adapters, hds, basis)), 4);
+		DoubleMatrix2D dh = getHarmonicFormsOfPrimalMesh(hds, basis, adapters);
+		SimpleMatrixPrintUtility.print(
+			dalgebra.mult(dh, EdgeUtility.cyclesToMatrix(adapters, hds, basis)), 4
+		);
 
 		// use the private method
 		return dh.toArray();
@@ -84,23 +86,23 @@ public class DiscreteHarmonicFormUtility {
 	 * @param wa
 	 * @return
 	 */
-	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> double[][] getHarmonicFormsOnDualMesh(
-			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
-			WeightAdapter<E> wa) {
-		// First make clear that we are working with a delaunay triangulation.
-		MappedLengthAdapter la = Delaunay.constructDelaunay(hds, adapters);
-
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> double[][] getHarmonicFormsOnDualMesh(
+		HalfEdgeDataStructure<V, E, F> hds, 
+		AdapterSet adapters,
+		WeightAdapter<E> wa
+	) {
 		// Get the homology basis of the surface.
 		V rootV = hds.getVertex(0);
-		List<List<E>> dualbasis = DualityUtility.getDualPaths(hds,
-				CanonicalBasisUtility.getCanonicalHomologyBasis(rootV,
-						adapters, wa));
+		List<List<E>> dualbasis = getDualPaths(hds, getCanonicalHomologyBasis(rootV, adapters, wa));
+		DoubleMatrix2D dh = getHarmonicFormsOfDualMesh(hds, dualbasis, adapters);
 
-		DoubleMatrix2D dh = getHarmonicFormsOfDualMesh(hds, dualbasis,
-				adapters, la);
-
-		SimpleMatrixPrintUtility.print(dalgebra.mult(dh, EdgeUtility
-				.cyclesToMatrix(adapters, hds, dualbasis)), 4);
+		SimpleMatrixPrintUtility.print(
+			dalgebra.mult(dh, EdgeUtility.cyclesToMatrix(adapters, hds, dualbasis)), 4
+		);
 
 		// use the private method
 		return dh.toArray();
@@ -171,20 +173,19 @@ public class DiscreteHarmonicFormUtility {
 	 * @param wa
 	 * @return
 	 */
-	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> DoubleMatrix2D getHarmonicFormsOfPrimalMesh(
-			HalfEdgeDataStructure<V, E, F> delaunay,
-			List<List<E>> homologyBasis, AdapterSet adapters,
-			MappedLengthAdapter la) {
-
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> DoubleMatrix2D getHarmonicFormsOfPrimalMesh(
+		HalfEdgeDataStructure<V, E, F> delaunay,
+		List<List<E>> homologyBasis, 
+		AdapterSet adapters
+	) {
 		// For each cycle in the basis we get a corresponding harmonic
 		// differential (closed but not exact, its integral differs by one on
 		// the cycle).
-		DoubleMatrix2D dh = DoubleFactory2D.sparse.make(homologyBasis.size(),
-				delaunay.numEdges() / 2);
-
-		// For each cycle construct the corresponding harmonic differential.
-		adapters.add(la); // delaunay lengths
-
+		DoubleMatrix2D dh = DoubleFactory2D.sparse.make(homologyBasis.size(), delaunay.numEdges() / 2);
 		DoubleMatrix1D form;
 		for (int i = 0; i < homologyBasis.size(); i++) {
 			form = getStandardHarmonicFormOnPrimalMesh(delaunay, adapters,
@@ -194,8 +195,6 @@ public class DiscreteHarmonicFormUtility {
 					dh.setQuick(i, j, form.getQuick(j));
 			}
 		}
-
-		adapters.remove(la);
 
 		return dh;
 	}
@@ -217,19 +216,20 @@ public class DiscreteHarmonicFormUtility {
 	 * @param wa
 	 * @return
 	 */
-	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> DoubleMatrix2D getHarmonicFormsOfDualMesh(
-			HalfEdgeDataStructure<V, E, F> delaunay,
-			List<List<E>> dualHomologyBasis, AdapterSet adapters,
-			MappedLengthAdapter la) {
-
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> DoubleMatrix2D getHarmonicFormsOfDualMesh(
+		HalfEdgeDataStructure<V, E, F> delaunay,
+		List<List<E>> dualHomologyBasis, 
+		AdapterSet adapters
+	) {
 		// For each cycle in the basis we get a corresponding harmonic
 		// differential (closed but not exact, its integral differs by one on
 		// the cycle).
 		DoubleMatrix2D dh = DoubleFactory2D.sparse.make(dualHomologyBasis
 				.size(), delaunay.numEdges() / 2);
-
-		// For each cycle construct the corresponding harmonic differential.
-		adapters.add(la); // delaunay lengths
 
 		DoubleMatrix1D form;
 		for (int i = 0; i < dualHomologyBasis.size(); i++) {
@@ -240,9 +240,6 @@ public class DiscreteHarmonicFormUtility {
 					dh.setQuick(i, j, form.getQuick(j));
 			}
 		}
-
-		adapters.remove(la);
-
 		return dh;
 	}
 
