@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.util;
 import static de.varylab.discreteconformal.util.CanonicalBasisUtility.getCanonicalHomologyBasis;
 import static de.varylab.discreteconformal.util.DiscreteHolomorphicFormUtility.getHolomorphicFormsOnDualMesh;
 import static de.varylab.discreteconformal.util.DiscreteHolomorphicFormUtility.getHolomorphicFormsOnPrimalMesh;
+import static java.lang.Math.PI;
 
 import java.util.List;
 
@@ -172,8 +173,12 @@ public class DiscreteRiemannUtility {
 		SiegelReduction siegel= new SiegelReduction(PeriodMatrix);
 		ComplexMatrix normalizedPeriodMatrix= siegel.getReducedPeriodMatrix();
 		
-		normalizedPeriodMatrix.print("Normalized Period Matrix;");
+		normalizedPeriodMatrix.print("Normalized Period Matrix 2PI:");
 
+		ComplexMatrix normalizedPeriodMatrix2 = normalizedPeriodMatrix.times(new Complex(0, -1.0/(2*PI)));
+		normalizedPeriodMatrix2.print("Normalizes Period Matrix 1:");
+		
+		
 		// use the private method
 		return array;
 	}
