@@ -494,6 +494,21 @@ public class FundamentalPolygonUtility {
 	}
 	
 	
+	public static FundamentalPolygon canonicalizeOpposite(FundamentalPolygon P) {
+		P = canonicalize(P, false);
+		int g = P.getGenus();
+		FundamentalEdge e0 = P.getEdges().get(0);
+		assert e0.nextEdge.nextEdge == e0.partner || e0.prevEdge.prevEdge == e0.partner;
+		if (e0.prevEdge.prevEdge == e0.partner) {
+			e0 = e0.partner;
+		}
+		for (int i = 0; i < g - 1; i++) {
+			
+		}
+		return P;
+	}
+	
+	
 	/**
 	 * Constructs a minimal fundamental polygon from a general polygon
 	 * The result will have only one vertex and 4g edges
@@ -550,8 +565,6 @@ public class FundamentalPolygonUtility {
 		}
 		return new FundamentalPolygon(edgeList);
 	}
-	
-	
 	
 	
 	/**
