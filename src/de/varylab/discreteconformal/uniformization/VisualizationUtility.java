@@ -4,7 +4,6 @@ import static de.jreality.math.Pn.HYPERBOLIC;
 import static de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility.context;
 import static java.awt.BasicStroke.CAP_SQUARE;
 import static java.awt.BasicStroke.JOIN_ROUND;
-import static java.awt.Color.BLACK;
 import static java.awt.RenderingHints.KEY_ANTIALIASING;
 import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
 import static java.awt.geom.Arc2D.OPEN;
@@ -16,8 +15,9 @@ import static java.lang.Math.sin;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Image;
+import java.awt.Stroke;
 import java.awt.geom.Arc2D;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
@@ -42,7 +42,7 @@ public class VisualizationUtility {
 		eps = 1E-15;
 
 	
-	public static Image drawUniversalCoverImage(
+	public static BufferedImage drawUniversalCoverImage(
 		FundamentalPolygon poly, 
 		int depth,
 		HyperbolicModel model,
@@ -55,22 +55,28 @@ public class VisualizationUtility {
 		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
 		g.setColor(new Color(255, 255, 255, 0));
 		g.fillRect(0, 0, res, res);
-		
 		g.scale(0.5, -0.5);
 		g.translate(res, -res);
+
+		if (model == HyperbolicModel.Klein || model == HyperbolicModel.Poincaré) {
+			g.setColor(Color.BLACK);
+			g.setStroke(new BasicStroke(4 * ls));
+			Ellipse2D boundary = new Ellipse2D.Double(-res,-res, 2*res, 2*res);
+			g.draw(boundary);
+		}
 		
-		g.setColor(BLACK);
+		g.setColor(Color.BLACK);
 		g.setStroke(new BasicStroke(1.5f * ls));
-		drawUniversalCover(poly, depth + 1, g, model, res);
+		drawUniversalCover(poly, depth, true, g, model, res);
 		
 		g.setStroke(new BasicStroke(4 * ls));
 		g.setColor(rootColor);
 		drawPolygon(poly, model, g, res);
-		
+
 		g.setStroke(new BasicStroke(5 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
 		g.setColor(Color.BLUE);
 		drawPolygonAxes(poly, model, g, res);
-		
+
 		return image;
 	}
 	
@@ -204,13 +210,14 @@ public class VisualizationUtility {
 	private static void drawUniversalCover(
 		FundamentalPolygon poly,
 		int maxDepth,
+		boolean drawAxes,
 		Graphics2D g,
 		HyperbolicModel model,
 		int resolution
 	) {
 		BigDecimal[] id = new BigDecimal[16];
 		RnBig.setIdentityMatrix(id);
-		drawUniversalCoverR(poly, id, 0, maxDepth, g, model, resolution);
+		drawUniversalCoverR(poly, id, 0, maxDepth, drawAxes, g, model, resolution);
 	}
 		
 		
@@ -219,14 +226,28 @@ public class VisualizationUtility {
 		BigDecimal[] domain,
 		int depth,
 		int maxDepth,
+		boolean drawAxes,
 		Graphics2D g,
 		HyperbolicModel model,
 		int resolution
 	) {
 		FundamentalPolygon rP = FundamentalPolygonUtility.copyPolygon(poly);
 		for (FundamentalEdge ce : rP.getEdges()) {
+			BigDecimal[] domainInv = RnBig.inverse(null, domain, context);
+			RnBig.times(ce.motionBig, ce.motionBig, domain, context);
+			RnBig.times(ce.motionBig, domainInv, ce.motionBig, context);
 			RnBig.matrixTimesVector(ce.startPosition, domain, ce.startPosition, context);
 			PnBig.normalize(ce.startPosition, ce.startPosition, HYPERBOLIC, context);
+		}
+		if (drawAxes) {
+			float ls = resolution / 500f;
+			Stroke storedStroke = g.getStroke();
+			Color storedColor = g.getColor();
+			g.setStroke(new BasicStroke(1.5f * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
+			g.setColor(Color.BLUE);
+			drawPolygonAxes(rP, model, g, resolution);
+			g.setStroke(storedStroke);
+			g.setColor(storedColor);
 		}
 		boolean proceed = drawPolygon(rP, model, g, resolution);
 		if (!proceed || depth + 1 > maxDepth) {
@@ -234,7 +255,7 @@ public class VisualizationUtility {
 		}
 		for (FundamentalEdge e : poly.getEdges()) {
 			BigDecimal[] newDomain = RnBig.times(null, domain, e.motionBig, context);
-			drawUniversalCoverR(poly, newDomain, depth + 1, maxDepth, g, model, resolution);
+			drawUniversalCoverR(poly, newDomain, depth + 1, maxDepth, drawAxes, g, model, resolution);
 		}
 	}
 	
@@ -249,7 +270,7 @@ public class VisualizationUtility {
 	) {
 		try {
 			if (model == HyperbolicModel.Klein) {
-				g.draw(new Line2D.Double(p1[0], p1[1], p2[0], p2[1]));
+				g.draw(new Line2D.Double(resolution * p1[0], resolution * p1[1], resolution * p2[0], resolution * p2[1]));
 			} else {
 				double[] center = getCircumCenter(p1, p2, p3);
 				double[] vec1 = Rn.subtract(null, p1, center);
@@ -260,14 +281,21 @@ public class VisualizationUtility {
 				double degAngle = Math.toDegrees(angle);
 				double degStartAngle = Math.toDegrees(startAngle);
 				double radius = Rn.euclideanDistance(p1, center);
-				double cornerx = resolution * (center[0] - radius);
-				double cornery = resolution * (center[1] - radius);
-				double size = resolution * radius * 2;
-				Arc2D arc = new Arc2D.Double(cornerx, cornery, size, size, degStartAngle, degAngle, OPEN);
-				g.draw(arc);
+				double[] betaVec1 = Rn.subtract(null, p1, p3);
+				double[] betaVec2 = Rn.subtract(null, p2, p3);
+				double beta = Rn.euclideanAngle(betaVec1, betaVec2);
+				if (beta < 3.1) {
+					double cornerx = resolution * (center[0] - radius);
+					double cornery = resolution * (center[1] - radius);
+					double size = resolution * radius * 2;
+					Arc2D arc = new Arc2D.Double(cornerx, cornery, size, size, degStartAngle, degAngle, OPEN);
+					g.draw(arc);
+				} else {
+					g.draw(new Line2D.Double(resolution * p1[0], resolution * p1[1], resolution * p2[0], resolution * p2[1]));
+				}
 			}
 		} catch (Exception e) {
-			g.draw(new Line2D.Double(p1[0], p1[1], p2[0], p2[1]));
+			g.draw(new Line2D.Double(resolution * p1[0], resolution * p1[1], resolution * p2[0], resolution * p2[1]));
 		}
 	}
 	

@@ -14,6 +14,7 @@ import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.WHITE;
+import static java.awt.GridBagConstraints.RELATIVE;
 import static java.lang.Math.PI;
 import static java.lang.Math.atan2;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
@@ -25,23 +26,26 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+import javax.imageio.ImageIO;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -71,6 +75,7 @@ import de.jreality.shader.Texture2D;
 import de.jreality.shader.TextureUtility;
 import de.jreality.ui.AppearanceInspector;
 import de.jreality.ui.TextureInspector;
+import de.jreality.ui.viewerapp.FileFilter;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -124,7 +129,6 @@ import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSelectionListener, ChangeListener, ActionListener, PropertyChangeListener, SelectionListener {
 
 	private static int
-		coverRecursion = 2,
 		coverResolution = 1024;
 	
 	private enum Domain {
@@ -152,12 +156,14 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		canonicalPolygon = null;
 	private Matrix 
 		polygonTextureMatrix = euclidean().translate(-0.5, -0.5, 0).scale(0.5).scale(1, -1, 1).getMatrix();
-	private Image
+	private BufferedImage
 		cutCoverImage = null,
 		minimalCoverImage = null,
 		canonicalCoverImage = null;
 	private int
 		genus = -1;
+	private CuttingInfo<CoVertex, CoEdge, CoFace> 
+		cutInfo = null;
 
 	private MetricErrorAdapter
 		metricErrorAdapter = new MetricErrorAdapter();
@@ -186,7 +192,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 
 	// user interface section ------------
 	private JButton
-		coverToTextureButton = new JButton("Texture"),
+		saveTextureButton = new JButton("Save Texture"),
+		resetXFormButton = new JButton("Reset Transformation"),
+		moveToCenterButton = new JButton("Center Selected Vertex"),
+		coverToTextureButton = new JButton("Create Texture"),
 		checkGaussBonnetBtn = new JButton("Check Gauß-Bonnet"),
 		unwrapBtn = new JButton("Unwrap"),
 		quantizeToQuads = new JButton("Quads");
@@ -200,11 +209,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		visualizationPanel = new ShrinkPanel("Visualization"),
 		texQuantizationPanel = new ShrinkPanel("Cone Texture Quantization");
 	private SpinnerNumberModel
+		coverRecursionModel = new SpinnerNumberModel(2, 0, 10, 1),
 		customThetaModel = new SpinnerNumberModel(360.0, 0.0, 1000.0, 1.0),
 		numConesModel = new SpinnerNumberModel(0, 0, 100, 1),
 		toleranceExpModel = new SpinnerNumberModel(-8, -30, -1, 1),
 		maxIterationsModel = new SpinnerNumberModel(150, 1, 10000, 1);
 	private JSpinner
+		coverRecursionSpinner = new JSpinner(coverRecursionModel),
 		customThetaSpinner = new JSpinner(customThetaModel),
 		numConesSpinner = new JSpinner(numConesModel),
 		toleranceExpSpinner = new JSpinner(toleranceExpModel),
@@ -214,8 +225,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		useDistanceToCanonicalize = new JCheckBox("Use Isometry Distances"),
 		useCustomThetaChecker = new JCheckBox("Custom Theta"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
-		showUnwrapped = new JCheckBox("Show Unwrapped"),
-		showUniversalCover = new JCheckBox("Universal Cover");
+		showUnwrapped = new JCheckBox("Unwrapped");
 	private JComboBox
 		numericsCombo = new JComboBox(new String[] {"Java/MTJ Numerics", "Petsc/Tao Numerics"}),
 		quantizationModeCombo = new JComboBox(QuantizationMode.values()),
@@ -240,7 +250,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		kleinButton.addActionListener(this);
 		poincareButton.addActionListener(this);
 		halfplaneButton.addActionListener(this);
-		showUniversalCover.addActionListener(this);
 		domainCombo.addActionListener(this);
 		useProjectiveTexture.addActionListener(this);
 		coverToTextureButton.addActionListener(this);
@@ -312,7 +321,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		shrinkPanel.add(maxIterationsSpinner, c2);
 		shrinkPanel.add(checkGaussBonnetBtn, c1);
 		shrinkPanel.add(unwrapBtn, c2);
-		shrinkPanel.add(useDistanceToCanonicalize, c2);
 		
 		boundaryPanel.setLayout(new GridBagLayout());
 		boundaryPanel.add(new JLabel("Mode"), c1);
@@ -340,6 +348,33 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		customNodePanel.add(new JLabel("Quantization"), c1);
 		customNodePanel.add(customQuantizationCombo, c2);
 		customNodePanel.add(circularEdgeChecker, c2);
+		shrinkPanel.add(customNodePanel, c2);
+		
+		texQuantizationPanel.add(quantizeToQuads, c2);
+		shrinkPanel.add(texQuantizationPanel, c2);
+		
+		visualizationPanel.setLayout(new GridBagLayout());
+		visualizationPanel.add(showUnwrapped, c1);
+		visualizationPanel.add(resetXFormButton, c2);
+		visualizationPanel.add(new JLabel("Domain"), c1);
+		visualizationPanel.add(domainCombo, c2);
+		visualizationPanel.add(new JLabel("Cover Recursion"), c1);
+		visualizationPanel.add(coverRecursionSpinner, c2);
+		visualizationPanel.add(useDistanceToCanonicalize, c2);
+		visualizationPanel.add(useProjectiveTexture, c1);
+		visualizationPanel.add(coverToTextureButton, c2);
+		visualizationPanel.add(saveTextureButton, c2);
+		visualizationPanel.setShrinked(true);
+		shrinkPanel.add(visualizationPanel, c2);
+		
+		modelPanel.setLayout(new GridBagLayout()); 	c1.gridwidth = 1;
+		modelPanel.add(kleinButton, c1); 			c1.gridwidth = RELATIVE;
+		modelPanel.add(poincareButton, c1);
+		modelPanel.add(halfplaneButton, c2);
+		modelPanel.add(moveToCenterButton, c2);
+		modelPanel.setShrinked(true);
+		shrinkPanel.add(modelPanel, c2);
+		
 		selectedNodesList.getSelectionModel().addListSelectionListener(this);
 		customModeCombo.addActionListener(this);
 		customQuantizationCombo.addActionListener(this);
@@ -347,26 +382,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		useCustomThetaChecker.addActionListener(this);
 		customThetaSpinner.addChangeListener(this);
 		circularEdgeChecker.addActionListener(this);
-		shrinkPanel.add(customNodePanel, c2);
-		
-		texQuantizationPanel.add(quantizeToQuads, c2);
-		shrinkPanel.add(texQuantizationPanel, c2);
-		
-		visualizationPanel.setLayout(new GridBagLayout());
-		visualizationPanel.add(showUnwrapped, c2);
-		visualizationPanel.add(showUniversalCover, c1);
-		visualizationPanel.add(domainCombo, c2);
-		visualizationPanel.add(coverToTextureButton, c2);
-		visualizationPanel.add(useProjectiveTexture, c2);
-		visualizationPanel.setShrinked(true);
-		shrinkPanel.add(visualizationPanel, c2);
-		
-		modelPanel.setLayout(new GridLayout(1, 3, 2, 2));
-		modelPanel.add(kleinButton);
-		modelPanel.add(poincareButton);
-		modelPanel.add(halfplaneButton);
-		modelPanel.setShrinked(true);
-		shrinkPanel.add(modelPanel, c2);
+		moveToCenterButton.addActionListener(this);
+		resetXFormButton.addActionListener(this);
+		saveTextureButton.addActionListener(this);
 	}
 	
 	
@@ -464,10 +482,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				unwrapper.getSurface().revertNormalization();
 			}
 			genus = unwrapper.genus;
+			cutInfo = unwrapper.cutInfo;
 			metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
 			metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
 
-			createVisualization(surface, genus, unwrapper.cutInfo);
+			createVisualization(surface, genus, cutInfo);
 			updateSurface();
 			updateStates();
 		}
@@ -497,7 +516,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon, useDistanceToCanonicalize.isSelected());
 			System.out.println(canonicalPolygon);
 			canonicalPolygon.checkRelation();
-			updatePolygonTexture(getSelectedModel(), coverRecursion, coverResolution);
+			updatePolygonTexture(coverResolution);
 			metricErrorAdapter.setSignature(Pn.HYPERBOLIC);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -514,7 +533,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
-		if (showUniversalCover == s || domainCombo == s) {
+		if (domainCombo == s) {
 			updateStates();
 			return;
 		}
@@ -555,7 +574,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		if (kleinButton == s || poincareButton == s || halfplaneButton == s) {
 			updateSurface();
 			if (genus > 1) {
-				updatePolygonTexture(getSelectedModel(), coverRecursion, coverResolution);
+				updatePolygonTexture(coverResolution);
 			}
 			updateStates();
 		}
@@ -684,6 +703,64 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			System.out.println("Quantizing texture cones: " + cones);
 			hif.update();
 		}
+		if (moveToCenterButton == s) {
+			Set<CoVertex> sel = hif.getSelection().getVertices(surface);
+			if (sel.isEmpty()) return;
+			CoVertex v = sel.iterator().next();
+			double[] pos = v.T;
+			MatrixBuilder mb = MatrixBuilder.hyperbolic();
+			mb.translateFromTo(pos, new double[] {0,0,0,1});
+			Matrix T = mb.getMatrix();
+			for (CoVertex vv : surface.getVertices()) {
+				T.transformVector(vv.T);
+			}
+			hif.update();
+			createVisualization(surface, genus, cutInfo);
+			updateSurface();
+			updateStates();
+		}
+		if (resetXFormButton == s) {
+			
+		}
+		if (saveTextureButton == s) {
+			JFileChooser imageChooser = new JFileChooser();
+			imageChooser.addChoosableFileFilter(new FileFilter() {
+				
+				@Override
+				public String getDescription() {
+					return "PNG Files (*.png)";
+				}
+				
+				@Override
+				public boolean accept(File f) {
+					return f.isDirectory() || f.getName().toLowerCase().endsWith(".png");
+				}
+			});
+			Window w = SwingUtilities.getWindowAncestor(this.shrinkPanel);
+			int result = imageChooser.showSaveDialog(w);
+			if (result != JFileChooser.APPROVE_OPTION) {
+				return;
+			}
+			File file = imageChooser.getSelectedFile();
+			if (!file.getName().toLowerCase().endsWith(".png")) {
+				file = new File(file.getAbsolutePath() + ".png");
+			}
+			try {
+				switch ((Domain)domainCombo.getSelectedItem()) {
+				case Cut:
+					ImageIO.write(cutCoverImage, "png", imageChooser.getSelectedFile());
+					break;
+				case Canonical:
+					ImageIO.write(canonicalCoverImage, "png", imageChooser.getSelectedFile());
+					break;
+				case Minimal:
+					ImageIO.write(minimalCoverImage, "png", imageChooser.getSelectedFile());
+					break;
+				}
+			} catch (Exception e2) {
+				JOptionPane.showMessageDialog(w, e2.getMessage(), "Error", ERROR_MESSAGE);
+			}
+		}
 	}
 	
 	/*
@@ -695,46 +772,45 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		l.removeTemporaryGeometry(minimalCoverRoot);
 		l.removeTemporaryGeometry(canonicalCoverRoot);
 		if (genus > 1 && showUnwrapped.isSelected()) {
-			if (showUniversalCover.isSelected()) {
-				switch ((Domain)domainCombo.getSelectedItem()) {
-				case Cut:
-					l.addTemporaryGeometry(cutCoverRoot);
-					break;
-				case Minimal:
-					l.addTemporaryGeometry(minimalCoverRoot);
-					break;
-				case Canonical:
-					l.addTemporaryGeometry(canonicalCoverRoot);
-					break;
-				}
-				unitCircle.setVisible(getSelectedModel() == HyperbolicModel.Poincaré);
-			}
-		}
-		if (showUniversalCover.isSelected()) {
-			ImageData imgData = null;
 			switch ((Domain)domainCombo.getSelectedItem()) {
 			case Cut:
-				if (cutCoverImage != null) {
-					imgData = new ImageData(cutCoverImage);
-				}
+				l.addTemporaryGeometry(cutCoverRoot);
 				break;
 			case Minimal:
-				if (minimalCoverImage != null) {
-					imgData = new ImageData(minimalCoverImage);
-				}
+				l.addTemporaryGeometry(minimalCoverRoot);
 				break;
 			case Canonical:
-				if (canonicalCoverImage != null) {
-					imgData = new ImageData(canonicalCoverImage);
-				}
+				l.addTemporaryGeometry(canonicalCoverRoot);
 				break;
 			}
-			if (imgData != null) {
-				Texture2D tex2d = TextureUtility.createTexture(universalCoverAppearance, POLYGON_SHADER, imgData);
-				tex2d.setTextureMatrix(polygonTextureMatrix);
-			} else {
-				TextureUtility.removeTexture(universalCoverAppearance, POLYGON_SHADER);
+			boolean showCircle = false;
+			showCircle |= getSelectedModel() == HyperbolicModel.Poincaré;
+			showCircle |= getSelectedModel() == HyperbolicModel.Klein;
+			unitCircle.setVisible(showCircle);
+		}
+		ImageData imgData = null;
+		switch ((Domain)domainCombo.getSelectedItem()) {
+		case Cut:
+			if (cutCoverImage != null) {
+				imgData = new ImageData(cutCoverImage);
 			}
+			break;
+		case Minimal:
+			if (minimalCoverImage != null) {
+				imgData = new ImageData(minimalCoverImage);
+			}
+			break;
+		case Canonical:
+			if (canonicalCoverImage != null) {
+				imgData = new ImageData(canonicalCoverImage);
+			}
+			break;
+		}
+		if (imgData != null) {
+			Texture2D tex2d = TextureUtility.createTexture(universalCoverAppearance, POLYGON_SHADER, imgData);
+			tex2d.setTextureMatrix(polygonTextureMatrix);
+		} else {
+			TextureUtility.removeTexture(universalCoverAppearance, POLYGON_SHADER);
 		}
 	}
 	
@@ -773,24 +849,27 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	}
 	
 
-	public void updatePolygonTexture(HyperbolicModel model, int depth, int resolution) {
+
+	public void updatePolygonTexture(int resolution) {
+		int coverRecusionDepth = coverRecursionModel.getNumber().intValue();
+		HyperbolicModel model = getSelectedModel();
 		cutCoverImage = VisualizationUtility.drawUniversalCoverImage(
 			cuttedPolygon, 
-			depth, 
+			coverRecusionDepth, 
 			model, 
 			resolution,
 			Color.BLUE
 		);
 		minimalCoverImage = VisualizationUtility.drawUniversalCoverImage(
 			minimalPolygon, 
-			depth, 
+			coverRecusionDepth,
 			model, 
 			resolution,
 			Color.GREEN
 		);
 		canonicalCoverImage = VisualizationUtility.drawUniversalCoverImage(
 			canonicalPolygon, 
-			depth, 
+			coverRecusionDepth, 
 			model, 
 			resolution,
 			Color.RED
@@ -817,7 +896,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		c.storeProperty(getClass(), "numericsMethod", numericsCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "klein", kleinButton.isSelected()); 
 		c.storeProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected());
-		c.storeProperty(getClass(), "showUniversalCover", showUniversalCover.isSelected());
+		c.storeProperty(getClass(), "coverRecursion", coverRecursionModel.getNumber());
 		c.storeProperty(getClass(), "quantizationMode", quantizationModeCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected());
 		c.storeProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber());
@@ -826,7 +905,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		c.storeProperty(getClass(), "conesPanelShrinked", coneConfigPanel.isShrinked());	
 		c.storeProperty(getClass(), "visualizationPanelShrinked", visualizationPanel.isShrinked());	
 		c.storeProperty(getClass(), "modelPanelShrinked", modelPanel.isShrinked());	
-		c.storeProperty(getClass(), "customVertexPanelShrinked", modelPanel.isShrinked());
+		c.storeProperty(getClass(), "coneTexQuantPanelShrinked", texQuantizationPanel.isShrinked());
+		c.storeProperty(getClass(), "customVertexPanelShrinked", customNodePanel.isShrinked());
 	} 
 	
  
@@ -838,7 +918,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		kleinButton.setSelected(c.getProperty(getClass(), "klein", kleinButton.isSelected()));
 		poincareButton.setSelected(!kleinButton.isSelected());
 		showUnwrapped.setSelected(c.getProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected()));
-		showUniversalCover.setSelected(c.getProperty(getClass(), "showUniversalCover", showUniversalCover.isSelected()));
+		coverRecursionModel.setValue(c.getProperty(getClass(), "coverRecursion", coverRecursionModel.getNumber()));
 		quantizationModeCombo.setSelectedIndex(c.getProperty(getClass(), "quantizationMode", quantizationModeCombo.getSelectedIndex()));
 		useProjectiveTexture.setSelected(c.getProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected()));
 		toleranceExpModel.setValue(c.getProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber()));
@@ -850,6 +930,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		coneConfigPanel.setShrinked(c.getProperty(getClass(), "conesPanelShrinked", true));
 		visualizationPanel.setShrinked(c.getProperty(getClass(), "visualizationPanelShrinked", true));
 		modelPanel.setShrinked(c.getProperty(getClass(), "modelPanelShrinked", true));
+		texQuantizationPanel.setShrinked(c.getProperty(getClass(), "coneTexQuantPanelShrinked", true));
 		customNodePanel.setShrinked(c.getProperty(getClass(), "customVertexPanelShrinked", customNodePanel.isShrinked()));
 	}
 	

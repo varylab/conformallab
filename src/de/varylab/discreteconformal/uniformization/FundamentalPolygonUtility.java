@@ -497,10 +497,13 @@ public class FundamentalPolygonUtility {
 	public static FundamentalPolygon canonicalizeOpposite(FundamentalPolygon P) {
 		P = canonicalize(P, false);
 		int g = P.getGenus();
-		FundamentalEdge e0 = P.getEdges().get(0);
-		assert e0.nextEdge.nextEdge == e0.partner || e0.prevEdge.prevEdge == e0.partner;
-		if (e0.prevEdge.prevEdge == e0.partner) {
-			e0 = e0.partner;
+		// find the first edge of the first handle
+		FundamentalEdge a = P.getEdges().get(0);
+		if (a.nextEdge.nextEdge != a.partner) {
+			a = a.partner;
+		}
+		if (a.prevEdge.partner != a.nextEdge) {
+			a = a.prevEdge;
 		}
 		for (int i = 0; i < g - 1; i++) {
 			

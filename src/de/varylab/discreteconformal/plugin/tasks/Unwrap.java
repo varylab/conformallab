@@ -142,11 +142,11 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 				Complex piNormalizedTau = new Complex(0, 2 * PI);
 				piNormalizedTau = piNormalizedTau.times(tau);
 				final ComplexMatrix PeriodMatrix = new ComplexMatrix(new Complex[][] {{piNormalizedTau}});
-				SiegelReduction siegel = new SiegelReduction(PeriodMatrix);
 				System.out.println("Tau Re " + tau.re);
 				System.out.println("Tau Im " + tau.im);
 				System.out.println("Tau Abs " + tau.abs());
 				System.out.println("Tau Arg " + tau.arg());
+				SiegelReduction siegel = new SiegelReduction(PeriodMatrix);
 				System.out.println("After Siegel: " +  siegel.getReducedPeriodMatrix());
 			} catch (Exception e) {
 				e.printStackTrace();

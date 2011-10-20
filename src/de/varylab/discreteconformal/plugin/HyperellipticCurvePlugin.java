@@ -22,9 +22,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
-import javax.swing.JTextArea;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.text.JTextComponent;
 
 import de.jreality.math.Pn;
 import de.jreality.plugin.basic.View;
@@ -62,8 +61,6 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 	private Random
 		rnd = new Random();
 	
-	private JTextComponent 
-		matrixfield = new JTextArea();
 	private CurveEditor editor;
 	private JScrollPane protectorPane;
 	
@@ -93,17 +90,15 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		editor.setPreferredSize(new Dimension(300, 300));
 		protectorPane = new JScrollPane(editor);
 		protectorPane.setMinimumSize(editor.getPreferredSize());
+		protectorPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		protectorPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
 		
-		initViewMatrixPanel();
-
 		setInitialPosition(SHRINKER_RIGHT);
 		GridBagConstraints c1 = createLeftConstraint();
 		GridBagConstraints c2 = createRightConstraint();
 		shrinkPanel.setTitle("Hyperelliptic Curve Plugin");
 		c2.weighty = 1.0;
 		shrinkPanel.add(protectorPane, c2);
-		c2.weighty = 0.0;
-		shrinkPanel.add(matrixfield, c2);
 		
 		geometryPanel.setBorder(BorderFactory.createTitledBorder("Triangulated Surface"));
 		geometryPanel.setLayout(new GridBagLayout());
@@ -205,13 +200,6 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 			updatePeriodMatrix();
 	}
 
-	private void initViewMatrixPanel() {
-		matrixfield.setEditable(false);
-		matrixfield.setText(" "
-				+ SimpleMatrixPrintUtility.toString(
-						getNormalizedPeriodMatrix(), 4));
-	}
-
 	private ComplexMatrix getNormalizedPeriodMatrix() {
 		final ComplexMatrix PeriodMatrix = editor.getCurve().getPeriodMatrix().copy();
 		SiegelReduction siegel = new SiegelReduction(PeriodMatrix);
@@ -224,11 +212,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 	}
 
 	private void updatePeriodMatrix() {
-		matrixfield.setText("" + SimpleMatrixPrintUtility.toString(
-				getNormalizedPeriodMatrix(), 4));
-		matrixfield.repaint();
-		System.out.println("" + SimpleMatrixPrintUtility.toString(
-				getNormalizedPeriodMatrix(), 20));
+		System.out.println(SimpleMatrixPrintUtility.toString(getNormalizedPeriodMatrix(), 20));
 	}
 
 	@Override

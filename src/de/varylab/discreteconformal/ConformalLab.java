@@ -3,6 +3,8 @@ package de.varylab.discreteconformal;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.Icon;
+
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
 import de.jreality.plugin.basic.ConsolePlugin;
@@ -26,6 +28,7 @@ import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutToDiskPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.FindPathPlugin;
+import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
 import de.varylab.discreteconformal.plugin.visualizer.ThetaVisualizer;
 
@@ -50,7 +53,8 @@ public class ConformalLab {
 	
 	public static void main(String[] args) {
 		JRViewer v = new JRViewer();
-		JRealitySplashScreen splash = new JRealitySplashScreen();
+		Icon splashImage = ImageHook.getIcon("splash01.png");
+		JRealitySplashScreen splash = new JRealitySplashScreen(splashImage);
 		splash.setVisible(true);
 		v.setSplashScreen(splash);
 		JRHalfedgeViewer.initHalfedgeFronted();

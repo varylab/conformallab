@@ -210,7 +210,7 @@ public class RnBig {
 	}
 	
 	public static BigDecimal[] inverse(
-		BigDecimal[] minvIn, 
+		BigDecimal[] dst, 
 		BigDecimal[] m,
 		MathContext context
 	)	{
@@ -224,10 +224,10 @@ public class RnBig {
 		System.arraycopy(m,0,t,0,m.length);
 		
 		BigDecimal[] minv;
-		if (minvIn == null)	{
+		if (dst == null)	{
 			minv = new BigDecimal[m.length];
 		} else {
-			minv = minvIn;
+			minv = dst;
 		}
 		setIdentityMatrix(minv);
 		
