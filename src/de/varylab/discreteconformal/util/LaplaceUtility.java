@@ -55,10 +55,10 @@ public class LaplaceUtility {
 		double cotanalpha = cosalpha / (Math.sqrt(1 - cosalpha * cosalpha));
 		return cotanalpha;
 	};
-	
-	
+
 	/**
-	 * Returns the matrix of the cotan laplace operator corresponding to the surface.
+	 * Returns the matrix of the cotan Laplace operator (not normalized!)
+	 * corresponding to the surface.
 	 * 
 	 * @param <V>
 	 * @param <E>
@@ -101,7 +101,8 @@ public class LaplaceUtility {
 	}
 
 	/**
-	 * Returns the matrix of the cotan laplace operator corresponding to the dual surface.
+	 * Returns the matrix of the cotan Laplace operator (not normalized!)
+	 * corresponding to the dual surface.
 	 * 
 	 * @param <V>
 	 * @param <E>

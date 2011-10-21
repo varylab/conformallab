@@ -256,7 +256,11 @@ public class DiscreteHarmonicFormUtility {
 	 * @param cycle
 	 * @return
 	 */
-	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> DoubleMatrix1D getStandardHarmonicFormOnPrimalMesh(
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> DoubleMatrix1D getStandardHarmonicFormOnPrimalMesh(
 			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
 			List<E> cycle) {
 
@@ -309,7 +313,11 @@ public class DiscreteHarmonicFormUtility {
 	 * @param cycle
 	 * @return
 	 */
-	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> DoubleMatrix1D getStandardHarmonicFormOnDualMesh(
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> DoubleMatrix1D getStandardHarmonicFormOnDualMesh(
 			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
 			List<E> cycle) {
 
@@ -349,7 +357,11 @@ public class DiscreteHarmonicFormUtility {
 		return dh;
 	}
 
-	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> double howHarmonicIsPrimalForm(
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> double howHarmonicIsPrimalForm(
 			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
 			DoubleMatrix1D form) {
 
@@ -379,7 +391,11 @@ public class DiscreteHarmonicFormUtility {
 		return res;
 	}
 
-	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> double howHarmonicIsDualForm(
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> double howHarmonicIsDualForm(
 			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
 			DoubleMatrix1D form) {
 
@@ -422,7 +438,11 @@ public class DiscreteHarmonicFormUtility {
 	 * @param edgesEndingAtLeftOfCycle
 	 * @return
 	 */
-	private static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> DoubleMatrix1D getStandardHarmonicFunctionOnPrimalMesh(
+	private static <
+		V extends Vertex<V, E, F>, 	
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> DoubleMatrix1D getStandardHarmonicFunctionOnPrimalMesh(
 			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
 			List<E> cycle, List<E> edgesEndingAtLeftOfCycle) {
 
@@ -506,7 +526,11 @@ public class DiscreteHarmonicFormUtility {
 	 * @param edgesEndingAtLeftOfCycle
 	 * @return
 	 */
-	public static <V extends Vertex<V, E, F>, E extends Edge<V, E, F>, F extends Face<V, E, F>> DoubleMatrix1D getStandardHarmonicFunctionOnDualMesh(
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> DoubleMatrix1D getStandardHarmonicFunctionOnDualMesh(
 			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
 			List<E> cycle, List<E> edgesEndingAtLeftOfCycle) {
 
