@@ -24,6 +24,7 @@ import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapper;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapperPETSc;
+import de.varylab.discreteconformal.unwrapper.SphericalUnwrapper;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
@@ -85,26 +86,26 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		case 0: 
 			Collection<CoEdge> bList = HalfEdgeUtils.boundaryEdges(surface);
 			boolean isSphere = bList.size() == 0;
+			Unwrapper unwrapper = null;
 			if (isSphere) {
 				System.out.println("unwrapping a sphere...");
+				unwrapper = new SphericalUnwrapper();
 			} else {
-				System.out.println("unwrapping a disk...");
-			}
-			Unwrapper unwrapper = null;
-			if (usePetsc) {
-				EuclideanUnwrapperPETSc uw = new EuclideanUnwrapperPETSc();
-				uw.setNumCones(numCones);
-				uw.setConeMode(coneMode);
-				uw.setBoundaryMode(boundaryMode);
-				uw.setBoundaryQuantMode(boundaryQuantMode);
-				unwrapper = uw;
-			} else {
-				EuclideanUnwrapper uw = new EuclideanUnwrapper();
-				uw.setNumCones(numCones);
-				uw.setConeMode(coneMode);
-				uw.setBoundaryMode(boundaryMode);
-				uw.setBoundaryQuantMode(boundaryQuantMode);
-				unwrapper = uw;
+				if (usePetsc) {
+					EuclideanUnwrapperPETSc uw = new EuclideanUnwrapperPETSc();
+					uw.setNumCones(numCones);
+					uw.setConeMode(coneMode);
+					uw.setBoundaryMode(boundaryMode);
+					uw.setBoundaryQuantMode(boundaryQuantMode);
+					unwrapper = uw;
+				} else {
+					EuclideanUnwrapper uw = new EuclideanUnwrapper();
+					uw.setNumCones(numCones);
+					uw.setConeMode(coneMode);
+					uw.setBoundaryMode(boundaryMode);
+					uw.setBoundaryQuantMode(boundaryQuantMode);
+					unwrapper = uw;
+				}
 			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);

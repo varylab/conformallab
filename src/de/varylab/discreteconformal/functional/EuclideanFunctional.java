@@ -378,5 +378,9 @@ public class EuclideanFunctional <
 		double l2 = lambda.getLambda(e) + u1 + u2;
 		return getLength(l2);
 	}
+	public double getVertexU(V v, DomainValue u) {
+		int i = var.getVarIndex(v);
+		return var.isVariable(v) ? u.get(i) : 0.0; 
+	};
 	
 }

@@ -28,5 +28,6 @@ public interface ConformalFunctional <
 	
 	
 	public double getNewLength(E e, DomainValue u);
+	public double getVertexU(V v, DomainValue u);
 	
 }

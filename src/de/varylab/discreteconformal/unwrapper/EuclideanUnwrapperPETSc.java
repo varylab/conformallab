@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.unwrapper;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import no.uib.cipr.matrix.DenseVector;
@@ -16,6 +17,7 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
+import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
 import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
@@ -55,6 +57,41 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 	@Override
 	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
 		CEuclideanApplication app = new CEuclideanApplication(surface);
+		double[] uValues = calculateConformalFactors(surface, aSet, app);
+		DenseVector uVec = new DenseVector(uValues);
+
+		switch (genus) {
+		case 0:
+			cutInfo = ConesUtility.cutMesh(surface);
+			break;
+		case 1:
+			CoVertex cutRoot = surface.getVertex(0);
+			DefaultWeightAdapter<CoEdge> constantWeight = new DefaultWeightAdapter<CoEdge>();
+			cutInfo = CuttingUtility.cutTorusToDisk(surface, cutRoot, constantWeight);
+			break;
+		default:
+			throw new RuntimeException("Cannot work on higher genus");
+		}
+		lengthMap = EuclideanLayout.getLengthMap(surface, app.getFunctional(), uVec);
+		layoutRoot = EuclideanLayout.doLayout(surface, app.getFunctional(), uVec);
+	}
+
+	
+	public Map<CoVertex, Double> calculateConformalFactors(CoHDS surface, AdapterSet aSet) throws UnwrapException {
+		CEuclideanApplication app = new CEuclideanApplication(surface);
+		double[] u = calculateConformalFactors(surface, aSet, app);
+		DenseVector uVec = new DenseVector(u);
+		MTJDomain uDomain = new MTJDomain(uVec);
+		Map<CoVertex, Double> result = new LinkedHashMap<CoVertex, Double>();
+		for (CoVertex v : surface.getVertices()) {
+			Double uVal = app.getFunctional().getVertexU(v, uDomain);
+			result.put(v, uVal);
+		}
+		return result;
+	}
+	
+	
+	private double[] calculateConformalFactors(CoHDS surface, AdapterSet aSet, CEuclideanApplication app) throws UnwrapException {
 		UnwrapUtility.prepareInvariantDataEuclidean(app.getFunctional(), surface, boundaryMode, boundaryQuantMode, aSet);
 		// cones
 		cones = ConesUtility.setUpCones(surface, numCones); 
@@ -113,23 +150,8 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 			}
 		}
 		double [] uValues = u.getArray();
-		DenseVector uVec = new DenseVector(uValues);
 		u.restoreArray();
-
-		switch (genus) {
-		case 0:
-			cutInfo = ConesUtility.cutMesh(surface);
-			break;
-		case 1:
-			CoVertex cutRoot = surface.getVertex(0);
-			DefaultWeightAdapter<CoEdge> constantWeight = new DefaultWeightAdapter<CoEdge>();
-			cutInfo = CuttingUtility.cutTorusToDisk(surface, cutRoot, constantWeight);
-			break;
-		default:
-			throw new RuntimeException("Cannot work on higher genus");
-		}
-		lengthMap = EuclideanLayout.getLengthMap(surface, app.getFunctional(), uVec);
-		layoutRoot = EuclideanLayout.doLayout(surface, app.getFunctional(), uVec);
+		return uValues;
 	}
 	
 	public Collection<CoVertex> getCones() {

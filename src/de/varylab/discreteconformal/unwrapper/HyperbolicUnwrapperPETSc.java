@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.unwrapper;
 
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import no.uib.cipr.matrix.DenseVector;
@@ -19,6 +20,7 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicApplication;
+import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 
@@ -51,8 +53,37 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper {
 	@Override
 	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
 		app = new CHyperbolicApplication(surface);
+		double[] uArr = calculateConformalFactors(surface, aSet, app);
+		uVec = new DenseVector(uArr);
+
+		if (cutAndLayout) {
+			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(uVec);
+			if (cutRoot == null) {
+				cutRoot = surface.getVertex(HyperbolicUnwrapper.getMinUIndex(uVec));
+			}
+			cutInfo = cutManifoldToDisk(surface, cutRoot, hypWa);
+			lengthMap = HyperbolicLayout.getLengthMap(surface, app.getFunctional(), uVec);
+			layoutRoot = HyperbolicLayout.doLayout(surface, null, app.getFunctional(), uVec);
+		}
+	}
+	
+	
+	public Map<CoVertex, Double> calculateConformalFactors(CoHDS surface, AdapterSet aSet) throws UnwrapException {
+		app = new CHyperbolicApplication(surface);
+		double[] u = calculateConformalFactors(surface, aSet, app);
+		DenseVector uVec = new DenseVector(u);
+		MTJDomain uDomain = new MTJDomain(uVec);
+		Map<CoVertex, Double> result = new LinkedHashMap<CoVertex, Double>();
+		for (CoVertex v : surface.getVertices()) {
+			Double uVal = app.getFunctional().getVertexU(v, uDomain);
+			result.put(v, uVal);
+		}
+		return result;
+	}
+
+
+	private double[] calculateConformalFactors(CoHDS surface, AdapterSet aSet, CHyperbolicApplication app) {
 		UnwrapUtility.prepareInvariantDataHyperbolic(app.getFunctional(), surface, aSet);
-		
 		int n = app.getDomainDimension(); 
 		Vec u = new Vec(n);
 		// set variable lambda start values
@@ -80,18 +111,9 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper {
 			throw new RuntimeException("Optinizer did not converge: \n" + optimizer.getSolutionStatus());
 		}
 		System.out.println(optimizer.getSolutionStatus());
-		uVec = new DenseVector(u.getArray());
+		double[] uVec = u.getArray();
 		u.restoreArray();
-
-		if (cutAndLayout) {
-			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(uVec);
-			if (cutRoot == null) {
-				cutRoot = surface.getVertex(HyperbolicUnwrapper.getMinUIndex(uVec));
-			}
-			cutInfo = cutManifoldToDisk(surface, cutRoot, hypWa);
-			lengthMap = HyperbolicLayout.getLengthMap(surface, app.getFunctional(), uVec);
-			layoutRoot = HyperbolicLayout.doLayout(surface, null, app.getFunctional(), uVec);
-		}
+		return uVec;
 	}
 
 	

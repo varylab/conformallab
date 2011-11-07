@@ -7,6 +7,7 @@ import static java.lang.Math.exp;
 import static java.lang.Math.sin;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -36,6 +37,17 @@ public class EuclideanLayout {
 	 * @param angleMapParam may be null
 	 */
 	public static CoVertex doLayout(CoHDS hds, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector u) {
+		Set<CoVertex> emptySet = Collections.emptySet();
+		return doLayout(hds, fun, u, emptySet);
+	}
+	
+	/**
+	 * Do flat layout for a HDS and a metric vector u. 
+	 * @param hds mesh
+	 * @param u new metric
+	 * @param angleMapParam may be null
+	 */
+	public static CoVertex doLayout(CoHDS hds, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector u, Set<CoVertex> ignoreSet) {
 		Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
 		Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		Queue<CoEdge> Qe = new LinkedList<CoEdge>();

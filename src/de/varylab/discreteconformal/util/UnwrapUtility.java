@@ -45,14 +45,14 @@ public class UnwrapUtility {
 	
 	
 	
-	private static class ZeroInitialEnergy implements InitialEnergy<CoFace> {
+	public static class ZeroInitialEnergy implements InitialEnergy<CoFace> {
 		@Override
 		public double getInitialEnergy(CoFace f) {
 			return 0.0;
 		}
 	}
 	
-	private static class ZeroU implements DomainValue {
+	public static class ZeroU implements DomainValue {
 		@Override
 		public void add(int i, double value) {
 		}
