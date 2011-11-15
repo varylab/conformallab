@@ -7,7 +7,6 @@ import static java.awt.BasicStroke.JOIN_ROUND;
 import static java.awt.RenderingHints.KEY_ANTIALIASING;
 import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
 import static java.awt.geom.Arc2D.OPEN;
-import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 import static java.lang.Math.cos;
 import static java.lang.Math.signum;
 import static java.lang.Math.sin;
@@ -19,7 +18,6 @@ import java.awt.Stroke;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
-import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.HashSet;
@@ -31,6 +29,8 @@ import no.uib.cipr.matrix.NotConvergedException;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.math.PnBig;
 import de.varylab.discreteconformal.math.RnBig;
 
@@ -42,16 +42,61 @@ public class VisualizationUtility {
 		eps = 1E-15;
 
 	
-	public static BufferedImage drawUniversalCoverImage(
+	
+	public static void drawTriangulation(
+		CoHDS surface,
+		HyperbolicModel model,
+		Graphics2D g,
+		int res,
+		Color color
+	) {
+		float ls = res / 500f; // line scale
+		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
+		g.scale(0.5, -0.5);
+		g.translate(res, -res);
+		g.setStroke(new BasicStroke(2 * ls));
+		g.setColor(color);
+		
+		for (CoEdge e : surface.getPositiveEdges()) {
+			double[] s = e.getStartVertex().T;
+			double[] t = e.getTargetVertex().T;
+			double[] m = Rn.linearCombination(null, 0.5, s, 0.5, t);
+			Pn.normalize(m, m, Pn.HYPERBOLIC);
+			double[] p1, p2, p3;
+			switch (model) {
+				case Klein:
+					p1 = new double[] {s[0] / s[3], s[1] / s[3], 0};
+					p2 = new double[] {t[0] / t[3], t[1] / t[3], 0};
+					p3 = new double[] {m[0] / m[3], m[1] / m[3], 0};		
+					break;
+				default:
+				case Poincaré:
+					p1 = new double[] {s[0] / (s[3] + 1), s[1] / (s[3] + 1), 0};
+					p2 = new double[] {t[0] / (t[3] + 1), t[1] / (t[3] + 1), 0};
+					p3 = new double[] {m[0] / (m[3] + 1), m[1] / (m[3] + 1), 0};
+					break;
+				case Halfplane:
+					p1 = new double[] {s[1] / (s[3] - s[0]), 1 / (s[3] - s[0]), 0};
+					p2 = new double[] {t[1] / (t[3] - t[0]), 1 / (t[3] - t[0]), 0};
+					p3 = new double[] {m[1] / (m[3] - m[0]), 1 / (m[3] - m[0]), 0};
+					break;
+			}
+			drawArc(p1, p2, p3, g, model, res);
+		}
+		
+	}
+	
+	
+	
+	public static void drawUniversalCoverImage(
 		FundamentalPolygon poly, 
 		int depth,
 		HyperbolicModel model,
+		Graphics2D g,
 		int res,
 		Color rootColor
 	) {
 		float ls = res / 500f; // line scale
-		BufferedImage image = new BufferedImage(res, res, TYPE_INT_ARGB);
-		Graphics2D g = image.createGraphics();
 		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
 		g.setColor(new Color(255, 255, 255, 0));
 		g.fillRect(0, 0, res, res);
@@ -76,8 +121,6 @@ public class VisualizationUtility {
 		g.setStroke(new BasicStroke(5 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
 		g.setColor(Color.BLUE);
 		drawPolygonAxes(poly, model, g, res);
-
-		return image;
 	}
 	
 	

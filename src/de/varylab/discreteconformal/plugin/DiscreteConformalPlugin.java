@@ -11,10 +11,17 @@ import static de.jreality.shader.CommonAttributes.TEXTURE_2D;
 import static de.jreality.shader.CommonAttributes.TRANSPARENCY;
 import static de.jreality.shader.CommonAttributes.TRANSPARENCY_ENABLED;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
+import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawTriangulation;
+import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawUniversalCoverImage;
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
 import static java.awt.Color.BLACK;
+import static java.awt.Color.BLUE;
+import static java.awt.Color.GRAY;
+import static java.awt.Color.GREEN;
+import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
 import static java.awt.GridBagConstraints.RELATIVE;
+import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 import static java.lang.Math.PI;
 import static java.lang.Math.atan2;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
@@ -22,8 +29,8 @@ import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static javax.swing.SwingUtilities.getWindowAncestor;
 
-import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -34,6 +41,7 @@ import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -59,6 +67,11 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfWriter;
 
 import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.Primitives;
@@ -116,7 +129,6 @@ import de.varylab.discreteconformal.plugin.tasks.Unwrap;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility;
 import de.varylab.discreteconformal.uniformization.FundamentalVertex;
-import de.varylab.discreteconformal.uniformization.VisualizationUtility;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
@@ -850,31 +862,49 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	
 
 
-	public void updatePolygonTexture(int resolution) {
-		int coverRecusionDepth = coverRecursionModel.getNumber().intValue();
+	public void updatePolygonTexture(int res) {
+		cutCoverImage = new BufferedImage(res, res, TYPE_INT_ARGB);
+		minimalCoverImage = new BufferedImage(res, res, TYPE_INT_ARGB);
+		canonicalCoverImage = new BufferedImage(res, res, TYPE_INT_ARGB);
+		Graphics2D gCut = cutCoverImage.createGraphics();
+		Graphics2D gMin = minimalCoverImage.createGraphics();
+		Graphics2D gCanon = canonicalCoverImage.createGraphics();
+		
+		int d = coverRecursionModel.getNumber().intValue();
 		HyperbolicModel model = getSelectedModel();
-		cutCoverImage = VisualizationUtility.drawUniversalCoverImage(
-			cuttedPolygon, 
-			coverRecusionDepth, 
-			model, 
-			resolution,
-			Color.BLUE
-		);
-		minimalCoverImage = VisualizationUtility.drawUniversalCoverImage(
-			minimalPolygon, 
-			coverRecusionDepth,
-			model, 
-			resolution,
-			Color.GREEN
-		);
-		canonicalCoverImage = VisualizationUtility.drawUniversalCoverImage(
-			canonicalPolygon, 
-			coverRecusionDepth, 
-			model, 
-			resolution,
-			Color.RED
-		);
+		drawUniversalCoverImage(cuttedPolygon, d, model, gCut, res, BLUE);
+		drawUniversalCoverImage(minimalPolygon, d, model, gMin, res, GREEN);
+		gMin = minimalCoverImage.createGraphics();
+		drawTriangulation(surface, model, gMin, res, GRAY);
+		drawUniversalCoverImage(canonicalPolygon, d, model, gCanon, res, RED);
+		
+		try {
+			exportPolygonToPDF(res);
+		} catch (Exception e) {
+			System.out.println("could not write pdf file: " + e.getLocalizedMessage());
+		}
 	}
+	
+	
+	public void exportPolygonToPDF(int res) throws Exception {
+		FileOutputStream out = new FileOutputStream("test.pdf");
+		Rectangle pageSize = new Rectangle(res, res);
+		Document doc = new Document(pageSize, 100.0f, 100.0f, 100.0f, 100.0f);
+		PdfWriter writer = PdfWriter.getInstance(doc, out);
+		doc.open();
+		PdfContentByte cb = writer.getDirectContent();
+		
+		int d = coverRecursionModel.getNumber().intValue();
+		HyperbolicModel model = getSelectedModel();
+		Graphics2D g2 = cb.createGraphics(res, res);
+		drawTriangulation(surface, model, g2, res, GRAY);
+		g2.dispose();
+		g2 = cb.createGraphics(res, res);
+		drawUniversalCoverImage(minimalPolygon, d, model, g2, res, GREEN);
+		g2.dispose();
+		doc.close();
+	}
+	
 	
 	@Override
 	public void install(Controller c) throws Exception {
