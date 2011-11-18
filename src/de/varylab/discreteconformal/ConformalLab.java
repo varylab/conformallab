@@ -52,6 +52,7 @@ public class ConformalLab {
 	
 	
 	public static void main(String[] args) {
+		JRViewer.setApplicationTitle("Conformal Lab");
 		JRViewer v = new JRViewer();
 		Icon splashImage = ImageHook.getIcon("splash01.png");
 		JRealitySplashScreen splash = new JRealitySplashScreen(splashImage);

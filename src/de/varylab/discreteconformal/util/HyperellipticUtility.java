@@ -81,7 +81,8 @@ public class HyperellipticUtility {
 			List<CoEdge> path1 = Search.bFS(start, end, avoid);
 			List<CoEdge> path1c = new LinkedList<CoEdge>();
 			for (CoEdge e : path1) {
-				path1c.add(hds.getEdge(eOffset + e.getIndex()));
+				int sheetOffset = e.getIndex() >= eOffset ? -eOffset : eOffset;
+				path1c.add(hds.getEdge(sheetOffset + e.getIndex()));
 			}
 			SurgeryUtility.cutAndGluePaths(path1, path1c);
 			Set<CoVertex> path1Vertices = getVerticesOnPath(path1);
