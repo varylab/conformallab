@@ -27,8 +27,8 @@ public class SphericalNormalizer {
 		ArmijoStepController stepController = new ArmijoStepController();
 		o.setStepController(stepController);
 		
-		o.setMaxIterations(20);
-		o.setError(1E-4);
+		o.setMaxIterations(400);
+		o.setError(1E-8);
 		Vector result = new DenseVector(opt.getDomainDimension());
 		o.minimize(result, opt);
 		if (lengthEuclid(result) == Double.NaN)

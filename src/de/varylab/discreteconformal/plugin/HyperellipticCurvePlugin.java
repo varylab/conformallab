@@ -50,8 +50,10 @@ import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeListener;
 import de.varylab.discreteconformal.plugin.hyperelliptic.CurveEditor;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.unwrapper.SphereUtility;
+import de.varylab.discreteconformal.unwrapper.SphericalNormalizer;
 import de.varylab.discreteconformal.util.HyperellipticUtility;
 import de.varylab.discreteconformal.util.SimpleMatrixPrintUtility;
+import de.varylab.mtjoptimization.NotConvergentException;
 
 public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		CurveChangeListener, ActionListener {
@@ -74,7 +76,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		extraPointsSpinner = new JSpinner(extraPointsModel);
 	private JCheckBox
 		showcutPathsChecker = new JCheckBox("Show Cut Paths"),
-		normalizerBranchPointPositionsChecker = new JCheckBox("Normalize Branch Points (Does not work yet!)");
+		normalizerBranchPointPositionsChecker = new JCheckBox("Normalize Branch Points");
 	private JButton
 		createButton = new JButton("Create Triangulated Surface");
 	
@@ -156,6 +158,15 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 				a.set(Position.class, v, new double[] {0, 0, 1});
 				branchVertices.add(v);
 			}
+			try {
+				if (normalizerBranchPointPositionsChecker.isSelected()) {
+					for (CoVertex v : hds.getVertices()) v.T = v.P.clone();
+					SphericalNormalizer.normalize(hds);
+					for (CoVertex v : hds.getVertices()) v.P = v.T.clone();
+				}
+			} catch (NotConvergentException e1) {
+				System.err.println("could nor normalize branch points " + e1.getLocalizedMessage());
+			}
 			int numextra = extraPointsModel.getNumber().intValue();
 			List<CoVertex> extraVertices = new LinkedList<CoVertex>();
 			// additional points
@@ -177,7 +188,6 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 			for (CoVertex bv : branchVertices) {
 				branchIndices[i++] = bv.getIndex();
 			}
-//			DiscreteEllipticUtility.generateEllipticImage(hds, 0, glueSet, branchIndices);
 			HyperellipticUtility.generateHyperellipticImage(hds, 0, glueSet, branchIndices);
 			if (showcutPathsChecker.isSelected()) {
 				PathVisualizer pathVisualizer = new PathVisualizer();
