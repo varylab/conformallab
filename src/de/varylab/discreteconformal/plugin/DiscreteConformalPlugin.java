@@ -11,13 +11,12 @@ import static de.jreality.shader.CommonAttributes.TEXTURE_2D;
 import static de.jreality.shader.CommonAttributes.TRANSPARENCY;
 import static de.jreality.shader.CommonAttributes.TRANSPARENCY_ENABLED;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
-import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawTriangulation;
 import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawUniversalCoverImage;
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.BLUE;
-import static java.awt.Color.GRAY;
 import static java.awt.Color.GREEN;
+import static java.awt.Color.ORANGE;
 import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
 import static java.awt.GridBagConstraints.RELATIVE;
@@ -126,6 +125,7 @@ import de.varylab.discreteconformal.heds.adapter.MarkedEdgesColorAdapter;
 import de.varylab.discreteconformal.heds.adapter.MarkedEdgesRadiusAdapter;
 import de.varylab.discreteconformal.heds.adapter.MetricErrorAdapter;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
+import de.varylab.discreteconformal.uniformization.CanonicalFormUtility;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility;
 import de.varylab.discreteconformal.uniformization.FundamentalVertex;
@@ -146,6 +146,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	private enum Domain {
 		Cut,
 		Minimal,
+		Opposite,
 		Canonical
 	}
 	
@@ -165,12 +166,14 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	private FundamentalPolygon 
 		cuttedPolygon = null,
 		minimalPolygon = null,
+		oppositePolygon = null,
 		canonicalPolygon = null;
 	private Matrix 
 		polygonTextureMatrix = euclidean().translate(-0.5, -0.5, 0).scale(0.5).scale(1, -1, 1).getMatrix();
 	private BufferedImage
 		cutCoverImage = null,
 		minimalCoverImage = null,
+		oppositeCoverImage = null,
 		canonicalCoverImage = null;
 	private int
 		genus = -1;
@@ -199,6 +202,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	private SceneGraphComponent
 		unitCircle = new SceneGraphComponent("Hyperbolic Boundary"),
 		cutCoverRoot = new SceneGraphComponent("Cut Cover"),
+		oppositeCoverRoot = new SceneGraphComponent("Opposite Cover"),
 		minimalCoverRoot = new SceneGraphComponent("Minimal Cover"),
 		canonicalCoverRoot = new SceneGraphComponent("Canonical Cover");
 
@@ -284,6 +288,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		cutCoverRoot.setAppearance(universalCoverAppearance);
 		minimalCoverRoot.setGeometry(ifsf.getGeometry());
 		minimalCoverRoot.setAppearance(universalCoverAppearance);
+		oppositeCoverRoot.setGeometry(ifsf.getGeometry());
+		oppositeCoverRoot.setAppearance(universalCoverAppearance);		
 		canonicalCoverRoot.setGeometry(ifsf.getGeometry());
 		canonicalCoverRoot.setAppearance(universalCoverAppearance);
 		universalCoverAppearance.setAttribute(VERTEX_DRAW, false);
@@ -305,6 +311,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		unitCircle.setGeometry(Primitives.torus(1.0025, 0.005, 200, 5));
 		cutCoverRoot.addChild(unitCircle);
 		minimalCoverRoot.addChild(unitCircle);
+		oppositeCoverRoot.addChild(unitCircle);
 		canonicalCoverRoot.addChild(unitCircle);
 	}
 
@@ -524,6 +531,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			minimalPolygon = FundamentalPolygonUtility.minimize(cuttedPolygon, root);
 			System.out.println(minimalPolygon);
 			minimalPolygon.checkRelation();
+			System.out.println("Constructing opposites sides polygon...");
+			oppositePolygon = CanonicalFormUtility.canonicalizeOpposite(minimalPolygon);
+			System.out.println(oppositePolygon);
+			oppositePolygon.checkRelation();	
 			System.out.println("Constructing fast canonical polygon...");
 			canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon, useDistanceToCanonicalize.isSelected());
 			System.out.println(canonicalPolygon);
@@ -557,6 +568,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			}
 			if (minimalCoverImage != null) {
 				ti.addTexture("Minimal Polygon", minimalCoverImage);
+			}
+			if (oppositeCoverImage != null) {
+				ti.addTexture("Opposite Polygon", oppositeCoverImage);
 			}
 			if (canonicalCoverImage != null) {
 				ti.addTexture("Canonical Polygon", canonicalCoverImage);
@@ -765,6 +779,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				case Canonical:
 					ImageIO.write(canonicalCoverImage, "png", imageChooser.getSelectedFile());
 					break;
+				case Opposite:
+					ImageIO.write(oppositeCoverImage, "png", imageChooser.getSelectedFile());
+					break;					
 				case Minimal:
 					ImageIO.write(minimalCoverImage, "png", imageChooser.getSelectedFile());
 					break;
@@ -782,6 +799,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		HalfedgeLayer l = hif.getActiveLayer();
 		l.removeTemporaryGeometry(cutCoverRoot);
 		l.removeTemporaryGeometry(minimalCoverRoot);
+		l.removeTemporaryGeometry(oppositeCoverRoot);
 		l.removeTemporaryGeometry(canonicalCoverRoot);
 		if (genus > 1 && showUnwrapped.isSelected()) {
 			switch ((Domain)domainCombo.getSelectedItem()) {
@@ -790,6 +808,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				break;
 			case Minimal:
 				l.addTemporaryGeometry(minimalCoverRoot);
+				break;
+			case Opposite:
+				l.addTemporaryGeometry(oppositeCoverRoot);
 				break;
 			case Canonical:
 				l.addTemporaryGeometry(canonicalCoverRoot);
@@ -810,6 +831,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		case Minimal:
 			if (minimalCoverImage != null) {
 				imgData = new ImageData(minimalCoverImage);
+			}
+			break;
+		case Opposite:
+			if (oppositeCoverImage != null) {
+				imgData = new ImageData(oppositeCoverImage);
 			}
 			break;
 		case Canonical:
@@ -865,17 +891,20 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	public void updatePolygonTexture(int res) {
 		cutCoverImage = new BufferedImage(res, res, TYPE_INT_ARGB);
 		minimalCoverImage = new BufferedImage(res, res, TYPE_INT_ARGB);
+		oppositeCoverImage = new BufferedImage(res, res, TYPE_INT_ARGB);
 		canonicalCoverImage = new BufferedImage(res, res, TYPE_INT_ARGB);
 		Graphics2D gCut = cutCoverImage.createGraphics();
 		Graphics2D gMin = minimalCoverImage.createGraphics();
+		Graphics2D gOpp = oppositeCoverImage.createGraphics();
 		Graphics2D gCanon = canonicalCoverImage.createGraphics();
 		
 		int d = coverRecursionModel.getNumber().intValue();
 		HyperbolicModel model = getSelectedModel();
 		drawUniversalCoverImage(cuttedPolygon, d, model, gCut, res, BLUE);
 		drawUniversalCoverImage(minimalPolygon, d, model, gMin, res, GREEN);
-		gMin = minimalCoverImage.createGraphics();
-		drawTriangulation(surface, model, gMin, res, GRAY);
+		drawUniversalCoverImage(oppositePolygon, d, model, gOpp, res, ORANGE);
+//		gMin = minimalCoverImage.createGraphics();
+//		drawTriangulation(surface, model, gMin, res, GRAY);
 		drawUniversalCoverImage(canonicalPolygon, d, model, gCanon, res, RED);
 		
 		try {
@@ -896,10 +925,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		
 		int d = coverRecursionModel.getNumber().intValue();
 		HyperbolicModel model = getSelectedModel();
+//		Graphics2D g2 = cb.createGraphics(res, res);
+//		drawTriangulation(surface, model, g2, res, GRAY);
+//		g2.dispose();
 		Graphics2D g2 = cb.createGraphics(res, res);
-		drawTriangulation(surface, model, g2, res, GRAY);
-		g2.dispose();
-		g2 = cb.createGraphics(res, res);
 		drawUniversalCoverImage(minimalPolygon, d, model, g2, res, GREEN);
 		g2.dispose();
 		doc.close();

@@ -104,7 +104,7 @@ public class FundamentalPolygonUtility {
 	 * @param b
 	 * @return the number of matrix products performed
 	 */
-	private static int bringTogetherViaA(FundamentalEdge a, FundamentalEdge b) {
+	public static int bringTogetherViaA(FundamentalEdge a, FundamentalEdge b) {
 		System.out.println("bring together via a " + a + " - " + b);
 		int cost = 0;
 		if (a.nextEdge == b) { // already together
@@ -155,7 +155,7 @@ public class FundamentalPolygonUtility {
 	 * @param b
 	 * @return the number of matrix products performed
 	 */
-	private static int bringTogetherViaB(FundamentalEdge a, FundamentalEdge b) {
+	public static int bringTogetherViaB(FundamentalEdge a, FundamentalEdge b) {
 		System.out.println("bring together via b " + a + " - " + b);
 		int cost = 0;
 		if (a.nextEdge == b) { // already together
@@ -370,7 +370,7 @@ public class FundamentalPolygonUtility {
 	 * @param e2
 	 * @return
 	 */
-	private static int calculateDistanceInPolygon(FundamentalEdge e1, FundamentalEdge e2) {
+	public static int calculateDistanceInPolygon(FundamentalEdge e1, FundamentalEdge e2) {
 		int i = 0;
 		while (e1 != e2) {
 			i++;
@@ -492,25 +492,6 @@ public class FundamentalPolygonUtility {
 		R.checkRelation();
 		return R;
 	}
-	
-	
-	public static FundamentalPolygon canonicalizeOpposite(FundamentalPolygon P) {
-		P = canonicalize(P, false);
-		int g = P.getGenus();
-		// find the first edge of the first handle
-		FundamentalEdge a = P.getEdges().get(0);
-		if (a.nextEdge.nextEdge != a.partner) {
-			a = a.partner;
-		}
-		if (a.prevEdge.partner != a.nextEdge) {
-			a = a.prevEdge;
-		}
-		for (int i = 0; i < g - 1; i++) {
-			
-		}
-		return P;
-	}
-	
 	
 	/**
 	 * Constructs a minimal fundamental polygon from a general polygon

@@ -132,6 +132,17 @@ public class FundamentalPolygon {
 	}
 	
 	
+	public void normalizeEdgeList() {
+		List<FundamentalEdge> normalizedList = new LinkedList<FundamentalEdge>();
+		FundamentalEdge a = edgeList.get(0);
+		do {
+			normalizedList.add(a);
+			a = a.nextEdge;
+		} while (a != edgeList.get(0));
+		edgeList = normalizedList;
+	}
+	
+	
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();

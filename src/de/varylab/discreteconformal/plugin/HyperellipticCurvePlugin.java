@@ -76,7 +76,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		extraPointsSpinner = new JSpinner(extraPointsModel);
 	private JCheckBox
 		showcutPathsChecker = new JCheckBox("Show Cut Paths"),
-		normalizerBranchPointPositionsChecker = new JCheckBox("Normalize Branch Points");
+		normalizerBranchPointPositionsChecker = new JCheckBox("Normalize Branch Points", true);
 	private JButton
 		createButton = new JButton("Create Triangulated Surface");
 	
