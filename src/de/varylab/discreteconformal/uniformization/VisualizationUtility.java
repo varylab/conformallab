@@ -118,7 +118,7 @@ public class VisualizationUtility {
 		g.setColor(rootColor);
 		drawPolygon(poly, model, g, res);
 
-		g.setStroke(new BasicStroke(5 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
+		g.setStroke(new BasicStroke(31 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
 		g.setColor(Color.BLUE);
 		drawPolygonAxes(poly, model, g, res);
 	}
