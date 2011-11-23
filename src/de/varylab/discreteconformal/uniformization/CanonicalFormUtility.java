@@ -49,48 +49,152 @@ public class CanonicalFormUtility {
 	
 	
 	public static void sortClusters(List<FundamentalEdge> C, List<FundamentalEdge> coC) {
-		for (int i = 0; i < C.size() - 1; i++) {
-			FundamentalEdge e = C.get(i);
-			FundamentalEdge next = C.get(i + 1);			
-			FundamentalEdge coE = e.partner;
-			FundamentalEdge coNext = next.partner;
-			int coIndex = coC.indexOf(coE);
-			int coNextIndex = coC.indexOf(coNext);
-			if (coIndex != coNextIndex - 1) {
-				if (canMoveBehind(coNext, coE)) {
-					moveBehind(coNext, coE);
-					coC.remove(coNext);
-					int insertionIndex = coC.indexOf(coE) + 1;
-					coC.add(insertionIndex, coNext);
-				} else {
-					FundamentalEdge markerEdge = null;
-					if (coIndex == coC.size() - 1) { 
-						markerEdge = C.get(0);
-					} else {
-						markerEdge = coC.get(coIndex + 1);
-					}
-					if (canMoveInFront(coNext, markerEdge)) {
-						moveInFront(coNext, markerEdge);
-						coC.remove(coNext);
-						int insertionIndex = coC.indexOf(coE) + 1;
-						coC.add(insertionIndex, coNext);
-					} else {
-						throw new RuntimeException("unable to sort cluster");
-					}
+		List<FundamentalEdge> sorted = findLongestSortedSubCluster(C, coC);
+		System.out.println("Sorted SubCluster ######### " + sorted);
+		
+		List<FundamentalEdge> toSort = new LinkedList<FundamentalEdge>(C);
+		toSort.removeAll(sorted);
+		
+		int numIterations = toSort.size();
+		
+		for (int i = 0; i < numIterations; i++) {
+			sorted = findLongestSortedSubCluster(C, coC);
+			toSort = new LinkedList<FundamentalEdge>(C);
+			toSort.removeAll(sorted);
+			FundamentalEdge e = toSort.get(0);
+			System.out.println("Inserting " + e + " or " + e.partner + " into sorted cluster");
+			insertIntoSortedCluster(e, sorted, C, coC);
+			System.out.println("IN SORT: Largest Cluster #####: " + C);
+			System.out.println("IN SORT: Co-Cluster #####: " + coC);
+		}
+	}
+	
+	
+	public static void insertIntoSortedCluster(FundamentalEdge e, List<FundamentalEdge> sorted, List<FundamentalEdge> C, List<FundamentalEdge> coC) {
+		List<FundamentalEdge> sortedPartners = getPartnerEdges(sorted);
+		int sIndex = -1;
+		int sCoIndex = -1;
+		int tIndex = C.size();
+		int tCoIndex = coC.size();
+		
+		
+		int ePartnerIndex = coC.indexOf(e.partner);
+		for (int i = ePartnerIndex + 1; i < coC.size(); i++) {
+			FundamentalEdge check = coC.get(i);
+			if (sortedPartners.contains(check)) {
+				tIndex = C.indexOf(check.partner);
+				break;
+			}
+		}
+		for (int i = ePartnerIndex - 1; i >= 0; i--) {
+			FundamentalEdge check = coC.get(i);
+			if (sortedPartners.contains(check)) {
+				sIndex = C.indexOf(check.partner);
+				break;
+			}
+		}
+		
+		int eIndex = C.indexOf(e);
+		for (int i = eIndex + 1; i < C.size(); i++) {
+			FundamentalEdge check = C.get(i);
+			if (sorted.contains(check)) {
+				tCoIndex = coC.indexOf(check.partner);
+				break;
+			}
+		}
+		for (int i = eIndex - 1; i >= 0; i--) {
+			FundamentalEdge check = C.get(i);
+			if (sorted.contains(check)) {
+				sCoIndex = coC.indexOf(check.partner);
+				break;
+			}
+		}
+		System.out.println(sIndex + ", " + tIndex + " - " + sCoIndex + ", " + tCoIndex);
+		
+		
+		FundamentalEdge frontEdge = null;
+		int cost = Integer.MAX_VALUE;
+		FundamentalEdge frontCoEdge = null;
+		int coCost = Integer.MAX_VALUE;
+		for (int i = sIndex; i < tIndex; i++) {
+			FundamentalEdge actEdge = i != -1 ? C.get(i) : coC.get(coC.size() - 1);
+			if (canMoveBehind(e, actEdge)) {
+				int c = moveBehindCost(e, actEdge);
+				if (cost > c) {
+					cost = c;
+					frontEdge = actEdge;
+					break;
 				}
 			}
 		}
+		for (int i = sCoIndex; i < tCoIndex; i++) {
+			FundamentalEdge actEdge = i != -1 ? coC.get(i) : C.get(C.size() - 1);
+			if (canMoveBehind(e.partner, actEdge)) {
+				int c = moveBehindCost(e.partner, actEdge);
+				if (coCost > c) {
+					coCost = c;
+					frontCoEdge = actEdge;
+					break;
+				}
+			}
+		}
+		System.out.println("could move edge " + e + " behind " + frontEdge + " cost " + cost);
+		System.out.println("could move edge " + e.partner + " behind " + frontCoEdge + " cost " + coCost);
+		assert (cost != Integer.MAX_VALUE || coCost != Integer.MAX_VALUE);
+		if (cost < coCost) {
+			moveBehind(e, frontEdge);
+			C.remove(e);
+			int i = C.indexOf(frontEdge);
+			C.add(i + 1, e);
+		} else {
+			moveBehind(e.partner, frontCoEdge);
+			coC.remove(e.partner);
+			int i = coC.indexOf(frontCoEdge);
+			coC.add(i + 1, e.partner);
+		}
+		// TODO check if moveToFront is cheaper
 	}
-//	
-//	
-//	public static List<FundamentalEdge> findLongestSortedSubCluster(List<FundamentalEdge> C) {
-//		
-//		
-//	}
-//	
-//	public static void moveIntoSortedSubCluster(FundamentalEdge e, List<FundamentalEdge> C) {
-//		
-//	}
+	
+	
+	
+	public static List<FundamentalEdge> findLongestSortedSubCluster(List<FundamentalEdge> C, List<FundamentalEdge> coC) {
+		int l = 0;
+		List<FundamentalEdge> R = null;
+		for (FundamentalEdge e : C) {
+			List<FundamentalEdge> sC = getSortedSubClusterAt(e, C, coC);
+			if (l < sC.size()) {
+				R = sC;
+				l = R.size();
+			}
+		}
+		return R;
+	}
+	
+	
+	public static List<FundamentalEdge> getSortedSubClusterAt(FundamentalEdge start, List<FundamentalEdge> C, List<FundamentalEdge> coC) {
+		List<FundamentalEdge> R = new LinkedList<FundamentalEdge>();
+		R.add(start);
+		int coIndex = coC.indexOf(start.partner);
+		int i = C.indexOf(start) + 1;
+		List<FundamentalEdge> recSubCluster = new LinkedList<FundamentalEdge>();
+		for (;i < C.size(); i++) {
+			FundamentalEdge next = C.get(i);
+			int coNextIndex = coC.indexOf(next.partner); 
+			if (coIndex < coNextIndex) {
+				List<FundamentalEdge> recCluster = getSortedSubClusterAt(next, C, coC);
+				if (recCluster.size() > recSubCluster.size()) {
+					recSubCluster = recCluster;
+				}
+			}
+		}
+		R.addAll(recSubCluster);
+		return R;
+	}
+	
+	
+	public static void moveIntoSortedSubCluster(FundamentalEdge e, List<FundamentalEdge> C) {
+		
+	}
 	
 
 	/**
@@ -112,6 +216,7 @@ public class CanonicalFormUtility {
 				}
 			}
 		}
+		// TODO check if moving p.partner can be done or is better
 		assert Q != null;
 		if (Q == null) {
 			throw new RuntimeException("Cannot move genarator into cluster.");
@@ -202,5 +307,13 @@ public class CanonicalFormUtility {
 		return result;
 	}
 		
+	
+	public static List<FundamentalEdge> getPartnerEdges(List<FundamentalEdge> edges) {
+		List<FundamentalEdge> R = new LinkedList<FundamentalEdge>();
+		for (FundamentalEdge e : edges) {
+			R.add(e.partner);
+		}
+		return R;
+	}
 	
 }

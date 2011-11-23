@@ -110,15 +110,17 @@ public class VisualizationUtility {
 			g.draw(boundary);
 		}
 		
-		g.setColor(Color.BLACK);
-		g.setStroke(new BasicStroke(1.5f * ls));
+//		g.setColor(Color.BLACK);
+//		g.setStroke(new BasicStroke(1.5f * ls));
+		g.setStroke(new BasicStroke(4 * ls));
+		g.setColor(rootColor);
 		drawUniversalCover(poly, depth, true, g, model, res);
 		
 		g.setStroke(new BasicStroke(4 * ls));
 		g.setColor(rootColor);
 		drawPolygon(poly, model, g, res);
 
-		g.setStroke(new BasicStroke(31 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
+		g.setStroke(new BasicStroke(3 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
 		g.setColor(Color.BLUE);
 		drawPolygonAxes(poly, model, g, res);
 	}
@@ -286,7 +288,9 @@ public class VisualizationUtility {
 			float ls = resolution / 500f;
 			Stroke storedStroke = g.getStroke();
 			Color storedColor = g.getColor();
-			g.setStroke(new BasicStroke(1.5f * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
+//			g.setStroke(new BasicStroke(1.5f * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
+//			g.setColor(Color.BLUE);
+			g.setStroke(new BasicStroke(3 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
 			g.setColor(Color.BLUE);
 			drawPolygonAxes(rP, model, g, resolution);
 			g.setStroke(storedStroke);
