@@ -203,27 +203,73 @@ public class CanonicalFormUtility {
 	 * @param cluster
 	 */
 	public static void moveIntoCluster(FundamentalEdge e, List<FundamentalEdge> cluster) {
+		FundamentalEdge pre = cluster.get(0).prevEdge.partner;
+		FundamentalEdge post = cluster.get(cluster.size() - 1).partner.nextEdge;
+		List<FundamentalEdge> inFrontEdges = new LinkedList<FundamentalEdge>();
+		List<FundamentalEdge> behindEdges = new LinkedList<FundamentalEdge>();
+		inFrontEdges.addAll(cluster);
+		inFrontEdges.add(post);
+		behindEdges.add(pre);
+		behindEdges.addAll(cluster);
 		FundamentalEdge P = e;
 		FundamentalEdge Q = null;
 		int minCost = Integer.MAX_VALUE;
-		for (FundamentalEdge active : cluster) {
-			// TODO check if we can do better by using moveBehind
+		boolean moveInFront = true;
+		boolean movePartner = false;
+		for (FundamentalEdge active : inFrontEdges) {
 			if (canMoveInFront(P, active)) {
 				int cost = moveInFrontCost(P, active); 
 				if (minCost > cost) {
 					Q = active;
 					minCost = cost;
+					moveInFront = true;
+					movePartner = false;
+				}
+			}
+			if (canMoveInFront(P.partner, active)) {
+				int cost = moveInFrontCost(P.partner, active); 
+				if (minCost > cost) {
+					Q = active;
+					minCost = cost;
+					moveInFront = true;
+					movePartner = true;
 				}
 			}
 		}
-		// TODO check if moving p.partner can be done or is better
+		for (FundamentalEdge active : behindEdges) {
+			if (canMoveBehind(P, active)) {
+				int cost = moveBehindCost(P, active);
+				if (minCost > cost) {
+					Q = active;
+					minCost = cost;
+					moveInFront = false;
+					movePartner = false;
+				}
+			}
+			if (canMoveBehind(P.partner, active)) {
+				int cost = moveBehindCost(P.partner, active);
+				if (minCost > cost) {
+					Q = active;
+					minCost = cost;
+					moveInFront = false;
+					movePartner = true;
+				}
+			}			
+		}
 		assert Q != null;
 		if (Q == null) {
-			throw new RuntimeException("Cannot move genarator into cluster.");
+			throw new RuntimeException("Cannot move generator into cluster.");
 		}
-		moveInFront(P, Q);
-		int index = cluster.indexOf(Q);
-		cluster.add(index, P);
+		FundamentalEdge Pmove = movePartner ? P.partner : P;
+		if (moveInFront) {
+			moveInFront(Pmove, Q);
+			int index = cluster.indexOf(Q);
+			cluster.add(index, Pmove);
+		} else {
+			moveBehind(Pmove, Q);
+			int index = cluster.indexOf(Q);
+			cluster.add(index + 1, Pmove);
+		}
 	}
 	
 	
@@ -268,9 +314,11 @@ public class CanonicalFormUtility {
 	}
 	
 	public static void moveInFront(FundamentalEdge P, FundamentalEdge Q) {
+		System.out.println("move in front " + P + " <-> " + Q);
 		FundamentalPolygonUtility.bringTogetherViaB(Q.prevEdge, P);
 	}
 	public static boolean moveBehind(FundamentalEdge P, FundamentalEdge Q) {
+		System.out.println("move behind " + P + " <-> " + Q);
 		FundamentalPolygonUtility.bringTogetherViaA(P.partner, Q.partner.nextEdge);
 		return true;
 	}
