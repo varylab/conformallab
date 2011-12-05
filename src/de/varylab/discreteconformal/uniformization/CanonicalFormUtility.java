@@ -71,24 +71,24 @@ public class CanonicalFormUtility {
 	
 	
 	public static void insertIntoSortedCluster(FundamentalEdge e, List<FundamentalEdge> sorted, List<FundamentalEdge> C, List<FundamentalEdge> coC) {
-		List<FundamentalEdge> sortedPartners = getPartnerEdges(sorted);
+		List<FundamentalEdge> coSorted = getPartnerEdges(sorted);
 		int sIndex = -1;
 		int sCoIndex = -1;
 		int tIndex = C.size();
 		int tCoIndex = coC.size();
 		
-		
+		// get target intervals
 		int ePartnerIndex = coC.indexOf(e.partner);
 		for (int i = ePartnerIndex + 1; i < coC.size(); i++) {
 			FundamentalEdge check = coC.get(i);
-			if (sortedPartners.contains(check)) {
+			if (coSorted.contains(check)) {
 				tIndex = C.indexOf(check.partner);
 				break;
 			}
 		}
 		for (int i = ePartnerIndex - 1; i >= 0; i--) {
 			FundamentalEdge check = coC.get(i);
-			if (sortedPartners.contains(check)) {
+			if (coSorted.contains(check)) {
 				sIndex = C.indexOf(check.partner);
 				break;
 			}
@@ -111,48 +111,88 @@ public class CanonicalFormUtility {
 		}
 		System.out.println(sIndex + ", " + tIndex + " - " + sCoIndex + ", " + tCoIndex);
 		
-		
-		FundamentalEdge frontEdge = null;
+		// minimize movement costs
+		FundamentalEdge moveTarget = null;
 		int cost = Integer.MAX_VALUE;
-		FundamentalEdge frontCoEdge = null;
-		int coCost = Integer.MAX_VALUE;
+		boolean moveCo = false;
+		boolean moveInFront = false;
 		for (int i = sIndex; i < tIndex; i++) {
-			FundamentalEdge actEdge = i != -1 ? C.get(i) : coC.get(coC.size() - 1);
-			if (canMoveBehind(e, actEdge)) {
-				int c = moveBehindCost(e, actEdge);
+			FundamentalEdge actBehindEdge = i != -1 ? C.get(i) : coC.get(coC.size() - 1);
+			if (canMoveBehind(e, actBehindEdge)) {
+				int c = moveBehindCost(e, actBehindEdge);
 				if (cost > c) {
 					cost = c;
-					frontEdge = actEdge;
+					moveTarget = actBehindEdge;
+					moveInFront = false;
+					moveCo = false;
 					break;
 				}
 			}
 		}
+		for (int i = sIndex + 1; i <= tIndex; i++) {
+			FundamentalEdge actInFrontEdge = i != C.size() ? C.get(i) : coC.get(0);
+			if (canMoveInFront(e, actInFrontEdge)) {
+				int c = moveInFrontCost(e, actInFrontEdge);
+				if (cost > c) {
+					cost = c;
+					moveTarget = actInFrontEdge;
+					moveInFront = true;
+					moveCo = false;
+					break;
+				}
+			}
+		}
+		
 		for (int i = sCoIndex; i < tCoIndex; i++) {
 			FundamentalEdge actEdge = i != -1 ? coC.get(i) : C.get(C.size() - 1);
 			if (canMoveBehind(e.partner, actEdge)) {
 				int c = moveBehindCost(e.partner, actEdge);
-				if (coCost > c) {
-					coCost = c;
-					frontCoEdge = actEdge;
+				if (cost > c) {
+					cost = c;
+					moveTarget = actEdge;
+					moveInFront = false;
+					moveCo = true;
 					break;
 				}
 			}
 		}
-		System.out.println("could move edge " + e + " behind " + frontEdge + " cost " + cost);
-		System.out.println("could move edge " + e.partner + " behind " + frontCoEdge + " cost " + coCost);
-		assert (cost != Integer.MAX_VALUE || coCost != Integer.MAX_VALUE);
-		if (cost < coCost) {
-			moveBehind(e, frontEdge);
-			C.remove(e);
-			int i = C.indexOf(frontEdge);
-			C.add(i + 1, e);
-		} else {
-			moveBehind(e.partner, frontCoEdge);
-			coC.remove(e.partner);
-			int i = coC.indexOf(frontCoEdge);
-			coC.add(i + 1, e.partner);
+		for (int i = sCoIndex + 1; i <= tCoIndex; i++) {
+			FundamentalEdge actEdge = i != coC.size() ? coC.get(i) : C.get(0);
+			if (canMoveInFront(e.partner, actEdge)) {
+				int c = moveInFrontCost(e.partner, actEdge);
+				if (cost > c) {
+					cost = c;
+					moveTarget = actEdge;
+					moveInFront = true;
+					moveCo = true;
+					break;
+				}
+			}
 		}
-		// TODO check if moveToFront is cheaper
+		assert (moveTarget != null);
+		
+		// move
+		FundamentalEdge Pmove = moveCo ? e.partner : e;
+		List<FundamentalEdge> targetC = moveCo ? coC : C;
+		if (moveInFront) {
+			moveInFront(Pmove, moveTarget);
+			targetC.remove(Pmove);
+			int i = targetC.indexOf(moveTarget);
+			if (i != -1) {
+				targetC.add(i, Pmove);
+			} else {
+				targetC.add(Pmove);
+			}
+		} else {
+			moveBehind(Pmove, moveTarget);
+			targetC.remove(Pmove);
+			int i = targetC.indexOf(moveTarget);
+			if (i != -1) {
+				targetC.add(i + 1, Pmove);
+			} else {
+				targetC.add(0, Pmove);
+			}
+		}
 	}
 	
 	
