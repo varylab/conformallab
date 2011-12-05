@@ -11,6 +11,7 @@ import static de.jreality.shader.CommonAttributes.TEXTURE_2D;
 import static de.jreality.shader.CommonAttributes.TRANSPARENCY;
 import static de.jreality.shader.CommonAttributes.TRANSPARENCY_ENABLED;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
+import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawTriangulation;
 import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawUniversalCoverImage;
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
 import static java.awt.Color.BLACK;
@@ -28,6 +29,7 @@ import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static javax.swing.SwingUtilities.getWindowAncestor;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -925,11 +927,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		
 		int d = coverRecursionModel.getNumber().intValue();
 		HyperbolicModel model = getSelectedModel();
-//		Graphics2D g2 = cb.createGraphics(res, res);
-//		drawTriangulation(surface, model, g2, res, GRAY);
-//		g2.dispose();
 		Graphics2D g2 = cb.createGraphics(res, res);
-		drawUniversalCoverImage(minimalPolygon, d, model, g2, res, GREEN);
+		drawTriangulation(surface, model, g2, res, Color.LIGHT_GRAY);
+		g2.dispose();
+		g2 = cb.createGraphics(res, res);
+		drawUniversalCoverImage(oppositePolygon, d, model, g2, res, ORANGE);
 		g2.dispose();
 		doc.close();
 	}
