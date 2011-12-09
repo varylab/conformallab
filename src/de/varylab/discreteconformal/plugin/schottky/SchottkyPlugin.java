@@ -214,7 +214,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			layoutRoot = HyperbolicLayout.doLayout(hds, layoutRoot, fun,  u);
 ////			
 			
-			hif.addAdapter(new CoTexturePositionPositionAdapter(Poincaré), false);
+			hif.addAdapter(new CoTexturePositionPositionAdapter(Poincaré, true), false);
 			hif.set(hds);
 //			discreteConformalPlugin.createVisualization(hds, genus, cutInfo);
 		}

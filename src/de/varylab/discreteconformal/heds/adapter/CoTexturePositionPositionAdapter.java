@@ -13,33 +13,52 @@ public class CoTexturePositionPositionAdapter extends AbstractTypedAdapter<CoVer
 
 	private HyperbolicModel
 		model = HyperbolicModel.Klein;
+	private boolean
+		projective = true;
 	
 	public CoTexturePositionPositionAdapter() {
 		super(CoVertex.class, null, null, double[].class, true, false);
 	}
 	
-	public CoTexturePositionPositionAdapter(HyperbolicModel model) {
+	public CoTexturePositionPositionAdapter(HyperbolicModel model, boolean projective) {
 		this();
 		this.model = model;
+		this.projective = projective;
 	}
 	
 	@Override
 	public double[] getVertexValue(CoVertex v, AdapterSet a) {
 		double[] t = v.T;
-		switch (model) {
-			case Klein:
-				return t;
-			case Poincaré: 
-			default:
-				return new double[] {t[0], t[1], 0.0, t[3] + 1};
-			case Halfplane:
-				return new double[] {t[1], 1, 0.0, t[3] - t[0]};
+		if (projective) {
+			switch (model) {
+				case Klein:
+					return new double[] {t[0], t[1], t[2], t[3]};
+				case Poincaré: 
+				default:
+					return new double[] {t[0], t[1], 0.0, t[3] + 1};
+				case Halfplane:
+					return new double[] {t[1], 1, 0.0, t[3] - t[0]};
+			}
+		} else {
+			switch (model) {
+				case Klein:
+					return new double[] {t[0] / t[3], t[1] / t[3], 0.0};
+				case Poincaré: 
+				default:
+					return new double[] {t[0] / (t[3] + 1), t[1] / (t[3] + 1), 0.0};
+				case Halfplane:
+					return new double[] {t[1] / (t[3] - t[0]), 1 / (t[3] - t[0]), 0.0};
+			}
 		}
 	}
 
 	@Override
 	public double getPriority() {
 		return 10;
+	}
+	
+	public void setProjective(boolean projective) {
+		this.projective = projective;
 	}
 	
 	public void setModel(HyperbolicModel model) {

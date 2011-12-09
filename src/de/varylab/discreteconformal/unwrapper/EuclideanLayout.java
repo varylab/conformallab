@@ -101,7 +101,7 @@ public class EuclideanLayout {
 				if (!visited.contains(nearVertex)) {
 					visited.add(nearVertex);
 					Qv.offer(nearVertex);
-					Qe.offer(e);	
+					Qe.offer(e);
 					Qa.offer(globalAngle);
 
 					l = getNewLength(e, fun, u);

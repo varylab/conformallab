@@ -1,0 +1,393 @@
+<de.varylab.discreteconformal.heds.CoHDS id="1">
+  <texCoordinatesValid>false</texCoordinatesValid>
+  <normalizeCenter id="2">
+    <double>0.0</double>
+    <double>0.0</double>
+    <double>0.0</double>
+    <double>1.0</double>
+  </normalizeCenter>
+  <normalizeFactor>1.0</normalizeFactor>
+  <vClass>de.varylab.discreteconformal.heds.CoVertex</vClass>
+  <eClass>de.varylab.discreteconformal.heds.CoEdge</eClass>
+  <fClass>de.varylab.discreteconformal.heds.CoFace</fClass>
+  <vertexList id="3">
+    <de.varylab.discreteconformal.heds.CoVertex id="4">
+      <P id="5">
+        <double>0.4533971687520141</double>
+        <double>0.4533971687520142</double>
+        <double>0.4533971687520141</double>
+        <double>0.7853069322863686</double>
+      </P>
+      <T id="6">
+        <double>0.606663993631269</double>
+        <double>1.129827747884649</double>
+        <double>0.0</double>
+        <double>1.0</double>
+      </T>
+      <theta>0.0</theta>
+      <solverIndex>-1</solverIndex>
+      <incomingEdge class="de.varylab.discreteconformal.heds.CoEdge" id="7">
+        <lambda>0.4974679708600999</lambda>
+        <alpha>0.49277089096341453</alpha>
+        <solverIndex>-1</solverIndex>
+        <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" id="8">
+          <lambda>0.4974679708600996</lambda>
+          <alpha>2.1560508716629645</alpha>
+          <solverIndex>-1</solverIndex>
+          <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" id="9">
+            <lambda>0.4974679708600999</lambda>
+            <alpha>0.49277089096341453</alpha>
+            <solverIndex>-1</solverIndex>
+            <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="7"/>
+            <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="8"/>
+            <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" id="10">
+              <lambda>0.4974679708600999</lambda>
+              <alpha>1.5718413592799347</alpha>
+              <solverIndex>-1</solverIndex>
+              <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" id="11">
+                <lambda>-0.30552601422836606</lambda>
+                <alpha>0.9844967494473599</alpha>
+                <solverIndex>-1</solverIndex>
+                <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" id="12">
+                  <lambda>0.005965228404911175</lambda>
+                  <alpha>0.5852545448624986</alpha>
+                  <solverIndex>-1</solverIndex>
+                  <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="10"/>
+                  <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="11"/>
+                  <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" id="13">
+                    <lambda>0.005965228404911175</lambda>
+                    <alpha>0.5852545448624982</alpha>
+                    <solverIndex>-1</solverIndex>
+                    <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" id="14">
+                      <lambda>-0.3027558218648629</lambda>
+                      <alpha>0.9865868144181588</alpha>
+                      <solverIndex>-1</solverIndex>
+                      <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" id="15">
+                        <lambda>0.49746797086010025</lambda>
+                        <alpha>1.5697512943091363</alpha>
+                        <solverIndex>-1</solverIndex>
+                        <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="13"/>
+                        <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="14"/>
+                        <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" id="16">
+                          <lambda>0.49746797086010025</lambda>
+                          <alpha>0.49277089096341453</alpha>
+                          <solverIndex>-1</solverIndex>
+                          <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" id="17">
+                            <lambda>0.4974679708600999</lambda>
+                            <alpha>2.1560508716629645</alpha>
+                            <solverIndex>-1</solverIndex>
+                            <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" id="18">
+                              <lambda>0.4974679708600999</lambda>
+                              <alpha>0.4927708909634144</alpha>
+                              <solverIndex>-1</solverIndex>
+                              <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="16"/>
+                              <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="17"/>
+                              <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="7"/>
+                              <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" id="19">
+                                <P id="20">
+                                  <double>-0.4533971687520142</double>
+                                  <double>-0.453397168752014</double>
+                                  <double>0.4533971687520142</double>
+                                  <double>0.7853069322863686</double>
+                                </P>
+                                <T id="21">
+                                  <double>1.8835844196586096</double>
+                                  <double>1.2482598662178763</double>
+                                  <double>0.0</double>
+                                  <double>3.1048231631429855</double>
+                                </T>
+                                <theta>6.283185307179586</theta>
+                                <solverIndex>0</solverIndex>
+                                <incomingEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="12"/>
+                                <index>3</index>
+                                <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                              </targetVertex>
+                              <leftFace class="de.varylab.discreteconformal.heds.CoFace" id="22">
+                                <initialEnergy>1.248462351494151</initialEnergy>
+                                <boundaryEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="16"/>
+                                <index>0</index>
+                                <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                              </leftFace>
+                              <isPositive>false</isPositive>
+                              <self class="de.varylab.discreteconformal.heds.CoEdge" reference="18"/>
+                              <index>4</index>
+                              <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                            </nextEdge>
+                            <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="16"/>
+                            <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" id="23">
+                              <lambda>0.4974679708600999</lambda>
+                              <alpha>0.0</alpha>
+                              <solverIndex>-1</solverIndex>
+                              <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" id="24">
+                                <lambda>0.4974679708600999</lambda>
+                                <alpha>0.0</alpha>
+                                <solverIndex>-1</solverIndex>
+                                <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" id="25">
+                                  <lambda>0.4974679708600996</lambda>
+                                  <alpha>0.0</alpha>
+                                  <solverIndex>-1</solverIndex>
+                                  <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="23"/>
+                                  <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="24"/>
+                                  <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="8"/>
+                                  <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" reference="4"/>
+                                  <isPositive>true</isPositive>
+                                  <self class="de.varylab.discreteconformal.heds.CoEdge" reference="25"/>
+                                  <index>11</index>
+                                  <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                                </nextEdge>
+                                <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="23"/>
+                                <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" id="26">
+                                  <lambda>0.4974679708600999</lambda>
+                                  <alpha>3.141592653589793</alpha>
+                                  <solverIndex>-1</solverIndex>
+                                  <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" id="27">
+                                    <lambda>-0.3027558218648629</lambda>
+                                    <alpha>0.0</alpha>
+                                    <solverIndex>-1</solverIndex>
+                                    <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" id="28">
+                                      <lambda>-0.30552601422836606</lambda>
+                                      <alpha>0.0</alpha>
+                                      <solverIndex>-1</solverIndex>
+                                      <nextEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="26"/>
+                                      <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="27"/>
+                                      <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="11"/>
+                                      <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" id="29">
+                                        <P id="30">
+                                          <double>-0.4533971687520141</double>
+                                          <double>0.4533971687520142</double>
+                                          <double>-0.4533971687520141</double>
+                                          <double>0.7853069322863686</double>
+                                        </P>
+                                        <T id="31">
+                                          <double>0.0</double>
+                                          <double>0.0</double>
+                                          <double>0.0</double>
+                                          <double>1.0</double>
+                                        </T>
+                                        <theta>0.0</theta>
+                                        <solverIndex>-1</solverIndex>
+                                        <incomingEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="28"/>
+                                        <index>2</index>
+                                        <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                                      </targetVertex>
+                                      <leftFace class="de.varylab.discreteconformal.heds.CoFace" id="32">
+                                        <initialEnergy>2.315782603660793</initialEnergy>
+                                        <boundaryEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="28"/>
+                                        <index>3</index>
+                                        <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                                      </leftFace>
+                                      <isPositive>false</isPositive>
+                                      <self class="de.varylab.discreteconformal.heds.CoEdge" reference="28"/>
+                                      <index>14</index>
+                                      <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                                    </nextEdge>
+                                    <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="26"/>
+                                    <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="14"/>
+                                    <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" id="33">
+                                      <P id="34">
+                                        <double>-0.3992686582066453</double>
+                                        <double>-0.39814176036002313</double>
+                                        <double>-0.5466028312479858</double>
+                                        <double>0.7853069322863686</double>
+                                      </P>
+                                      <T id="35">
+                                        <double>1.215246537062985</double>
+                                        <double>2.6983893720866293E-16</double>
+                                        <double>0.0</double>
+                                        <double>2.0045507062157384</double>
+                                      </T>
+                                      <theta>6.283185307179586</theta>
+                                      <solverIndex>1</solverIndex>
+                                      <incomingEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="13"/>
+                                      <index>4</index>
+                                      <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                                    </targetVertex>
+                                    <leftFace class="de.varylab.discreteconformal.heds.CoFace" reference="32"/>
+                                    <isPositive>true</isPositive>
+                                    <self class="de.varylab.discreteconformal.heds.CoEdge" reference="27"/>
+                                    <index>15</index>
+                                    <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                                  </nextEdge>
+                                  <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="28"/>
+                                  <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="24"/>
+                                  <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" id="36">
+                                    <P id="37">
+                                      <double>0.4533971687520142</double>
+                                      <double>-0.453397168752014</double>
+                                      <double>-0.4533971687520142</double>
+                                      <double>0.7853069322863686</double>
+                                    </P>
+                                    <T id="38">
+                                      <double>1.2824008503813225</double>
+                                      <double>0.0</double>
+                                      <double>0.0</double>
+                                      <double>1.0</double>
+                                    </T>
+                                    <theta>0.0</theta>
+                                    <solverIndex>-1</solverIndex>
+                                    <incomingEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="14"/>
+                                    <index>1</index>
+                                    <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                                  </targetVertex>
+                                  <leftFace class="de.varylab.discreteconformal.heds.CoFace" reference="32"/>
+                                  <isPositive>false</isPositive>
+                                  <self class="de.varylab.discreteconformal.heds.CoEdge" reference="26"/>
+                                  <index>0</index>
+                                  <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                                </oppositeEdge>
+                                <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" reference="29"/>
+                                <isPositive>true</isPositive>
+                                <self class="de.varylab.discreteconformal.heds.CoEdge" reference="24"/>
+                                <index>9</index>
+                                <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                              </nextEdge>
+                              <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="25"/>
+                              <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="17"/>
+                              <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" reference="36"/>
+                              <isPositive>true</isPositive>
+                              <self class="de.varylab.discreteconformal.heds.CoEdge" reference="23"/>
+                              <index>10</index>
+                              <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                            </oppositeEdge>
+                            <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" reference="4"/>
+                            <leftFace class="de.varylab.discreteconformal.heds.CoFace" reference="22"/>
+                            <isPositive>false</isPositive>
+                            <self class="de.varylab.discreteconformal.heds.CoEdge" reference="17"/>
+                            <index>3</index>
+                            <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                          </nextEdge>
+                          <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="18"/>
+                          <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="15"/>
+                          <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" reference="36"/>
+                          <leftFace class="de.varylab.discreteconformal.heds.CoFace" reference="22"/>
+                          <isPositive>true</isPositive>
+                          <self class="de.varylab.discreteconformal.heds.CoEdge" reference="16"/>
+                          <index>5</index>
+                          <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                        </oppositeEdge>
+                        <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" reference="19"/>
+                        <leftFace class="de.varylab.discreteconformal.heds.CoFace" id="39">
+                          <initialEnergy>2.0786563709883565</initialEnergy>
+                          <boundaryEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="14"/>
+                          <index>4</index>
+                          <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                        </leftFace>
+                        <isPositive>false</isPositive>
+                        <self class="de.varylab.discreteconformal.heds.CoEdge" reference="15"/>
+                        <index>1</index>
+                        <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                      </nextEdge>
+                      <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="13"/>
+                      <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="27"/>
+                      <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" reference="36"/>
+                      <leftFace class="de.varylab.discreteconformal.heds.CoFace" reference="39"/>
+                      <isPositive>false</isPositive>
+                      <self class="de.varylab.discreteconformal.heds.CoEdge" reference="14"/>
+                      <index>16</index>
+                      <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                    </nextEdge>
+                    <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="15"/>
+                    <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="12"/>
+                    <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" reference="33"/>
+                    <leftFace class="de.varylab.discreteconformal.heds.CoFace" reference="39"/>
+                    <isPositive>false</isPositive>
+                    <self class="de.varylab.discreteconformal.heds.CoEdge" reference="13"/>
+                    <index>17</index>
+                    <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                  </oppositeEdge>
+                  <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" reference="19"/>
+                  <leftFace class="de.varylab.discreteconformal.heds.CoFace" id="40">
+                    <initialEnergy>2.0809788372002553</initialEnergy>
+                    <boundaryEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="12"/>
+                    <index>2</index>
+                    <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                  </leftFace>
+                  <isPositive>true</isPositive>
+                  <self class="de.varylab.discreteconformal.heds.CoEdge" reference="12"/>
+                  <index>12</index>
+                  <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+                </nextEdge>
+                <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="10"/>
+                <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="28"/>
+                <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" reference="33"/>
+                <leftFace class="de.varylab.discreteconformal.heds.CoFace" reference="40"/>
+                <isPositive>true</isPositive>
+                <self class="de.varylab.discreteconformal.heds.CoEdge" reference="11"/>
+                <index>13</index>
+                <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+              </nextEdge>
+              <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="12"/>
+              <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="9"/>
+              <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" reference="29"/>
+              <leftFace class="de.varylab.discreteconformal.heds.CoFace" reference="40"/>
+              <isPositive>false</isPositive>
+              <self class="de.varylab.discreteconformal.heds.CoEdge" reference="10"/>
+              <index>2</index>
+              <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+            </oppositeEdge>
+            <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" reference="19"/>
+            <leftFace class="de.varylab.discreteconformal.heds.CoFace" id="41">
+              <initialEnergy>1.2484623514941515</initialEnergy>
+              <boundaryEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="8"/>
+              <index>1</index>
+              <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+            </leftFace>
+            <isPositive>true</isPositive>
+            <self class="de.varylab.discreteconformal.heds.CoEdge" reference="9"/>
+            <index>8</index>
+            <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+          </nextEdge>
+          <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="7"/>
+          <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="25"/>
+          <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" reference="29"/>
+          <leftFace class="de.varylab.discreteconformal.heds.CoFace" reference="41"/>
+          <isPositive>false</isPositive>
+          <self class="de.varylab.discreteconformal.heds.CoEdge" reference="8"/>
+          <index>7</index>
+          <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+        </nextEdge>
+        <previousEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="9"/>
+        <oppositeEdge class="de.varylab.discreteconformal.heds.CoEdge" reference="18"/>
+        <targetVertex class="de.varylab.discreteconformal.heds.CoVertex" reference="4"/>
+        <leftFace class="de.varylab.discreteconformal.heds.CoFace" reference="41"/>
+        <isPositive>true</isPositive>
+        <self class="de.varylab.discreteconformal.heds.CoEdge" reference="7"/>
+        <index>6</index>
+        <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+      </incomingEdge>
+      <index>0</index>
+      <hds class="de.varylab.discreteconformal.heds.CoHDS" reference="1"/>
+    </de.varylab.discreteconformal.heds.CoVertex>
+    <de.varylab.discreteconformal.heds.CoVertex reference="36"/>
+    <de.varylab.discreteconformal.heds.CoVertex reference="29"/>
+    <de.varylab.discreteconformal.heds.CoVertex reference="19"/>
+    <de.varylab.discreteconformal.heds.CoVertex reference="33"/>
+  </vertexList>
+  <faceList id="42">
+    <de.varylab.discreteconformal.heds.CoFace reference="22"/>
+    <de.varylab.discreteconformal.heds.CoFace reference="41"/>
+    <de.varylab.discreteconformal.heds.CoFace reference="40"/>
+    <de.varylab.discreteconformal.heds.CoFace reference="32"/>
+    <de.varylab.discreteconformal.heds.CoFace reference="39"/>
+  </faceList>
+  <edgeList id="43">
+    <de.varylab.discreteconformal.heds.CoEdge reference="26"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="15"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="10"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="17"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="18"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="16"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="7"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="8"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="9"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="24"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="23"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="25"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="12"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="11"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="28"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="27"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="14"/>
+    <de.varylab.discreteconformal.heds.CoEdge reference="13"/>
+  </edgeList>
+</de.varylab.discreteconformal.heds.CoHDS>

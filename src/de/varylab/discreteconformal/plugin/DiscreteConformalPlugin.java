@@ -880,6 +880,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		hif.clearSelection();
 		texturePositionAdapter.setProjective(useProjectiveTexture.isSelected());
 		texturePositionAdapter.setModel(getSelectedModel());
+		texCoordPositionAdapter.setProjective(useProjectiveTexture.isSelected());
 		texCoordPositionAdapter.setModel(getSelectedModel());
 		hif.addAdapter(metricErrorAdapter, false);
 		if (showUnwrapped.isSelected()) {

@@ -1,8 +1,8 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.jtem.halfedge.util.HalfEdgeUtils.neighboringVertices;
-import static java.lang.Math.PI;
-import static java.util.Collections.singleton;
+import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
+import static de.varylab.discreteconformal.util.UnwrapUtility.BoundaryMode.Isometric;
+import static de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode.AllAngles;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -11,22 +11,17 @@ import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
-import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
-import de.varylab.discreteconformal.unwrapper.numerics.ConformalEnergy;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
-import de.varylab.discreteconformal.util.SparseUtility;
-import de.varylab.discreteconformal.util.UnwrapUtility.ZeroInitialEnergy;
-import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
@@ -47,47 +42,25 @@ public class SphericalUnwrapper implements Unwrapper{
 	
 	@Override
 	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
-		// punch out vertex 0 and reorder solver indices
-		CoVertex v0 = surface.getVertex(0);
-		Set<CoVertex> notVariableSet = new HashSet<CoVertex>();
-		notVariableSet.add(v0);
-		notVariableSet.addAll(neighboringVertices(v0));
+		// change edge lengths conformally such that the edges incident with vertex 0 are of equal length
 		
+		
+		
+		// punch out the last vertex
+		CoVertex v0 = surface.getVertex(surface.numVertices() - 1);
+		TopologyAlgorithms.removeVertex(v0);
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
-		
-		for (final CoEdge e : surface.getPositiveEdges()) {
-			double l = aSet.get(Length.class, e, Double.class);
-			double lambda = opt.getFunctional().getLambda(l);
-			e.setLambda(lambda);
-			e.getOppositeEdge().setLambda(e.getLambda());
-		}
-		int index = 0;
-		for (CoVertex v : surface.getVertices()) {
-			if (notVariableSet.contains(v)) {
-				v.setSolverIndex(-1);
-			} else {
-				v.setTheta(2 * PI);
-				v.setSolverIndex(index++);
-			}
-		}
-		ZeroU zeroU = new ZeroU();
-		ConformalEnergy E = new ConformalEnergy();
-		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
-		for (CoFace f : surface.getFaces()) {
-			E.setZero();
-			opt.getFunctional().triangleEnergyAndAlphas(zeroU, f, E, zeroEnergy);
-			f.setInitialEnergy(E.get());
-		}
-		int n = index;//UnwrapUtility.prepareInvariantDataEuclidean(opt.getFunctional(), surface, Isometric, AllAngles, aSet);
+		int n = prepareInvariantDataEuclidean(opt.getFunctional(), surface, Isometric, AllAngles, aSet);
 		
 		// optimization
 		DenseVector u = new DenseVector(n);
-		Matrix H = new CompRowMatrix(n,n, SparseUtility.makeNonZeros(surface));
+		Matrix H = opt.getHessianTemplate();
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
-		optimizer.setSolver(Solver.GMRES);
+		optimizer.setSolver(Solver.BiCGstab);
 		optimizer.setError(gradTolerance);
 		optimizer.setMaxIterations(maxIterations);
+		
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
@@ -95,21 +68,54 @@ public class SphericalUnwrapper implements Unwrapper{
 		}
 		
 		// layout Euclidean
-		layoutRoot = EuclideanLayout.doLayout(surface, opt.getFunctional(), u, singleton(v0));
+		layoutRoot = EuclideanLayout.doLayout(surface, opt.getFunctional(), u);
 		
 		// spherical mapping
 		for (CoVertex v : surface.getVertices()) {
 			Pn.dehomogenize(v.T, v.T);
 		}
-		normalizeBeforeProjection(surface, 0.5);
+		normalizeBeforeProjection(surface, 1);
 		inverseStereographicProjection(surface, 1.0);
-		v0.T = new double[] {0,0,1,1};
 		try {
 			SphericalNormalizer.normalize(surface);
 		} catch (NotConvergentException e) {
 			log.info("Sphere normalization did not succeed: " + e.getMessage());
 		}
-		TopologyAlgorithms.removeVertex(v0);
+		
+		// re-insert vertex 0
+		CoVertex oldV0 = v0;
+		v0 = surface.addNewVertex();
+		v0.P = oldV0.P;
+		v0.T = new double[] {0,1,0,1};
+		
+		CoEdge lastNext = null;
+		CoEdge firstPrev = null;
+		Set<CoEdge> boundary = new HashSet<CoEdge>(HalfEdgeUtils.boundaryEdges(surface));
+		CoEdge be = HalfEdgeUtils.boundaryEdges(surface).iterator().next();
+		while (!boundary.isEmpty()) {
+			CoEdge next = be.getNextEdge();
+			boundary.remove(be); 
+			CoEdge eNext = surface.addNewEdge();
+			CoEdge ePrev = surface.addNewEdge();
+			CoFace f = surface.addNewFace();
+			be.linkNextEdge(eNext);
+			be.linkPreviousEdge(ePrev);
+			eNext.linkNextEdge(ePrev);
+			eNext.setTargetVertex(v0);
+			ePrev.setTargetVertex(be.getStartVertex());
+			be.setLeftFace(f);
+			eNext.setLeftFace(f);
+			ePrev.setLeftFace(f);
+			if (lastNext != null) {
+				ePrev.linkOppositeEdge(lastNext);
+			}
+			if (firstPrev == null) {
+				firstPrev = ePrev;
+			}
+			lastNext = eNext;
+			be = next;
+		}
+		firstPrev.linkOppositeEdge(lastNext);
 	}
 
 	

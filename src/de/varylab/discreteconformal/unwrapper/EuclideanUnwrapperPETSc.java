@@ -74,6 +74,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		}
 		lengthMap = EuclideanLayout.getLengthMap(surface, app.getFunctional(), uVec);
 		layoutRoot = EuclideanLayout.doLayout(surface, app.getFunctional(), uVec);
+		System.out.println(uVec);
 	}
 
 	

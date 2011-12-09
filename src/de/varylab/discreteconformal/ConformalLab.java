@@ -25,6 +25,7 @@ import de.varylab.discreteconformal.plugin.DiscreteCurvatureLines;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
 import de.varylab.discreteconformal.plugin.EllipticImageGenerator;
 import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
+import de.varylab.discreteconformal.plugin.SphereEqualizerPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutToDiskPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.FindPathPlugin;
@@ -47,6 +48,7 @@ public class ConformalLab {
 		s.add(new CutAtEdgePlugin());
 		s.add(new FindPathPlugin());
 		s.add(new DiscreteCurvatureLines());
+		s.add(new SphereEqualizerPlugin());
 		return s;
 	}
 	

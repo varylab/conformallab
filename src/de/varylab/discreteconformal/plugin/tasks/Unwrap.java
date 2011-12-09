@@ -20,6 +20,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapper;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapper;
@@ -187,6 +188,28 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		NumberFormat nf = new DecimalFormat("0.00");
 		System.out.println("minimization took " + nf.format((unwrapTime - startTime) / 1000.0) + "sec.");
 		System.out.println("layout took " + nf.format((layoutTime - unwrapTime) / 1000.0) + "sec.");
+		int brokenCount = 0;
+		int curveVertices = 0;
+		for (CoEdge e : surface.getEdges()) {
+			if (e.getAlpha() >= Math.PI) {
+				brokenCount++;
+			}
+		}
+		for (CoVertex v : surface.getVertices()) {
+			if (HalfEdgeUtils.isBoundaryVertex(v)) {
+				continue;
+			}
+			double sum = EuclideanLayout.calculateAngleSum(v);
+			if (Math.abs(sum - 2*Math.PI) > 1E-6) {
+				curveVertices++;
+			}
+		}
+		if (brokenCount > 0) {
+			System.err.println("WARNING: there are " + brokenCount + " broken triangles in the solution.");
+		}
+		if (curveVertices > 0) {
+			System.err.println("WARNING: there are " + curveVertices + " internal vertices with angle sum != 2PI.");
+		}
 		return surface;
 	}
 	
