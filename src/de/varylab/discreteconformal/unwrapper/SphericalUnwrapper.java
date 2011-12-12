@@ -4,28 +4,33 @@ import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDa
 import static de.varylab.discreteconformal.util.UnwrapUtility.BoundaryMode.Isometric;
 import static de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode.AllAngles;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.Matrix;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
+import de.jtem.jpetsc.InsertMode;
+import de.jtem.jpetsc.Mat;
+import de.jtem.jpetsc.Vec;
+import de.jtem.jtao.ConvergenceFlags;
+import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
+import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.mtjoptimization.NotConvergentException;
-import de.varylab.mtjoptimization.newton.NewtonOptimizer;
-import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
-import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
 
 public class SphericalUnwrapper implements Unwrapper{
@@ -37,38 +42,100 @@ public class SphericalUnwrapper implements Unwrapper{
 	private int
 		maxIterations = 150;
 	private CoVertex
+		unwrapRoot = null,
 		layoutRoot = null;
+	
 
+	static {
+		Tao.Initialize();		
+	}
 	
 	@Override
 	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
+		CoVertex v0 = unwrapRoot;
+		if (v0 == null) {
+			surface.getVertex(surface.numVertices() - 1);
+		}
 		// change edge lengths conformally such that the edges incident with vertex 0 are of equal length
-		
-		
+		double meanLength = 0.0;
+		int numIncident = 0;
+		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
+			meanLength += aSet.get(Length.class, e, Double.class);
+			numIncident++;
+		}
+		meanLength /= numIncident;
+		Map<CoVertex, Double> uMap = new HashMap<CoVertex, Double>();
+		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
+			double l = aSet.get(Length.class, e, Double.class);
+			double u = meanLength / l;
+			uMap.put(e.getStartVertex(), u);
+		}
+		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
+		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
+			CoVertex v = e.getStartVertex();
+			for (CoEdge ee : HalfEdgeUtils.incomingEdges(v)) {
+				double l = aSet.get(Length.class, ee, Double.class);
+				CoVertex vs = ee.getStartVertex();
+				CoVertex vt = ee.getTargetVertex();
+				double us = uMap.containsKey(vs) ? uMap.get(vs) : 1.0;
+				double ut = uMap.containsKey(vt) ? uMap.get(vt) : 1.0;
+				double nl = l * us * ut;
+				lMap.put(ee, nl);
+				lMap.put(ee.getOppositeEdge(), nl);
+				System.out.println(ee + ": " + l + " -> " + nl);
+			}
+		}
+		MappedEdgeLengthAdapter eAdapter = new MappedEdgeLengthAdapter(lMap, 100);
+		aSet.add(eAdapter);
 		
 		// punch out the last vertex
-		CoVertex v0 = surface.getVertex(surface.numVertices() - 1);
 		TopologyAlgorithms.removeVertex(v0);
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
-		int n = prepareInvariantDataEuclidean(opt.getFunctional(), surface, Isometric, AllAngles, aSet);
+		prepareInvariantDataEuclidean(opt.getFunctional(), surface, Isometric, AllAngles, aSet);
 		
 		// optimization
-		DenseVector u = new DenseVector(n);
-		Matrix H = opt.getHessianTemplate();
-		NewtonOptimizer optimizer = new NewtonOptimizer(H);
-		optimizer.setStepController(new ArmijoStepController());
-		optimizer.setSolver(Solver.BiCGstab);
-		optimizer.setError(gradTolerance);
-		optimizer.setMaxIterations(maxIterations);
+//		DenseVector u = new DenseVector(n);
+//		Matrix H = opt.getHessianTemplate();
+//		NewtonOptimizer optimizer = new NewtonOptimizer(H);
+//		optimizer.setStepController(new ArmijoStepController());
+//		optimizer.setSolver(Solver.BiCGstab);
+//		optimizer.setError(gradTolerance);
+//		optimizer.setMaxIterations(maxIterations);
+//		try {
+//			optimizer.minimize(u, opt);
+//		} catch (NotConvergentException e) {
+//			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
+//		}
 		
-		try {
-			optimizer.minimize(u, opt);
-		} catch (NotConvergentException e) {
-			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
+		CEuclideanApplication app = new CEuclideanApplication(surface);
+		int n = app.getDomainDimension();
+		Vec u = new Vec(n);
+		// set variable lambda start values
+		for (CoEdge e : surface.getPositiveEdges()) {
+			if (e.getSolverIndex() >= 0) {
+				u.setValue(e.getSolverIndex(), e.getLambda(), InsertMode.INSERT_VALUES);
+			}
 		}
+		app.setInitialSolutionVec(u);
+		Mat H = app.getHessianTemplate();
+		app.setHessianMat(H, H);
+		
+		Tao optimizer = new Tao(Tao.Method.NTR);
+		optimizer.setApplication(app);
+		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance); 
+		optimizer.setTolerances(0, 0, 0, 0);
+		optimizer.setMaximumIterates(maxIterations);
+		System.out.println("Using grad tolerance " + gradTolerance);
+		optimizer.solve();
+		if (optimizer.getSolutionStatus().reason != ConvergenceFlags.CONVERGED_ATOL) {
+			throw new RuntimeException("Optinizer did not converge: \n" + optimizer.getSolutionStatus());
+		}
+		System.out.println(optimizer.getSolutionStatus());
+		double[] uValues = u.getArray();
+		DenseVector uVec = new DenseVector(uValues);
 		
 		// layout Euclidean
-		layoutRoot = EuclideanLayout.doLayout(surface, opt.getFunctional(), u);
+		layoutRoot = EuclideanLayout.doLayout(surface, opt.getFunctional(), uVec);
 		
 		// spherical mapping
 		for (CoVertex v : surface.getVertices()) {
@@ -76,18 +143,12 @@ public class SphericalUnwrapper implements Unwrapper{
 		}
 		normalizeBeforeProjection(surface, 1);
 		inverseStereographicProjection(surface, 1.0);
-		try {
-			SphericalNormalizer.normalize(surface);
-		} catch (NotConvergentException e) {
-			log.info("Sphere normalization did not succeed: " + e.getMessage());
-		}
 		
 		// re-insert vertex 0
 		CoVertex oldV0 = v0;
 		v0 = surface.addNewVertex();
 		v0.P = oldV0.P;
 		v0.T = new double[] {0,1,0,1};
-		
 		CoEdge lastNext = null;
 		CoEdge firstPrev = null;
 		Set<CoEdge> boundary = new HashSet<CoEdge>(HalfEdgeUtils.boundaryEdges(surface));
@@ -116,6 +177,12 @@ public class SphericalUnwrapper implements Unwrapper{
 			be = next;
 		}
 		firstPrev.linkOppositeEdge(lastNext);
+		
+		try {
+			SphericalNormalizer.normalize(surface);
+		} catch (NotConvergentException e) {
+			log.info("Sphere normalization did not succeed: " + e.getMessage());
+		}
 	}
 
 	
@@ -183,7 +250,7 @@ public class SphericalUnwrapper implements Unwrapper{
 
 	@Override
 	public void setCutRoot(CoVertex root) {
-		
+		unwrapRoot = root;
 	}
 
 	@Override
