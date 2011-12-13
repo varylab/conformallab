@@ -20,9 +20,12 @@ import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
 public class SphericalNormalizer {
 
+	public static void normalize(CoHDS hds) throws NotConvergentException {
+		normalize(hds, hds.getVertices());
+	}
 	
-	public static void normalize(CoHDS hds) throws NotConvergentException{
-		CNormalizerOptimizable opt = new CNormalizerOptimizable(hds);
+	public static void normalize(CoHDS hds, List<CoVertex> effectiveList) throws NotConvergentException {
+		CNormalizerOptimizable opt = new CNormalizerOptimizable(effectiveList);
 		Optimizer o = new NewtonOptimizer();
 		ArmijoStepController stepController = new ArmijoStepController();
 		o.setStepController(stepController);
@@ -98,11 +101,11 @@ public class SphericalNormalizer {
 	
 	protected static class CNormalizerOptimizable implements Optimizable{
 		
-		private CoHDS
-			hds = null;
+		private List<CoVertex>
+			vertices = null;
 		
-		public CNormalizerOptimizable(CoHDS hds){
-			this.hds = hds;
+		public CNormalizerOptimizable(List<CoVertex> vList){
+			this.vertices = vList;
 		}
 		
 		@Override
@@ -128,7 +131,7 @@ public class SphericalNormalizer {
 		public Double evaluate(Vector x) {
 			double result = 0;
 			double l = myLength(x);
-			for (CoVertex v : hds.getVertices()) {
+			for (CoVertex v : vertices) {
 				Pn.dehomogenize(v.T, v.T);
 				result += log( dot(v.T, x) / sqrt(l) );
 			}
@@ -147,7 +150,7 @@ public class SphericalNormalizer {
 		
 		private void makeGradient(Vector x, Vector g){
 			g.zero();
-			List<CoVertex> vList = hds.getVertices(); 
+			List<CoVertex> vList = vertices; 
 			for (int i = 0; i < 3; i++){
 				for (CoVertex v : vList){
 					Pn.dehomogenize(v.T, v.T);
@@ -167,7 +170,7 @@ public class SphericalNormalizer {
 		
 		private void makeHessian(Vector x, Matrix hess){
 			hess.zero();
-			List<CoVertex> vList = hds.getVertices(); 
+			List<CoVertex> vList = vertices; 
 			for (int i = 0; i < 3; i++){
 				for (int j = 0; j < 3; j++){
 					for (CoVertex v : vList){

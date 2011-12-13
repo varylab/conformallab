@@ -29,7 +29,6 @@ import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.Search;
-import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
 
 public class ConesUtility {
 

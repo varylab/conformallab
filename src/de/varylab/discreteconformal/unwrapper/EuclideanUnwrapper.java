@@ -15,8 +15,6 @@ import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
 import de.varylab.discreteconformal.util.UnwrapUtility;
-import de.varylab.discreteconformal.util.UnwrapUtility.BoundaryMode;
-import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;

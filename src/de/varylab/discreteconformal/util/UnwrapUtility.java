@@ -23,27 +23,12 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.unwrapper.BoundaryMode;
+import de.varylab.discreteconformal.unwrapper.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.numerics.ConformalEnergy;
 
 public class UnwrapUtility {
 
-	
-	public static enum QuantizationMode {
-		AllAngles,
-		Quads,
-		QuadsStrict,
-		Hexagons,
-		Straight
-	}
-	
-	
-	public static enum BoundaryMode {
-		Isometric,
-		Conformal,
-		ConformalCurvature
-	}
-	
-	
 	
 	public static class ZeroInitialEnergy implements InitialEnergy<CoFace> {
 		@Override

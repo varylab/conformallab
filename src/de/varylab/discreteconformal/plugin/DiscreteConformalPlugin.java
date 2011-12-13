@@ -131,14 +131,14 @@ import de.varylab.discreteconformal.uniformization.CanonicalFormUtility;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility;
 import de.varylab.discreteconformal.uniformization.FundamentalVertex;
+import de.varylab.discreteconformal.unwrapper.BoundaryMode;
+import de.varylab.discreteconformal.unwrapper.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
-import de.varylab.discreteconformal.util.UnwrapUtility.BoundaryMode;
-import de.varylab.discreteconformal.util.UnwrapUtility.QuantizationMode;
 
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSelectionListener, ChangeListener, ActionListener, PropertyChangeListener, SelectionListener {
 
@@ -246,7 +246,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		showUnwrapped = new JCheckBox("Unwrapped");
 	private JComboBox
 		numericsCombo = new JComboBox(new String[] {"Java/MTJ Numerics", "Petsc/Tao Numerics"}),
-		quantizationModeCombo = new JComboBox(QuantizationMode.values()),
+		conesQuantizationModeCombo = new JComboBox(QuantizationMode.values()),
 		boundaryModeCombo = new JComboBox(BoundaryMode.values()),
 		boundaryQuantizationCombo = new JComboBox(QuantizationMode.values()),
 		customModeCombo = new JComboBox(BoundaryMode.values()),
@@ -355,7 +355,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		coneConfigPanel.add(new JLabel("Cones"), c1);
 		coneConfigPanel.add(numConesSpinner, c2);
 		coneConfigPanel.add(new JLabel("Quantization"), c1);
-		coneConfigPanel.add(quantizationModeCombo, c2);
+		coneConfigPanel.add(conesQuantizationModeCombo, c2);
 		coneConfigPanel.setShrinked(true);
 		shrinkPanel.add(coneConfigPanel, c2);
 		
@@ -587,7 +587,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());
 			uw.setMaxIterations(maxIterationsModel.getNumber().intValue());
 			uw.setNumCones(numConesModel.getNumber().intValue());
-			uw.setQuantizationMode((QuantizationMode)quantizationModeCombo.getSelectedItem());
+			uw.setQuantizationMode((QuantizationMode)conesQuantizationModeCombo.getSelectedItem());
 			uw.setBoundaryQuantMode((QuantizationMode)boundaryQuantizationCombo.getSelectedItem());
 			uw.setBoundaryMode((BoundaryMode)boundaryModeCombo.getSelectedItem());
 			uw.setUsePetsc(numericsCombo.getSelectedIndex() == 1);
@@ -952,14 +952,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	public void storeStates(Controller c) throws Exception {
 		super.storeStates(c);
 		c.storeProperty(getClass(), "numCones", numConesModel.getNumber().intValue());
-		c.storeProperty(getClass(), "quantizeMode", quantizationModeCombo.getSelectedItem());
-		c.storeProperty(getClass(), "boundaryMode", boundaryModeCombo.getSelectedItem());
-		c.storeProperty(getClass(), "boundaryQuantMode", boundaryQuantizationCombo.getSelectedItem());
+		c.storeProperty(getClass(), "conesQuantizationModeIndex", conesQuantizationModeCombo.getSelectedIndex());
+		c.storeProperty(getClass(), "boundaryModeIndex", boundaryModeCombo.getSelectedIndex());
+		c.storeProperty(getClass(), "boundaryQuantModeIndex", boundaryQuantizationCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "numericsMethod", numericsCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "klein", kleinButton.isSelected()); 
 		c.storeProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected());
 		c.storeProperty(getClass(), "coverRecursion", coverRecursionModel.getNumber());
-		c.storeProperty(getClass(), "quantizationMode", quantizationModeCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected());
 		c.storeProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber());
 		c.storeProperty(getClass(), "maxIterations", maxIterationsModel.getNumber());
@@ -981,13 +980,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		poincareButton.setSelected(!kleinButton.isSelected());
 		showUnwrapped.setSelected(c.getProperty(getClass(), "showUnwrapped", showUnwrapped.isSelected()));
 		coverRecursionModel.setValue(c.getProperty(getClass(), "coverRecursion", coverRecursionModel.getNumber()));
-		quantizationModeCombo.setSelectedIndex(c.getProperty(getClass(), "quantizationMode", quantizationModeCombo.getSelectedIndex()));
 		useProjectiveTexture.setSelected(c.getProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected()));
 		toleranceExpModel.setValue(c.getProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber()));
 		maxIterationsModel.setValue(c.getProperty(getClass(), "maxIterations", maxIterationsModel.getNumber()));
-		quantizationModeCombo.setSelectedItem(c.getProperty(getClass(), "quantizeMode", quantizationModeCombo.getSelectedItem()));
-		boundaryModeCombo.setSelectedItem(c.getProperty(getClass(), "boundaryMode", boundaryModeCombo.getSelectedItem()));
-		boundaryQuantizationCombo.setSelectedItem(c.getProperty(getClass(), "boundaryQuantMode", boundaryQuantizationCombo.getSelectedItem()));
+		conesQuantizationModeCombo.setSelectedIndex(c.getProperty(getClass(), "conesQuantizationModeIndex", conesQuantizationModeCombo.getSelectedIndex()));
+		boundaryModeCombo.setSelectedIndex(c.getProperty(getClass(), "boundaryModeIndex", boundaryModeCombo.getSelectedIndex()));
+		boundaryQuantizationCombo.setSelectedIndex(c.getProperty(getClass(), "boundaryQuantModeIndex", boundaryQuantizationCombo.getSelectedIndex()));
 		boundaryPanel.setShrinked(c.getProperty(getClass(), "boundaryPanelShrinked", true));
 		coneConfigPanel.setShrinked(c.getProperty(getClass(), "conesPanelShrinked", true));
 		visualizationPanel.setShrinked(c.getProperty(getClass(), "visualizationPanelShrinked", true));
