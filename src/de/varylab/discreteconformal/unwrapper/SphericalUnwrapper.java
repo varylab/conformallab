@@ -54,7 +54,7 @@ public class SphericalUnwrapper implements Unwrapper{
 	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
 		CoVertex v0 = unwrapRoot;
 		if (v0 == null) {
-			surface.getVertex(surface.numVertices() - 1);
+			v0 = surface.getVertex(surface.numVertices() - 1);
 		}
 		// change edge lengths conformally such that the edges incident with vertex 0 are of equal length
 		double meanLength = 0.0;
@@ -136,7 +136,7 @@ public class SphericalUnwrapper implements Unwrapper{
 		
 		// layout Euclidean
 		layoutRoot = EuclideanLayout.doLayout(surface, opt.getFunctional(), uVec);
-		
+//		if (true) return;
 		// spherical mapping
 		for (CoVertex v : surface.getVertices()) {
 			Pn.dehomogenize(v.T, v.T);

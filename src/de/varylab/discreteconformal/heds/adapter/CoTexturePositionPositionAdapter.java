@@ -17,7 +17,7 @@ public class CoTexturePositionPositionAdapter extends AbstractTypedAdapter<CoVer
 		projective = true;
 	
 	public CoTexturePositionPositionAdapter() {
-		super(CoVertex.class, null, null, double[].class, true, false);
+		super(CoVertex.class, null, null, double[].class, true, true);
 	}
 	
 	public CoTexturePositionPositionAdapter(HyperbolicModel model, boolean projective) {
@@ -49,6 +49,22 @@ public class CoTexturePositionPositionAdapter extends AbstractTypedAdapter<CoVer
 				case Halfplane:
 					return new double[] {t[1] / (t[3] - t[0]), 1 / (t[3] - t[0]), 0.0};
 			}
+		}
+	}
+	
+	@Override
+	public void setVertexValue(CoVertex v, double[] value, AdapterSet a) {
+		if (value.length >= 2) {
+			v.T[0] = value[0];
+			v.T[1] = value[1];
+			v.T[2] = 0.0;
+			v.T[3] = 1.0;
+		}
+		if (value.length >= 3) {
+			v.T[2] = value[2];
+		}
+		if (value.length >= 4) {
+			v.T[3] = value[3];
 		}
 	}
 

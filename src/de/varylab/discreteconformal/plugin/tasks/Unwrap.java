@@ -92,10 +92,6 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			if (isSphere) {
 				System.out.println("unwrapping a sphere...");
 				unwrapper = new SphericalUnwrapper();
-				if (!selectedVertices.isEmpty()) {
-					CoVertex cutRoot = selectedVertices.iterator().next();
-					unwrapper.setCutRoot(cutRoot);
-				}
 			} else {
 				if (boundaryMode == BoundaryMode.Circle) {
 					CircleDomainUnwrapper cdu = new CircleDomainUnwrapper();
@@ -117,6 +113,10 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 						unwrapper = uw;
 					}
 				}
+			}
+			if (!selectedVertices.isEmpty()) {
+				CoVertex cutRoot = selectedVertices.iterator().next();
+				unwrapper.setCutRoot(cutRoot);
 			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);

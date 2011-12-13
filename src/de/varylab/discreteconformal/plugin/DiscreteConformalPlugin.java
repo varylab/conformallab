@@ -501,6 +501,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				return;
 			} finally {
 				unwrapper.getSurface().revertNormalization();
+				hif.update();
 			}
 			genus = unwrapper.genus;
 			cutInfo = unwrapper.cutInfo;
@@ -882,9 +883,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		texturePositionAdapter.setModel(getSelectedModel());
 		texCoordPositionAdapter.setProjective(useProjectiveTexture.isSelected());
 		texCoordPositionAdapter.setModel(getSelectedModel());
-		hif.addAdapter(metricErrorAdapter, false);
+		hif.addLayerAdapter(metricErrorAdapter, false);
 		if (showUnwrapped.isSelected()) {
-			hif.addAdapter(texCoordPositionAdapter, false);	
+			hif.addLayerAdapter(texCoordPositionAdapter, false);	
+		} else {
+			hif.removeAdapter(texCoordPositionAdapter);
 		}
 		hif.set(surface);
 	}
