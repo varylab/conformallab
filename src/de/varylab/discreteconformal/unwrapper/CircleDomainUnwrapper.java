@@ -1,23 +1,33 @@
 package de.varylab.discreteconformal.unwrapper;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.boundaryVertices;
+import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
+import static de.jtem.halfedge.util.HalfEdgeUtils.outgoingEdges;
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.DenseVector;
+import de.jreality.geometry.IndexedFaceSetUtility;
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
+import de.jreality.scene.IndexedFaceSet;
+import de.jreality.scene.data.Attribute;
+import de.jreality.scene.data.DataList;
+import de.jreality.scene.data.DoubleArrayArray;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
+import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
@@ -29,6 +39,8 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.CustomVertexInfo;
+import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
 import de.varylab.discreteconformal.math.ComplexUtility;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
@@ -54,11 +66,62 @@ public class CircleDomainUnwrapper implements Unwrapper{
 		Tao.Initialize();		
 	}
 	
+	
+	public static void unwrap(IndexedFaceSet ifs) throws Exception {
+		try {
+		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, null);
+		IndexedFaceSetUtility.makeConsistentOrientation(ifs);
+		CoHDS hds = new CoHDS();
+		AdapterSet a = AdapterSet.createGenericAdapters();
+		a.add(new CoPositionAdapter());
+		a.add(new CoTexturePositionAdapter());
+		ConverterJR2Heds cTo = new ConverterJR2Heds();
+		cTo.ifs2heds(ifs, hds, a);
+		Set<CoVertex> oldVertices = new HashSet<CoVertex>(hds.getVertices());
+
+		// store initial indices
+		Map<CoVertex, Integer> indexMap = new HashMap<CoVertex, Integer>();
+		for (CoVertex v : hds.getVertices()) {
+			indexMap.put(v, v.getIndex());
+		}
+		
+		// unwrap
+		CircleDomainUnwrapper unwrapper = new CircleDomainUnwrapper();
+		unwrapper.unwrap(hds, 0, a);
+		
+		oldVertices.removeAll(hds.getVertices());
+		int oldV0Index = oldVertices.iterator().next().getIndex(); 
+		
+		double[][] texArr = new double[ifs.getNumPoints()][];
+		for (CoVertex v : hds.getVertices()) {
+			Integer oldI = indexMap.get(v);
+			if (oldI == null) {
+				oldI = oldV0Index;
+			}
+			texArr[oldI] = v.T;
+		}
+		
+		DataList newTexCoords = new DoubleArrayArray.Array(texArr);
+		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, newTexCoords);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
 	@Override
 	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
-		CoVertex v0 = unwrapRoot; 
-		if (v0 == null) {
-			v0 = HalfEdgeUtils.boundaryVertices(surface).iterator().next();
+		CoVertex v0 = unwrapRoot;
+		// find boundary vertex with high valence
+		if (v0 == null || !HalfEdgeUtils.isBoundaryVertex(v0)) {
+			int maxValence = 0;
+			for (CoVertex v : boundaryVertices(surface)) {
+				int val = incomingEdges(v).size();
+				if (val > maxValence) {
+					v0 = v;
+					maxValence = val;
+				}
+			}
 		}
 		
 		// find reference vertices
@@ -80,6 +143,15 @@ public class CircleDomainUnwrapper implements Unwrapper{
 				v3 = e.getStartVertex();
 			}
 		}
+		// get cut border
+		Set<CoEdge> cutEdges = new HashSet<CoEdge>();
+		for (CoFace f : HalfEdgeUtils.facesIncidentWithVertex(v0)) {
+			cutEdges.addAll(HalfEdgeUtils.boundaryEdges(f));
+		}
+		Set<CoEdge> inEdges = new HashSet<CoEdge>(incomingEdges(v0));
+		Set<CoEdge> outEdges = new HashSet<CoEdge>(outgoingEdges(v0));
+		cutEdges.removeAll(inEdges);
+		cutEdges.removeAll(outEdges);
 		
 		// change edge lengths conformally such that the edges incident with vertex 0 are of equal length
 		meanLength /= numIncident;
@@ -101,7 +173,6 @@ public class CircleDomainUnwrapper implements Unwrapper{
 				double nl = l * us * ut;
 				lMap.put(ee, nl);
 				lMap.put(ee.getOppositeEdge(), nl);
-				System.out.println(ee + ": " + l + " -> " + nl);
 			}
 		}
 		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
@@ -115,12 +186,20 @@ public class CircleDomainUnwrapper implements Unwrapper{
 		
 		// punch out the first vertex
 		TopologyAlgorithms.removeVertex(v0);
+		Map<CoEdge, CoEdge> nextOnCutBoundaryMap = new HashMap<CoEdge, CoEdge>();
+		for (CoEdge e : cutEdges) {
+			CoEdge next = e.getNextEdge();
+			if (cutEdges.contains(next)) {
+				nextOnCutBoundaryMap.put(e, next);
+			}
+		}
 		
 		// map to the upper half space
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
 		int n = prepareInvariantDataEuclidean(opt.getFunctional(), surface, BoundaryMode.Conformal, QuantizationMode.Straight, aSet);
 		CEuclideanApplication app = new CEuclideanApplication(surface);
 		Vec u = new Vec(n);
+		u.assemble();
 		for (CoEdge e : surface.getPositiveEdges()) {
 			if (e.getSolverIndex() >= 0) {
 				u.setValue(e.getSolverIndex(), e.getLambda(), InsertMode.INSERT_VALUES);
@@ -147,7 +226,6 @@ public class CircleDomainUnwrapper implements Unwrapper{
 		
 		
 		// pre-normalize before projection
-		System.out.println(v1 + ", " + v2);
 		double[] v1T = Pn.dehomogenize(v1.T, v1.T);
 		double[] v2T = Pn.dehomogenize(v2.T, v2.T);
 		double[] v3T = Pn.dehomogenize(v3.T, v3.T);
@@ -158,7 +236,6 @@ public class CircleDomainUnwrapper implements Unwrapper{
 		mb.rotate(-angle, 0, 0, 1);
 		mb.translateFromTo(v1T, new double[]{0,0,0,1});
 		Matrix M = mb.getMatrix();
-
 		double[] check = M.multiplyVector(v3T);
 		MatrixBuilder nb = MatrixBuilder.euclidean();
 		nb.translate(check[0] < 0 ? 1 : -1, 0, 0);
@@ -198,13 +275,53 @@ public class CircleDomainUnwrapper implements Unwrapper{
 			v.T[3] = 1.0;
 		}
 		
-		// TODO reinsert vertex 0
-		
+		// reinsert vertex 0
+		CoVertex v0New = surface.addNewVertex();
+		v0New.P = v0.P;
+		v0New.T = new double[] {0,1,0,1};
+		CoEdge onBoundaryIn = null;
+		CoEdge onBoundaryOut = null;
+		CoEdge inNextOpp = null;
+		CoEdge outPrevOpp = null;
+		for (CoEdge e : cutEdges) {
+			CoEdge in = surface.addNewEdge();
+			CoEdge out = surface.addNewEdge();
+			CoFace face = surface.addNewFace();
+			if (!cutEdges.contains(e.getNextEdge()) && e.getNextEdge() != null) {
+				onBoundaryOut = e.getNextEdge();
+				outPrevOpp = in;
+			}
+			if (!cutEdges.contains(e.getPreviousEdge()) && e.getPreviousEdge() != null) {
+				onBoundaryIn = e.getPreviousEdge();
+				inNextOpp = out;
+			}
+			in.setLeftFace(face);
+			out.setLeftFace(face);
+			e.setLeftFace(face);
+			in.setTargetVertex(v0New);
+			out.setTargetVertex(e.getStartVertex());
+			in.linkNextEdge(out);
+			out.linkNextEdge(e);
+			e.linkNextEdge(in);
+		}
+		for (CoEdge e : nextOnCutBoundaryMap.keySet()) {
+			CoEdge next = nextOnCutBoundaryMap.get(e);
+			e.getNextEdge().linkOppositeEdge(next.getPreviousEdge());
+		}
+		CoEdge inNext = surface.addNewEdge();
+		CoEdge outPrev = surface.addNewEdge();
+		inNext.setTargetVertex(v0New);
+		outPrev.setTargetVertex(onBoundaryOut.getStartVertex());
+		onBoundaryIn.linkNextEdge(inNext);
+		onBoundaryOut.linkPreviousEdge(outPrev);
+		inNext.linkOppositeEdge(inNextOpp);
+		outPrev.linkOppositeEdge(outPrevOpp);
+		inNext.linkNextEdge(outPrev);
 		
 		// normalize
 		try {
 			List<CoVertex> bVerts = new LinkedList<CoVertex>(boundaryVertices(surface));
-			SphericalNormalizer.normalize(surface, bVerts);
+			SphericalNormalizerPETc.normalize(surface, bVerts);
 		} catch (NotConvergentException e) {
 			log.info("Sphere normalization did not succeed: " + e.getMessage());
 		}

@@ -179,7 +179,7 @@ public class SphericalUnwrapper implements Unwrapper{
 		firstPrev.linkOppositeEdge(lastNext);
 		
 		try {
-			SphericalNormalizer.normalize(surface);
+			SphericalNormalizerPETc.normalize(surface);
 		} catch (NotConvergentException e) {
 			log.info("Sphere normalization did not succeed: " + e.getMessage());
 		}

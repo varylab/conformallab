@@ -50,7 +50,7 @@ import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeListener;
 import de.varylab.discreteconformal.plugin.hyperelliptic.CurveEditor;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.unwrapper.SphereUtility;
-import de.varylab.discreteconformal.unwrapper.SphericalNormalizer;
+import de.varylab.discreteconformal.unwrapper.SphericalNormalizerPETc;
 import de.varylab.discreteconformal.util.HyperellipticUtility;
 import de.varylab.discreteconformal.util.SimpleMatrixPrintUtility;
 import de.varylab.mtjoptimization.NotConvergentException;
@@ -161,7 +161,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 			try {
 				if (normalizerBranchPointPositionsChecker.isSelected()) {
 					for (CoVertex v : hds.getVertices()) v.T = v.P.clone();
-					SphericalNormalizer.normalize(hds);
+					SphericalNormalizerPETc.normalize(hds);
 					for (CoVertex v : hds.getVertices()) v.P = v.T.clone();
 				}
 			} catch (NotConvergentException e1) {

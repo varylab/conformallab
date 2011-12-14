@@ -72,7 +72,7 @@ public class CoTexturePositionAdapter extends AbstractTypedAdapter<CoVertex, CoE
 		t[0] = value[0];
 		t[1] = value[1];
 		t[2] = value.length > 2 ? value[2] : 0.0;
-		t[3] = value.length > 3 ? value[3] : 0.0;
+		t[3] = value.length > 3 ? value[3] : 1.0;
 	}
 	
 	
