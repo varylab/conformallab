@@ -68,7 +68,10 @@ public class CircleDomainUnwrapper implements Unwrapper{
 	
 	
 	public static void unwrap(IndexedFaceSet ifs) throws Exception {
-		try {
+		unwrap(ifs, -1, false);
+	}
+	
+	public static void unwrap(IndexedFaceSet ifs, int oneIndex, boolean usePoolarCoords) throws Exception {
 		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, null);
 		IndexedFaceSetUtility.makeConsistentOrientation(ifs);
 		CoHDS hds = new CoHDS();
@@ -100,12 +103,33 @@ public class CircleDomainUnwrapper implements Unwrapper{
 			}
 			texArr[oldI] = v.T;
 		}
+		if (oneIndex < 0) {
+			CoVertex myVertex = HalfEdgeUtils.boundaryVertices(hds).iterator().next();
+			oneIndex = indexMap.get(myVertex);
+		}
+		double[] onePoint = texArr[oneIndex];	
+		
+		MatrixBuilder SR = MatrixBuilder.euclidean();
+		SR.scale(1 / Pn.norm(onePoint, Pn.EUCLIDEAN));
+		double alpha = Math.atan2(onePoint[1], onePoint[0]);
+		SR.rotate(-alpha, 0, 0, 1);
+		double[] tmp = {0, 0, 0, 1};
+		Matrix SRm = SR.getMatrix();
+		for (double[] p : texArr) {
+			tmp[0] = p[0]; tmp[1] = p[1]; tmp[2] = 0; tmp[3] = 1;
+			SRm.transformVector(tmp);
+			if (usePoolarCoords) {
+				double phi = Math.atan2(tmp[1], tmp[0]);
+				double r = Pn.norm(p, Pn.EUCLIDEAN);
+				p[0] = r;
+				p[1] = phi;
+			} else {
+				p[0] = tmp[0]; p[1] = tmp[1];
+			}
+		}
 		
 		DataList newTexCoords = new DoubleArrayArray.Array(texArr);
 		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, newTexCoords);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 	
 	
