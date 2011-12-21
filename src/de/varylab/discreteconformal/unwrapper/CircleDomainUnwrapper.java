@@ -68,11 +68,10 @@ public class CircleDomainUnwrapper implements Unwrapper{
 	
 	
 	public static void unwrap(IndexedFaceSet ifs) throws Exception {
-		unwrap(ifs, -1, false);
+		unwrap(ifs, -1, -1, false);
 	}
 	
-	public static void unwrap(IndexedFaceSet ifs, int oneIndex, boolean usePoolarCoords) throws Exception {
-		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, null);
+	public static void unwrap(IndexedFaceSet ifs, int oneIndex, int zeroIndex, boolean usePoolarCoords) throws Exception {
 		IndexedFaceSetUtility.makeConsistentOrientation(ifs);
 		CoHDS hds = new CoHDS();
 		AdapterSet a = AdapterSet.createGenericAdapters();
@@ -90,6 +89,7 @@ public class CircleDomainUnwrapper implements Unwrapper{
 		
 		// unwrap
 		CircleDomainUnwrapper unwrapper = new CircleDomainUnwrapper();
+		unwrapper.setMaxIterations(300);
 		unwrapper.unwrap(hds, 0, a);
 		
 		oldVertices.removeAll(hds.getVertices());
@@ -101,37 +101,59 @@ public class CircleDomainUnwrapper implements Unwrapper{
 			if (oldI == null) {
 				oldI = oldV0Index;
 			}
+			toKlein(v.T);
 			texArr[oldI] = v.T;
 		}
-		if (oneIndex < 0) {
-			CoVertex myVertex = HalfEdgeUtils.boundaryVertices(hds).iterator().next();
-			oneIndex = indexMap.get(myVertex);
-		}
-		double[] onePoint = texArr[oneIndex];	
 		
+		// center
+		MatrixBuilder zeroBuilder = MatrixBuilder.hyperbolic();
+		if (zeroIndex >= 0) {
+			double[] zeroPoint = texArr[zeroIndex];
+			zeroBuilder.translate(zeroPoint, new double[] {0,0,0,1});
+		}
+		Matrix Zm = zeroBuilder.getMatrix();
+		
+		// normalize
 		MatrixBuilder SR = MatrixBuilder.euclidean();
-		SR.scale(1 / Pn.norm(onePoint, Pn.EUCLIDEAN));
-		double alpha = Math.atan2(onePoint[1], onePoint[0]);
-		SR.rotate(-alpha, 0, 0, 1);
-		double[] tmp = {0, 0, 0, 1};
+		if (oneIndex >= 0) {
+			double[] p = texArr[oneIndex].clone();	
+			Zm.transformVector(p);
+			Pn.normalize(p, p, Pn.HYPERBOLIC);
+			p[3] +=1;
+			Pn.dehomogenize(p, p);
+			SR.scale(1 / Pn.norm(p, Pn.EUCLIDEAN));
+			double alpha = Math.atan2(p[1], p[0]);
+			SR.rotate(-alpha, 0, 0, 1);
+		}
 		Matrix SRm = SR.getMatrix();
+		
 		for (double[] p : texArr) {
-			tmp[0] = p[0]; tmp[1] = p[1]; tmp[2] = 0; tmp[3] = 1;
-			SRm.transformVector(tmp);
+			Zm.transformVector(p);
+			Pn.normalize(p, p, Pn.HYPERBOLIC);
+			p[3] +=1;
+			Pn.dehomogenize(p, p);
+			SRm.transformVector(p);
+			Pn.dehomogenize(p, p);
 			if (usePoolarCoords) {
-				double phi = Math.atan2(tmp[1], tmp[0]);
+				double phi = Math.atan2(p[1], p[0]);
 				double r = Pn.norm(p, Pn.EUCLIDEAN);
 				p[0] = r;
 				p[1] = phi;
-			} else {
-				p[0] = tmp[0]; p[1] = tmp[1];
 			}
 		}
 		
 		DataList newTexCoords = new DoubleArrayArray.Array(texArr);
+		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, null);
 		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, newTexCoords);
 	}
 	
+	private static void toKlein(double[] p) {
+		double kS = -2/(p[0]*p[0] + p[1]*p[1] - 1);
+		p[0] *= kS;
+		p[1] *= kS;
+		p[2] = 0;
+		p[3] = kS - 1;
+	}
 	
 	@Override
 	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
