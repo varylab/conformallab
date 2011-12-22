@@ -501,7 +501,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				return;
 			} finally {
 				unwrapper.getSurface().revertNormalization();
-				hif.update();
+				updateSurface();
 			}
 			genus = unwrapper.genus;
 			cutInfo = unwrapper.cutInfo;
@@ -878,7 +878,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		if (surface == null) {
 			return;
 		}
-		hif.clearSelection();
 		texturePositionAdapter.setProjective(useProjectiveTexture.isSelected());
 		texturePositionAdapter.setModel(getSelectedModel());
 		texCoordPositionAdapter.setProjective(useProjectiveTexture.isSelected());
