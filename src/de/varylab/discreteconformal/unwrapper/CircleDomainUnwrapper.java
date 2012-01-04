@@ -72,6 +72,32 @@ public class CircleDomainUnwrapper implements Unwrapper{
 	}
 	
 	public static void unwrap(IndexedFaceSet ifs, int oneIndex, int zeroIndex, boolean usePoolarCoords) throws Exception {
+		int[] face = null;
+		double[] bary = null;
+		if (zeroIndex >= 0) {
+			int[][] faces = ifs.getFaceAttributes(Attribute.INDICES).toIntArrayArray(null);
+			int index = -1;
+			for (int[] f : faces) {
+				int j = 0;
+				for (int i : f) {
+					if (zeroIndex == i) {
+						face = f;
+						index = j;
+					}
+					j++;
+				}
+				if (face != null) break;
+			}
+			if (face == null) {
+				throw new Exception("could not find face with vertex " + zeroIndex);
+			}
+			bary = new double[3];
+			bary[index] = 1.0;
+		}
+		unwrap(ifs, oneIndex, face, bary, usePoolarCoords);
+	}
+	
+	public static void unwrap(IndexedFaceSet ifs, int oneIndex, int[] zeroBaryFace, double[] zeroBaryWeights, boolean usePoolarCoords) throws Exception {
 		IndexedFaceSetUtility.makeConsistentOrientation(ifs);
 		CoHDS hds = new CoHDS();
 		AdapterSet a = AdapterSet.createGenericAdapters();
@@ -107,8 +133,11 @@ public class CircleDomainUnwrapper implements Unwrapper{
 		
 		// center
 		MatrixBuilder zeroBuilder = MatrixBuilder.hyperbolic();
-		if (zeroIndex >= 0) {
-			double[] zeroPoint = texArr[zeroIndex];
+		if (zeroBaryFace != null && zeroBaryWeights != null) {
+			double[][] face = {texArr[zeroBaryFace[0]], texArr[zeroBaryFace[1]], texArr[zeroBaryFace[2]]};
+			Pn.dehomogenize(face, face);
+			double[] zeroPoint = Rn.barycentricTriangleInterp(new double[4], face, zeroBaryWeights);
+//			double[] zeroPoint = texArr[zeroIndex];
 			zeroBuilder.translate(zeroPoint, new double[] {0,0,0,1});
 		}
 		Matrix Zm = zeroBuilder.getMatrix();
