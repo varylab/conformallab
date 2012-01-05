@@ -167,7 +167,7 @@ public class CircleDomainUnwrapper implements Unwrapper{
 				double phi = Math.atan2(p[1], p[0]);
 				double r = Pn.norm(p, Pn.EUCLIDEAN);
 				p[0] = r;
-				p[1] = phi;
+				p[1] = phi/(2*Math.PI);
 			}
 		}
 		
