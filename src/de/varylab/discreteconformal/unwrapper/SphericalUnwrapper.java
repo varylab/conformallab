@@ -176,6 +176,7 @@ public class SphericalUnwrapper implements Unwrapper{
 			lastNext = eNext;
 			be = next;
 		}
+		assert firstPrev != null;
 		firstPrev.linkOppositeEdge(lastNext);
 		
 		try {

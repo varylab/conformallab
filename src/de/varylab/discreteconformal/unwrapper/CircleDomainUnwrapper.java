@@ -198,6 +198,7 @@ public class CircleDomainUnwrapper implements Unwrapper{
 				}
 			}
 		}
+		assert v0 != null;
 		
 		// find reference vertices
 		CoVertex v1 = null;
@@ -218,6 +219,8 @@ public class CircleDomainUnwrapper implements Unwrapper{
 				v3 = e.getStartVertex();
 			}
 		}
+		assert v1 != null && v2 != null && v3 != null;
+		
 		// get cut border
 		Set<CoEdge> cutEdges = new HashSet<CoEdge>();
 		for (CoFace f : HalfEdgeUtils.facesIncidentWithVertex(v0)) {
@@ -379,6 +382,7 @@ public class CircleDomainUnwrapper implements Unwrapper{
 			out.linkNextEdge(e);
 			e.linkNextEdge(in);
 		}
+		assert onBoundaryIn != null && onBoundaryOut != null;
 		for (CoEdge e : nextOnCutBoundaryMap.keySet()) {
 			CoEdge next = nextOnCutBoundaryMap.get(e);
 			e.getNextEdge().linkOppositeEdge(next.getPreviousEdge());

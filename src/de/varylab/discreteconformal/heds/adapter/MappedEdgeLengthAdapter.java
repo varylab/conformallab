@@ -63,6 +63,7 @@ public class MappedEdgeLengthAdapter extends AbstractAdapter<Double> {
 		lengthMap.put((CoEdge)e, value);
 	}
 	
+	@Override
 	public double getPriority() {
 		return priority;
 	}

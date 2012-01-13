@@ -360,6 +360,7 @@ public class EuclideanFunctional <
 		return true;
 	}
 	
+	@Override
 	public double getLambda(double length) {
 		return log(length);
 	}
@@ -368,6 +369,7 @@ public class EuclideanFunctional <
 		return exp(lambda);
 	}
 	
+	@Override
 	public double getNewLength(E e, DomainValue u) {
 		V v1 = e.getStartVertex();
 		V v2 = e.getTargetVertex();
@@ -378,6 +380,7 @@ public class EuclideanFunctional <
 		double l2 = lambda.getLambda(e) + u1 + u2;
 		return getLength(l2);
 	}
+	@Override
 	public double getVertexU(V v, DomainValue u) {
 		int i = var.getVarIndex(v);
 		return var.isVariable(v) ? u.get(i) : 0.0; 
