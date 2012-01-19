@@ -77,8 +77,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		schottkyModeller = new SchottkyModeller();
 	private Viewer2D
 		viewer = schottkyModeller.getViewer();
-	private JScrollPane 
-		protectorPane = new JScrollPane(viewer);
 	private JButton
 		generateButton = new JButton("Generate Surface"),
 		toFuchsianButton = new JButton("Uniformize");
@@ -86,10 +84,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		equalizationIterationsModel = new SpinnerNumberModel(10, 0, 100, 1),
 		cirleResModel = new SpinnerNumberModel(20, 4, 1000, 1),
 		extraPointsModel = new SpinnerNumberModel(400, 0, 10000, 1);
-//	private JCheckBox
-//		debugProjectChecker = new JCheckBox("Project", true),
-//		debugDoRuppertChecker = new JCheckBox("Ruppert", true),
-//		debugIdentifyChecker = new JCheckBox("Identify", true);
 	private JSpinner
 		equalizationIterationsSpinner = new JSpinner(equalizationIterationsModel),
 		extraPointsSpinner = new JSpinner(extraPointsModel),
@@ -103,11 +97,17 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		GridBagConstraints c2 = LayoutFactory.createRightConstraint();
 		shrinkPanel.setTitle("Schottky Modeller");
 		shrinkPanel.setFillSpace(true);
-		viewer.setPreferredSize(new Dimension(500, 300));
+		viewer.setPreferredSize(new Dimension(240, 240));
 		viewer.setMinimumSize(viewer.getPreferredSize());
+		JScrollPane scrollProtector = new JScrollPane(viewer);
+		scrollProtector.setPreferredSize(viewer.getPreferredSize());
+		scrollProtector.setMinimumSize(scrollProtector.getPreferredSize());
+		scrollProtector.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollProtector.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+		
 		shrinkPanel.setLayout(new GridBagLayout());
 		c2.weighty = 1.0;
-		shrinkPanel.add(protectorPane, c2);
+		shrinkPanel.add(scrollProtector, c2);
 		c2.weighty = 0.0;
 		shrinkPanel.add(new JLabel("Num Extra Points"), c1);
 		shrinkPanel.add(extraPointsSpinner, c2);
@@ -115,9 +115,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		shrinkPanel.add(equalizationIterationsSpinner, c2);
 		shrinkPanel.add(new JLabel("Circle Resolution"), c1);
 		shrinkPanel.add(circleResSpinner, c2);
-//		shrinkPanel.add(debugProjectChecker, c2);
-//		shrinkPanel.add(debugDoRuppertChecker, c2);
-//		shrinkPanel.add(debugIdentifyChecker, c2);		
 		shrinkPanel.add(generateButton, c1);
 		shrinkPanel.add(toFuchsianButton, c2);
 
@@ -164,9 +161,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				e1.printStackTrace();
 				return;
 			}
-//			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
-//			SchottkyWeightAdapter swa = new SchottkyWeightAdapter(cylces);
-//			CoVertex cutRoot = hds.getVertex(1);
 
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
 			for (Set<CoEdge> cycle : cycles) {
@@ -204,19 +198,13 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				bc = HalfEdgeUtils.boundaryComponents(hds);
 			}
 			
-			
-//			System.out.println("Genus: " + HalfEdgeUtils.getGenus(hds));
-//			
-//			cutManifoldToDisk(hds, cutRoot, swa);
 			CoVertex layoutRoot = hds.getVertex(0);
 			ConformalFunctional<CoVertex, CoEdge, CoFace> fun = unwrapper.getFunctional();
 			Vector u = unwrapper.getUResult();
 			layoutRoot = HyperbolicLayout.doLayout(hds, layoutRoot, fun,  u);
-////			
 			
 			hif.addAdapter(new CoTexturePositionPositionAdapter(Poincaré, true), false);
 			hif.set(hds);
-//			discreteConformalPlugin.createVisualization(hds, genus, cutInfo);
 		}
 	}
 	
@@ -230,52 +218,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		}
 		return r;
 	}
-	
-//	
-//	public class StereographicRuppert extends Ruppert {
-//
-//		private static final long serialVersionUID = 1L;
-//		private boolean inited = false;
-//		private double[] v1, v2, v3, vp1, vp2, vp3, vec1, vec2, cross;
-//		
-//		public StereographicRuppert(double[][] p) {
-//			super(p);
-//		}
-//		
-//		@Override
-//		protected double area(int f) {
-//			if (!inited) {
-//				v1 = new double[2];
-//				v2 = new double[2];
-//				v3 = new double[3];
-//				vp1 = new double[3];
-//				vp2 = new double[3];
-//				vp3 = new double[3];
-//				vec1 = new double[3];
-//				vec2 = new double[3];
-//				cross = new double[3];
-//				inited = true;
-//			}
-//			int v1Index = getIndex(f, 1);
-//			int v2Index = getIndex(f, 2);
-//			int v3Index = getIndex(f, 3);
-//			getPoint(v1Index, v1);
-//			getPoint(v2Index, v2);
-//			getPoint(v3Index, v3);
-//			Complex z1 = new Complex(v1[0], v1[1]);
-//			Complex z2 = new Complex(v2[0], v2[1]);
-//			Complex z3 = new Complex(v3[0], v3[1]);
-//			ComplexUtility.inverseStereographic(z1, vp1);
-//			ComplexUtility.inverseStereographic(z2, vp2);
-//			ComplexUtility.inverseStereographic(z3, vp3);
-//			Rn.subtract(vec1, vp2, vp1);
-//			Rn.subtract(vec2, vp3, vp1);
-//			Rn.crossProduct(cross, vec1, vec2);
-//			return Rn.euclideanNorm(cross);
-//		}
-//		
-//	}
-//	
 	
 	
 	private void cutIdentificationHoles(CoHDS hds, List<ArrayList<CoVertex>> circles) {
@@ -297,9 +239,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			}
 		}
 	}
-	
-	
-	
+
 	
 	private CoHDS generate(List<SchottkyGenerator> pairs, Complex rootPos, Map<CoEdge, Double> lMap, Set<Set<CoEdge>> cyclesReturn) {
 		AdapterSet a = AdapterSet.createGenericAdapters();
@@ -386,9 +326,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			}
 		}
 		
-		
-//		if (!debugProjectChecker.isSelected()) return hds;
-		
 		// scale and project 
 		Map<CoVertex, Complex> zMap = new HashMap<CoVertex, Complex>();
 		for (CoVertex v : hds.getVertices()) {
@@ -405,7 +342,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		vertexCircles.addAll(sourceVertexCircles);
 		vertexCircles.addAll(targetVertexCircles);
 		cutIdentificationHoles(hds, vertexCircles);
-
 		
 		// build edge identification opposites maps
 		for (List<CoVertex> circle : sourceVertexCircles) {
@@ -433,8 +369,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				}
 			}
 		}
-		
-		//if (true) return hds;
 		
 		// we know how many edges there are on the circles
 		assert edgeMap.size() == 2 * pairs.size() * circleRes * 2 : "lengths of cycles";
@@ -487,22 +421,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			crMap.put(e, cr);
 		}
 
-//		if (!debugIdentifyChecker.isSelected()) {
-//			MatrixBuilder mb = MatrixBuilder.euclidean();
-//			mb.rotateX(Math.PI);
-//			Matrix T = mb.getMatrix();
-//			for (CoVertex v : hds.getVertices()) {
-//				double[] p = a.getD(Position4d.class, v);
-//				T.transformVector(p);
-//				Pn.dehomogenize(p, p);
-//				Complex z = ComplexUtility.stereographic(p);
-////				Complex z = zMap.get(v);
-//				double[] p2 = {z.getRe(), z.getIm(), 0};
-//				a.set(Position.class, v, p2);
-//			}
-//			return hds;
-//		}
-		
 		// identify circles
 		try {
 			Set<CoEdge> mappedEdgesSet = new TreeSet<CoEdge>(new NodeIndexComparator<CoEdge>());
@@ -551,7 +469,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			}
 			assert abs(pr - 1.0) < 1E-8 : "Cross-ratio product around vertex not 1.0";
 		}
-		
 		
 		// define lengths from cross-ratios
 		Map<CoEdge, Double> aMap = new HashMap<CoEdge, Double>();
@@ -604,7 +521,5 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		v.registerPlugin(SchottkyPlugin.class);
 		v.startup();
 	}
-	
-	
 	
 }

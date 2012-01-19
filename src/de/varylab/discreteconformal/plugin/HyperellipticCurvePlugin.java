@@ -22,7 +22,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerNumberModel;
 
 import de.jreality.math.Pn;
@@ -64,7 +63,6 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		rnd = new Random();
 	
 	private CurveEditor editor;
-	private JScrollPane protectorPane;
 	
 	private JPanel
 		geometryPanel = new JPanel();
@@ -89,18 +87,19 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		c.update();
 		setCurve(c);
 
-		editor.setPreferredSize(new Dimension(300, 300));
-		protectorPane = new JScrollPane(editor);
-		protectorPane.setMinimumSize(editor.getPreferredSize());
-		protectorPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		protectorPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
-		
+		editor.setPreferredSize(new Dimension(240, 240));
+		editor.setMinimumSize(editor.getPreferredSize());
+		JScrollPane scrollProtector = new JScrollPane(editor);
+		scrollProtector.setPreferredSize(editor.getPreferredSize());
+		scrollProtector.setMinimumSize(scrollProtector.getPreferredSize());
+		scrollProtector.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollProtector.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 		setInitialPosition(SHRINKER_RIGHT);
 		GridBagConstraints c1 = createLeftConstraint();
 		GridBagConstraints c2 = createRightConstraint();
 		shrinkPanel.setTitle("Hyperelliptic Curve Plugin");
 		c2.weighty = 1.0;
-		shrinkPanel.add(protectorPane, c2);
+		shrinkPanel.add(scrollProtector, c2);
 		
 		geometryPanel.setBorder(BorderFactory.createTitledBorder("Triangulated Surface"));
 		geometryPanel.setLayout(new GridBagLayout());
