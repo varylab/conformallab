@@ -28,6 +28,7 @@ import no.uib.cipr.matrix.EVD;
 import no.uib.cipr.matrix.NotConvergedException;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
+import de.jreality.scene.IndexedLineSet;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -84,7 +85,25 @@ public class VisualizationUtility {
 			drawArc(p1, p2, p3, g, model, res);
 		}
 		
+		g.translate(-res, res);
+		g.scale(2, -2);
 	}
+	
+	
+	public static IndexedLineSet createSurfaceCurves(
+		FundamentalPolygon poly, 
+		int depth,
+		HyperbolicModel model,
+		Graphics2D g,
+		int res,
+		Color rootColor
+	) {
+		
+		
+		
+		return new IndexedLineSet();
+	}
+	
 	
 	
 	
@@ -123,6 +142,9 @@ public class VisualizationUtility {
 		g.setStroke(new BasicStroke(3 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
 		g.setColor(Color.BLUE);
 		drawPolygonAxes(poly, model, g, res);
+		
+		g.translate(-res, res);
+		g.scale(2, -2);
 	}
 	
 	

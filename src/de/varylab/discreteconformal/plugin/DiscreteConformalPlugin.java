@@ -16,6 +16,7 @@ import static de.varylab.discreteconformal.uniformization.VisualizationUtility.d
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.BLUE;
+import static java.awt.Color.GRAY;
 import static java.awt.Color.GREEN;
 import static java.awt.Color.ORANGE;
 import static java.awt.Color.RED;
@@ -26,14 +27,16 @@ import static java.lang.Math.PI;
 import static java.lang.Math.atan2;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
+import static javax.swing.JOptionPane.WARNING_MESSAGE;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static javax.swing.SwingUtilities.getWindowAncestor;
 
-import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
@@ -58,6 +61,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
@@ -80,6 +84,7 @@ import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
+import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.basic.View;
 import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.scene.Appearance;
@@ -100,6 +105,7 @@ import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.halfedgetools.plugin.SelectionListener;
+import de.jtem.halfedgetools.plugin.image.ImageHook;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
@@ -172,11 +178,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		canonicalPolygon = null;
 	private Matrix 
 		polygonTextureMatrix = euclidean().translate(-0.5, -0.5, 0).scale(0.5).scale(1, -1, 1).getMatrix();
-	private BufferedImage
-		cutCoverImage = null,
-		minimalCoverImage = null,
-		oppositeCoverImage = null,
-		canonicalCoverImage = null;
 	private int
 		genus = -1;
 	private CuttingInfo<CoVertex, CoEdge, CoFace> 
@@ -197,21 +198,22 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	private BranchPointRadiusAdapter
 		pointRadiusAdapter = new BranchPointRadiusAdapter();
 	
-//	private Tool
-//		hyperbolicCopyTool = new HyperbolicCopyTool(this);
 	private Appearance
 		universalCoverAppearance = new Appearance();
 	private SceneGraphComponent
 		unitCircle = new SceneGraphComponent("Hyperbolic Boundary"),
-		cutCoverRoot = new SceneGraphComponent("Cut Cover"),
-		oppositeCoverRoot = new SceneGraphComponent("Opposite Cover"),
-		minimalCoverRoot = new SceneGraphComponent("Minimal Cover"),
-		canonicalCoverRoot = new SceneGraphComponent("Canonical Cover");
+		domainRoot = new SceneGraphComponent("Domain");
+	
+	private BufferedImage
+		activeDomainImage = null;
+		
 
 	// user interface section ------------
+	private JPanel
+		visButtonsPanel = new JPanel();
 	private JButton
 		saveTextureButton = new JButton("Save Texture"),
-		resetXFormButton = new JButton("Reset Transformation"),
+		exportHyperbolicButton = new JButton(ImageHook.getIcon("disk.png")),
 		moveToCenterButton = new JButton("Center Selected Vertex"),
 		coverToTextureButton = new JButton("Create Texture"),
 		checkGaussBonnetBtn = new JButton("Check Gauß-Bonnet"),
@@ -243,6 +245,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		useDistanceToCanonicalize = new JCheckBox("Use Isometry Distances"),
 		useCustomThetaChecker = new JCheckBox("Custom Theta"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
+		drawTriangulationChecker = new JCheckBox("Draw Triangulation"),
 		showUnwrapped = new JCheckBox("Unwrapped");
 	private JComboBox
 		numericsCombo = new JComboBox(new String[] {"Java/MTJ Numerics", "Petsc/Tao Numerics"}),
@@ -259,6 +262,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		selectedNodesList = new JList();
 	private JScrollPane
 		selectionScroller = new JScrollPane(selectedNodesList);
+	private JFileChooser
+		pngChooser = new JFileChooser(),
+		pdfChooser = new JFileChooser();
 		
 	public DiscreteConformalPlugin() {
 		createLayout();
@@ -286,14 +292,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		ifsf.setVertexCoordinates(new double[]{-1,-1,0.001, 1,-1,0.001, 1,1,0.001, -1,1,0.001});
 		ifsf.setGenerateFaceNormals(true);
 		ifsf.update();
-		cutCoverRoot.setGeometry(ifsf.getGeometry());
-		cutCoverRoot.setAppearance(universalCoverAppearance);
-		minimalCoverRoot.setGeometry(ifsf.getGeometry());
-		minimalCoverRoot.setAppearance(universalCoverAppearance);
-		oppositeCoverRoot.setGeometry(ifsf.getGeometry());
-		oppositeCoverRoot.setAppearance(universalCoverAppearance);		
-		canonicalCoverRoot.setGeometry(ifsf.getGeometry());
-		canonicalCoverRoot.setAppearance(universalCoverAppearance);
+		domainRoot.setGeometry(ifsf.getGeometry());
+		domainRoot.setAppearance(universalCoverAppearance);
 		universalCoverAppearance.setAttribute(VERTEX_DRAW, false);
 		universalCoverAppearance.setAttribute(EDGE_DRAW, false);
 		universalCoverAppearance.setAttribute(FACE_DRAW, true);
@@ -311,10 +311,30 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		unitCircle.setAppearance(circleApp);
 		euclidean().rotate(PI / 2, 1, 0, 0).assignTo(unitCircle);
 		unitCircle.setGeometry(Primitives.torus(1.0025, 0.005, 200, 5));
-		cutCoverRoot.addChild(unitCircle);
-		minimalCoverRoot.addChild(unitCircle);
-		oppositeCoverRoot.addChild(unitCircle);
-		canonicalCoverRoot.addChild(unitCircle);
+		domainRoot.addChild(unitCircle);
+		
+		pngChooser = new JFileChooser();
+		pngChooser.addChoosableFileFilter(new FileFilter() {
+			@Override
+			public String getDescription() {
+				return "PNG Files (*.png)";
+			}
+			@Override
+			public boolean accept(File f) {
+				return f.isDirectory() || f.getName().toLowerCase().endsWith(".png");
+			}
+		});
+		pdfChooser = new JFileChooser();
+		pdfChooser.addChoosableFileFilter(new FileFilter() {
+			@Override
+			public String getDescription() {
+				return "PDF Files (*.pdf)";
+			}
+			@Override
+			public boolean accept(File f) {
+				return f.isDirectory() || f.getName().toLowerCase().endsWith(".pdf");
+			}
+		});
 	}
 
 	
@@ -375,18 +395,21 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		shrinkPanel.add(texQuantizationPanel, c2);
 		
 		visualizationPanel.setLayout(new GridBagLayout());
-		visualizationPanel.add(showUnwrapped, c1);
-		visualizationPanel.add(resetXFormButton, c2);
+		visualizationPanel.add(showUnwrapped, c2);
 		visualizationPanel.add(new JLabel("Domain"), c1);
 		visualizationPanel.add(domainCombo, c2);
 		visualizationPanel.add(new JLabel("Cover Recursion"), c1);
 		visualizationPanel.add(coverRecursionSpinner, c2);
+		visualizationPanel.add(drawTriangulationChecker, c2);
 		visualizationPanel.add(useDistanceToCanonicalize, c2);
 		visualizationPanel.add(useProjectiveTexture, c1);
 		visualizationPanel.add(coverToTextureButton, c2);
-		visualizationPanel.add(saveTextureButton, c2);
-		visualizationPanel.setShrinked(true);
+		visualizationPanel.add(visButtonsPanel, c2);
 		shrinkPanel.add(visualizationPanel, c2);
+
+		visButtonsPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
+		visButtonsPanel.add(saveTextureButton);
+		visButtonsPanel.add(exportHyperbolicButton);
 		
 		modelPanel.setLayout(new GridBagLayout()); 	c1.gridwidth = 1;
 		modelPanel.add(kleinButton, c1); 			c1.gridwidth = RELATIVE;
@@ -404,8 +427,17 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		customThetaSpinner.addChangeListener(this);
 		circularEdgeChecker.addActionListener(this);
 		moveToCenterButton.addActionListener(this);
-		resetXFormButton.addActionListener(this);
 		saveTextureButton.addActionListener(this);
+		drawTriangulationChecker.addActionListener(this);
+		exportHyperbolicButton.addActionListener(this);
+		coverRecursionSpinner.addChangeListener(this);
+	}
+	
+	public static void main(String[] args) {
+		JRViewer v = new JRViewer();
+		v.registerPlugin(DiscreteConformalPlugin.class);
+		v.setPropertiesFile("test.xml");
+		v.startup();
 	}
 	
 	
@@ -464,12 +496,17 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	
 	@Override
 	public void stateChanged(ChangeEvent e) {
-		if (selectedNodesList.getSelectedValue() == null) return;
-		for (Object s : selectedNodesList.getSelectedValues()) {
-			if (!(s instanceof CoVertex)) continue;
-			CoVertex v = (CoVertex)s;
-			double thetaDeg = customThetaModel.getNumber().doubleValue();
-			v.info.theta = Math.toRadians(thetaDeg);
+		if (customThetaSpinner == e.getSource()) {
+			if (selectedNodesList.getSelectedValue() == null) return;
+			for (Object s : selectedNodesList.getSelectedValues()) {
+				if (!(s instanceof CoVertex)) continue;
+				CoVertex v = (CoVertex)s;
+				double thetaDeg = customThetaModel.getNumber().doubleValue();
+				v.info.theta = Math.toRadians(thetaDeg);
+			}
+		}
+		if (coverRecursionSpinner == e.getSource()) {
+			updateDomainImage();
 		}
 	}
 	
@@ -510,7 +547,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 
 			createVisualization(surface, genus, cutInfo);
 			updateSurface();
-			updateStates();
+			updateDomainImage();
 		}
 	}
 	
@@ -526,24 +563,23 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		}
 		if (genus > 1) {
 			try {
-			System.out.println("Constructing fundamental cut polygon...");
-			cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo);
-			System.out.println(cuttedPolygon);
-			FundamentalVertex root = cuttedPolygon.getMaxValenceVertex();
-			System.out.println("Constructing minimal polygon...");
-			minimalPolygon = FundamentalPolygonUtility.minimize(cuttedPolygon, root);
-			System.out.println(minimalPolygon);
-			minimalPolygon.checkRelation();
-			System.out.println("Constructing opposites sides polygon...");
-			oppositePolygon = CanonicalFormUtility.canonicalizeOpposite(minimalPolygon);
-			System.out.println(oppositePolygon);
-			oppositePolygon.checkRelation();	
-			System.out.println("Constructing fast canonical polygon...");
-			canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon, useDistanceToCanonicalize.isSelected());
-			System.out.println(canonicalPolygon);
-			canonicalPolygon.checkRelation();
-			updatePolygonTexture(coverResolution);
-			metricErrorAdapter.setSignature(Pn.HYPERBOLIC);
+				System.out.println("Constructing fundamental cut polygon...");
+				cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo);
+				System.out.println(cuttedPolygon);
+				FundamentalVertex root = cuttedPolygon.getMaxValenceVertex();
+				System.out.println("Constructing minimal polygon...");
+				minimalPolygon = FundamentalPolygonUtility.minimize(cuttedPolygon, root);
+				System.out.println(minimalPolygon);
+				minimalPolygon.checkRelation();
+				System.out.println("Constructing opposites sides polygon...");
+				oppositePolygon = CanonicalFormUtility.canonicalizeOpposite(minimalPolygon);
+				System.out.println(oppositePolygon);
+				oppositePolygon.checkRelation();	
+				System.out.println("Constructing fast canonical polygon...");
+				canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon, useDistanceToCanonicalize.isSelected());
+				System.out.println(canonicalPolygon);
+				canonicalPolygon.checkRelation();
+				metricErrorAdapter.setSignature(Pn.HYPERBOLIC);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -553,6 +589,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			cutInfo = null;
 			cuttedPolygon = null;
 		}
+		updateDomainImage();
 	}
 	
 	
@@ -560,24 +597,25 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
 		if (domainCombo == s) {
-			updateStates();
+			updateDomainImage();
 			return;
 		}
 		if (coverToTextureButton == s) {
+			if (activeDomainImage == null) {
+				Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
+				JOptionPane.showMessageDialog(w, "No current domain image", "Cannot create texture", WARNING_MESSAGE);
+				return;
+			}
 			AppearanceInspector ai = contentAppearance.getAppearanceInspector();
 			TextureInspector ti = ai.getTextureInspector();
-			if (cutCoverImage != null) {
-				ti.addTexture("Cut Polygon", cutCoverImage);
-			}
-			if (minimalCoverImage != null) {
-				ti.addTexture("Minimal Polygon", minimalCoverImage);
-			}
-			if (oppositeCoverImage != null) {
-				ti.addTexture("Opposite Polygon", oppositeCoverImage);
-			}
-			if (canonicalCoverImage != null) {
-				ti.addTexture("Canonical Polygon", canonicalCoverImage);
-			}
+			ti.addTexture("Hyperbolic Domain", activeDomainImage);
+			ti.setTextureScaleLock(false);
+			ti.setTextureUScale(0.5);
+			ti.setTextureVScale(-0.5);
+			ti.setTextureUTranslation(1.0);
+			ti.setTextureVTranslation(1.0);
+			ti.setTextureRotation(0.0);
+			ti.setTextureShear(0.0);
 		}
 		if (unwrapBtn == s) {
 			CoHDS surface = getLoaderGeometry();
@@ -598,14 +636,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		}
 		if (showUnwrapped == s || useProjectiveTexture == s) {
 			updateSurface();
-			updateStates();
+			updateDomainImage();
 		}
 		if (kleinButton == s || poincareButton == s || halfplaneButton == s) {
 			updateSurface();
-			if (genus > 1) {
-				updatePolygonTexture(coverResolution);
-			}
-			updateStates();
+			updateDomainImage();
 		}
 		if (customModeCombo == s) {
 			for (Object sel : selectedNodesList.getSelectedValues()) {
@@ -746,112 +781,73 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			hif.update();
 			createVisualization(surface, genus, cutInfo);
 			updateSurface();
-			updateStates();
-		}
-		if (resetXFormButton == s) {
-			
+			updateDomainImage();
 		}
 		if (saveTextureButton == s) {
-			JFileChooser imageChooser = new JFileChooser();
-			imageChooser.addChoosableFileFilter(new FileFilter() {
-				
-				@Override
-				public String getDescription() {
-					return "PNG Files (*.png)";
-				}
-				
-				@Override
-				public boolean accept(File f) {
-					return f.isDirectory() || f.getName().toLowerCase().endsWith(".png");
-				}
-			});
 			Window w = SwingUtilities.getWindowAncestor(this.shrinkPanel);
-			int result = imageChooser.showSaveDialog(w);
+			int result = pngChooser.showSaveDialog(w);
 			if (result != JFileChooser.APPROVE_OPTION) {
 				return;
 			}
-			File file = imageChooser.getSelectedFile();
+			File file = pngChooser.getSelectedFile();
 			if (!file.getName().toLowerCase().endsWith(".png")) {
 				file = new File(file.getAbsolutePath() + ".png");
 			}
-			try {
-				switch ((Domain)domainCombo.getSelectedItem()) {
-				case Cut:
-					ImageIO.write(cutCoverImage, "png", imageChooser.getSelectedFile());
-					break;
-				case Canonical:
-					ImageIO.write(canonicalCoverImage, "png", imageChooser.getSelectedFile());
-					break;
-				case Opposite:
-					ImageIO.write(oppositeCoverImage, "png", imageChooser.getSelectedFile());
-					break;					
-				case Minimal:
-					ImageIO.write(minimalCoverImage, "png", imageChooser.getSelectedFile());
-					break;
+			if (file.exists()) {
+				result = JOptionPane.showConfirmDialog(w, "File exists, overwrite?", "File exists", OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+				if (result != JOptionPane.OK_OPTION) {
+					return;
 				}
+			}			
+			BufferedImage img = createDomainImage(coverResolution);
+			try {
+				ImageIO.write(img, "png", pngChooser.getSelectedFile());
 			} catch (Exception e2) {
 				JOptionPane.showMessageDialog(w, e2.getMessage(), "Error", ERROR_MESSAGE);
 			}
 		}
+		if (exportHyperbolicButton == s) {
+			Window w = SwingUtilities.getWindowAncestor(this.shrinkPanel);
+			int result = pdfChooser.showSaveDialog(w);
+			if (result != JFileChooser.APPROVE_OPTION) {
+				return;
+			}
+			File file = pdfChooser.getSelectedFile();
+			if (!file.getName().toLowerCase().endsWith(".pdf")) {
+				file = new File(file.getAbsolutePath() + ".pdf");
+			}
+			if (file.exists()) {
+				result = JOptionPane.showConfirmDialog(w, "File exists, overwrite?", "File exists", OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+				if (result != JOptionPane.OK_OPTION) {
+					return;
+				}
+			}
+			try {
+				exportHyperbolicImageToPDF(file, coverResolution);
+			} catch (Exception e2) {
+				JOptionPane.showMessageDialog(w, e2.getMessage(), "Error", ERROR_MESSAGE);
+			}
+		}
+		if (drawTriangulationChecker == s) {
+			updateDomainImage();
+		}
 	}
 	
-	/*
-	 * Set up scene
-	 */
-	private void updateStates() {
+
+	private void updateDomainImage() {
+		if (hif == null) return;
 		HalfedgeLayer l = hif.getActiveLayer();
-		l.removeTemporaryGeometry(cutCoverRoot);
-		l.removeTemporaryGeometry(minimalCoverRoot);
-		l.removeTemporaryGeometry(oppositeCoverRoot);
-		l.removeTemporaryGeometry(canonicalCoverRoot);
+		l.removeTemporaryGeometry(domainRoot);
 		if (genus > 1 && showUnwrapped.isSelected()) {
-			switch ((Domain)domainCombo.getSelectedItem()) {
-			case Cut:
-				l.addTemporaryGeometry(cutCoverRoot);
-				break;
-			case Minimal:
-				l.addTemporaryGeometry(minimalCoverRoot);
-				break;
-			case Opposite:
-				l.addTemporaryGeometry(oppositeCoverRoot);
-				break;
-			case Canonical:
-				l.addTemporaryGeometry(canonicalCoverRoot);
-				break;
-			}
+			l.addTemporaryGeometry(domainRoot);
 			boolean showCircle = false;
 			showCircle |= getSelectedModel() == HyperbolicModel.Poincaré;
 			showCircle |= getSelectedModel() == HyperbolicModel.Klein;
 			unitCircle.setVisible(showCircle);
-		}
-		ImageData imgData = null;
-		switch ((Domain)domainCombo.getSelectedItem()) {
-		case Cut:
-			if (cutCoverImage != null) {
-				imgData = new ImageData(cutCoverImage);
-			}
-			break;
-		case Minimal:
-			if (minimalCoverImage != null) {
-				imgData = new ImageData(minimalCoverImage);
-			}
-			break;
-		case Opposite:
-			if (oppositeCoverImage != null) {
-				imgData = new ImageData(oppositeCoverImage);
-			}
-			break;
-		case Canonical:
-			if (canonicalCoverImage != null) {
-				imgData = new ImageData(canonicalCoverImage);
-			}
-			break;
-		}
-		if (imgData != null) {
+			Image img = createDomainImage(coverResolution);
+			ImageData imgData = new ImageData(img);
 			Texture2D tex2d = TextureUtility.createTexture(universalCoverAppearance, POLYGON_SHADER, imgData);
 			tex2d.setTextureMatrix(polygonTextureMatrix);
-		} else {
-			TextureUtility.removeTexture(universalCoverAppearance, POLYGON_SHADER);
 		}
 	}
 	
@@ -892,51 +888,69 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	}
 	
 
+	public BufferedImage createDomainImage(int res) {
+		BufferedImage image = new BufferedImage(res, res, TYPE_INT_ARGB);
+		Graphics2D gImage = image.createGraphics();
+		drawDomainImage(gImage, res);
+		activeDomainImage = image;
+		return image;
+	}
+	
 
-	public void updatePolygonTexture(int res) {
-		cutCoverImage = new BufferedImage(res, res, TYPE_INT_ARGB);
-		minimalCoverImage = new BufferedImage(res, res, TYPE_INT_ARGB);
-		oppositeCoverImage = new BufferedImage(res, res, TYPE_INT_ARGB);
-		canonicalCoverImage = new BufferedImage(res, res, TYPE_INT_ARGB);
-		Graphics2D gCut = cutCoverImage.createGraphics();
-		Graphics2D gMin = minimalCoverImage.createGraphics();
-		Graphics2D gOpp = oppositeCoverImage.createGraphics();
-		Graphics2D gCanon = canonicalCoverImage.createGraphics();
-		
+	public void drawDomainImage(Graphics2D g2d, int res) {
 		int d = coverRecursionModel.getNumber().intValue();
 		HyperbolicModel model = getSelectedModel();
-		drawUniversalCoverImage(cuttedPolygon, d, model, gCut, res, BLUE);
-		drawUniversalCoverImage(minimalPolygon, d, model, gMin, res, GREEN);
-		drawUniversalCoverImage(oppositePolygon, d, model, gOpp, res, ORANGE);
-//		gMin = minimalCoverImage.createGraphics();
-//		drawTriangulation(surface, model, gMin, res, GRAY);
-		drawUniversalCoverImage(canonicalPolygon, d, model, gCanon, res, RED);
-		
-		try {
-			exportPolygonToPDF(res);
-		} catch (Exception e) {
-			System.out.println("could not write pdf file: " + e.getLocalizedMessage());
+		if (drawTriangulationChecker.isSelected()) {
+			if (surface == null) {
+				throw new RuntimeException("No surface available");
+			}
+			drawTriangulation(surface, model, g2d, res, GRAY);
+		}
+		Domain domain = (Domain)domainCombo.getSelectedItem();
+		switch (domain) {
+			case Cut:
+				if (cuttedPolygon == null) {
+					throw new RuntimeException("No fundamental polygon available");
+				}
+				drawUniversalCoverImage(cuttedPolygon, d, model, g2d, res, BLUE);
+				break;
+			case Minimal:
+				if (minimalPolygon == null) {
+					throw new RuntimeException("No fundamental polygon available");
+				}
+				drawUniversalCoverImage(minimalPolygon, d, model, g2d, res, GREEN);
+				break;
+			case Canonical:
+				if (canonicalPolygon == null) {
+					throw new RuntimeException("No fundamental polygon available");
+				}	
+				drawUniversalCoverImage(canonicalPolygon, d, model, g2d, res, RED);
+				break;
+			case Opposite:
+				if (oppositePolygon == null) {
+					throw new RuntimeException("No fundamental polygon available");
+				}
+				drawUniversalCoverImage(oppositePolygon, d, model, g2d, res, ORANGE);
+				break;
 		}
 	}
 	
 	
-	public void exportPolygonToPDF(int res) throws Exception {
-		FileOutputStream out = new FileOutputStream("test.pdf");
+	public void exportHyperbolicImageToPDF(File file, int res) throws Exception {
+		FileOutputStream out = new FileOutputStream(file);
 		Rectangle pageSize = new Rectangle(res, res);
-		Document doc = new Document(pageSize, 100.0f, 100.0f, 100.0f, 100.0f);
+		Document doc = new Document(pageSize);
 		PdfWriter writer = PdfWriter.getInstance(doc, out);
 		doc.open();
 		PdfContentByte cb = writer.getDirectContent();
-		
-		int d = coverRecursionModel.getNumber().intValue();
-		HyperbolicModel model = getSelectedModel();
 		Graphics2D g2 = cb.createGraphics(res, res);
-		drawTriangulation(surface, model, g2, res, Color.LIGHT_GRAY);
-		g2.dispose();
-		g2 = cb.createGraphics(res, res);
-		drawUniversalCoverImage(oppositePolygon, d, model, g2, res, ORANGE);
-		g2.dispose();
-		doc.close();
+		try {
+			drawDomainImage(g2, res);
+		} finally {
+			g2.dispose();
+			doc.close();
+			out.close();
+		}
 	}
 	
 	
