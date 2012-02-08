@@ -20,7 +20,9 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import no.uib.cipr.matrix.DenseMatrix;
@@ -28,7 +30,6 @@ import no.uib.cipr.matrix.EVD;
 import no.uib.cipr.matrix.NotConvergedException;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
-import de.jreality.scene.IndexedLineSet;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -41,7 +42,6 @@ public class VisualizationUtility {
 		HALF = new BigDecimal(0.5);
 	private static double 
 		eps = 1E-15;
-
 	
 	
 	public static void drawTriangulation(
@@ -90,23 +90,6 @@ public class VisualizationUtility {
 	}
 	
 	
-	public static IndexedLineSet createSurfaceCurves(
-		FundamentalPolygon poly, 
-		int depth,
-		HyperbolicModel model,
-		Graphics2D g,
-		int res,
-		Color rootColor
-	) {
-		
-		
-		
-		return new IndexedLineSet();
-	}
-	
-	
-	
-	
 	public static void drawUniversalCoverImage(
 		FundamentalPolygon poly, 
 		int depth,
@@ -133,15 +116,15 @@ public class VisualizationUtility {
 //		g.setStroke(new BasicStroke(1.5f * ls));
 		g.setStroke(new BasicStroke(4 * ls));
 		g.setColor(rootColor);
-		drawUniversalCover(poly, depth, true, g, model, res);
+		drawUniversalCover(poly, depth, true, g, model, res, null, null);
 		
 		g.setStroke(new BasicStroke(4 * ls));
 		g.setColor(rootColor);
-		drawPolygon(poly, model, g, res);
+		drawPolygon(poly, model, g, res, null);
 
 		g.setStroke(new BasicStroke(3 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
 		g.setColor(Color.BLUE);
-		drawPolygonAxes(poly, model, g, res);
+		drawPolygonAxes(poly, model, g, res, null);
 		
 		g.translate(-res, res);
 		g.scale(2, -2);
@@ -152,7 +135,8 @@ public class VisualizationUtility {
 		FundamentalPolygon poly, 
 		HyperbolicModel model, 
 		Graphics2D g,
-		int resolution
+		int resolution,
+		List<double[][]> segmentsOUT
 	) {
 		boolean proceed = true;
 		for (FundamentalEdge e : poly.getEdges()) {
@@ -186,25 +170,37 @@ public class VisualizationUtility {
 			double[] p1, p2, p3;
 			switch (model) {
 				case Klein:
-					p1 = new double[] {p1ad[0] / p1ad[3], p1ad[1] / p1ad[3], 0};
-					p2 = new double[] {p2ad[0] / p2ad[3], p2ad[1] / p2ad[3], 0};
-					p3 = new double[] {p3ad[0] / p3ad[3], p3ad[1] / p3ad[3], 0};		
+					p1 = new double[] {p1ad[0] / p1ad[3], p1ad[1] / p1ad[3], 1};
+					p2 = new double[] {p2ad[0] / p2ad[3], p2ad[1] / p2ad[3], 1};
+					p3 = new double[] {p3ad[0] / p3ad[3], p3ad[1] / p3ad[3], 1};
+					if (segmentsOUT != null) {
+						segmentsOUT.add(new double[][] {p1, p2});
+					}
 					break;
 				default:
 				case Poincaré:
-					p1 = new double[] {p1ad[0] / (p1ad[3] + 1), p1ad[1] / (p1ad[3] + 1), 0};
-					p2 = new double[] {p2ad[0] / (p2ad[3] + 1), p2ad[1] / (p2ad[3] + 1), 0};
-					p3 = new double[] {p3ad[0] / (p3ad[3] + 1), p3ad[1] / (p3ad[3] + 1), 0};
+					p1 = new double[] {p1ad[0] / (p1ad[3] + 1), p1ad[1] / (p1ad[3] + 1), 1};
+					p2 = new double[] {p2ad[0] / (p2ad[3] + 1), p2ad[1] / (p2ad[3] + 1), 1};
+					p3 = new double[] {p3ad[0] / (p3ad[3] + 1), p3ad[1] / (p3ad[3] + 1), 1};
 					break;
 				case Halfplane:
-					p1 = new double[] {p1ad[1] / (p1ad[3] - p1ad[0]), 1 / (p1ad[3] - p1ad[0]), 0};
-					p2 = new double[] {p2ad[1] / (p2ad[3] - p2ad[0]), 1 / (p2ad[3] - p2ad[0]), 0};
-					p3 = new double[] {p3ad[1] / (p3ad[3] - p3ad[0]), 1 / (p3ad[3] - p3ad[0]), 0};
+					p1 = new double[] {p1ad[1] / (p1ad[3] - p1ad[0]), 1 / (p1ad[3] - p1ad[0]), 1};
+					p2 = new double[] {p2ad[1] / (p2ad[3] - p2ad[0]), 1 / (p2ad[3] - p2ad[0]), 1};
+					p3 = new double[] {p3ad[1] / (p3ad[3] - p3ad[0]), 1 / (p3ad[3] - p3ad[0]), 1};
 					break;
 			}
-			drawArc(p1, p2, p3, g, model, resolution);
+			if (g != null) {
+				drawArc(p1, p2, p3, g, model, resolution);
+			}
 		}
 		return proceed;
+	}
+	
+	
+	protected static List<double[][]> getPolygonAxesSegments(FundamentalPolygon poly) {
+		List<double[][]> result = new ArrayList<double[][]>();
+		drawPolygonAxes(poly, HyperbolicModel.Klein, null, -1, result);
+		return result;
 	}
 	
 	
@@ -212,14 +208,15 @@ public class VisualizationUtility {
 		FundamentalPolygon poly, 
 		HyperbolicModel model, 
 		Graphics2D g,
-		int resolution
+		int resolution,
+		List<double[][]> segmentsOUT
 	) {
 		Set<FundamentalEdge> axisDrawn = new HashSet<FundamentalEdge>();
 		for (FundamentalEdge e : poly.getEdges()) {
 			if (axisDrawn.contains(e) || axisDrawn.contains(e.partner)) {
 				continue;
 			}
-			drawAxis(e.motionBig, model, g, resolution);
+			drawAxis(e.motionBig, model, g, resolution, segmentsOUT);
 			axisDrawn.add(e);
 		}
 	}
@@ -229,7 +226,8 @@ public class VisualizationUtility {
 		BigDecimal[] Ta,		
 		HyperbolicModel model, 
 		Graphics2D g,
-		int resolution
+		int resolution,
+		List<double[][]> segmentsOUT
 	) {
 		double[][] Tad = new double[4][4];
 		for (int i = 0; i < Ta.length; i++) {
@@ -254,23 +252,39 @@ public class VisualizationUtility {
 		double[] p1, p2, p3;
 		switch (model) {
 			case Klein:
-				p1 = new double[] {f1[0] / f1[3], f1[1] / f1[3], 0};
-				p2 = new double[] {f2[0] / f2[3], f2[1] / f2[3], 0};
-				p3 = new double[] {f3[0] / f3[3], f3[1] / f3[3], 0};		
+				p1 = new double[] {f1[0] / f1[3], f1[1] / f1[3], 1};
+				p2 = new double[] {f2[0] / f2[3], f2[1] / f2[3], 1};
+				p3 = new double[] {f3[0] / f3[3], f3[1] / f3[3], 1};
+				if (segmentsOUT != null) {
+					segmentsOUT.add(new double[][] {p1, p2});
+				}
 				break;
 			default:
 			case Poincaré:
-				p1 = new double[] {f1[0] / f1[3], f1[1] / f1[3], 0};
-				p2 = new double[] {f2[0] / f2[3], f2[1] / f2[3], 0};
-				p3 = new double[] {f3[0] / (f3[3] + 1), f3[1] / (f3[3] + 1), 0};
+				p1 = new double[] {f1[0] / f1[3], f1[1] / f1[3], 1};
+				p2 = new double[] {f2[0] / f2[3], f2[1] / f2[3], 1};
+				p3 = new double[] {f3[0] / (f3[3] + 1), f3[1] / (f3[3] + 1), 1};
 				break;
 			case Halfplane:
-				p1 = new double[] {f1[0] / f1[3], f1[1] / f1[3], 0};
-				p2 = new double[] {f2[0] / f2[3], f2[1] / f2[3], 0};
-				p3 = new double[] {f3[1] / (f3[3] - f3[0]), 1 / (f3[3] - f3[0]), 0};
+				p1 = new double[] {f1[0] / f1[3], f1[1] / f1[3], 1};
+				p2 = new double[] {f2[0] / f2[3], f2[1] / f2[3], 1};
+				p3 = new double[] {f3[1] / (f3[3] - f3[0]), 1 / (f3[3] - f3[0]), 1};
 				break;
 		}
-		drawArc(p1, p2, p3, g, model, resolution);
+		if (g != null) {
+			drawArc(p1, p2, p3, g, model, resolution);
+		}
+	}
+	
+	
+	protected static void getUniversalCoverSegments(
+		FundamentalPolygon poly,
+		int maxDepth,
+		boolean drawAxes,
+		List<double[][]> axesSegments,
+		List<double[][]> polygonSegments
+	) {
+		drawUniversalCover(poly, maxDepth, drawAxes, null, HyperbolicModel.Klein, -1, axesSegments, polygonSegments);
 	}
 	
 	
@@ -280,11 +294,13 @@ public class VisualizationUtility {
 		boolean drawAxes,
 		Graphics2D g,
 		HyperbolicModel model,
-		int resolution
+		int resolution,
+		List<double[][]> axesSegments,
+		List<double[][]> polygonSegments
 	) {
 		BigDecimal[] id = new BigDecimal[16];
 		RnBig.setIdentityMatrix(id);
-		drawUniversalCoverR(poly, id, 0, maxDepth, drawAxes, g, model, resolution);
+		drawUniversalCoverR(poly, id, 0, maxDepth, drawAxes, g, model, resolution, axesSegments, polygonSegments);
 	}
 		
 		
@@ -296,7 +312,9 @@ public class VisualizationUtility {
 		boolean drawAxes,
 		Graphics2D g,
 		HyperbolicModel model,
-		int resolution
+		int resolution,
+		List<double[][]> axesSegments,
+		List<double[][]> polygonSegments
 	) {
 		FundamentalPolygon rP = FundamentalPolygonUtility.copyPolygon(poly);
 		for (FundamentalEdge ce : rP.getEdges()) {
@@ -307,24 +325,28 @@ public class VisualizationUtility {
 			PnBig.normalize(ce.startPosition, ce.startPosition, HYPERBOLIC, context);
 		}
 		if (drawAxes) {
-			float ls = resolution / 500f;
-			Stroke storedStroke = g.getStroke();
-			Color storedColor = g.getColor();
-//			g.setStroke(new BasicStroke(1.5f * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
-//			g.setColor(Color.BLUE);
-			g.setStroke(new BasicStroke(3 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
-			g.setColor(Color.BLUE);
-			drawPolygonAxes(rP, model, g, resolution);
-			g.setStroke(storedStroke);
-			g.setColor(storedColor);
+			if (g != null) {
+				float ls = resolution / 500f;
+				Stroke storedStroke = g.getStroke();
+				Color storedColor = g.getColor();
+	//			g.setStroke(new BasicStroke(1.5f * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
+	//			g.setColor(Color.BLUE);
+				g.setStroke(new BasicStroke(3 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
+				g.setColor(Color.BLUE);
+				drawPolygonAxes(rP, model, g, resolution, axesSegments);
+				g.setStroke(storedStroke);
+				g.setColor(storedColor);
+			} else {
+				drawPolygonAxes(rP, model, null, resolution, axesSegments);
+			}
 		}
-		boolean proceed = drawPolygon(rP, model, g, resolution);
+		boolean proceed = drawPolygon(rP, model, g, resolution, polygonSegments);
 		if (!proceed || depth + 1 > maxDepth) {
 			return;
 		}
 		for (FundamentalEdge e : poly.getEdges()) {
 			BigDecimal[] newDomain = RnBig.times(null, domain, e.motionBig, context);
-			drawUniversalCoverR(poly, newDomain, depth + 1, maxDepth, drawAxes, g, model, resolution);
+			drawUniversalCoverR(poly, newDomain, depth + 1, maxDepth, drawAxes, g, model, resolution, axesSegments, polygonSegments);
 		}
 	}
 	
