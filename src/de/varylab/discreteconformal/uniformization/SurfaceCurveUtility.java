@@ -141,9 +141,9 @@ public class SurfaceCurveUtility {
 	
 	private static double[] getPointOnSegment(double[] p, double[][] source, double[][] target) {
 		Pn.dehomogenize(target, target);
-		double l = Pn.distanceBetween(source[0], source[1], Pn.HYPERBOLIC);
-		double l1 = Pn.distanceBetween(source[0], p, Pn.HYPERBOLIC) / l;
-		double l2 = Pn.distanceBetween(source[1], p, Pn.HYPERBOLIC) / l;
+		double l = Pn.distanceBetween(source[0], source[1], Pn.EUCLIDEAN);
+		double l1 = Pn.distanceBetween(source[0], p, Pn.EUCLIDEAN) / l;
+		double l2 = Pn.distanceBetween(source[1], p, Pn.EUCLIDEAN) / l;
 		return Rn.linearCombination(null, l1, target[0], l2, target[1]);
 	}
 	
