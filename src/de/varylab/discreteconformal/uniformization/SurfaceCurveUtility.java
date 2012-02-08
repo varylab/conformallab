@@ -7,6 +7,7 @@ import java.util.List;
 
 import de.jreality.math.P2;
 import de.jreality.math.Pn;
+import de.jreality.math.Rn;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -58,6 +59,9 @@ public class SurfaceCurveUtility {
 			v1.T[1] = s[0][1][1];
 			v0.P = s[1][0];
 			v1.P = s[1][1];
+			
+			Pn.normalize(v0.T, v0.T, Pn.HYPERBOLIC);
+			Pn.normalize(v1.T, v1.T, Pn.HYPERBOLIC);
 		}
 		
 		return result;
@@ -118,8 +122,7 @@ public class SurfaceCurveUtility {
 					} else if (isOnSegment(c1, ts2)) {
 						sp1 = getPointOnSegment(c1, ts2, ps2);
 					}
-					
-					double[][][] curveSegment = {{c0, c1}, {v0.P, v1.P}};
+					double[][][] curveSegment = {{c0, c1}, {sp0, sp1}};
 					result.add(curveSegment);
 				}
 			}
@@ -137,8 +140,11 @@ public class SurfaceCurveUtility {
 	
 	
 	private static double[] getPointOnSegment(double[] p, double[][] source, double[][] target) {
-		
-		return null;
+		Pn.dehomogenize(target, target);
+		double l = Pn.distanceBetween(source[0], source[1], Pn.HYPERBOLIC);
+		double l1 = Pn.distanceBetween(source[0], p, Pn.HYPERBOLIC) / l;
+		double l2 = Pn.distanceBetween(source[1], p, Pn.HYPERBOLIC) / l;
+		return Rn.linearCombination(null, l1, target[0], l2, target[1]);
 	}
 	
 }
