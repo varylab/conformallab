@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.uniformization;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -26,7 +27,7 @@ public class SurfaceCurveUtility {
 	) {
 		List<double[][]> axesSegments = new ArrayList<double[][]>();
 		List<double[][]> polySegments = new ArrayList<double[][]>();
-		VisualizationUtility.getUniversalCoverSegments(poly, depth, includePoygon, includeAxes, axesSegments, polySegments);
+		VisualizationUtility.getUniversalCoverSegments(poly, depth, includePoygon, includeAxes, Color.BLACK, Color.BLACK, axesSegments, polySegments);
 		
 		List<double[][][]> allCurves = new ArrayList<double[][][]>();
 		if (includeAxes) {
@@ -133,7 +134,7 @@ public class SurfaceCurveUtility {
 		double l = Pn.distanceBetween(s[0], s[1], Pn.EUCLIDEAN);
 		double l1 = Pn.distanceBetween(s[0], p, Pn.EUCLIDEAN);
 		double l2 = Pn.distanceBetween(s[1], p, Pn.EUCLIDEAN);
-		return Math.abs(l1 + l2 - l) < l*1E-5;
+		return Math.abs(l1 + l2 - l) < l*1E-6;
 	}
 	
 	

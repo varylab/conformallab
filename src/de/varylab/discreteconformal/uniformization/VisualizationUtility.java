@@ -55,7 +55,7 @@ public class VisualizationUtility {
 		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
 		g.scale(0.5, -0.5);
 		g.translate(res, -res);
-		g.setStroke(new BasicStroke(2 * ls));
+		g.setStroke(new BasicStroke(1 * ls));
 		g.setColor(color);
 		
 		for (CoEdge e : surface.getPositiveEdges()) {
@@ -98,7 +98,8 @@ public class VisualizationUtility {
 		HyperbolicModel model,
 		Graphics2D g,
 		int res,
-		Color rootColor
+		Color polygonColor,
+		Color axesColor
 	) {
 		float ls = res / 500f; // line scale
 		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
@@ -107,27 +108,16 @@ public class VisualizationUtility {
 		g.scale(0.5, -0.5);
 		g.translate(res, -res);
 
+		
+		g.setStroke(new BasicStroke(4 * ls));
+		g.setColor(polygonColor);
+		drawUniversalCover(poly, depth, drawPolygon, drawAxes, g, model, res, polygonColor, axesColor, null, null);
+		
 		if (model == HyperbolicModel.Klein || model == HyperbolicModel.Poincaré) {
 			g.setColor(Color.BLACK);
 			g.setStroke(new BasicStroke(4 * ls));
-			Ellipse2D boundary = new Ellipse2D.Double(-res,-res, 2*res, 2*res);
+			Ellipse2D boundary = new Ellipse2D.Double(-res + ls, -res + ls, 2*res - 2*ls, 2*res - 2*ls);
 			g.draw(boundary);
-		}
-		
-//		g.setColor(Color.BLACK);
-//		g.setStroke(new BasicStroke(1.5f * ls));
-		g.setStroke(new BasicStroke(4 * ls));
-		g.setColor(rootColor);
-		drawUniversalCover(poly, depth, drawPolygon, drawAxes, g, model, res, null, null);
-		
-//		g.setStroke(new BasicStroke(4 * ls));
-//		g.setColor(rootColor);
-//		drawPolygon(poly, model, g, res, null);
-
-		if (drawAxes) {
-			g.setStroke(new BasicStroke(3 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
-			g.setColor(Color.BLUE);
-			drawPolygonAxes(poly, model, g, res, null);
 		}
 		
 		g.translate(-res, res);
@@ -286,10 +276,12 @@ public class VisualizationUtility {
 		int maxDepth,
 		boolean drawPolygon,
 		boolean drawAxes,
+		Color polygonColor,
+		Color axesColor,
 		List<double[][]> axesSegments,
 		List<double[][]> polygonSegments
 	) {
-		drawUniversalCover(poly, maxDepth, drawPolygon, drawAxes, null, HyperbolicModel.Klein, -1, axesSegments, polygonSegments);
+		drawUniversalCover(poly, maxDepth, drawPolygon, drawAxes, null, HyperbolicModel.Klein, -1, polygonColor, axesColor, axesSegments, polygonSegments);
 	}
 	
 	
@@ -301,12 +293,14 @@ public class VisualizationUtility {
 		Graphics2D g,
 		HyperbolicModel model,
 		int resolution,
+		Color polygonColor,
+		Color axesColor,
 		List<double[][]> axesSegments,
 		List<double[][]> polygonSegments
 	) {
 		BigDecimal[] id = new BigDecimal[16];
 		RnBig.setIdentityMatrix(id);
-		drawUniversalCoverR(poly, id, 0, maxDepth, drawPolygon, drawAxes, g, model, resolution, axesSegments, polygonSegments);
+		drawUniversalCoverR(poly, id, 0, maxDepth, drawPolygon, drawAxes, g, model, resolution, polygonColor, axesColor, axesSegments, polygonSegments);
 	}
 		
 		
@@ -320,6 +314,8 @@ public class VisualizationUtility {
 		Graphics2D g,
 		HyperbolicModel model,
 		int resolution,
+		Color polygonColor,
+		Color axesColor,
 		List<double[][]> axesSegments,
 		List<double[][]> polygonSegments
 	) {
@@ -336,19 +332,20 @@ public class VisualizationUtility {
 				float ls = resolution / 500f;
 				Stroke storedStroke = g.getStroke();
 				Color storedColor = g.getColor();
-	//			g.setStroke(new BasicStroke(1.5f * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
-	//			g.setColor(Color.BLUE);
 				g.setStroke(new BasicStroke(3 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
-				g.setColor(Color.BLUE);
+				g.setColor(axesColor);
 				drawPolygonAxes(rP, model, g, resolution, axesSegments);
-				g.setStroke(storedStroke);
 				g.setColor(storedColor);
+				g.setStroke(storedStroke);
 			} else {
 				drawPolygonAxes(rP, model, null, resolution, axesSegments);
 			}
 		}
 		boolean proceed = true;
 		if (drawPolygon) {
+			if (g != null) {
+				g.setColor(polygonColor);
+			}
 			proceed = drawPolygon(rP, model, g, resolution, polygonSegments);
 		}
 		if (!proceed || depth + 1 > maxDepth) {
@@ -356,7 +353,7 @@ public class VisualizationUtility {
 		}
 		for (FundamentalEdge e : poly.getEdges()) {
 			BigDecimal[] newDomain = RnBig.times(null, domain, e.motionBig, context);
-			drawUniversalCoverR(poly, newDomain, depth + 1, maxDepth, drawPolygon, drawAxes, g, model, resolution, axesSegments, polygonSegments);
+			drawUniversalCoverR(poly, newDomain, depth + 1, maxDepth, drawPolygon, drawAxes, g, model, resolution, polygonColor, axesColor, axesSegments, polygonSegments);
 		}
 	}
 	
