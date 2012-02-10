@@ -90,6 +90,7 @@ import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.basic.View;
 import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.scene.Appearance;
+import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.shader.ImageData;
 import de.jreality.shader.Texture2D;
@@ -104,6 +105,7 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
+import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeSelection;
@@ -168,7 +170,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	private ContentAppearance
 		contentAppearance = null;
 	private HalfedgeLayer
-		curvesLayer = null;
+		surfaceLayer = null;
 	
 	// data section ---------------------
 	private CoHDS
@@ -206,8 +208,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	
 	private Appearance
 		curvesAppearance = new Appearance(),
+		axesCurvesAppearance = new Appearance(),
 		universalCoverAppearance = new Appearance();
 	private SceneGraphComponent
+		polygonCurvesRoot = new SceneGraphComponent("Polygon Curves"),
+		axesCurvesRoot = new SceneGraphComponent("Axes Curves"),
 		unitCircle = new SceneGraphComponent("Hyperbolic Boundary"),
 		domainRoot = new SceneGraphComponent("Domain");
 	
@@ -253,6 +258,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		useCustomThetaChecker = new JCheckBox("Custom Theta"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
 		drawTriangulationChecker = new JCheckBox("Draw Triangulation"),
+		drawAxesChecker = new JCheckBox("Draw Axes"),
+		drawPolygonChecker = new JCheckBox("Draw Polygon"),
+		drawCurvesOnSurface = new JCheckBox("Draw Curves On Surface"),
 		showUnwrapped = new JCheckBox("Unwrapped");
 	private JComboBox
 		numericsCombo = new JComboBox(new String[] {"Java/MTJ Numerics", "Petsc/Tao Numerics"}),
@@ -321,7 +329,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		domainRoot.addChild(unitCircle);
 		
 		curvesAppearance.setAttribute(EDGE_DRAW, true);
-		curvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, Color.MAGENTA);
+		curvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, Color.YELLOW);
+		polygonCurvesRoot.setAppearance(curvesAppearance);
+		axesCurvesAppearance.setAttribute(EDGE_DRAW, true);
+		axesCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, Color.BLUE);
+		axesCurvesRoot.setAppearance(axesCurvesAppearance);
 		
 		pngChooser = new JFileChooser();
 		pngChooser.addChoosableFileFilter(new FileFilter() {
@@ -411,6 +423,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		visualizationPanel.add(new JLabel("Cover Recursion"), c1);
 		visualizationPanel.add(coverRecursionSpinner, c2);
 		visualizationPanel.add(drawTriangulationChecker, c2);
+		visualizationPanel.add(drawPolygonChecker, c2);
+		visualizationPanel.add(drawAxesChecker, c2);
+		visualizationPanel.add(drawCurvesOnSurface, c2);
 		visualizationPanel.add(useDistanceToCanonicalize, c2);
 		visualizationPanel.add(useProjectiveTexture, c1);
 		visualizationPanel.add(coverToTextureButton, c2);
@@ -441,6 +456,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		drawTriangulationChecker.addActionListener(this);
 		exportHyperbolicButton.addActionListener(this);
 		coverRecursionSpinner.addChangeListener(this);
+		drawPolygonChecker.addActionListener(this);
+		drawAxesChecker.addActionListener(this);
+		drawCurvesOnSurface.addActionListener(this);
 	}
 	
 	public static void main(String[] args) {
@@ -610,6 +628,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
 		if (domainCombo == s) {
+			updateSurface();
 			updateDomainImage();
 			return;
 		}
@@ -841,7 +860,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 				JOptionPane.showMessageDialog(w, e2.getMessage(), "Error", ERROR_MESSAGE);
 			}
 		}
-		if (drawTriangulationChecker == s) {
+		if (drawTriangulationChecker == s ||
+			drawAxesChecker == s ||
+			drawPolygonChecker == s ||
+			drawCurvesOnSurface == s
+		) {
+			updateSurface();
 			updateDomainImage();
 		}
 	}
@@ -851,7 +875,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		if (hif == null) return;
 		HalfedgeLayer l = hif.getActiveLayer();
 		l.removeTemporaryGeometry(domainRoot);
-		if (genus > 1 && showUnwrapped.isSelected()) {
+		boolean unwrapped = showUnwrapped.isSelected();
+		if (genus > 1 && unwrapped) {
 			// texture
 			l.addTemporaryGeometry(domainRoot);
 			boolean showCircle = false;
@@ -862,6 +887,59 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			ImageData imgData = new ImageData(img);
 			Texture2D tex2d = TextureUtility.createTexture(universalCoverAppearance, POLYGON_SHADER, imgData);
 			tex2d.setTextureMatrix(polygonTextureMatrix);
+		}
+		
+		// add curves
+		boolean drawCurves = drawCurvesOnSurface.isSelected();
+		surfaceLayer.removeTemporaryGeometry(polygonCurvesRoot);
+		surfaceLayer.removeTemporaryGeometry(axesCurvesRoot);
+		if (genus > 1 && !unwrapped && drawCurves) {
+			AdapterSet aSet = hif.getActiveAdapters();
+			int depth = coverRecursionModel.getNumber().intValue();
+			Domain domain = (Domain)domainCombo.getSelectedItem();
+			boolean drawPolygon = drawPolygonChecker.isSelected();
+			boolean drawAxes = drawAxesChecker.isSelected();
+			ConverterHeds2JR converter = new ConverterHeds2JR();
+			if (drawPolygon) {
+				CoHDS curves = null;
+				switch (domain) {
+					case Cut:
+						curves = SurfaceCurveUtility.createSurfaceCurves(cuttedPolygon, surface, aSet, depth, true, false);
+						break;
+					case Minimal:
+						curves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, surface, aSet, depth, true, false);
+						break;
+					case Canonical:
+						curves = SurfaceCurveUtility.createSurfaceCurves(canonicalPolygon, surface, aSet, depth, true, false);
+						break;
+					case Opposite:
+						curves = SurfaceCurveUtility.createSurfaceCurves(oppositePolygon, surface, aSet, depth, true, false);
+						break;				
+				}
+				IndexedFaceSet curvesGeom = converter.heds2ifs(curves, aSet);
+				polygonCurvesRoot.setGeometry(curvesGeom);
+				surfaceLayer.addTemporaryGeometry(polygonCurvesRoot);
+			}
+			if (drawAxes) {
+				CoHDS axesCurves = null;
+				switch (domain) {
+					case Cut:
+						axesCurves = SurfaceCurveUtility.createSurfaceCurves(cuttedPolygon, surface, aSet, depth, false, true);
+						break;
+					case Minimal:
+						axesCurves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, surface, aSet, depth, false, true);
+						break;
+					case Canonical:
+						axesCurves = SurfaceCurveUtility.createSurfaceCurves(canonicalPolygon, surface, aSet, depth, false, true);
+						break;
+					case Opposite:
+						axesCurves = SurfaceCurveUtility.createSurfaceCurves(oppositePolygon, surface, aSet, depth, false, true);
+						break;				
+				}
+				IndexedFaceSet axesGeom = converter.heds2ifs(axesCurves, aSet);
+				axesCurvesRoot.setGeometry(axesGeom);
+				surfaceLayer.addTemporaryGeometry(axesCurvesRoot);
+			}
 		}
 	}
 	
@@ -880,6 +958,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			}
 		}
 		Triangulator.triangulate(surface);
+		surfaceLayer = hif.getActiveLayer();
 		return surface;
 	}
 	
@@ -888,6 +967,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		if (surface == null) {
 			return;
 		}
+		
 		texturePositionAdapter.setProjective(useProjectiveTexture.isSelected());
 		texturePositionAdapter.setModel(getSelectedModel());
 		texCoordPositionAdapter.setProjective(useProjectiveTexture.isSelected());
@@ -895,24 +975,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		hif.addLayerAdapter(metricErrorAdapter, false);
 		if (showUnwrapped.isSelected()) {
 			hif.addLayerAdapter(texCoordPositionAdapter, false);	
-			curvesLayer.addAdapter(texCoordPositionAdapter, false);
 		} else {
 			hif.removeAdapter(texCoordPositionAdapter);
-			curvesLayer.removeAdapter(texCoordPositionAdapter);
 		}
-		
-		if (genus > 1) {
-			// curves
-			AdapterSet aSet = hif.getAdapters();
-			CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(canonicalPolygon, surface, aSet, 1);
-			curvesLayer.set(curves);
-			curvesLayer.setAppearance(curvesAppearance);
-			curvesLayer.setVisible(true);
-		} else {
-			curvesLayer.setVisible(false);
-		}
-		
-		hif.set(surface);
+		surfaceLayer.set(surface);
 	}
 	
 
@@ -926,7 +992,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 	
 
 	public void drawDomainImage(Graphics2D g2d, int res) {
-		int d = coverRecursionModel.getNumber().intValue();
+		int depth = coverRecursionModel.getNumber().intValue();
 		HyperbolicModel model = getSelectedModel();
 		if (drawTriangulationChecker.isSelected()) {
 			if (surface == null) {
@@ -934,31 +1000,33 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 			}
 			drawTriangulation(surface, model, g2d, res, GRAY);
 		}
+		boolean drawPolygon = drawPolygonChecker.isSelected();
+		boolean drawAxes = drawAxesChecker.isSelected();
 		Domain domain = (Domain)domainCombo.getSelectedItem();
 		switch (domain) {
 			case Cut:
 				if (cuttedPolygon == null) {
 					throw new RuntimeException("No fundamental polygon available");
 				}
-				drawUniversalCoverImage(cuttedPolygon, d, model, g2d, res, BLUE);
+				drawUniversalCoverImage(cuttedPolygon, drawPolygon, drawAxes, depth, model, g2d, res, BLUE);
 				break;
 			case Minimal:
 				if (minimalPolygon == null) {
 					throw new RuntimeException("No fundamental polygon available");
 				}
-				drawUniversalCoverImage(minimalPolygon, d, model, g2d, res, GREEN);
+				drawUniversalCoverImage(minimalPolygon, drawPolygon, drawAxes, depth, model, g2d, res, GREEN);
 				break;
 			case Canonical:
 				if (canonicalPolygon == null) {
 					throw new RuntimeException("No fundamental polygon available");
 				}	
-				drawUniversalCoverImage(canonicalPolygon, d, model, g2d, res, RED);
+				drawUniversalCoverImage(canonicalPolygon, drawPolygon, drawAxes, depth, model, g2d, res, RED);
 				break;
 			case Opposite:
 				if (oppositePolygon == null) {
 					throw new RuntimeException("No fundamental polygon available");
 				}
-				drawUniversalCoverImage(oppositePolygon, d, model, g2d, res, ORANGE);
+				drawUniversalCoverImage(oppositePolygon, drawPolygon, drawAxes, depth, model, g2d, res, ORANGE);
 				break;
 		}
 	}
@@ -989,9 +1057,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin implements ListSe
 		hif.addAdapter(new CoPositionAdapter(), true);
 		hif.addAdapter(texturePositionAdapter, true);
 		hif.addSelectionListener(this);
-		curvesLayer = hif.createLayer("Curves");
 		contentAppearance = c.getPlugin(ContentAppearance.class);
 	}
+	
 	
 	@Override
 	public void storeStates(Controller c) throws Exception {

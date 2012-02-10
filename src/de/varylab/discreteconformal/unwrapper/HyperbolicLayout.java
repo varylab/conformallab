@@ -180,6 +180,7 @@ public class HyperbolicLayout {
 				e = e.getOppositeEdge().getNextEdge();
 			}
 		}
+		
 		if (visited.size() != hds.numVertices()) {
 			throw new RuntimeException("Skipped vertices during layout.");
 		}

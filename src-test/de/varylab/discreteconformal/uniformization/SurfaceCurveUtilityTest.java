@@ -68,7 +68,7 @@ public class SurfaceCurveUtilityTest {
 	
 	@Test
 	public void testCreateSurfaceCurves() throws Exception {
-		CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, lawson, a, 0);
+		CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, lawson, a, 0, true, true);
 		Assert.assertEquals("Surface Curve Edge Number", 42, curves.numEdges() / 2);
 	}
 	

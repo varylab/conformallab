@@ -66,20 +66,20 @@ public class VisualizationUtility {
 			double[] p1, p2, p3;
 			switch (model) {
 				case Klein:
-					p1 = new double[] {s[0] / s[3], s[1] / s[3], 0};
-					p2 = new double[] {t[0] / t[3], t[1] / t[3], 0};
-					p3 = new double[] {m[0] / m[3], m[1] / m[3], 0};		
+					p1 = new double[] {s[0] / s[3], s[1] / s[3], 1};
+					p2 = new double[] {t[0] / t[3], t[1] / t[3], 1};
+					p3 = new double[] {m[0] / m[3], m[1] / m[3], 1};		
 					break;
 				default:
 				case Poincaré:
-					p1 = new double[] {s[0] / (s[3] + 1), s[1] / (s[3] + 1), 0};
-					p2 = new double[] {t[0] / (t[3] + 1), t[1] / (t[3] + 1), 0};
-					p3 = new double[] {m[0] / (m[3] + 1), m[1] / (m[3] + 1), 0};
+					p1 = new double[] {s[0] / (s[3] + 1), s[1] / (s[3] + 1), 1};
+					p2 = new double[] {t[0] / (t[3] + 1), t[1] / (t[3] + 1), 1};
+					p3 = new double[] {m[0] / (m[3] + 1), m[1] / (m[3] + 1), 1};
 					break;
 				case Halfplane:
-					p1 = new double[] {s[1] / (s[3] - s[0]), 1 / (s[3] - s[0]), 0};
-					p2 = new double[] {t[1] / (t[3] - t[0]), 1 / (t[3] - t[0]), 0};
-					p3 = new double[] {m[1] / (m[3] - m[0]), 1 / (m[3] - m[0]), 0};
+					p1 = new double[] {s[1] / (s[3] - s[0]), 1 / (s[3] - s[0]), 1};
+					p2 = new double[] {t[1] / (t[3] - t[0]), 1 / (t[3] - t[0]), 1};
+					p3 = new double[] {m[1] / (m[3] - m[0]), 1 / (m[3] - m[0]), 1};
 					break;
 			}
 			drawArc(p1, p2, p3, g, model, res);
@@ -91,7 +91,9 @@ public class VisualizationUtility {
 	
 	
 	public static void drawUniversalCoverImage(
-		FundamentalPolygon poly, 
+		FundamentalPolygon poly,
+		boolean drawPolygon,
+		boolean drawAxes,
 		int depth,
 		HyperbolicModel model,
 		Graphics2D g,
@@ -116,15 +118,17 @@ public class VisualizationUtility {
 //		g.setStroke(new BasicStroke(1.5f * ls));
 		g.setStroke(new BasicStroke(4 * ls));
 		g.setColor(rootColor);
-		drawUniversalCover(poly, depth, true, g, model, res, null, null);
+		drawUniversalCover(poly, depth, drawPolygon, drawAxes, g, model, res, null, null);
 		
-		g.setStroke(new BasicStroke(4 * ls));
-		g.setColor(rootColor);
-		drawPolygon(poly, model, g, res, null);
+//		g.setStroke(new BasicStroke(4 * ls));
+//		g.setColor(rootColor);
+//		drawPolygon(poly, model, g, res, null);
 
-		g.setStroke(new BasicStroke(3 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
-		g.setColor(Color.BLUE);
-		drawPolygonAxes(poly, model, g, res, null);
+		if (drawAxes) {
+			g.setStroke(new BasicStroke(3 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
+			g.setColor(Color.BLUE);
+			drawPolygonAxes(poly, model, g, res, null);
+		}
 		
 		g.translate(-res, res);
 		g.scale(2, -2);
@@ -280,17 +284,19 @@ public class VisualizationUtility {
 	protected static void getUniversalCoverSegments(
 		FundamentalPolygon poly,
 		int maxDepth,
+		boolean drawPolygon,
 		boolean drawAxes,
 		List<double[][]> axesSegments,
 		List<double[][]> polygonSegments
 	) {
-		drawUniversalCover(poly, maxDepth, drawAxes, null, HyperbolicModel.Klein, -1, axesSegments, polygonSegments);
+		drawUniversalCover(poly, maxDepth, drawPolygon, drawAxes, null, HyperbolicModel.Klein, -1, axesSegments, polygonSegments);
 	}
 	
 	
 	private static void drawUniversalCover(
 		FundamentalPolygon poly,
 		int maxDepth,
+		boolean drawPolygon,
 		boolean drawAxes,
 		Graphics2D g,
 		HyperbolicModel model,
@@ -300,7 +306,7 @@ public class VisualizationUtility {
 	) {
 		BigDecimal[] id = new BigDecimal[16];
 		RnBig.setIdentityMatrix(id);
-		drawUniversalCoverR(poly, id, 0, maxDepth, drawAxes, g, model, resolution, axesSegments, polygonSegments);
+		drawUniversalCoverR(poly, id, 0, maxDepth, drawPolygon, drawAxes, g, model, resolution, axesSegments, polygonSegments);
 	}
 		
 		
@@ -309,6 +315,7 @@ public class VisualizationUtility {
 		BigDecimal[] domain,
 		int depth,
 		int maxDepth,
+		boolean drawPolygon,
 		boolean drawAxes,
 		Graphics2D g,
 		HyperbolicModel model,
@@ -340,13 +347,16 @@ public class VisualizationUtility {
 				drawPolygonAxes(rP, model, null, resolution, axesSegments);
 			}
 		}
-		boolean proceed = drawPolygon(rP, model, g, resolution, polygonSegments);
+		boolean proceed = true;
+		if (drawPolygon) {
+			proceed = drawPolygon(rP, model, g, resolution, polygonSegments);
+		}
 		if (!proceed || depth + 1 > maxDepth) {
 			return;
 		}
 		for (FundamentalEdge e : poly.getEdges()) {
 			BigDecimal[] newDomain = RnBig.times(null, domain, e.motionBig, context);
-			drawUniversalCoverR(poly, newDomain, depth + 1, maxDepth, drawAxes, g, model, resolution, axesSegments, polygonSegments);
+			drawUniversalCoverR(poly, newDomain, depth + 1, maxDepth, drawPolygon, drawAxes, g, model, resolution, axesSegments, polygonSegments);
 		}
 	}
 	

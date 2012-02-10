@@ -20,27 +20,27 @@ public class SurfaceCurveUtility {
 		FundamentalPolygon poly, 
 		CoHDS surface,
 		AdapterSet aSet,
-		int depth
+		int depth,
+		boolean includePoygon,
+		boolean includeAxes
 	) {
 		List<double[][]> axesSegments = new ArrayList<double[][]>();
 		List<double[][]> polySegments = new ArrayList<double[][]>();
-		VisualizationUtility.getUniversalCoverSegments(poly, depth, true, axesSegments, polySegments);
-		
-		
-		List<double[][][]> axesCurves = new ArrayList<double[][][]>();
-		for (double[][] ds : axesSegments) {
-			List<double[][][]> I = intersectTriangulation(surface, ds);
-			axesCurves.addAll(I);
-		}
-		List<double[][][]> polyCurves = new ArrayList<double[][][]>();
-		for (double[][] ds : polySegments) {
-			List<double[][][]> I = intersectTriangulation(surface, ds);
-			polyCurves.addAll(I);
-		}
+		VisualizationUtility.getUniversalCoverSegments(poly, depth, includePoygon, includeAxes, axesSegments, polySegments);
 		
 		List<double[][][]> allCurves = new ArrayList<double[][][]>();
-		allCurves.addAll(axesCurves);
-		allCurves.addAll(polyCurves);
+		if (includeAxes) {
+			for (double[][] ds : axesSegments) {
+				List<double[][][]> I = intersectTriangulation(surface, ds);
+				allCurves.addAll(I);
+			}
+		}
+		if (includePoygon) {
+			for (double[][] ds : polySegments) {
+				List<double[][][]> I = intersectTriangulation(surface, ds);
+				allCurves.addAll(I);
+			}
+		}
 		
 		CoHDS result = new CoHDS();
 		for (double[][][] s : allCurves) {
@@ -59,11 +59,9 @@ public class SurfaceCurveUtility {
 			v1.T[1] = s[0][1][1];
 			v0.P = s[1][0];
 			v1.P = s[1][1];
-			
 			Pn.normalize(v0.T, v0.T, Pn.HYPERBOLIC);
 			Pn.normalize(v1.T, v1.T, Pn.HYPERBOLIC);
 		}
-		
 		return result;
 	}
 
@@ -140,11 +138,11 @@ public class SurfaceCurveUtility {
 	
 	
 	private static double[] getPointOnSegment(double[] p, double[][] source, double[][] target) {
-		Pn.dehomogenize(target, target);
-		double l = Pn.distanceBetween(source[0], source[1], Pn.EUCLIDEAN);
-		double l1 = Pn.distanceBetween(source[0], p, Pn.EUCLIDEAN) / l;
-		double l2 = Pn.distanceBetween(source[1], p, Pn.EUCLIDEAN) / l;
-		return Rn.linearCombination(null, l1, target[0], l2, target[1]);
+//		Pn.dehomogenize(target, target);
+		double l = Pn.distanceBetween(source[0], source[1], Pn.HYPERBOLIC);
+		double l1 = Pn.distanceBetween(source[0], p, Pn.HYPERBOLIC) / l;
+		double l2 = Pn.distanceBetween(source[1], p, Pn.HYPERBOLIC) / l;
+		return Rn.linearCombination(null, l1, target[1], l2, target[0]);
 	}
 	
 }
