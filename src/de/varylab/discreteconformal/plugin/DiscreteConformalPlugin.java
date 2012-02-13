@@ -43,6 +43,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -69,6 +70,10 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.apache.batik.svggen.SVGGraphics2D;
 
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Rectangle;
@@ -225,6 +230,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	private JButton
 		saveTextureButton = new JButton("Save Texture"),
 		exportHyperbolicButton = new JButton(ImageHook.getIcon("disk.png")),
+		exportHyperbolicSVGButton = new JButton(ImageHook.getIcon("disk.png")),
 		moveToCenterButton = new JButton("Center Selected Vertex"),
 		coverToTextureButton = new JButton("Create Texture"),
 		checkGaussBonnetBtn = new JButton("Check Gauß-Bonnet"),
@@ -282,7 +288,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		selectionScroller = new JScrollPane(selectedNodesList);
 	private JFileChooser
 		pngChooser = new JFileChooser(),
-		pdfChooser = new JFileChooser();
+		pdfChooser = new JFileChooser(),
+		svgChooser = new JFileChooser();
 		
 	public DiscreteConformalPlugin() {
 		createLayout();
@@ -358,6 +365,17 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				return f.isDirectory() || f.getName().toLowerCase().endsWith(".pdf");
 			}
 		});
+		svgChooser = new JFileChooser();
+		svgChooser.addChoosableFileFilter(new FileFilter() {
+			@Override
+			public String getDescription() {
+				return "Scalable Vector Graphics (*.svg)";
+			}
+			@Override
+			public boolean accept(File f) {
+				return f.isDirectory() || f.getName().toLowerCase().endsWith(".svg");
+			}
+		});		
 	}
 
 	
@@ -439,6 +457,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		visButtonsPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
 		visButtonsPanel.add(saveTextureButton);
 		visButtonsPanel.add(exportHyperbolicButton);
+		visButtonsPanel.add(exportHyperbolicSVGButton);
 		
 		modelPanel.setLayout(new GridBagLayout()); 	c1.gridwidth = 1;
 		modelPanel.add(kleinButton, c1); 			c1.gridwidth = RELATIVE;
@@ -459,6 +478,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		saveTextureButton.addActionListener(this);
 		drawTriangulationChecker.addActionListener(this);
 		exportHyperbolicButton.addActionListener(this);
+		exportHyperbolicSVGButton.addActionListener(this);
 		coverRecursionSpinner.addChangeListener(this);
 		drawPolygonChecker.addActionListener(this);
 		drawAxesChecker.addActionListener(this);
@@ -872,6 +892,28 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				JOptionPane.showMessageDialog(w, e2.getMessage(), "Error", ERROR_MESSAGE);
 			}
 		}
+		if (exportHyperbolicSVGButton == s) {
+			Window w = SwingUtilities.getWindowAncestor(this.shrinkPanel);
+			int result = svgChooser.showSaveDialog(w);
+			if (result != JFileChooser.APPROVE_OPTION) {
+				return;
+			}
+			File file = svgChooser.getSelectedFile();
+			if (!file.getName().toLowerCase().endsWith(".svg")) {
+				file = new File(file.getAbsolutePath() + ".svg");
+			}
+			if (file.exists()) {
+				result = JOptionPane.showConfirmDialog(w, "File exists, overwrite?", "File exists", OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+				if (result != JOptionPane.OK_OPTION) {
+					return;
+				}
+			}
+			try {
+				exportHyperbolicImageToSVG(file, coverResolution);
+			} catch (Exception e2) {
+				JOptionPane.showMessageDialog(w, e2.getMessage(), "Error", ERROR_MESSAGE);
+			}
+		}		
 		if (drawTriangulationChecker == s ||
 			drawAxesChecker == s ||
 			drawPolygonChecker == s ||
@@ -1065,6 +1107,22 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			g2.dispose();
 			doc.close();
 			out.close();
+		}
+	}
+	
+	public void exportHyperbolicImageToSVG(File file, int res) throws Exception {
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder = factory.newDocumentBuilder();
+		org.w3c.dom.Document doc = builder.newDocument();
+		SVGGraphics2D svg = new SVGGraphics2D(doc);
+		svg.setSVGCanvasSize(new Dimension(res, res));
+		FileWriter writer = new FileWriter(file);
+		try {
+			drawDomainImage(svg, res);
+			svg.stream(writer);
+		} finally {
+			svg.dispose();
+			writer.close();
 		}
 	}
 	
