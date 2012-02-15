@@ -101,6 +101,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		c2.weighty = 1.0;
 		shrinkPanel.add(scrollProtector, c2);
 		
+		c2.weighty = 0.0;
 		geometryPanel.setBorder(BorderFactory.createTitledBorder("Triangulated Surface"));
 		geometryPanel.setLayout(new GridBagLayout());
 		geometryPanel.add(new JLabel("Extra Random Points"), c1);
