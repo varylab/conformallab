@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.plugin.schottky;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Poincaré;
+import static de.varylab.discreteconformal.plugin.InterpolationMethod.Linear;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.cos;
@@ -203,7 +204,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			Vector u = unwrapper.getUResult();
 			layoutRoot = HyperbolicLayout.doLayout(hds, layoutRoot, fun,  u);
 			
-			hif.addAdapter(new CoTexturePositionPositionAdapter(Poincaré, true), false);
+			hif.addAdapter(new CoTexturePositionPositionAdapter(Poincaré, Linear), false);
 			hif.set(hds);
 		}
 	}

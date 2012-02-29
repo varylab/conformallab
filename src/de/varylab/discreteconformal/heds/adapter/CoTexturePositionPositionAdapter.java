@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.heds.adapter;
 
+import de.jreality.math.Rn;
 import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Position;
@@ -7,48 +8,53 @@ import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.plugin.InterpolationMethod;
 
 @Position
 public class CoTexturePositionPositionAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
 
 	private HyperbolicModel
 		model = HyperbolicModel.Klein;
-	private boolean
-		projective = true;
+	private InterpolationMethod
+		interpolationMethod = InterpolationMethod.Optimal;
 	
 	public CoTexturePositionPositionAdapter() {
 		super(CoVertex.class, null, null, double[].class, true, true);
 	}
 	
-	public CoTexturePositionPositionAdapter(HyperbolicModel model, boolean projective) {
+	public CoTexturePositionPositionAdapter(HyperbolicModel model, InterpolationMethod interpolationMethod) {
 		this();
 		this.model = model;
-		this.projective = projective;
+		this.interpolationMethod = interpolationMethod;
 	}
 	
 	@Override
 	public double[] getVertexValue(CoVertex v, AdapterSet a) {
 		double[] t = v.T;
-		if (projective) {
-			switch (model) {
-				case Klein:
-					return new double[] {t[0], t[1], t[2], t[3]};
-				case Poincaré: 
-				default:
-					return new double[] {t[0], t[1], 0.0, t[3] + 1};
-				case Halfplane:
-					return new double[] {t[1], 1, 0.0, t[3] - t[0]};
-			}
-		} else {
-			switch (model) {
-				case Klein:
-					return new double[] {t[0] / t[3], t[1] / t[3], 0.0};
-				case Poincaré: 
-				default:
-					return new double[] {t[0] / (t[3] + 1), t[1] / (t[3] + 1), 0.0};
-				case Halfplane:
-					return new double[] {t[1] / (t[3] - t[0]), 1 / (t[3] - t[0]), 0.0};
-			}
+		switch (interpolationMethod) {
+			case Linear:
+				switch (model) {
+					case Klein:
+						return new double[] {t[0] / t[3], t[1] / t[3], 0, 1};
+					case Poincaré: 
+					default:
+						return new double[] {t[0] / (t[3] + 1), t[1] / (t[3] + 1), 0, 1};
+					case Halfplane:
+						return new double[] {t[1] / (t[3] - t[0]), 1 / (t[3] - t[0]), 0, 1};
+				}
+			case Circumcircle:
+				t = Rn.times(null, t[3], t);
+			default:
+			case Optimal:	
+				switch (model) {
+					case Klein:
+						return t;
+					case Poincaré: 
+					default:
+						return new double[] {t[0], t[1], 0.0, t[3] + 1};
+					case Halfplane:
+						return new double[] {t[1], 1, 0.0, t[3] - t[0]};
+				}
 		}
 	}
 	
@@ -73,8 +79,8 @@ public class CoTexturePositionPositionAdapter extends AbstractTypedAdapter<CoVer
 		return 10;
 	}
 	
-	public void setProjective(boolean projective) {
-		this.projective = projective;
+	public void setInterpolationMethod(InterpolationMethod interpolationMethod) {
+		this.interpolationMethod = interpolationMethod;
 	}
 	
 	public void setModel(HyperbolicModel model) {

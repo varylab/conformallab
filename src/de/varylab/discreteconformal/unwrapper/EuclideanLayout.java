@@ -119,7 +119,8 @@ public class EuclideanLayout {
 		for (CoVertex v : hds.getVertices()) {
 			double uv = v.getSolverIndex() < 0 ? 0.0 : u.get(v.getSolverIndex());
 			double[] t = v.T;
-			double e = exp( -uv );
+//			double e = exp( -uv );
+			double e = exp( -uv / 2 );
 			Pn.dehomogenize(t, t);
 			Rn.times(t, e, t);
 		}

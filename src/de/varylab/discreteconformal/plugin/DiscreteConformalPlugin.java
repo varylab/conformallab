@@ -241,6 +241,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		polygonColorButton = new ColorChooseJButton(Color.RED, true),
 		axesColorButton = new ColorChooseJButton(Color.BLUE, true);
 	private JComboBox
+		interpolationCombo = new JComboBox(InterpolationMethod.values()),
 		domainCombo = new JComboBox(Domain.values());
 	private ShrinkPanel
 		customNodePanel = new ShrinkPanel("Custom Vertices"),
@@ -299,6 +300,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		kleinButton.addActionListener(this);
 		poincareButton.addActionListener(this);
 		halfplaneButton.addActionListener(this);
+		interpolationCombo.addActionListener(this);
 		domainCombo.addActionListener(this);
 		useProjectiveTexture.addActionListener(this);
 		coverToTextureButton.addActionListener(this);
@@ -449,7 +451,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		visualizationPanel.add(axesColorButton, c2);
 		visualizationPanel.add(drawCurvesOnSurface, c2);
 		visualizationPanel.add(useDistanceToCanonicalize, c2);
-		visualizationPanel.add(useProjectiveTexture, c1);
+//		visualizationPanel.add(useProjectiveTexture, c1);
+		visualizationPanel.add(new JLabel("Interpolation"), c1);
+		visualizationPanel.add(interpolationCombo, c2);
 		visualizationPanel.add(coverToTextureButton, c2);
 		visualizationPanel.add(visButtonsPanel, c2);
 		shrinkPanel.add(visualizationPanel, c2);
@@ -659,7 +663,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
-		if (domainCombo == s) {
+		if (domainCombo == s || interpolationCombo == s) {
 			updateSurface();
 			updateDomainImage();
 			return;
@@ -1025,10 +1029,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		if (surface == null) {
 			return;
 		}
-		
-		texturePositionAdapter.setProjective(useProjectiveTexture.isSelected());
+		texturePositionAdapter.setInterpolationMethod(getSelectedInterpolation());
 		texturePositionAdapter.setModel(getSelectedModel());
-		texCoordPositionAdapter.setProjective(useProjectiveTexture.isSelected());
+		texCoordPositionAdapter.setInterpolationMethod(getSelectedInterpolation());
 		texCoordPositionAdapter.setModel(getSelectedModel());
 		hif.addLayerAdapter(metricErrorAdapter, false);
 		if (showUnwrapped.isSelected()) {
@@ -1213,6 +1216,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			return HyperbolicModel.Halfplane;
 		}
 		return HyperbolicModel.Klein;
+	}
+	
+	protected InterpolationMethod getSelectedInterpolation() {
+		return (InterpolationMethod)interpolationCombo.getSelectedItem();
 	}
 	
 }
