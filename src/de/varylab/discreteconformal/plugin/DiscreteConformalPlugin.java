@@ -7,7 +7,9 @@ import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.LIGHTING_ENABLED;
 import static de.jreality.shader.CommonAttributes.LINE_SHADER;
+import static de.jreality.shader.CommonAttributes.POINT_SHADER;
 import static de.jreality.shader.CommonAttributes.POLYGON_SHADER;
+import static de.jreality.shader.CommonAttributes.SPHERES_DRAW;
 import static de.jreality.shader.CommonAttributes.TEXTURE_2D;
 import static de.jreality.shader.CommonAttributes.TRANSPARENCY;
 import static de.jreality.shader.CommonAttributes.TRANSPARENCY_ENABLED;
@@ -17,6 +19,7 @@ import static de.varylab.discreteconformal.uniformization.VisualizationUtility.d
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.WHITE;
+import static java.awt.Color.YELLOW;
 import static java.awt.GridBagConstraints.RELATIVE;
 import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 import static java.lang.Math.PI;
@@ -91,6 +94,7 @@ import de.jreality.plugin.basic.View;
 import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
+import de.jreality.scene.PointSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.shader.ImageData;
 import de.jreality.shader.Texture2D;
@@ -211,10 +215,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		pointRadiusAdapter = new BranchPointRadiusAdapter();
 	
 	private Appearance
+		yellowPointsAppearance = new Appearance(),
 		polygonCurvesAppearance = new Appearance(),
 		axesCurvesAppearance = new Appearance(),
 		universalCoverAppearance = new Appearance();
 	private SceneGraphComponent
+		selectedCustomNodesRoot = new SceneGraphComponent("Selected Custom Nodes"),
 		polygonCurvesRoot = new SceneGraphComponent("Polygon Curves"),
 		axesCurvesRoot = new SceneGraphComponent("Axes Curves"),
 		unitCircle = new SceneGraphComponent("Hyperbolic Boundary"),
@@ -284,9 +290,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		poincareButton = new JRadioButton("Poincaré", true),
 		halfplaneButton = new JRadioButton("Half-Plane"); 
 	private JList
-		selectedNodesList = new JList();
+		customNodesList = new JList();
 	private JScrollPane
-		selectionScroller = new JScrollPane(selectedNodesList);
+		selectionScroller = new JScrollPane(customNodesList);
 	private JFileChooser
 		pngChooser = new JFileChooser(),
 		pdfChooser = new JFileChooser(),
@@ -344,6 +350,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		polygonCurvesRoot.setAppearance(polygonCurvesAppearance);
 		axesCurvesAppearance.setAttribute(EDGE_DRAW, true);
 		axesCurvesRoot.setAppearance(axesCurvesAppearance);
+		
+		yellowPointsAppearance.setAttribute(VERTEX_DRAW, true);
+		yellowPointsAppearance.setAttribute(POINT_SHADER + "." + DIFFUSE_COLOR, YELLOW);
+		yellowPointsAppearance.setAttribute(POINT_SHADER + "." + SPHERES_DRAW, true);
+		selectedCustomNodesRoot.setAppearance(yellowPointsAppearance);
 		
 		pngChooser = new JFileChooser();
 		pngChooser.addChoosableFileFilter(new FileFilter() {
@@ -471,7 +482,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		modelPanel.setShrinked(true);
 		shrinkPanel.add(modelPanel, c2);
 		
-		selectedNodesList.getSelectionModel().addListSelectionListener(this);
+		customNodesList.getSelectionModel().addListSelectionListener(this);
 		customModeCombo.addActionListener(this);
 		customQuantizationCombo.addActionListener(this);
 		customNodePanel.setShrinked(true);
@@ -540,32 +551,39 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				model.addElement(edge);
 			}
 		}
-		selectedNodesList.setModel(model);
+		customNodesList.setModel(model);
 	}
 
 	
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
-		if (selectedNodesList.getSelectedValue() == null) return;
-		Object val = selectedNodesList.getSelectedValue();
+		selectedCustomNodesRoot.removeAllChildren();
+		if (customNodesList.getSelectedValue() == null) return;
+		Object val = customNodesList.getSelectedValue();
 		if (val instanceof CoVertex) {
 			CoVertex v = (CoVertex)val;
 			customModeCombo.setSelectedItem(v.info.boundaryMode);
 			customQuantizationCombo.setSelectedItem(v.info.quantizationMode);
 			useCustomThetaChecker.setSelected(v.info.useCustomTheta);
 			customThetaModel.setValue(Math.toDegrees(v.info.theta));
+			PointSet ps = Primitives.point(v.P);
+			SceneGraphComponent psgc = new SceneGraphComponent("Vertex " + v.getIndex());
+			psgc.setGeometry(ps);
+			selectedCustomNodesRoot.addChild(psgc);
 		}
 		if (val instanceof CoEdge) {
 			CoEdge edge = (CoEdge)val;
 			circularEdgeChecker.setSelected(edge.info.circularHoleEdge);
 		}
+		hif.removeTemporaryGeometry(selectedCustomNodesRoot);
+		hif.addTemporaryGeometry(selectedCustomNodesRoot);
 	}
 	
 	@Override
 	public void stateChanged(ChangeEvent e) {
 		if (customThetaSpinner == e.getSource()) {
-			if (selectedNodesList.getSelectedValue() == null) return;
-			for (Object s : selectedNodesList.getSelectedValues()) {
+			if (customNodesList.getSelectedValue() == null) return;
+			for (Object s : customNodesList.getSelectedValues()) {
 				if (!(s instanceof CoVertex)) continue;
 				CoVertex v = (CoVertex)s;
 				double thetaDeg = customThetaModel.getNumber().doubleValue();
@@ -711,28 +729,28 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			updateDomainImage();
 		}
 		if (customModeCombo == s) {
-			for (Object sel : selectedNodesList.getSelectedValues()) {
+			for (Object sel : customNodesList.getSelectedValues()) {
 				if (!(sel instanceof CoVertex)) continue;
 				CoVertex v = (CoVertex)sel;
 				v.info.boundaryMode = (BoundaryMode)customModeCombo.getSelectedItem();
 			}
 		}
 		if (customQuantizationCombo == s) {
-			for (Object sel : selectedNodesList.getSelectedValues()) {
+			for (Object sel : customNodesList.getSelectedValues()) {
 				if (!(sel instanceof CoVertex)) continue;
 				CoVertex v = (CoVertex)sel;
 				v.info.quantizationMode = (QuantizationMode)customQuantizationCombo.getSelectedItem();
 			}
 		}
 		if (useCustomThetaChecker == s) {
-			for (Object sel : selectedNodesList.getSelectedValues()) {
+			for (Object sel : customNodesList.getSelectedValues()) {
 				if (!(sel instanceof CoVertex)) continue;
 				CoVertex v = (CoVertex)sel;
 				v.info.useCustomTheta = useCustomThetaChecker.isSelected(); 
 			}
 		}
 		if (circularEdgeChecker == s) {
-			for (Object sel : selectedNodesList.getSelectedValues()) {
+			for (Object sel : customNodesList.getSelectedValues()) {
 				if (!(sel instanceof CoEdge)) continue;
 				CoEdge edge = (CoEdge)sel;
 				edge.info.circularHoleEdge = circularEdgeChecker.isSelected();
@@ -789,7 +807,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				}
 			}
 			if (cones.size() == 2) { // affine transform
-				// TODO fix this!
 				CoVertex cv1 = cones.get(0);
 				CoVertex cv2 = cones.get(1);
 				double[] texpos1 = a.getD(TexturePosition4d.class, cv1);
