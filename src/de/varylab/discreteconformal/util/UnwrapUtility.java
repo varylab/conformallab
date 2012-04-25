@@ -276,6 +276,11 @@ public class UnwrapUtility {
 		return dim;
 	}
 	
+	/**
+	 * Normalize a given angle to the interval [-pi,pi]
+	 * @param a
+	 * @return
+	 */
 	private static double normalizeAngle(double a) {
 		a %= 2*PI;
 		if (abs(a) > PI) {
