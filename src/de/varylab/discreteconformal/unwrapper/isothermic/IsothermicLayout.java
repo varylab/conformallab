@@ -87,33 +87,24 @@ public class IsothermicLayout {
 				
 				globalAngle -= alpha;
 				
+				if (!lengthMap.containsKey(e)) {
+					double prevLength = lengthMap.get(e.getPreviousEdge());
+					l = getEdgeLength(e, prevLength, angleMap);
+					lengthMap.put(e, l);
+					lengthMap.put(e.getOppositeEdge(), l);
+				}
+				
 				if (!visited.contains(nearVertex)) {
-					if (!lengthMap.containsKey(e.getPreviousEdge())) {
-						System.out.println("allert!");
-						break;
-					}
 					visited.add(nearVertex);
 					Qv.offer(nearVertex);
 					Qe.offer(e);
 					Qa.offer(globalAngle);
 					
-					double prevLength = lengthMap.get(e.getPreviousEdge());
-					l = getEdgeLength(e, prevLength, angleMap);
-					lengthMap.put(e, l);
-					lengthMap.put(e.getOppositeEdge(), l);
-
 					double[] dif = {cos(globalAngle), sin(globalAngle), 0.0, 1.0};
 					Rn.times(dif, l, dif);
 					double[] t = Rn.add(null, tp, dif);
 					t[3] = 1.0;
 					aSet.set(TexturePosition.class, nearVertex, t);
-				} else {
-					if (!lengthMap.containsKey(e)) {
-						double prevLength = lengthMap.get(e.getPreviousEdge());
-						l = getEdgeLength(e, prevLength, angleMap);
-						lengthMap.put(e, l);
-						lengthMap.put(e.getOppositeEdge(), l);
-					}
 				}
 				e = e.getOppositeEdge().getNextEdge();
 			}
@@ -141,13 +132,22 @@ public class IsothermicLayout {
 		F extends Face<V, E, F>,
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> double getOppositeAlpha(E e, Map<E, Double> angleMap) {
-		double eA = angleMap.get(e);
-		double eNextA = angleMap.get(e.getNextEdge());
-		double ePrevA = angleMap.get(e.getPreviousEdge());
+		Double eA = angleMap.get(e);
+		if (eA == null) {
+			eA = angleMap.get(e.getOppositeEdge());
+		}
+		Double eNextA = angleMap.get(e.getNextEdge());
+		if (eNextA == null) {
+			eNextA = angleMap.get(e.getOppositeEdge().getNextEdge());
+		}
+		Double ePrevA = angleMap.get(e.getPreviousEdge());
+		if (ePrevA == null) {
+			ePrevA = angleMap.get(e.getOppositeEdge().getPreviousEdge());
+		}
 		return IsothermicUtility.calculateTriangleAngle(eNextA, ePrevA, eA);
 	}
 	
-	protected static <
+	public static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,

@@ -8,6 +8,7 @@ import java.util.Map;
 
 import junit.framework.Assert;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import de.jreality.util.NativePathUtility;
@@ -24,22 +25,26 @@ import de.varylab.discreteconformal.unwrapper.IsothermicUtility;
 
 public class SinConditionFunctionalTest {
 
+	public SinConditionFunctional<CoVertex, CoEdge, CoFace, CoHDS>
+		fun = null;
 	
-	@Test
-	public void testSinConditionFunctional() throws Exception {
+	
+	static {
 		NativePathUtility.set("native");
 		String[] taoCommand = new String[] {
 			"-tao_nm_lamda", "0.01", 
-			"-tao_nm_mu", "1.0"
+			"-tao_nm_mu", "1.0",
+			"-tao_fd_gradient", "0.001"
 		};
 		Tao.Initialize("Sinus Condition Test", taoCommand, false);
+	}
+	
+	@Before
+	public void createFunctional() {
 		CoHDS hds = new CoHDS();
 		CoFace f = HalfEdgeUtils.addNGon(hds, 3);
 		CoVertex v = TopologyAlgorithms.splitFace(f);
 		Map<Integer, Integer> edgeMap = IsothermicUtility.createUndirectedEdgeMap(hds);
-		
-		SinConditionFunctional<CoVertex, CoEdge, CoFace, CoHDS> 
-			fun = new SinConditionFunctional<CoVertex, CoEdge, CoFace, CoHDS>(hds, edgeMap);
 		
 		Vec init = new Vec(6);
 		List<CoEdge> eIn = HalfEdgeUtils.incomingEdges(v);
@@ -50,17 +55,25 @@ public class SinConditionFunctionalTest {
 		init.setValue(edgeMap.get(eIn.get(2).getIndex()), 3*PI/8, INSERT_VALUES);
 		init.setValue(edgeMap.get(eIn.get(2).getPreviousEdge().getIndex()), PI/2, INSERT_VALUES);
 		init.assemble();
+		fun = new SinConditionFunctional<CoVertex, CoEdge, CoFace, CoHDS>(hds, edgeMap);
 		fun.setInitialSolutionVec(init);
-		
+	}
+	
+	
+	
+	@Test
+	public void testSinConditionFunctional() throws Exception {
+		Vec init = fun.getSolutionVec();
 		Vec startVec = new Vec(init.getSize());
 		init.copy(startVec);
 		
 		Assert.assertTrue("energy is large at the beginning", 1E-3 < fun.evaluateObjective(init));
 		
-		Tao tao = new Tao(Method.NM);
+		Tao tao = new Tao(Method.LMVM);
 		tao.setFromOptions();
 		tao.setApplication(fun);
-		tao.setMaximumIterates(500);
+		tao.setMaximumIterates(20);
+		tao.setGradientTolerances(1E-10, 1E-10, 1E-10);
 		tao.setTolerances(1E-10, 1E-10, 1E-10, 1E-10);
 		tao.solve();
 		System.out.println(tao.getSolutionStatus());
@@ -73,9 +86,18 @@ public class SinConditionFunctionalTest {
 			dif2 += (start-solution)*(start-solution);
 		}
 		Assert.assertEquals("solution start proximity", 1E-3, dif2, 1E-2);
-		
-		Tao.Finalize();
 	}
+	
+	
+	@Test
+	public void testGradient() throws Exception {
+		Tao tao = Tao.createFiniteDifferenceTester(true, false);
+		tao.setFromOptions();
+		tao.setApplication(fun);
+		tao.solve();
+		System.out.println(tao.getSolutionStatus());
+	}
+	
 	
 	
 }
