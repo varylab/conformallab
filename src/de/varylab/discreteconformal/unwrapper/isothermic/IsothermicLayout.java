@@ -16,7 +16,6 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
-import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
@@ -126,7 +125,7 @@ public class IsothermicLayout {
 	}
 	
 	
-	protected static <
+	public static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,
@@ -145,19 +144,6 @@ public class IsothermicLayout {
 			ePrevA = angleMap.get(e.getOppositeEdge().getPreviousEdge());
 		}
 		return IsothermicUtility.calculateTriangleAngle(eNextA, ePrevA, eA);
-	}
-	
-	public static <
-		V extends Vertex<V, E, F>,
-		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>,
-		HDS extends HalfEdgeDataStructure<V, E, F>
-	> double calculateAngleSum(V v, Map<E, Double> angleMap) {
-		double sum = 0.0;
-		for (E e : HalfEdgeUtils.incomingEdges(v)) {
-			sum += getOppositeAlpha(e.getPreviousEdge(), angleMap);
-		}
-		return sum;
 	}
 	
 	

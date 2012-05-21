@@ -1,9 +1,13 @@
 package de.varylab.discreteconformal.plugin;
 
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
+import static java.awt.GridBagConstraints.HORIZONTAL;
+import static java.awt.GridBagConstraints.REMAINDER;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
@@ -12,10 +16,14 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 
 import de.jreality.plugin.basic.View;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.CurvatureFieldMin;
+import de.jtem.halfedgetools.adapter.type.Normal;
+import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jrworkspace.plugin.Controller;
@@ -27,6 +35,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.unwrapper.CPLayoutAlgorithm;
 import de.varylab.discreteconformal.unwrapper.ConesUtility;
 import de.varylab.discreteconformal.unwrapper.IsothermicUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout;
@@ -36,6 +45,8 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 
 	private HalfedgeInterface
 		hif = null;
+	private JCheckBox
+		useCirclePatternChecker = new JCheckBox("Use Circle Pattern", true);
 	private JButton
 		goButton = new JButton("Go");
 	
@@ -50,12 +61,58 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	
 	public QuasiIsothermicPlugin() {
 		shrinkPanel.setTitle("Quasiisothermic Parametrization");
-		shrinkPanel.add(goButton);
+		shrinkPanel.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = HORIZONTAL;
+		c.weightx = 1.0;
+		c.gridwidth = REMAINDER;
+		shrinkPanel.add(useCirclePatternChecker, c);
+		shrinkPanel.add(goButton, c);
+		
 		goButton.addActionListener(this);
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent ae) {
+		if (useCirclePatternChecker.isSelected()) {
+			calculateWithCirclePattern();
+		} else {
+			calculateWithSinFunctional();
+		}
+	}
+	
+	
+	protected void calculateWithCirclePattern() {
+		System.out.println("using circle patterns");
+		AdapterSet a = hif.getAdapters();
+		CoHDS hds = hif.get(new CoHDS());
+		
+		Map<CoEdge, Double> alphaMap = new HashMap<CoEdge, Double>();
+		
+		for (CoEdge e : hds.getEdges()) {
+			double[] N = a.getD(Normal.class, e);
+			double[] Kmin = a.getD(CurvatureFieldMin.class, e);
+			double[] E = a.getD(EdgeVector.class, e);
+			double ae = IsothermicUtility.getSignedAngle(N, Kmin, E);
+			alphaMap.put(e, ae);
+			alphaMap.put(e.getOppositeEdge(), ae);
+		}
+		
+		IsothermicUtility.CPFunctionalAdapters adapters = new IsothermicUtility.CPFunctionalAdapters();
+		Vec rho = IsothermicUtility.calculateCirclePatternRadii(hds, alphaMap, adapters);
+
+		IsothermicUtility.CPLayoutAdapters layoutAdapters = new IsothermicUtility.CPLayoutAdapters(rho);
+		CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>
+			layout = new CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>(
+				layoutAdapters, layoutAdapters, adapters, layoutAdapters, layoutAdapters
+			);
+		layout.execute(hds);
+		
+		hif.update();
+	}
+	
+	protected void calculateWithSinFunctional() {
+		System.out.println("using sin-functional");
 		AdapterSet a = hif.getAdapters();
 		CoHDS hds = hif.get(new CoHDS());
 		
@@ -63,7 +120,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		SinConditionFunctional<CoVertex, CoEdge, CoFace, CoHDS> 
 		fun = new SinConditionFunctional<CoVertex, CoEdge, CoFace, CoHDS>(hds, edgeMap);
-		fun.calculateAndSetInitionSolution(a);
+		fun.calculateAndSetInitialSolution(a);
 		
 		System.out.println("energy before optimization: " + fun.evaluateObjective(fun.getSolutionVec()));
 		
@@ -96,7 +153,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		Set<CoVertex> innerVerts = new HashSet<CoVertex>(hds.getVertices());
 		innerVerts.removeAll(HalfEdgeUtils.boundaryVertices(hds));
 		for (CoVertex v : innerVerts) {
-			double sum = IsothermicLayout.calculateAngleSum(v, alphaMap);
+			double sum = IsothermicUtility.calculateAngleSumFromAlphas(v, alphaMap);
 			if (abs(sum - 2*PI) > Math.PI/4) {
 				int index = (int)Math.round(sum / PI);
 				v.setTheta(index * PI);
@@ -110,6 +167,8 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		IsothermicLayout.doTexLayout(hds, alphaMap, a);
 		hif.update();
 	}
+	
+	
 	
 	@Override
 	public void install(Controller c) throws Exception {

@@ -38,7 +38,7 @@ public class SinConditionFunctional <
 		this.solverIndices = undirectedIndexMap;
 	}
 	
-	public void calculateAndSetInitionSolution(AdapterSet a) {
+	public void calculateAndSetInitialSolution(AdapterSet a) {
 		Vec alpha = new Vec(hds.numEdges() / 2);
 		for (E e : hds.getEdges()) {
 			int index = solverIndices.get(e.getIndex());
