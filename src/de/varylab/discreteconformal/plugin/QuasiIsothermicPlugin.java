@@ -35,7 +35,6 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.CPLayoutAlgorithm;
 import de.varylab.discreteconformal.unwrapper.ConesUtility;
 import de.varylab.discreteconformal.unwrapper.IsothermicUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout;
@@ -98,15 +97,14 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 			alphaMap.put(e.getOppositeEdge(), ae);
 		}
 		
-		IsothermicUtility.CPFunctionalAdapters adapters = new IsothermicUtility.CPFunctionalAdapters();
-		Vec rho = IsothermicUtility.calculateCirclePatternRadii(hds, alphaMap, adapters);
-
-		IsothermicUtility.CPLayoutAdapters layoutAdapters = new IsothermicUtility.CPLayoutAdapters(rho);
-		CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>
-			layout = new CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>(
-				layoutAdapters, layoutAdapters, adapters, layoutAdapters, layoutAdapters
-			);
-		layout.execute(hds);
+//		Vec rho = IsothermicUtility.calculateCirclePatternRadii(hds, alphaMap, adapters);
+//
+//		IsothermicUtility.CPLayoutAdapters layoutAdapters = new IsothermicUtility.CPLayoutAdapters(rho);
+//		CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>
+//			layout = new CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>(
+//				layoutAdapters, layoutAdapters, adapters, layoutAdapters, layoutAdapters
+//			);
+//		layout.execute(hds);
 		
 		hif.update();
 	}

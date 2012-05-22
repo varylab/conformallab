@@ -1,5 +1,7 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
+import java.util.Map;
+
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
@@ -7,8 +9,6 @@ import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
 import de.jtem.jtao.TaoAppAddHess;
 import de.jtem.jtao.TaoApplication;
 import de.varylab.discreteconformal.functional.CPEuclideanFunctional;
-import de.varylab.discreteconformal.functional.CPEuclideanFunctional.Phi;
-import de.varylab.discreteconformal.functional.CPEuclideanFunctional.Theta;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -24,9 +24,9 @@ public class CPEuclideanApplication extends TaoApplication implements
 		functional = null;
 		
 
-	public CPEuclideanApplication(CoHDS hds, Theta<CoEdge> theta, Phi<CoFace> phi) {
+	public CPEuclideanApplication(CoHDS hds, Map<CoEdge, Double> thetaMap, Map<CoFace, Double> phiMap) {
 		this.hds = hds;
-		this.functional = new CPEuclideanFunctional<CoVertex, CoEdge, CoFace>(theta, phi);
+		this.functional = new CPEuclideanFunctional<CoVertex, CoEdge, CoFace>(thetaMap, phiMap);
 	}
 	
 	public CPEuclideanFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
@@ -37,7 +37,7 @@ public class CPEuclideanApplication extends TaoApplication implements
 	public double evaluateObjectiveAndGradient(Vec x, Vec g) {
 		TaoDomain u = new TaoDomain(x);
 		TaoGradient G = new TaoGradient(g);
-		ConformalEnergy E = new ConformalEnergy();
+		SimpleEnergy E = new SimpleEnergy();
 		functional.evaluate(hds, u, E, G, null);
 		g.assemble();
 		return E.get();

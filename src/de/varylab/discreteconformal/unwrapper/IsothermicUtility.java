@@ -1,6 +1,5 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 
@@ -21,92 +20,17 @@ import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
 import de.jtem.jtao.Tao.Method;
-import de.varylab.discreteconformal.functional.CPEuclideanFunctional.Phi;
-import de.varylab.discreteconformal.functional.CPEuclideanFunctional.Theta;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.Radius;
-import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.Rho;
 import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.XYFace;
 import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.XYVertex;
-import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout;
 import de.varylab.discreteconformal.unwrapper.numerics.CPEuclideanApplication;
 
 public class IsothermicUtility {
 
-	public static class CPFunctionalAdapters implements Theta<CoEdge>, Phi<CoFace> {
-	
-		public Map<CoEdge, Double>
-			thetaMap = new HashMap<CoEdge, Double>();
-		public Map<CoFace, Double>
-			phiMap = new HashMap<CoFace, Double>();
-		
-		@Override
-		public double getPhi(CoFace f) {
-			if (HalfEdgeUtils.isInteriorFace(f)) {
-				return 2 * PI;
-			} else {
-				double Phi = 2*PI;
-				for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
-					if (!HalfEdgeUtils.isBoundaryEdge(e)) {
-						continue;
-					}
-					double eStar = PI - getTheta(e);
-					Phi -= 2*eStar;
-				}
-				return Phi;
-			}
-		}
-	
-		@Override
-		public void setPhi(CoFace f, double phi) {
-			phiMap.put(f, phi);
-		}
-	
-		@Override
-		public double getTheta(CoEdge e) {
-			if (!thetaMap.containsKey(e)) {
-				return PI;
-			}
-			return thetaMap.get(e);
-		}
-	
-		@Override
-		public void setTheta(CoEdge e, double theta) {
-			thetaMap.put(e, theta);
-		}
-		
-	}
-
-	public static class CPLayoutAdapters implements XYVertex<CoVertex>, XYFace<CoFace>, Rho<CoFace>, Radius<CoFace> {
-	
-		public Vec rho = null;
-		
-		public CPLayoutAdapters(Vec rho) {
-			super();
-			this.rho = rho;
-		}
-	
-		@Override
-		public double getRadius(CoFace v) {
-			return 0;
-		}
-	
-		@Override
-		public void setRadius(CoFace v, double r) {
-		}
-	
-		@Override
-		public double getRho(CoFace f) {
-			return rho.getValue(f.getIndex());
-		}
-	
-		@Override
-		public void setRho(CoFace f, double rho) {
-			this.rho.setValue(f.getIndex(), rho, INSERT_VALUES);
-		}
+	public static class CPLayoutAdapters implements XYVertex<CoVertex>, XYFace<CoFace> {
 	
 		@Override
 		public Point2d getXY(CoFace v, Point2d xy) {
@@ -200,7 +124,7 @@ public class IsothermicUtility {
 	> double calculateAngleSumFromAlphas(V v, Map<E, Double> alphaMap) {
 		double sum = 0.0;
 		for (E e : HalfEdgeUtils.incomingEdges(v)) {
-			sum += IsothermicLayout.getOppositeAlpha(e.getPreviousEdge(), alphaMap);
+			sum += IsothermicUtility.getOppositeAlpha(e.getPreviousEdge(), alphaMap);
 		}
 		return sum;
 	}
@@ -232,9 +156,55 @@ public class IsothermicUtility {
 		return nnz;
 	}
 	
-	public static Vec calculateCirclePatternRadii(CoHDS hds, Map<CoEdge, Double> alphaMap, IsothermicUtility.CPFunctionalAdapters funAdapters) {
-		Map<CoEdge, Double> betaMap = new HashMap<CoEdge, Double>();
+	public static Map<CoFace, Double> calculateCirclePatternRhos(CoHDS hds, Map<CoEdge, Double> thetaMap, Map<CoFace, Double> phiMap) {
+		// check pre-conditions
+		System.out.println("Curvatures: ----------");
+		double boundarySum = 0;
+		for (CoVertex v : hds.getVertices()) {
+			double Phi = 0.0;
+			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+				Phi += thetaMap.get(e);
+			}
+			if (HalfEdgeUtils.isBoundaryVertex(v)) {
+				boundarySum += 2*PI - Phi;
+			}
+			System.out.println(v + ": " + Phi/PI);
+		}
+		System.out.println("Boundary Sum/PI: " + boundarySum/PI);
 		
+		for (CoFace f : hds.getFaces()) {
+			System.out.println(f + ": " + phiMap.get(f)/PI);
+		}
+		
+		int dim = hds.numFaces();
+		Vec rho = new Vec(dim);
+		rho.zeroEntries();
+		rho.assemble();
+		
+		CPEuclideanApplication app = new CPEuclideanApplication(hds, thetaMap, phiMap);
+		app.setInitialSolutionVec(rho);
+		Mat H = Mat.createSeqAIJ(dim, dim, PETSc.PETSC_DEFAULT, getPETScNonZeros(hds, app.getFunctional()));
+		H.assemble();
+		app.setHessianMat(H, H);
+		
+		Tao tao = new Tao(Method.NTR);
+		tao.setApplication(app);
+		tao.setMaximumIterates(200);
+		tao.setTolerances(1E-15, 0, 0, 0);
+		tao.setGradientTolerances(1E-15, 0, 0);
+		tao.solve();
+		System.out.println(tao.getSolutionStatus());
+		
+		Map<CoFace, Double> rhos = new HashMap<CoFace, Double>();
+		for (CoFace f : hds.getFaces()) {
+			rhos.put(f, rho.getValue(f.getIndex()));
+		}
+		return rhos;
+	}
+
+
+	public static Map<CoEdge, Double> calculateBetasFromAlphas(CoHDS hds, Map<CoEdge, Double> alphaMap) {
+		Map<CoEdge, Double> betaMap = new HashMap<CoEdge, Double>();
 		for (CoEdge e : hds.getEdges()) {
 			if (e.getLeftFace() != null) {
 				double a1 = alphaMap.get(e);
@@ -244,7 +214,11 @@ public class IsothermicUtility {
 				betaMap.put(e, beta);
 			}
 		}
-		
+		return betaMap;
+	}
+	
+	public static Map<CoEdge, Double> calculateThetasFromBetas(CoHDS hds, Map<CoEdge, Double> betaMap) {
+		Map<CoEdge, Double> thetas = new HashMap<CoEdge, Double>();
 		for (CoEdge e : hds.getPositiveEdges()) {
 			double theta = PI;
 			if (e.getRightFace() != null) {
@@ -255,43 +229,52 @@ public class IsothermicUtility {
 				double betaLeft = betaMap.get(e);
 				theta -= betaLeft;
 			}
-			funAdapters.setTheta(e, theta);
-			funAdapters.setTheta(e.getOppositeEdge(), theta);
+			thetas.put(e, theta);
+			thetas.put(e.getOppositeEdge(), theta);
 		}
-		
-		// check pre-conditions
-		double boundarySum = 0;
-		for (CoVertex v : hds.getVertices()) {
-			double Phi = calculateAngleSumFromBetas(v, betaMap);
-			if (HalfEdgeUtils.isBoundaryVertex(v)) {
-				boundarySum += PI - Phi;
+		return thetas;
+	}
+
+	
+	public static Map<CoFace, Double> calculatePhisFromBetas(CoHDS hds, Map<CoEdge, Double> betaMap) {
+		Map<CoFace, Double> phiMap = new HashMap<CoFace, Double>();
+		for (CoFace f : hds.getFaces()) {
+			if (HalfEdgeUtils.isInteriorFace(f)) {
+				phiMap.put(f, 2*PI);
 			} else {
-				System.out.println(v + ": " + Phi);
+				double Phi = 2*PI;
+				for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
+					if (e.getRightFace() == null) {
+						double beta = betaMap.get(e);
+						Phi -= 2*beta;
+					}
+				}
+				phiMap.put(f, Phi);
 			}
 		}
-		System.out.println("Boundary Sum/PI: " + boundarySum/PI);
-		
-		int dim = hds.numFaces();
-		Vec rho = new Vec(dim);
-		rho.zeroEntries();
-		rho.assemble();
-		
-		CPEuclideanApplication app = new CPEuclideanApplication(hds, funAdapters, funAdapters);
-		app.setInitialSolutionVec(rho);
-		Mat H = Mat.createSeqAIJ(dim, dim, PETSc.PETSC_DEFAULT, getPETScNonZeros(hds, app.getFunctional()));
-		H.assemble();
-		app.setHessianMat(H, H);
-		
-		Tao tao = new Tao(Method.NTR);
-		tao.setFromOptions();
-		tao.setApplication(app);
-		tao.setMaximumIterates(20);
-		tao.setTolerances(1E-15, 0, 0, 0);
-		tao.setGradientTolerances(1E-15, 0, 0);
-		tao.solve();
-		System.out.println(tao.getSolutionStatus());
-		
-		return app.getSolutionVec();
+		return phiMap;
+	}
+	
+
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> double getOppositeAlpha(E e, Map<E, Double> alphaMap) {
+		Double eA = alphaMap.get(e);
+		if (eA == null) {
+			eA = alphaMap.get(e.getOppositeEdge());
+		}
+		Double eNextA = alphaMap.get(e.getNextEdge());
+		if (eNextA == null) {
+			eNextA = alphaMap.get(e.getOppositeEdge().getNextEdge());
+		}
+		Double ePrevA = alphaMap.get(e.getPreviousEdge());
+		if (ePrevA == null) {
+			ePrevA = alphaMap.get(e.getOppositeEdge().getPreviousEdge());
+		}
+		return calculateTriangleAngle(eNextA, ePrevA, eA);
 	}
 	
 }

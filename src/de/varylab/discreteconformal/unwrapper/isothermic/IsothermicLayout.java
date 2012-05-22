@@ -77,7 +77,7 @@ public class IsothermicLayout {
 				V nearVertex = e.getTargetVertex();
 				
 				E next = e.getNextEdge();
-				Double alpha = getOppositeAlpha(next, angleMap);
+				Double alpha = IsothermicUtility.getOppositeAlpha(next, angleMap);
 				if (e.getLeftFace() == null) { // a boundary edge
 					//TODO do layout in the other direction too
 					break;
@@ -113,37 +113,15 @@ public class IsothermicLayout {
 	}
 	
 	
-	protected  static <
+	protected static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> double getEdgeLength(E e, double prevEdgeLength, Map<E, Double> angleMap) {
-		double ea = getOppositeAlpha(e, angleMap);
-		double prevAngle = getOppositeAlpha(e.getPreviousEdge(), angleMap);
+		double ea = IsothermicUtility.getOppositeAlpha(e, angleMap);
+		double prevAngle = IsothermicUtility.getOppositeAlpha(e.getPreviousEdge(), angleMap);
 		return prevEdgeLength  * sin(ea) / sin(prevAngle);
-	}
-	
-	
-	public static <
-		V extends Vertex<V, E, F>,
-		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>,
-		HDS extends HalfEdgeDataStructure<V, E, F>
-	> double getOppositeAlpha(E e, Map<E, Double> angleMap) {
-		Double eA = angleMap.get(e);
-		if (eA == null) {
-			eA = angleMap.get(e.getOppositeEdge());
-		}
-		Double eNextA = angleMap.get(e.getNextEdge());
-		if (eNextA == null) {
-			eNextA = angleMap.get(e.getOppositeEdge().getNextEdge());
-		}
-		Double ePrevA = angleMap.get(e.getPreviousEdge());
-		if (ePrevA == null) {
-			ePrevA = angleMap.get(e.getOppositeEdge().getPreviousEdge());
-		}
-		return IsothermicUtility.calculateTriangleAngle(eNextA, ePrevA, eA);
 	}
 	
 	

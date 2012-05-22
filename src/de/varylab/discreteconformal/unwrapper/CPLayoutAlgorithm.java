@@ -31,9 +31,12 @@ OF SUCH DAMAGE.
 
 package de.varylab.discreteconformal.unwrapper;
 
+import static java.lang.Math.exp;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import javax.vecmath.Point2d;
@@ -43,9 +46,6 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.varylab.discreteconformal.functional.CPEuclideanFunctional.Theta;
-import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.Radius;
-import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.Rho;
 import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.XYFace;
 import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.XYVertex;
 
@@ -69,20 +69,17 @@ public class CPLayoutAlgorithm <
 		xyVertex = null;
 	private XYFace<F> 
 		xyFace = null;
-	private Theta<E> 
-		theta = null;
-	private Rho<F> 
-		rho = null;
-	private Radius<F> 
-		radius = null;
+	private Map<F, Double> 
+		rhoMap = null;
+	private Map<E, Double> 
+		thetaMap = null;
 	
 	
-	public CPLayoutAlgorithm(XYVertex<V> xyV, XYFace<F> xyF, Theta<E> theta, Rho<F> rho, Radius<F> radius) {
+	public CPLayoutAlgorithm(XYVertex<V> xyV, XYFace<F> xyF, Map<F, Double> rhoMap, Map<E, Double> thetaMap) {
 		this.xyVertex = xyV;
 		this.xyFace = xyF;
-		this.theta = theta;
-		this.rho = rho;
-		this.radius = radius;
+		this.thetaMap = thetaMap;
+		this.rhoMap = rhoMap;
 	}
 	
 
@@ -111,7 +108,6 @@ public class CPLayoutAlgorithm <
 		Stack<E> edgeStack = new Stack<E>();
 		HashSet<E> doneEdges = new HashSet<E>();
 		HashSet<F> doneFaces = new HashSet<F>();	
-		setRadii(hds, rot);
 		
 		// Init ---------------------------------------
 		F rootFace = hds.getFace(0);
@@ -125,7 +121,7 @@ public class CPLayoutAlgorithm <
 		E firstEdge = rootEdge.getNextEdge();
 		
 		xyFace.setXY(rootFace, new Point2d());
-		double firstPlanarRadius = Math.exp(rho.getRho(rootFace));
+		double firstPlanarRadius = exp(rhoMap.get(rootFace));
 		xyVertex.setXY(rootEdge.getTargetVertex(), new Point2d(firstPlanarRadius, 0.0));
 		layoutEdgeCounterClockwise(firstEdge, rot);
 		
@@ -208,12 +204,12 @@ public class CPLayoutAlgorithm <
 		F rightFace = edge.getRightFace();
 		V t = edge.getTargetVertex();
 		V s = edge.getStartVertex();
-		Double phi = -rot.getPhi(edge, rho, theta);
+		Double phi = -rot.getPhi(edge, rhoMap, thetaMap);
 		Point2d xy = rot.rotate(xyVertex.getXY(t, new Point2d()), xyFace.getXY(leftFace, new Point2d()), 2*phi, 0.0);
 		xyVertex.setXY(s, xy);	
 		if (rightFace != null){
-			Double logScale = rho.getRho(rightFace) - rho.getRho(leftFace);
-			xy = rot.rotate(xyFace.getXY(leftFace, new Point2d()), xyVertex.getXY(s, new Point2d()), -theta.getTheta(edge), logScale);
+			Double logScale = rhoMap.get(rightFace) - rhoMap.get(leftFace);
+			xy = rot.rotate(xyFace.getXY(leftFace, new Point2d()), xyVertex.getXY(s, new Point2d()), -thetaMap.get(edge), logScale);
 			xyFace.setXY(rightFace, xy);
 		}
 		
@@ -231,26 +227,15 @@ public class CPLayoutAlgorithm <
 		F rightFace = edge.getRightFace();
 		V t = edge.getTargetVertex();
 		V s = edge.getStartVertex();
-		Double phi = rot.getPhi(edge, rho, theta);
+		Double phi = rot.getPhi(edge, rhoMap, thetaMap);
 		Point2d xy = rot.rotate(xyVertex.getXY(s, new Point2d()), xyFace.getXY(leftFace, new Point2d()), 2*phi, 0.0);
 		xyVertex.setXY(t, xy);	
 		if (rightFace != null){
-			Double logScale = rho.getRho(rightFace) - rho.getRho(leftFace);
-			xyFace.setXY(rightFace, rot.rotate(xyFace.getXY(leftFace, new Point2d()), xyVertex.getXY(t, new Point2d()), theta.getTheta(edge), logScale));
+			Double logScale = rhoMap.get(rightFace) - rhoMap.get(leftFace);
+			xyFace.setXY(rightFace, rot.rotate(xyFace.getXY(leftFace, new Point2d()), xyVertex.getXY(t, new Point2d()), thetaMap.get(edge), logScale));
 		}
 		
 	}
-	
-	
-	private void setRadii(
-		HalfEdgeDataStructure<V, E, F> graph, 
-		Rotation<V, E, F> rot
-	) {
-		for (F f : graph.getFaces()) {
-			radius.setRadius(f, rot.getRadius(rho.getRho(f)));
-		}
-	}
-	
 	
 	private <
 		HDS extends HalfEdgeDataStructure<V, E, F>
@@ -273,7 +258,7 @@ public class CPLayoutAlgorithm <
 		F extends Face<V, E, F>
 	> {
 		public Point2d rotate(Point2d p, Point2d center, Double phi, Double logScale);
-		public double getPhi(E edge, Rho<F> rho, Theta<E> theta);
+		public double getPhi(E edge, Map<F, Double> rhoMap, Map<E, Double> thetaMap);
 		public Double getRadius(Double rho);
 	}
 	

@@ -47,7 +47,7 @@ public class CHyperbolicApplication extends TaoApplication implements
 	@Override
 	public double evaluateObjectiveAndGradient(Vec x, Vec g) {
 		TaoDomain u = new TaoDomain(x);
-		ConformalEnergy E = new ConformalEnergy();
+		SimpleEnergy E = new SimpleEnergy();
 		TaoGradient G = new TaoGradient(g);
 		functional.evaluate(hds, u, E, G, null);
 		g.assemble();

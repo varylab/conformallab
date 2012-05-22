@@ -38,6 +38,7 @@ import static java.lang.Math.sin;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -49,6 +50,8 @@ import de.jtem.halfedgetools.functional.Energy;
 import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 
 
 public class CPEuclideanFunctional <
@@ -57,24 +60,14 @@ public class CPEuclideanFunctional <
 	F extends Face<V, E, F>
 > implements Functional<V, E, F> {
 	
-	public static interface Theta <E extends Edge<?,E,?>> {
-		public double getTheta(E e);
-		public void setTheta(E e, double theta);
-	}
-	public static interface Phi <F extends Face<?,?,F>> {
-		public double getPhi(F f);
-		public void setPhi(F f, double phi);
-	}
+	private Map<CoEdge, Double> 
+		thetaMap = null;
+	private Map<CoFace, Double> 
+		phiMap = null;
 	
-	private Theta<E> 
-		theta = null; 
-	private Phi<F>
-		phi = null;
-
-	
-	public CPEuclideanFunctional(Theta<E> theta, Phi<F> phi) {
-		this.theta = theta;
-		this.phi = phi;
+	public CPEuclideanFunctional(Map<CoEdge, Double> thetaMap, Map<CoFace, Double> phiMap) {
+		this.thetaMap = thetaMap;
+		this.phiMap = phiMap;
 	}
 		
 	@Override
@@ -158,7 +151,7 @@ public class CPEuclideanFunctional <
 			if (j == 0) {
 				rhoj = 0.0;
 			}
-			Double th = theta.getTheta(edge);
+			Double th = thetaMap.get(edge);
 			Double hjk = sin(th) / (cosh(rhok - rhoj) - cos(th));
 
 			if (j != 0) {
@@ -193,7 +186,7 @@ public class CPEuclideanFunctional <
 			if (face.getIndex() == 0) {
 				continue;
 			}
-			double facePhi = phi.getPhi(face);
+			double facePhi = phiMap.get(face);
 			if (E != null) {
 				E.add(facePhi * x.get(face.getIndex()));
 			}
@@ -207,7 +200,7 @@ public class CPEuclideanFunctional <
 			if (leftFace == null) {
 				continue;
 			}
-			Double th = theta.getTheta(edge); 
+			Double th = thetaMap.get(edge); 
 			Double thStar = PI - th;
 			Double leftRho = x.get(leftFace.getIndex());
 			if (leftFace.getIndex() == 0) {

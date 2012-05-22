@@ -23,7 +23,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.numerics.ConformalEnergy;
+import de.varylab.discreteconformal.unwrapper.numerics.SimpleEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
 import de.varylab.discreteconformal.unwrapper.numerics.MTJGradient;
 import de.varylab.discreteconformal.unwrapper.numerics.MTJHessian;
@@ -62,7 +62,7 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 				MTJDomain u = new MTJDomain(x);
 				MTJGradient G = new MTJGradient(gradient);
 				MTJHessian H = new MTJHessian(hessian);
-				ConformalEnergy E = new ConformalEnergy();
+				SimpleEnergy E = new SimpleEnergy();
 				MobiusCenteringFunctional.this.evaluate(hds, u, E, G, H);
 				return E.get();
 			}
@@ -71,7 +71,7 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 			public Double evaluate(Vector x, Vector gradient) {
 				MTJDomain u = new MTJDomain(x);
 				MTJGradient G = new MTJGradient(gradient);
-				ConformalEnergy E = new ConformalEnergy();
+				SimpleEnergy E = new SimpleEnergy();
 				MobiusCenteringFunctional.this.evaluate(hds, u, E, G, null);
 				return E.get();
 			}
@@ -80,7 +80,7 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 			public Double evaluate(Vector x, Matrix hessian) {
 				MTJDomain u = new MTJDomain(x);
 				MTJHessian H = new MTJHessian(hessian);
-				ConformalEnergy E = new ConformalEnergy();
+				SimpleEnergy E = new SimpleEnergy();
 				MobiusCenteringFunctional.this.evaluate(hds, u, E, null, H);
 				return E.get();
 			}
@@ -88,7 +88,7 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 			@Override
 			public Double evaluate(Vector x) {
 				MTJDomain u = new MTJDomain(x);
-				ConformalEnergy E = new ConformalEnergy();
+				SimpleEnergy E = new SimpleEnergy();
 				MobiusCenteringFunctional.this.evaluate(hds, u, E, null, null);
 				return E.get();
 			}

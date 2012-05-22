@@ -33,4 +33,8 @@ public class TaoGradient implements Gradient {
 		return G.getValue(i);
 	}
 	
+	public Vec getVec() {
+		return G;
+	}
+	
 }

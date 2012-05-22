@@ -33,6 +33,8 @@ package de.varylab.discreteconformal.unwrapper;
 
 import static java.lang.Math.PI;
 
+import java.util.Map;
+
 import javax.vecmath.Point2d;
 
 import de.jtem.halfedge.Edge;
@@ -41,8 +43,6 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.mfc.field.Complex;
 import de.jtem.mfc.geometry.ComplexProjective1;
 import de.jtem.mfc.group.Moebius;
-import de.varylab.discreteconformal.functional.CPEuclideanFunctional.Theta;
-import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.Rho;
 import de.varylab.discreteconformal.unwrapper.CPLayoutAlgorithm.Rotation;
 
 public class CPEuclideanRotation 
@@ -68,13 +68,13 @@ public class CPEuclideanRotation
 
 	
 	@Override
-	public double getPhi(E edge, Rho<F> rho, Theta<E> theta) {
-		double th = theta.getTheta(edge);
+	public double getPhi(E edge, Map<F, Double> rhoMap, Map<E, Double> thetaMap) {
+		double th = thetaMap.get(edge);
 		double thStar = PI - th;
 		if (edge.getLeftFace() == null || edge.getRightFace() == null)
 			return thStar;
-		double leftRho = rho.getRho(edge.getLeftFace());
-		double rightRho = rho.getRho(edge.getRightFace());
+		double leftRho = rhoMap.get(edge.getLeftFace());
+		double rightRho = rhoMap.get(edge.getRightFace());
 		double p = p(thStar, rightRho - leftRho);
 		return 0.5*(p + thStar);
 	}

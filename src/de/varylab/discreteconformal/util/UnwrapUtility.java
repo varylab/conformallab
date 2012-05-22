@@ -25,7 +25,7 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.QuantizationMode;
-import de.varylab.discreteconformal.unwrapper.numerics.ConformalEnergy;
+import de.varylab.discreteconformal.unwrapper.numerics.SimpleEnergy;
 
 public class UnwrapUtility {
 
@@ -266,7 +266,7 @@ public class UnwrapUtility {
 		
 		// initial Euclidean energy
 		ZeroU zeroU = new ZeroU();
-		ConformalEnergy E = new ConformalEnergy();
+		SimpleEnergy E = new SimpleEnergy();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
 		for (final CoFace f : hds.getFaces()) {
 			E.setZero();
@@ -346,7 +346,7 @@ public class UnwrapUtility {
 		// initial hyperbolic energy
 		ZeroU zeroU = new ZeroU();
 		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
-		ConformalEnergy E = new ConformalEnergy();
+		SimpleEnergy E = new SimpleEnergy();
 		for (final CoFace f : hds.getFaces()) {
 			E.setZero();
 			fun.triangleEnergyAndAlphas(zeroU, f, E, zeroEnergy);

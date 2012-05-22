@@ -38,16 +38,6 @@ import de.jtem.halfedge.Vertex;
 
 public class CPLayoutAdapters {
 
-	public static interface Rho <F extends Face<?, ?, F>> {
-		public double getRho(F f);
-		public void setRho(F f, double rho);
-	}
-	
-	public static interface Radius <F extends Face<?, ?, F>> {
-		public double getRadius(F v);
-		public void setRadius(F v, double r);
-	}
-
 	public static interface XYVertex <V extends Vertex<V, ?, ?>> {
 		public Point2d getXY(V v, Point2d xy);
 		public void setXY(V v, Point2d xy);

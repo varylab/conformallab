@@ -31,6 +31,8 @@ OF SUCH DAMAGE.
 
 package de.varylab.discreteconformal.functional;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import no.uib.cipr.matrix.DenseVector;
@@ -42,8 +44,8 @@ import de.varylab.discreteconformal.functional.hds.CPEdge;
 import de.varylab.discreteconformal.functional.hds.CPFace;
 import de.varylab.discreteconformal.functional.hds.CPHDS;
 import de.varylab.discreteconformal.functional.hds.CPVertex;
-import de.varylab.discreteconformal.functional.hds.MyCPAdapters.MyPhi;
-import de.varylab.discreteconformal.functional.hds.MyCPAdapters.MyTheta;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 
 public class CPEuclideanFunctionalTest extends FunctionalTest<CPVertex, CPEdge, CPFace> {
 
@@ -53,11 +55,11 @@ public class CPEuclideanFunctionalTest extends FunctionalTest<CPVertex, CPEdge, 
 		HalfEdgeUtils.addDodecahedron(hds);
 		hds.removeFace(hds.getFace(0));
 		
-		MyTheta theta = new MyTheta();
-		MyPhi phi = new MyPhi();
+		Map<CoEdge, Double> thetaMap = new HashMap<CoEdge, Double>();
+		Map<CoFace, Double> phiMap = new HashMap<CoFace, Double>();
 		
 		CPEuclideanFunctional<CPVertex, CPEdge, CPFace>
-			functional = new CPEuclideanFunctional<CPVertex, CPEdge, CPFace>(theta, phi);
+			functional = new CPEuclideanFunctional<CPVertex, CPEdge, CPFace>(thetaMap, phiMap);
 		
 		int n = functional.getDimension(hds);
 		

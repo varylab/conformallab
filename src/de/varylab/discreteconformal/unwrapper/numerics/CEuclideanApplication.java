@@ -50,7 +50,7 @@ public class CEuclideanApplication extends TaoApplication implements
 	public double evaluateObjectiveAndGradient(Vec x, Vec g) {
 		TaoDomain u = new TaoDomain(x);
 		TaoGradient G = new TaoGradient(g);
-		ConformalEnergy E = new ConformalEnergy();
+		SimpleEnergy E = new SimpleEnergy();
 		functional.evaluate(hds, u, E, G, null);
 		g.assemble();
 		return E.get();

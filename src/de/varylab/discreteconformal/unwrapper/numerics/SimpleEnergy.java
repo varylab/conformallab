@@ -5,7 +5,7 @@ package de.varylab.discreteconformal.unwrapper.numerics;
 
 import de.jtem.halfedgetools.functional.Energy;
 
-public class ConformalEnergy implements Energy {
+public class SimpleEnergy implements Energy {
 
 	public double 
 		E = 0.0;
