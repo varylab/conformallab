@@ -99,6 +99,9 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		}
 		
 		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
+		
+		IsothermicUtility.createDelaunayAngleSystem(hds, betaMap);
+		
 		Map<CoEdge, Double> thetaMap = IsothermicUtility.calculateThetasFromBetas(hds, betaMap);
 		Map<CoFace, Double> phiMap = IsothermicUtility.calculatePhisFromBetas(hds, betaMap);
 		

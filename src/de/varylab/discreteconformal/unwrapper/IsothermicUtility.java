@@ -12,9 +12,11 @@ import de.jreality.math.Rn;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
+import de.jtem.halfedge.Node;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
+import de.jtem.halfedgetools.adapter.AbstractAdapter;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.PETSc;
@@ -25,6 +27,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.adapter.types.OppositeAngle;
 import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.XYFace;
 import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.XYVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CPEuclideanApplication;
@@ -63,6 +66,43 @@ public class IsothermicUtility {
 		}
 		
 	}
+	
+	@OppositeAngle
+	private static class OppositeAnglesAdapter extends AbstractAdapter<Double> {
+		
+		private Map<CoEdge, Double>
+			angleMap = new HashMap<CoEdge, Double>();
+		
+		public OppositeAnglesAdapter(Map<CoEdge, Double> angleMap) {
+			super(Double.class, true, true);
+			this.angleMap = angleMap;
+		}
+		
+		@Override
+		public <
+			V extends Vertex<V, E, F>,
+			E extends Edge<V, E, F>,
+			F extends Face<V, E, F>
+		> Double getE(E e, AdapterSet a) {
+			return angleMap.get(e);
+		}
+		
+		@Override
+		public <
+			V extends Vertex<V, E, F>,
+			E extends Edge<V, E, F>,
+			F extends Face<V, E, F>
+		> void setE(E e, Double value, AdapterSet a) {
+			angleMap.put((CoEdge)e, value);
+		}
+		
+		@Override
+		public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
+			return CoEdge.class.isAssignableFrom(nodeClass);
+		}
+		
+	}
+	
 
 	/**
 	 * Calculate the angle between the edges that belong to alpha1 and alpha2.
@@ -240,24 +280,17 @@ public class IsothermicUtility {
 		return betaMap;
 	}
 	
-	
+	/**
+	 * invokes the Delaunay flip algorithm on hds and modifies the angles in betaMap 
+	 * accordingly. The local Delaunay condition is derived from the opposite angles
+	 * of an edge.
+	 * @param hds
+	 * @param betaMap
+	 */
 	public static void createDelaunayAngleSystem(CoHDS hds, Map<CoEdge, Double> betaMap) {
-		for (CoEdge e : hds.getPositiveEdges()) {
-			if (HalfEdgeUtils.isBoundaryEdge(e)) {
-				continue;
-			}
-			double bij = betaMap.get(e);
-			double bji = betaMap.get(e.getOppositeEdge());
-			double bmi = betaMap.get(e.getNextEdge());
-			double bjm = betaMap.get(e.getPreviousEdge());
-			double bik = betaMap.get(e.getOppositeEdge().getNextEdge());
-			double bkj = betaMap.get(e.getOppositeEdge().getPreviousEdge());
-			double theta = Math.PI - bij - bji;
-			if (theta < 0) {
-				TopologyAlgorithms.flipEdge(e);
-				//TODO set corresponding betas
-			}
-		}
+		OppositeAnglesAdapter anglesAdapter = new OppositeAnglesAdapter(betaMap);
+		AdapterSet a = new AdapterSet(anglesAdapter);
+		IsothermicDelaunay.constructDelaunay(hds, a);
 	}
 	
 	

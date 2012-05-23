@@ -120,9 +120,6 @@ public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFa
 	@Test
 	public void testCalculateCirclePatternRadii() throws Exception {
 		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
-		
-		
-		
 		Map<CoEdge, Double> thetaMap = IsothermicUtility.calculateThetasFromBetas(hds, betaMap);
 		Map<CoFace, Double> phiMap = IsothermicUtility.calculatePhisFromBetas(hds, betaMap);
 		
