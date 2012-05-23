@@ -14,6 +14,7 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.PETSc;
@@ -164,26 +165,39 @@ public class IsothermicUtility {
 	}
 	
 	public static Map<CoFace, Double> calculateCirclePatternRhos(CoHDS hds, Map<CoEdge, Double> thetaMap, Map<CoFace, Double> phiMap) {
-		// check pre-conditions
-		System.out.println("Curvatures: ----------");
-		double boundarySum = 0;
-		for (CoVertex v : hds.getVertices()) {
-			double Phi = 0.0;
-			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
-				Phi += thetaMap.get(e);
-			}
-			if (HalfEdgeUtils.isBoundaryVertex(v)) {
-				boundarySum += 2*PI - Phi;
-				System.out.println(v + "(bd): " + Phi/PI);
-			} else {
-				System.out.println(v + ": " + Phi/PI);
+		double thetaStarSum = 0.0;
+		for (CoEdge e : hds.getPositiveEdges()) {
+			double thStar = PI-thetaMap.get(e);
+			thetaStarSum += 2*thStar;
+		}
+		System.out.println("theta star sum: " + thetaStarSum/(2*PI));
+		for (CoEdge e : hds.getPositiveEdges()) {
+			double theta = thetaMap.get(e);
+			if (theta < 0) {
+				System.err.println("negative theta at " + e + ": " + theta);
 			}
 		}
-		System.out.println("Boundary Sum/PI: " + boundarySum/PI);
 		
-		for (CoFace f : hds.getFaces()) {
-			System.out.println(f + ": " + phiMap.get(f)/PI);
-		}
+		// check pre-conditions
+//		System.out.println("Curvatures: ----------");
+//		double boundarySum = 0;
+//		for (CoVertex v : hds.getVertices()) {
+//			double Phi = 0.0;
+//			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+//				Phi += thetaMap.get(e);
+//			}
+//			if (HalfEdgeUtils.isBoundaryVertex(v)) {
+//				boundarySum += 2*PI - Phi;
+//				System.out.println(v + "(bd): " + Phi/PI);
+//			} else {
+//				System.out.println(v + ": " + Phi/PI);
+//			}
+//		}
+//		System.out.println("Boundary Sum/PI: " + boundarySum/PI);
+//		
+//		for (CoFace f : hds.getFaces()) {
+//			System.out.println(f + ": " + phiMap.get(f)/PI);
+//		}
 		
 		int dim = hds.numFaces();
 		Vec rho = new Vec(dim);
@@ -225,6 +239,27 @@ public class IsothermicUtility {
 		}
 		return betaMap;
 	}
+	
+	
+	public static void createDelaunayAngleSystem(CoHDS hds, Map<CoEdge, Double> betaMap) {
+		for (CoEdge e : hds.getPositiveEdges()) {
+			if (HalfEdgeUtils.isBoundaryEdge(e)) {
+				continue;
+			}
+			double bij = betaMap.get(e);
+			double bji = betaMap.get(e.getOppositeEdge());
+			double bmi = betaMap.get(e.getNextEdge());
+			double bjm = betaMap.get(e.getPreviousEdge());
+			double bik = betaMap.get(e.getOppositeEdge().getNextEdge());
+			double bkj = betaMap.get(e.getOppositeEdge().getPreviousEdge());
+			double theta = Math.PI - bij - bji;
+			if (theta < 0) {
+				TopologyAlgorithms.flipEdge(e);
+				//TODO set corresponding betas
+			}
+		}
+	}
+	
 	
 	public static Map<CoEdge, Double> calculateThetasFromBetas(CoHDS hds, Map<CoEdge, Double> betaMap) {
 		Map<CoEdge, Double> thetas = new HashMap<CoEdge, Double>();
