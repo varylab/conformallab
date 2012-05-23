@@ -37,6 +37,7 @@ public class IsothermicityMeasure extends Plugin {
 			super(Double.class, true, false);
 		}
 		
+		@Override
 		public <
 			V extends Vertex<V,E,F>, 
 			E extends Edge<V,E,F>, 

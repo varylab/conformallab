@@ -31,14 +31,21 @@ import de.varylab.discreteconformal.unwrapper.numerics.CPEuclideanApplication;
 public class IsothermicUtility {
 
 	public static class CPLayoutAdapters implements XYVertex<CoVertex>, XYFace<CoFace> {
-	
+
+		private Map<CoFace, double[]>
+			centerMap = new HashMap<CoFace, double[]>();
+		
 		@Override
-		public Point2d getXY(CoFace v, Point2d xy) {
-			return new Point2d(new double[] {0,0});
+		public Point2d getXY(CoFace f, Point2d xy) {
+			if (!centerMap.containsKey(f)) {
+				centerMap.put(f, new double[2]);
+			}
+			return new Point2d(centerMap.get(f));
 		}
 	
 		@Override
 		public void setXY(CoFace f, Point2d xy) {
+			centerMap.put(f, new double[] {xy.x, xy.y});
 		}
 	
 		@Override
@@ -167,8 +174,10 @@ public class IsothermicUtility {
 			}
 			if (HalfEdgeUtils.isBoundaryVertex(v)) {
 				boundarySum += 2*PI - Phi;
+				System.out.println(v + "(bd): " + Phi/PI);
+			} else {
+				System.out.println(v + ": " + Phi/PI);
 			}
-			System.out.println(v + ": " + Phi/PI);
 		}
 		System.out.println("Boundary Sum/PI: " + boundarySum/PI);
 		
@@ -239,18 +248,18 @@ public class IsothermicUtility {
 	public static Map<CoFace, Double> calculatePhisFromBetas(CoHDS hds, Map<CoEdge, Double> betaMap) {
 		Map<CoFace, Double> phiMap = new HashMap<CoFace, Double>();
 		for (CoFace f : hds.getFaces()) {
-			if (HalfEdgeUtils.isInteriorFace(f)) {
+//			if (HalfEdgeUtils.isInteriorFace(f)) {
 				phiMap.put(f, 2*PI);
-			} else {
-				double Phi = 2*PI;
-				for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
-					if (e.getRightFace() == null) {
-						double beta = betaMap.get(e);
-						Phi -= 2*beta;
-					}
-				}
-				phiMap.put(f, Phi);
-			}
+//			} else {
+//				double Phi = 2*PI;
+//				for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
+//					if (e.getRightFace() == null) {
+//						double beta = betaMap.get(e);
+//						Phi -= 2*beta;
+//					}
+//				}
+//				phiMap.put(f, Phi);
+//			}
 		}
 		return phiMap;
 	}
