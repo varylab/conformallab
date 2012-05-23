@@ -42,8 +42,8 @@ public class IsothermicDelaunay {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> boolean isDelaunay(E edge, AdapterSet a) throws TriangulationException{
-		Double gamma = a.get(OppositeAngle.class, edge.getNextEdge(), Double.class);
-		Double delta = a.get(OppositeAngle.class, edge.getOppositeEdge().getNextEdge(), Double.class);
+		Double gamma = a.get(OppositeAngle.class, edge, Double.class);
+		Double delta = a.get(OppositeAngle.class, edge.getOppositeEdge(), Double.class);
 		return gamma + delta <= Math.PI;
 	}
 	
@@ -135,6 +135,7 @@ public class IsothermicDelaunay {
 		b1.setTargetVertex(v4);
 		
 		// calculate new angles
+		System.out.println("flipped edge " + e);
 		double a1a = a.get(OppositeAngle.class, a1, Double.class); 
 		double a2a = a.get(OppositeAngle.class, a2, Double.class); 
 		double b1a = a.get(OppositeAngle.class, b1, Double.class); 

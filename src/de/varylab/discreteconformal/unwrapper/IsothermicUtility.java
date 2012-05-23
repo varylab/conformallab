@@ -84,6 +84,9 @@ public class IsothermicUtility {
 			E extends Edge<V, E, F>,
 			F extends Face<V, E, F>
 		> Double getE(E e, AdapterSet a) {
+			if (!angleMap.containsKey(e)) {
+				return 0.0;
+			}
 			return angleMap.get(e);
 		}
 		
@@ -217,27 +220,6 @@ public class IsothermicUtility {
 				System.err.println("negative theta at " + e + ": " + theta);
 			}
 		}
-		
-		// check pre-conditions
-//		System.out.println("Curvatures: ----------");
-//		double boundarySum = 0;
-//		for (CoVertex v : hds.getVertices()) {
-//			double Phi = 0.0;
-//			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
-//				Phi += thetaMap.get(e);
-//			}
-//			if (HalfEdgeUtils.isBoundaryVertex(v)) {
-//				boundarySum += 2*PI - Phi;
-//				System.out.println(v + "(bd): " + Phi/PI);
-//			} else {
-//				System.out.println(v + ": " + Phi/PI);
-//			}
-//		}
-//		System.out.println("Boundary Sum/PI: " + boundarySum/PI);
-//		
-//		for (CoFace f : hds.getFaces()) {
-//			System.out.println(f + ": " + phiMap.get(f)/PI);
-//		}
 		
 		int dim = hds.numFaces();
 		Vec rho = new Vec(dim);
