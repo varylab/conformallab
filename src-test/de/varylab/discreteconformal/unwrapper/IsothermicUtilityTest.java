@@ -11,9 +11,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import cern.colt.Arrays;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
@@ -22,15 +22,18 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.IsothermicUtility.CPLayoutAdapters;
+import de.varylab.discreteconformal.unwrapper.IsothermicUtility.OppositeAnglesAdapter;
 import de.varylab.discreteconformal.unwrapper.numerics.TaoDomain;
 
 public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
 
 	private final double
-		EPS = 1E-3;
+		EPS = 1E-3,
+		EPS2 = 1E-1;
 	public CoHDS
 		hds = null;
+	public CoEdge
+		e0 = null;
 	public Map<CoEdge, Double> 
 		alphaMap = null;
 		
@@ -52,7 +55,7 @@ public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFa
 		CoFace f2 = HalfEdgeUtils.constructFaceByVertices(hds, v0, v3, v4).getLeftFace();
 		CoFace f3 = HalfEdgeUtils.constructFaceByVertices(hds, v0, v4, v1).getLeftFace();
 
-		CoEdge e0 = HalfEdgeUtils.findEdgeBetweenFaces(f1, f0);
+		e0 = HalfEdgeUtils.findEdgeBetweenFaces(f1, f0);
 		CoEdge e1 = HalfEdgeUtils.findEdgeBetweenFaces(f2, f1);
 		CoEdge e2 = HalfEdgeUtils.findEdgeBetweenFaces(f3, f2);
 		CoEdge e3 = HalfEdgeUtils.findEdgeBetweenFaces(f0, f3);
@@ -61,7 +64,7 @@ public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFa
 		CoEdge e6 = e2.getNextEdge();
 		CoEdge e7 = e3.getNextEdge();
 		
-		double EPS2 = 1E-1;
+		
 		alphaMap = new HashMap<CoEdge, Double>();
 		alphaMap.put(e0,  0.0);
 		alphaMap.put(e1,  PI/2);
@@ -122,25 +125,41 @@ public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFa
 		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
 		Map<CoEdge, Double> thetaMap = IsothermicUtility.calculateThetasFromBetas(hds, betaMap);
 		Map<CoFace, Double> phiMap = IsothermicUtility.calculatePhisFromBetas(hds, betaMap);
-		
-		System.out.println("thetas: " + thetaMap);
-		System.out.println("Phis: " + phiMap);
-		
+
 		Map<CoFace, Double> rhoMap = IsothermicUtility.calculateCirclePatternRhos(hds, thetaMap, phiMap);
-		System.out.println(rhoMap);
-//		Assert.assertEquals(0.0, rhoMap.get(hds.getFace(0)), 1E-10);
-//		Assert.assertEquals(0.0, rhoMap.get(hds.getFace(2)), 1E-10);
-//		Assert.assertEquals(0.6139735886337799, rhoMap.get(hds.getFace(1)), 1E-11);
+		Assert.assertEquals(0.0, rhoMap.get(hds.getFace(0)), 1E-10);
+		Assert.assertEquals(0.0, rhoMap.get(hds.getFace(1)), 1E-10);
+		Assert.assertEquals(-0.110740796199, rhoMap.get(hds.getFace(2)), 1E-11);
+		Assert.assertEquals(-0.110740796199, rhoMap.get(hds.getFace(3)), 1E-11);
 		
-		CPLayoutAdapters layoutAdapters = new CPLayoutAdapters();
-		CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>
-			layout = new CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>(layoutAdapters, layoutAdapters, rhoMap, thetaMap);
+//		CPLayoutAdapters layoutAdapters = new CPLayoutAdapters();
+//		CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>
+//			layout = new CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>(layoutAdapters, layoutAdapters, rhoMap, thetaMap);
+//		
+//		layout.execute(hds);
+//		
+//		for (CoVertex vertex : hds.getVertices()) {
+//			System.out.println(vertex + ": " + Arrays.toString(vertex.T));
+//		}
+	}
+	
+	
+	@Test
+	public void testCreateDelaunayAngleSystem() throws Exception {
+		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
+		OppositeAnglesAdapter oppositeAnglesAdapter = new OppositeAnglesAdapter(betaMap);
+		AdapterSet a = new AdapterSet(oppositeAnglesAdapter);
+
+		IsothermicDelaunay.flip(e0, a);
 		
-		layout.execute(hds);
-		
-		for (CoVertex vertex : hds.getVertices()) {
-			System.out.println(vertex + ": " + Arrays.toString(vertex.T));
-		}
+		double g1 = betaMap.get(e0.getNextEdge());
+		double g2 = betaMap.get(e0.getPreviousEdge());
+		double g3 = betaMap.get(e0.getOppositeEdge().getNextEdge());
+		double g4 = betaMap.get(e0.getOppositeEdge().getPreviousEdge());
+		Assert.assertEquals(PI/4 + EPS2, g1, 1E-8);
+		Assert.assertEquals(PI/4 + EPS2, g2, 1E-8);
+		Assert.assertEquals(0.0, g3, 1E-8);
+		Assert.assertEquals(0.0, g4, 1E-8);
 	}
 	
 }

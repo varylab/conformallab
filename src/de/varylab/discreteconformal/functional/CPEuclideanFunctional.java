@@ -50,8 +50,6 @@ import de.jtem.halfedgetools.functional.Energy;
 import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
-import de.varylab.discreteconformal.heds.CoEdge;
-import de.varylab.discreteconformal.heds.CoFace;
 
 
 public class CPEuclideanFunctional <
@@ -60,12 +58,12 @@ public class CPEuclideanFunctional <
 	F extends Face<V, E, F>
 > implements Functional<V, E, F> {
 	
-	private Map<CoEdge, Double> 
+	private Map<E, Double> 
 		thetaMap = null;
-	private Map<CoFace, Double> 
+	private Map<F, Double> 
 		phiMap = null;
 	
-	public CPEuclideanFunctional(Map<CoEdge, Double> thetaMap, Map<CoFace, Double> phiMap) {
+	public CPEuclideanFunctional(Map<E, Double> thetaMap, Map<F, Double> phiMap) {
 		this.thetaMap = thetaMap;
 		this.phiMap = phiMap;
 	}

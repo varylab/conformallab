@@ -3,7 +3,6 @@ package de.varylab.discreteconformal.uniformization;
 import junit.framework.Assert;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import de.jreality.reader.ReaderOBJ;
@@ -33,13 +32,15 @@ public class SurfaceCurveUtilityTest {
 	public FundamentalPolygon 
  		minimalPolygon = null;
 	
-	@BeforeClass
-	public static void initPetsc() {
+	@Before
+	public void init() throws Exception {
 		NativePathUtility.set("native");
+		loadSurface();
+		unwrapSurface();
+		calculateFundamentalPoygon();
 	}
 	
 	
-	@Before
 	public void calculateFundamentalPoygon() {
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = unwrapper.getCutInfo();
 		FundamentalPolygon cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo);
@@ -48,7 +49,6 @@ public class SurfaceCurveUtilityTest {
 		System.out.println(minimalPolygon);
 	}
 	
-	@Before
 	public void unwrapSurface() throws Exception {
 		unwrapper.setGradientTolerance(1E-4);
 		unwrapper.setMaxIterations(200);
@@ -56,7 +56,6 @@ public class SurfaceCurveUtilityTest {
 	}
 
 	
-	@Before
 	public void loadSurface() throws Exception {
 		// load lawsons surface
 		ReaderOBJ readerOBJ = new ReaderOBJ();
@@ -69,7 +68,7 @@ public class SurfaceCurveUtilityTest {
 	@Test
 	public void testCreateSurfaceCurves() throws Exception {
 		CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, lawson, a, 0, true, true);
-		Assert.assertEquals("Surface Curve Edge Number", 42, curves.numEdges() / 2);
+		Assert.assertEquals("Surface Curve Edge Number", 614, curves.numEdges() / 2);
 	}
 	
 }

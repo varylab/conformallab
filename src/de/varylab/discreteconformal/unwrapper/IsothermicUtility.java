@@ -68,14 +68,14 @@ public class IsothermicUtility {
 	}
 	
 	@OppositeAngle
-	private static class OppositeAnglesAdapter extends AbstractAdapter<Double> {
+	public static class OppositeAnglesAdapter extends AbstractAdapter<Double> {
 		
 		private Map<CoEdge, Double>
 			angleMap = new HashMap<CoEdge, Double>();
 		
-		public OppositeAnglesAdapter(Map<CoEdge, Double> angleMap) {
+		public OppositeAnglesAdapter(Map<CoEdge, Double> betaMap) {
 			super(Double.class, true, true);
-			this.angleMap = angleMap;
+			this.angleMap = betaMap;
 		}
 		
 		@Override
