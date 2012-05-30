@@ -33,7 +33,6 @@ package de.varylab.discreteconformal.unwrapper;
 
 import static java.lang.Math.exp;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -91,7 +90,7 @@ public class CPLayoutAlgorithm <
 		CPEuclideanRotation<V, E, F> rot = new CPEuclideanRotation<V, E, F>();
 		calculateGeneric(hds, rot);
 		// set unlayoutable faces
-		List<E> ears = findEarsEdge(hds);
+		List<E> ears = IsothermicUtility.findEarsEdge(hds);
 		for (E e : ears) {
 			Point2d xy = xyFace.getXY(e.getRightFace(), new Point2d());
 			xyVertex.setXY(e.getTargetVertex(), xy);
@@ -236,21 +235,6 @@ public class CPLayoutAlgorithm <
 		}
 		
 	}
-	
-	private <
-		HDS extends HalfEdgeDataStructure<V, E, F>
-	> List<E> findEarsEdge(HDS hds){
-		ArrayList<E> result = new ArrayList<E>();
-		for (E e : hds.getEdges()){
-			if (!HalfEdgeUtils.isInteriorEdge(e) && e.getLeftFace() == null) {
-				if (e.getRightFace() == e.getNextEdge().getRightFace()) {
-					result.add(e);
-				}
-			}
-		}
-		return result;
-	}
-	
 	
 	protected static interface Rotation <
 		V extends Vertex<V, E, F>,

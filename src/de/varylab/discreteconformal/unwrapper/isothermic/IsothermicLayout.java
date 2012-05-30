@@ -77,7 +77,7 @@ public class IsothermicLayout {
 				V nearVertex = e.getTargetVertex();
 				
 				E next = e.getNextEdge();
-				Double alpha = IsothermicUtility.getOppositeAlpha(next, angleMap);
+				Double alpha = IsothermicUtility.getOppositeBeta(next, angleMap);
 				if (e.getLeftFace() == null) { // a boundary edge
 					//TODO do layout in the other direction too
 					break;
@@ -88,7 +88,7 @@ public class IsothermicLayout {
 				
 				if (!lengthMap.containsKey(e)) {
 					double prevLength = lengthMap.get(e.getPreviousEdge());
-					l = getEdgeLength(e, prevLength, angleMap);
+					l = IsothermicUtility.getEdgeLength(e, prevLength, angleMap);
 					lengthMap.put(e, l);
 					lengthMap.put(e.getOppositeEdge(), l);
 				}
@@ -110,18 +110,6 @@ public class IsothermicLayout {
 		}
 		
 		assert (visited.size() == hds.numVertices());
-	}
-	
-	
-	protected static <
-		V extends Vertex<V, E, F>,
-		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>,
-		HDS extends HalfEdgeDataStructure<V, E, F>
-	> double getEdgeLength(E e, double prevEdgeLength, Map<E, Double> angleMap) {
-		double ea = IsothermicUtility.getOppositeAlpha(e, angleMap);
-		double prevAngle = IsothermicUtility.getOppositeAlpha(e.getPreviousEdge(), angleMap);
-		return prevEdgeLength  * sin(ea) / sin(prevAngle);
 	}
 	
 	

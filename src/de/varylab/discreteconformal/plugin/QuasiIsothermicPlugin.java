@@ -3,22 +3,20 @@ package de.varylab.discreteconformal.plugin;
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 import static java.awt.GridBagConstraints.HORIZONTAL;
 import static java.awt.GridBagConstraints.REMAINDER;
-import static java.lang.Math.PI;
-import static java.lang.Math.abs;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 
 import de.jreality.plugin.basic.View;
+import de.jtem.halfedge.Edge;
+import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.CurvatureFieldMin;
@@ -36,7 +34,6 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.CPLayoutAlgorithm;
-import de.varylab.discreteconformal.unwrapper.ConesUtility;
 import de.varylab.discreteconformal.unwrapper.IsothermicUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout;
 import de.varylab.discreteconformal.unwrapper.isothermic.SinConditionFunctional;
@@ -85,17 +82,24 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	protected void calculateWithCirclePattern() {
 		System.out.println("using circle patterns");
 		AdapterSet a = hif.getAdapters();
-		CoHDS hds = hif.get(new CoHDS());
+		HalfEdgeDataStructure<?, ?, ?> genHDS = hif.get();
 		
-		Map<CoEdge, Double> alphaMap = new HashMap<CoEdge, Double>();
+		Map<Integer, Double> indexAlphaMap = new HashMap<Integer, Double>();
 		
-		for (CoEdge e : hds.getEdges()) {
+		for (Edge<?,?,?> e : genHDS.getEdges()) {
 			double[] N = a.getD(Normal.class, e);
 			double[] Kmin = a.getD(CurvatureFieldMin.class, e);
 			double[] E = a.getD(EdgeVector.class, e);
 			double ae = IsothermicUtility.getSignedAngle(N, Kmin, E);
-			alphaMap.put(e, ae);
-			alphaMap.put(e.getOppositeEdge(), ae);
+			indexAlphaMap.put(e.getIndex(), ae);
+			indexAlphaMap.put(e.getOppositeEdge().getIndex(), ae);
+		}
+		
+		CoHDS hds = hif.get(new CoHDS());
+		Map<CoEdge, Double> alphaMap = new HashMap<CoEdge, Double>();
+		for (CoEdge e : hds.getEdges()) {
+			Double alpha = indexAlphaMap.get(e.getIndex());
+			alphaMap.put(e, alpha);
 		}
 		
 		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
@@ -107,13 +111,16 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		Map<CoFace, Double> rhoMap = IsothermicUtility.calculateCirclePatternRhos(hds, thetaMap, phiMap);
 
-
+		IsothermicUtility.cutConesToBoundary(hds, betaMap);
+		
 		IsothermicUtility.CPLayoutAdapters layoutAdapters = new IsothermicUtility.CPLayoutAdapters();
 		CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>
 			layout = new CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>(
 				layoutAdapters, layoutAdapters, rhoMap, thetaMap
 			);
 		layout.execute(hds);
+		
+		IsothermicUtility.alignLayout(hds, alphaMap);
 		
 		hif.update();
 	}
@@ -151,32 +158,20 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 			alphaMap.put(e.getOppositeEdge(), alpha);
 		}
 		
+		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
+		
 		// remove topology
 		if (HalfEdgeUtils.getGenus(hds) >= 1) {
 			CoVertex cutRoot = hds.getVertex(0);
 			cutManifoldToDisk(hds, cutRoot, null);
 		}
 		
-		Set<CoVertex> innerVerts = new HashSet<CoVertex>(hds.getVertices());
-		innerVerts.removeAll(HalfEdgeUtils.boundaryVertices(hds));
-		for (CoVertex v : innerVerts) {
-			double sum = IsothermicUtility.calculateAngleSumFromAlphas(v, alphaMap);
-			if (abs(sum - 2*PI) > Math.PI/4) {
-				int index = (int)Math.round(sum / PI);
-				v.setTheta(index * PI);
-				System.out.println("singularity: " + v + ", " + index + " pi");
-			} else {
-				v.setTheta(2 * PI);
-			}
-		}
-		ConesUtility.cutMesh(hds);
+		IsothermicUtility.cutConesToBoundary(hds, betaMap);
 		
 		IsothermicLayout.doTexLayout(hds, alphaMap, a);
 		hif.update();
 	}
-	
-	
-	
+
 	@Override
 	public void install(Controller c) throws Exception {
 		super.install(c);

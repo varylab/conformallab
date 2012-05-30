@@ -2,12 +2,21 @@ package de.varylab.discreteconformal.unwrapper;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
+import static java.lang.Math.atan;
+import static java.lang.Math.sin;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.vecmath.Point2d;
 
+import de.jreality.math.Matrix;
+import de.jreality.math.MatrixBuilder;
+import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -175,7 +184,7 @@ public class IsothermicUtility {
 	> double calculateAngleSumFromAlphas(V v, Map<E, Double> alphaMap) {
 		double sum = 0.0;
 		for (E e : HalfEdgeUtils.incomingEdges(v)) {
-			sum += IsothermicUtility.getOppositeAlpha(e.getPreviousEdge(), alphaMap);
+			sum += IsothermicUtility.getOppositeBeta(e.getPreviousEdge(), alphaMap);
 		}
 		return sum;
 	}
@@ -320,7 +329,7 @@ public class IsothermicUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,
 		HDS extends HalfEdgeDataStructure<V, E, F>
-	> double getOppositeAlpha(E e, Map<E, Double> alphaMap) {
+	> double getOppositeBeta(E e, Map<E, Double> alphaMap) {
 		Double eA = alphaMap.get(e);
 		if (eA == null) {
 			eA = alphaMap.get(e.getOppositeEdge());
@@ -335,5 +344,97 @@ public class IsothermicUtility {
 		}
 		return calculateTriangleAngle(eNextA, ePrevA, eA);
 	}
+	
+	
+	public static void layoutEars(CoHDS hds, Map<CoEdge, Double> alphaMap) {
+		List<CoEdge> earEdges = findEarsEdge(hds);
+		for (CoEdge ear : earEdges) {
+			CoEdge base = ear.getPreviousEdge();
+			CoVertex v = ear.getTargetVertex();
+			double[] p2 = base.getTargetVertex().T;
+			double[] p1 = base.getStartVertex().T;
+			double lBase = Pn.distanceBetween(p2, p1, Pn.EUCLIDEAN);
+			double lNew = getEdgeLength(ear, lBase, alphaMap);
+			
+		}
+	}
+	
+	
+	public static void alignLayout(CoHDS hds, Map<CoEdge, Double> alphaMap) {
+		 List<CoEdge> b = HalfEdgeUtils.boundaryEdges(hds);
+		 List<CoEdge> earEdges = findEarsEdge(hds);
+		 for (CoEdge e : earEdges) {
+			 b.remove(e);
+			 b.remove(e.getNextEdge());
+		 }
+		 CoEdge refEdge = hds.getEdge(0);
+		 if (b.size() != 0) {
+			 refEdge = b.get(0);
+		 }
+		 double alpha = alphaMap.get(refEdge);
+		 double[] s = refEdge.getStartVertex().T;
+		 double[] t = refEdge.getTargetVertex().T;
+		 double angle = atan((s[1] - t[1]) / (s[0] - t[0]));
+		 double difAngle = alpha - angle;
+		 MatrixBuilder mb = MatrixBuilder.euclidean();
+		 mb.rotate(difAngle, new double[] {0,0,1});
+		 Matrix T = mb.getMatrix();
+		 for (CoVertex v : hds.getVertices()) {
+			 T.transformVector(v.T);
+		 }
+	}
+	
+	
+
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> List<E> findEarsEdge(HDS hds){
+		ArrayList<E> result = new ArrayList<E>();
+		for (E e : hds.getEdges()){
+			if (!HalfEdgeUtils.isInteriorEdge(e) && e.getLeftFace() == null) {
+				if (e.getRightFace() == e.getNextEdge().getRightFace()) {
+					result.add(e);
+				}
+			}
+		}
+		return result;
+	}
+
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> double getEdgeLength(E e, double prevEdgeLength, Map<E, Double> alphaMap) {
+		double ea = getOppositeBeta(e, alphaMap);
+		double prevAngle = getOppositeBeta(e.getPreviousEdge(), alphaMap);
+		return prevEdgeLength  * sin(ea) / sin(prevAngle);
+	}
+
+	
+	/**
+	 * Cuts from cone points (beta sum != 2PI) to the boundary of a mesh
+	 * @param hds
+	 * @param betaMap
+	 */
+	public static void cutConesToBoundary(CoHDS hds, Map<CoEdge, Double> betaMap) {
+		Set<CoVertex> innerVerts = new HashSet<CoVertex>(hds.getVertices());
+		innerVerts.removeAll(HalfEdgeUtils.boundaryVertices(hds));
+		for (CoVertex v : innerVerts) {
+			double sum = calculateAngleSumFromBetas(v, betaMap);
+			if (abs(sum - 2*PI) > Math.PI/4) {
+				int index = (int)Math.round(sum / PI);
+				v.setTheta(index * PI);
+				System.out.println("singularity: " + v + ", " + index + " pi");
+			} else {
+				v.setTheta(2 * PI);
+			}
+		}
+		ConesUtility.cutMesh(hds);
+	}
+	
 	
 }
