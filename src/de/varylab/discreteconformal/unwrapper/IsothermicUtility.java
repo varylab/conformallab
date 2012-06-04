@@ -26,6 +26,9 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.CurvatureFieldMin;
+import de.jtem.halfedgetools.adapter.type.Normal;
+import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.PETSc;
@@ -271,6 +274,38 @@ public class IsothermicUtility {
 		return betaMap;
 	}
 	
+	
+	public static void checkTriangleAngles(CoHDS hds, Map<CoEdge, Double> betaMap) {
+		double EPS = 1E-5;
+		for (CoFace f : hds.getFaces()) {
+			double sum = 0.0;
+			for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
+				double beta = betaMap.get(e);
+				if (beta < 0) {
+					throw new RuntimeException("Negative angle at edge " + e + ": " + beta);
+				}
+				sum += beta;
+			}
+			if (Math.abs(sum - PI) > EPS) {
+				throw new RuntimeException("Angle sum at " + f + ": " + sum);
+			}
+		}
+		for (CoVertex v : hds.getVertices()) {
+			if (HalfEdgeUtils.isBoundaryVertex(v)) {
+				continue;
+			}
+			double sum = 0.0;
+			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+				double beta = betaMap.get(e.getPreviousEdge());
+				sum += beta;
+			}
+			if (Math.abs(sum - 2*PI) > EPS) {
+				throw new RuntimeException("Angle sum at " + v + ": " + sum);
+			}
+		}
+	}
+	
+	
 	/**
 	 * invokes the Delaunay flip algorithm on hds and modifies the angles in betaMap 
 	 * accordingly. The local Delaunay condition is derived from the opposite angles
@@ -434,6 +469,28 @@ public class IsothermicUtility {
 			}
 		}
 		ConesUtility.cutMesh(hds);
+	}
+
+	public static Map<CoEdge, Double> calculateAlphasFromCurvature(AdapterSet a, CoHDS hds) {
+		Map<CoEdge, Double> alphaMap = new HashMap<CoEdge, Double>();
+		for (CoEdge e : hds.getEdges()) {
+			double[] N = a.getD(Normal.class, e);
+			double[] Kmin = a.getD(CurvatureFieldMin.class, e);
+			double[] E = a.getD(EdgeVector.class, e);
+			double ae = getSignedAngle(N, Kmin, E);
+			alphaMap.put(e, ae);
+			alphaMap.put(e.getOppositeEdge(), ae);
+		}
+		return alphaMap;
+	}
+
+	public static void doCirclePatternLayout(CoHDS hds, Map<CoEdge, Double> thetaMap, Map<CoFace, Double> rhoMap) {
+		CPLayoutAdapters layoutAdapters = new CPLayoutAdapters();
+		CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>
+			layout = new CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>(
+				layoutAdapters, layoutAdapters, rhoMap, thetaMap
+			);
+		layout.execute(hds);
 	}
 	
 	

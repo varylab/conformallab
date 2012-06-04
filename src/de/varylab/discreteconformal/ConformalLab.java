@@ -13,6 +13,7 @@ import de.jreality.util.NativePathUtility;
 import de.jtem.halfedgetools.JRHalfedgeViewer;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgePluginFactory;
+import de.jtem.halfedgetools.plugin.algorithm.vectorfield.CurvatureVectorFields;
 import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
 import de.jtem.jrworkspace.plugin.Plugin;
 import de.jtem.jrworkspace.plugin.lnfswitch.LookAndFeelSwitch;
@@ -79,6 +80,7 @@ public class ConformalLab {
 		v.registerPlugin(new NimbusLnF());
 		v.registerPlugin(new SystemLookAndFeel());
 		v.registerPlugin(new VertexEditorPlugin());
+		v.registerPlugin(CurvatureVectorFields.class);
 //		v.registerPlugin(new HalfedgeDebuggerPlugin());
 		v.registerPlugins(createConformalPlugins());
 		v.registerPlugins(HalfedgePluginFactory.createPlugins());

@@ -16,13 +16,21 @@ public class MappedWeightAdapter extends AbstractAdapter<Double> {
 
 	private Map<Edge<?, ?, ?>, Double>
 		wMap = new HashMap<Edge<?,?,?>, Double>();
+	private String
+		name = "Weights";
 	
 	public MappedWeightAdapter() {
 		super(Double.class, true, true);
 	}
-	public MappedWeightAdapter(Map<Edge<?,?,?>, Double> map) {
+	@SuppressWarnings("unchecked")
+	public MappedWeightAdapter(Map<? extends Edge<?,?,?>, Double> map) {
 		super(Double.class, true, true);
-		this.wMap = map;
+		this.wMap = (Map<Edge<?, ?, ?>, Double>)map;
+	}
+	
+	public MappedWeightAdapter(Map<? extends Edge<?,?,?>, Double> map, String name) {
+		this(map);
+		this.name = name;
 	}
 	
 	@Override
@@ -57,6 +65,11 @@ public class MappedWeightAdapter extends AbstractAdapter<Double> {
 	@Override
 	public double getPriority() {
 		return 10;
+	}
+	
+	@Override
+	public String toString() {
+		return name;
 	}
 	
 }

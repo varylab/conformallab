@@ -59,7 +59,6 @@ public class CPEuclideanRotation
 		Complex c1 = new Complex(center.x, center.y);
 		Complex c2 = new Complex(1,0);
 		ComplexProjective1 c = new ComplexProjective1(c1, c2);
-		
 		rot.assignEuclideanLogScaleRotation(c, logScale, phi);
 		Complex pc = new Complex(p.x, p.y);
 		pc = rot.applyTo(pc);

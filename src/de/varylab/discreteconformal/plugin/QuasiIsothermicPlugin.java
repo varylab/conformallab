@@ -8,6 +8,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,13 +16,8 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 
 import de.jreality.plugin.basic.View;
-import de.jtem.halfedge.Edge;
-import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.type.CurvatureFieldMin;
-import de.jtem.halfedgetools.adapter.type.Normal;
-import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jrworkspace.plugin.Controller;
@@ -29,11 +25,12 @@ import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.jtao.Tao;
 import de.jtem.jtao.Tao.Method;
+import de.varylab.discreteconformal.adapter.MappedWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.CPLayoutAlgorithm;
+import de.varylab.discreteconformal.plugin.generator.TestVectorFieldGenerator;
 import de.varylab.discreteconformal.unwrapper.IsothermicUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout;
 import de.varylab.discreteconformal.unwrapper.isothermic.SinConditionFunctional;
@@ -47,14 +44,14 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	private JButton
 		goButton = new JButton("Go");
 	
-//	static {
-//		String[] taoCommand = new String[] {
-//			"-tao_nm_lamda", "0.01", 
-//			"-tao_nm_mu", "1.0"
-//		};
-//		System.out.println("initing tao: " + Arrays.toString(taoCommand));
-//		Tao.Initialize("Quasiisothermic Parametrization", taoCommand, false);
-//	}
+	static {
+		String[] taoCommand = new String[] {
+			"-tao_nm_lamda", "0.01", 
+			"-tao_nm_mu", "1.0"
+		};
+		System.out.println("initing tao: " + Arrays.toString(taoCommand));
+		Tao.Initialize("Quasiisothermic Parametrization", taoCommand, false);
+	}
 	
 	public QuasiIsothermicPlugin() {
 		shrinkPanel.setTitle("Quasiisothermic Parametrization");
@@ -80,50 +77,41 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	
 	
 	protected void calculateWithCirclePattern() {
-		System.out.println("using circle patterns");
 		AdapterSet a = hif.getAdapters();
-		HalfEdgeDataStructure<?, ?, ?> genHDS = hif.get();
-		
-		Map<Integer, Double> indexAlphaMap = new HashMap<Integer, Double>();
-		
-		for (Edge<?,?,?> e : genHDS.getEdges()) {
-			double[] N = a.getD(Normal.class, e);
-			double[] Kmin = a.getD(CurvatureFieldMin.class, e);
-			double[] E = a.getD(EdgeVector.class, e);
-			double ae = IsothermicUtility.getSignedAngle(N, Kmin, E);
-			indexAlphaMap.put(e.getIndex(), ae);
-			indexAlphaMap.put(e.getOppositeEdge().getIndex(), ae);
-		}
-		
 		CoHDS hds = hif.get(new CoHDS());
-		Map<CoEdge, Double> alphaMap = new HashMap<CoEdge, Double>();
-		for (CoEdge e : hds.getEdges()) {
-			Double alpha = indexAlphaMap.get(e.getIndex());
-			alphaMap.put(e, alpha);
-		}
 		
+		Map<CoEdge, Double> alphaMap = IsothermicUtility.calculateAlphasFromCurvature(a, hds);
 		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
 		
+		IsothermicUtility.checkTriangleAngles(hds, betaMap);
 		IsothermicUtility.createDelaunayAngleSystem(hds, betaMap);
+		IsothermicUtility.checkTriangleAngles(hds, betaMap);
 		
 		Map<CoEdge, Double> thetaMap = IsothermicUtility.calculateThetasFromBetas(hds, betaMap);
-		Map<CoFace, Double> phiMap = IsothermicUtility.calculatePhisFromBetas(hds, betaMap);
+		for (CoEdge e : thetaMap.keySet()) {
+			if (e.isPositive() && e.getLeftFace() != null) continue;
+			System.out.println("Theta " + e.getIndex() + ": " + thetaMap.get(e));
+		}
 		
+		Map<CoFace, Double> phiMap = IsothermicUtility.calculatePhisFromBetas(hds, betaMap);
 		Map<CoFace, Double> rhoMap = IsothermicUtility.calculateCirclePatternRhos(hds, thetaMap, phiMap);
 
+		for (CoFace f : rhoMap.keySet()) {
+			System.out.println("Rho " + f.getIndex() + ": " + rhoMap.get(f));
+		}
+		
 		IsothermicUtility.cutConesToBoundary(hds, betaMap);
 		
-		IsothermicUtility.CPLayoutAdapters layoutAdapters = new IsothermicUtility.CPLayoutAdapters();
-		CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>
-			layout = new CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>(
-				layoutAdapters, layoutAdapters, rhoMap, thetaMap
-			);
-		layout.execute(hds);
+		IsothermicUtility.doCirclePatternLayout(hds, thetaMap, rhoMap);
 		
 		IsothermicUtility.alignLayout(hds, alphaMap);
 		
+		
+		MappedWeightAdapter thetaAdapter = new MappedWeightAdapter(thetaMap, "Thetas");
 		hif.update();
+		hif.addLayerAdapter(thetaAdapter, false);
 	}
+	
 	
 	protected void calculateWithSinFunctional() {
 		System.out.println("using sin-functional");
@@ -176,6 +164,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
+		c.getPlugin(TestVectorFieldGenerator.class);
 	}
 	
 	
