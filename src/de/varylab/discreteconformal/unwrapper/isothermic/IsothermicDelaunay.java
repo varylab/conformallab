@@ -106,6 +106,12 @@ public class IsothermicDelaunay {
 		if (leftFace == rightFace) {
 			return;
 		}
+
+		// calculate new angles
+		System.out.println("flipped edge " + e);
+		setMetricFlipAngles(e, a);
+//		setPtolemyFlipAngles(e, a); // does not terminate
+		
 		E a1 = e.getOppositeEdge().getNextEdge();
 		E a2 = a1.getNextEdge();
 		E b1 = e.getNextEdge();
@@ -135,11 +141,6 @@ public class IsothermicDelaunay {
 		a2.setTargetVertex(v2);
 		a1.setTargetVertex(v3);
 		b1.setTargetVertex(v4);
-		
-		// calculate new angles
-		System.out.println("flipped edge " + e);
-		setMetricFlipAngles(e, a);
-//		setPtolemyFlipAngles(e, a); // does not terminate
 	}
 	
 	
