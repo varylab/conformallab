@@ -64,7 +64,7 @@ public class ConformalLab {
 		JRealitySplashScreen splash = new JRealitySplashScreen(splashImage);
 		splash.setVisible(true);
 		v.setSplashScreen(splash);
-//		JRHalfedgeViewer.initHalfedgeFronted();
+		JRHalfedgeViewer.initHalfedgeFronted();
 		NativePathUtility.set("native");
 		v.addBasicUI();
 		v.addContentUI();

@@ -4,6 +4,7 @@ import static java.lang.Math.PI;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.util.Random;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -55,6 +56,8 @@ public class TestVectorFieldGenerator extends AlgorithmDialogPlugin {
 		
 		private double 
 			angle = PI/2;
+		private Random
+			rnd = new Random();
 		
 		public TestVectorField(double angle) {
 			super(double[].class, true, false);
@@ -67,10 +70,17 @@ public class TestVectorFieldGenerator extends AlgorithmDialogPlugin {
 			E extends Edge<V, E, F>,
 			F extends Face<V, E, F>
 		> double[] getE(E e, AdapterSet a) {
+			if (e.isPositive()) {
+				rnd.setSeed(e.getIndex());
+			} else {
+				rnd.setSeed(e.getOppositeEdge().getIndex());
+			}
 			double[] c = a.getD(BaryCenter3d.class, e);
-			double r = Rn.maxNorm(new double[] {c[0], c[2]});
+			double r = Rn.maxNorm(new double[] {c[0] + 1, c[2]});
+			double r2 = Rn.maxNorm(new double[] {c[0], c[2]});
 			double l = 0.5 + Math.cos(r * PI)/2.0;
-			double phi = l * angle;
+			double l2 = 0.5 + Math.cos(r2 * PI)/2.0;
+			double phi = (l+l2) * angle + l2*rnd.nextGaussian()*0;
 			double[] vec = {Math.cos(phi), 0, Math.sin(phi)};
 			return vec;
 		}

@@ -96,10 +96,6 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		Map<CoFace, Double> phiMap = IsothermicUtility.calculatePhisFromBetas(hds, betaMap);
 		Map<CoFace, Double> rhoMap = IsothermicUtility.calculateCirclePatternRhos(hds, thetaMap, phiMap);
 
-		for (CoFace f : rhoMap.keySet()) {
-			System.out.println("Rho " + f.getIndex() + ": " + rhoMap.get(f));
-		}
-		
 		IsothermicUtility.cutConesToBoundary(hds, betaMap);
 		
 		IsothermicUtility.doCirclePatternLayout(hds, thetaMap, rhoMap);
