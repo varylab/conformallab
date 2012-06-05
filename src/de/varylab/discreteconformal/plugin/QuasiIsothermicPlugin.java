@@ -107,9 +107,10 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		IsothermicUtility.alignLayout(hds, alphaMap);
 		
 		
-		MappedWeightAdapter thetaAdapter = new MappedWeightAdapter(thetaMap, "Thetas");
 		hif.update();
-		hif.addLayerAdapter(thetaAdapter, false);
+		hif.addLayerAdapter(new MappedWeightAdapter(thetaMap, "Quasiisothermic Thetas"), false);
+		hif.addLayerAdapter(new MappedWeightAdapter(betaMap, "Quasiisothermic Betas"), false);
+		hif.addLayerAdapter(new MappedWeightAdapter(alphaMap, "Quasiisothermic Alphas"), false);
 	}
 	
 	
