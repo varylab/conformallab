@@ -29,7 +29,7 @@ IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
 OF SUCH DAMAGE.
 **/
 
-package de.varylab.discreteconformal.unwrapper;
+package de.varylab.discreteconformal.unwrapper.circlepattern;
 
 import static java.lang.Math.exp;
 
@@ -45,8 +45,9 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.XYFace;
-import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.XYVertex;
+import de.varylab.discreteconformal.unwrapper.circlepattern.CPLayoutAdapters.XYFace;
+import de.varylab.discreteconformal.unwrapper.circlepattern.CPLayoutAdapters.XYVertex;
+import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
 
 
 /**

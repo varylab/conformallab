@@ -22,7 +22,9 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.IsothermicUtility.OppositeAnglesAdapter;
+import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicDelaunay;
+import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
+import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.OppositeAnglesAdapter;
 import de.varylab.discreteconformal.unwrapper.numerics.TaoDomain;
 
 public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {

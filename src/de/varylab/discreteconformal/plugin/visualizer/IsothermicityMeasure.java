@@ -21,7 +21,7 @@ import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.Plugin;
-import de.varylab.discreteconformal.unwrapper.IsothermicUtility;
+import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
 
 public class IsothermicityMeasure extends Plugin {
 

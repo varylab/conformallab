@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.unwrapper;
+package de.varylab.discreteconformal.unwrapper.isothermic;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
@@ -40,8 +40,10 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.types.OppositeAngle;
-import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.XYFace;
-import de.varylab.discreteconformal.unwrapper.CPLayoutAdapters.XYVertex;
+import de.varylab.discreteconformal.unwrapper.ConesUtility;
+import de.varylab.discreteconformal.unwrapper.circlepattern.CPLayoutAlgorithm;
+import de.varylab.discreteconformal.unwrapper.circlepattern.CPLayoutAdapters.XYFace;
+import de.varylab.discreteconformal.unwrapper.circlepattern.CPLayoutAdapters.XYVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CPEuclideanApplication;
 
 public class IsothermicUtility {
@@ -477,9 +479,13 @@ public class IsothermicUtility {
 			double[] N = a.getD(Normal.class, e);
 			double[] Kmin = a.getD(CurvatureFieldMin.class, e);
 			double[] E = a.getD(EdgeVector.class, e);
-			double ae = getSignedAngle(N, Kmin, E);
-			alphaMap.put(e, ae);
-			alphaMap.put(e.getOppositeEdge(), ae);
+			try {
+				double ae = getSignedAngle(N, Kmin, E);
+				alphaMap.put(e, ae);
+				alphaMap.put(e.getOppositeEdge(), ae);
+			} catch (Exception e2) { 
+				System.out.println("check");
+			}
 		}
 		return alphaMap;
 	}

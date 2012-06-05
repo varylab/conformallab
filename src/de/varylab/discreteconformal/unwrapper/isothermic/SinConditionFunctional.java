@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.unwrapper.isothermic;
 
-import static de.varylab.discreteconformal.unwrapper.IsothermicUtility.calculateTriangleAngle;
+import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateTriangleAngle;
 import static java.lang.Math.sin;
 
 import java.util.Map;
@@ -19,7 +19,6 @@ import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.TaoAppAddGrad;
 import de.jtem.jtao.TaoAppAddObjective;
 import de.jtem.jtao.TaoApplication;
-import de.varylab.discreteconformal.unwrapper.IsothermicUtility;
 
 public class SinConditionFunctional <
 	V extends Vertex<V, E, F>,

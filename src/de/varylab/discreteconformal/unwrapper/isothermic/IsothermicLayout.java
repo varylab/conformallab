@@ -19,7 +19,6 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
-import de.varylab.discreteconformal.unwrapper.IsothermicUtility;
 
 public class IsothermicLayout {
 

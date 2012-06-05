@@ -31,8 +31,8 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.generator.TestVectorFieldGenerator;
-import de.varylab.discreteconformal.unwrapper.IsothermicUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout;
+import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.SinConditionFunctional;
 
 public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionListener {
@@ -83,16 +83,11 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		Map<CoEdge, Double> alphaMap = IsothermicUtility.calculateAlphasFromCurvature(a, hds);
 		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
 		
-		IsothermicUtility.checkTriangleAngles(hds, betaMap);
+//		IsothermicUtility.checkTriangleAngles(hds, betaMap);
 		IsothermicUtility.createDelaunayAngleSystem(hds, betaMap);
-		IsothermicUtility.checkTriangleAngles(hds, betaMap);
+//		IsothermicUtility.checkTriangleAngles(hds, betaMap);
 		
 		Map<CoEdge, Double> thetaMap = IsothermicUtility.calculateThetasFromBetas(hds, betaMap);
-		for (CoEdge e : thetaMap.keySet()) {
-			if (e.isPositive() && e.getLeftFace() != null) continue;
-			System.out.println("Theta " + e.getIndex() + ": " + thetaMap.get(e));
-		}
-		
 		Map<CoFace, Double> phiMap = IsothermicUtility.calculatePhisFromBetas(hds, betaMap);
 		Map<CoFace, Double> rhoMap = IsothermicUtility.calculateCirclePatternRhos(hds, thetaMap, phiMap);
 

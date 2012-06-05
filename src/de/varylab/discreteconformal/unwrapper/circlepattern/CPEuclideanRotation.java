@@ -29,7 +29,7 @@ IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
 OF SUCH DAMAGE.
 **/
 
-package de.varylab.discreteconformal.unwrapper;
+package de.varylab.discreteconformal.unwrapper.circlepattern;
 
 import static java.lang.Math.PI;
 
@@ -43,7 +43,7 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.mfc.field.Complex;
 import de.jtem.mfc.geometry.ComplexProjective1;
 import de.jtem.mfc.group.Moebius;
-import de.varylab.discreteconformal.unwrapper.CPLayoutAlgorithm.Rotation;
+import de.varylab.discreteconformal.unwrapper.circlepattern.CPLayoutAlgorithm.Rotation;
 
 public class CPEuclideanRotation 
 <
