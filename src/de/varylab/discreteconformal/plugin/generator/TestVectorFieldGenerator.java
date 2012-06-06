@@ -76,11 +76,11 @@ public class TestVectorFieldGenerator extends AlgorithmDialogPlugin {
 				rnd.setSeed(e.getOppositeEdge().getIndex());
 			}
 			double[] c = a.getD(BaryCenter3d.class, e);
-			double r = Rn.maxNorm(new double[] {c[0] + 1, c[2]});
+//			double r = Rn.maxNorm(new double[] {c[0] + 1, c[2]});
 			double r2 = Rn.maxNorm(new double[] {c[0], c[2]});
-			double l = 0.5 + Math.cos(r * PI)/2.0;
+//			double l = 0.5 + Math.cos(r * PI)/2.0;
 			double l2 = 0.5 + Math.cos(r2 * PI)/2.0;
-			double phi = (l+l2) * angle + l2*rnd.nextGaussian()*0;
+			double phi = (l2) * angle + l2*rnd.nextGaussian()*0;
 			double[] vec = {Math.cos(phi), 0, Math.sin(phi)};
 			return vec;
 		}

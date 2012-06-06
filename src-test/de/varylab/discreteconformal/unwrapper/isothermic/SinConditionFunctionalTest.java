@@ -59,14 +59,13 @@ public class SinConditionFunctionalTest {
 	}
 	
 	
-	
 	@Test
 	public void testSinConditionFunctional() throws Exception {
 		Vec init = fun.getSolutionVec();
 		Vec startVec = new Vec(init.getSize());
 		init.copy(startVec);
 		
-		Assert.assertTrue("energy is large at the beginning", 1E-3 < fun.evaluateObjective(init));
+		Assert.assertTrue("energy is large at the beginning", 1E-3 < fun.evaluateObjectiveAndGradient(init, null));
 		
 		Tao tao = new Tao(Method.LMVM);
 		tao.setFromOptions();
@@ -76,7 +75,7 @@ public class SinConditionFunctionalTest {
 		tao.setTolerances(1E-10, 1E-10, 1E-10, 1E-10);
 		tao.solve();
 		System.out.println(tao.getSolutionStatus());
-		Assert.assertTrue("energy is small after minimizatin", 1E-9 > fun.evaluateObjective(init));
+		Assert.assertTrue("energy is small after minimizatin", 1E-9 > fun.evaluateObjectiveAndGradient(init, null));
 		
 		double dif2 = 0.0;
 		for (int i = 0; i < startVec.getSize(); i++) {
@@ -94,7 +93,6 @@ public class SinConditionFunctionalTest {
 		tao.setFromOptions();
 		tao.setApplication(fun);
 		tao.solve();
-		System.out.println(tao.getSolutionStatus());
 	}
 	
 	

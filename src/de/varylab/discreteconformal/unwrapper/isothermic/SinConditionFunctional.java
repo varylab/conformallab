@@ -1,7 +1,10 @@
 package de.varylab.discreteconformal.unwrapper.isothermic;
 
+import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateTriangleAngle;
+import static java.lang.Math.log;
 import static java.lang.Math.sin;
+import static java.lang.Math.tan;
 
 import java.util.Map;
 
@@ -15,9 +18,10 @@ import de.jtem.halfedgetools.adapter.type.CurvatureFieldMin;
 import de.jtem.halfedgetools.adapter.type.Normal;
 import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.jpetsc.InsertMode;
+import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
-import de.jtem.jtao.TaoAppAddGrad;
-import de.jtem.jtao.TaoAppAddObjective;
+import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
+import de.jtem.jtao.TaoAppAddHess;
 import de.jtem.jtao.TaoApplication;
 
 public class SinConditionFunctional <
@@ -25,7 +29,7 @@ public class SinConditionFunctional <
 	E extends Edge<V, E, F>,
 	F extends Face<V, E, F>,
 	HDS extends HalfEdgeDataStructure<V, E, F>
-> extends TaoApplication implements TaoAppAddGrad, TaoAppAddObjective {
+> extends TaoApplication implements TaoAppAddCombinedObjectiveAndGrad, TaoAppAddHess {
 
 	private HDS
 		hds = null;
@@ -52,82 +56,53 @@ public class SinConditionFunctional <
 	}
 	
 	@Override
-	public void evaluateGradient(Vec x, Vec g) {
-		defaultComputeGradient(x, g);
-	}
-	
-	
-//	public double evaluateObjectiveAndGradient(Vec x, Vec g) {
-//		for (V v : hds.getVertices()) {
-//			if (HalfEdgeUtils.isBoundaryVertex(v)) {
-//				continue;
-//			}
-//			// star alphas
-//			for (E e : HalfEdgeUtils.incomingEdges(v)) {
-//				double sl = getLeftSinProduct(v, x);
-//				double sr = getRightSinProduct(v, x);
-//				double eAlpha = 2 * (sl - sr);
-//				double ol = 1.0;
-//				double or = 1.0;
-//				for (E e2 : HalfEdgeUtils.incomingEdges(v)) {
-//					// betas left and right of e2
-//					double betaL = getOppsiteBeta(e.getNextEdge(), x);
-//					double betaR = getOppsiteBeta(e.getOppositeEdge().getPreviousEdge(), x);
-//					if (e2 == e) {
-//						ol *= cos(betaL);
-//						or *= cos(betaR);
-//					} else {
-//						ol *= sin(betaL);
-//						or *= sin(betaR);
-//					}
-//				}
-//				eAlpha *= (ol - or);
-//				int index = solverIndices.get(e.getIndex());
-//				g.add(index, eAlpha);
-//			}
-//			// rim alphas
-//			for (E e : HalfEdgeUtils.incomingEdges(v)) {
-//				double sl = getLeftSinProduct(v, x);
-//				double sr = getRightSinProduct(v, x);
-//				double eAlpha = 2 * (sl - sr);
-//				double ol = 1.0;
-//				double or = 1.0;
-//				for (E e2 : HalfEdgeUtils.incomingEdges(v)) {
-//					// betas left and right of e2
-//					double betaL = getOppsiteBeta(e.getNextEdge(), x);
-//					double betaR = getOppsiteBeta(e.getOppositeEdge().getPreviousEdge(), x);
-//					if (e2 == e) {
-//						ol *= cos(betaL);
-//						or *= cos(betaR);
-//					} else {
-//						ol *= sin(betaL);
-//						or *= sin(betaR);
-//					}
-//				}
-//				eAlpha *= (ol - or);
-//				int index = solverIndices.get(e.getPreviousEdge().getIndex());
-//				g.add(index, eAlpha);
-//			}
-//		}
-//		return evaluateObjective(x);
-//	}
-	
-	@Override
-	public double evaluateObjective(Vec x) {
+	public double evaluateObjectiveAndGradient(Vec x, Vec g) {
+		// objective
 		double E = 0.0;
 		for (V v : hds.getVertices()) {
-			E += getVertexEnergy(v, x);
+			if (HalfEdgeUtils.isBoundaryVertex(v)) {
+				continue;
+			}
+			double e = getVertexLogSumEnergy(v, x);
+			E += e*e;
+			if (g != null) {
+				for (E ein : incomingEdges(v)) {
+					double bl = getOppsiteBeta(ein.getNextEdge(), x);
+					double br = getOppsiteBeta(ein.getOppositeEdge().getPreviousEdge(), x);
+					double brr = getOppsiteBeta(ein, x);
+					int iin = solverIndices.get(ein.getIndex());
+					int iopp = solverIndices.get(ein.getPreviousEdge().getIndex());
+					g.add(iin, 2*e*(tan(bl) - tan(br)));
+					g.add(iopp, 2*e*(tan(bl) - tan(brr)));
+				}
+			}
 		}
 		return E;
 	}
 	
-	public double getVertexEnergy(V v, Vec aVec) {
+	
+	@Override
+	public PreconditionerType evaluateHessian(Vec x, Mat H, Mat Hpre) {
+		return PreconditionerType.SAME_NONZERO_PATTERN;
+	}
+
+	
+	public double getVertexProductEnergy(V v, Vec aVec) {
 		if (HalfEdgeUtils.isBoundaryVertex(v)) {
 			return 0;
 		}
 		double sl = getLeftSinProduct(v, aVec);
 		double sr = getRightSinProduct(v, aVec);
 		return (sl - sr) * (sl - sr);
+	}
+	
+	public double getVertexLogSumEnergy(V v, Vec aVec) {
+		if (HalfEdgeUtils.isBoundaryVertex(v)) {
+			return 0;
+		}
+		double sl = getLeftLogSinSum(v, aVec);
+		double sr = getRightLogSinSum(v, aVec);
+		return sl - sr;
 	}
 	
 	
@@ -146,6 +121,21 @@ public class SinConditionFunctional <
 		return sl;
 	}
 	
+	protected double getLeftLogSinSum(V v, Vec aVec) {
+		if (HalfEdgeUtils.isBoundaryVertex(v)) {
+			return 0;
+		}
+		double sl = 0.0;
+		for (E eIn : HalfEdgeUtils.incomingEdges(v)) {
+			double alpha_ki = getAlpha(eIn, aVec);
+			double alpha_ij = getAlpha(eIn.getNextEdge(), aVec);
+			double alpha_jk = getAlpha(eIn.getPreviousEdge(), aVec);
+			double betaLeft = calculateTriangleAngle(alpha_ij, alpha_jk, alpha_ki);
+			sl += log(sin(betaLeft));
+		}
+		return sl;
+	}
+	
 	protected double getRightSinProduct(V v, Vec aVec) {
 		if (HalfEdgeUtils.isBoundaryVertex(v)) {
 			return 0;
@@ -157,6 +147,21 @@ public class SinConditionFunctional <
 			double alpha_jk = getAlpha(eIn.getPreviousEdge(), aVec);
 			double betaRight = calculateTriangleAngle(alpha_jk, alpha_ki, alpha_ij);
 			sr *= sin(betaRight);
+		}
+		return sr;
+	}
+	
+	protected double getRightLogSinSum(V v, Vec aVec) {
+		if (HalfEdgeUtils.isBoundaryVertex(v)) {
+			return 0;
+		}
+		double sr = 0.0;
+		for (E eIn : HalfEdgeUtils.incomingEdges(v)) {
+			double alpha_ki = getAlpha(eIn, aVec);
+			double alpha_ij = getAlpha(eIn.getNextEdge(), aVec);
+			double alpha_jk = getAlpha(eIn.getPreviousEdge(), aVec);
+			double betaRight = calculateTriangleAngle(alpha_jk, alpha_ki, alpha_ij);
+			sr += log(sin(betaRight));
 		}
 		return sr;
 	}
