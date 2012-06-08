@@ -67,7 +67,7 @@ public class SinConditionFunctionalTest {
 		
 		Assert.assertTrue("energy is large at the beginning", 1E-3 < fun.evaluateObjectiveAndGradient(init, null));
 		
-		Tao tao = new Tao(Method.LMVM);
+		Tao tao = new Tao(Method.CG);
 		tao.setFromOptions();
 		tao.setApplication(fun);
 		tao.setMaximumIterates(20);

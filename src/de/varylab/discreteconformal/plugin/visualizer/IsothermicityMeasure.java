@@ -83,8 +83,8 @@ public class IsothermicityMeasure extends Plugin {
 				double alphaE = a.get(CurvatureAngle.class, e, Double.class);
 				double alphaEPrev = a.get(CurvatureAngle.class, e.getPreviousEdge(), Double.class);
 				double alphaENext = a.get(CurvatureAngle.class, e.getNextEdge(), Double.class);
-				double alphaRight = IsothermicUtility.calculateTriangleAngle(alphaE, alphaEPrev, alphaENext);
-				double alphaLeft = IsothermicUtility.calculateTriangleAngle(alphaENext, alphaEPrev, alphaE);
+				double alphaRight = IsothermicUtility.calculateBeta(alphaE, alphaEPrev, alphaENext);
+				double alphaLeft = IsothermicUtility.calculateBeta(alphaENext, alphaEPrev, alphaE);
 				sr *= sin(alphaRight);
 				sl *= sin(alphaLeft);
 			}

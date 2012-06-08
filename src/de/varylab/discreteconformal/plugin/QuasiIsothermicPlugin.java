@@ -118,7 +118,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		System.out.println("energy before optimization: " + fun.evaluateObjectiveAndGradient(fun.getSolutionVec(), null));
 		
-		Tao tao = new Tao(Method.LMVM);
+		Tao tao = new Tao(Method.CG);
 		tao.setFromOptions();
 		tao.setApplication(fun);
 		tao.setMaximumIterates(200);

@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.unwrapper.isothermic;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.atan;
+import static java.lang.Math.signum;
 import static java.lang.Math.sin;
 
 import java.util.ArrayList;
@@ -41,9 +42,9 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.types.OppositeAngle;
 import de.varylab.discreteconformal.unwrapper.ConesUtility;
-import de.varylab.discreteconformal.unwrapper.circlepattern.CPLayoutAlgorithm;
 import de.varylab.discreteconformal.unwrapper.circlepattern.CPLayoutAdapters.XYFace;
 import de.varylab.discreteconformal.unwrapper.circlepattern.CPLayoutAdapters.XYVertex;
+import de.varylab.discreteconformal.unwrapper.circlepattern.CPLayoutAlgorithm;
 import de.varylab.discreteconformal.unwrapper.numerics.CPEuclideanApplication;
 
 public class IsothermicUtility {
@@ -128,7 +129,7 @@ public class IsothermicUtility {
 	 * @param alpha3
 	 * @return
 	 */
-	public static double calculateTriangleAngle(double alpha1, double alpha2, double alpha3) {
+	public static double calculateBeta(double alpha1, double alpha2, double alpha3) {
 		alpha1 = IsothermicUtility.normalizeAngle(alpha1);
 		alpha2 = IsothermicUtility.normalizeAngle(alpha2);
 		alpha3 = IsothermicUtility.normalizeAngle(alpha3);
@@ -139,6 +140,7 @@ public class IsothermicUtility {
 			return PI - beta;
 		}
 	}
+	
 
 	public static double normalizeAngle(double a) {
 		a %= 2*PI;
@@ -269,7 +271,7 @@ public class IsothermicUtility {
 				double a1 = alphaMap.get(e);
 				double a2 = alphaMap.get(e.getNextEdge());
 				double a3 = alphaMap.get(e.getPreviousEdge());
-				double beta = calculateTriangleAngle(a2, a3, a1);
+				double beta = calculateBeta(a2, a3, a1);
 				betaMap.put(e, beta);
 			}
 		}
@@ -379,7 +381,7 @@ public class IsothermicUtility {
 		if (ePrevA == null) {
 			ePrevA = alphaMap.get(e.getOppositeEdge().getPreviousEdge());
 		}
-		return calculateTriangleAngle(eNextA, ePrevA, eA);
+		return calculateBeta(eNextA, ePrevA, eA);
 	}
 	
 	

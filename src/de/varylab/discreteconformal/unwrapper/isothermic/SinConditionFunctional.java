@@ -1,7 +1,7 @@
 package de.varylab.discreteconformal.unwrapper.isothermic;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
-import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateTriangleAngle;
+import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateBeta;
 import static java.lang.Math.log;
 import static java.lang.Math.sin;
 import static java.lang.Math.tan;
@@ -35,6 +35,7 @@ public class SinConditionFunctional <
 		hds = null;
 	private Map<Integer, Integer>
 		solverIndices = null;
+	private boolean recCall = false;
 	
 	public SinConditionFunctional(HDS hds, Map<Integer, Integer> undirectedIndexMap) {
 		this.hds = hds;
@@ -63,19 +64,30 @@ public class SinConditionFunctional <
 			if (HalfEdgeUtils.isBoundaryVertex(v)) {
 				continue;
 			}
-			double e = getVertexLogSumEnergy(v, x);
+			double sl = getLeftLogSinSum(v, x);
+			double sr = getRightLogSinSum(v, x);
+			double e = sr - sl;
 			E += e*e;
-			if (g != null) {
+			if (g != null && !recCall) {
 				for (E ein : incomingEdges(v)) {
 					double bl = getOppsiteBeta(ein.getNextEdge(), x);
 					double br = getOppsiteBeta(ein.getOppositeEdge().getPreviousEdge(), x);
-					double brr = getOppsiteBeta(ein, x);
+					double br2 = getOppsiteBeta(ein, x);
 					int iin = solverIndices.get(ein.getIndex());
 					int iopp = solverIndices.get(ein.getPreviousEdge().getIndex());
-					g.add(iin, 2*e*(tan(bl) - tan(br)));
-					g.add(iopp, 2*e*(tan(bl) - tan(brr)));
+					g.add(iin, 2*e*(-1/tan(br) - 1/tan(bl)));
+					g.add(iopp, 2*e*(1/tan(br2) + 1/tan(bl)));
 				}
 			}
+		}
+		if (g != null && !recCall) {
+			System.out.println("check --------------------------------");
+			System.out.println("x: " + x);
+			System.out.println("h: " + g);
+			recCall = true;
+			defaultComputeGradient(x, g);
+			recCall = false;
+			System.out.println("f: " + g);
 		}
 		return E;
 	}
@@ -96,15 +108,6 @@ public class SinConditionFunctional <
 		return (sl - sr) * (sl - sr);
 	}
 	
-	public double getVertexLogSumEnergy(V v, Vec aVec) {
-		if (HalfEdgeUtils.isBoundaryVertex(v)) {
-			return 0;
-		}
-		double sl = getLeftLogSinSum(v, aVec);
-		double sr = getRightLogSinSum(v, aVec);
-		return sl - sr;
-	}
-	
 	
 	protected double getLeftSinProduct(V v, Vec aVec) {
 		if (HalfEdgeUtils.isBoundaryVertex(v)) {
@@ -115,7 +118,7 @@ public class SinConditionFunctional <
 			double alpha_ki = getAlpha(eIn, aVec);
 			double alpha_ij = getAlpha(eIn.getNextEdge(), aVec);
 			double alpha_jk = getAlpha(eIn.getPreviousEdge(), aVec);
-			double betaLeft = calculateTriangleAngle(alpha_ij, alpha_jk, alpha_ki);
+			double betaLeft = calculateBeta(alpha_ij, alpha_jk, alpha_ki);
 			sl *= sin(betaLeft);
 		}
 		return sl;
@@ -130,7 +133,7 @@ public class SinConditionFunctional <
 			double alpha_ki = getAlpha(eIn, aVec);
 			double alpha_ij = getAlpha(eIn.getNextEdge(), aVec);
 			double alpha_jk = getAlpha(eIn.getPreviousEdge(), aVec);
-			double betaLeft = calculateTriangleAngle(alpha_ij, alpha_jk, alpha_ki);
+			double betaLeft = calculateBeta(alpha_ij, alpha_jk, alpha_ki);
 			sl += log(sin(betaLeft));
 		}
 		return sl;
@@ -145,7 +148,7 @@ public class SinConditionFunctional <
 			double alpha_ki = getAlpha(eIn, aVec);
 			double alpha_ij = getAlpha(eIn.getNextEdge(), aVec);
 			double alpha_jk = getAlpha(eIn.getPreviousEdge(), aVec);
-			double betaRight = calculateTriangleAngle(alpha_jk, alpha_ki, alpha_ij);
+			double betaRight = calculateBeta(alpha_jk, alpha_ki, alpha_ij);
 			sr *= sin(betaRight);
 		}
 		return sr;
@@ -160,7 +163,7 @@ public class SinConditionFunctional <
 			double alpha_ki = getAlpha(eIn, aVec);
 			double alpha_ij = getAlpha(eIn.getNextEdge(), aVec);
 			double alpha_jk = getAlpha(eIn.getPreviousEdge(), aVec);
-			double betaRight = calculateTriangleAngle(alpha_jk, alpha_ki, alpha_ij);
+			double betaRight = calculateBeta(alpha_jk, alpha_ki, alpha_ij);
 			sr += log(sin(betaRight));
 		}
 		return sr;
@@ -171,9 +174,9 @@ public class SinConditionFunctional <
 		double alpha_ki = getAlpha(e, aVec);
 		double alpha_ij = getAlpha(e.getNextEdge(), aVec);
 		double alpha_jk = getAlpha(e.getPreviousEdge(), aVec);
-		return calculateTriangleAngle(alpha_ij, alpha_jk, alpha_ki);
+		return calculateBeta(alpha_ij, alpha_jk, alpha_ki);
 	}
-	
+
 	
 	protected double getAlpha(E e, Vec aVec) {
 		int index = solverIndices.get(e.getIndex());
