@@ -116,7 +116,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		fun = new SinConditionFunctional<CoVertex, CoEdge, CoFace, CoHDS>(hds, edgeMap);
 		fun.calculateAndSetInitialSolution(a);
 		
-		System.out.println("energy before optimization: " + fun.evaluateObjectiveAndGradient(fun.getSolutionVec(), null));
+		System.out.println("energy before optimization: " + fun.evaluateObjective(fun.getSolutionVec()));
 		
 		Tao tao = new Tao(Method.CG);
 		tao.setFromOptions();
@@ -127,7 +127,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		tao.setGradientTolerances(1E-10, 1E-10, 1E-10);
 		tao.solve();
 		System.out.println(tao.getSolutionStatus());
-		System.out.println("energy after optimization: " + fun.evaluateObjectiveAndGradient(fun.getSolutionVec(), null));
+		System.out.println("energy after optimization: " + fun.evaluateObjective(fun.getSolutionVec()));
 		
 		Vec solution = fun.getSolutionVec();
 		Map<CoEdge, Double> alphaMap = new HashMap<CoEdge, Double>();
