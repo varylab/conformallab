@@ -3,7 +3,6 @@ package de.varylab.discreteconformal.unwrapper.isothermic;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.atan;
-import static java.lang.Math.signum;
 import static java.lang.Math.sin;
 
 import java.util.ArrayList;
@@ -17,7 +16,6 @@ import javax.vecmath.Point2d;
 
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
-import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -386,16 +384,16 @@ public class IsothermicUtility {
 	
 	
 	public static void layoutEars(CoHDS hds, Map<CoEdge, Double> alphaMap) {
-		List<CoEdge> earEdges = findEarsEdge(hds);
-		for (CoEdge ear : earEdges) {
-			CoEdge base = ear.getPreviousEdge();
-			CoVertex v = ear.getTargetVertex();
-			double[] p2 = base.getTargetVertex().T;
-			double[] p1 = base.getStartVertex().T;
-			double lBase = Pn.distanceBetween(p2, p1, Pn.EUCLIDEAN);
-			double lNew = getEdgeLength(ear, lBase, alphaMap);
-			
-		}
+//		List<CoEdge> earEdges = findEarsEdge(hds);
+//		for (CoEdge ear : earEdges) {
+//			CoEdge base = ear.getPreviousEdge();
+//			CoVertex v = ear.getTargetVertex();
+//			double[] p2 = base.getTargetVertex().T;
+//			double[] p1 = base.getStartVertex().T;
+//			double lBase = Pn.distanceBetween(p2, p1, Pn.EUCLIDEAN);
+//			double lNew = getEdgeLength(ear, lBase, alphaMap);
+//			
+//		}
 	}
 	
 	

@@ -9,8 +9,6 @@ import java.util.Map;
 
 import junit.framework.Assert;
 
-import no.uib.cipr.matrix.DenseVector;
-
 import org.junit.Before;
 import org.junit.Test;
 

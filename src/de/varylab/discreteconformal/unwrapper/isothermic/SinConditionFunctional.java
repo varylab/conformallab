@@ -1,15 +1,11 @@
 package de.varylab.discreteconformal.unwrapper.isothermic;
 
 import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateBeta;
-import static java.lang.Math.PI;
-import static java.lang.Math.abs;
 import static java.lang.Math.log;
 import static java.lang.Math.sin;
 import static java.lang.Math.tan;
 
 import java.util.Map;
-
-import sun.security.x509.AVA;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
