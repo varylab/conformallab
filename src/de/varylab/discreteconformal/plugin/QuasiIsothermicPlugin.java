@@ -40,7 +40,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	private HalfedgeInterface
 		hif = null;
 	private JCheckBox
-		useCirclePatternChecker = new JCheckBox("Use Circle Pattern", true);
+		useCirclePatternChecker = new JCheckBox("Use Circle Pattern", false);
 	private JButton
 		goButton = new JButton("Go");
 	
@@ -121,7 +121,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		Tao tao = new Tao(Method.CG);
 		tao.setFromOptions();
 		tao.setApplication(fun);
-		tao.setMaximumIterates(200);
+		tao.setMaximumIterates(1000);
 		tao.setMaximumFunctionEvaluations(1000000);
 		tao.setTolerances(1E-10, 1E-10, 1E-10, 1E-10);
 		tao.setGradientTolerances(1E-10, 1E-10, 1E-10);

@@ -1,5 +1,8 @@
 package de.varylab.discreteconformal.unwrapper.isothermic;
 
+import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
+import static de.jreality.shader.CommonAttributes.PICKABLE;
+import static de.jreality.shader.CommonAttributes.POLYGON_SHADER;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
 import static java.lang.Math.PI;
@@ -17,7 +20,6 @@ import de.jreality.geometry.QuadMeshFactory;
 import de.jreality.plugin.JRViewer;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.proxy.scene.SceneGraphComponent;
-import de.jreality.shader.CommonAttributes;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
@@ -39,7 +41,9 @@ public class SinConditionFunctionalTest {
 		NativePathUtility.set("native");
 		String[] taoCommand = new String[] {
 			"-tao_nm_lamda", "0.01", 
-			"-tao_nm_mu", "1.0"
+			"-tao_nm_mu", "1.0",
+			"-tao_ls_type", "",
+			"-tao_ls_stepmax", "0.1"
 		};
 		Tao.Initialize("Sinus Condition Test", taoCommand, false);
 	}
@@ -55,7 +59,7 @@ public class SinConditionFunctionalTest {
 		List<CoEdge> eIn = HalfEdgeUtils.incomingEdges(v);
 		init.setValue(edgeMap.get(eIn.get(0).getIndex()), -3*PI/8, INSERT_VALUES);
 		init.setValue(edgeMap.get(eIn.get(0).getPreviousEdge().getIndex()), -PI/4, INSERT_VALUES);
-		init.setValue(edgeMap.get(eIn.get(1).getIndex()), 0.2, INSERT_VALUES);
+		init.setValue(edgeMap.get(eIn.get(1).getIndex()), -0.2, INSERT_VALUES);
 		init.setValue(edgeMap.get(eIn.get(1).getPreviousEdge().getIndex()), PI/4, INSERT_VALUES);
 		init.setValue(edgeMap.get(eIn.get(2).getIndex()), 3*PI/8, INSERT_VALUES);
 		init.setValue(edgeMap.get(eIn.get(2).getPreviousEdge().getIndex()), PI/2, INSERT_VALUES);
@@ -76,18 +80,19 @@ public class SinConditionFunctionalTest {
 		Tao tao = new Tao(Method.CG);
 		tao.setFromOptions();
 		tao.setApplication(fun);
-		tao.setMaximumIterates(20);
+		tao.setMaximumIterates(200);
 		tao.setGradientTolerances(1E-10, 1E-10, 1E-10);
 		tao.setTolerances(1E-10, 1E-10, 1E-10, 1E-10);
 		tao.solve();
+		Vec solution = fun.getSolutionVec();
 		System.out.println(tao.getSolutionStatus());
-		Assert.assertTrue("energy is small after minimizatin", 1E-9 > fun.evaluateObjective(init));
+		Assert.assertTrue("energy is small after minimizatin", 1E-8 > fun.evaluateObjective(solution));
 		
 		double dif2 = 0.0;
 		for (int i = 0; i < startVec.getSize(); i++) {
 			double start = startVec.getValue(i);
-			double solution = init.getValue(i);
-			dif2 += (start-solution)*(start-solution);
+			double sol = init.getValue(i);
+			dif2 += (start-sol)*(start-sol);
 		}
 		Assert.assertEquals("solution start proximity", 1E-3, dif2, 1E-2);
 	}
@@ -116,12 +121,12 @@ public class SinConditionFunctionalTest {
 		
 		int e1Index = 0;
 		int e2Index = 1;
-		double scale = 1E-2;
+		double scale = 1E-1;
 		
-		double[] xArr = {0.5063494740335717, 0.2551584482990371, -0.24595351698479617, 0.06080650753547159, -0.38134954860685977, 0.36865045139194175};
+		double[] xArr = {1.550848732167379, 0.7726856928589729, -0.8016039900623643, -0.1910292974241263, -1.1581496504686548, 1.19804483972369};
 		Vec x = fun.getSolutionVec();
 		for (int i = 0; i < xArr.length; i++) {
-			x.setValue(i, PI*xArr[i], INSERT_VALUES);
+			x.setValue(i, xArr[i], INSERT_VALUES);
 		}
 		x.assemble();
 		
@@ -134,14 +139,14 @@ public class SinConditionFunctionalTest {
 		
 		for (int i = 0; i < uLine; i++) {
 			for (int j = 0; j < vline; j++) {
-				double x1 = PI * (i/(double)(uLine-1)) - PI/2;
-				double x2 = PI * (j/(double)(vline-1)) - PI/2;
+				double x1 = 2*PI * (i/(double)(uLine-1)) - PI;
+				double x2 = 2*PI * (j/(double)(vline-1)) - PI;
 				x.setValue(e1Index, x1, INSERT_VALUES);
 				x.setValue(e2Index, x2, INSERT_VALUES);
 				double val = fun.evaluateObjective(x);
 				fun.evaluateGradient(x, g);
 //				fun.defaultComputeGradient(x, g);
-				val = g.getValue(4);
+				val = g.getValue(1);
 				val *= scale;
 				val = Math.min(val, 0.5);
 				val = Math.max(val, -0.5);
@@ -160,11 +165,11 @@ public class SinConditionFunctionalTest {
 		qmf.setGenerateVertexNormals(true);
 		qmf.update();
 		
-		x.setValue(e1Index, PI*xArr[e1Index], INSERT_VALUES);
-		x.setValue(e2Index, PI*xArr[e2Index], INSERT_VALUES);
+		x.setValue(e1Index, xArr[e1Index], INSERT_VALUES);
+		x.setValue(e2Index, xArr[e2Index], INSERT_VALUES);
 		double val = fun.evaluateObjective(x);
 		System.out.println("value: " + val);
-		double[] markerPos = {PI*xArr[e1Index], PI*xArr[e2Index], scale * val};
+		double[] markerPos = {xArr[e1Index], xArr[e2Index], scale * val};
 		
 		SceneGraphComponent root = new SceneGraphComponent();
 		SceneGraphComponent graph = new SceneGraphComponent();
@@ -172,7 +177,8 @@ public class SinConditionFunctionalTest {
 		graph.setGeometry(qmf.getIndexedFaceSet());
 		Appearance graphApp = new Appearance();
 		graphApp.setAttribute(VERTEX_DRAW, false);
-		graphApp.setAttribute(CommonAttributes.EDGE_DRAW, false);
+		graphApp.setAttribute(EDGE_DRAW, false);
+		graphApp.setAttribute(POLYGON_SHADER + "." + PICKABLE, false);
 		graph.setAppearance(graphApp);
 		marker.setGeometry(Primitives.point(markerPos));
 		root.addChild(graph);

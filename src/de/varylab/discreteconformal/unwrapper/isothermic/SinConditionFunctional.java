@@ -19,9 +19,8 @@ import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
-import de.jtem.jtao.TaoAppAddGrad;
+import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
 import de.jtem.jtao.TaoAppAddHess;
-import de.jtem.jtao.TaoAppAddObjective;
 import de.jtem.jtao.TaoApplication;
 
 public class SinConditionFunctional <
@@ -29,7 +28,7 @@ public class SinConditionFunctional <
 	E extends Edge<V, E, F>,
 	F extends Face<V, E, F>,
 	HDS extends HalfEdgeDataStructure<V, E, F>
-> extends TaoApplication implements TaoAppAddObjective, TaoAppAddGrad, TaoAppAddHess {
+> extends TaoApplication implements TaoAppAddCombinedObjectiveAndGrad, TaoAppAddHess {
 
 	private HDS
 		hds = null;
@@ -55,9 +54,7 @@ public class SinConditionFunctional <
 		setInitialSolutionVec(alpha);
 	}
 	
-	@Override
 	public double evaluateObjective(Vec x) {
-		// objective
 		double E = 0.0;
 		for (V v : hds.getVertices()) {
 			if (HalfEdgeUtils.isBoundaryVertex(v)) {
@@ -65,16 +62,48 @@ public class SinConditionFunctional <
 			}
 			double sl = getLeftLogSinSum(v, x);
 			double sr = getRightLogSinSum(v, x);
-//			double sl = getLeftSinProduct(v, x);
-//			double sr = getRightSinProduct(v, x);
 			double e = sr - sl;
 			E += e*e;
 		}
 		return E;
 	}
 	
+	
 	@Override
+	public double evaluateObjectiveAndGradient(Vec x, Vec g) {
+		double E = 0.0;
+		if (g != null) {
+			g.zeroEntries();
+		}
+		for (V v : hds.getVertices()) {
+			if (HalfEdgeUtils.isBoundaryVertex(v)) {
+				continue;
+			}
+			double sl = getLeftLogSinSum(v, x);
+			double sr = getRightLogSinSum(v, x);
+			double e = sr - sl;
+			E += e*e;
+			if (g != null) {
+				for (E ein : HalfEdgeUtils.incomingEdges(v)) {
+					double bl = getOppsiteBeta(ein.getNextEdge(), x);
+					double dblp = getOppBetaDerivativeWrtPrev(ein.getNextEdge(), x);
+					double dbln = getOppBetaDerivativeWrtNext(ein.getNextEdge(), x);
+					double br = getOppsiteBeta(ein.getOppositeEdge().getPreviousEdge(), x);
+					double dbrn = getOppBetaDerivativeWrtNext(ein.getOppositeEdge().getPreviousEdge(), x);
+					double bl2 = getOppsiteBeta(ein, x);
+					double dbl2p = getOppBetaDerivativeWrtPrev(ein, x);
+					int iin = solverIndices.get(ein.getIndex());
+					int iopp = solverIndices.get(ein.getPreviousEdge().getIndex());
+					g.add(iin, -2*e*(dbrn/tan(br) - dblp/tan(bl)));
+					g.add(iopp, -2*e*(dbl2p/tan(bl2) - dbln/tan(bl)));
+				}
+			}
+		}
+		return E;
+	}
+	
 	public void evaluateGradient(Vec x, Vec g) {
+		g.zeroEntries();
 		for (V v : hds.getVertices()) {
 			if (HalfEdgeUtils.isBoundaryVertex(v)) {
 				continue;
@@ -93,8 +122,8 @@ public class SinConditionFunctional <
 					double dbl2p = getOppBetaDerivativeWrtPrev(ein, x);
 					int iin = solverIndices.get(ein.getIndex());
 					int iopp = solverIndices.get(ein.getPreviousEdge().getIndex());
-					g.add(iin, 2*e*(dbrn/tan(br) - dblp/tan(bl)));
-					g.add(iopp, 2*e*(dbl2p/tan(bl2) - dbln/tan(bl)));
+					g.add(iin, -2*e*(dbrn/tan(br) - dblp/tan(bl)));
+					g.add(iopp, -2*e*(dbl2p/tan(bl2) - dbln/tan(bl)));
 				}
 			}
 		}
@@ -102,9 +131,11 @@ public class SinConditionFunctional <
 	
 	@Override
 	public PreconditionerType evaluateHessian(Vec x, Mat H, Mat Hpre) {
+		
+		
 		return PreconditionerType.SAME_NONZERO_PATTERN;
 	}
-
+	
 	
 	protected double getLeftSinProduct(V v, Vec aVec) {
 		if (HalfEdgeUtils.isBoundaryVertex(v)) {
