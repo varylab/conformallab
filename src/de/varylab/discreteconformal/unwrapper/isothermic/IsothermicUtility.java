@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.unwrapper.isothermic;
 
+import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.atan;
@@ -170,13 +171,25 @@ public class IsothermicUtility {
 	}
 
 	
-	public static Map<Integer, Integer> createUndirectedEdgeMap(HalfEdgeDataStructure<?, ?, ?> hds) {
-		Map<Integer, Integer> result = new HashMap<Integer, Integer>();
+	public static  <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> Map<E, Integer> createSolverIndexMap(HDS hds, boolean excludeBoundary) {
+		Map<E, Integer> result = new HashMap<E, Integer>();
 		Integer i = 0;
-		for (Edge<?,?,?> e : hds.getPositiveEdges()) {
-			result.put(e.getIndex(), i);
-			result.put(e.getOppositeEdge().getIndex(), i);
-			i++;
+		for (E e : hds.getPositiveEdges()) {
+			if (((isBoundaryVertex(e.getStartVertex()) || 
+				isBoundaryVertex(e.getTargetVertex())) && excludeBoundary)
+			) {
+				result.put(e, -1);
+				result.put(e.getOppositeEdge(), -1);
+			} else {
+				result.put(e, i);
+				result.put(e.getOppositeEdge(), i);
+				i++;
+			}
 		}
 		return result;
 	}
@@ -344,18 +357,7 @@ public class IsothermicUtility {
 	public static Map<CoFace, Double> calculatePhisFromBetas(CoHDS hds, Map<CoEdge, Double> betaMap) {
 		Map<CoFace, Double> phiMap = new HashMap<CoFace, Double>();
 		for (CoFace f : hds.getFaces()) {
-//			if (HalfEdgeUtils.isInteriorFace(f)) {
-				phiMap.put(f, 2*PI);
-//			} else {
-//				double Phi = 2*PI;
-//				for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
-//					if (e.getRightFace() == null) {
-//						double beta = betaMap.get(e);
-//						Phi -= 2*beta;
-//					}
-//				}
-//				phiMap.put(f, Phi);
-//			}
+			phiMap.put(f, 2*PI);
 		}
 		return phiMap;
 	}

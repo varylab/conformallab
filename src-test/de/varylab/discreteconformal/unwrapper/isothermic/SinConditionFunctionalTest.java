@@ -7,6 +7,7 @@ import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
 import static java.lang.Math.PI;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,15 +26,15 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
-import de.jtem.jtao.Tao.Method;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.util.TestUtility;
 
 public class SinConditionFunctionalTest {
 
-	public SinConditionFunctional<CoVertex, CoEdge, CoFace, CoHDS>
+	public SinConditionApplication<CoVertex, CoEdge, CoFace, CoHDS>
 		fun = null;
 	
 	
@@ -53,19 +54,19 @@ public class SinConditionFunctionalTest {
 		CoHDS hds = new CoHDS();
 		CoFace f = HalfEdgeUtils.addNGon(hds, 3);
 		CoVertex v = TopologyAlgorithms.splitFace(f);
-		Map<Integer, Integer> edgeMap = IsothermicUtility.createUndirectedEdgeMap(hds);
-		
-		Vec init = new Vec(6);
+
+		Map<CoEdge, Double> alphaMap = new HashMap<CoEdge, Double>();
 		List<CoEdge> eIn = HalfEdgeUtils.incomingEdges(v);
-		init.setValue(edgeMap.get(eIn.get(0).getIndex()), -3*PI/8, INSERT_VALUES);
-		init.setValue(edgeMap.get(eIn.get(0).getPreviousEdge().getIndex()), -PI/4, INSERT_VALUES);
-		init.setValue(edgeMap.get(eIn.get(1).getIndex()), -0.2, INSERT_VALUES);
-		init.setValue(edgeMap.get(eIn.get(1).getPreviousEdge().getIndex()), PI/4, INSERT_VALUES);
-		init.setValue(edgeMap.get(eIn.get(2).getIndex()), 3*PI/8, INSERT_VALUES);
-		init.setValue(edgeMap.get(eIn.get(2).getPreviousEdge().getIndex()), PI/2, INSERT_VALUES);
-		init.assemble();
-		fun = new SinConditionFunctional<CoVertex, CoEdge, CoFace, CoHDS>(hds, edgeMap);
-		fun.setInitialSolutionVec(init);
+		alphaMap.put(eIn.get(0), -3*PI/8);
+		alphaMap.put(eIn.get(0).getPreviousEdge(), -PI/4);
+		alphaMap.put(eIn.get(1), -0.2);
+		alphaMap.put(eIn.get(1).getPreviousEdge(), PI/4);
+		alphaMap.put(eIn.get(2), 3*PI/8);
+		alphaMap.put(eIn.get(2).getPreviousEdge(), PI/2);
+		TestUtility.completeOpposites(alphaMap);
+		
+		fun = new SinConditionApplication<CoVertex, CoEdge, CoFace, CoHDS>(hds);
+		fun.initialize(alphaMap, false);
 	}
 	
 	
@@ -77,15 +78,8 @@ public class SinConditionFunctionalTest {
 		
 		Assert.assertTrue("energy is large at the beginning", 1E-3 < fun.evaluateObjective(init));
 		
-		Tao tao = new Tao(Method.CG);
-		tao.setFromOptions();
-		tao.setApplication(fun);
-		tao.setMaximumIterates(200);
-		tao.setGradientTolerances(1E-10, 1E-10, 1E-10);
-		tao.setTolerances(1E-10, 1E-10, 1E-10, 1E-10);
-		tao.solve();
+		fun.solve(200, 1E-10);
 		Vec solution = fun.getSolutionVec();
-		System.out.println(tao.getSolutionStatus());
 		Assert.assertTrue("energy is small after minimizatin", 1E-8 > fun.evaluateObjective(solution));
 		
 		double dif2 = 0.0;
@@ -100,8 +94,26 @@ public class SinConditionFunctionalTest {
 	
 	@Test
 	public void testGradient() throws Exception {
-		Tao tao = Tao.createFiniteDifferenceTester(true, false);
-		tao.setFromOptions();
+		Vec init = fun.getSolutionVec();
+		Vec Gfd = new Vec(init.getSize());
+		Vec Ghc = new Vec(init.getSize());
+		Gfd.zeroEntries();
+		Ghc.zeroEntries();
+		Gfd.assemble();
+		Ghc.assemble();
+		fun.computeGradient(init, Ghc);
+		TestUtility.calculateFDGradient(fun, init, Gfd);
+		for (int i = 0; i < init.getSize(); i++) {
+			double fd = Gfd.getValue(i);
+			double hc = Ghc.getValue(i);
+			Assert.assertEquals(fd, hc, 1E-6);
+		}
+	}
+	
+	
+	@Test
+	public void testHessian() throws Exception {
+		Tao tao = Tao.createFiniteDifferenceTester(false, true);
 		tao.setApplication(fun);
 		tao.solve();
 	}
@@ -109,7 +121,9 @@ public class SinConditionFunctionalTest {
 	
 	public static void main(String[] args) throws Exception {
 		SinConditionFunctionalTest test = new SinConditionFunctionalTest();
-		test.testEnergy();
+		test.createFunctional();
+		test.testGradient();
+//		test.testEnergy();
 	}
 	
 	public void testEnergy() throws Exception {
@@ -144,9 +158,9 @@ public class SinConditionFunctionalTest {
 				x.setValue(e1Index, x1, INSERT_VALUES);
 				x.setValue(e2Index, x2, INSERT_VALUES);
 				double val = fun.evaluateObjective(x);
-				fun.evaluateGradient(x, g);
+//				fun.evaluateGradient(x, g);
 //				fun.defaultComputeGradient(x, g);
-				val = g.getValue(1);
+//				val = g.getValue(1);
 				val *= scale;
 				val = Math.min(val, 0.5);
 				val = Math.max(val, -0.5);

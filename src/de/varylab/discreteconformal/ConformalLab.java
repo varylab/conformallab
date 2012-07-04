@@ -5,6 +5,8 @@ import java.util.Set;
 
 import javax.swing.Icon;
 
+import curvaturelines.CurvatureLines;
+import curvaturelines.plugin.SpectralSectionPlugin;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
 import de.jreality.plugin.basic.ConsolePlugin;
@@ -81,6 +83,9 @@ public class ConformalLab {
 		v.registerPlugin(new SystemLookAndFeel());
 		v.registerPlugin(new VertexEditorPlugin());
 		v.registerPlugin(CurvatureVectorFields.class);
+		
+		v.registerPlugin(SpectralSectionPlugin.class);
+		
 //		v.registerPlugin(new HalfedgeDebuggerPlugin());
 		v.registerPlugins(createConformalPlugins());
 		v.registerPlugins(HalfedgePluginFactory.createPlugins());
@@ -89,6 +94,9 @@ public class ConformalLab {
 		splash.setVisible(false);
 		v.getPlugin(HalfedgeInterface.class).set(new CoHDS());
 		v.getPlugin(HalfedgeInterface.class).setTemplateHDS(new CoHDS());
+		
+		CurvatureLines.addCurvatureLineAdapters(v.getPlugin(HalfedgeInterface.class));
+		CurvatureLines.addBasicAdapters(v.getPlugin(HalfedgeInterface.class));
 	} 
 
 }

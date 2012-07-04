@@ -6,43 +6,50 @@ import static java.awt.GridBagConstraints.REMAINDER;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import de.jreality.plugin.basic.View;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
-import de.jtem.jpetsc.Vec;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.jtao.Tao;
-import de.jtem.jtao.Tao.Method;
 import de.varylab.discreteconformal.adapter.MappedWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.generator.TestVectorFieldGenerator;
+import de.varylab.discreteconformal.unwrapper.isothermic.DBFSolution;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
-import de.varylab.discreteconformal.unwrapper.isothermic.SinConditionFunctional;
+import de.varylab.discreteconformal.unwrapper.isothermic.SinConditionApplication;
 
 public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionListener {
 
 	private HalfedgeInterface
 		hif = null;
+	private JPanel
+		circlePatternPanel = new JPanel(),
+		dbfPanel = new JPanel();
 	private JCheckBox
-		useCirclePatternChecker = new JCheckBox("Use Circle Pattern", false);
+		excludeBoundaryChecker = new JCheckBox("Exclude Boundary", true);
 	private JButton
-		goButton = new JButton("Go");
+		goCirclePatternButton = new JButton("Calculate Circle Pattern"),
+		goDBFButton = new JButton("Calculate DBF");
 	
 	static {
 		String[] taoCommand = new String[] {
@@ -60,18 +67,35 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		c.fill = HORIZONTAL;
 		c.weightx = 1.0;
 		c.gridwidth = REMAINDER;
-		shrinkPanel.add(useCirclePatternChecker, c);
-		shrinkPanel.add(goButton, c);
+		shrinkPanel.add(dbfPanel, c);
+		shrinkPanel.add(circlePatternPanel, c);
 		
-		goButton.addActionListener(this);
+		dbfPanel.setLayout(new GridBagLayout());
+		dbfPanel.setBorder(BorderFactory.createTitledBorder("DBF"));
+		dbfPanel.add(excludeBoundaryChecker, c);
+		dbfPanel.add(goDBFButton, c);
+		
+		circlePatternPanel.setLayout(new GridBagLayout());
+		circlePatternPanel.setBorder(BorderFactory.createTitledBorder("Circle Patterns"));
+		circlePatternPanel.add(goCirclePatternButton, c);
+		
+		goCirclePatternButton.addActionListener(this);
+		goDBFButton.addActionListener(this);
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent ae) {
-		if (useCirclePatternChecker.isSelected()) {
-			calculateWithCirclePattern();
-		} else {
-			calculateWithSinFunctional();
+		Object s = ae.getSource();
+		try {
+			if (goDBFButton == s) {
+				calculateWithSinFunctional();
+			}
+			if (goCirclePatternButton == s) {
+				calculateWithCirclePattern();
+			}
+		} catch (Exception e) {
+			Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
+			JOptionPane.showMessageDialog(w, e.toString());
 		}
 	}
 	
@@ -110,34 +134,15 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		AdapterSet a = hif.getAdapters();
 		CoHDS hds = hif.get(new CoHDS());
 		
-		Map<Integer, Integer> edgeMap = IsothermicUtility.createUndirectedEdgeMap(hds);
+		boolean excludeBoundary = excludeBoundaryChecker.isSelected();
 		
-		SinConditionFunctional<CoVertex, CoEdge, CoFace, CoHDS> 
-		fun = new SinConditionFunctional<CoVertex, CoEdge, CoFace, CoHDS>(hds, edgeMap);
-		fun.calculateAndSetInitialSolution(a);
+		SinConditionApplication<CoVertex, CoEdge, CoFace, CoHDS> 
+		fun = new SinConditionApplication<CoVertex, CoEdge, CoFace, CoHDS>(hds);
+		fun.initialize(a, excludeBoundary);
+		fun.solve(1000, 1E-10);
 		
-		System.out.println("energy before optimization: " + fun.evaluateObjective(fun.getSolutionVec()));
-		
-		Tao tao = new Tao(Method.CG);
-		tao.setFromOptions();
-		tao.setApplication(fun);
-		tao.setMaximumIterates(1000);
-		tao.setMaximumFunctionEvaluations(1000000);
-		tao.setTolerances(1E-10, 1E-10, 1E-10, 1E-10);
-		tao.setGradientTolerances(1E-10, 1E-10, 1E-10);
-		tao.solve();
-		System.out.println(tao.getSolutionStatus());
-		System.out.println("energy after optimization: " + fun.evaluateObjective(fun.getSolutionVec()));
-		
-		Vec solution = fun.getSolutionVec();
-		Map<CoEdge, Double> alphaMap = new HashMap<CoEdge, Double>();
-		for (CoEdge e : hds.getEdges()) {
-			int solverIndex = edgeMap.get(e.getIndex());
-			double alpha = solution.getValue(solverIndex);
-			alphaMap.put(e, alpha);
-			alphaMap.put(e.getOppositeEdge(), alpha);
-		}
-		
+		DBFSolution<CoVertex, CoEdge, CoFace, CoHDS> solution = fun.getDBFSolution();
+		Map<CoEdge, Double> alphaMap = solution.solutionAlphaMap;
 		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
 		
 		// remove topology
