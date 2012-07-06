@@ -60,6 +60,7 @@ public class TestUtility {
 	}
 	
 	public static void calculateFDHessian(TaoAppAddCombinedObjectiveAndGrad app, Vec x, Mat H) {
+		H.zeroEntries();
 		double y = app.evaluateObjectiveAndGradient(x, null);
 		for (int i = 0; i < x.getSize(); i++){
 			for (int j = 0; j < x.getSize(); j++){
@@ -96,6 +97,7 @@ public class TestUtility {
 				H.setValue(i, j, fdHessian, INSERT_VALUES);
 			}
 		}
+		H.assemble();
 	}
 	
 	public static <

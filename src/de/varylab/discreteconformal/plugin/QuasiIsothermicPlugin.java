@@ -139,7 +139,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		SinConditionApplication<CoVertex, CoEdge, CoFace, CoHDS> 
 		fun = new SinConditionApplication<CoVertex, CoEdge, CoFace, CoHDS>(hds);
 		fun.initialize(a, excludeBoundary);
-		fun.solve(1000, 1E-10);
+		fun.solveCG(1000, 1E-10);
 		
 		DBFSolution<CoVertex, CoEdge, CoFace, CoHDS> solution = fun.getDBFSolution();
 		Map<CoEdge, Double> alphaMap = solution.solutionAlphaMap;

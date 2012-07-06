@@ -19,26 +19,31 @@ import de.jtem.halfedgetools.adapter.type.Normal;
 import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.Mat;
+import de.jtem.jpetsc.MatStructure;
+import de.jtem.jpetsc.SNES;
 import de.jtem.jpetsc.Vec;
+import de.jtem.jpetsc.SNES.FunctionEvaluator;
+import de.jtem.jpetsc.SNES.JacobianEvaluator;
 import de.jtem.jtao.Tao;
+import de.jtem.jtao.Tao.Method;
 import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
 import de.jtem.jtao.TaoAppAddHess;
 import de.jtem.jtao.TaoApplication;
-import de.jtem.jtao.Tao.Method;
 
 public class SinConditionApplication <
 	V extends Vertex<V, E, F>,
 	E extends Edge<V, E, F>,
 	F extends Face<V, E, F>,
 	HDS extends HalfEdgeDataStructure<V, E, F>
-> extends TaoApplication implements TaoAppAddCombinedObjectiveAndGrad, TaoAppAddHess {
+> extends TaoApplication implements TaoAppAddCombinedObjectiveAndGrad, TaoAppAddHess, FunctionEvaluator, JacobianEvaluator {
 
-	private HDS
+	protected HDS
 		hds = null;
-	private Map<E, Integer>
+	protected Map<E, Integer>
 		solverIndices = new HashMap<E, Integer>();
-	private Map<E, Double>
+	protected Map<E, Double>
 		initialAlphas = new HashMap<E, Double>();
+	protected int dim = -1;
 	
 	public SinConditionApplication(HDS hds) {
 		this.hds = hds;
@@ -67,7 +72,8 @@ public class SinConditionApplication <
 			int index = solverIndices.get(e);
 			maxIndex = maxIndex < index ? index : maxIndex;
 		}
-		Vec alpha = new Vec(maxIndex + 1);
+		this.dim = maxIndex + 1;
+		Vec alpha = new Vec(dim);
 		for (E e : hds.getEdges()) {
 			int index = solverIndices.get(e);
 			if (index >= 0) {
@@ -83,7 +89,7 @@ public class SinConditionApplication <
 	}
 	
 	
-	public void solve(int maxIterations, double tol) {
+	public void solveCG(int maxIterations, double tol) {
 		Tao tao = new Tao(Method.CG);
 		tao.setFromOptions();
 		tao.setApplication(this);
@@ -94,6 +100,62 @@ public class SinConditionApplication <
 		tao.solve();
 		System.out.println(tao.getSolutionStatus());
 		System.out.println("energy after optimization: " + evaluateObjective(getSolutionVec()));
+	}
+	
+	public void solveSNES(int maxIterations, double tol) {
+		SNES snes = SNES.create();
+		Mat J = new Mat(dim, 1);
+		J.assemble();
+		Vec f = new Vec(1);
+		Vec b = new Vec(1);
+		b.zeroEntries();
+		Vec solution = new Vec(dim);
+		snes.setFunction(this, f);
+		snes.setJacobian(this, J, J);
+		snes.setFromOptions();
+		snes.setSolution(getSolutionVec());
+		snes.setTolerances(tol, tol, tol, maxIterations, 10000000);
+		getSolutionVec().copy(solution);
+		snes.solve(b, solution);
+		solution.copy(getSolutionVec());
+		System.out.println(snes.getConvergedReason());
+	}
+	
+	
+	@Override
+	public MatStructure evaluateJacobian(Vec x, Mat J, Mat Jpre) {
+		J.zeroEntries();
+		for (V v : hds.getVertices()) {
+			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
+			for (E ein : HalfEdgeUtils.incomingEdges(v)) {
+				double bl = getOppsiteBeta(ein.getNextEdge(), x);
+				double dblp = getOppBetaDerivativeWrtPrev(ein.getNextEdge(), x);
+				double dbln = getOppBetaDerivativeWrtNext(ein.getNextEdge(), x);
+				double br = getOppsiteBeta(ein.getOppositeEdge().getPreviousEdge(), x);
+				double dbrn = getOppBetaDerivativeWrtNext(ein.getOppositeEdge().getPreviousEdge(), x);
+				double bl2 = getOppsiteBeta(ein, x);
+				double dbl2p = getOppBetaDerivativeWrtPrev(ein, x);
+				int iin = solverIndices.get(ein);
+				int iopp = solverIndices.get(ein.getPreviousEdge());
+				J.setValue(iin, 0, dbrn/tan(br) - dblp/tan(bl), InsertMode.ADD_VALUES);
+				J.setValue(iopp, 0, dbl2p/tan(bl2) - dbln/tan(bl), InsertMode.ADD_VALUES);
+			}
+		}
+		J.assemble();
+		return MatStructure.SAME_NONZERO_PATTERN;
+	}
+
+	@Override
+	public void evaluateFunction(Vec x, Vec f) {
+		double E = 0.0;
+		for (V v : hds.getVertices()) {
+			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
+			// energy
+			double sl = getLeftLogSinSum(v, x);
+			double sr = getRightLogSinSum(v, x);
+			E += sr - sl;
+		}
+		f.set(E);
 	}
 	
 	
@@ -153,15 +215,15 @@ public class SinConditionApplication <
 	
 	@Override
 	public PreconditionerType evaluateHessian(Vec x, Mat H, Mat Hpre) {
-		H.zeroEntries();
-		for (V v : hds.getVertices()) {
-			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
-			for (E ein : HalfEdgeUtils.incomingEdges(v)) {
-				int iin = solverIndices.get(ein);
-				int iopp = solverIndices.get(ein.getPreviousEdge());
-				
-			}
-		}		
+//		H.zeroEntries();
+//		for (V v : hds.getVertices()) {
+//			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
+//			for (E ein : HalfEdgeUtils.incomingEdges(v)) {
+//				int iin = solverIndices.get(ein);
+//				int iopp = solverIndices.get(ein.getPreviousEdge());
+//				
+//			}
+//		}
 		return PreconditionerType.SAME_NONZERO_PATTERN;
 	}
 	

@@ -14,6 +14,7 @@ import java.util.Map;
 import junit.framework.Assert;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.jreality.geometry.Primitives;
@@ -24,6 +25,8 @@ import de.jreality.scene.proxy.scene.SceneGraphComponent;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
+import de.jtem.jpetsc.Mat;
+import de.jtem.jpetsc.SNES;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -37,16 +40,9 @@ public class SinConditionFunctionalTest {
 	public SinConditionApplication<CoVertex, CoEdge, CoFace, CoHDS>
 		fun = null;
 	
-	
 	static {
 		NativePathUtility.set("native");
-		String[] taoCommand = new String[] {
-			"-tao_nm_lamda", "0.01", 
-			"-tao_nm_mu", "1.0",
-			"-tao_ls_type", "",
-			"-tao_ls_stepmax", "0.1"
-		};
-		Tao.Initialize("Sinus Condition Test", taoCommand, false);
+		Tao.Initialize("Sinus Condition Test", null, false);
 	}
 	
 	@Before
@@ -71,14 +67,14 @@ public class SinConditionFunctionalTest {
 	
 	
 	@Test
-	public void testSinConditionFunctional() throws Exception {
+	public void testSolveCG() throws Exception {
 		Vec init = fun.getSolutionVec();
 		Vec startVec = new Vec(init.getSize());
 		init.copy(startVec);
 		
 		Assert.assertTrue("energy is large at the beginning", 1E-3 < fun.evaluateObjective(init));
 		
-		fun.solve(200, 1E-10);
+		fun.solveCG(200, 1E-10);
 		Vec solution = fun.getSolutionVec();
 		Assert.assertTrue("energy is small after minimizatin", 1E-8 > fun.evaluateObjective(solution));
 		
@@ -91,6 +87,41 @@ public class SinConditionFunctionalTest {
 		Assert.assertEquals("solution start proximity", 1E-3, dif2, 1E-2);
 	}
 	
+	@Test
+	public void testSolveSNES() throws Exception {
+		Vec init = fun.getSolutionVec();
+		Vec startVec = new Vec(init.getSize());
+		init.copy(startVec);
+		Vec f = new Vec(1);
+		
+		fun.evaluateFunction(init, f);
+		Assert.assertTrue("energy is large at the beginning", 1E-3 < Math.abs(f.getValue(0)));
+		
+		fun.solveSNES(200, 1E-10);
+		Vec solution = fun.getSolutionVec();
+		fun.evaluateFunction(solution, f);
+		Assert.assertTrue("energy is small after minimizatin", 1E-8 > Math.abs(f.getValue(0)));
+		
+		double dif2 = 0.0;
+		for (int i = 0; i < startVec.getSize(); i++) {
+			double start = startVec.getValue(i);
+			double sol = init.getValue(i);
+			dif2 += (start-sol)*(start-sol);
+		}
+		Assert.assertEquals("solution start proximity", 1E-3, dif2, 1E-2);
+	}
+	
+	
+	@Test
+	public void testJacobian() throws Exception {
+		SNES snes = SNES.create();
+		Vec f = new Vec(1);
+		Vec x = fun.getSolutionVec();
+		Mat J = new Mat(x.getSize(), 1);
+		snes.setFunction(fun, f);
+		snes.setJacobian(fun, J, J);
+		SNES.testJacobian(fun, J, x, f);
+	}
 	
 	@Test
 	public void testGradient() throws Exception {
@@ -111,11 +142,20 @@ public class SinConditionFunctionalTest {
 	}
 	
 	
-	@Test
+	@Test@Ignore
 	public void testHessian() throws Exception {
-		Tao tao = Tao.createFiniteDifferenceTester(false, true);
-		tao.setApplication(fun);
-		tao.solve();
+		Vec init = fun.getSolutionVec();
+		Mat Hfd = fun.createHessianTemplate();
+		Mat Hhc = fun.createHessianTemplate();
+		fun.evaluateHessian(init, Hhc, Hhc);
+		TestUtility.calculateFDHessian(fun, init, Hfd);
+		for (int i = 0; i < init.getSize(); i++) {
+			for (int j = 0; j < init.getSize(); j++) {
+				double fd = Hfd.getValue(i, j);
+				double hc = Hhc.getValue(i, j);
+				Assert.assertEquals(fd, hc, 1E-6);
+			}
+		}
 	}
 	
 	

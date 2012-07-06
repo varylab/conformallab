@@ -38,7 +38,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/riemann"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/blas"/>
 	<classpathentry kind="lib" path="lib/MTJOptimization.jar"/>
-	<classpathentry kind="lib" path="lib/jPETScTao.jar" sourcepath="/jTao"/>
+	<classpathentry kind="lib" path="lib/jPETScTao.jar" sourcepath="/jPETSc"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jrworkspace"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/curvatureLines"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ParallelColt"/>
