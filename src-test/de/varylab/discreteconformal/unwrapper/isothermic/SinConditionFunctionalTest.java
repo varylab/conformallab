@@ -26,6 +26,7 @@ import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.jpetsc.Mat;
+import de.jtem.jpetsc.NormType;
 import de.jtem.jpetsc.SNES;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
@@ -42,7 +43,12 @@ public class SinConditionFunctionalTest {
 	
 	static {
 		NativePathUtility.set("native");
-		Tao.Initialize("Sinus Condition Test", null, false);
+		String[] args = {
+				"-snes_type", "ls",
+				"-snes_test_display",
+				"-pc_factor_shift_nonzero", "1.0e-5"
+		};
+		Tao.Initialize("Sinus Condition Test", args, false);
 	}
 	
 	@Before
@@ -92,23 +98,17 @@ public class SinConditionFunctionalTest {
 		Vec init = fun.getSolutionVec();
 		Vec startVec = new Vec(init.getSize());
 		init.copy(startVec);
-		Vec f = new Vec(1);
+		Vec f = new Vec(fun.getDimension());
 		
 		fun.evaluateFunction(init, f);
-		Assert.assertTrue("energy is large at the beginning", 1E-3 < Math.abs(f.getValue(0)));
+		double res = f.norm(NormType.NORM_FROBENIUS);
+		Assert.assertTrue("residual is large at the beginning", 1E-3 < res);
 		
 		fun.solveSNES(200, 1E-10);
 		Vec solution = fun.getSolutionVec();
 		fun.evaluateFunction(solution, f);
-		Assert.assertTrue("energy is small after minimizatin", 1E-8 > Math.abs(f.getValue(0)));
-		
-		double dif2 = 0.0;
-		for (int i = 0; i < startVec.getSize(); i++) {
-			double start = startVec.getValue(i);
-			double sol = init.getValue(i);
-			dif2 += (start-sol)*(start-sol);
-		}
-		Assert.assertEquals("solution start proximity", 1E-3, dif2, 1E-2);
+		res = f.norm(NormType.NORM_FROBENIUS);
+		Assert.assertTrue("residual is small after minimizatin", 1E-8 > res);
 	}
 	
 	

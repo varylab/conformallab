@@ -176,7 +176,7 @@ public class IsothermicUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,
 		HDS extends HalfEdgeDataStructure<V, E, F>
-	> Map<E, Integer> createSolverIndexMap(HDS hds, boolean excludeBoundary) {
+	> Map<E, Integer> createSolverEdgeIndexMap(HDS hds, boolean excludeBoundary) {
 		Map<E, Integer> result = new HashMap<E, Integer>();
 		Integer i = 0;
 		for (E e : hds.getPositiveEdges()) {
@@ -188,6 +188,25 @@ public class IsothermicUtility {
 			} else {
 				result.put(e, i);
 				result.put(e.getOppositeEdge(), i);
+				i++;
+			}
+		}
+		return result;
+	}
+	
+	public static  <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> Map<V, Integer> createSolverVertexIndexMap(HDS hds) {
+		Map<V, Integer> result = new HashMap<V, Integer>();
+		Integer i = 0;
+		for (V v : hds.getVertices()) {
+			if (isBoundaryVertex(v)) { 
+				result.put(v, -1);
+			} else {
+				result.put(v, i);
 				i++;
 			}
 		}

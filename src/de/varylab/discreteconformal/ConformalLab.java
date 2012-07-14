@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,6 +23,7 @@ import de.jtem.jrworkspace.plugin.lnfswitch.LookAndFeelSwitch;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.CrossPlatformLnF;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.NimbusLnF;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.SystemLookAndFeel;
+import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
@@ -40,6 +42,20 @@ import de.varylab.discreteconformal.plugin.visualizer.ThetaVisualizer;
 
 public class ConformalLab {
 
+	static {
+		NativePathUtility.set("native");
+		String[] taoCommand = new String[] {
+			"-snes_view",
+			"-ksp_converged_reason",			
+			"-snes_type", "tr",
+			"-snes_test_display",
+			"-pc_factor_shift_nonzero", "1.0e-10",			
+			"-tao_nm_lamda", "0.01", 
+			"-tao_nm_mu", "1.0"
+		};
+		System.out.println("initing tao: " + Arrays.toString(taoCommand));
+		Tao.Initialize("Quasiisothermic Parametrization", taoCommand, false);
+	}
 
 	public static Set<Plugin> createConformalPlugins() {
 		Set<Plugin> s = new HashSet<Plugin>();
@@ -67,7 +83,6 @@ public class ConformalLab {
 		splash.setVisible(true);
 		v.setSplashScreen(splash);
 		JRHalfedgeViewer.initHalfedgeFronted();
-		NativePathUtility.set("native");
 		v.addBasicUI();
 		v.addContentUI();
 		v.setShowToolBar(true);

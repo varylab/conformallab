@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.unwrapper.isothermic;
 
+import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
 import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateBeta;
 import static java.lang.Math.log;
 import static java.lang.Math.sin;
@@ -40,7 +41,9 @@ public class SinConditionApplication <
 	protected HDS
 		hds = null;
 	protected Map<E, Integer>
-		solverIndices = new HashMap<E, Integer>();
+		solverEdgeIndices = new HashMap<E, Integer>();
+	protected Map<V, Integer>
+		solverVertexIndices = new HashMap<V, Integer>();
 	protected Map<E, Double>
 		initialAlphas = new HashMap<E, Double>();
 	protected int dim = -1;
@@ -65,17 +68,18 @@ public class SinConditionApplication <
 	}
 	
 	public void initialize(Map<E, Double> initAlphas, boolean excludeBoundary) {
-		this.solverIndices = IsothermicUtility.createSolverIndexMap(hds, excludeBoundary);
+		this.solverEdgeIndices = IsothermicUtility.createSolverEdgeIndexMap(hds, excludeBoundary);
+		this.solverVertexIndices = IsothermicUtility.createSolverVertexIndexMap(hds);
 		this.initialAlphas = initAlphas;
 		int maxIndex = -1;
 		for (E e : hds.getEdges()) {
-			int index = solverIndices.get(e);
+			int index = solverEdgeIndices.get(e);
 			maxIndex = maxIndex < index ? index : maxIndex;
 		}
 		this.dim = maxIndex + 1;
 		Vec alpha = new Vec(dim);
 		for (E e : hds.getEdges()) {
-			int index = solverIndices.get(e);
+			int index = solverEdgeIndices.get(e);
 			if (index >= 0) {
 				double ae = initialAlphas.get(e);
 				alpha.setValue(index, ae, InsertMode.INSERT_VALUES);
@@ -104,20 +108,22 @@ public class SinConditionApplication <
 	
 	public void solveSNES(int maxIterations, double tol) {
 		SNES snes = SNES.create();
-		Mat J = new Mat(dim, 1);
+		snes.setFromOptions();
+		Vec f = new Vec(dim);
+		Mat J = new Mat(dim, dim);
+		for (int i = 0; i < dim; i++) {
+			J.setValue(i, i, 0.0, InsertMode.INSERT_VALUES);
+		}
 		J.assemble();
-		Vec f = new Vec(1);
-		Vec b = new Vec(1);
-		b.zeroEntries();
-		Vec solution = new Vec(dim);
 		snes.setFunction(this, f);
 		snes.setJacobian(this, J, J);
-		snes.setFromOptions();
-		snes.setSolution(getSolutionVec());
 		snes.setTolerances(tol, tol, tol, maxIterations, 10000000);
-		getSolutionVec().copy(solution);
-		snes.solve(b, solution);
-		solution.copy(getSolutionVec());
+		snes.getKSP().setInitialGuessNonzero(false);
+		System.out.println("residual: " + snes.getFunctionNorm());
+		System.out.println("guess\n" + getSolutionVec());
+		snes.solve(null, getSolutionVec());
+		System.out.println("residual: " + snes.getFunctionNorm());
+		System.out.println("solution\n" + getSolutionVec());
 		System.out.println(snes.getConvergedReason());
 	}
 	
@@ -127,6 +133,7 @@ public class SinConditionApplication <
 		J.zeroEntries();
 		for (V v : hds.getVertices()) {
 			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
+			int vIndex = solverVertexIndices.get(v);
 			for (E ein : HalfEdgeUtils.incomingEdges(v)) {
 				double bl = getOppsiteBeta(ein.getNextEdge(), x);
 				double dblp = getOppBetaDerivativeWrtPrev(ein.getNextEdge(), x);
@@ -135,27 +142,25 @@ public class SinConditionApplication <
 				double dbrn = getOppBetaDerivativeWrtNext(ein.getOppositeEdge().getPreviousEdge(), x);
 				double bl2 = getOppsiteBeta(ein, x);
 				double dbl2p = getOppBetaDerivativeWrtPrev(ein, x);
-				int iin = solverIndices.get(ein);
-				int iopp = solverIndices.get(ein.getPreviousEdge());
-				J.setValue(iin, 0, dbrn/tan(br) - dblp/tan(bl), InsertMode.ADD_VALUES);
-				J.setValue(iopp, 0, dbl2p/tan(bl2) - dbln/tan(bl), InsertMode.ADD_VALUES);
+				int iin = solverEdgeIndices.get(ein);
+				int iopp = solverEdgeIndices.get(ein.getPreviousEdge());
+				J.setValue(vIndex, iin, dbrn/tan(br) - dblp/tan(bl), InsertMode.ADD_VALUES);
+				J.setValue(vIndex, iopp, dbl2p/tan(bl2) - dbln/tan(bl), InsertMode.ADD_VALUES);
 			}
 		}
 		J.assemble();
-		return MatStructure.SAME_NONZERO_PATTERN;
+		return MatStructure.DIFFERENT_NONZERO_PATTERN;
 	}
 
 	@Override
 	public void evaluateFunction(Vec x, Vec f) {
-		double E = 0.0;
 		for (V v : hds.getVertices()) {
 			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
-			// energy
+			int index = solverVertexIndices.get(v);
 			double sl = getLeftLogSinSum(v, x);
 			double sr = getRightLogSinSum(v, x);
-			E += sr - sl;
+			f.setValue(index, sl - sr, INSERT_VALUES);
 		}
-		f.set(E);
 	}
 	
 	
@@ -166,7 +171,7 @@ public class SinConditionApplication <
 		Vec vec = getSolutionVec();
 		s.solutionAlphaMap = new HashMap<E, Double>();
 		for (E e : hds.getEdges()) {
-			int index = solverIndices.get(e);
+			int index = solverEdgeIndices.get(e);
 			if (index >= 0) {
 				s.solutionAlphaMap.put(e, vec.getValue(index));
 			} else {
@@ -203,8 +208,8 @@ public class SinConditionApplication <
 				double dbrn = getOppBetaDerivativeWrtNext(ein.getOppositeEdge().getPreviousEdge(), x);
 				double bl2 = getOppsiteBeta(ein, x);
 				double dbl2p = getOppBetaDerivativeWrtPrev(ein, x);
-				int iin = solverIndices.get(ein);
-				int iopp = solverIndices.get(ein.getPreviousEdge());
+				int iin = solverEdgeIndices.get(ein);
+				int iopp = solverEdgeIndices.get(ein.getPreviousEdge());
 				g.add(iin, -2*e*(dbrn/tan(br) - dblp/tan(bl)));
 				g.add(iopp, -2*e*(dbl2p/tan(bl2) - dbln/tan(bl)));
 			}
@@ -232,7 +237,7 @@ public class SinConditionApplication <
 		int dim = hds.numEdges() / 2;
 		int[] nz = new int[dim]; 
 		for (E e : hds.getPositiveEdges()) {
-			int i = solverIndices.get(e);
+			int i = solverEdgeIndices.get(e);
 			if (HalfEdgeUtils.isBoundaryEdge(e)) {
 				nz[i] = 3;
 			} else {
@@ -334,7 +339,7 @@ public class SinConditionApplication <
 
 	
 	protected double getAlpha(E e, Vec aVec) {
-		int index = solverIndices.get(e);
+		int index = solverEdgeIndices.get(e);
 		if (index >= 0) {
 			return aVec.getValue(index);
 		} else {
@@ -342,5 +347,8 @@ public class SinConditionApplication <
 		}
 	}
 	
+	public int getDimension() {
+		return dim;
+	}
 	
 }

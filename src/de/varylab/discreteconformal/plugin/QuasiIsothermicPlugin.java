@@ -9,7 +9,6 @@ import java.awt.GridBagLayout;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
@@ -26,7 +25,6 @@ import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
-import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.adapter.MappedWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -50,15 +48,6 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	private JButton
 		goCirclePatternButton = new JButton("Calculate Circle Pattern"),
 		goDBFButton = new JButton("Calculate DBF");
-	
-	static {
-		String[] taoCommand = new String[] {
-			"-tao_nm_lamda", "0.01", 
-			"-tao_nm_mu", "1.0"
-		};
-		System.out.println("initing tao: " + Arrays.toString(taoCommand));
-		Tao.Initialize("Quasiisothermic Parametrization", taoCommand, false);
-	}
 	
 	public QuasiIsothermicPlugin() {
 		shrinkPanel.setTitle("Quasiisothermic Parametrization");

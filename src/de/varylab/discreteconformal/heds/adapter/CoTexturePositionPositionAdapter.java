@@ -35,7 +35,7 @@ public class CoTexturePositionPositionAdapter extends AbstractTypedAdapter<CoVer
 			case Linear:
 				switch (model) {
 					case Klein:
-						return new double[] {t[0] / t[3], t[1] / t[3], 0, 1};
+						return new double[] {t[0] / t[3], t[1] / t[3], t[2] / t[3], 1};
 					case Poincaré: 
 					default:
 						return new double[] {t[0] / (t[3] + 1), t[1] / (t[3] + 1), 0, 1};
