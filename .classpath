@@ -41,6 +41,8 @@
 	<classpathentry kind="lib" path="lib/jPETScTao.jar" sourcepath="/jPETSc"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jrworkspace"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/curvatureLines"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ParallelColt"/>
+	<classpathentry kind="lib" path="lib/arpack-combo.jar"/>
+	<classpathentry kind="lib" path="lib/netlib-java.jar"/>
+	<classpathentry kind="lib" path="lib/parallelcolt-0.9.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
