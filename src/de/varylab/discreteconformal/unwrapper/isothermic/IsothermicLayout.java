@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import com.sun.org.apache.xml.internal.resolver.readers.TR9401CatalogReader;
+
 import de.jreality.math.Rn;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -19,6 +21,7 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
+import de.varylab.discreteconformal.adapter.TriangleOrientationAdapter;
 
 public class IsothermicLayout {
 
@@ -26,6 +29,7 @@ public class IsothermicLayout {
 	 * Calculates the layout of a mesh from given edge angles
 	 * @param hds
 	 * @param angleMap
+	 * @param orientationMap TODO
 	 * @param a
 	 */
 	public static <
@@ -33,7 +37,8 @@ public class IsothermicLayout {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,
 		HDS extends HalfEdgeDataStructure<V, E, F>
-	> void  doTexLayout(HDS hds, Map<E, Double> angleMap, AdapterSet aSet) {
+	> void  doTexLayout(HDS hds, Map<E, Double> angleMap, Map<F, Double> orientationMap, AdapterSet aSet) {
+		
 		Map<E, Double> lengthMap = new HashMap<E, Double>();
 		Set<V> visited = new HashSet<V>(hds.numVertices());
 		Queue<V> Qv = new LinkedList<V>();
@@ -76,12 +81,14 @@ public class IsothermicLayout {
 				V nearVertex = e.getTargetVertex();
 				
 				E next = e.getNextEdge();
-				Double alpha = IsothermicUtility.getOppositeBeta(next, angleMap);
+				
 				if (e.getLeftFace() == null) { // a boundary edge
 					//TODO do layout in the other direction too
 					break;
 //					alpha = 2*PI - calculateAngleSum(v, angleMap);
 				}
+				Double alpha = IsothermicUtility.getOppositeBeta(next, angleMap);
+				alpha *= orientationMap.get(next.getLeftFace());
 				
 				globalAngle -= alpha;
 				

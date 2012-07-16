@@ -44,7 +44,7 @@ public class IsothermicLayoutTest {
 		
 		
 		AdapterSet aSet = new ConformalAdapterSet();
-		IsothermicLayout.doTexLayout(hds, angleMap, aSet);
+		IsothermicLayout.doTexLayout(hds, angleMap, null, aSet);
 		
 		for (CoVertex tv : hds.getVertices()) {
 			System.out.println(Arrays.toString(tv.T));

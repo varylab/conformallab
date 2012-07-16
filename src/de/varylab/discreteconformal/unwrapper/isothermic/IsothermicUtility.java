@@ -1,6 +1,8 @@
 package de.varylab.discreteconformal.unwrapper.isothermic;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
+import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.angleOrientation;
+import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateAlpha;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.atan;
@@ -301,7 +303,7 @@ public class IsothermicUtility {
 				double a1 = alphaMap.get(e);
 				double a2 = alphaMap.get(e.getNextEdge());
 				double a3 = alphaMap.get(e.getPreviousEdge());
-				double beta = calculateBeta(a2, a3, a1);
+				double beta = angleOrientation(a2,a3,a1)*calculateBeta(a2, a3, a1);
 				betaMap.put(e, beta);
 			}
 		}
@@ -483,10 +485,12 @@ public class IsothermicUtility {
 		innerVerts.removeAll(HalfEdgeUtils.boundaryVertices(hds));
 		for (CoVertex v : innerVerts) {
 			double sum = calculateAngleSumFromBetas(v, betaMap);
-			if (abs(sum - 2*PI) > Math.PI/4) {
+			if (abs(abs(sum) - 2*PI) > Math.PI/4) {
 				int index = (int)Math.round(sum / PI);
 				v.setTheta(index * PI);
-				System.out.println("singularity: " + v + ", " + index + " pi");
+				if((index % 2) != 0) {
+					System.out.println("singularity: " + v + ", " + index + " pi");
+				}
 			} else {
 				v.setTheta(2 * PI);
 			}
@@ -496,7 +500,7 @@ public class IsothermicUtility {
 
 	public static Map<CoEdge, Double> calculateAlphasFromCurvature(AdapterSet a, CoHDS hds) {
 		Map<CoEdge, Double> alphaMap = new HashMap<CoEdge, Double>();
-		for (CoEdge e : hds.getEdges()) {
+		for(CoEdge e : hds.getEdges()) {
 			double[] N = a.getD(Normal.class, e);
 			double[] Kmin = a.getD(CurvatureFieldMin.class, e);
 			double[] E = a.getD(EdgeVector.class, e);
@@ -519,6 +523,52 @@ public class IsothermicUtility {
 			);
 		layout.execute(hds);
 	}
+
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double calculateAlpha(E e, AdapterSet a) {
+		double[] N = a.getD(Normal.class, e);
+		double[] Kmin = a.getD(CurvatureFieldMin.class, e);
+		double[] E = a.getD(EdgeVector.class, e);
+		return IsothermicUtility.getSignedAngle(N, Kmin, E);
+	}
 	
+
+	public static Map<CoFace, Double> calculateOrientationFromAlphas(CoHDS hds,	Map<CoEdge, Double> alphaMap) {
+		Map<CoFace, Double> orientationMap = new HashMap<CoFace, Double>(hds.numFaces());
+		for(CoFace f : hds.getFaces()) {
+			CoEdge e = f.getBoundaryEdge();
+			orientationMap.put(f, 
+					angleOrientation(
+						alphaMap.get(e), 
+						alphaMap.get(e.getNextEdge()), 
+						alphaMap.get(e.getPreviousEdge())
+					));
+		}
+		return orientationMap;
+	}
+
+
+	public static double angleOrientation(double alpha1, double alpha2,	double alpha3) {
+		return (
+				((alpha1 < alpha2) && (alpha2 < alpha3)) ||
+				((alpha2 < alpha3) && (alpha3 < alpha1)) ||
+				((alpha3 < alpha1) && (alpha1 < alpha2)) 
+				)? 1.0 : -1.0;
+	}
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double alphaOrientation(F f, AdapterSet a) {
+		E e = f.getBoundaryEdge();
+		double alpha1 = calculateAlpha(e,a);
+		double alpha2 = calculateAlpha(e.getNextEdge(),a);
+		double alpha3 = calculateAlpha(e.getPreviousEdge(),a);
+		return angleOrientation(alpha1, alpha2, alpha3);
+	}
 	
 }

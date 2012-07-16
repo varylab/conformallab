@@ -85,6 +85,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		} catch (Exception e) {
 			Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
 			JOptionPane.showMessageDialog(w, e.toString());
+			e.printStackTrace();
 		}
 	}
 	
@@ -132,7 +133,9 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		DBFSolution<CoVertex, CoEdge, CoFace, CoHDS> solution = fun.getDBFSolution();
 		Map<CoEdge, Double> alphaMap = solution.solutionAlphaMap;
+		Map<CoFace, Double> orientationMap = IsothermicUtility.calculateOrientationFromAlphas(hds,alphaMap);
 		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
+		
 		
 		// remove topology
 		if (HalfEdgeUtils.getGenus(hds) >= 1) {
@@ -142,7 +145,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		IsothermicUtility.cutConesToBoundary(hds, betaMap);
 		
-		IsothermicLayout.doTexLayout(hds, alphaMap, a);
+		IsothermicLayout.doTexLayout(hds, alphaMap, orientationMap, a);
 		hif.update();
 	}
 

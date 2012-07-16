@@ -36,6 +36,7 @@ import de.varylab.discreteconformal.plugin.algorithm.CutToDiskPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.FindPathPlugin;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
+import de.varylab.discreteconformal.plugin.visualizer.FlippedTriangles;
 import de.varylab.discreteconformal.plugin.visualizer.IsothermicityMeasure;
 import de.varylab.discreteconformal.plugin.visualizer.ThetaVisualizer;
 
@@ -71,6 +72,7 @@ public class ConformalLab {
 		s.add(new QuasiIsothermicPlugin());
 		s.add(new SphereEqualizerPlugin());
 		s.add(new IsothermicityMeasure());
+		
 		return s;
 	}
 	
@@ -98,7 +100,7 @@ public class ConformalLab {
 		v.registerPlugin(new SystemLookAndFeel());
 		v.registerPlugin(new VertexEditorPlugin());
 		v.registerPlugin(CurvatureVectorFields.class);
-		
+		v.registerPlugin(FlippedTriangles.class);
 		v.registerPlugin(SpectralSectionPlugin.class);
 		
 //		v.registerPlugin(new HalfedgeDebuggerPlugin());
@@ -110,8 +112,8 @@ public class ConformalLab {
 		v.getPlugin(HalfedgeInterface.class).set(new CoHDS());
 		v.getPlugin(HalfedgeInterface.class).setTemplateHDS(new CoHDS());
 		
-		CurvatureLines.addCurvatureLineAdapters(v.getPlugin(HalfedgeInterface.class));
-		CurvatureLines.addBasicAdapters(v.getPlugin(HalfedgeInterface.class));
+//		CurvatureLines.addCurvatureLineAdapters(v.getPlugin(HalfedgeInterface.class));
+//		CurvatureLines.addBasicAdapters(v.getPlugin(HalfedgeInterface.class));
 	} 
 
 }
