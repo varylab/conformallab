@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-import com.sun.org.apache.xml.internal.resolver.readers.TR9401CatalogReader;
-
 import de.jreality.math.Rn;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -21,7 +19,6 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
-import de.varylab.discreteconformal.adapter.TriangleOrientationAdapter;
 
 public class IsothermicLayout {
 

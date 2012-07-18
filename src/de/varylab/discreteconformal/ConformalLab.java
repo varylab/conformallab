@@ -6,7 +6,6 @@ import java.util.Set;
 
 import javax.swing.Icon;
 
-import curvaturelines.CurvatureLines;
 import curvaturelines.plugin.SpectralSectionPlugin;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;

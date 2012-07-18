@@ -1,8 +1,6 @@
 package de.varylab.discreteconformal.unwrapper.isothermic;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
-import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.angleOrientation;
-import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateAlpha;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.atan;

@@ -87,8 +87,8 @@ public class SinConditionApplication <
 		}	
 		alpha.assemble();
 		setInitialSolutionVec(alpha);
-		Mat H = createHessianTemplate();
-		setHessianMat(H, H);
+//		Mat H = createHessianTemplate();
+//		setHessianMat(H, H);
 		System.out.println("SinFunctional number of variables: " + alpha.getSize());
 	}
 	

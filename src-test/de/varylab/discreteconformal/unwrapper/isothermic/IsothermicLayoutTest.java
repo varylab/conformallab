@@ -2,7 +2,6 @@ package de.varylab.discreteconformal.unwrapper.isothermic;
 
 import static java.lang.Math.PI;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -11,6 +10,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import de.jreality.junitutils.Assert;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
@@ -42,12 +42,19 @@ public class IsothermicLayoutTest {
 			angleMap.put(e.getOppositeEdge(), angleMap.get(e));
 		}
 		
+		Map<CoFace, Double> orientationMap = IsothermicUtility.calculateOrientationFromAlphas(hds, angleMap);
 		
 		AdapterSet aSet = new ConformalAdapterSet();
-		IsothermicLayout.doTexLayout(hds, angleMap, null, aSet);
+		IsothermicLayout.doTexLayout(hds, angleMap, orientationMap, aSet);
 		
+		double[] tv0 = {0, 1, 0, 1};
+		double[] tv1 = {1, 0, 0, 1};
+		double[] tv2 = {0, -1, 0, 1};
+		double[] tv3 = {0.41421356237309537, 0, 0, 1};
+		double[][] tvVec = {tv0, tv1, tv2, tv3};
 		for (CoVertex tv : hds.getVertices()) {
-			System.out.println(Arrays.toString(tv.T));
+			int i = tv.getIndex();
+			Assert.assertArrayEquals(tvVec[i], tv.T, 1E-8);
 		}
 	}
 	
