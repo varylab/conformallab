@@ -2,10 +2,12 @@ package de.varylab.discreteconformal.plugin;
 
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 import static java.awt.GridBagConstraints.HORIZONTAL;
+import static java.awt.GridBagConstraints.RELATIVE;
 import static java.awt.GridBagConstraints.REMAINDER;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,6 +16,8 @@ import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -45,9 +49,17 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		dbfPanel = new JPanel();
 	private JCheckBox
 		excludeBoundaryChecker = new JCheckBox("Exclude Boundary", false);
+	private JComboBox
+		methodCombo = new JComboBox(SolverMethod.values());
 	private JButton
 		goCirclePatternButton = new JButton("Calculate Circle Pattern"),
 		goDBFButton = new JButton("Calculate DBF");
+	
+	protected enum SolverMethod {
+		EnergyCG,
+		EnergyNTR,
+		SNES
+	}
 	
 	public QuasiIsothermicPlugin() {
 		shrinkPanel.setTitle("Quasiisothermic Parametrization");
@@ -55,6 +67,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = HORIZONTAL;
 		c.weightx = 1.0;
+		c.insets = new Insets(2, 2, 2, 2);
 		c.gridwidth = REMAINDER;
 		shrinkPanel.add(dbfPanel, c);
 		shrinkPanel.add(circlePatternPanel, c);
@@ -62,6 +75,10 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		dbfPanel.setLayout(new GridBagLayout());
 		dbfPanel.setBorder(BorderFactory.createTitledBorder("DBF"));
 		dbfPanel.add(excludeBoundaryChecker, c);
+		c.gridwidth = RELATIVE;
+		dbfPanel.add(new JLabel("Method"), c);
+		c.gridwidth = REMAINDER;
+		dbfPanel.add(methodCombo, c);
 		dbfPanel.add(goDBFButton, c);
 		
 		circlePatternPanel.setLayout(new GridBagLayout());
@@ -70,6 +87,24 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		goCirclePatternButton.addActionListener(this);
 		goDBFButton.addActionListener(this);
+	}
+	
+	@Override
+	public void storeStates(Controller c) throws Exception {
+		super.storeStates(c);
+		c.storeProperty(getClass(), "excludeBoundary", excludeBoundaryChecker.isSelected());
+		c.storeProperty(getClass(), "dbfMethod", methodCombo.getSelectedIndex());
+	}
+
+	@Override
+	public void restoreStates(Controller c) throws Exception {
+		super.restoreStates(c);
+		excludeBoundaryChecker.setSelected(c.getProperty(getClass(), "excludeBoundary", false));
+		methodCombo.setSelectedIndex(c.getProperty(getClass(), "dbfMethod", 0));
+	}
+	
+	protected SolverMethod getSelectedMethod() {
+		return (SolverMethod)methodCombo.getSelectedItem();
 	}
 	
 	@Override
@@ -129,7 +164,17 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		SinConditionApplication<CoVertex, CoEdge, CoFace, CoHDS> 
 		fun = new SinConditionApplication<CoVertex, CoEdge, CoFace, CoHDS>(hds);
 		fun.initialize(a, excludeBoundary);
-		fun.solveCG(1000, 1E-10);
+		switch (getSelectedMethod()) {
+		case EnergyCG:
+			fun.solveCG(1000, 1E-10);
+			break;
+		case EnergyNTR:
+			fun.solveNTR(1000, 1E-10);
+			break;
+		case SNES:
+			fun.solveSNES(1000, 1E-10);
+			break;
+		}
 		
 		DBFSolution<CoVertex, CoEdge, CoFace, CoHDS> solution = fun.getDBFSolution();
 		Map<CoEdge, Double> alphaMap = solution.solutionAlphaMap;

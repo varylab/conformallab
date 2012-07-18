@@ -45,12 +45,13 @@ public class IsothermicLayoutTest {
 		Map<CoFace, Double> orientationMap = IsothermicUtility.calculateOrientationFromAlphas(hds, angleMap);
 		
 		AdapterSet aSet = new ConformalAdapterSet();
+		IsothermicLayout.setInitialLength(2.0);
 		IsothermicLayout.doTexLayout(hds, angleMap, orientationMap, aSet);
 		
 		double[] tv0 = {0, 1, 0, 1};
-		double[] tv1 = {1, 0, 0, 1};
+		double[] tv1 = {-1, 0, 0, 1};
 		double[] tv2 = {0, -1, 0, 1};
-		double[] tv3 = {0.41421356237309537, 0, 0, 1};
+		double[] tv3 = {-0.41421356237309537, 0, 0, 1};
 		double[][] tvVec = {tv0, tv1, tv2, tv3};
 		for (CoVertex tv : hds.getVertices()) {
 			int i = tv.getIndex();

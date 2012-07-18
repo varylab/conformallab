@@ -22,7 +22,7 @@ import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 
 public class IsothermicLayout {
 
-	private static final double
+	private static double
 		INITIAL_LENGTH = 1E-1;
 	
 	/**
@@ -63,8 +63,8 @@ public class IsothermicLayout {
 		Double l = INITIAL_LENGTH;
 		lengthMap.put(e0, l);
 		lengthMap.put(e1, l);
-		aSet.set(TexturePosition.class, v1, new double[] {0, 0, 0, 1});
-		aSet.set(TexturePosition.class, v2, new double[] {cos(e0a)*INITIAL_LENGTH, sin(e0a)*INITIAL_LENGTH, 0, 1});		
+		aSet.set(TexturePosition.class, v1, new double[] {-cos(e0a)*INITIAL_LENGTH/2, -sin(e0a)*INITIAL_LENGTH/2, 0, 1});
+		aSet.set(TexturePosition.class, v2, new double[] {cos(e0a)*INITIAL_LENGTH/2, sin(e0a)*INITIAL_LENGTH/2, 0, 1});		
 		visited.add(v1);
 		visited.add(v2);
 		
@@ -116,6 +116,10 @@ public class IsothermicLayout {
 		}
 		
 		assert (visited.size() == hds.numVertices());
+	}
+	
+	public static void setInitialLength(double l) {
+		INITIAL_LENGTH = l;
 	}
 	
 	

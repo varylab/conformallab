@@ -87,14 +87,27 @@ public class SinConditionApplication <
 		}	
 		alpha.assemble();
 		setInitialSolutionVec(alpha);
-//		Mat H = createHessianTemplate();
-//		setHessianMat(H, H);
 		System.out.println("SinFunctional number of variables: " + alpha.getSize());
 	}
 	
 	
 	public void solveCG(int maxIterations, double tol) {
 		Tao tao = new Tao(Method.CG);
+		tao.setFromOptions();
+		tao.setApplication(this);
+		tao.setMaximumIterates(1000);
+		tao.setTolerances(tol, tol, tol, tol);
+		tao.setGradientTolerances(tol, tol, tol);
+		System.out.println("energy before optimization: " + evaluateObjective(getSolutionVec()));
+		tao.solve();
+		System.out.println(tao.getSolutionStatus());
+		System.out.println("energy after optimization: " + evaluateObjective(getSolutionVec()));
+	}
+	
+	public void solveNTR(int maxIterations, double tol) {
+		Mat H = createHessianTemplate();
+		setHessianMat(H, H);
+		Tao tao = new Tao(Method.NTR);
 		tao.setFromOptions();
 		tao.setApplication(this);
 		tao.setMaximumIterates(1000);
@@ -118,13 +131,16 @@ public class SinConditionApplication <
 		snes.setFunction(this, f);
 		snes.setJacobian(this, J, J);
 		snes.setTolerances(tol, tol, tol, maxIterations, 10000000);
-		snes.getKSP().setInitialGuessNonzero(false);
+		snes.getKSP().setInitialGuessNonzero(true);
+		System.out.println("energy before optimization: " + evaluateObjective(getSolutionVec()));
 		System.out.println("residual: " + snes.getFunctionNorm());
 		System.out.println("guess\n" + getSolutionVec());
-		snes.solve(null, getSolutionVec());
+		snes.setSolution(getSolutionVec());
+		snes.solve(null, null);
 		System.out.println("residual: " + snes.getFunctionNorm());
 		System.out.println("solution\n" + getSolutionVec());
 		System.out.println(snes.getConvergedReason());
+		System.out.println("energy after optimization: " + evaluateObjective(getSolutionVec()));
 	}
 	
 	

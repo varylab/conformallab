@@ -14,7 +14,6 @@ import java.util.Map;
 import junit.framework.Assert;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import de.jreality.geometry.Primitives;
@@ -113,18 +112,22 @@ public class SinConditionFunctionalTest {
 	
 	
 	@Test
-	public void testJacobian() throws Exception {
+	public void testSNESJacobian() throws Exception {
 		SNES snes = SNES.create();
-		Vec f = new Vec(1);
 		Vec x = fun.getSolutionVec();
-		Mat J = new Mat(x.getSize(), 1);
+		Vec f = new Vec(x.getSize());
+		Mat J = new Mat(x.getSize(), x.getSize());
+		J.assemble();
+		snes.setFromOptions();
 		snes.setFunction(fun, f);
 		snes.setJacobian(fun, J, J);
-		SNES.testJacobian(fun, J, x, f);
+		fun.evaluateJacobian(x, J, J);
+		boolean check = SNES.testJacobian(fun, J, x, f);
+		Assert.assertTrue("SNES Jacobian seems correct", check);
 	}
 	
 	@Test
-	public void testGradient() throws Exception {
+	public void testCGGradient() throws Exception {
 		Vec init = fun.getSolutionVec();
 		Vec Gfd = new Vec(init.getSize());
 		Vec Ghc = new Vec(init.getSize());
@@ -142,8 +145,8 @@ public class SinConditionFunctionalTest {
 	}
 	
 	
-	@Test@Ignore
-	public void testHessian() throws Exception {
+	@Test
+	public void testCGHessian() throws Exception {
 		Vec init = fun.getSolutionVec();
 		Mat Hfd = fun.createHessianTemplate();
 		Mat Hhc = fun.createHessianTemplate();
@@ -162,7 +165,7 @@ public class SinConditionFunctionalTest {
 	public static void main(String[] args) throws Exception {
 		SinConditionFunctionalTest test = new SinConditionFunctionalTest();
 		test.createFunctional();
-		test.testGradient();
+		test.testCGGradient();
 //		test.testEnergy();
 	}
 	
