@@ -44,7 +44,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		circlePatternPanel = new JPanel(),
 		dbfPanel = new JPanel();
 	private JCheckBox
-		excludeBoundaryChecker = new JCheckBox("Exclude Boundary", true);
+		excludeBoundaryChecker = new JCheckBox("Exclude Boundary", false);
 	private JButton
 		goCirclePatternButton = new JButton("Calculate Circle Pattern"),
 		goDBFButton = new JButton("Calculate DBF");

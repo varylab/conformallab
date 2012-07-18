@@ -22,6 +22,9 @@ import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 
 public class IsothermicLayout {
 
+	private static final double
+		INITIAL_LENGTH = 1E-1;
+	
 	/**
 	 * Calculates the layout of a mesh from given edge angles
 	 * @param hds
@@ -57,11 +60,11 @@ public class IsothermicLayout {
 		Qa.offer(e0a);
 
 		// vertices
-		Double l = 2.0;
+		Double l = INITIAL_LENGTH;
 		lengthMap.put(e0, l);
 		lengthMap.put(e1, l);
-		aSet.set(TexturePosition.class, v1, new double[] {-cos(e0a), -sin(e0a), 0, 1});
-		aSet.set(TexturePosition.class, v2, new double[] {cos(e0a), sin(e0a), 0, 1});		
+		aSet.set(TexturePosition.class, v1, new double[] {0, 0, 0, 1});
+		aSet.set(TexturePosition.class, v2, new double[] {cos(e0a)*INITIAL_LENGTH, sin(e0a)*INITIAL_LENGTH, 0, 1});		
 		visited.add(v1);
 		visited.add(v2);
 		

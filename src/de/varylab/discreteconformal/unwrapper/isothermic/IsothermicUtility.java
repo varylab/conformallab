@@ -554,7 +554,7 @@ public class IsothermicUtility {
 				((alpha1 < alpha2) && (alpha2 < alpha3)) ||
 				((alpha2 < alpha3) && (alpha3 < alpha1)) ||
 				((alpha3 < alpha1) && (alpha1 < alpha2)) 
-				)? 1.0 : -1.0;
+				)? -1.0 : 1.0;
 	}
 	
 	public static <
