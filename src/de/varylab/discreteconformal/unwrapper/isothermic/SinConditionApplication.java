@@ -264,6 +264,7 @@ public class SinConditionApplication <
 			double sl = getLeftLogSinSum(v, x);
 			double sr = getRightLogSinSum(v, x);
 			double e = sl - sr;
+			//E ein = v.getIncomingEdge();
 			for (E ein : HalfEdgeUtils.incomingEdges(v)) {
 				double bl = getOppsiteBeta(ein.getNextEdge(), x);
 				double dblp = getOppBetaDerivativeWrtPrev(ein.getNextEdge(), x);
@@ -280,28 +281,28 @@ public class SinConditionApplication <
 				for (E ein2 : HalfEdgeUtils.incomingEdges(v)) {
 					int iin2 = solverEdgeIndices.get(ein2);
 					int iopp2 = solverEdgeIndices.get(ein2.getPreviousEdge());
-					int ioppnext2 = solverEdgeIndices.get(ein2.getOppositeEdge().getNextEdge());
-					// same edge kind derivatives
 					if (ein2 == ein) {
-						H.add(iin, iin2, 2*e*(dcot(bl) - dcot(br)) + 2*ginnerIn*ginnerIn);
-						H.add(iopp, iopp2, 2*e*(dcot(bl) - dcot(bl2)) + 2*ginnerOpp*ginnerOpp);
+						H.add(iin, iin, 2*e*(dcot(bl) - dcot(br)) + 2*ginnerIn*ginnerIn);
+						H.add(iopp, iopp, 2*e*(dcot(bl) - dcot(bl2)) + 2*ginnerOpp*ginnerOpp);
 						
-						H.add(iin, iopp2, 2*e*dbln*dblp*dcot(bl) + 2*ginnerIn*ginnerIn);
-						H.add(iopp, iin2, 2*e*dbln*dblp*dcot(bl) + 2*ginnerOpp*ginnerOpp);
+						H.add(iin, iopp, 2*e*dbln*dblp*dcot(bl) + 2*ginnerIn*ginnerOpp);
+						H.add(iopp, iin, 2*e*dbln*dblp*dcot(bl) + 2*ginnerIn*ginnerOpp);
 						
+						int ioppnext = solverEdgeIndices.get(ein.getOppositeEdge().getNextEdge());
+						int iinprev = solverEdgeIndices.get(ein.getNextEdge());
 						double gInnerNextOpp = vertexEnergyGradientForOpposite(ein.getOppositeEdge().getPreviousEdge(), x);
-						H.add(iin, ioppnext2, 2*e*dbrp*dbrn*dcot(br) + 2*gInnerNextOpp*ginnerIn);
-						H.add(ioppnext2, iin, 2*e*dbrp*dbrn*dcot(br) + 2*gInnerNextOpp*ginnerIn);
+						H.add(iin, ioppnext, 2*e*dbrp*dbrn*dcot(br) + 2*ginnerIn*gInnerNextOpp);
+						H.add(iopp, iinprev, gInnerNextOpp);
 					} else {
 						double din2 = vertexEnergyGradientForIncoming(ein2, x);
-						H.add(iin, iin2, 2*din2*ginnerIn);
 						double dopp2 = vertexEnergyGradientForOpposite(ein2, x);
+						H.add(iin, iin2, 2*din2*ginnerIn);
+						if (ein2.getNextEdge().getOppositeEdge() != ein) {
+							H.add(iin, iopp2, 2*dopp2*ginnerIn);
+						} 
 						H.add(iopp, iopp2, 2*dopp2*ginnerOpp);
-						H.add(iin, iopp2, 2*dopp2*ginnerIn);
-						H.add(iopp, iin2, 2*din2*ginnerOpp);
-						if (ein2.getNextEdge().getOppositeEdge() == ein) {
-							// this case is treated above
-							continue;
+						if (ein2.getOppositeEdge().getPreviousEdge() != ein) {
+							H.add(iopp, iin2, 2*din2*ginnerOpp);
 						}
 					}
 				}
