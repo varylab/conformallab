@@ -158,7 +158,7 @@ public class SinConditionFunctionalTest {
 			for (int j = 0; j < init.getSize(); j++) {
 				double fd = Hfd.getValue(i, j);
 				double hc = Hhc.getValue(i, j);
-				Assert.assertEquals(fd, hc, 1E-6);
+				Assert.assertEquals(fd, hc, 1E-5);
 			}
 		}
 	}

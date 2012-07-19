@@ -1,5 +1,7 @@
 package de.varylab.discreteconformal.unwrapper.isothermic;
 
+import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
+import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
 import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateBeta;
 import static java.lang.Math.log;
@@ -116,7 +118,7 @@ public class SinConditionApplication <
 	public void solveNTR(int maxIterations, double tol) {
 		Mat H = createHessianTemplate();
 		setHessianMat(H, H);
-		Tao tao = new Tao(Method.NTR);
+		Tao tao = new Tao(Method.NLS);
 		tao.setFromOptions();
 		tao.setApplication(this);
 		tao.setMaximumFunctionEvaluations(10000000);
@@ -264,7 +266,6 @@ public class SinConditionApplication <
 			double sl = getLeftLogSinSum(v, x);
 			double sr = getRightLogSinSum(v, x);
 			double e = sl - sr;
-			//E ein = v.getIncomingEdge();
 			for (E ein : HalfEdgeUtils.incomingEdges(v)) {
 				double bl = getOppsiteBeta(ein.getNextEdge(), x);
 				double dblp = getOppBetaDerivativeWrtPrev(ein.getNextEdge(), x);
@@ -273,7 +274,8 @@ public class SinConditionApplication <
 				double dbrn = getOppBetaDerivativeWrtNext(ein.getOppositeEdge().getPreviousEdge(), x);
 				double dbrp = getOppBetaDerivativeWrtPrev(ein.getOppositeEdge().getPreviousEdge(), x);
 				double bl2 = getOppsiteBeta(ein, x);
-//				double dbl2p = getOppBetaDerivativeWrtPrev(ein, x);				
+				double dbl2p = getOppBetaDerivativeWrtPrev(ein, x);	
+				double dbl2n = getOppBetaDerivativeWrtNext(ein, x);
 				int iin = solverEdgeIndices.get(ein);
 				int iopp = solverEdgeIndices.get(ein.getPreviousEdge());
 				double ginnerIn = vertexEnergyGradientForIncoming(ein, x);
@@ -284,15 +286,14 @@ public class SinConditionApplication <
 					if (ein2 == ein) {
 						H.add(iin, iin, 2*e*(dcot(bl) - dcot(br)) + 2*ginnerIn*ginnerIn);
 						H.add(iopp, iopp, 2*e*(dcot(bl) - dcot(bl2)) + 2*ginnerOpp*ginnerOpp);
-						
 						H.add(iin, iopp, 2*e*dbln*dblp*dcot(bl) + 2*ginnerIn*ginnerOpp);
 						H.add(iopp, iin, 2*e*dbln*dblp*dcot(bl) + 2*ginnerIn*ginnerOpp);
-						
 						int ioppnext = solverEdgeIndices.get(ein.getOppositeEdge().getNextEdge());
-						int iinprev = solverEdgeIndices.get(ein.getNextEdge());
+						int iinprev = solverEdgeIndices.get(ein.getNextEdge().getOppositeEdge());
 						double gInnerNextOpp = vertexEnergyGradientForOpposite(ein.getOppositeEdge().getPreviousEdge(), x);
-						H.add(iin, ioppnext, 2*e*dbrp*dbrn*dcot(br) + 2*ginnerIn*gInnerNextOpp);
-						H.add(iopp, iinprev, gInnerNextOpp);
+						double gInnerPrevIn = vertexEnergyGradientForIncoming(ein.getNextEdge().getOppositeEdge(), x);
+						H.add(iin, ioppnext, -2*e*dbrp*dbrn*dcot(br) + 2*ginnerIn*gInnerNextOpp);
+						H.add(iopp, iinprev, -2*e*dbl2n*dbl2p*dcot(bl2) + 2*ginnerOpp*gInnerPrevIn);
 					} else {
 						double din2 = vertexEnergyGradientForIncoming(ein2, x);
 						double dopp2 = vertexEnergyGradientForOpposite(ein2, x);
@@ -318,14 +319,19 @@ public class SinConditionApplication <
 		int[] nz = new int[dim]; 
 		for (E e : hds.getPositiveEdges()) {
 			int i = solverEdgeIndices.get(e);
-			if (HalfEdgeUtils.isBoundaryEdge(e)) {
-				nz[i] = 3;
-			} else {
-				nz[i] = 5;
+			if (!isBoundaryVertex(e.getStartVertex())) {
+				int starLen = incomingEdges(e.getStartVertex()).size();
+				nz[i] += 2*starLen;
+				if (!isBoundaryVertex(e.getTargetVertex())) {
+					nz[i] -= 5; 
+				}
+			} 
+			if (!isBoundaryVertex(e.getTargetVertex())) {
+				int starLen = incomingEdges(e.getTargetVertex()).size();
+				nz[i] += 2*starLen;
 			}
 		}
-		Mat H = Mat.createSeqAIJ(dim, dim, -1, nz);
-		H.zeroEntries();
+		Mat H = Mat.createSeqAIJ(dim, dim, 0, nz);
 		H.assemble();
 		return H;
 	}
