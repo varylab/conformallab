@@ -152,6 +152,8 @@ public class SinConditionFunctionalTest {
 		Mat Hhc = fun.createHessianTemplate();
 		fun.evaluateHessian(init, Hhc, Hhc);
 		TestUtility.calculateFDHessian(fun, init, Hfd);
+		System.out.println("HC:\n" + Hhc);
+		System.out.println("FD:\n" + Hfd);
 		for (int i = 0; i < init.getSize(); i++) {
 			for (int j = 0; j < init.getSize(); j++) {
 				double fd = Hfd.getValue(i, j);

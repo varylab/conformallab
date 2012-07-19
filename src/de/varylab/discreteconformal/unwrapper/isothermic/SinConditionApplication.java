@@ -52,6 +52,14 @@ public class SinConditionApplication <
 		this.hds = hds;
 	}
 	
+	private static double cot(final double x) {
+		return 1 / Math.tan(x);
+	}
+	private static double dcot(final double x) {
+		double cot = cot(x);
+		return -1 - cot*cot;
+	}	
+	
 	public void initialize(AdapterSet a, boolean excludeBoundary) {
 		if (!a.isAvailable(CurvatureFieldMin.class, hds.getEdge(0).getClass(), double[].class)) {
 			throw new IllegalArgumentException("No curvature directions found!");
@@ -95,7 +103,8 @@ public class SinConditionApplication <
 		Tao tao = new Tao(Method.CG);
 		tao.setFromOptions();
 		tao.setApplication(this);
-		tao.setMaximumIterates(1000);
+		tao.setMaximumFunctionEvaluations(10000000);
+		tao.setMaximumIterates(maxIterations);
 		tao.setTolerances(tol, tol, tol, tol);
 		tao.setGradientTolerances(tol, tol, tol);
 		System.out.println("energy before optimization: " + evaluateObjective(getSolutionVec()));
@@ -110,7 +119,8 @@ public class SinConditionApplication <
 		Tao tao = new Tao(Method.NTR);
 		tao.setFromOptions();
 		tao.setApplication(this);
-		tao.setMaximumIterates(1000);
+		tao.setMaximumFunctionEvaluations(10000000);
+		tao.setMaximumIterates(maxIterations);
 		tao.setTolerances(tol, tol, tol, tol);
 		tao.setGradientTolerances(tol, tol, tol);
 		System.out.println("energy before optimization: " + evaluateObjective(getSolutionVec()));
@@ -173,8 +183,8 @@ public class SinConditionApplication <
 		for (V v : hds.getVertices()) {
 			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
 			int index = solverVertexIndices.get(v);
-			double sl = getLeftLogSinSum(v, x);
-			double sr = getRightLogSinSum(v, x);
+			double sl = getRightLogSinSum(v, x);
+			double sr = getLeftLogSinSum(v, x);
 			f.setValue(index, sl - sr, INSERT_VALUES);
 		}
 	}
@@ -202,6 +212,22 @@ public class SinConditionApplication <
 		return evaluateObjectiveAndGradient(x, null);
 	}
 	
+	public double vertexEnergyGradientForIncoming(E ein, Vec x) {
+		double bl = getOppsiteBeta(ein.getNextEdge(), x);
+		double dblp = getOppBetaDerivativeWrtPrev(ein.getNextEdge(), x);
+		double br = getOppsiteBeta(ein.getOppositeEdge().getPreviousEdge(), x);
+		double dbrn = getOppBetaDerivativeWrtNext(ein.getOppositeEdge().getPreviousEdge(), x);
+		return dblp*cot(bl) - dbrn*cot(br);
+	}
+	
+	public double vertexEnergyGradientForOpposite(E ein, Vec x) {
+		double bl = getOppsiteBeta(ein.getNextEdge(), x);
+		double dbln = getOppBetaDerivativeWrtNext(ein.getNextEdge(), x);
+		double bl2 = getOppsiteBeta(ein, x);
+		double dbl2p = getOppBetaDerivativeWrtPrev(ein, x);
+		return dbln*cot(bl) - dbl2p*cot(bl2);
+	}
+	
 	
 	@Override
 	public double evaluateObjectiveAndGradient(Vec x, Vec g) {
@@ -212,22 +238,17 @@ public class SinConditionApplication <
 			// energy
 			double sl = getLeftLogSinSum(v, x);
 			double sr = getRightLogSinSum(v, x);
-			double e = sr - sl;
+			double e = sl - sr;
 			E += e*e;
 			// gradient
 			if (g == null) continue;
 			for (E ein : HalfEdgeUtils.incomingEdges(v)) {
-				double bl = getOppsiteBeta(ein.getNextEdge(), x);
-				double dblp = getOppBetaDerivativeWrtPrev(ein.getNextEdge(), x);
-				double dbln = getOppBetaDerivativeWrtNext(ein.getNextEdge(), x);
-				double br = getOppsiteBeta(ein.getOppositeEdge().getPreviousEdge(), x);
-				double dbrn = getOppBetaDerivativeWrtNext(ein.getOppositeEdge().getPreviousEdge(), x);
-				double bl2 = getOppsiteBeta(ein, x);
-				double dbl2p = getOppBetaDerivativeWrtPrev(ein, x);
 				int iin = solverEdgeIndices.get(ein);
 				int iopp = solverEdgeIndices.get(ein.getPreviousEdge());
-				g.add(iin, -2*e*(dbrn/tan(br) - dblp/tan(bl)));
-				g.add(iopp, -2*e*(dbl2p/tan(bl2) - dbln/tan(bl)));
+				double din = vertexEnergyGradientForIncoming(ein, x);
+				double dopp = vertexEnergyGradientForOpposite(ein, x);
+				g.add(iin, 2*e*din);
+				g.add(iopp, 2*e*dopp);
 			}
 		}
 		return E;
@@ -236,15 +257,57 @@ public class SinConditionApplication <
 	
 	@Override
 	public PreconditionerType evaluateHessian(Vec x, Mat H, Mat Hpre) {
-//		H.zeroEntries();
-//		for (V v : hds.getVertices()) {
-//			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
-//			for (E ein : HalfEdgeUtils.incomingEdges(v)) {
-//				int iin = solverIndices.get(ein);
-//				int iopp = solverIndices.get(ein.getPreviousEdge());
-//				
-//			}
-//		}
+		H.zeroEntries();
+		for (V v : hds.getVertices()) {
+			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
+			// energy
+			double sl = getLeftLogSinSum(v, x);
+			double sr = getRightLogSinSum(v, x);
+			double e = sl - sr;
+			for (E ein : HalfEdgeUtils.incomingEdges(v)) {
+				double bl = getOppsiteBeta(ein.getNextEdge(), x);
+				double dblp = getOppBetaDerivativeWrtPrev(ein.getNextEdge(), x);
+				double dbln = getOppBetaDerivativeWrtNext(ein.getNextEdge(), x);
+				double br = getOppsiteBeta(ein.getOppositeEdge().getPreviousEdge(), x);
+				double dbrn = getOppBetaDerivativeWrtNext(ein.getOppositeEdge().getPreviousEdge(), x);
+				double dbrp = getOppBetaDerivativeWrtPrev(ein.getOppositeEdge().getPreviousEdge(), x);
+				double bl2 = getOppsiteBeta(ein, x);
+//				double dbl2p = getOppBetaDerivativeWrtPrev(ein, x);				
+				int iin = solverEdgeIndices.get(ein);
+				int iopp = solverEdgeIndices.get(ein.getPreviousEdge());
+				double ginnerIn = vertexEnergyGradientForIncoming(ein, x);
+				double ginnerOpp = vertexEnergyGradientForOpposite(ein, x);
+				for (E ein2 : HalfEdgeUtils.incomingEdges(v)) {
+					int iin2 = solverEdgeIndices.get(ein2);
+					int iopp2 = solverEdgeIndices.get(ein2.getPreviousEdge());
+					int ioppnext2 = solverEdgeIndices.get(ein2.getOppositeEdge().getNextEdge());
+					// same edge kind derivatives
+					if (ein2 == ein) {
+						H.add(iin, iin2, 2*e*(dcot(bl) - dcot(br)) + 2*ginnerIn*ginnerIn);
+						H.add(iopp, iopp2, 2*e*(dcot(bl) - dcot(bl2)) + 2*ginnerOpp*ginnerOpp);
+						
+						H.add(iin, iopp2, 2*e*dbln*dblp*dcot(bl) + 2*ginnerIn*ginnerIn);
+						H.add(iopp, iin2, 2*e*dbln*dblp*dcot(bl) + 2*ginnerOpp*ginnerOpp);
+						
+						double gInnerNextOpp = vertexEnergyGradientForOpposite(ein.getOppositeEdge().getPreviousEdge(), x);
+						H.add(iin, ioppnext2, 2*e*dbrp*dbrn*dcot(br) + 2*gInnerNextOpp*ginnerIn);
+						H.add(ioppnext2, iin, 2*e*dbrp*dbrn*dcot(br) + 2*gInnerNextOpp*ginnerIn);
+					} else {
+						double din2 = vertexEnergyGradientForIncoming(ein2, x);
+						H.add(iin, iin2, 2*din2*ginnerIn);
+						double dopp2 = vertexEnergyGradientForOpposite(ein2, x);
+						H.add(iopp, iopp2, 2*dopp2*ginnerOpp);
+						H.add(iin, iopp2, 2*dopp2*ginnerIn);
+						H.add(iopp, iin2, 2*din2*ginnerOpp);
+						if (ein2.getNextEdge().getOppositeEdge() == ein) {
+							// this case is treated above
+							continue;
+						}
+					}
+				}
+			}
+		}
+		H.assemble();
 		return PreconditionerType.SAME_NONZERO_PATTERN;
 	}
 	
@@ -279,7 +342,7 @@ public class SinConditionApplication <
 		return sl;
 	}
 	
-	protected double getLeftLogSinSum(V v, Vec aVec) {
+	protected double getRightLogSinSum(V v, Vec aVec) {
 		if (HalfEdgeUtils.isBoundaryVertex(v)) {
 			return 0;
 		}
@@ -303,16 +366,16 @@ public class SinConditionApplication <
 		return sr;
 	}
 	
-	protected double getRightLogSinSum(V v, Vec aVec) {
+	protected double getLeftLogSinSum(V v, Vec aVec) {
 		if (HalfEdgeUtils.isBoundaryVertex(v)) {
 			return 0;
 		}
-		double sr = 0.0;
+		double sl = 0.0;
 		for (E eIn : HalfEdgeUtils.incomingEdges(v)) {
 			double betaRight = getOppsiteBeta(eIn.getNextEdge(), aVec);
-			sr += log(sin(betaRight));
+			sl += log(sin(betaRight));
 		}
-		return sr;
+		return sl;
 	}
 	
 	

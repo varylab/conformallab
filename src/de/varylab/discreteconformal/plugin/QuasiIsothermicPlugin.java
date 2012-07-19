@@ -166,13 +166,13 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		fun.initialize(a, excludeBoundary);
 		switch (getSelectedMethod()) {
 		case EnergyCG:
-			fun.solveCG(1000, 1E-10);
+			fun.solveCG(10000, 1E-10);
 			break;
 		case EnergyNTR:
-			fun.solveNTR(1000, 1E-10);
+			fun.solveNTR(10000, 1E-10);
 			break;
 		case SNES:
-			fun.solveSNES(1000, 1E-10);
+			fun.solveSNES(10000, 1E-10);
 			break;
 		}
 		
