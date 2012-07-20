@@ -29,6 +29,7 @@ import de.jtem.jpetsc.NormType;
 import de.jtem.jpetsc.SNES;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
+import de.jtem.jtao.Tao.Method;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -79,7 +80,7 @@ public class SinConditionFunctionalTest {
 		
 		Assert.assertTrue("energy is large at the beginning", 1E-3 < fun.evaluateObjective(init));
 		
-		fun.solveCG(200, 1E-10);
+		fun.solveEnergyMinimzation(200, 1E-10, Method.CG);
 		Vec solution = fun.getSolutionVec();
 		Assert.assertTrue("energy is small after minimizatin", 1E-8 > fun.evaluateObjective(solution));
 		

@@ -100,9 +100,13 @@ public class SinConditionApplication <
 		System.out.println("SinFunctional number of variables: " + alpha.getSize());
 	}
 	
-	
-	public void solveCG(int maxIterations, double tol) {
-		Tao tao = new Tao(Method.CG);
+	public void solveEnergyMinimzation(int maxIterations, double tol, Method method) {
+		switch (method) {
+		case NLS:case NTR:case TRON:
+			Mat H = createHessianTemplate();
+			setHessianMat(H, H);
+		}
+		Tao tao = new Tao(method);
 		tao.setFromOptions();
 		tao.setApplication(this);
 		tao.setMaximumFunctionEvaluations(10000000);
@@ -110,25 +114,13 @@ public class SinConditionApplication <
 		tao.setTolerances(tol, tol, tol, tol);
 		tao.setGradientTolerances(tol, tol, tol);
 		System.out.println("energy before optimization: " + evaluateObjective(getSolutionVec()));
+		long startTime = System.currentTimeMillis();
 		tao.solve();
+		long elapsed = System.currentTimeMillis() - startTime;
+		double sec = elapsed / 1000;
 		System.out.println(tao.getSolutionStatus());
 		System.out.println("energy after optimization: " + evaluateObjective(getSolutionVec()));
-	}
-	
-	public void solveNTR(int maxIterations, double tol) {
-		Mat H = createHessianTemplate();
-		setHessianMat(H, H);
-		Tao tao = new Tao(Method.NLS);
-		tao.setFromOptions();
-		tao.setApplication(this);
-		tao.setMaximumFunctionEvaluations(10000000);
-		tao.setMaximumIterates(maxIterations);
-		tao.setTolerances(tol, tol, tol, tol);
-		tao.setGradientTolerances(tol, tol, tol);
-		System.out.println("energy before optimization: " + evaluateObjective(getSolutionVec()));
-		tao.solve();
-		System.out.println(tao.getSolutionStatus());
-		System.out.println("energy after optimization: " + evaluateObjective(getSolutionVec()));
+		System.out.println("solution time " + sec + " sec");
 	}
 	
 	public void solveSNES(int maxIterations, double tol) {
