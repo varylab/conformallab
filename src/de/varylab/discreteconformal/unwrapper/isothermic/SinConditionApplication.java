@@ -70,6 +70,9 @@ public class SinConditionApplication <
 			double[] N = a.getD(Normal.class, e);
 			double[] Kmin = a.getD(CurvatureFieldMin.class, e);
 			double[] E = a.getD(EdgeVector.class, e);
+			if (N == null || Kmin == null || E == null) {
+				throw new RuntimeException("Could not get curvature information at edge " + e);
+			}
 			double ae = IsothermicUtility.getSignedAngle(N, Kmin, E);
 			initialAlphas.put(e, ae);
 			initialAlphas.put(e.getOppositeEdge(), ae);
