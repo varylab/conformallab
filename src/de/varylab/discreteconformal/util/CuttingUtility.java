@@ -179,8 +179,12 @@ public class CuttingUtility {
 		F extends Face<V, E, F>,
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> CuttingInfo<V, E, F> cutManifoldToDisk(HDS hds, V root, WeightAdapter<E> wa) {
+		int genus = HalfEdgeUtils.getGenus(hds);
 		CuttingInfo<V, E, F> context = new CuttingInfo<V, E, F>();
 		context.cutRoot = root;
+		if (genus < 1) {
+			return context;
+		}
 		for(Set<E> path : HomotopyUtility.getGeneratorPaths(root, wa)) {
 			context.paths.add(path);
 		}

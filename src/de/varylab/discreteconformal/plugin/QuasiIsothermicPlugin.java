@@ -1,17 +1,23 @@
 package de.varylab.discreteconformal.plugin;
 
+import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.cutConesToBoundary;
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 import static java.awt.GridBagConstraints.HORIZONTAL;
 import static java.awt.GridBagConstraints.RELATIVE;
 import static java.awt.GridBagConstraints.REMAINDER;
+import static javax.swing.ListSelectionModel.SINGLE_SELECTION;
 
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -20,14 +26,26 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
+import javax.swing.JTable;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableModel;
 
 import de.jreality.plugin.basic.View;
-import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedge.Edge;
+import de.jtem.halfedgetools.adapter.Adapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.CurvatureFieldMax;
+import de.jtem.halfedgetools.adapter.type.CurvatureFieldMin;
+import de.jtem.halfedgetools.adapter.type.Normal;
+import de.jtem.halfedgetools.adapter.type.VectorField;
+import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.plugin.HalfedgeLayer;
+import de.jtem.halfedgetools.plugin.HalfedgeListener;
+import de.jtem.halfedgetools.plugin.data.AdapterNameComparator;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
@@ -43,7 +61,7 @@ import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.SinConditionApplication;
 
-public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionListener {
+public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionListener, HalfedgeListener {
 
 	private Method[]
 		methods = {Method.LMVM, Method.CG, Method.NTR, Method.NLS};
@@ -65,6 +83,12 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	private JButton
 		goCirclePatternButton = new JButton("Calculate Circle Pattern"),
 		goDBFButton = new JButton("Calculate DBF");
+	private JTable
+		dataTable = new JTable();
+	private JScrollPane
+		dataScroller = new JScrollPane(dataTable);
+	private Set<Adapter<?>>
+		vecSet = new TreeSet<Adapter<?>>(new AdapterNameComparator());
 	
 	public QuasiIsothermicPlugin() {
 		shrinkPanel.setTitle("Quasiisothermic Parametrization");
@@ -92,6 +116,11 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		dbfPanel.add(new JLabel("Tolerance"), c);
 		c.gridwidth = REMAINDER;
 		dbfPanel.add(tolExpSpinner, c);
+		dataScroller.setPreferredSize(new Dimension(10, 75));
+		dataScroller.setMinimumSize(new Dimension(10, 75));
+		dataTable.getTableHeader().setPreferredSize(new Dimension(10, 0));
+		dataTable.setSelectionMode(SINGLE_SELECTION);
+		dbfPanel.add(dataScroller, c);
 		
 		dbfPanel.add(goDBFButton, c);
 		
@@ -102,6 +131,56 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		goCirclePatternButton.addActionListener(this);
 		goDBFButton.addActionListener(this);
 	}
+	
+	protected class VecTableModel extends DefaultTableModel {
+		
+		private static final long 
+			serialVersionUID = 1L;
+
+		@Override
+		public int getColumnCount() {
+			return 1;
+		}
+		
+		@Override
+		public Class<?> getColumnClass(int columnIndex) {
+			switch (columnIndex) {
+				default: return String.class;
+			}
+		}
+		
+		@Override
+		public int getRowCount() {
+			return vecSet.size();
+		}
+		
+		@Override
+		public Object getValueAt(int row, int column) {
+			if (row < 0 || row >= vecSet.size()) {
+				return "-";
+			}
+			Object[] objects = vecSet.toArray();
+			Object op = objects[row];
+			return op;
+		}
+		
+		@Override
+		public boolean isCellEditable(int row, int column) {
+			return false;
+		}
+		
+	}
+	
+	public Adapter<double[]> getSetectedData() {
+		int row = dataTable.getSelectedRow();
+		if (row < 0) {
+			return null;
+		}
+		@SuppressWarnings("unchecked")
+		Adapter<double[]> data = (Adapter<double[]>)dataTable.getModel().getValueAt(row, 0);
+		return data;
+	}
+	
 	
 	@Override
 	public void storeStates(Controller c) throws Exception {
@@ -127,13 +206,51 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	
 	@Override
 	public void actionPerformed(ActionEvent ae) {
+		// create data structure independent data
+		AdapterSet a = hif.getAdapters();
+		Map<Integer, Double> indexAlphaMap = new HashMap<Integer, Double>();
+		Adapter<?> data = getSetectedData();
+		if (data == null) {
+			Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
+			JOptionPane.showMessageDialog(w, "Please generate and select a vector field");
+		}
+		for (Edge<?,?,?> e : hif.get().getPositiveEdges()) {
+			Object kData = data.get(e, hif.getAdapters());
+			double[] K = null;
+			if (kData instanceof double[]) {
+				K = (double[])kData;
+			} else 
+			if (kData instanceof double[][]) {
+				K = ((double[][])kData)[0];
+			} else {
+				throw new RuntimeException("cannot work with VectorField data of type " + kData.getClass().getName());
+			}
+			
+			double[] N = a.getD(Normal.class, e);
+			double[] E = a.getD(EdgeVector.class, e);
+			if (N == null || K == null || E == null) {
+				throw new RuntimeException("Could not get curvature information at edge " + e);
+			}
+			double alpha = IsothermicUtility.getSignedAngle(N, K, E);
+			indexAlphaMap.put(e.getIndex(), alpha);
+			indexAlphaMap.put(e.getOppositeEdge().getIndex(), alpha);
+		}
+		
+		CoHDS hds = hif.get(new CoHDS());
+		Map<CoEdge, Double> edgeAlphaMap = new HashMap<CoEdge, Double>();
+		for (CoEdge e : hds.getEdges()) {
+			Double alpha = indexAlphaMap.get(e.getIndex()); 
+			edgeAlphaMap.put(e, alpha);
+			edgeAlphaMap.put(e.getOppositeEdge(), alpha);
+		}
+		
 		Object s = ae.getSource();
 		try {
 			if (goDBFButton == s) {
-				calculateWithSinFunctional();
+				calculateWithSinFunctional(hds, edgeAlphaMap, a);
 			}
 			if (goCirclePatternButton == s) {
-				calculateWithCirclePattern();
+				calculateWithCirclePattern(hds, edgeAlphaMap, a);
 			}
 		} catch (Exception e) {
 			Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
@@ -143,45 +260,31 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	}
 	
 	
-	protected void calculateWithCirclePattern() {
-		AdapterSet a = hif.getAdapters();
-		CoHDS hds = hif.get(new CoHDS());
-		
-		Map<CoEdge, Double> alphaMap = IsothermicUtility.calculateAlphasFromCurvature(a, hds);
-		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
-		
-//		IsothermicUtility.checkTriangleAngles(hds, betaMap);
+	protected void calculateWithCirclePattern(CoHDS hds, Map<CoEdge, Double> initAlphas, AdapterSet a) {
+		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, initAlphas);
 		IsothermicUtility.createDelaunayAngleSystem(hds, betaMap);
-//		IsothermicUtility.checkTriangleAngles(hds, betaMap);
 		
 		Map<CoEdge, Double> thetaMap = IsothermicUtility.calculateThetasFromBetas(hds, betaMap);
 		Map<CoFace, Double> phiMap = IsothermicUtility.calculatePhisFromBetas(hds, betaMap);
 		Map<CoFace, Double> rhoMap = IsothermicUtility.calculateCirclePatternRhos(hds, thetaMap, phiMap);
 
 		IsothermicUtility.cutConesToBoundary(hds, betaMap);
-		
 		IsothermicUtility.doCirclePatternLayout(hds, thetaMap, rhoMap);
-		
-		IsothermicUtility.alignLayout(hds, alphaMap);
-		
+		IsothermicUtility.alignLayout(hds, initAlphas);
 		
 		hif.update();
 		hif.addLayerAdapter(new MappedWeightAdapter(thetaMap, "Quasiisothermic Thetas"), false);
 		hif.addLayerAdapter(new MappedWeightAdapter(betaMap, "Quasiisothermic Betas"), false);
-		hif.addLayerAdapter(new MappedWeightAdapter(alphaMap, "Quasiisothermic Alphas"), false);
+		hif.addLayerAdapter(new MappedWeightAdapter(initAlphas, "Quasiisothermic Alphas"), false);
 	}
 	
 	
-	protected void calculateWithSinFunctional() {
-		System.out.println("using sin-functional");
-		AdapterSet a = hif.getAdapters();
-		CoHDS hds = hif.get(new CoHDS());
-		
+	protected void calculateWithSinFunctional(CoHDS hds, Map<CoEdge, Double> initAlphas, AdapterSet a) {
 		boolean excludeBoundary = excludeBoundaryChecker.isSelected();
 		
 		SinConditionApplication<CoVertex, CoEdge, CoFace, CoHDS> 
 		fun = new SinConditionApplication<CoVertex, CoEdge, CoFace, CoHDS>(hds);
-		fun.initialize(a, excludeBoundary);
+		fun.initialize(initAlphas, excludeBoundary);
 		
 		int maxIt = maxItModel.getNumber().intValue();
 		int tolExp = tolExpModel.getNumber().intValue();
@@ -190,18 +293,13 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		Method method = getSelectedMethod();
 		fun.solveEnergyMinimzation(maxIt, tol, method);
 		DBFSolution<CoVertex, CoEdge, CoFace, CoHDS> solution = fun.getDBFSolution();
+		
 		Map<CoEdge, Double> alphaMap = solution.solutionAlphaMap;
 		Map<CoFace, Double> orientationMap = IsothermicUtility.calculateOrientationFromAlphas(hds,alphaMap);
 		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
 		
-		
-		// remove topology
-		if (HalfEdgeUtils.getGenus(hds) >= 1) {
-			CoVertex cutRoot = hds.getVertex(0);
-			cutManifoldToDisk(hds, cutRoot, null);
-		}
-		
-		IsothermicUtility.cutConesToBoundary(hds, betaMap);
+		cutManifoldToDisk(hds, hds.getVertex(0), null);
+		cutConesToBoundary(hds, betaMap);
 		
 		IsothermicLayout.doTexLayout(hds, alphaMap, orientationMap, a);
 		hif.update();
@@ -211,13 +309,39 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
+		hif.addHalfedgeListener(this);
 		c.getPlugin(TestVectorFieldGenerator.class);
+		dataTable.setModel(new VecTableModel());
 	}
 	
 	
 	@Override
 	public Class<? extends SideContainerPerspective> getPerspectivePluginClass() {
 		return View.class;
+	}
+
+	@Override
+	public void dataChanged(HalfedgeLayer layer) {
+	}
+	@Override
+	public void adaptersChanged(HalfedgeLayer layer) {
+		vecSet.clear();
+		vecSet.addAll(hif.getAdapters().queryAll(VectorField.class));
+		vecSet.addAll(hif.getAdapters().queryAll(VectorField.class));
+		vecSet.addAll(hif.getAdapters().queryAll(CurvatureFieldMin.class));
+		vecSet.addAll(hif.getAdapters().queryAll(CurvatureFieldMax.class));
+		dataTable.setModel(new VecTableModel());
+		dataTable.updateUI();
+		dataTable.getSelectionModel().setSelectionInterval(0, 0);
+	}
+	@Override
+	public void activeLayerChanged(HalfedgeLayer old, HalfedgeLayer active) {
+	}
+	@Override
+	public void layerCreated(HalfedgeLayer layer) {
+	}
+	@Override
+	public void layerRemoved(HalfedgeLayer layer) {
 	}
 
 }

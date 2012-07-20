@@ -40,7 +40,6 @@
 	<classpathentry kind="lib" path="lib/MTJOptimization.jar"/>
 	<classpathentry kind="lib" path="lib/jPETScTao.jar" sourcepath="/jPETSc"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jrworkspace"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/curvatureLines"/>
 	<classpathentry kind="lib" path="lib/arpack-combo.jar"/>
 	<classpathentry kind="lib" path="lib/netlib-java.jar"/>
 	<classpathentry kind="lib" path="lib/parallelcolt-0.9.4.jar"/>

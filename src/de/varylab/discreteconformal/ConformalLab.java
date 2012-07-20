@@ -6,7 +6,6 @@ import java.util.Set;
 
 import javax.swing.Icon;
 
-import curvaturelines.plugin.SpectralSectionPlugin;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
 import de.jreality.plugin.basic.ConsolePlugin;
@@ -70,10 +69,8 @@ public class ConformalLab {
 		s.add(new QuasiIsothermicPlugin());
 		s.add(new SphereEqualizerPlugin());
 		s.add(new IsothermicityMeasure());
-		
 		return s;
 	}
-	
 	
 	public static void main(String[] args) {
 		JRViewer.setApplicationTitle("Conformal Lab");
@@ -92,6 +89,7 @@ public class ConformalLab {
 		v.setPropertiesResource(ConformalLab.class, "ConformalLab.jrw");
 		v.getController().setManageLookAndFeel(true);
 //		v.registerPlugin(new WebContentLoader());
+		
 		v.registerPlugin(new LookAndFeelSwitch());
 		v.registerPlugin(new CrossPlatformLnF());
 		v.registerPlugin(new NimbusLnF());
@@ -99,7 +97,6 @@ public class ConformalLab {
 		v.registerPlugin(new VertexEditorPlugin());
 		v.registerPlugin(CurvatureVectorFields.class);
 		v.registerPlugin(FlippedTriangles.class);
-		v.registerPlugin(SpectralSectionPlugin.class);
 		
 //		v.registerPlugin(new HalfedgeDebuggerPlugin());
 		v.registerPlugins(createConformalPlugins());
