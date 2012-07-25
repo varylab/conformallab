@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.unwrapper.isothermic;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
+import static de.jtem.jpetsc.MatStructure.SAME_PRECONDITIONER;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.atan;
@@ -30,7 +31,10 @@ import de.jtem.halfedgetools.adapter.type.CurvatureFieldMin;
 import de.jtem.halfedgetools.adapter.type.Normal;
 import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.halfedgetools.functional.Functional;
+import de.jtem.jpetsc.InsertMode;
+import de.jtem.jpetsc.KSP;
 import de.jtem.jpetsc.Mat;
+import de.jtem.jpetsc.MatStructure;
 import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
@@ -568,5 +572,28 @@ public class IsothermicUtility {
 		double alpha3 = calculateAlpha(e.getPreviousEdge(),a);
 		return angleOrientation(alpha1, alpha2, alpha3);
 	}
+	
+	
+	public Vec calculateQuasiconformalFactors(CoHDS hds, Map<CoEdge, Double> edgeLengths, Map<CoEdge, Double> texLengths) {
+		Map<CoEdge, Integer> eIndexMap = createSolverEdgeIndexMap(hds, false);
+		int n = hds.numVertices();
+		int m = hds.numEdges();
+		Vec mu = new Vec(n);
+		Vec l = new Vec(m);
+		for (CoEdge e : hds.getEdges()) {
+			int i = eIndexMap.get(e);
+			l.setValue(i, texLengths.get(e), InsertMode.INSERT_VALUES);
+		}
+		for (int i = 0; i < n; i++) {
+			
+		}
+		Mat L = new Mat(n, m);
+		L.assemble();
+		KSP ksp = KSP.create();
+		ksp.setOperators(L, L, SAME_PRECONDITIONER);
+		ksp.solve(l, mu);
+		return mu;
+	}
+	
 	
 }
