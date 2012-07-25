@@ -1,10 +1,13 @@
 package de.varylab.discreteconformal.plugin;
 
+import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout.doTexLayout;
+import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateQuasiconformalFactors;
 import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.cutConesToBoundary;
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 import static java.awt.GridBagConstraints.HORIZONTAL;
 import static java.awt.GridBagConstraints.RELATIVE;
 import static java.awt.GridBagConstraints.REMAINDER;
+import static java.lang.Math.exp;
 import static javax.swing.ListSelectionModel.SINGLE_SELECTION;
 
 import java.awt.Dimension;
@@ -33,15 +36,19 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
+import de.jreality.math.Pn;
+import de.jreality.math.Rn;
 import de.jreality.plugin.basic.View;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedgetools.adapter.Adapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.CurvatureFieldMax;
 import de.jtem.halfedgetools.adapter.type.CurvatureFieldMin;
+import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.Normal;
 import de.jtem.halfedgetools.adapter.type.VectorField;
 import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
+import de.jtem.halfedgetools.adapter.type.generic.TexturePosition2d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeListener;
@@ -57,7 +64,6 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.generator.TestVectorFieldGenerator;
 import de.varylab.discreteconformal.unwrapper.isothermic.DBFSolution;
-import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.SinConditionApplication;
 
@@ -301,8 +307,34 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		cutManifoldToDisk(hds, hds.getVertex(0), null);
 		cutConesToBoundary(hds, betaMap);
 		
-		IsothermicLayout.doTexLayout(hds, alphaMap, orientationMap, a);
+		doTexLayout(hds, alphaMap, orientationMap, a);
+		
+//		calculateProjectiveTexCoords(hds, a);
+		
 		hif.update();
+	}
+
+
+	public void calculateProjectiveTexCoords(CoHDS hds, AdapterSet a) {
+		Map<CoEdge, Double> edgeLengthMap = new HashMap<CoEdge, Double>();
+		Map<CoEdge, Double> texLengthMap = new HashMap<CoEdge, Double>();
+		for (CoEdge e : hds.getPositiveEdges()) {
+			double l = a.get(Length.class, e, Double.class);
+			double[] t1 = a.getD(TexturePosition2d.class, e.getStartVertex());
+			double[] t2 = a.getD(TexturePosition2d.class, e.getTargetVertex());
+			double l2 = Rn.euclideanDistance(t1, t2);
+			edgeLengthMap.put(e, l);
+			edgeLengthMap.put(e.getOppositeEdge(), l);
+			texLengthMap.put(e, l2);
+			texLengthMap.put(e.getOppositeEdge(), l2);
+		}
+		Map<CoVertex, Double> uMap = calculateQuasiconformalFactors(hds, edgeLengthMap, texLengthMap);
+		for (CoVertex v : hds.getVertices()) {
+			Pn.dehomogenize(v.T, v.T);
+			double ui = uMap.get(v);
+			double e = exp(-ui/2);
+			Rn.times(v.T, e, v.T);
+		}
 	}
 
 	@Override

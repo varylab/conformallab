@@ -5,6 +5,7 @@ import static de.jtem.jpetsc.MatStructure.SAME_PRECONDITIONER;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.atan;
+import static java.lang.Math.log;
 import static java.lang.Math.sin;
 
 import java.util.ArrayList;
@@ -34,7 +35,6 @@ import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.KSP;
 import de.jtem.jpetsc.Mat;
-import de.jtem.jpetsc.MatStructure;
 import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
@@ -574,25 +574,35 @@ public class IsothermicUtility {
 	}
 	
 	
-	public Vec calculateQuasiconformalFactors(CoHDS hds, Map<CoEdge, Double> edgeLengths, Map<CoEdge, Double> texLengths) {
+	public static Map<CoVertex, Double> calculateQuasiconformalFactors(CoHDS hds, Map<CoEdge, Double> edgeLengths, Map<CoEdge, Double> texLengths) {
 		Map<CoEdge, Integer> eIndexMap = createSolverEdgeIndexMap(hds, false);
-		int n = hds.numVertices();
 		int m = hds.numEdges();
-		Vec mu = new Vec(n);
+		Vec u = new Vec(m);
 		Vec l = new Vec(m);
-		for (CoEdge e : hds.getEdges()) {
-			int i = eIndexMap.get(e);
-			l.setValue(i, texLengths.get(e), InsertMode.INSERT_VALUES);
+		Mat A = Mat.createSeqAIJ(m, m, 3, null);
+		for (CoEdge e : hds.getPositiveEdges()) {
+			int eIndex = eIndexMap.get(e);
+			int i = e.getStartVertex().getIndex();
+			int j = e.getTargetVertex().getIndex();
+			double l1 = 2*log(edgeLengths.get(e));
+			double l2 = 2*log(texLengths.get(e));
+			l.setValue(eIndex, l2 - l1, InsertMode.INSERT_VALUES);
+			A.setValue(i, j, 1.0, InsertMode.INSERT_VALUES);
 		}
-		for (int i = 0; i < n; i++) {
-			
-		}
-		Mat L = new Mat(n, m);
-		L.assemble();
+		A.assemble();
 		KSP ksp = KSP.create();
-		ksp.setOperators(L, L, SAME_PRECONDITIONER);
-		ksp.solve(l, mu);
-		return mu;
+		ksp.setFromOptions();
+		ksp.view();
+		ksp.setOperators(A, A, SAME_PRECONDITIONER);
+		System.out.println("ksp residual: " + ksp.getResidualNorm());
+		ksp.solve(l, u);
+		System.out.println("ksp residual: " + ksp.getResidualNorm());
+		Map<CoVertex, Double> result = new HashMap<CoVertex, Double>();
+		for (CoVertex v : hds.getVertices()) {
+			double ui = u.getValue(v.getIndex());
+			result.put(v, ui);
+		}
+		return result;
 	}
 	
 	

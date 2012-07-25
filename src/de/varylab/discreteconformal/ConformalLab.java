@@ -44,12 +44,16 @@ public class ConformalLab {
 	static {
 		NativePathUtility.set("native");
 		String[] taoCommand = new String[] {
+			"-help",
 //			"-snes_view",
 //			"-snes_type", "tr",
 //			"-snes_test_display",
-//			"-pc_factor_shift_nonzero", "1.0e-10",			
-//			"-tao_nm_lamda", "0.01", 
-//			"-tao_nm_mu", "1.0"
+			"-pc_type", "none",
+			"-pc_factor_nonzeros_along_diagonal",
+			"-pc_factor_diagonal_fill",
+			"-pc_factor_shift_nonzero", "1.0e-10",			
+			"-tao_nm_lamda", "0.01", 
+			"-tao_nm_mu", "1.0"
 		};
 		System.out.println("initing tao: " + Arrays.toString(taoCommand));
 		Tao.Initialize("Quasiisothermic Parametrization", taoCommand, false);
