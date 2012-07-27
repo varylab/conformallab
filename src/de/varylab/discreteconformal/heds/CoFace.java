@@ -9,7 +9,8 @@ import de.varylab.discreteconformal.functional.node.ConformalFace;
 
 public class CoFace extends ConformalFace<CoVertex, CoEdge, CoFace> {
 
-    private double[]
+    public double[]
+    	center = {0, 0, 0, 1},
     	normal = null;
     
     public double[] getNormal() {

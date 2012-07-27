@@ -22,6 +22,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicDelaunay;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.OppositeAnglesAdapter;
@@ -128,7 +129,7 @@ public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFa
 		Map<CoEdge, Double> thetaMap = IsothermicUtility.calculateThetasFromBetas(hds, betaMap);
 		Map<CoFace, Double> phiMap = IsothermicUtility.calculatePhisFromBetas(hds, betaMap);
 
-		Map<CoFace, Double> rhoMap = IsothermicUtility.calculateCirclePatternRhos(hds, thetaMap, phiMap);
+		Map<CoFace, Double> rhoMap = CirclePatternUtility.calculateCirclePatternRhos(hds, thetaMap, phiMap);
 		Assert.assertEquals(0.0, rhoMap.get(hds.getFace(0)), 1E-10);
 		Assert.assertEquals(0.0, rhoMap.get(hds.getFace(1)), 1E-10);
 		Assert.assertEquals(-0.110740796199, rhoMap.get(hds.getFace(2)), 1E-11);

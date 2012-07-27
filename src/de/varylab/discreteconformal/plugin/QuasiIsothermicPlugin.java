@@ -63,6 +63,8 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.generator.TestVectorFieldGenerator;
+import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternLayout;
+import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.DBFSolution;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.SinConditionApplication;
@@ -272,10 +274,10 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		Map<CoEdge, Double> thetaMap = IsothermicUtility.calculateThetasFromBetas(hds, betaMap);
 		Map<CoFace, Double> phiMap = IsothermicUtility.calculatePhisFromBetas(hds, betaMap);
-		Map<CoFace, Double> rhoMap = IsothermicUtility.calculateCirclePatternRhos(hds, thetaMap, phiMap);
+		Map<CoFace, Double> rhoMap = CirclePatternUtility.calculateCirclePatternRhos(hds, thetaMap, phiMap);
 
 		IsothermicUtility.cutConesToBoundary(hds, betaMap);
-		IsothermicUtility.doCirclePatternLayout(hds, thetaMap, rhoMap);
+		CirclePatternLayout.execute(null, rhoMap, thetaMap, a);
 		IsothermicUtility.alignLayout(hds, initAlphas);
 		
 		hif.update();

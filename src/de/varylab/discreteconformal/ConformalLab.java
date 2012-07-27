@@ -14,6 +14,7 @@ import de.jreality.util.NativePathUtility;
 import de.jtem.halfedgetools.JRHalfedgeViewer;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgePluginFactory;
+import de.jtem.halfedgetools.plugin.algorithm.geometry.PrimitivesGenerator;
 import de.jtem.halfedgetools.plugin.algorithm.vectorfield.CurvatureVectorFields;
 import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
 import de.jtem.jrworkspace.plugin.Plugin;
@@ -27,6 +28,7 @@ import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
 import de.varylab.discreteconformal.plugin.EllipticImageGenerator;
 import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
+import de.varylab.discreteconformal.plugin.KoebePolyhedronPlugin;
 import de.varylab.discreteconformal.plugin.QuasiIsothermicPlugin;
 import de.varylab.discreteconformal.plugin.SphereEqualizerPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
@@ -73,6 +75,8 @@ public class ConformalLab {
 		s.add(new QuasiIsothermicPlugin());
 		s.add(new SphereEqualizerPlugin());
 		s.add(new IsothermicityMeasure());
+		s.add(new KoebePolyhedronPlugin());
+		s.add(new PrimitivesGenerator());
 		return s;
 	}
 	

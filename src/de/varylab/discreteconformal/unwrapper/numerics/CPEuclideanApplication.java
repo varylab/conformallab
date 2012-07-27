@@ -2,6 +2,10 @@ package de.varylab.discreteconformal.unwrapper.numerics;
 
 import java.util.Map;
 
+import de.jtem.halfedge.Edge;
+import de.jtem.halfedge.Face;
+import de.jtem.halfedge.HalfEdgeDataStructure;
+import de.jtem.halfedge.Vertex;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
@@ -9,27 +13,27 @@ import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
 import de.jtem.jtao.TaoAppAddHess;
 import de.jtem.jtao.TaoApplication;
 import de.varylab.discreteconformal.functional.CPEuclideanFunctional;
-import de.varylab.discreteconformal.heds.CoEdge;
-import de.varylab.discreteconformal.heds.CoFace;
-import de.varylab.discreteconformal.heds.CoHDS;
-import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.util.SparseUtility;
 
-public class CPEuclideanApplication extends TaoApplication implements
-		TaoAppAddCombinedObjectiveAndGrad, TaoAppAddHess {
+public class CPEuclideanApplication <
+	V extends Vertex<V, E, F>,
+	E extends Edge<V, E, F>,
+	F extends Face<V, E, F>,
+	HDS extends HalfEdgeDataStructure<V, E, F>
+> extends TaoApplication implements TaoAppAddCombinedObjectiveAndGrad, TaoAppAddHess {
 
-	private CoHDS
+	private HDS
 		hds = null;
-	private CPEuclideanFunctional<CoVertex, CoEdge, CoFace>
+	private CPEuclideanFunctional<V, E, F>
 		functional = null;
 		
 
-	public CPEuclideanApplication(CoHDS hds, Map<CoEdge, Double> thetaMap, Map<CoFace, Double> phiMap) {
+	public CPEuclideanApplication(HDS hds, Map<E, Double> thetaMap, Map<F, Double> phiMap) {
 		this.hds = hds;
-		this.functional = new CPEuclideanFunctional<CoVertex, CoEdge, CoFace>(thetaMap, phiMap);
+		this.functional = new CPEuclideanFunctional<V, E, F>(thetaMap, phiMap);
 	}
 	
-	public CPEuclideanFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
+	public CPEuclideanFunctional<V, E, F> getFunctional() {
 		return functional;
 	}
 	

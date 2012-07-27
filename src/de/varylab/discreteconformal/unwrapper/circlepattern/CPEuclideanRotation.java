@@ -35,15 +35,13 @@ import static java.lang.Math.PI;
 
 import java.util.Map;
 
-import javax.vecmath.Point2d;
-
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.Vertex;
 import de.jtem.mfc.field.Complex;
 import de.jtem.mfc.geometry.ComplexProjective1;
 import de.jtem.mfc.group.Moebius;
-import de.varylab.discreteconformal.unwrapper.circlepattern.CPLayoutAlgorithm.Rotation;
+import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternLayout.Rotation;
 
 public class CPEuclideanRotation 
 <
@@ -54,15 +52,15 @@ public class CPEuclideanRotation
 
 	
 	@Override
-	public Point2d rotate(Point2d p, Point2d center, Double phi, Double logScale) {
+	public double[] rotate(double[] p, double[] center, Double phi, Double logScale) {
 		Moebius rot = new Moebius();
-		Complex c1 = new Complex(center.x, center.y);
+		Complex c1 = new Complex(center[0], center[1]);
 		Complex c2 = new Complex(1,0);
 		ComplexProjective1 c = new ComplexProjective1(c1, c2);
 		rot.assignEuclideanLogScaleRotation(c, logScale, phi);
-		Complex pc = new Complex(p.x, p.y);
+		Complex pc = new Complex(p[0], p[1]);
 		pc = rot.applyTo(pc);
-		return new Point2d(pc.re, pc.im);
+		return new double[] {pc.re, pc.im};
 	}
 
 	

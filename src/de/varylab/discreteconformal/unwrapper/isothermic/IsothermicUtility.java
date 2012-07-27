@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.vecmath.Point2d;
-
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Rn;
@@ -35,56 +33,16 @@ import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.KSP;
 import de.jtem.jpetsc.Mat;
-import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
-import de.jtem.jtao.Tao;
-import de.jtem.jtao.Tao.Method;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.types.OppositeAngle;
 import de.varylab.discreteconformal.unwrapper.ConesUtility;
-import de.varylab.discreteconformal.unwrapper.circlepattern.CPLayoutAdapters.XYFace;
-import de.varylab.discreteconformal.unwrapper.circlepattern.CPLayoutAdapters.XYVertex;
-import de.varylab.discreteconformal.unwrapper.circlepattern.CPLayoutAlgorithm;
-import de.varylab.discreteconformal.unwrapper.numerics.CPEuclideanApplication;
 
 public class IsothermicUtility {
 
-	public static class CPLayoutAdapters implements XYVertex<CoVertex>, XYFace<CoFace> {
-
-		private Map<CoFace, double[]>
-			centerMap = new HashMap<CoFace, double[]>();
-		
-		@Override
-		public Point2d getXY(CoFace f, Point2d xy) {
-			if (!centerMap.containsKey(f)) {
-				centerMap.put(f, new double[2]);
-			}
-			return new Point2d(centerMap.get(f));
-		}
-	
-		@Override
-		public void setXY(CoFace f, Point2d xy) {
-			centerMap.put(f, new double[] {xy.x, xy.y});
-		}
-	
-		@Override
-		public Point2d getXY(CoVertex v, Point2d xy) {
-			return new Point2d(new double[] {v.T[0], v.T[1]});
-		}
-	
-		@Override
-		public void setXY(CoVertex v, Point2d xy) {
-			v.T[0] = xy.x;
-			v.T[1] = xy.y;
-			v.T[2] = 0.0;
-			v.T[3] = 1.0;
-		}
-		
-	}
-	
 	@OppositeAngle
 	public static class OppositeAnglesAdapter extends AbstractAdapter<Double> {
 		
@@ -248,7 +206,12 @@ public class IsothermicUtility {
 	}
 	
 	
-	public static int[] getPETScNonZeros(CoHDS hds, Functional<CoVertex, CoEdge, CoFace> fun){
+	public static  <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> int[] getPETScNonZeros(HDS hds, Functional<V, E, F> fun){
 		int [][] sparseStucture = fun.getNonZeroPattern(hds);
 		int [] nnz = new int[sparseStucture.length];
 		for(int i = 0; i < nnz.length; i++){
@@ -257,47 +220,6 @@ public class IsothermicUtility {
 		return nnz;
 	}
 	
-	public static Map<CoFace, Double> calculateCirclePatternRhos(CoHDS hds, Map<CoEdge, Double> thetaMap, Map<CoFace, Double> phiMap) {
-		double thetaStarSum = 0.0;
-		for (CoEdge e : hds.getPositiveEdges()) {
-			double thStar = PI-thetaMap.get(e);
-			thetaStarSum += 2*thStar;
-		}
-		System.out.println("theta star sum: " + thetaStarSum/(2*PI));
-		for (CoEdge e : hds.getPositiveEdges()) {
-			double theta = thetaMap.get(e);
-			if (theta < 0) {
-				System.err.println("negative theta at " + e + ": " + theta);
-			}
-		}
-		
-		int dim = hds.numFaces();
-		Vec rho = new Vec(dim);
-		rho.zeroEntries();
-		rho.assemble();
-		
-		CPEuclideanApplication app = new CPEuclideanApplication(hds, thetaMap, phiMap);
-		app.setInitialSolutionVec(rho);
-		Mat H = Mat.createSeqAIJ(dim, dim, PETSc.PETSC_DEFAULT, getPETScNonZeros(hds, app.getFunctional()));
-		H.assemble();
-		app.setHessianMat(H, H);
-		
-		Tao tao = new Tao(Method.NTR);
-		tao.setApplication(app);
-		tao.setMaximumIterates(200);
-		tao.setTolerances(1E-15, 0, 0, 0);
-		tao.setGradientTolerances(1E-15, 0, 0);
-		tao.solve();
-		System.out.println(tao.getSolutionStatus());
-		
-		Map<CoFace, Double> rhos = new HashMap<CoFace, Double>();
-		for (CoFace f : hds.getFaces()) {
-			rhos.put(f, rho.getValue(f.getIndex()));
-		}
-		return rhos;
-	}
-
-
 	public static Map<CoEdge, Double> calculateBetasFromAlphas(CoHDS hds, Map<CoEdge, Double> alphaMap) {
 		Map<CoEdge, Double> betaMap = new HashMap<CoEdge, Double>();
 		for (CoEdge e : hds.getEdges()) {
@@ -515,15 +437,6 @@ public class IsothermicUtility {
 			}
 		}
 		return alphaMap;
-	}
-
-	public static void doCirclePatternLayout(CoHDS hds, Map<CoEdge, Double> thetaMap, Map<CoFace, Double> rhoMap) {
-		CPLayoutAdapters layoutAdapters = new CPLayoutAdapters();
-		CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>
-			layout = new CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>(
-				layoutAdapters, layoutAdapters, rhoMap, thetaMap
-			);
-		layout.execute(hds);
 	}
 
 	public static <
