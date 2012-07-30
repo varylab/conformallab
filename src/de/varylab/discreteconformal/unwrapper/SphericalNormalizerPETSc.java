@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.unwrapper;
 import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
 
+import java.lang.annotation.Annotation;
 import java.util.List;
 
 import no.uib.cipr.matrix.DenseMatrix;
@@ -10,17 +11,19 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import de.jreality.math.Pn;
+import de.jtem.halfedge.Edge;
+import de.jtem.halfedge.Face;
+import de.jtem.halfedge.HalfEdgeDataStructure;
+import de.jtem.halfedge.Vertex;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
 import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
 import de.jtem.jtao.TaoAppAddHess;
 import de.jtem.jtao.TaoApplication;
-import de.varylab.discreteconformal.heds.CoHDS;
-import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.mtjoptimization.NotConvergentException;
 
-public class SphericalNormalizerPETc {
+public class SphericalNormalizerPETSc {
 	
 	private static double
 		tolerance = 1E-6;
@@ -31,13 +34,27 @@ public class SphericalNormalizerPETc {
 		Tao.Initialize();		
 	}
 	
-	public static void normalize(CoHDS hds) throws NotConvergentException {
-		normalize(hds, hds.getVertices());
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>,
+		DATAGET extends Annotation, 
+		DATASET extends Annotation
+	> void normalize(HDS hds, AdapterSet a, Class<DATAGET> get, Class<DATASET> set) {
+		normalize(hds, hds.getVertices(), a, get, set);
 	}
 	
-	public static void normalize(CoHDS hds, List<CoVertex> effectiveList) throws NotConvergentException {
-		CNormalizerOptimizable opt = new CNormalizerOptimizable(effectiveList);
-		
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>,
+		DATAGET extends Annotation, 
+		DATASET extends Annotation
+	> void normalize(HDS hds, List<V> include, AdapterSet a, Class<DATAGET> get, Class<DATASET> set) {
+		CNormalizerOptimizable<V, E, F, HDS, DATAGET> 
+			opt = new CNormalizerOptimizable<V, E, F, HDS, DATAGET>(include, a, get);
 		Vec center = new Vec(opt.getDomainDimension());
 		opt.setInitialSolutionVec(center);
 		Mat H = opt.getHessianTemplate();
@@ -51,12 +68,12 @@ public class SphericalNormalizerPETc {
 		optimizer.solve();
 		
 		if (lengthEuclid(center) == Double.NaN) {
-			throw new NotConvergentException("normalization did not succeed in PolyederNormalizer: NaN", -1.0);
+			throw new RuntimeException("normalization did not succeed in PolyederNormalizer: NaN");
 		}
 		if (lengthEuclid(center) >= 1) {
-			throw new NotConvergentException("normalization did not succeed in PolyederNormalizer: |center| >= 1", -1.0);
+			throw new RuntimeException("normalization did not succeed in PolyederNormalizer: |center| >= 1");
 		}
-		int_normalize(center, hds);
+		int_normalize(center, hds, a, get, set);
 	}
 
 	
@@ -68,7 +85,14 @@ public class SphericalNormalizerPETc {
 	}
 	
 
-	private static void int_normalize(Vec center, CoHDS hds){
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>,
+		DATAGET extends Annotation, 
+		DATASET extends Annotation
+	> void int_normalize(Vec center, HDS hds, AdapterSet a, Class<DATAGET> get, Class<DATASET> set){
 		Vector e1 = new DenseVector(new double[]{1,0,0,0});
 		Vector e2 = new DenseVector(new double[]{0,1,0,0});
 		Vector e3 = new DenseVector(new double[]{0,0,1,0});
@@ -91,13 +115,12 @@ public class SphericalNormalizerPETc {
 		test = A_inv.mult(test, new DenseVector(4));
 		
 		// transform
-		for (CoVertex v : hds.getVertices()){
-			Vector v1 = new DenseVector(v.T);
+		for (V v : hds.getVertices()){
+			double[] vt = a.getD(get, v);
+			Vector v1 = new DenseVector(vt);
 			Vector newV = A_inv.mult(v1, new DenseVector(4));
-			v.T[0] = newV.get(0);
-			v.T[1] = newV.get(1);
-			v.T[2] = newV.get(2);
-			v.T[3] = newV.get(3);
+			double[] newVT = {newV.get(0), newV.get(1), newV.get(2), newV.get(3)};
+			a.set(set, v, newVT);
 		}
 	}
 	
@@ -114,14 +137,25 @@ public class SphericalNormalizerPETc {
 	}
 	
 	
-	protected static class CNormalizerOptimizable extends TaoApplication implements
-		TaoAppAddCombinedObjectiveAndGrad, TaoAppAddHess {
+	protected static class CNormalizerOptimizable <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>,
+		DATAGET extends Annotation
+	> extends TaoApplication implements TaoAppAddCombinedObjectiveAndGrad, TaoAppAddHess {
 		
-		private List<CoVertex>
+		private List<V>
 			vertices = null;
+		private AdapterSet
+			a = new AdapterSet();
+		private Class<DATAGET>
+			get = null;
 		
-		public CNormalizerOptimizable(List<CoVertex> vList){
+		public CNormalizerOptimizable(List<V> vList, AdapterSet a, Class<DATAGET> get){
 			this.vertices = vList;
+			this.a = a;
+			this.get = get;
 		}
 		
 		@Override
@@ -142,9 +176,10 @@ public class SphericalNormalizerPETc {
 		public Double evaluate(Vec x) {
 			double result = 0;
 			double l = myLength(x);
-			for (CoVertex v : vertices) {
-				Pn.dehomogenize(v.T, v.T);
-				result += log( dot(v.T, x) / sqrt(l) );
+			for (V v : vertices) {
+				double[] vt = a.getD(get, v);
+				Pn.dehomogenize(vt, vt);
+				result += log( dot(vt, x) / sqrt(l) );
 			}
 			return result;
 		}
@@ -161,16 +196,17 @@ public class SphericalNormalizerPETc {
 		
 		private void makeGradient(Vec x, Vec g){
 			g.zeroEntries();
-			List<CoVertex> vList = vertices; 
+			List<V> vList = vertices; 
 			for (int i = 0; i < 3; i++){
-				for (CoVertex v : vList){
-					Pn.dehomogenize(v.T, v.T);
+				for (V v : vList){
+					double[] vt = a.getD(get, v);
+					Pn.dehomogenize(vt, vt);
 					double pi = 0;
-					if (i == 0) pi = v.T[0];
-					if (i == 1) pi = v.T[1];
-					if (i == 2) pi = v.T[2];
+					if (i == 0) pi = vt[0];
+					if (i == 1) pi = vt[1];
+					if (i == 2) pi = vt[2];
 					double xi = x.getValue(i);
-					double dot = dot(v.T, x);
+					double dot = dot(vt, x);
 					double l = myLength(x);
 					g.add(i, (-pi/dot + xi/l));
 				}
@@ -180,22 +216,23 @@ public class SphericalNormalizerPETc {
 		
 		private void makeHessian(Vec x, Mat hess){
 			hess.zeroEntries();
-			List<CoVertex> vList = vertices; 
+			List<V> vList = vertices; 
 			for (int i = 0; i < 3; i++){
 				for (int j = 0; j < 3; j++){
-					for (CoVertex v : vList){
-						Pn.dehomogenize(v.T, v.T);
+					for (V v : vList){
+						double[] vt = a.getD(get, v);
+						Pn.dehomogenize(vt, vt);
 						double xi = x.getValue(i);
 						double xj = x.getValue(j);
 						double pi = 0;
-						if (i == 0) pi = v.T[0];
-						if (i == 1) pi = v.T[1];
-						if (i == 2) pi = v.T[2];
+						if (i == 0) pi = vt[0];
+						if (i == 1) pi = vt[1];
+						if (i == 2) pi = vt[2];
 						double pj = 0;
-						if (j == 0) pj = v.T[0];
-						if (j == 1) pj = v.T[1];
-						if (j == 2) pj = v.T[2];
-						double d = dot(v.T, x);
+						if (j == 0) pj = vt[0];
+						if (j == 1) pj = vt[1];
+						if (j == 2) pj = vt[2];
+						double d = dot(vt, x);
 						double l = myLength(x);
 						double diag = i == j ? 1 : 0;
 						hess.add(i, j, diag/l + 2*xi*xj/(l*l) - pi*pj/(d*d));

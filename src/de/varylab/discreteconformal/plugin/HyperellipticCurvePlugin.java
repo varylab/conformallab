@@ -29,6 +29,7 @@ import de.jreality.plugin.basic.View;
 import de.jtem.blas.ComplexMatrix;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Position;
+import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.jrworkspace.plugin.Controller;
@@ -49,10 +50,9 @@ import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeListener;
 import de.varylab.discreteconformal.plugin.hyperelliptic.CurveEditor;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.unwrapper.SphereUtility;
-import de.varylab.discreteconformal.unwrapper.SphericalNormalizerPETc;
+import de.varylab.discreteconformal.unwrapper.SphericalNormalizerPETSc;
 import de.varylab.discreteconformal.util.HyperellipticUtility;
 import de.varylab.discreteconformal.util.SimpleMatrixPrintUtility;
-import de.varylab.mtjoptimization.NotConvergentException;
 
 public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		CurveChangeListener, ActionListener {
@@ -160,11 +160,9 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 			}
 			try {
 				if (normalizerBranchPointPositionsChecker.isSelected()) {
-					for (CoVertex v : hds.getVertices()) v.T = v.P.clone();
-					SphericalNormalizerPETc.normalize(hds);
-					for (CoVertex v : hds.getVertices()) v.P = v.T.clone();
+					SphericalNormalizerPETSc.normalize(hds, a, Position4d.class, Position.class);
 				}
-			} catch (NotConvergentException e1) {
+			} catch (Exception e1) {
 				System.err.println("could nor normalize branch points " + e1.getLocalizedMessage());
 			}
 			int numextra = extraPointsModel.getNumber().intValue();

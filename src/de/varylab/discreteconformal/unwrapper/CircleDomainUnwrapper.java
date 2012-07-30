@@ -26,6 +26,8 @@ import de.jreality.scene.data.DoubleArrayArray;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
+import de.jtem.halfedgetools.adapter.type.TexturePosition;
+import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.jtem.jpetsc.InsertMode;
@@ -46,7 +48,6 @@ import de.varylab.discreteconformal.math.ComplexUtility;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
-import de.varylab.mtjoptimization.NotConvergentException;
 
 
 public class CircleDomainUnwrapper implements Unwrapper{
@@ -400,8 +401,8 @@ public class CircleDomainUnwrapper implements Unwrapper{
 		// normalize
 		try {
 			List<CoVertex> bVerts = new LinkedList<CoVertex>(boundaryVertices(surface));
-			SphericalNormalizerPETc.normalize(surface, bVerts);
-		} catch (NotConvergentException e) {
+			SphericalNormalizerPETSc.normalize(surface, bVerts, aSet, TexturePosition4d.class, TexturePosition.class);
+		} catch (Exception e) {
 			log.info("Sphere normalization did not succeed: " + e.getMessage());
 		}
 		

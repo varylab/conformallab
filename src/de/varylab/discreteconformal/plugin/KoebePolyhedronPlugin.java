@@ -5,9 +5,12 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Position;
+import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmCategory;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmPlugin;
+import de.varylab.discreteconformal.unwrapper.SphericalNormalizerPETSc;
 import de.varylab.discreteconformal.unwrapper.koebe.KoebePolyhedron;
 import de.varylab.discreteconformal.unwrapper.koebe.KoebePolyhedronContext;
 
@@ -31,7 +34,8 @@ public class KoebePolyhedronPlugin extends AlgorithmPlugin {
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> void execute(HDS hds, AdapterSet a, HalfedgeInterface hi) {
 		KoebePolyhedronContext<V, E, F> context = KoebePolyhedron.contructKoebePolyhedron(hds, a);
-		hi.set(context.polyhedron);
+		SphericalNormalizerPETSc.normalize(context.polyhedron, a, Position4d.class, Position.class);
+		hi.update();
 	}
 
 }

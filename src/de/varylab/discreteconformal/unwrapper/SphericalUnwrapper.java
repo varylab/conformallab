@@ -16,6 +16,8 @@ import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
+import de.jtem.halfedgetools.adapter.type.TexturePosition;
+import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.Mat;
@@ -30,7 +32,6 @@ import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
-import de.varylab.mtjoptimization.NotConvergentException;
 
 
 public class SphericalUnwrapper implements Unwrapper{
@@ -180,8 +181,8 @@ public class SphericalUnwrapper implements Unwrapper{
 		firstPrev.linkOppositeEdge(lastNext);
 		
 		try {
-			SphericalNormalizerPETc.normalize(surface);
-		} catch (NotConvergentException e) {
+			SphericalNormalizerPETSc.normalize(surface, aSet, TexturePosition4d.class, TexturePosition.class);
+		} catch (Exception e) {
 			log.info("Sphere normalization did not succeed: " + e.getMessage());
 		}
 	}
