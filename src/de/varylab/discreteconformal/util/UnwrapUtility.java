@@ -197,6 +197,8 @@ public class UnwrapUtility {
 			case ConformalCurvature:
 				bSize++;
 				break;
+			default:
+				break;
 			}
 		}
 		

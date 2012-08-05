@@ -108,6 +108,7 @@ public class SinConditionApplication <
 		case NLS:case NTR:case TRON:
 			Mat H = createHessianTemplate();
 			setHessianMat(H, H);
+		default:
 		}
 		Tao tao = new Tao(method);
 		tao.setFromOptions();
