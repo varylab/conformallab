@@ -56,6 +56,7 @@ import de.jtem.halfedgetools.plugin.data.AdapterNameComparator;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
+import de.jtem.jtao.Tao;
 import de.jtem.jtao.Tao.Method;
 import de.varylab.discreteconformal.adapter.MappedWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -214,6 +215,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	
 	@Override
 	public void actionPerformed(ActionEvent ae) {
+		Tao.Initialize();
 		// create data structure independent data
 		AdapterSet a = hif.getAdapters();
 		Map<Integer, Double> indexAlphaMap = new HashMap<Integer, Double>();

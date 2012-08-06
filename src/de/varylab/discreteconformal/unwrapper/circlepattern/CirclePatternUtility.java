@@ -39,6 +39,8 @@ public class CirclePatternUtility {
 		}
 		
 		int dim = hds.numFaces();
+		
+		Tao.Initialize();
 		Vec rho = new Vec(dim);
 		rho.zeroEntries();
 		rho.assemble();
