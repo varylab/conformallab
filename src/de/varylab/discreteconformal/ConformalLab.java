@@ -48,9 +48,9 @@ public class ConformalLab {
 		String[] taoCommand = new String[] {
 			"-help",
 //			"-snes_view",
-//			"-snes_type", "tr",
+//			"-snes_type", "ls",
 //			"-snes_test_display",
-			"-pc_type", "none",
+//			"-pc_type", "none",
 			"-pc_factor_nonzeros_along_diagonal",
 			"-pc_factor_diagonal_fill",
 			"-pc_factor_shift_nonzero", "1.0e-10",			

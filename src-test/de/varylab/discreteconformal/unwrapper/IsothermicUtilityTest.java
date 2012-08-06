@@ -134,16 +134,6 @@ public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFa
 		Assert.assertEquals(0.0, rhoMap.get(hds.getFace(1)), 1E-10);
 		Assert.assertEquals(-0.110740796199, rhoMap.get(hds.getFace(2)), 1E-11);
 		Assert.assertEquals(-0.110740796199, rhoMap.get(hds.getFace(3)), 1E-11);
-		
-//		CPLayoutAdapters layoutAdapters = new CPLayoutAdapters();
-//		CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>
-//			layout = new CPLayoutAlgorithm<CoVertex, CoEdge, CoFace>(layoutAdapters, layoutAdapters, rhoMap, thetaMap);
-//		
-//		layout.execute(hds);
-//		
-//		for (CoVertex vertex : hds.getVertices()) {
-//			System.out.println(vertex + ": " + Arrays.toString(vertex.T));
-//		}
 	}
 	
 	
@@ -164,5 +154,14 @@ public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFa
 		Assert.assertEquals(0.0, g3, 1E-8);
 		Assert.assertEquals(0.0, g4, 1E-8);
 	}
+	
+	
+	
+	@Test
+	public void testQuasiConformalFactors() throws Exception {
+		//TODO check result against conformally equivalent metric
+		Assert.fail("implement me!");
+	}
+	
 	
 }

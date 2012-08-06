@@ -140,6 +140,7 @@ public class SinConditionApplication <
 		snes.setJacobian(this, J, J);
 		snes.setTolerances(tol, tol, tol, maxIterations, 10000000);
 		snes.getKSP().setInitialGuessNonzero(true);
+		snes.getKSP().setFromOptions();
 		System.out.println("energy before optimization: " + evaluateObjective(getSolutionVec()));
 		System.out.println("residual: " + snes.getFunctionNorm());
 		System.out.println("guess\n" + getSolutionVec());
