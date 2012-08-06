@@ -63,6 +63,8 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.plugin.generator.TestVectorFieldGenerator;
 import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternLayout;
 import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternUtility;
@@ -348,6 +350,9 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		hif.addHalfedgeListener(this);
 		c.getPlugin(TestVectorFieldGenerator.class);
 		dataTable.setModel(new VecTableModel());
+		
+		hif.addAdapter(new CoPositionAdapter(), true);
+		hif.addAdapter(new CoTexturePositionAdapter(), true);
 	}
 	
 	
