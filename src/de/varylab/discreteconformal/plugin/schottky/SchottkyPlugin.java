@@ -1,8 +1,6 @@
 package de.varylab.discreteconformal.plugin.schottky;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
-import static de.varylab.discreteconformal.adapter.HyperbolicModel.Poincaré;
-import static de.varylab.discreteconformal.plugin.InterpolationMethod.Linear;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.cos;
@@ -46,6 +44,7 @@ import de.jtem.halfedgetools.adapter.type.generic.Position3d;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.java2d.Viewer2D;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
@@ -58,7 +57,7 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
-import de.varylab.discreteconformal.heds.adapter.CoTexturePositionPositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.StereographicProjectionAdapter;
 import de.varylab.discreteconformal.math.ComplexUtility;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
@@ -68,12 +67,15 @@ import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.NodeIndexComparator;
 import de.varylab.discreteconformal.util.PathUtility;
+import de.varylab.discreteconformal.util.Search;
 import de.varylab.discreteconformal.util.SurgeryUtility;
 
 public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener {
 
 	private HalfedgeInterface
 		hif = null;
+	private DiscreteConformalPlugin
+		dcp = null;
 	private SchottkyModeller
 		schottkyModeller = new SchottkyModeller();
 	private Viewer2D
@@ -91,6 +93,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		circleResSpinner = new JSpinner(cirleResModel);
 	private Random
 		rnd = new Random();
+	private HalfedgeLayer
+		schottkyLayer = null;
 	
 	
 	public SchottkyPlugin() {
@@ -153,7 +157,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			System.out.println("unwrapping surface of genus " + genus + "...");
 			HyperbolicUnwrapperPETSc unwrapper = new HyperbolicUnwrapperPETSc();
 			unwrapper.setCutAndLayout(false);
-			unwrapper.setGradientTolerance(1E-5);
+			unwrapper.setGradientTolerance(1E-8);
 			unwrapper.setMaxIterations(2000);
 			try {
 				unwrapper.unwrap(hds, genus, aSet);
@@ -171,31 +175,22 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			List<List<CoEdge>> bc = HalfEdgeUtils.boundaryComponents(hds);
 			
 			while (bc.size() > 1) {
-				List<Set<CoVertex>> vbc = new LinkedList<Set<CoVertex>>();
-				for (List<CoEdge> b : bc) {
-					vbc.add(PathUtility.getVerticesOnPath(b));
+				Set<CoVertex> cycle1 = PathUtility.getVerticesOnPath(bc.get(0));
+				Set<CoVertex> cycle2 = PathUtility.getVerticesOnPath(bc.get(1));
+				
+				Set<CoVertex> inter = new HashSet<CoVertex>(cycle1);
+				inter.retainAll(cycle2);
+				if (!inter.isEmpty()) {
+					throw new RuntimeException("paths cannot intersect!");
 				}
-				for (CoEdge e : hds.getEdges()) {
-					CoVertex s = e.getStartVertex();
-					CoVertex t = e.getTargetVertex();
-					Set<CoVertex> sSet = null;
-					Set<CoVertex> tSet = null;
-					for (Set<CoVertex> b : vbc) {
-						if (b.contains(s)) {
-							sSet = b;
-						}
-						if (b.contains(t)) {
-							tSet = b;
-						}
-					}
-					if (sSet != null && tSet != null && sSet != tSet) {
-						cutInfo.edgeCutMap.put(e, e.getOppositeEdge());
-						cutInfo.edgeCutMap.put(e.getOppositeEdge(), e);
-						Map<CoVertex, CoVertex> copyMap = CuttingUtility.cutAtEdge(e);
-						cutInfo.vertexCopyMap.putAll(copyMap);
-						break;
-					}
-				}				
+				
+				CoVertex s = cycle1.iterator().next();
+				List<CoEdge> path = Search.getShortestPath(s, cycle2, null);
+				if (path.isEmpty()) {
+					throw new RuntimeException("no path between cycles found!");
+				}
+				CuttingUtility.cutAlongPath(path, cutInfo);
+				
 				bc = HalfEdgeUtils.boundaryComponents(hds);
 			}
 			
@@ -204,8 +199,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			Vector u = unwrapper.getUResult();
 			layoutRoot = HyperbolicLayout.doLayout(hds, layoutRoot, fun,  u);
 			
-			hif.addAdapter(new CoTexturePositionPositionAdapter(Poincaré, Linear), false);
-			hif.set(hds);
+			dcp.createVisualization(hds, genus, cutInfo);
+			dcp.updateSurface();
 		}
 	}
 	
@@ -343,6 +338,9 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		vertexCircles.addAll(sourceVertexCircles);
 		vertexCircles.addAll(targetVertexCircles);
 		cutIdentificationHoles(hds, vertexCircles);
+		
+		schottkyLayer.addAdapter(new StereographicProjectionAdapter(), false);
+		schottkyLayer.set(hds);
 		
 		// build edge identification opposites maps
 		for (List<CoVertex> circle : sourceVertexCircles) {
@@ -503,7 +501,10 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
-		c.getPlugin(DiscreteConformalPlugin.class);
+		dcp = c.getPlugin(DiscreteConformalPlugin.class);
+		schottkyLayer = new HalfedgeLayer(hif);
+		schottkyLayer.setName("Schottky Data");
+		hif.addLayer(schottkyLayer);
 	}
 	
 	@Override

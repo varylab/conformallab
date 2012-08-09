@@ -640,6 +640,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	public void createVisualization(CoHDS surface, int genus, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		this.genus = genus;
 		this.surface = surface;
+		this.cutInfo = cutInfo;
 		if (genus > 0) {
 			cutColorAdapter.setContext(cutInfo);
 			cutRadiusAdapter.setContext(cutInfo);
@@ -1023,7 +1024,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 	
 	
-	private CoHDS getLoaderGeometry() {
+	public CoHDS getLoaderGeometry() {
 		CoHDS surface = new CoHDS();
 		surface.setTexCoordinatesValid(false);
 		surface = hif.get(surface);
@@ -1042,7 +1043,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 	
 	
-	private void updateSurface() {
+	public void updateSurface() {
 		if (surface == null) {
 			return;
 		}
@@ -1155,6 +1156,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		hif.addAdapter(texturePositionAdapter, true);
 		hif.addSelectionListener(this);
 		contentAppearance = c.getPlugin(ContentAppearance.class);
+		surfaceLayer = hif.getActiveLayer();
 	}
 	
 	

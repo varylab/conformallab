@@ -57,7 +57,7 @@ public class CurveEditor extends Editor implements CurveChangeListener {
 		addMouseListener(new MouseListener() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				if (arg0.getButton() == MouseEvent.BUTTON2
+				if (arg0.getButton() == MouseEvent.BUTTON1
 						&& arg0.getClickCount() == 2) {
 					double dx = arg0.getX(), dy = arg0.getY();
 					updateUI();
