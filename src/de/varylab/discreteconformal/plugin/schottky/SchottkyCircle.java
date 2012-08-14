@@ -56,7 +56,7 @@ class SchottkyCircle {
 	
 	@Override
 	public String toString() {
-		return "Circle: " + c + " r=" + r;
+		return "Circle: " + c + " r=" + r + " o=" + orientation;
 	}
 	
 }

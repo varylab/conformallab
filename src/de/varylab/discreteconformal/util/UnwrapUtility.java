@@ -252,7 +252,9 @@ public class UnwrapUtility {
 				e = e.getNextEdge();
 			} while (true);
 		}
-		System.out.println("Gauss-Bonnet sum: " + (bSum / PI));
+		if (bm == BoundaryMode.ConformalCurvature) {
+			System.out.println("Gauss-Bonnet sum: " + (bSum / PI));
+		}
 
 		// circular quad edges
 		for (CoEdge e : hds.getPositiveEdges()) {

@@ -141,64 +141,79 @@ public class QualitySeries {
 /** random configuration **/
 	
 	@Test
-	public void randomMultiRatioExp1() throws Exception {
+	public void randomMultiRatioExp1RandOpt() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Quality",
 			"--base", "data/convergence/qualityMultiRatioExp1",
-			"--name", "random02-extra50-randopt",
+			"--name", "random02-extra100-randopt",
 			"--pin", "data/convergence/random02.obj",
 			"--num", "10000",
-			"--extra", "40",
-			"--nopt", "20",
+			"--extra", "100",
+			"--nopt", "50",
 			"--noptrand",
 			"--exp", "1.0",
 			"--QM", "MeanMultiRatio"
 		);
 	}
 	@Test
-	public void randomMultiRatioExp2() throws Exception {
+	public void randomMultiRatioExp1NoOpt() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Quality",
-			"--base", "data/convergence/qualityMultiRatioExp2",
-			"--name", "random02-extra50-randopt",
+			"--base", "data/convergence/qualityMultiRatioExp1",
+			"--name", "random02-extra100-noopt",
 			"--pin", "data/convergence/random02.obj",
 			"--num", "10000",
-			"--extra", "40",
-			"--nopt", "20",
-			"--noptrand",
-			"--exp", "2.0",
-			"--QM", "MeanMultiRatio"
-		);
-	}
-	@Test
-	public void randomMultiRatioExp10() throws Exception {
-		ConvergenceSeries.performConvergenceSeries(
-			"-M", "Quality",
-			"--base", "data/convergence/qualityMultiRatioExp10",
-			"--name", "random02-extra50-randopt",
-			"--pin", "data/convergence/random02.obj",
-			"--num", "10000",
-			"--extra", "40",
-			"--nopt", "20",
-			"--noptrand",
+			"--extra", "100",
+			"--nopt", "0",
 			"--exp", "1.0",
 			"--QM", "MeanMultiRatio"
 		);
-	}
-	@Test
-	public void randomMultiRatioExp05() throws Exception {
-		ConvergenceSeries.performConvergenceSeries(
-			"-M", "Quality",
-			"--base", "data/convergence/qualityMultiRatioExp05",
-			"--name", "random02-extra50-randopt",
-			"--pin", "data/convergence/random02.obj",
-			"--num", "10000",
-			"--extra", "40",
-			"--nopt", "20",
-			"--noptrand",
-			"--exp", "0.5",
-			"--QM", "MeanMultiRatio"
-		);
-	}
+	}	
+	
+//	@Test
+//	public void randomMultiRatioExp2() throws Exception {
+//		ConvergenceSeries.performConvergenceSeries(
+//			"-M", "Quality",
+//			"--base", "data/convergence/qualityMultiRatioExp2",
+//			"--name", "random02-extra50-randopt",
+//			"--pin", "data/convergence/random02.obj",
+//			"--num", "10000",
+//			"--extra", "40",
+//			"--nopt", "20",
+//			"--noptrand",
+//			"--exp", "2.0",
+//			"--QM", "MeanMultiRatio"
+//		);
+//	}
+//	@Test
+//	public void randomMultiRatioExp10() throws Exception {
+//		ConvergenceSeries.performConvergenceSeries(
+//			"-M", "Quality",
+//			"--base", "data/convergence/qualityMultiRatioExp10",
+//			"--name", "random02-extra50-randopt",
+//			"--pin", "data/convergence/random02.obj",
+//			"--num", "10000",
+//			"--extra", "40",
+//			"--nopt", "20",
+//			"--noptrand",
+//			"--exp", "1.0",
+//			"--QM", "MeanMultiRatio"
+//		);
+//	}
+//	@Test
+//	public void randomMultiRatioExp05() throws Exception {
+//		ConvergenceSeries.performConvergenceSeries(
+//			"-M", "Quality",
+//			"--base", "data/convergence/qualityMultiRatioExp05",
+//			"--name", "random02-extra50-randopt",
+//			"--pin", "data/convergence/random02.obj",
+//			"--num", "10000",
+//			"--extra", "40",
+//			"--nopt", "20",
+//			"--noptrand",
+//			"--exp", "0.5",
+//			"--QM", "MeanMultiRatio"
+//		);
+//	}
 	
 }

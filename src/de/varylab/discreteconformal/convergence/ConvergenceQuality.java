@@ -1,5 +1,7 @@
 package de.varylab.discreteconformal.convergence;
 
+import static java.lang.Math.sqrt;
+
 import java.io.FileWriter;
 import java.util.HashSet;
 import java.util.Set;
@@ -41,7 +43,8 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		MaxMultiRatio,
 		MeanMultiRatio,
 		SumMultiRatio,
-		ElectrostaticEnergy
+		ElectrostaticEnergy,
+		MaxCircumCircle
 	}
 	
 	
@@ -148,6 +151,12 @@ public class ConvergenceQuality extends ConvergenceSeries {
 				DiscreteEllipticUtility.generateEllipticImage(hds, 0, glueSet, branchIndices);
 				meshQuality = calculateQualityMeasure(qualityMeasure, measureExponent, hds);
 				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, 1E-8);
+				if (qualityMeasure == QualityMeasure.MaxCircumCircle) {
+					meshQuality = calculateQualityMeasure(qualityMeasure, measureExponent, hds);
+				}
+				if (Double.isInfinite(meshQuality) | Double.isNaN(meshQuality)) {
+					continue;
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				continue;
@@ -179,6 +188,8 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			return sumMultiRatioFunction(hds, measureExponent);
 		case ElectrostaticEnergy:
 			return electrostaticEnergy(hds);
+		case MaxCircumCircle:
+			return getMaxCircumRadius(hds) / getTextureArea(hds);
 		}
 		return 1.0;
 	}
@@ -266,6 +277,42 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			r += Math.pow(qfun, exp);
 		}
 		return r;
+	}
+	
+	public static double getMaxCircumRadius(CoHDS hds) {
+		double r = 0.0;
+		for (CoFace f : hds.getFaces()) {
+			double rad = getTextureCircumCircleRadius(f);
+			if (rad > r) {
+				r = rad;
+			}
+		}
+		return r;
+	}
+	
+	public static double getTextureCircumCircleRadius(CoFace f) {
+		CoEdge e = f.getBoundaryEdge();
+		double a = e.getTexLength();
+		double b = e.getNextEdge().getTexLength();
+		double c = e.getPreviousEdge().getTexLength();
+		double A = getTextureTriangleArea(f);
+		return a*b*c / A / 4;
+	}
+	
+	public static double getTextureArea(CoHDS hds) {
+		double A = 0.0;
+		for (CoFace f : hds.getFaces()) {
+			A += getTextureTriangleArea(f);
+		}
+		return A;
+	}
+	
+	public static double getTextureTriangleArea(CoFace f) {
+		CoEdge e = f.getBoundaryEdge();
+		double a = e.getTexLength();
+		double b = e.getNextEdge().getTexLength();
+		double c = e.getPreviousEdge().getTexLength();
+		return sqrt((a+b+c)*(b+c-a)*(c+a-b)*(a+b-c)) / 4;	
 	}
 	
 	

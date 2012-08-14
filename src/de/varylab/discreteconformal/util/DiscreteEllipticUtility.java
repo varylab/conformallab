@@ -85,8 +85,9 @@ public class DiscreteEllipticUtility {
 		Unwrapper unwrapper = new EuclideanUnwrapperPETSc();
 		unwrapper.setGradientTolerance(tol);
 		unwrapper.setMaxIterations(500);
+		AdapterSet a = new ConformalAdapterSet();
 		try {
-			unwrapper.unwrap(hds, 1, new AdapterSet());
+			unwrapper.unwrap(hds, 1, a);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new Complex();

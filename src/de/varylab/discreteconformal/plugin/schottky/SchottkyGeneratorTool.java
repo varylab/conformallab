@@ -138,6 +138,8 @@ public class SchottkyGeneratorTool extends ModellingTool2D implements ChangeList
 			Complex sCenter = new Complex(sEllipse.x + sRadius, sEllipse.y + sRadius);
 			sCircle.setCenter(sCenter);
 			sCircle.setRadius(sRadius);
+			Complex A = generator.getA();
+			sCircle.setOrientation(sEllipse.contains(A.re, A.im));
 		} else {
 			Ellipse2DDouble tEllipse = targetCircle.getModel();
 			double tRadius = tEllipse.width / 2;

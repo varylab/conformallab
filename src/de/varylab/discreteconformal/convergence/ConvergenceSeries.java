@@ -169,10 +169,10 @@ public abstract class ConvergenceSeries {
 		double[] p3 = series.vertices[series.branchIndices[2]];
 		double[] p4 = series.vertices[series.branchIndices[3]];
 		if (p1.length == 3) {
-			Pn.homogenize(p1, p1);
-			Pn.homogenize(p2, p2);
-			Pn.homogenize(p3, p3);
-			Pn.homogenize(p4, p4);
+			p1 = Pn.homogenize(null, p1);
+			p2 = Pn.homogenize(null, p2);
+			p3 = Pn.homogenize(null, p3);
+			p4 = Pn.homogenize(null, p4);
 		}
 		series.tauExpected = DiscreteEllipticUtility.calculateHalfPeriodRatioMathLink(p1, p2, p3, p4, link);
 		series.writeComment("Expected tau: " + series.tauExpected);

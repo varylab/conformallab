@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
@@ -91,6 +92,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		equalizationIterationsSpinner = new JSpinner(equalizationIterationsModel),
 		extraPointsSpinner = new JSpinner(extraPointsModel),
 		circleResSpinner = new JSpinner(cirleResModel);
+	private JCheckBox
+		cutFromRootChecker = new JCheckBox("Use Cut Root");
 	private Random
 		rnd = new Random();
 	private HalfedgeLayer
@@ -120,6 +123,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		shrinkPanel.add(equalizationIterationsSpinner, c2);
 		shrinkPanel.add(new JLabel("Circle Resolution"), c1);
 		shrinkPanel.add(circleResSpinner, c2);
+		shrinkPanel.add(cutFromRootChecker, c1);
 		shrinkPanel.add(generateButton, c1);
 		shrinkPanel.add(toFuchsianButton, c2);
 
@@ -139,7 +143,9 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			Complex root = schottkyModeller.getBasePoint();
 			Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
 			Set<Set<CoEdge>> cylces = new HashSet<Set<CoEdge>>();
-			CoHDS hds = generate(pairs, root, lMap, cylces);
+			CoHDS hds = new CoHDS();
+			Map<CoVertex, Complex> mapCycleMap = new HashMap<CoVertex, Complex>();
+			generate(hds, pairs, root, lMap, cylces, mapCycleMap);
 			
 			hif.set(hds);
 			hif.addLayerAdapter(new SchottkyLengthAdapter(lMap), false);
@@ -149,7 +155,9 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			Complex root = schottkyModeller.getBasePoint();
 			Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
 			Set<Set<CoEdge>> cycles = new HashSet<Set<CoEdge>>();
-			CoHDS hds = generate(pairs, root, lMap, cycles);
+			CoHDS hds = new CoHDS();
+			Map<CoVertex, Complex> mapCycleMap = new HashMap<CoVertex, Complex>();
+			CoVertex rootVertex = generate(hds, pairs, root, lMap, cycles, mapCycleMap);
 			AdapterSet aSet = hif.getAdapters();
 			aSet.add(new SchottkyLengthAdapter(lMap));
 			
@@ -169,30 +177,17 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
 			for (Set<CoEdge> cycle : cycles) {
+				Set<CoVertex> vCycle = PathUtility.getVerticesOnPath(cycle);
 				CuttingUtility.cutAlongPath(cycle, cutInfo);
+				for (CoVertex v : vCycle) {
+					Complex z = mapCycleMap.get(v);
+					CoVertex vv = cutInfo.vertexCopyMap.get(v);
+					TopologyAlgorithms.removeVertex(vv);
+//					aSet.set(Position.class, vv, new double[] {z.re, z.im});
+				}
 			}
 			
-			List<List<CoEdge>> bc = HalfEdgeUtils.boundaryComponents(hds);
-			
-			while (bc.size() > 1) {
-				Set<CoVertex> cycle1 = PathUtility.getVerticesOnPath(bc.get(0));
-				Set<CoVertex> cycle2 = PathUtility.getVerticesOnPath(bc.get(1));
-				
-				Set<CoVertex> inter = new HashSet<CoVertex>(cycle1);
-				inter.retainAll(cycle2);
-				if (!inter.isEmpty()) {
-					throw new RuntimeException("paths cannot intersect!");
-				}
-				
-				CoVertex s = cycle1.iterator().next();
-				List<CoEdge> path = Search.getShortestPath(s, cycle2, null);
-				if (path.isEmpty()) {
-					throw new RuntimeException("no path between cycles found!");
-				}
-				CuttingUtility.cutAlongPath(path, cutInfo);
-				
-				bc = HalfEdgeUtils.boundaryComponents(hds);
-			}
+			cutToSimplyConnected(hds, rootVertex, cutInfo);
 			
 			CoVertex layoutRoot = hds.getVertex(0);
 			ConformalFunctional<CoVertex, CoEdge, CoFace> fun = unwrapper.getFunctional();
@@ -203,6 +198,46 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			dcp.updateSurface();
 		}
 	}
+	
+	
+	private void cutToSimplyConnected(CoHDS hds, CoVertex cutRoot, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		List<List<CoEdge>> bc = HalfEdgeUtils.boundaryComponents(hds);
+		if (cutRoot != null && cutFromRootChecker.isSelected()) {
+			for (List<CoEdge> path : bc) {
+				Set<CoVertex> cycle = PathUtility.getVerticesOnPath(path);
+				List<CoEdge> cutPath = Search.getShortestPath(cutRoot, cycle, null);
+				CuttingUtility.cutAlongPath(cutPath, cutInfo);
+			}
+		} else {
+			while (bc.size() > 1) {
+				Set<CoVertex> cycle1 = PathUtility.getVerticesOnPath(bc.get(0));
+				List<CoEdge> path = null;
+				Set<CoVertex> cycle2 = PathUtility.getVerticesOnPath(bc.get(1));
+				
+				Set<CoVertex> inter = new HashSet<CoVertex>(cycle1);
+				inter.retainAll(cycle2);
+				if (!inter.isEmpty()) {
+					throw new RuntimeException("paths cannot intersect!");
+				}
+				for (CoVertex s : cycle1) {
+					List<CoEdge> checkPath = Search.getShortestPath(s, cycle2, null);
+					if (path == null) {
+						path = checkPath;
+					}
+					if (checkPath.size() < path.size() && !checkPath.isEmpty()) {
+						path = checkPath;
+					}
+				}
+				if (path == null || path.isEmpty()) {
+					throw new RuntimeException("no path between cycles found!");
+				}
+				CuttingUtility.cutAlongPath(path, cutInfo);
+				bc = HalfEdgeUtils.boundaryComponents(hds);
+			}
+		}
+	}
+	
+	
 	
 	private List<SchottkyCircle> getAllCircles(List<SchottkyGenerator> pairs) {
 		List<SchottkyCircle> r = new LinkedList<SchottkyCircle>();
@@ -237,13 +272,12 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	}
 
 	
-	private CoHDS generate(List<SchottkyGenerator> pairs, Complex rootPos, Map<CoEdge, Double> lMap, Set<Set<CoEdge>> cyclesReturn) {
+	private CoVertex generate(CoHDS hds, List<SchottkyGenerator> pairs, Complex rootPos, Map<CoEdge, Double> lMap, Set<Set<CoEdge>> cyclesReturn, Map<CoVertex, Complex> mapCycleMap) {
 		AdapterSet a = AdapterSet.createGenericAdapters();
 		a.add(new CoPositionAdapter());
 		int circleRes = cirleResModel.getNumber().intValue();
 		int numExtraPoints = extraPointsModel.getNumber().intValue();
 		
-		CoHDS hds = new CoHDS();
 		Map<CoVertex, CoVertex> sMap = new HashMap<CoVertex, CoVertex>();
 		Map<CoVertex, CoVertex> sInvMap = new HashMap<CoVertex, CoVertex>();
 		Map<CoVertex, SchottkyGenerator> vertexPairMap = new HashMap<CoVertex, SchottkyGenerator>(); 
@@ -271,7 +305,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			a.set(Position.class, v, new double[] {z.re, z.im, 0});
 		}
 		
-		// the root vertex 
+//		// the root vertex 
 		CoVertex root = hds.addNewVertex();
 		a.set(Position.class, root, new double[]{rootPos.re, rootPos.im, 0});
 		
@@ -314,9 +348,12 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				continue; // we are a circle vertex
 			}
 			for (SchottkyCircle c : getAllCircles(pairs)) {
-				double[] vp = a.getD(Position3d.class, v);
+				double[] vp = a.getD(Position3d.class, v); 
 				Complex vz = new Complex(vp[0], vp[1]);
 				if (c.isInside(vz, c.getRadius() * 1E-4)) {
+					if (!v.isValid()) {
+						continue;
+					}
 					hds.removeVertex(v);
 				}
 			}
@@ -339,6 +376,12 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		vertexCircles.addAll(targetVertexCircles);
 		cutIdentificationHoles(hds, vertexCircles);
 		
+		// back to C
+		for (CoVertex v : hds.getVertices()) {
+			Complex z = zMap.get(v);
+			a.set(Position.class, v, new double[] {z.re, z.im});
+		}
+				
 		schottkyLayer.addAdapter(new StereographicProjectionAdapter(), false);
 		schottkyLayer.set(hds);
 		
@@ -379,10 +422,10 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			CoVertex vj = e.getTargetVertex();
 			CoVertex vl = e.getNextEdge().getTargetVertex();
 			CoVertex vk = e.getOppositeEdge().getNextEdge().getTargetVertex();
-			Complex zi = ComplexUtility.stereographic(a.getD(Position3d.class, vi));
-			Complex zj = ComplexUtility.stereographic(a.getD(Position3d.class, vj));
-			Complex zl = ComplexUtility.stereographic(a.getD(Position3d.class, vl));
-			Complex zk = ComplexUtility.stereographic(a.getD(Position3d.class, vk));
+			Complex zi = zMap.get(vi);
+			Complex zj = zMap.get(vj);
+			Complex zl = zMap.get(vl);
+			Complex zk = zMap.get(vk);
 			
 			Moebius pullTransform = null;
 			// check if we have to pull a vertex position
@@ -418,6 +461,15 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			double cr = (l_kj * l_li) / (l_ik * l_jl);
 			// store the cross ratio
 			crMap.put(e, cr);
+		}
+		
+		// store to be lost coordinates
+		for (CoEdge e : edgeMap.keySet()) {
+			CoEdge se = edgeMap.get(e);
+//			Complex mape = zMap.get(e.getStartVertex());
+			Complex mapse = zMap.get(se.getStartVertex());
+			mapCycleMap.put(e.getStartVertex(), mapse);
+//			mapCycleMap.put(se.getStartVertex(), mapse);
 		}
 
 		// identify circles
@@ -494,7 +546,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		}
 
 		System.out.println("Generated surface of genus " + HalfEdgeUtils.getGenus(hds));
-		return hds;
+		return root.isValid() ? root : null;
 	}
 	
 	@Override

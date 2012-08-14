@@ -68,7 +68,8 @@ class SchottkyGenerator {
 		Moebius T = getMoebius();
 		Complex center = new Complex().invert(); 
 		double R = T.getRadiusOfMappedCircle(c.getCenter(), c.getRadius(), center);
-		return new SchottkyCircle(center, R, c.getOrientation());
+		double bDist = center.minus(B).abs();
+		return new SchottkyCircle(center, R, bDist < R);
 	}
 	
 	public Complex unmapPoint(Complex z) {
@@ -79,7 +80,8 @@ class SchottkyGenerator {
 		Moebius T = getMoebius().invert();
 		Complex center = new Complex(); 
 		double R = T.getRadiusOfMappedCircle(c.getCenter(), c.getRadius(), center);
-		return new SchottkyCircle(center, R, c.getOrientation());
+		double aDist = center.minus(A).abs();
+		return new SchottkyCircle(center, R, aDist < R);
 	}
 	
 }
