@@ -15,6 +15,7 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicOptimizable;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
@@ -41,7 +42,8 @@ public class HyperbolicUnwrapper implements Unwrapper{
 	@Override
 	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
 		CHyperbolicOptimizable opt = new CHyperbolicOptimizable(surface);
-		UnwrapUtility.prepareInvariantDataHyperbolic(opt.getFunctional(), surface, aSet);
+		ZeroU zeroU = new ZeroU();
+		UnwrapUtility.prepareInvariantDataHyperbolicAndSpherical(opt.getFunctional(), surface, aSet, zeroU);
 		
 		// optimization
 		int n = opt.getDomainDimension();

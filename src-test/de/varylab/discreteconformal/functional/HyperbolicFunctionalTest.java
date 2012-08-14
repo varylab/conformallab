@@ -18,6 +18,7 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 import de.varylab.discreteconformal.util.UnwrapUtility;
+import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 
 public class HyperbolicFunctionalTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
 
@@ -43,9 +44,9 @@ public class HyperbolicFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 		CoHDS hds = new CoHDS(); 
 		AdapterSet aSet = new ConformalAdapterSet();
 		createCube(hds, aSet);
-		hds.removeFace(hds.getFace(0));
 		
-		UnwrapUtility.prepareInvariantDataHyperbolic(functional, hds, aSet);
+		ZeroU zeroU = new ZeroU();
+		UnwrapUtility.prepareInvariantDataHyperbolicAndSpherical(functional, hds, aSet, zeroU);
 		
 		int n = functional.getDimension(hds);
 		Random rnd = new Random(); 

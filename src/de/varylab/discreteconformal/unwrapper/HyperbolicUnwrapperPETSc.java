@@ -22,6 +22,7 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicApplication;
 import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class HyperbolicUnwrapperPETSc implements Unwrapper {
@@ -83,7 +84,8 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper {
 
 
 	private double[] calculateConformalFactors(CoHDS surface, AdapterSet aSet, CHyperbolicApplication app) {
-		UnwrapUtility.prepareInvariantDataHyperbolic(app.getFunctional(), surface, aSet);
+		ZeroU zeroU = new ZeroU();
+		UnwrapUtility.prepareInvariantDataHyperbolicAndSpherical(app.getFunctional(), surface, aSet, zeroU);
 		int n = app.getDomainDimension(); 
 		Vec u = new Vec(n);
 		// set variable lambda start values

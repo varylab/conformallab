@@ -202,6 +202,14 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		}
 	}
 	
+//	
+//	public Adapter<Double> introduceNonHyperellipicity(CoHDS hds, double factor) {
+//		CoVertex root = hds.getVertex(0);
+//		Set<List<CoEdge>> paths = HomologyUtility.getDualGeneratorPaths(root, null);
+//		List<CoEdge> path = paths.iterator().next();
+//	}
+//	
+	
 	@Override
 	public void curveChanged(CurveChangeEvent e) {
 		if (e.type == EventType.CURVE_CHANGED)

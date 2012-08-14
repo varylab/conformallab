@@ -2,31 +2,30 @@ package de.varylab.discreteconformal.functional;
 
 import java.util.Random;
 
+import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
-
-import org.junit.Ignore;
-import org.junit.Test;
-
-import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jreality.math.Pn;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
+import de.jtem.halfedgetools.functional.MyGradient;
+import de.jtem.halfedgetools.functional.MyHessian;
 import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.CustomEdgeInfo;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
+import de.varylab.discreteconformal.util.TestUtility;
 import de.varylab.discreteconformal.util.UnwrapUtility;
-import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 
-public class HyperbolicCircularHolesFunctionalTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
+public class SphericalFunctionalTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
 
 	public static final Double
 		eps = 1E-5,
@@ -41,46 +40,31 @@ public class HyperbolicCircularHolesFunctionalTest extends FunctionalTest<CoVert
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	private HyperbolicCircularHolesFunctional<CoVertex, CoEdge, CoFace>
-		functional = new HyperbolicCircularHolesFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
-	
+	private SphericalFunctional<CoVertex, CoEdge, CoFace>
+		functional = new SphericalFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	private Random 
+		rnd = new Random(); 
 	
 	@Override
 	public void init() {
+		rnd.setSeed(1);
+		
 		CoHDS hds = new CoHDS(); 
 		AdapterSet aSet = new ConformalAdapterSet();
 		createCube(hds, aSet);
-		hds.removeFace(hds.getFace(0));
 		
-//		one triangle of edges is circular
-		for (CoFace f : hds.getFaces()) {
-			if (!HalfEdgeUtils.isInteriorFace(f)) continue;
-			CoEdge e1 = f.getBoundaryEdge();
-			CoEdge e2 = e1.getNextEdge();
-			CoEdge e3 = e2.getNextEdge();
-			CustomEdgeInfo info = new CustomEdgeInfo();
-			info.circularHoleEdge = true;
-			e1.info = info;
-			e2.info = info;
-			e3.info = info;
-			e1.getOppositeEdge().info = info;
-			e2.getOppositeEdge().info = info;
-			e3.getOppositeEdge().info = info;
-			break;
+		for (CoVertex v : hds.getVertices()) {
+			Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 		}
-		
-		ZeroU zeroU = new ZeroU();
-		UnwrapUtility.prepareInvariantDataHyperbolicAndSpherical(functional, hds, aSet, zeroU);
-		
-		int n = functional.getDimension(hds);
-		Random rnd = new Random(); 
-		rnd.setSeed(1);
-		
+		int n = 8;
+
+		// we need small length at start for corresponding spherical length to exist
 		Vector x = new DenseVector(n);
-		for (Integer i = 0; i < x.size(); i++) {
-			x.set(i, rnd.nextDouble() - 0.5);
-		}
+		for (int i = 0; i < n; i++) x.set(i, -2.0);
 		MyDomainValue u = new MyDomainValue(x);
+		
+		UnwrapUtility.prepareInvariantDataHyperbolicAndSpherical(functional, hds, aSet, u);
+		functional.getDimension(hds);
 		
 		setFunctional(functional);
 		setHDS(hds);
@@ -88,11 +72,19 @@ public class HyperbolicCircularHolesFunctionalTest extends FunctionalTest<CoVert
 		setXHessian(u);
 		setEps(eps);
 		setError(error);
-	}
-	
-	@Override@Test@Ignore
-	public void testHessian() throws Exception {
-		super.testHessian();
+		
+		MyGradient g = new MyGradient(new DenseVector(n));
+		functional.evaluate(hds, u, null, g, null);
+		System.out.println("hand coded: \n" + g);
+		
+		MyGradient gfd = new MyGradient(new DenseVector(n));
+		TestUtility.calculateFDGradient(hds, functional, n, u, gfd);
+		System.out.println("finite differences: \n" + gfd);
+		
+		Matrix H = new DenseMatrix(n, n);
+		MyHessian hessian = new MyHessian(H);
+		functional.evaluate(hds, u, null, null, hessian);
+		System.out.println(hessian);
 	}
 	
 	

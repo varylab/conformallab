@@ -3,13 +3,13 @@ package de.varylab.discreteconformal.functional;
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.varylab.discreteconformal.functional.Clausen.lob;
 import static java.lang.Math.PI;
+import static java.lang.Math.asin;
 import static java.lang.Math.atan2;
 import static java.lang.Math.exp;
 import static java.lang.Math.log;
-import static java.lang.Math.sinh;
+import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
 import static java.lang.Math.tan;
-import static java.lang.Math.tanh;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -215,6 +215,7 @@ public class SphericalFunctional <
 			final HalfEdgeDataStructure<V, E, F> hds,
 		// input
 			final DomainValue u,
+		// output	
 			final Hessian H
 	) {
 		H.setZero();
@@ -258,14 +259,22 @@ public class SphericalFunctional <
 				uj = var.isVariable(vj) ? u.get(var.getVarIndex(vj)) : 0.0;
 			final double 
 				λij = lambda.getLambda(e) + ui + uj;
+			final double 
+				lEuc = exp(λij / 2);
+			if (lEuc > 1) {
+				throw new RuntimeException("new spherical lengths cannot be greater that PI/2 here");
+			}
 			final double
-				lij = 2*arsinh(exp(λij / 2));
-			double 
-				tan2 = tanh(lij / 2);
+				lij = 2*asin(lEuc);
+			double
+				tan2 = tan(lij / 2);
 			tan2 *= tan2;
 			final double 
 				Hii = 0.5 * cot * (1 + tan2),
 				Hij = 0.5 * cot * (tan2 - 1);
+			if (Double.isInfinite(Hii) || Double.isInfinite(Hij)) {
+				System.out.println("inifinit!");
+			}
 			if (var.isVariable(vi)) {
 				H.add(i, i, Hii);
 			}
@@ -306,23 +315,33 @@ public class SphericalFunctional <
 			λi = var.isVariable(ejk) ? u.get(var.getVarIndex(ejk)) : lambda.getLambda(ejk),
 			λj = var.isVariable(eki) ? u.get(var.getVarIndex(eki)) : lambda.getLambda(eki);
 		final double 
-			λij = λk + (var.isVariable(eij) ? 0 : ui + uj),
-			λjk = λi + (var.isVariable(ejk) ? 0 : uj + uk),
-			λki = λj + (var.isVariable(eki) ? 0 : uk + ui);
+			λij = λk - (var.isVariable(eij) ? 0 : ui + uj),
+			λjk = λi - (var.isVariable(ejk) ? 0 : uj + uk),
+			λki = λj - (var.isVariable(eki) ? 0 : uk + ui);
+		final double 
+			λlij = λk + (var.isVariable(eij) ? 0 : ui + uj),
+			λljk = λi + (var.isVariable(ejk) ? 0 : uj + uk),
+			λlki = λj + (var.isVariable(eki) ? 0 : uk + ui);		
+		final double lijEuc = exp(λlij / 2);
+		final double ljkEuc = exp(λljk / 2);
+		final double lkiEuc = exp(λlki / 2);
+		if (lijEuc > 1 || ljkEuc > 1 || lkiEuc > 1) {
+			throw new RuntimeException("New spherical lengths cannot be greater that PI/2 here");
+		}
 		final double
-			lij = 2 * arsinh(exp(λij / 2)),
-			ljk = 2 * arsinh(exp(λjk / 2)),
-			lki = 2 * arsinh(exp(λki / 2));
+			lij = 2 * asin(lijEuc),
+			ljk = 2 * asin(ljkEuc),
+			lki = 2 * asin(lkiEuc);
 		final double
 			Δij = - lij + ljk + lki,
 			Δjk = + lij - ljk + lki,
 			Δki = + lij + ljk - lki,
 			Δijk = + lij + ljk + lki;
 		final double
-			si = sinh(Δjk / 2),
-			sj = sinh(Δki / 2),
-			sk = sinh(Δij / 2),
-			s = sinh(Δijk / 2);
+			si = sin(Δjk / 2),
+			sj = sin(Δki / 2),
+			sk = sin(Δij / 2),
+			s = sin(Δijk / 2);
 		double
 			αi = 0.0,
 			αj = 0.0,
@@ -357,13 +376,6 @@ public class SphericalFunctional <
 			alpha.setAlpha(eki, αj);
 		}
 		return valid;
-	}
-	
-	
-	
-	private double arsinh(double x) {
-		double r = x + sqrt(x*x + 1);
-		return log(r);
 	}
 	
 	
@@ -420,7 +432,7 @@ public class SphericalFunctional <
 		Double u1 = var.isVariable(v1) ? u.get(i1) : 0.0; 
 		Double u2 = var.isVariable(v2) ? u.get(i2) : 0.0;
 		double l2 = var.isVariable(e) ? u.get(ei) : lambda.getLambda(e) + u1 + u2;
-		return 2 * arsinh( exp(l2 / 2) );
+		return 2 * asin(exp(l2 / 2) );
 	}
 	@Override
 	public double getVertexU(V v, DomainValue u) {

@@ -313,17 +313,22 @@ public class UnwrapUtility {
 	 * @param boundary the boundary vertices which do not belong to the solver system
 	 * @return the dimension of the parameter space
 	 */
-	public static int prepareInvariantDataHyperbolic(ConformalFunctional<CoVertex, CoEdge, CoFace> fun, CoHDS hds, AdapterSet a) {
+	public static int prepareInvariantDataHyperbolicAndSpherical(
+		ConformalFunctional<CoVertex, CoEdge, CoFace> fun, 
+		CoHDS hds, 
+		AdapterSet a,
+		DomainValue initialU
+	) {
 		// set initial lambdas
 		for (final CoEdge e : hds.getPositiveEdges()) {
 			try {
-			double l = a.get(Length.class, e, Double.class);
-			double lambda = fun.getLambda(l);
-			e.setLambda(lambda);
-			e.getOppositeEdge().setLambda(e.getLambda());
+				double l = a.get(Length.class, e, Double.class);
+				double lambda = fun.getLambda(l);
+				e.setLambda(lambda);
+				e.getOppositeEdge().setLambda(e.getLambda());
 			} catch (Exception e1) {
-				System.out
-						.println("UnwrapUtility.prepareInvariantDataHyperbolic()");
+				System.err.println("error setting lambdas in prepareInvariantData(): " + e1);
+				return -1;
 			}
 		}
 		
@@ -346,14 +351,12 @@ public class UnwrapUtility {
 			}
 		}
 		
-		
 		// initial hyperbolic energy
-		ZeroU zeroU = new ZeroU();
-		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
+		ZeroInitialEnergy initialEnergy = new ZeroInitialEnergy();
 		SimpleEnergy E = new SimpleEnergy();
 		for (final CoFace f : hds.getFaces()) {
 			E.setZero();
-			fun.triangleEnergyAndAlphas(zeroU, f, E, zeroEnergy);
+			fun.triangleEnergyAndAlphas(initialU, f, E, initialEnergy);
 			f.setInitialEnergy(E.get());
 		}
 		return dim;

@@ -10,7 +10,12 @@ import java.util.Set;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
+import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
+import de.jtem.halfedgetools.functional.DomainValue;
+import de.jtem.halfedgetools.functional.Functional;
+import de.jtem.halfedgetools.functional.Gradient;
+import de.jtem.halfedgetools.functional.MyEnergy;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
@@ -56,6 +61,27 @@ public class TestUtility {
 			double fdGrad = (f1 - f2) / (2 * eps);
 			G.setValue(i, fdGrad, INSERT_VALUES);
 			x.setValue(i, xi, INSERT_VALUES);
+		}
+	}
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void calculateFDGradient(HDS hds, Functional<V, E, F> app, int dim, DomainValue x, Gradient G) {
+		MyEnergy E = new MyEnergy();
+		for (int i = 0; i < dim; i++){
+			double xi = x.get(i);
+			x.set(i, xi + eps);
+			app.evaluate(hds, x, E, null, null);
+			double f1 = E.get();
+			x.set(i, xi - eps);
+			app.evaluate(hds, x, E, null, null);
+			double f2 = E.get();
+			double fdGrad = (f1 - f2) / (2 * eps);
+			G.set(i, fdGrad);
+			x.set(i, xi);
 		}
 	}
 	
