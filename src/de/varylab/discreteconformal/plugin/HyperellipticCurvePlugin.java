@@ -10,6 +10,7 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -27,7 +28,10 @@ import javax.swing.SpinnerNumberModel;
 import de.jreality.math.Pn;
 import de.jreality.plugin.basic.View;
 import de.jtem.blas.ComplexMatrix;
+import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
+import de.jtem.halfedgetools.adapter.Adapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -40,6 +44,7 @@ import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.surface.BranchPoint;
 import de.jtem.riemann.theta.SiegelReduction;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.EllipticImageGenerator.PathVisualizer;
@@ -51,6 +56,7 @@ import de.varylab.discreteconformal.plugin.hyperelliptic.CurveEditor;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.unwrapper.SphereUtility;
 import de.varylab.discreteconformal.unwrapper.SphericalNormalizerPETSc;
+import de.varylab.discreteconformal.util.HomologyUtility;
 import de.varylab.discreteconformal.util.HyperellipticUtility;
 import de.varylab.discreteconformal.util.SimpleMatrixPrintUtility;
 
@@ -196,19 +202,65 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 				// show the result
 				hif.addLayerAdapter(pathVisualizer, true);
 			}
+			
+			Adapter<Double> modifiedLengths = introduceNonHyperellipicity(hds, 3.0, 3.0);
+			
 			hif.set(hds);
+			hif.addAdapter(modifiedLengths, false);
 			HalfedgeSelection branchSelection = new HalfedgeSelection(branchVertices);
 			hif.setSelection(branchSelection);
 		}
 	}
 	
-//	
-//	public Adapter<Double> introduceNonHyperellipicity(CoHDS hds, double factor) {
-//		CoVertex root = hds.getVertex(0);
-//		Set<List<CoEdge>> paths = HomologyUtility.getDualGeneratorPaths(root, null);
-//		List<CoEdge> path = paths.iterator().next();
-//	}
-//	
+	
+	@Length
+	private class ModifiedLengthAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, Double> {
+		
+		private List<CoEdge>
+			generator1 = null,
+			generator2 = null;
+		private double 
+			factor1 = 1.0,
+			factor2 = 1.0;
+		
+		public ModifiedLengthAdapter(double factor1, double factor2, List<CoEdge> generator1, List<CoEdge> generator2) {
+			super(null, CoEdge.class, null, Double.class, true, false);
+			this.generator1 = generator1;
+			this.generator2 = generator2;
+			this.factor1 = factor1;
+			this.factor2 = factor2;
+		}
+		
+		@Override
+		public Double getEdgeValue(CoEdge e, AdapterSet a) {
+			a.setPriorityBound(getPriority());
+			double l = a.get(Length.class, e, Double.class);
+			a.removePriorityBound();
+			if (generator1.contains(e) || generator1.contains(e.getOppositeEdge())) {
+				return l * factor1;
+			} else 
+			if (generator2.contains(e) || generator2.contains(e.getOppositeEdge())) {
+				return l * factor2;
+			} else {
+				return l;
+			}
+		}
+		
+		@Override
+		public double getPriority() {
+			return 10.0;
+		}
+		
+	};
+	
+	public Adapter<Double> introduceNonHyperellipicity(CoHDS hds, double factor1, double factor2) {
+		CoVertex root = hds.getVertex(0);
+		Set<List<CoEdge>> paths = HomologyUtility.getDualGeneratorPaths(root, null);
+		Iterator<List<CoEdge>> it = paths.iterator();
+		final List<CoEdge> path01 = it.next();
+		final List<CoEdge> path02 = it.next();
+		return new ModifiedLengthAdapter(factor1, factor2, path01, path02);
+	}
 	
 	@Override
 	public void curveChanged(CurveChangeEvent e) {
