@@ -172,8 +172,10 @@ public class SphericalNormalizerPETSc {
 			return PreconditionerType.SAME_NONZERO_PATTERN;
 		}
 
-
-		public Double evaluate(Vec x) {
+		public Double evaluate(Vec x)	{
+			return evaluate(x, 1.0);
+		}
+		public Double evaluate(Vec x, double weight) {
 			double result = 0;
 			double l = myLength(x);
 			for (V v : vertices) {
