@@ -13,10 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import charlesgunn.math.Biquaternion;
-import charlesgunn.math.IsometryAxis;
-import charlesgunn.math.Biquaternion.Metric;
-
 import no.uib.cipr.matrix.DenseVector;
 import de.jreality.geometry.IndexedFaceSetUtility;
 import de.jreality.math.Matrix;
