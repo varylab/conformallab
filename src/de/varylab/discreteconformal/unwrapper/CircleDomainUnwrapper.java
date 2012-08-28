@@ -13,10 +13,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import charlesgunn.math.Biquaternion;
+import charlesgunn.math.IsometryAxis;
+import charlesgunn.math.Biquaternion.Metric;
+
 import no.uib.cipr.matrix.DenseVector;
 import de.jreality.geometry.IndexedFaceSetUtility;
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
+import de.jreality.math.P3;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jreality.scene.IndexedFaceSet;
@@ -62,7 +67,7 @@ public class CircleDomainUnwrapper implements Unwrapper{
 		unwrapRoot = null,
 		layoutRoot = null;
 	
-
+	
 	static {
 		Tao.Initialize();		
 	}
@@ -98,6 +103,7 @@ public class CircleDomainUnwrapper implements Unwrapper{
 		unwrap(ifs, oneIndex, face, bary, usePoolarCoords);
 	}
 	
+	static boolean useExtraPoints = true;
 	public static void unwrap(IndexedFaceSet ifs, int oneIndex, int[] zeroBaryFace, double[] zeroBaryWeights, boolean usePoolarCoords) throws Exception {
 		IndexedFaceSetUtility.makeConsistentOrientation(ifs);
 		CoHDS hds = new CoHDS();
@@ -117,6 +123,7 @@ public class CircleDomainUnwrapper implements Unwrapper{
 		// unwrap
 		CircleDomainUnwrapper unwrapper = new CircleDomainUnwrapper();
 		unwrapper.setMaxIterations(300);
+		unwrapper.setGradientTolerance(10E-12);
 		unwrapper.unwrap(hds, 0, a);
 		
 		oldVertices.removeAll(hds.getVertices());
@@ -134,34 +141,79 @@ public class CircleDomainUnwrapper implements Unwrapper{
 		
 		// center
 		MatrixBuilder zeroBuilder = MatrixBuilder.hyperbolic();
-		if (zeroBaryFace != null && zeroBaryWeights != null) {
-			double[][] face = {texArr[zeroBaryFace[0]], texArr[zeroBaryFace[1]], texArr[zeroBaryFace[2]]};
+		int i0 = zeroBaryFace[0];
+		int i1 = zeroBaryFace[1];
+		double[][] allverts = ifs.getVertexAttributes(Attribute.COORDINATES).toDoubleArrayArray(null);
+		if (useExtraPoints) {
+			zeroBuilder.translate(texArr[i0], P3.originP3);
+			System.err.println("unwrap center = "+Rn.toString(texArr[i0]));
+		}
+		else if (zeroBaryFace != null && zeroBaryWeights != null) {
+			double[][] face = {texArr[i0], texArr[i1], texArr[zeroBaryFace[2]]};
 			Pn.dehomogenize(face, face);
 			double[] zeroPoint = Rn.barycentricTriangleInterp(new double[4], face, zeroBaryWeights);
 //			double[] zeroPoint = texArr[zeroIndex];
-			zeroBuilder.translate(zeroPoint, new double[] {0,0,0,1});
+			zeroBuilder.translate(zeroPoint, P3.originP3);
 		}
 		Matrix Zm = zeroBuilder.getMatrix();
-		
-		// normalize
-		MatrixBuilder SR = MatrixBuilder.euclidean();
-		if (oneIndex >= 0) {
-			double[] p = texArr[oneIndex].clone();	
-			Zm.transformVector(p);
-			Pn.normalize(p, p, Pn.HYPERBOLIC);
-			p[3] +=1;
-			Pn.dehomogenize(p, p);
-			SR.scale(1 / Pn.norm(p, Pn.EUCLIDEAN));
-			double alpha = Math.atan2(p[1], p[0]);
-			SR.rotate(-alpha, 0, 0, 1);
-		}
-		Matrix SRm = SR.getMatrix();
-		
+
+//		texArr = Rn.matrixTimesVector(null, Zm.getArray(), texArr);
+//		Pn.normalize(texArr, texArr, Pn.HYPERBOLIC);
+//		for (int i = 0; i<texArr.length; ++i)	texArr[i][3] += 1;
+//		Pn.dehomogenize(texArr, texArr);
 		for (double[] p : texArr) {
 			Zm.transformVector(p);
 			Pn.normalize(p, p, Pn.HYPERBOLIC);
-			p[3] +=1;
+			p[3] +=1; // ??
 			Pn.dehomogenize(p, p);
+		}
+
+		// normalize
+		MatrixBuilder SR = MatrixBuilder.euclidean();
+		double alpha = 0.0;
+		if (oneIndex >= 0) {
+			double[] p = texArr[oneIndex].clone();	
+			SR.scale(1 / Pn.norm(p, Pn.EUCLIDEAN));
+			alpha = Math.atan2(p[1], p[0]);
+		} else if (useExtraPoints) {  // guarantee that f'(0) = 1
+			double[] coordDiff = Rn.subtract(null, allverts[i1], allverts[i0]);
+			double[] confDiff = Rn.subtract(null, texArr[i1], texArr[i0]);
+			double angle1 = Math.atan2(coordDiff[1], coordDiff[0]);
+			double angle2 = Math.atan2(confDiff[1], confDiff[0]);
+			alpha = angle2 - angle1;
+		} else {
+			double[][] verts = new double[3][];
+			double[][] face = {texArr[i0], texArr[i1], texArr[zeroBaryFace[2]]};			
+			Pn.dehomogenize(face, face);
+			for (int i = 0; i<3; ++i)	verts[i]  = allverts[zeroBaryFace[i]];
+			double[] zeroPointC = Rn.barycentricTriangleInterp(new double[4], verts, zeroBaryWeights);
+//			System.err.println("Zero point C= "+Rn.toString(zeroPointC));
+			double[] zeroPoint = Rn.barycentricTriangleInterp(new double[4], face, zeroBaryWeights);
+//			System.err.println("Zero point= "+Rn.toString(zeroPoint));
+			double[] alphaL = new double[3];
+			// compare the rotation of the triangle in domain and in image and 
+			// deduce an angle which rotates the image triangle so it has same rotation as domain triangle
+			// TODO Check for degenerate situations where the center is very near one of the corners
+			for (int i = 0; i<3; ++i)	{
+				double[] v1 = Rn.subtract(null, verts[i], zeroPointC);
+				double[] v2 = texArr[zeroBaryFace[i]];
+				double angle1 = Math.atan2(v1[1], v1[0]);
+				double angle2 = Math.atan2(v2[1], v2[0]);
+				if (angle1 - angle2 < -Math.PI) angle1 += 2*Math.PI;
+				if (angle1 - angle2 > Math.PI) angle2 += 2*Math.PI;
+				alphaL[i] = angle1 + angle2;
+			}
+			for (int i = 1; i<3; ++i)	{
+				while (alphaL[i]-alphaL[0] < -Math.PI)	alphaL[i] += 2*Math.PI;
+				while (alphaL[i]-alphaL[0] > Math.PI)	alphaL[i] -= 2*Math.PI;
+			}
+			alpha = (1.0/3.0) * (alphaL[0]+alphaL[1]+alphaL[2]);
+		}
+		System.err.println("Alpha = "+alpha);
+		SR.rotate(-alpha, 0, 0, 1);
+		Matrix SRm = SR.getMatrix();
+	
+		for (double[] p : texArr) {
 			SRm.transformVector(p);
 			Pn.dehomogenize(p, p);
 			if (usePoolarCoords) {
@@ -170,7 +222,9 @@ public class CircleDomainUnwrapper implements Unwrapper{
 				p[0] = r;
 				p[1] = phi/(2*Math.PI);
 			}
+			
 		}
+
 		
 		DataList newTexCoords = new DoubleArrayArray.Array(texArr);
 		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, null);
