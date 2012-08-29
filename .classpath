@@ -25,6 +25,8 @@
 	<classpathentry kind="lib" path="lib/batik-svggen.jar"/>
 	<classpathentry kind="lib" path="lib/batik-awt-util.jar"/>
 	<classpathentry kind="lib" path="lib/batik-util.jar"/>
+	<classpathentry kind="lib" path="lib/substance-6.0.jar"/>
+	<classpathentry kind="lib" path="lib/trident-6.0.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jreality"/>

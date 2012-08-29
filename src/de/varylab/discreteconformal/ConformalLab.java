@@ -1,10 +1,14 @@
 package de.varylab.discreteconformal;
 
+import java.awt.EventQueue;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.Icon;
+
+import org.pushingpixels.substance.api.SubstanceLookAndFeel;
+import org.pushingpixels.substance.api.skin.ModerateSkin;
 
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
@@ -18,9 +22,6 @@ import de.jtem.halfedgetools.plugin.algorithm.geometry.PrimitivesGenerator;
 import de.jtem.halfedgetools.plugin.algorithm.vectorfield.CurvatureVectorFields;
 import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
 import de.jtem.jrworkspace.plugin.Plugin;
-import de.jtem.jrworkspace.plugin.lnfswitch.LookAndFeelSwitch;
-import de.jtem.jrworkspace.plugin.lnfswitch.plugin.CrossPlatformLnF;
-import de.jtem.jrworkspace.plugin.lnfswitch.plugin.NimbusLnF;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.SystemLookAndFeel;
 import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -41,7 +42,7 @@ import de.varylab.discreteconformal.plugin.visualizer.IsothermicityMeasure;
 import de.varylab.discreteconformal.plugin.visualizer.ThetaVisualizer;
 
 
-public class ConformalLab {
+public class ConformalLab implements Runnable {
 
 	static {
 		NativePathUtility.set("native");
@@ -80,9 +81,20 @@ public class ConformalLab {
 		return s;
 	}
 	
-	public static void main(String[] args) {
+	public static void installLookAndFeel() {
+		try {
+			SubstanceLookAndFeel.setSkin(new ModerateSkin());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	@Override
+	public void run() {
 		JRViewer.setApplicationTitle("Conformal Lab");
 		JRViewer v = new JRViewer();
+		installLookAndFeel();
 		Icon splashImage = ImageHook.getIcon("splash01.png");
 		JRealitySplashScreen splash = new JRealitySplashScreen(splashImage);
 		splash.setVisible(true);
@@ -95,12 +107,12 @@ public class ConformalLab {
 		v.addContentSupport(ContentType.Raw);
 		v.setPropertiesFile("ConformalLab.jrw");
 		v.setPropertiesResource(ConformalLab.class, "ConformalLab.jrw");
-		v.getController().setManageLookAndFeel(true);
+		v.getController().setManageLookAndFeel(false);
 //		v.registerPlugin(new WebContentLoader());
 		
-		v.registerPlugin(new LookAndFeelSwitch());
-		v.registerPlugin(new CrossPlatformLnF());
-		v.registerPlugin(new NimbusLnF());
+//		v.registerPlugin(new LookAndFeelSwitch());
+//		v.registerPlugin(new CrossPlatformLnF());
+//		v.registerPlugin(new NimbusLnF());
 		v.registerPlugin(new SystemLookAndFeel());
 		v.registerPlugin(new VertexEditorPlugin());
 		v.registerPlugin(CurvatureVectorFields.class);
@@ -116,7 +128,12 @@ public class ConformalLab {
 		v.getPlugin(HalfedgeInterface.class).setTemplateHDS(new CoHDS());
 		
 //		CurvatureLines.addCurvatureLineAdapters(v.getPlugin(HalfedgeInterface.class));
-//		CurvatureLines.addBasicAdapters(v.getPlugin(HalfedgeInterface.class));
+//		CurvatureLines.addBasicAdapters(v.getPlugin(HalfedgeInterface.class));		
+	}
+	
+	
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new ConformalLab());
 	} 
 
 }
