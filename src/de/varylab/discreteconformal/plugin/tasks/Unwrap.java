@@ -94,6 +94,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 				unwrapper = new SphericalUnwrapper();
 			} else {
 				if (boundaryMode == BoundaryMode.Circle) {
+					CircleDomainUnwrapper.subdivideAtEars(surface, aSet);
 					CircleDomainUnwrapper cdu = new CircleDomainUnwrapper();
 					unwrapper = cdu;
 				} else {

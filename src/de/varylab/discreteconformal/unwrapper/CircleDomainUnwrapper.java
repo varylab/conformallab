@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.unwrapper;
 
+import static de.jtem.halfedge.util.HalfEdgeUtils.boundaryEdges;
 import static de.jtem.halfedge.util.HalfEdgeUtils.boundaryVertices;
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.jtem.halfedge.util.HalfEdgeUtils.outgoingEdges;
@@ -27,7 +28,9 @@ import de.jreality.scene.data.DoubleArrayArray;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
+import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
+import de.jtem.halfedgetools.adapter.type.generic.BaryCenter3d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
@@ -99,6 +102,26 @@ public class CircleDomainUnwrapper implements Unwrapper{
 		unwrap(ifs, oneIndex, face, bary, usePoolarCoords);
 	}
 	
+	
+	public static void subdivideAtEars(CoHDS hds, AdapterSet a) {
+		for (CoEdge e : boundaryEdges(hds)) {
+			CoEdge ne = e.getNextEdge();
+			CoFace fl = e.getRightFace();
+			if (fl != ne.getRightFace()) continue;
+			CoEdge ee = e.getOppositeEdge().getNextEdge();
+			CoFace fr = ee.getRightFace();
+			CoVertex vl = e.getTargetVertex();
+			CoVertex vr = ee.getOppositeEdge().getNextEdge().getTargetVertex();
+			double[] vmPos = a.getD(BaryCenter3d.class, ee);
+			CoVertex vm = TopologyAlgorithms.splitEdge(ee);
+			TopologyAlgorithms.splitFaceAt(fl, vl, vm);
+			TopologyAlgorithms.splitFaceAt(fr, vr, vm);
+			a.set(Position.class, vm, vmPos);
+			System.out.println("subdivided ear " + ee);
+		}
+	}
+	
+	
 	static boolean useExtraPoints = true;
 	public static void unwrap(IndexedFaceSet ifs, int oneIndex, int[] zeroBaryFace, double[] zeroBaryWeights, boolean usePoolarCoords) throws Exception {
 		IndexedFaceSetUtility.makeConsistentOrientation(ifs);
@@ -108,6 +131,7 @@ public class CircleDomainUnwrapper implements Unwrapper{
 		a.add(new CoTexturePositionAdapter());
 		ConverterJR2Heds cTo = new ConverterJR2Heds();
 		cTo.ifs2heds(ifs, hds, a);
+		subdivideAtEars(hds, a);
 		Set<CoVertex> oldVertices = new HashSet<CoVertex>(hds.getVertices());
 
 		// store initial indices
@@ -184,7 +208,7 @@ public class CircleDomainUnwrapper implements Unwrapper{
 			for (int i = 0; i<3; ++i)	verts[i]  = allverts[zeroBaryFace[i]];
 			double[] zeroPointC = Rn.barycentricTriangleInterp(new double[4], verts, zeroBaryWeights);
 //			System.err.println("Zero point C= "+Rn.toString(zeroPointC));
-			double[] zeroPoint = Rn.barycentricTriangleInterp(new double[4], face, zeroBaryWeights);
+//			double[] zeroPoint = Rn.barycentricTriangleInterp(new double[4], face, zeroBaryWeights);
 //			System.err.println("Zero point= "+Rn.toString(zeroPoint));
 			double[] alphaL = new double[3];
 			// compare the rotation of the triangle in domain and in image and 

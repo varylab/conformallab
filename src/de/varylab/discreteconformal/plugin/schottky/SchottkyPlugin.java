@@ -176,16 +176,16 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			}
 
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
-			for (Set<CoEdge> cycle : cycles) {
-				Set<CoVertex> vCycle = PathUtility.getVerticesOnPath(cycle);
-				CuttingUtility.cutAlongPath(cycle, cutInfo);
-				for (CoVertex v : vCycle) {
-					Complex z = mapCycleMap.get(v);
-					CoVertex vv = cutInfo.vertexCopyMap.get(v);
-					TopologyAlgorithms.removeVertex(vv);
-//					aSet.set(Position.class, vv, new double[] {z.re, z.im});
-				}
-			}
+//			for (Set<CoEdge> cycle : cycles) {
+//				Set<CoVertex> vCycle = PathUtility.getVerticesOnPath(cycle);
+//				CuttingUtility.cutAlongPath(cycle, cutInfo);
+//				for (CoVertex v : vCycle) {
+//					Complex z = mapCycleMap.get(v);
+//					CoVertex vv = cutInfo.vertexCopyMap.get(v);
+//					TopologyAlgorithms.removeVertex(vv);
+////					aSet.set(Position.class, vv, new double[] {z.re, z.im});
+//				}
+//			}
 			
 			cutToSimplyConnected(hds, rootVertex, cutInfo);
 			
