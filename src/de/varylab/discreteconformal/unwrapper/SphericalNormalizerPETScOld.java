@@ -19,7 +19,6 @@ import de.jtem.jtao.TaoAppAddHess;
 import de.jtem.jtao.TaoApplication;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.mtjoptimization.NotConvergentException;
 
 
 public class SphericalNormalizerPETScOld {
@@ -35,11 +34,11 @@ public class SphericalNormalizerPETScOld {
 	
 	
 	
-	public static void normalize(CoHDS hds) throws NotConvergentException {
+	public static void normalize(CoHDS hds) throws Exception {
 	normalize(hds, hds.getVertices());
 	}
 	
-	public static void normalize(CoHDS hds, List<CoVertex> effectiveList) throws NotConvergentException {
+	public static void normalize(CoHDS hds, List<CoVertex> effectiveList) throws Exception {
 		double[][] verts = new double[effectiveList.size()][];
 		int i = 0;
 		for (CoVertex v : effectiveList) {
@@ -49,7 +48,7 @@ public class SphericalNormalizerPETScOld {
 		normalize(verts);
 	}
 	
-	public static double[] normalize(double[][] verts) throws NotConvergentException {
+	public static double[] normalize(double[][] verts) throws Exception {
 		double[] weights = new double[verts.length];
 		for (int i = 0; i < verts.length; i++) {
 			Pn.dehomogenize(verts[i], verts[i]);
@@ -73,10 +72,10 @@ public class SphericalNormalizerPETScOld {
 		optimizer.solve();
 		
 		if (lengthEuclid(center) == Double.NaN) {
-			throw new NotConvergentException("normalization did not succeed in PolyederNormalizer: NaN", -1.0);
+			throw new Exception("normalization did not succeed in PolyederNormalizer: NaN");
 		}
 		if (lengthEuclid(center) >= 1) {
-			throw new NotConvergentException("normalization did not succeed in PolyederNormalizer: |center| >= 1", -1.0);
+			throw new Exception("normalization did not succeed in PolyederNormalizer: |center| >= 1");
 		}
 		
 		int_normalize(center, verts);
