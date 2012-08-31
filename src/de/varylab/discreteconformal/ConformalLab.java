@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal;
 
 import java.awt.EventQueue;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,13 +22,13 @@ import de.jtem.halfedgetools.plugin.algorithm.vectorfield.CurvatureVectorFields;
 import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
 import de.jtem.jrworkspace.plugin.Plugin;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.SystemLookAndFeel;
-import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
 import de.varylab.discreteconformal.plugin.EllipticImageGenerator;
 import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
 import de.varylab.discreteconformal.plugin.KoebePolyhedronPlugin;
+import de.varylab.discreteconformal.plugin.ProjectiveTexturePlugin;
 import de.varylab.discreteconformal.plugin.QuasiIsothermicPlugin;
 import de.varylab.discreteconformal.plugin.SphereEqualizerPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
@@ -46,22 +45,8 @@ public class ConformalLab implements Runnable {
 
 	static {
 		NativePathUtility.set("native");
-		String[] taoCommand = new String[] {
-			"-help",
-//			"-snes_view",
-//			"-snes_type", "ls",
-//			"-snes_test_display",
-//			"-pc_type", "none",
-			"-pc_factor_nonzeros_along_diagonal",
-			"-pc_factor_diagonal_fill",
-			"-pc_factor_shift_nonzero", "1.0e-10",			
-			"-tao_nm_lamda", "0.01", 
-			"-tao_nm_mu", "1.0"
-		};
-		System.out.println("initing tao: " + Arrays.toString(taoCommand));
-		Tao.Initialize("Quasiisothermic Parametrization", taoCommand, false);
 	}
-
+	
 	public static Set<Plugin> createConformalPlugins() {
 		Set<Plugin> s = new HashSet<Plugin>();
 		s.add(new DiscreteConformalPlugin());
@@ -78,6 +63,7 @@ public class ConformalLab implements Runnable {
 		s.add(new IsothermicityMeasure());
 		s.add(new KoebePolyhedronPlugin());
 		s.add(new PrimitivesGenerator());
+		s.add(new ProjectiveTexturePlugin());
 		return s;
 	}
 	

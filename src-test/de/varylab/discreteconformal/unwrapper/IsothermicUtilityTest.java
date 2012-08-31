@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.unwrapper;
 
 import static java.lang.Math.PI;
+import static java.lang.Math.log;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,9 +15,11 @@ import org.junit.Test;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
+import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.functional.CPEuclideanFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -27,9 +30,15 @@ import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicDelaunay;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.OppositeAnglesAdapter;
 import de.varylab.discreteconformal.unwrapper.numerics.TaoDomain;
+import de.varylab.discreteconformal.util.TestUtility;
 
 public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
 
+	static {
+		NativePathUtility.set("native");
+		Tao.Initialize();
+	}
+	
 	private final double
 		EPS = 1E-3,
 		EPS2 = 1E-1;
@@ -43,9 +52,6 @@ public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFa
 	@Override
 	@Before
 	public void init() {
-		NativePathUtility.set("native");
-		Tao.Initialize();
-		
 		hds = new CoHDS();
 		CoVertex v0 = hds.addNewVertex();
 		CoVertex v1 = hds.addNewVertex();
@@ -159,8 +165,25 @@ public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFa
 	
 	@Test
 	public void testQuasiConformalFactors() throws Exception {
-		//TODO check result against conformally equivalent metric
-		Assert.fail("implement me!");
+		double checkFactor = Math.PI;
+		CoHDS conformal = TestUtility.readOBJ(getClass(), "triangles.obj");
+		AdapterSet a = new ConformalAdapterSet();
+		Map<CoEdge, Double> edgeLengthMap = new HashMap<CoEdge, Double>();
+		Map<CoEdge, Double> texLengthMap = new HashMap<CoEdge, Double>();
+		for (CoEdge e : conformal.getPositiveEdges()) {
+			double l = a.get(Length.class, e, Double.class);
+			edgeLengthMap.put(e, l);
+			edgeLengthMap.put(e.getOppositeEdge(), l);
+			texLengthMap.put(e, checkFactor*l);
+			texLengthMap.put(e.getOppositeEdge(), checkFactor*l);
+		}
+		
+		Map<CoVertex, Double> uMap = IsothermicUtility.calculateQuasiconformalFactors(conformal, edgeLengthMap, texLengthMap);
+		
+		for (CoVertex v : conformal.getVertices()) {
+			double u1 = uMap.get(v);
+			Assert.assertEquals(log(checkFactor), u1, 1E-5);
+		}
 	}
 	
 	

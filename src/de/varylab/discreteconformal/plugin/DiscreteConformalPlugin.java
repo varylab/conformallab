@@ -201,7 +201,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 
 	private MetricErrorAdapter
 		metricErrorAdapter = new MetricErrorAdapter();
-	private CoTexturePositionAdapter
+	public static CoPositionAdapter
+		positionAdapter = new CoPositionAdapter();
+	public static CoTexturePositionAdapter
 		texturePositionAdapter = new CoTexturePositionAdapter();
 	private CoTexturePositionPositionAdapter
 		texCoordPositionAdapter = new CoTexturePositionPositionAdapter();
@@ -1152,7 +1154,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
-		hif.addAdapter(new CoPositionAdapter(), true);
+		hif.addAdapter(positionAdapter, true);
 		hif.addAdapter(texturePositionAdapter, true);
 		hif.addSelectionListener(this);
 		contentAppearance = c.getPlugin(ContentAppearance.class);

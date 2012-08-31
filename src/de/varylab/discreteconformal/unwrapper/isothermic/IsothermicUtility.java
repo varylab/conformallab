@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.unwrapper.isothermic;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
-import static de.jtem.jpetsc.MatStructure.SAME_PRECONDITIONER;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.atan;
@@ -33,6 +32,8 @@ import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.KSP;
 import de.jtem.jpetsc.Mat;
+import de.jtem.jpetsc.MatStructure;
+import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -489,10 +490,10 @@ public class IsothermicUtility {
 	
 	public static Map<CoVertex, Double> calculateQuasiconformalFactors(CoHDS hds, Map<CoEdge, Double> edgeLengths, Map<CoEdge, Double> texLengths) {
 		Map<CoEdge, Integer> eIndexMap = createSolverEdgeIndexMap(hds, false);
-		int m = hds.numEdges();
+		int m = hds.numEdges() / 2;
 		Vec u = new Vec(m);
 		Vec l = new Vec(m);
-		Mat A = Mat.createSeqAIJ(m, m, 3, null);
+		Mat A = Mat.createSeqAIJ(m, m, 2, null);
 		for (CoEdge e : hds.getPositiveEdges()) {
 			int eIndex = eIndexMap.get(e);
 			int i = e.getStartVertex().getIndex();
@@ -500,14 +501,16 @@ public class IsothermicUtility {
 			double l1 = 2*log(edgeLengths.get(e));
 			double l2 = 2*log(texLengths.get(e));
 			l.setValue(eIndex, l2 - l1, InsertMode.INSERT_VALUES);
-			A.setValue(i, j, 1.0, InsertMode.INSERT_VALUES);
+			A.setValue(eIndex, i, 1.0, InsertMode.INSERT_VALUES);
+			A.setValue(eIndex, j, 1.0, InsertMode.INSERT_VALUES);
 		}
 		A.assemble();
 		KSP ksp = KSP.create();
+		ksp.setOptionsPrefix("qcf_");
+		PETSc.optionsSetValue("-qcf_ksp_type", "lsqr");
+
 		ksp.setFromOptions();
-		ksp.view();
-		ksp.setOperators(A, A, SAME_PRECONDITIONER);
-		System.out.println("ksp residual: " + ksp.getResidualNorm());
+		ksp.setOperators(A, A, MatStructure.SAME_NONZERO_PATTERN);
 		ksp.solve(l, u);
 		System.out.println("ksp residual: " + ksp.getResidualNorm());
 		Map<CoVertex, Double> result = new HashMap<CoVertex, Double>();

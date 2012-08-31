@@ -11,9 +11,11 @@ import java.util.Set;
 import org.junit.Test;
 
 import de.jreality.junitutils.Assert;
+import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
+import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -22,6 +24,20 @@ import de.varylab.discreteconformal.heds.CoVertex;
 
 public class IsothermicLayoutTest {
 
+	static {
+		NativePathUtility.set("native");
+		String[] args = {
+				"-help",
+				"-snes_view",
+				"-snes_type", "ls",
+				"-snes_test_display",
+				"-ksp_converged_reason",
+				"-pc_factor_shift_nonzero", "1.0e-10"
+		};
+		Tao.Initialize("Sinus Condition Test", args, false);
+	}
+	
+	
 	@Test
 	public void testDoLayout() throws Exception {
 		CoHDS hds = new CoHDS();

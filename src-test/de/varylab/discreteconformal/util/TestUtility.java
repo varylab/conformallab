@@ -2,23 +2,33 @@ package de.varylab.discreteconformal.util;
 
 import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
 
+import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.StringReader;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import de.jreality.reader.ReaderOBJ;
+import de.jreality.scene.IndexedFaceSet;
+import de.jreality.scene.SceneGraphComponent;
+import de.jreality.util.Input;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.MyEnergy;
+import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 
 public class TestUtility {
 
@@ -139,5 +149,30 @@ public class TestUtility {
 			}
 		}
 	}
+	
+	
+	public static CoHDS readOBJ(Class<?> root, String name) {
+		ReaderOBJ reader = new ReaderOBJ();
+		SceneGraphComponent c = null;
+		IndexedFaceSet ifs = null;
+		try {
+			Input in = new Input("Obj File", root.getResourceAsStream(name));
+			c =reader.read(in);
+			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
+			ConverterJR2Heds converter = new ConverterJR2Heds();
+			CoHDS hds = new CoHDS();
+			AdapterSet a = new AdapterSet();
+			a.add(new CoPositionAdapter());
+			a.add(new CoTexturePositionAdapter());
+			converter.ifs2heds(ifs, hds, a, null);
+			return hds;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	
+	
 	
 }
