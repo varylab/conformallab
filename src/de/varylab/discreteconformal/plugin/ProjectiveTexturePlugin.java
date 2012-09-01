@@ -35,6 +35,7 @@ public class ProjectiveTexturePlugin extends AlgorithmPlugin {
 		return "Optimize Texture Interpolation";
 	}
 	
+	@Override
 	public <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,

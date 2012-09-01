@@ -7,7 +7,7 @@ import java.util.Set;
 import javax.swing.Icon;
 
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
-import org.pushingpixels.substance.api.skin.DustCoffeeSkin;
+import org.pushingpixels.substance.api.skin.GraphiteAquaSkin;
 
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
@@ -69,7 +69,7 @@ public class ConformalLab implements Runnable {
 	
 	public static void installLookAndFeel() {
 		try {
-			SubstanceLookAndFeel.setSkin(new DustCoffeeSkin());
+			SubstanceLookAndFeel.setSkin(new GraphiteAquaSkin());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
