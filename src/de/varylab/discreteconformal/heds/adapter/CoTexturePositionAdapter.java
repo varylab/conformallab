@@ -25,7 +25,7 @@ public class CoTexturePositionAdapter extends AbstractTypedAdapter<CoVertex, CoE
 	}
 	
 	public CoTexturePositionAdapter(int priority) {
-		super(CoVertex.class, null, null, double[].class, true, true);
+		super(CoVertex.class, null, CoFace.class, double[].class, true, true);
 		this.priority = priority;
 	}
 	
@@ -71,6 +71,22 @@ public class CoTexturePositionAdapter extends AbstractTypedAdapter<CoVertex, CoE
 	@Override
 	public void setVertexValue(CoVertex v, double[] value, AdapterSet a) {
 		double[] t = v.T;
+		t[0] = value[0];
+		t[1] = value[1];
+		t[2] = value.length > 2 ? value[2] : 0.0;
+		t[3] = value.length > 3 ? value[3] : 1.0;
+	}
+	
+	
+	@Override
+	public double[] getFaceValue(CoFace f, AdapterSet a) {
+		return f.T;
+	}
+	
+	
+	@Override
+	public void setFaceValue(CoFace f, double[] value, AdapterSet a) {
+		double[] t = f.T;
 		t[0] = value[0];
 		t[1] = value[1];
 		t[2] = value.length > 2 ? value[2] : 0.0;

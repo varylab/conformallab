@@ -32,8 +32,8 @@ public class ConformalVisualizationPlugin extends ShrinkPanelPlugin implements A
 	private JComboBox
 		interpolationCombo = new JComboBox(InterpolationMethod.values());
 	private JRadioButton
-		kleinButton = new JRadioButton("Klein"),
-		poincareButton = new JRadioButton("Poincaré", true),
+		kleinButton = new JRadioButton("Klein", true),
+		poincareButton = new JRadioButton("Poincaré"),
 		halfplaneButton = new JRadioButton("Half-Plane"); 	
 	private JPanel
 		modelPanel = new JPanel();

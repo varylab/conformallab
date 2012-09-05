@@ -47,19 +47,19 @@ public class CoPositionAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, Co
 	@Override
 	public void setFaceValue(CoFace f, double[] value, AdapterSet a) {
 		if (value.length == 2) {
-			f.center[0] = value[0];
-			f.center[1] = value[1];
-			f.center[2] = 0.0;
-			f.center[3] = 1.0;
+			f.P[0] = value[0];
+			f.P[1] = value[1];
+			f.P[2] = 0.0;
+			f.P[3] = 1.0;
 		} else 
 		if (value.length == 3) {
-			f.center[0] = value[0];
-			f.center[1] = value[1];
-			f.center[2] = value[2];
-			f.center[3] = 1.0;
+			f.P[0] = value[0];
+			f.P[1] = value[1];
+			f.P[2] = value[2];
+			f.P[3] = 1.0;
 		} else
 		if (value.length == 4) {
-			System.arraycopy(value, 0, f.center, 0, 4);
+			System.arraycopy(value, 0, f.P, 0, 4);
 		} else {
 			throw new IllegalArgumentException("invalid dimension in set vertex value of CoFace");
 		}
@@ -76,7 +76,7 @@ public class CoPositionAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, Co
 	
 	@Override
 	public double[] getFaceValue(CoFace f, AdapterSet a) {
-		return f.center;
+		return f.P;
 	}
 	
 	public void setShowUnwrapped(boolean showUnwrapped) {

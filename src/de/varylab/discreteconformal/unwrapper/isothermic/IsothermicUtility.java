@@ -110,7 +110,7 @@ public class IsothermicUtility {
 	
 
 	public static double normalizeAngle(double a) {
-		a %= 2*PI;
+		a %= PI;
 		if (a > PI/2) {
 			return a - PI;
 		} else if (a < -PI/2) {

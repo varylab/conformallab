@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.unwrapper.isothermic;
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
+import static de.jtem.jpetsc.PETSc.PETSC_DEFAULT;
 import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateBeta;
 import static java.lang.Math.log;
 import static java.lang.Math.sin;
@@ -129,30 +130,25 @@ public class SinConditionApplication <
 	}
 	
 	public void solveSNES(int maxIterations, double tol) {
-		PETSc.optionsSetValue("-help", null);
 		PETSc.optionsSetValue("-sin_fun_snes_type", "ls");
-		PETSc.optionsSetValue("-sin_fun_snes_test_display", null);
-		PETSc.optionsSetValue("-sin_fun_pc_factor_shift_nonzero", "1e-10");
+		PETSc.optionsSetValue("-sin_fun_pc_type", "none");
+		PETSc.optionsSetValue("-sin_fun_ksp_type", "gmres");
+		PETSc.optionsSetValue("-sin_fun_ksp_constant_null_space", null);
+		PETSc.optionsSetValue("-sin_fun_ksp_gmres_restart", "100");
+		PETSc.optionsSetValue("-sin_fun_ksp_gmres_preallocate", null);
 		SNES snes = SNES.create();
 		snes.setOptionsPrefix("sin_fun_");
 		snes.setFromOptions();
-		snes.view();
 		Vec f = new Vec(dim);
 		Mat J = new Mat(dim, dim);
-		for (int i = 0; i < dim; i++) {
-			J.setValue(i, i, 0.0, InsertMode.INSERT_VALUES);
-		}
 		J.assemble();
 		snes.setFunction(this, f);
 		snes.setJacobian(this, J, J);
-		snes.setTolerances(tol, PETSc.PETSC_DEFAULT, PETSc.PETSC_DEFAULT, maxIterations, PETSc.PETSC_DEFAULT);
-		snes.getKSP().setInitialGuessNonzero(true);
-		snes.getKSP().setFromOptions();
+		snes.setTolerances(tol, PETSC_DEFAULT, PETSC_DEFAULT, maxIterations, PETSC_DEFAULT);
 		System.out.println("energy before optimization: " + evaluateObjective(getSolutionVec()));
 		System.out.println("residual: " + snes.getFunctionNorm());
 		System.out.println("guess\n" + getSolutionVec());
-		snes.setSolution(getSolutionVec());
-		snes.solve(null, null);
+		snes.solve(null, getSolutionVec());
 		System.out.println("residual: " + snes.getFunctionNorm());
 		System.out.println("solution\n" + getSolutionVec());
 		System.out.println(snes.getConvergedReason());
@@ -191,6 +187,8 @@ public class SinConditionApplication <
 			int index = solverVertexIndices.get(v);
 			double sl = getRightLogSinSum(v, x);
 			double sr = getLeftLogSinSum(v, x);
+			sl = getRightLogSinSum(v, x);
+			sr = getLeftLogSinSum(v, x);
 			f.setValue(index, sl - sr, INSERT_VALUES);
 		}
 	}

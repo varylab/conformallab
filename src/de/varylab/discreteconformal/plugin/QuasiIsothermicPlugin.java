@@ -1,6 +1,5 @@
 package de.varylab.discreteconformal.plugin;
 
-import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout.doTexLayout;
 import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.cutConesToBoundary;
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 import static java.awt.GridBagConstraints.HORIZONTAL;
@@ -63,6 +62,7 @@ import de.varylab.discreteconformal.plugin.generator.TestVectorFieldGenerator;
 import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternLayout;
 import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.DBFSolution;
+import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
 import de.varylab.discreteconformal.unwrapper.isothermic.SinConditionApplication;
 
@@ -129,7 +129,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		dbfPanel.add(dataScroller, c);
 		
 		dbfPanel.add(goDBFButton, c);
-		dbfPanel.add(goDBFSnesButton, c);
+//		dbfPanel.add(goDBFSnesButton, c);
 		
 		circlePatternPanel.setLayout(new GridBagLayout());
 		circlePatternPanel.setBorder(BorderFactory.createTitledBorder("Circle Patterns"));
@@ -313,8 +313,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		cutManifoldToDisk(hds, hds.getVertex(0), null);
 		cutConesToBoundary(hds, betaMap);
 		
-		doTexLayout(hds, alphaMap, orientationMap, a);
-		
+		IsothermicLayout.doTexLayout(hds, alphaMap, orientationMap, a);
 		hif.update();
 	}
 	
@@ -339,8 +338,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		cutManifoldToDisk(hds, hds.getVertex(0), null);
 		cutConesToBoundary(hds, betaMap);
 		
-		doTexLayout(hds, alphaMap, orientationMap, a);
-		
+		IsothermicLayout.doTexLayout(hds, alphaMap, orientationMap, a);
 		hif.update();
 	}
 
