@@ -51,6 +51,15 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper {
 		Tao.Initialize();		
 	}
 	
+	public HyperbolicUnwrapperPETSc() {
+		super();
+	}
+
+	public HyperbolicUnwrapperPETSc(boolean cutAndLayout) {
+		super();
+		this.cutAndLayout = cutAndLayout;
+	}
+
 	@Override
 	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
 		app = new CHyperbolicApplication(surface);

@@ -6,12 +6,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
 import de.jtem.jtao.Tao.GetSolutionStatusResult;
+import de.varylab.discreteconformal.functional.ConformalFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -35,6 +37,8 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		numCones = 0;
 	private double
 		gradTolerance = 1E-8;
+	private boolean
+		cutAndLayout = true;
 
 	public static double
 		lastGNorm = 0;
@@ -47,31 +51,46 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		cutInfo = null;
 	public Map<CoEdge, Double>
 		lengthMap = null;
+	private Vector
+		uVec = null;	
+	private CEuclideanApplication
+		app = null;
 	
 	static {
 		Tao.Initialize();		
 	}
 	
+	public EuclideanUnwrapperPETSc() {
+		super();
+	}
+
+	public EuclideanUnwrapperPETSc(boolean cutAndLayout) {
+		super();
+		this.cutAndLayout = cutAndLayout;
+	}
+
 	@Override
 	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
-		CEuclideanApplication app = new CEuclideanApplication(surface);
+		app = new CEuclideanApplication(surface);
 		double[] uValues = calculateConformalFactors(surface, aSet, app);
-		DenseVector uVec = new DenseVector(uValues);
+		uVec = new DenseVector(uValues);
 
-		switch (genus) {
-		case 0:
-			cutInfo = ConesUtility.cutMesh(surface);
-			break;
-		case 1:
-			CoVertex cutRoot = surface.getVertex(0);
-			DefaultWeightAdapter<CoEdge> constantWeight = new DefaultWeightAdapter<CoEdge>();
-			cutInfo = CuttingUtility.cutTorusToDisk(surface, cutRoot, constantWeight);
-			break;
-		default:
-			throw new RuntimeException("Cannot work on higher genus");
+		if (cutAndLayout) {
+			switch (genus) {
+			case 0:
+				cutInfo = ConesUtility.cutMesh(surface);
+				break;
+			case 1:
+				CoVertex cutRoot = surface.getVertex(0);
+				DefaultWeightAdapter<CoEdge> constantWeight = new DefaultWeightAdapter<CoEdge>();
+				cutInfo = CuttingUtility.cutTorusToDisk(surface, cutRoot, constantWeight);
+				break;
+			default:
+				throw new RuntimeException("Cannot work on higher genus");
+			}
+			lengthMap = EuclideanLayout.getLengthMap(surface, app.getFunctional(), uVec);
+			layoutRoot = EuclideanLayout.doLayout(surface, app.getFunctional(), uVec);
 		}
-		lengthMap = EuclideanLayout.getLengthMap(surface, app.getFunctional(), uVec);
-		layoutRoot = EuclideanLayout.doLayout(surface, app.getFunctional(), uVec);
 	}
 
 	
@@ -179,6 +198,15 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 	public void setCutRoot(CoVertex root) {
 	}
 	
+	public Vector getUResult() {
+		return uVec;
+	}
+	public boolean isCutAndLayout() {
+		return cutAndLayout;
+	}
+	public void setCutAndLayout(boolean cutAndLayout) {
+		this.cutAndLayout = cutAndLayout;
+	}
 
 	@Override
 	public CuttingInfo<CoVertex, CoEdge, CoFace> getCutInfo() {
@@ -191,6 +219,10 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 	@Override
 	public CoVertex getLayoutRoot() {
 		return layoutRoot;
+	}
+	
+	public ConformalFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
+		return app.getFunctional();
 	}
 	
 }

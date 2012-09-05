@@ -102,6 +102,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		domainViewer.registerPlugin(ContentAppearance.class);
 		domainViewer.registerPlugin(MarqueeWidget.class);
 		JRootPane viewerRoot = domainViewer.startupLocal();
+		viewerRoot.setJMenuBar(null);
 		viewerRoot.setPreferredSize(new Dimension(200, 400));
 		viewerPanel.add(viewerRoot);
 		mainHif = c.getPlugin(HalfedgeInterface.class);

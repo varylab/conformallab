@@ -914,7 +914,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 	
 
-	private void updateDomainImage() {
+	public void updateDomainImage() {
 		if (domainVisualisationPlugin == null) return;
 		HalfedgeInterface domInterface = domainVisualisationPlugin.getDomainInterface();
 		domInterface.removeTemporaryGeometry(domainRoot);
