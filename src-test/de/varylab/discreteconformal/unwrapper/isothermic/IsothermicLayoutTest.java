@@ -26,15 +26,7 @@ public class IsothermicLayoutTest {
 
 	static {
 		NativePathUtility.set("native");
-		String[] args = {
-				"-help",
-				"-snes_view",
-				"-snes_type", "ls",
-				"-snes_test_display",
-				"-ksp_converged_reason",
-				"-pc_factor_shift_nonzero", "1.0e-10"
-		};
-		Tao.Initialize("Sinus Condition Test", args, false);
+		Tao.Initialize();
 	}
 	
 	

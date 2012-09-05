@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.unwrapper.circlepattern;
 
 import static java.lang.Math.exp;
 
+import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,8 +14,6 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.type.Position;
-import de.jtem.halfedgetools.adapter.type.generic.Position2d;
 import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
 
 
@@ -30,15 +29,17 @@ public final class CirclePatternLayout {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,
-		HDS extends HalfEdgeDataStructure<V, E, F>
-	> void execute(HDS hds, Map<F, Double> rhoMap, Map<E, Double> thetaMap, AdapterSet a){
+		HDS extends HalfEdgeDataStructure<V, E, F>,
+		GET extends Annotation,
+		SET extends Annotation
+	> void execute(HDS hds, Map<F, Double> rhoMap, Map<E, Double> thetaMap, AdapterSet a, Class<GET> getter, Class<SET> setter){
 		CPEuclideanRotation<V, E, F> rot = new CPEuclideanRotation<V, E, F>();
-		calculateGeneric(hds, rot, rhoMap, thetaMap, a);
+		calculateGeneric(hds, rot, rhoMap, thetaMap, a, getter, setter);
 		// set unlayoutable faces
 		List<E> ears = IsothermicUtility.findEarsEdge(hds);
 		for (E e : ears) {
-			double[] xyFace = a.getD(Position2d.class, e.getRightFace());
-			a.set(Position.class, e.getTargetVertex(), xyFace);
+			double[] xyFace = a.getD(getter, e.getRightFace());
+			a.set(setter, e.getTargetVertex(), xyFace);
 		}
 	}
 	
@@ -46,13 +47,17 @@ public final class CirclePatternLayout {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,
-		HDS extends HalfEdgeDataStructure<V, E, F>
+		HDS extends HalfEdgeDataStructure<V, E, F>,
+		GET extends Annotation,
+		SET extends Annotation
 	> void calculateGeneric(
 		HDS hds, 
 		Rotation<V, E, F> rot, 
 		Map<F, Double> rhoMap, 
 		Map<E, Double> thetaMap, 
-		AdapterSet a
+		AdapterSet a,
+		Class<GET> getter, 
+		Class<SET> setter
 	) { 
 		Stack<E> edgeStack = new Stack<E>();
 		HashSet<E> doneEdges = new HashSet<E>();
@@ -70,9 +75,9 @@ public final class CirclePatternLayout {
 		E firstEdge = rootEdge.getNextEdge();
 
 		double firstPlanarRadius = exp(rhoMap.get(rootFace));
-		a.set(Position.class, rootFace, new double[] {0, 0});
-		a.set(Position.class, rootEdge.getTargetVertex(), new double[] {firstPlanarRadius, 0.0});
-		layoutEdgeCounterClockwise(firstEdge, rot, rhoMap, thetaMap, a);
+		a.set(setter, rootFace, new double[] {0, 0});
+		a.set(setter, rootEdge.getTargetVertex(), new double[] {firstPlanarRadius, 0.0});
+		layoutEdgeCounterClockwise(firstEdge, rot, rhoMap, thetaMap, a, getter, setter);
 		
 		if (firstEdge.getRightFace() != null)
 			edgeStack.push(firstEdge.getOppositeEdge());
@@ -87,7 +92,7 @@ public final class CirclePatternLayout {
 			E edge = edgeStack.pop();
 			F face = edge.getLeftFace();
 			if (!doneFaces.contains(face)) {
-				layoutFace(face, edge, rot, edgeStack, doneEdges, doneFaces, rhoMap, thetaMap, a);
+				layoutFace(face, edge, rot, edgeStack, doneEdges, doneFaces, rhoMap, thetaMap, a, getter, setter);
 			}
 		}
 	}
@@ -99,7 +104,9 @@ public final class CirclePatternLayout {
 	private static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>
+		F extends Face<V, E, F>,
+		GET extends Annotation,
+		SET extends Annotation
 	> void layoutFace(
 		F face, 
 		E edge, 
@@ -109,7 +116,9 @@ public final class CirclePatternLayout {
 		HashSet<F> doneFaces,
 		Map<F, Double> rhoMap, 
 		Map<E, Double> thetaMap, 
-		AdapterSet a
+		AdapterSet a,
+		Class<GET> getter, 
+		Class<SET> setter
 	){
 		doneFaces.add(face);
 		boolean stoppedAtBoundary = false;
@@ -121,7 +130,7 @@ public final class CirclePatternLayout {
 				break;
 			}
 			if (!doneEdges.contains(actEdge)){
-				layoutEdgeCounterClockwise(actEdge, rot, rhoMap, thetaMap, a);
+				layoutEdgeCounterClockwise(actEdge, rot, rhoMap, thetaMap, a, getter, setter);
 				if (actEdge.getRightFace() != null)
 					edgeStack.push(actEdge.getOppositeEdge());
 				doneEdges.add(actEdge);
@@ -137,7 +146,7 @@ public final class CirclePatternLayout {
 			if (!HalfEdgeUtils.isInteriorEdge(actEdge))
 				return;
 			if (!doneEdges.contains(actEdge)){
-				layoutEdgeClockwise(actEdge, rot, rhoMap, thetaMap, a);
+				layoutEdgeClockwise(actEdge, rot, rhoMap, thetaMap, a, getter, setter);
 				if (actEdge.getRightFace() != null)
 					edgeStack.push(actEdge.getOppositeEdge());
 				doneEdges.add(actEdge);
@@ -155,27 +164,31 @@ public final class CirclePatternLayout {
 	private static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>
+		F extends Face<V, E, F>,
+		GET extends Annotation,
+		SET extends Annotation
 	> void layoutEdgeClockwise(
 		E edge, 
 		Rotation<V, E, F> rot, 
 		Map<F, Double> rhoMap, 
 		Map<E, Double> thetaMap, 
-		AdapterSet a
+		AdapterSet a,
+		Class<GET> getter, 
+		Class<SET> setter
 	){
 		F leftFace = edge.getLeftFace();
 		F rightFace = edge.getRightFace();
 		V t = edge.getTargetVertex();
 		V s = edge.getStartVertex();
 		double phi = -rot.getPhi(edge, rhoMap, thetaMap);
-		double[] p = a.getD(Position2d.class, t);
-		double[] c = a.getD(Position2d.class, leftFace);
+		double[] p = a.getD(getter, t);
+		double[] c = a.getD(getter, leftFace);
 		double[] xy = rot.rotate(p, c, 2*phi, 0.0);
-		a.set(Position.class, s, xy);
+		a.set(setter, s, xy);
 		if (rightFace != null){
 			double logScale = rhoMap.get(rightFace) - rhoMap.get(leftFace);
 			xy = rot.rotate(c, xy, -thetaMap.get(edge), logScale);
-			a.set(Position.class, rightFace, xy);
+			a.set(setter, rightFace, xy);
 		}
 		
 	}
@@ -187,27 +200,31 @@ public final class CirclePatternLayout {
 	private static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>
+		F extends Face<V, E, F>,
+		GET extends Annotation,
+		SET extends Annotation
 	> void layoutEdgeCounterClockwise(
 		E edge, 
 		Rotation<V, E, F> rot, 
 		Map<F, Double> rhoMap, 
 		Map<E, Double> thetaMap, 
-		AdapterSet a
+		AdapterSet a,
+		Class<GET> getter, 
+		Class<SET> setter
 	){
 		F leftFace = edge.getLeftFace();
 		F rightFace = edge.getRightFace();
 		V t = edge.getTargetVertex();
 		V s = edge.getStartVertex();
 		double phi = rot.getPhi(edge, rhoMap, thetaMap);
-		double[] p = a.getD(Position2d.class, s);
-		double[] c = a.getD(Position2d.class, leftFace);
+		double[] p = a.getD(getter, s);
+		double[] c = a.getD(getter, leftFace);
 		double[] xy = rot.rotate(p, c, 2*phi, 0.0);
-		a.set(Position.class, t, xy);
+		a.set(setter, t, xy);
 		if (rightFace != null){
 			double logScale = rhoMap.get(rightFace) - rhoMap.get(leftFace);
 			xy = rot.rotate(c, xy, thetaMap.get(edge), logScale);
-			a.set(Position.class, rightFace, xy);
+			a.set(setter, rightFace, xy);
 		}
 		
 	}

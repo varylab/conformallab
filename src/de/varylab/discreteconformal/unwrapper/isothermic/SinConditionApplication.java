@@ -23,10 +23,11 @@ import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.MatStructure;
+import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.SNES;
-import de.jtem.jpetsc.Vec;
 import de.jtem.jpetsc.SNES.FunctionEvaluator;
 import de.jtem.jpetsc.SNES.JacobianEvaluator;
+import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
 import de.jtem.jtao.Tao.Method;
 import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
@@ -128,8 +129,14 @@ public class SinConditionApplication <
 	}
 	
 	public void solveSNES(int maxIterations, double tol) {
+		PETSc.optionsSetValue("-help", null);
+		PETSc.optionsSetValue("-sin_fun_snes_type", "ls");
+		PETSc.optionsSetValue("-sin_fun_snes_test_display", null);
+		PETSc.optionsSetValue("-sin_fun_pc_factor_shift_nonzero", "1e-10");
 		SNES snes = SNES.create();
+		snes.setOptionsPrefix("sin_fun_");
 		snes.setFromOptions();
+		snes.view();
 		Vec f = new Vec(dim);
 		Mat J = new Mat(dim, dim);
 		for (int i = 0; i < dim; i++) {
@@ -138,7 +145,7 @@ public class SinConditionApplication <
 		J.assemble();
 		snes.setFunction(this, f);
 		snes.setJacobian(this, J, J);
-		snes.setTolerances(tol, tol, tol, maxIterations, 10000000);
+		snes.setTolerances(tol, PETSc.PETSC_DEFAULT, PETSc.PETSC_DEFAULT, maxIterations, PETSc.PETSC_DEFAULT);
 		snes.getKSP().setInitialGuessNonzero(true);
 		snes.getKSP().setFromOptions();
 		System.out.println("energy before optimization: " + evaluateObjective(getSolutionVec()));

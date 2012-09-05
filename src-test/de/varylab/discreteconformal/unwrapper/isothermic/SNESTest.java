@@ -8,6 +8,7 @@ import org.junit.Test;
 import de.jreality.util.NativePathUtility;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.MatStructure;
+import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.SNES;
 import de.jtem.jpetsc.SNES.FunctionEvaluator;
 import de.jtem.jpetsc.SNES.JacobianEvaluator;
@@ -18,20 +19,15 @@ public class SNESTest implements FunctionEvaluator, JacobianEvaluator {
 	
 	static {
 		NativePathUtility.set("native");
-		String[] args = {
-				"-help",
-				"-snes_view",
-				"-snes_type", "ls",
-				"-snes_test_display",
-				"-ksp_converged_reason",
-				"-pc_factor_shift_nonzero", "1.0e-10"
-		};
-		Tao.Initialize("Sinus Condition Test", args, false);
+		Tao.Initialize();
 	}
 	
 	@Test
 	public void testSNES() {
+		PETSc.optionsSetValue("-snes_test_snes_type", "ls");
+		PETSc.optionsSetValue("-snes_test_pc_factor_shift_nonzero", "1e-10");
 		SNES snes = SNES.create();
+		snes.setOptionsPrefix("snes_test_");
 		snes.setFromOptions();
 		Vec fTpl = new Vec(2);
 		Mat JTpl = new Mat(2,2);

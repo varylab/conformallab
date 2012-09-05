@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.heds.adapter;
 import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Position;
+import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoVertex;
@@ -10,11 +11,18 @@ import de.varylab.discreteconformal.heds.CoVertex;
 @Position
 public class CoPositionAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
 
+	private boolean
+		showUnwrapped = false;
+	
 	public CoPositionAdapter() {
 		super(CoVertex.class, null, CoFace.class, double[].class, true, true);
 	}
 	
-	
+	public CoPositionAdapter(boolean unwrapped) {
+		this();
+		this.showUnwrapped = unwrapped;
+	}
+
 	@Override
 	public void setVertexValue(CoVertex v, double[] value, AdapterSet a) {
 		if (value.length == 2) {
@@ -60,12 +68,19 @@ public class CoPositionAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, Co
 
 	@Override
 	public double[] getVertexValue(CoVertex v, AdapterSet a) {
+		if (showUnwrapped) {
+			return a.getD(TexturePosition.class, v);
+		}
 		return v.P;
 	}
 	
 	@Override
 	public double[] getFaceValue(CoFace f, AdapterSet a) {
 		return f.center;
+	}
+	
+	public void setShowUnwrapped(boolean showUnwrapped) {
+		this.showUnwrapped = showUnwrapped;
 	}
 	
 	

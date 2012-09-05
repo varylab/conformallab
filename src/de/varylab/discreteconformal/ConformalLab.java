@@ -23,9 +23,11 @@ import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
 import de.jtem.jrworkspace.plugin.Plugin;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.SystemLookAndFeel;
 import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.plugin.ConformalVisualizationPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
 import de.varylab.discreteconformal.plugin.EllipticImageGenerator;
+import de.varylab.discreteconformal.plugin.DomainVisualisationPlugin;
 import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
 import de.varylab.discreteconformal.plugin.KoebePolyhedronPlugin;
 import de.varylab.discreteconformal.plugin.ProjectiveTexturePlugin;
@@ -64,6 +66,8 @@ public class ConformalLab implements Runnable {
 		s.add(new KoebePolyhedronPlugin());
 		s.add(new PrimitivesGenerator());
 		s.add(new ProjectiveTexturePlugin());
+		s.add(new ConformalVisualizationPlugin());
+		s.add(new DomainVisualisationPlugin());
 		return s;
 	}
 	

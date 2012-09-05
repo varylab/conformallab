@@ -7,6 +7,8 @@ import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
 import static java.lang.Math.PI;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,12 +45,7 @@ public class SinConditionFunctionalTest {
 	
 	static {
 		NativePathUtility.set("native");
-		String[] args = {
-				"-snes_type", "ls",
-				"-snes_test_display",
-				"-pc_factor_shift_nonzero", "1.0e-10"
-		};
-		Tao.Initialize("Sinus Condition Test", args, false);
+		Tao.Initialize();
 	}
 	
 	@Before
@@ -123,8 +120,12 @@ public class SinConditionFunctionalTest {
 		snes.setFunction(fun, f);
 		snes.setJacobian(fun, J, J);
 		fun.evaluateJacobian(x, J, J);
-		boolean check = SNES.testJacobian(fun, J, x, f);
-		Assert.assertTrue("SNES Jacobian seems correct", check);
+		ByteArrayOutputStream myOut = new ByteArrayOutputStream();
+		PrintStream myIOStream = new PrintStream(myOut);
+		System.setOut(myIOStream);
+		SNES.testJacobian(fun, J, x, f);
+		String result = new String(myOut.toByteArray());
+		Assert.assertTrue("SNES Jacobian", !result.contains("failed"));
 	}
 	
 	@Test

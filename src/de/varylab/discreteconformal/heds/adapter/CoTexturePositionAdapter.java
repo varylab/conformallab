@@ -16,7 +16,7 @@ public class CoTexturePositionAdapter extends AbstractTypedAdapter<CoVertex, CoE
 	private HyperbolicModel
 		model = HyperbolicModel.Klein;
 	private InterpolationMethod
-		interpolationMethod = InterpolationMethod.Optimal;
+		interpolationMethod = InterpolationMethod.Incircle;
 	private int
 		priority = 1;
 	
@@ -54,7 +54,7 @@ public class CoTexturePositionAdapter extends AbstractTypedAdapter<CoVertex, CoE
 			case Circumcircle:
 				t = Rn.times(null, t[3], t);
 			default:
-			case Optimal:	
+			case Incircle:	
 				switch (model) {
 					case Klein:
 						return t;

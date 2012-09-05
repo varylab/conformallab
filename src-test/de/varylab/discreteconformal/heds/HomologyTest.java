@@ -10,7 +10,6 @@ import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.varylab.discreteconformal.util.HomologyUtility.getGeneratorPaths;
 import static java.awt.Color.LIGHT_GRAY;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -22,11 +21,9 @@ import org.junit.Test;
 
 import de.jreality.geometry.IndexedFaceSetUtility;
 import de.jreality.plugin.JRViewer;
-import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
-import de.jreality.util.Input;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.Node;
@@ -37,10 +34,10 @@ import de.jtem.halfedgetools.adapter.impl.DoubleArrayAdapter;
 import de.jtem.halfedgetools.adapter.type.Color;
 import de.jtem.halfedgetools.adapter.type.Radius;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
-import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.util.HomologyUtility;
 import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
+import de.varylab.discreteconformal.util.TestUtility;
 
 public class HomologyTest {
 
@@ -49,22 +46,8 @@ public class HomologyTest {
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		ReaderOBJ reader = new ReaderOBJ();
-		SceneGraphComponent c = null;
-		IndexedFaceSet ifs = null;
-		try {
-			Input in = new Input("Obj File", HomologyTest.class.getResourceAsStream("brezel2.obj"));
-			c =reader.read(in);
-			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
-			ConverterJR2Heds converter = new ConverterJR2Heds();
-			hds = new CoHDS();
-			AdapterSet a = new AdapterSet(new CoPositionAdapter());
-			converter.ifs2heds(ifs, hds, a, null);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		hds = TestUtility.readOBJ(HomologyTest.class, "brezel2.obj"); 
 	}
-	
 	
 	@Test
 	public void testHomology() throws Exception{

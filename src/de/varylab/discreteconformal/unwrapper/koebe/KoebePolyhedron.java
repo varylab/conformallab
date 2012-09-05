@@ -81,7 +81,7 @@ public class KoebePolyhedron {
 		
 		// optimization
 		Map<F, Double> rhoMap = CirclePatternUtility.calculateCirclePatternRhos(medialCirclePattern, thetaMap, phiMap);
-		CirclePatternLayout.execute(medialCirclePattern, rhoMap, thetaMap, a);
+		CirclePatternLayout.execute(medialCirclePattern, rhoMap, thetaMap, a, Position2d.class, Position.class);
 		
 		// check rhos
 		for (F f : medialCirclePattern.getFaces()){

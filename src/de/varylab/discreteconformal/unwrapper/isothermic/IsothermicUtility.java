@@ -35,6 +35,7 @@ import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.MatStructure;
 import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
+import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -44,6 +45,10 @@ import de.varylab.discreteconformal.unwrapper.ConesUtility;
 
 public class IsothermicUtility {
 
+	static {
+		Tao.Initialize();
+	}
+	
 	@OppositeAngle
 	public static class OppositeAnglesAdapter extends AbstractAdapter<Double> {
 		
@@ -510,6 +515,7 @@ public class IsothermicUtility {
 		PETSc.optionsSetValue("-qcf_ksp_type", "lsqr");
 
 		ksp.setFromOptions();
+//		ksp.setTolerances(1E-8, PETSc.PETSC_DEFAULT, PETSc.PETSC_DEFAULT, 25);
 		ksp.setOperators(A, A, MatStructure.SAME_NONZERO_PATTERN);
 		ksp.solve(l, u);
 		System.out.println("ksp residual: " + ksp.getResidualNorm());

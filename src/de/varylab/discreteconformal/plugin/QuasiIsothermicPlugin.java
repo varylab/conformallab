@@ -41,8 +41,10 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.CurvatureFieldMax;
 import de.jtem.halfedgetools.adapter.type.CurvatureFieldMin;
 import de.jtem.halfedgetools.adapter.type.Normal;
+import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.VectorField;
 import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
+import de.jtem.halfedgetools.adapter.type.generic.TexturePosition2d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeListener;
@@ -85,7 +87,8 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		methodCombo = new JComboBox(methods);
 	private JButton
 		goCirclePatternButton = new JButton("Calculate Circle Pattern"),
-		goDBFButton = new JButton("Calculate DBF");
+		goDBFButton = new JButton("Calculate DBF Variational"),
+		goDBFSnesButton = new JButton("Calculate DBF SNES");
 	private JTable
 		dataTable = new JTable();
 	private JScrollPane
@@ -126,6 +129,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		dbfPanel.add(dataScroller, c);
 		
 		dbfPanel.add(goDBFButton, c);
+		dbfPanel.add(goDBFSnesButton, c);
 		
 		circlePatternPanel.setLayout(new GridBagLayout());
 		circlePatternPanel.setBorder(BorderFactory.createTitledBorder("Circle Patterns"));
@@ -133,6 +137,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		goCirclePatternButton.addActionListener(this);
 		goDBFButton.addActionListener(this);
+		goDBFSnesButton.addActionListener(this);
 	}
 	
 	protected class VecTableModel extends DefaultTableModel {
@@ -256,6 +261,9 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 			if (goCirclePatternButton == s) {
 				calculateWithCirclePattern(hds, edgeAlphaMap, a);
 			}
+			if (goDBFSnesButton == s) {
+				calculateWithSNES(hds, edgeAlphaMap, a);
+			}
 		} catch (Exception e) {
 			Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
 			JOptionPane.showMessageDialog(w, e.toString());
@@ -273,7 +281,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		Map<CoFace, Double> rhoMap = CirclePatternUtility.calculateCirclePatternRhos(hds, thetaMap, phiMap);
 
 		IsothermicUtility.cutConesToBoundary(hds, betaMap);
-		CirclePatternLayout.execute(null, rhoMap, thetaMap, a);
+		CirclePatternLayout.execute(hds, rhoMap, thetaMap, a, TexturePosition2d.class, TexturePosition.class);
 		IsothermicUtility.alignLayout(hds, initAlphas);
 		
 		hif.update();
@@ -309,6 +317,32 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		hif.update();
 	}
+	
+	protected void calculateWithSNES(CoHDS hds, Map<CoEdge, Double> initAlphas, AdapterSet a) {
+		boolean excludeBoundary = excludeBoundaryChecker.isSelected();
+		
+		SinConditionApplication<CoVertex, CoEdge, CoFace, CoHDS> 
+		fun = new SinConditionApplication<CoVertex, CoEdge, CoFace, CoHDS>(hds);
+		fun.initialize(initAlphas, excludeBoundary);
+		
+		int maxIt = maxItModel.getNumber().intValue();
+		int tolExp = tolExpModel.getNumber().intValue();
+		double tol = Math.pow(10, tolExp);
+		
+		fun.solveSNES(maxIt, tol);
+		DBFSolution<CoVertex, CoEdge, CoFace, CoHDS> solution = fun.getDBFSolution();
+		
+		Map<CoEdge, Double> alphaMap = solution.solutionAlphaMap;
+		Map<CoFace, Double> orientationMap = IsothermicUtility.calculateOrientationFromAlphas(hds,alphaMap);
+		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
+		
+		cutManifoldToDisk(hds, hds.getVertex(0), null);
+		cutConesToBoundary(hds, betaMap);
+		
+		doTexLayout(hds, alphaMap, orientationMap, a);
+		
+		hif.update();
+	}
 
 
 	@Override
@@ -318,9 +352,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		hif.addHalfedgeListener(this);
 		c.getPlugin(TestVectorFieldGenerator.class);
 		dataTable.setModel(new VecTableModel());
-		
-		hif.addAdapter(DiscreteConformalPlugin.positionAdapter, true);
-		hif.addAdapter(DiscreteConformalPlugin.texturePositionAdapter, true);
+		c.getPlugin(DiscreteConformalPlugin.class);
 	}
 	
 	

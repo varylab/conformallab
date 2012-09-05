@@ -103,20 +103,17 @@ public class VisualizationUtility {
 	) {
 		float ls = res / 500f; // line scale
 		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
-		g.setColor(new Color(255, 255, 255, 0));
-		g.fillRect(0, 0, res, res);
 		g.scale(0.5, -0.5);
 		g.translate(res, -res);
 
-		
 		g.setStroke(new BasicStroke(4 * ls));
 		g.setColor(polygonColor);
 		drawUniversalCover(poly, depth, drawPolygon, drawAxes, g, model, res, polygonColor, axesColor, null, null);
 		
 		if (model == HyperbolicModel.Klein || model == HyperbolicModel.Poincaré) {
+			Ellipse2D boundary = new Ellipse2D.Double(-res + ls, -res + ls, 2*res - 2*ls, 2*res - 2*ls);
 			g.setColor(Color.BLACK);
 			g.setStroke(new BasicStroke(4 * ls));
-			Ellipse2D boundary = new Ellipse2D.Double(-res + ls, -res + ls, 2*res - 2*ls, 2*res - 2*ls);
 			g.draw(boundary);
 		}
 		
@@ -124,6 +121,23 @@ public class VisualizationUtility {
 		g.scale(2, -2);
 	}
 	
+	
+	public static void drawDomainBackground(Graphics2D g, int res, HyperbolicModel model) {
+		float ls = res / 500f; // line scale
+		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
+		g.setColor(new Color(255, 255, 255, 0));
+		g.fillRect(0, 0, res, res);
+		g.scale(0.5, -0.5);
+		g.translate(res, -res);
+		
+		if (model == HyperbolicModel.Klein || model == HyperbolicModel.Poincaré) {
+			Ellipse2D boundary = new Ellipse2D.Double(-res + ls, -res + ls, 2*res - 2*ls, 2*res - 2*ls);
+			g.setColor(Color.WHITE);
+			g.fill(boundary);
+		}
+		g.translate(-res, res);
+		g.scale(2, -2);
+	}
 	
 	private static boolean drawPolygon(
 		FundamentalPolygon poly, 

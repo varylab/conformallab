@@ -20,7 +20,11 @@ public class TriangleOrientationAdapter extends AbstractAdapter<Double> {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> Double getF(F f, AdapterSet a) {
-		return alphaOrientation(f, a);
+		try {
+			return alphaOrientation(f, a);
+		} catch (Exception e) {
+			return -1.0;
+		}
 	}
 	
 	@Override
