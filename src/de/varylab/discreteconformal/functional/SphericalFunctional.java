@@ -145,66 +145,27 @@ public class SphericalFunctional <
 			final double
 				αi = alpha.getAlpha(ejk),
 				αj = alpha.getAlpha(eki),
-				αk = alpha.getAlpha(eij),
-				αij = 0.5 * (PI - αi - αj + αk),
-				αjk = 0.5 * (PI - αj - αk + αi),
-				αki = 0.5 * (PI - αk - αi + αj);
+				αk = alpha.getAlpha(eij);
 			if (G != null) {
 				if (var.isVariable(vi)) {
-					if (var.isVariable(eij) || var.isVariable(eki)) {
-						if (!var.isVariable(eij)) {
-							G.add(ivi, αij - PI/2);
-						}
-						if (!var.isVariable(eki)) {
-							G.add(ivi, αki - PI/2);
-						}
-					} else {
-						G.add(ivi, -alpha.getAlpha(ejk));
-					}
+					G.add(ivi, -αi);
 				}
 				if (var.isVariable(vj)) {
-					if (var.isVariable(eij) || var.isVariable(ejk)) {
-						if (!var.isVariable(eij)) {
-							G.add(ivj, αij - PI/2);
-						}
-						if (!var.isVariable(ejk)) {
-							G.add(ivj, αjk - PI/2);
-						}
-					} else {
-						G.add(ivj, -alpha.getAlpha(eki));
-					}
+					G.add(ivj, -αj);
 				}
 				if (var.isVariable(vk)) {
-					if (var.isVariable(ejk) || var.isVariable(eki)) {
-						if (!var.isVariable(ejk)) {
-							G.add(ivk, αjk - PI/2);
-						}
-						if (!var.isVariable(eki)) {
-							G.add(ivk, αki - PI/2);
-						}
-					} else {
-						G.add(ivk, -alpha.getAlpha(eij));
-					}	
+					G.add(ivk, -αk);
 				}
 			}
 		}
 		// Circular Edges Gradient
 		if (G != null) {
-			for (final E eij : hds.getPositiveEdges()) {
-				if (!var.isVariable(eij)) continue;
-				E eji = eij.getOppositeEdge();
-				E ejl = eij.getNextEdge();
-				E eli = ejl.getNextEdge();
-				E eik = eji.getNextEdge();
-				E ekj = eik.getNextEdge();
-				int i = var.getVarIndex(eij);
-				double αij = alpha.getAlpha(eij);
-				double αji = alpha.getAlpha(eji);
-				double αjl = alpha.getAlpha(ejl);
-				double αli = alpha.getAlpha(eli);
-				double αik = alpha.getAlpha(eik);
-				double αkj = alpha.getAlpha(ekj);
-				G.add(i, 0.5 * (αij + αji - αjl - αli - αik - αkj));
+			for (final E e : hds.getPositiveEdges()) {
+				if (!var.isVariable(e)) continue;
+				int i = var.getVarIndex(e);
+				double αk = alpha.getAlpha(e);
+				double αl = alpha.getAlpha(e.getOppositeEdge());
+				G.add(i, αk + αl - PI);
 			}
 		}
 	}
@@ -315,16 +276,12 @@ public class SphericalFunctional <
 			λi = var.isVariable(ejk) ? u.get(var.getVarIndex(ejk)) : lambda.getLambda(ejk),
 			λj = var.isVariable(eki) ? u.get(var.getVarIndex(eki)) : lambda.getLambda(eki);
 		final double 
-			λij = λk - (var.isVariable(eij) ? 0 : ui + uj),
-			λjk = λi - (var.isVariable(ejk) ? 0 : uj + uk),
-			λki = λj - (var.isVariable(eki) ? 0 : uk + ui);
-		final double 
-			λlij = λk + (var.isVariable(eij) ? 0 : ui + uj),
-			λljk = λi + (var.isVariable(ejk) ? 0 : uj + uk),
-			λlki = λj + (var.isVariable(eki) ? 0 : uk + ui);		
-		final double lijEuc = exp(λlij / 2);
-		final double ljkEuc = exp(λljk / 2);
-		final double lkiEuc = exp(λlki / 2);
+			λij = λk + (var.isVariable(eij) ? 0 : ui + uj),
+			λjk = λi + (var.isVariable(ejk) ? 0 : uj + uk),
+			λki = λj + (var.isVariable(eki) ? 0 : uk + ui);
+		final double lijEuc = exp(λij / 2);
+		final double ljkEuc = exp(λjk / 2);
+		final double lkiEuc = exp(λki / 2);
 		if (lijEuc > 1 || ljkEuc > 1 || lkiEuc > 1) {
 			throw new RuntimeException("New spherical lengths cannot be greater that PI/2 here");
 		}
@@ -364,10 +321,10 @@ public class SphericalFunctional <
 			βj = 0.5 * (PI - αi + αj - αk),
 			βk = 0.5 * (PI - αi - αj + αk);
 		if (E != null) {
-			E.add(βi*λjk + βj*λki + βk*λij);
+			E.add(- αi*ui - αj*uj - αk*uk);
+			E.add(βi*λi + βj*λj + βk*λk);
 			E.add(+ lob(αi) + lob(αj) + lob(αk) + lob(βi) + lob(βj) + lob(βk));
 			E.add(+ lob(0.5 * (PI - αi - αj - αk)));
-			E.add(-0.5 * PI * (λjk + λki + λij));
 			E.add(-initialEnergy.getInitialEnergy(f));
 		}
 		if (alpha != null) {

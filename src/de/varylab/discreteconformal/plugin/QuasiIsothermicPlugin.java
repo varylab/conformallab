@@ -1,6 +1,10 @@
 package de.varylab.discreteconformal.plugin;
 
+import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout.doTexLayout;
+import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateBetasFromAlphas;
+import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateOrientationFromAlphas;
 import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.cutConesToBoundary;
+import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.subdivideFaceSingularities;
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 import static java.awt.GridBagConstraints.HORIZONTAL;
 import static java.awt.GridBagConstraints.RELATIVE;
@@ -307,13 +311,14 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		DBFSolution<CoVertex, CoEdge, CoFace, CoHDS> solution = fun.getDBFSolution();
 		
 		Map<CoEdge, Double> alphaMap = solution.solutionAlphaMap;
-		Map<CoFace, Double> orientationMap = IsothermicUtility.calculateOrientationFromAlphas(hds,alphaMap);
-		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
+		Map<CoFace, Double> orientationMap = calculateOrientationFromAlphas(hds,alphaMap);
+		subdivideFaceSingularities(hds, alphaMap, a);
+		Map<CoEdge, Double> betaMap = calculateBetasFromAlphas(hds, alphaMap);
 		
 		cutManifoldToDisk(hds, hds.getVertex(0), null);
 		cutConesToBoundary(hds, betaMap);
 		
-		IsothermicLayout.doTexLayout(hds, alphaMap, orientationMap, a);
+		doTexLayout(hds, alphaMap, orientationMap, a);
 		hif.update();
 	}
 	

@@ -27,7 +27,10 @@ import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.CurvatureFieldMin;
 import de.jtem.halfedgetools.adapter.type.Normal;
+import de.jtem.halfedgetools.adapter.type.Position;
+import de.jtem.halfedgetools.adapter.type.generic.BaryCenter4d;
 import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
+import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.KSP;
@@ -120,6 +123,30 @@ public class IsothermicUtility {
 		}
 	}
 
+	
+	public static void subdivideFaceSingularities(CoHDS hds, Map<CoEdge, Double> alpha, AdapterSet a) {
+		Set<CoFace> faces = new HashSet<CoFace>(hds.getFaces());
+		for (CoFace f : faces) {
+			double index = getSingularityIndex(f, a);
+			if (Math.abs(index) < 0.25) continue;
+			double[] p = a.getD(BaryCenter4d.class, f);
+			CoVertex v = TopologyAlgorithms.splitFace(f);
+			System.out.println("subdividing face " + f + " with index " + index + " -> " + v);
+			a.set(Position.class, v, p);
+			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+				double a1 = alpha.get(e.getPreviousEdge());
+				double a2 = alpha.get(e.getOppositeEdge().getNextEdge());
+				double a12 = (a1 + a2) / 2;
+				alpha.put(e, a12);
+				alpha.put(e.getOppositeEdge(), a12);
+			}
+		}
+	}
+	
+	public static double getSingularityIndex(CoFace f, AdapterSet a) {
+		return Math.round(2 * alphaRotation(f, a) / (2.0 * Math.PI)) / 2.0;
+	}
+	
 	/**
 	 * Returns the angle between v1 and v2 in the range ]-pi/2, pi/2]. 
 	 * Where the sign is the sign of the determinant |N v1 v2|. 
@@ -416,6 +443,7 @@ public class IsothermicUtility {
 		for (CoVertex v : innerVerts) {
 			double sum = calculateAngleSumFromBetas(v, betaMap);
 			if (abs(abs(sum) - 2*PI) > Math.PI/4) {
+				System.out.println("angle sum " + sum);
 				int index = (int)Math.round(sum / PI);
 				v.setTheta(index * PI);
 				if((index % 2) != 0) {
