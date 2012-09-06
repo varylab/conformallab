@@ -492,6 +492,49 @@ public class IsothermicUtility {
 		return angleOrientation(alpha1, alpha2, alpha3);
 	}
 	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double alphaRotation(F f, AdapterSet a) {
+		E se = f.getBoundaryEdge();
+		E e = se;
+		double rotation = 0.0;
+		do {
+			rotation += alphaRotation(e,a);
+			e = e.getNextEdge();
+		} while(e != se); 
+		return rotation;
+	}
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double alphaRotation(V v, AdapterSet a) {
+		E se = v.getIncomingEdge();
+		E e = se;
+		double rotation = 0.0;
+		do {
+			rotation += alphaRotation(e,a);
+			e = e.getNextEdge().getOppositeEdge();
+		} while(e != se);
+		return rotation;
+	}
+	
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double alphaRotation(E e, AdapterSet a) {
+		double alpha1 = calculateAlpha(e,a);
+		double[] edge1 = a.getD(EdgeVector.class,e);
+		double alpha2 = calculateAlpha(e.getNextEdge(),a);
+		double[] edge2 = a.getD(EdgeVector.class,e.getNextEdge());
+		double gamma = Rn.euclideanAngle(edge1, edge2);
+		double rotation = normalizeAngle(gamma + alpha1 -alpha2 - Math.PI);
+		return rotation;
+	}
 	
 	public static Map<CoVertex, Double> calculateQuasiconformalFactors(CoHDS hds, Map<CoEdge, Double> edgeLengths, Map<CoEdge, Double> texLengths) {
 		Map<CoEdge, Integer> eIndexMap = createSolverEdgeIndexMap(hds, false);
@@ -526,6 +569,5 @@ public class IsothermicUtility {
 		}
 		return result;
 	}
-	
 	
 }
