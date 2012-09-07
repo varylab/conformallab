@@ -37,6 +37,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
+import de.jreality.math.Rn;
 import de.jreality.plugin.basic.View;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedgetools.adapter.Adapter;
@@ -51,6 +52,7 @@ import de.jtem.halfedgetools.adapter.type.generic.TexturePosition2d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeListener;
+import de.jtem.halfedgetools.plugin.algorithm.vectorfield.EdgeVectorFieldMaxAdapter;
 import de.jtem.halfedgetools.plugin.data.AdapterNameComparator;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
@@ -92,6 +94,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	private JButton
 		goCirclePatternButton = new JButton("Calculate Circle Pattern"),
 		goDBFButton = new JButton("Calculate DBF Variational"),
+		goVectorfieldButton = new JButton("Calculate Flat Vectorfield"),
 		goDBFSnesButton = new JButton("Calculate DBF SNES");
 	private JTable
 		dataTable = new JTable();
@@ -133,6 +136,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		dbfPanel.add(dataScroller, c);
 		
 		dbfPanel.add(goDBFButton, c);
+		dbfPanel.add(goVectorfieldButton, c);
 //		dbfPanel.add(goDBFSnesButton, c);
 		
 		circlePatternPanel.setLayout(new GridBagLayout());
@@ -142,6 +146,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		goCirclePatternButton.addActionListener(this);
 		goDBFButton.addActionListener(this);
 		goDBFSnesButton.addActionListener(this);
+		goVectorfieldButton.addActionListener(this);
 	}
 	
 	protected class VecTableModel extends DefaultTableModel {
@@ -260,13 +265,16 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		Object s = ae.getSource();
 		try {
 			if (goDBFButton == s) {
-				calculateWithSinFunctional(hds, edgeAlphaMap, a);
+				calculateWithSinFunctional(hds, edgeAlphaMap, a, false);
 			}
 			if (goCirclePatternButton == s) {
 				calculateWithCirclePattern(hds, edgeAlphaMap, a);
 			}
 			if (goDBFSnesButton == s) {
 				calculateWithSNES(hds, edgeAlphaMap, a);
+			}
+			if (goVectorfieldButton == s) {
+				calculateWithSinFunctional(hds, edgeAlphaMap, a, true);
 			}
 		} catch (Exception e) {
 			Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
@@ -295,7 +303,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	}
 	
 	
-	protected void calculateWithSinFunctional(CoHDS hds, Map<CoEdge, Double> initAlphas, AdapterSet a) {
+	protected void calculateWithSinFunctional(CoHDS hds, Map<CoEdge, Double> initAlphas, AdapterSet a, boolean vectorsOnly) {
 		boolean excludeBoundary = excludeBoundaryChecker.isSelected();
 		
 		SinConditionApplication<CoVertex, CoEdge, CoFace, CoHDS> 
@@ -311,6 +319,11 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		DBFSolution<CoVertex, CoEdge, CoFace, CoHDS> solution = fun.getDBFSolution();
 		
 		Map<CoEdge, Double> alphaMap = solution.solutionAlphaMap;
+		if (vectorsOnly) {
+			createAlphaField(hds, alphaMap, a);
+			hif.update();
+			return;
+		}
 		Map<CoFace, Double> orientationMap = calculateOrientationFromAlphas(hds,alphaMap);
 		subdivideFaceSingularities(hds, alphaMap, a);
 		Map<CoEdge, Double> betaMap = calculateBetasFromAlphas(hds, alphaMap);
@@ -320,6 +333,24 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		doTexLayout(hds, alphaMap, orientationMap, a);
 		hif.update();
+	}
+	
+	protected void createAlphaField(CoHDS hds, Map<CoEdge, Double> alpha, AdapterSet a) {
+		Map<CoEdge, double[]> vMap = new HashMap<CoEdge, double[]>();
+		for (CoEdge e : hds.getPositiveEdges()) {
+			double al = alpha.get(e);
+			double[] ev = a.getD(EdgeVector.class, e);
+			Rn.normalize(ev, ev);
+			double[] n = a.getD(Normal.class, e);
+			double[] vp = Rn.crossProduct(null, ev, n);
+			Rn.times(ev, Math.cos(al), ev);
+			Rn.times(vp, Math.sin(al), vp);
+			double[] vec = Rn.add(null, ev, vp);
+			vMap.put(e, vec);
+			vMap.put(e.getOppositeEdge(), vec);
+		}
+		EdgeVectorFieldMaxAdapter aMax = new EdgeVectorFieldMaxAdapter(vMap, "Quasiisothermic Directions Max");
+		hif.addAdapter(aMax, false);
 	}
 	
 	protected void calculateWithSNES(CoHDS hds, Map<CoEdge, Double> initAlphas, AdapterSet a) {
