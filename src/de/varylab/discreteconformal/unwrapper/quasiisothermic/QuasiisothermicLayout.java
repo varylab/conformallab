@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.unwrapper.isothermic;
+package de.varylab.discreteconformal.unwrapper.quasiisothermic;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.cos;
@@ -20,7 +20,7 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 
-public class IsothermicLayout {
+public class QuasiisothermicLayout {
 
 	private static double
 		INITIAL_LENGTH = 1E-1;
@@ -87,14 +87,14 @@ public class IsothermicLayout {
 					break;
 //					alpha = 2*PI - calculateAngleSum(v, angleMap);
 				}
-				Double alpha = IsothermicUtility.getOppositeBeta(next, angleMap);
+				Double alpha = QuasiisothermicUtility.getOppositeBeta(next, angleMap);
 				alpha *= orientationMap.get(next.getLeftFace());
 				
 				globalAngle -= alpha;
 				
 				if (!lengthMap.containsKey(e)) {
 					double prevLength = lengthMap.get(e.getPreviousEdge());
-					l = IsothermicUtility.getEdgeLength(e, prevLength, angleMap);
+					l = QuasiisothermicUtility.getEdgeLength(e, prevLength, angleMap);
 					lengthMap.put(e, l);
 					lengthMap.put(e.getOppositeEdge(), l);
 				}
@@ -115,7 +115,7 @@ public class IsothermicLayout {
 			}
 		}
 		
-		assert (visited.size() == hds.numVertices());
+//		assert (visited.size() == hds.numVertices());
 	}
 	
 	public static void setInitialLength(double l) {

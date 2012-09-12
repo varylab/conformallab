@@ -21,7 +21,7 @@ import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.Plugin;
-import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
+import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility;
 
 public class IsothermicityMeasure extends Plugin {
 
@@ -46,7 +46,7 @@ public class IsothermicityMeasure extends Plugin {
 			double[] N = a.getD(Normal.class, e);
 			double[] Kmin = a.getD(CurvatureFieldMin.class, e);
 			double[] E = a.getD(EdgeVector.class, e);
-			return IsothermicUtility.getSignedAngle(N, Kmin, E);
+			return QuasiisothermicUtility.getSignedAngle(N, Kmin, E);
 		}
 		
 		@Override
@@ -83,8 +83,8 @@ public class IsothermicityMeasure extends Plugin {
 				double alphaE = a.get(CurvatureAngle.class, e, Double.class);
 				double alphaEPrev = a.get(CurvatureAngle.class, e.getPreviousEdge(), Double.class);
 				double alphaENext = a.get(CurvatureAngle.class, e.getNextEdge(), Double.class);
-				double alphaRight = IsothermicUtility.calculateBeta(alphaE, alphaEPrev, alphaENext);
-				double alphaLeft = IsothermicUtility.calculateBeta(alphaENext, alphaEPrev, alphaE);
+				double alphaRight = QuasiisothermicUtility.calculateBeta(alphaE, alphaEPrev, alphaENext);
+				double alphaLeft = QuasiisothermicUtility.calculateBeta(alphaENext, alphaEPrev, alphaE);
 				sr *= sin(alphaRight);
 				sl *= sin(alphaLeft);
 			}

@@ -7,7 +7,7 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
+import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility;
 
 public class IndexMedialGraphAdapter extends AbstractAdapter<Double> {
 	
@@ -26,7 +26,7 @@ public class IndexMedialGraphAdapter extends AbstractAdapter<Double> {
 		if(HalfEdgeUtils.isBoundaryVertex(v)) {
 			return null;
 		}
-		return Math.round(digits*IsothermicUtility.alphaRotation(v, a) / (2.0 * Math.PI))/digits;
+		return Math.round(digits*QuasiisothermicUtility.alphaRotationFromAdapterSet(v, a) / (2.0 * Math.PI))/digits;
 	}
 	
 	@Override
@@ -35,7 +35,7 @@ public class IndexMedialGraphAdapter extends AbstractAdapter<Double> {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> Double getF(F f, AdapterSet a) {
-		return Math.round(digits*IsothermicUtility.alphaRotation(f, a) / (2.0 * Math.PI))/digits;
+		return Math.round(digits*QuasiisothermicUtility.alphaRotationFromAdapterSet(f, a) / (2.0 * Math.PI))/digits;
 	}
 	
 	@Override

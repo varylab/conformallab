@@ -1,10 +1,11 @@
 package de.varylab.discreteconformal.plugin;
 
-import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout.doTexLayout;
-import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateBetasFromAlphas;
-import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateOrientationFromAlphas;
-import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.cutConesToBoundary;
-import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.subdivideFaceSingularities;
+import static de.jtem.halfedge.util.HalfEdgeUtils.boundaryVertices;
+import static de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicLayout.doTexLayout;
+import static de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility.calculateOrientationFromAlphas;
+import static de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility.createAlphaField;
+import static de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility.cutConesToBoundary;
+import static de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility.subdivideFaceSingularities;
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 import static java.awt.GridBagConstraints.HORIZONTAL;
 import static java.awt.GridBagConstraints.RELATIVE;
@@ -19,6 +20,8 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -37,7 +40,6 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
-import de.jreality.math.Rn;
 import de.jreality.plugin.basic.View;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedgetools.adapter.Adapter;
@@ -52,7 +54,6 @@ import de.jtem.halfedgetools.adapter.type.generic.TexturePosition2d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeListener;
-import de.jtem.halfedgetools.plugin.algorithm.vectorfield.EdgeVectorFieldMaxAdapter;
 import de.jtem.halfedgetools.plugin.data.AdapterNameComparator;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
@@ -67,10 +68,13 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.generator.TestVectorFieldGenerator;
 import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternLayout;
 import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternUtility;
-import de.varylab.discreteconformal.unwrapper.isothermic.DBFSolution;
-import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicLayout;
-import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
-import de.varylab.discreteconformal.unwrapper.isothermic.SinConditionApplication;
+import de.varylab.discreteconformal.unwrapper.quasiisothermic.DBFSolution;
+import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicLayout;
+import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility;
+import de.varylab.discreteconformal.unwrapper.quasiisothermic.SinConditionApplication;
+import de.varylab.discreteconformal.util.CuttingUtility;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.util.Search;
 
 public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionListener, HalfedgeListener {
 
@@ -249,7 +253,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 			if (N == null || K == null || E == null) {
 				throw new RuntimeException("Could not get curvature information at edge " + e);
 			}
-			double alpha = IsothermicUtility.getSignedAngle(N, K, E);
+			double alpha = QuasiisothermicUtility.getSignedAngle(N, K, E);
 			indexAlphaMap.put(e.getIndex(), alpha);
 			indexAlphaMap.put(e.getOppositeEdge().getIndex(), alpha);
 		}
@@ -285,16 +289,16 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	
 	
 	protected void calculateWithCirclePattern(CoHDS hds, Map<CoEdge, Double> initAlphas, AdapterSet a) {
-		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, initAlphas);
-		IsothermicUtility.createDelaunayAngleSystem(hds, betaMap);
+		Map<CoEdge, Double> betaMap = QuasiisothermicUtility.calculateBetasFromAlphas(hds, initAlphas);
+		QuasiisothermicUtility.createDelaunayAngleSystem(hds, betaMap);
 		
-		Map<CoEdge, Double> thetaMap = IsothermicUtility.calculateThetasFromBetas(hds, betaMap);
-		Map<CoFace, Double> phiMap = IsothermicUtility.calculatePhisFromBetas(hds, betaMap);
+		Map<CoEdge, Double> thetaMap = QuasiisothermicUtility.calculateThetasFromBetas(hds, betaMap);
+		Map<CoFace, Double> phiMap = QuasiisothermicUtility.calculatePhisFromBetas(hds, betaMap);
 		Map<CoFace, Double> rhoMap = CirclePatternUtility.calculateCirclePatternRhos(hds, thetaMap, phiMap);
 
-		IsothermicUtility.cutConesToBoundary(hds, betaMap);
+		QuasiisothermicUtility.cutConesToBoundary(hds, betaMap);
 		CirclePatternLayout.execute(hds, rhoMap, thetaMap, a, TexturePosition2d.class, TexturePosition.class);
-		IsothermicUtility.alignLayout(hds, initAlphas);
+		QuasiisothermicUtility.alignLayout(hds, initAlphas, a);
 		
 		hif.update();
 		hif.addLayerAdapter(new MappedWeightAdapter(thetaMap, "Quasiisothermic Thetas"), false);
@@ -320,38 +324,79 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		Map<CoEdge, Double> alphaMap = solution.solutionAlphaMap;
 		if (vectorsOnly) {
-			createAlphaField(hds, alphaMap, a);
+			Adapter<double[]> aInit = createAlphaField(hds, initAlphas, a, "Quasiisothermic Initial Alpha");
+			Adapter<double[]> aNew = createAlphaField(hds, alphaMap, a, "Quasiisothermic Flat Alpha");
+			hif.addAdapter(aInit, false);
+			hif.addAdapter(aNew, false);
 			hif.update();
 			return;
 		}
-		Map<CoFace, Double> orientationMap = calculateOrientationFromAlphas(hds,alphaMap);
+		
+		inspectAlphas(hds, alphaMap, a);
 		subdivideFaceSingularities(hds, alphaMap, a);
-		Map<CoEdge, Double> betaMap = calculateBetasFromAlphas(hds, alphaMap);
+		inspectAlphas(hds, alphaMap, a);
+		
+		Map<CoFace, Double> orientationMap = calculateOrientationFromAlphas(hds,alphaMap);
+//		Map<CoEdge, Double> betaMap = QuasiisothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
 		
 		cutManifoldToDisk(hds, hds.getVertex(0), null);
-		cutConesToBoundary(hds, betaMap);
+		cutMesh(hds, alphaMap, a);
 		
 		doTexLayout(hds, alphaMap, orientationMap, a);
+		Adapter<double[]> aInit = QuasiisothermicUtility.createAlphaField(hds, initAlphas, a, "Quasiisothermic Initial Alpha");
+		Adapter<double[]> aOpt = QuasiisothermicUtility.createAlphaField(hds, alphaMap, a, "Quasiisothermic Flat Alpha");
+		hif.addAdapter(aInit, false);
+		hif.addAdapter(aOpt, false);
 		hif.update();
 	}
 	
-	protected void createAlphaField(CoHDS hds, Map<CoEdge, Double> alpha, AdapterSet a) {
-		Map<CoEdge, double[]> vMap = new HashMap<CoEdge, double[]>();
-		for (CoEdge e : hds.getPositiveEdges()) {
-			double al = alpha.get(e);
-			double[] ev = a.getD(EdgeVector.class, e);
-			Rn.normalize(ev, ev);
-			double[] n = a.getD(Normal.class, e);
-			double[] vp = Rn.crossProduct(null, ev, n);
-			Rn.times(ev, Math.cos(al), ev);
-			Rn.times(vp, Math.sin(al), vp);
-			double[] vec = Rn.add(null, ev, vp);
-			vMap.put(e, vec);
-			vMap.put(e.getOppositeEdge(), vec);
+	
+	public static void cutMesh(CoHDS hds, Map<CoEdge, Double> alpha, AdapterSet a) {
+		Set<CoVertex> cones = new HashSet<CoVertex>();
+		for (CoVertex v : hds.getVertices()) {
+			double index = QuasiisothermicUtility.getSingularityIndexV(v, alpha, a);
+			if (Math.abs(index) > 0.25) {
+				cones.add(v);
+			}
 		}
-		EdgeVectorFieldMaxAdapter aMax = new EdgeVectorFieldMaxAdapter(vMap, "Quasiisothermic Directions Max");
-		hif.addAdapter(aMax, false);
+		Set<CoEdge> validSet = new HashSet<CoEdge>(hds.getEdges());
+		Set<CoVertex> targetVertices = new HashSet<CoVertex>(boundaryVertices(hds));
+		
+		CuttingInfo<CoVertex, CoEdge, CoFace> info = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+		for (CoVertex c : cones) {
+			System.out.println("cutting from cone " + c);
+			List<CoEdge> path = Search.bFS(validSet, c, targetVertices, true, null);
+			CuttingUtility.cutAlongPath(path, info);
+		}
 	}
+	
+	
+	
+	public void inspectAlphas(CoHDS hds, Map<CoEdge, Double> alpha, AdapterSet a) {
+		System.out.println("alpha inspection -------------");
+		Map<CoFace, Double> orientationMap = calculateOrientationFromAlphas(hds, alpha);
+		for (CoFace f : hds.getFaces()) {
+			Double orientation = orientationMap.get(f);
+			if (orientation < 0) {
+				System.out.println(f + " -> flipped");
+			}
+		}
+		System.out.println("singularities -----");
+		for (CoVertex v : hds.getVertices()) {
+			double index = QuasiisothermicUtility.getSingularityIndexV(v, alpha, a);
+			if (Math.abs(index) > 0.25) {
+				System.out.println(v + " -> index = " + index);
+			}
+		}
+		for (CoFace f : hds.getFaces()) {
+			double index = QuasiisothermicUtility.getSingularityIndexF(f, alpha, a);
+			if (Math.abs(index) > 0.25) {
+				System.out.println(f + " -> index = " + index);
+			}
+		}
+		System.out.println("------------------------------");
+	}
+	
 	
 	protected void calculateWithSNES(CoHDS hds, Map<CoEdge, Double> initAlphas, AdapterSet a) {
 		boolean excludeBoundary = excludeBoundaryChecker.isSelected();
@@ -368,13 +413,13 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		DBFSolution<CoVertex, CoEdge, CoFace, CoHDS> solution = fun.getDBFSolution();
 		
 		Map<CoEdge, Double> alphaMap = solution.solutionAlphaMap;
-		Map<CoFace, Double> orientationMap = IsothermicUtility.calculateOrientationFromAlphas(hds,alphaMap);
-		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
+		Map<CoFace, Double> orientationMap = QuasiisothermicUtility.calculateOrientationFromAlphas(hds,alphaMap);
+		Map<CoEdge, Double> betaMap = QuasiisothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
 		
 		cutManifoldToDisk(hds, hds.getVertex(0), null);
 		cutConesToBoundary(hds, betaMap);
 		
-		IsothermicLayout.doTexLayout(hds, alphaMap, orientationMap, a);
+		QuasiisothermicLayout.doTexLayout(hds, alphaMap, orientationMap, a);
 		hif.update();
 	}
 

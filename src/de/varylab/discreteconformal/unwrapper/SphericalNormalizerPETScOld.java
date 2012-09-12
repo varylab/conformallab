@@ -11,6 +11,7 @@ import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
+import de.jreality.util.NativePathUtility;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
@@ -29,6 +30,8 @@ public class SphericalNormalizerPETScOld {
 		maxIterations = 400;
 	
 	static {
+		NativePathUtility.set("native");
+		NativePathUtility.set("../DiscreteConformalLab/native");
 		Tao.Initialize();		
 	}
 	

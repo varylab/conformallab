@@ -14,7 +14,7 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
+import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility;
 
 
 /**
@@ -36,7 +36,7 @@ public final class CirclePatternLayout {
 		CPEuclideanRotation<V, E, F> rot = new CPEuclideanRotation<V, E, F>();
 		calculateGeneric(hds, rot, rhoMap, thetaMap, a, getter, setter);
 		// set unlayoutable faces
-		List<E> ears = IsothermicUtility.findEarsEdge(hds);
+		List<E> ears = QuasiisothermicUtility.findEarsEdge(hds);
 		for (E e : ears) {
 			double[] xyFace = a.getD(getter, e.getRightFace());
 			a.set(setter, e.getTargetVertex(), xyFace);

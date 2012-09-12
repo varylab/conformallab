@@ -1,8 +1,5 @@
 package de.varylab.discreteconformal.plugin;
 
-import static de.varylab.discreteconformal.adapter.HyperbolicModel.Klein;
-import static de.varylab.discreteconformal.plugin.InterpolationMethod.Incircle;
-
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -17,9 +14,19 @@ import de.jreality.plugin.JRViewerUtility;
 import de.jreality.plugin.basic.Scene;
 import de.jreality.plugin.basic.View;
 import de.jreality.plugin.content.ContentAppearance;
+import de.jreality.plugin.menu.BackgroundColor;
 import de.jreality.scene.event.AppearanceEvent;
 import de.jreality.scene.event.AppearanceListener;
 import de.jreality.ui.AppearanceInspector;
+import de.jtem.halfedge.Edge;
+import de.jtem.halfedge.Face;
+import de.jtem.halfedge.Node;
+import de.jtem.halfedge.Vertex;
+import de.jtem.halfedgetools.adapter.AbstractAdapter;
+import de.jtem.halfedgetools.adapter.Adapter;
+import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Position;
+import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeListener;
@@ -29,9 +36,6 @@ import de.jtem.halfedgetools.plugin.widget.MarqueeWidget;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
-import de.varylab.discreteconformal.adapter.HyperbolicModel;
-import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
-import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 
 public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements ActionListener, HalfedgeListener, AppearanceListener, SelectionListener {
 
@@ -40,15 +44,11 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		visHif = null;
 	private Scene
 		domainScene = null;
-	private ConformalVisualizationPlugin
-		conformalVisualizationPlugin = null;
 	private ContentAppearance
 		mainAppearance = null,
 		visAppearance = null;
-	private CoPositionAdapter
-		positionAdapter = new CoPositionAdapter(true);
-	private CoTexturePositionAdapter
-		texturePositionAdapter = new CoTexturePositionAdapter(Klein, Incircle);
+	private TextureDomainPositionAdapter
+		domainAdapter = new TextureDomainPositionAdapter();
 	
 	private JRViewer
 		domainViewer = new JRViewer();
@@ -62,32 +62,54 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 	}
 
 	
+	@TexturePosition
+	@Position
+	public class TextureDomainPositionAdapter extends AbstractAdapter<double[]> {
+		
+		public TextureDomainPositionAdapter() {
+			super(double[].class, true, false);
+		}
+		
+		@Override
+		public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
+			return Vertex.class.isAssignableFrom(nodeClass);
+		}
+		
+		@Override
+		public <
+			V extends Vertex<V, E, F>,
+			E extends Edge<V, E, F>,
+			F extends Face<V, E, F>
+		> double[] getV(V v, AdapterSet a) {
+			a.setPriorityBound(getPriority());
+			double[] tp = a.getD(TexturePosition.class, v);
+			a.removePriorityBound();
+			return tp;
+		}
+		
+		@Override
+		public double getPriority() {
+			return 1000.0;
+		}
+		
+	}
+	
+	
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		updateVisualization();
 	}
 	
-	
 	public void updateVisualization() {
-		HyperbolicModel model = conformalVisualizationPlugin.getSelectedHyperbolicModel();
-		texturePositionAdapter.setModel(model);
+//		HyperbolicModel model = conformalVisualizationPlugin.getSelectedHyperbolicModel();
+//		texturePositionAdapter.setModel(model);
+		for (Adapter<?> a : mainHif.getAdapters()) {
+			visHif.addAdapter(a, false);
+		}
 		visHif.set(mainHif.get());
 		JRViewerUtility.encompassEuclidean(domainScene);
 	}
-	
-	private void synchronizeApprearances() {
-		AppearanceInspector vi = visAppearance.getAppearanceInspector();
-		AppearanceInspector mi = mainAppearance.getAppearanceInspector();
-		vi.setTextureScaleLock(mi.isTextureScaleLock());
-		vi.setTextureScaleU(mi.getTextureScaleU());
-		vi.setTextureScaleV(mi.getTextureScaleV());
-		vi.setTextureTranslationU(mi.getTextureTranslationU());
-		vi.setTextureTranslationV(mi.getTextureTranslationV());
-		vi.setTextureRotationAngle(mi.getTextureRotationAngle());
-		vi.setTextureShearAngle(mi.getTextureShearAngle());
-		vi.setTexture(mi.getTexture());
-	}
-	
 	
 	@Override
 	public void install(Controller c) throws Exception {
@@ -101,6 +123,8 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		domainViewer.registerPlugin(HalfedgeInterface.class);
 		domainViewer.registerPlugin(ContentAppearance.class);
 		domainViewer.registerPlugin(MarqueeWidget.class);
+		domainViewer.setShowPanelSlots(false, false, false, false);
+		domainViewer.setShowToolBar(true);
 		JRootPane viewerRoot = domainViewer.startupLocal();
 		viewerRoot.setJMenuBar(null);
 		viewerRoot.setPreferredSize(new Dimension(200, 400));
@@ -111,17 +135,39 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		mainAppearance.getAppearanceInspector().getAppearance().addAppearanceListener(this);
 		visHif = domainViewer.getPlugin(HalfedgeInterface.class);
 		visAppearance = domainViewer.getPlugin(ContentAppearance.class);
-		visHif.addAdapter(positionAdapter, true);
-		visHif.addAdapter(texturePositionAdapter, true);
-		conformalVisualizationPlugin = c.getPlugin(ConformalVisualizationPlugin.class);
+		visHif.addAdapter(domainAdapter, true);
 		mainHif.addSelectionListener(this);
 		visHif.addSelectionListener(this);
 		domainScene = domainViewer.getPlugin(Scene.class);
+		domainViewer.getPlugin(BackgroundColor.class).setColor("Transparent Black");
 	}
 	
 	@Override
 	public void appearanceChanged(AppearanceEvent ev) {
-		synchronizeApprearances();
+		AppearanceInspector vi = visAppearance.getAppearanceInspector();
+		AppearanceInspector mi = mainAppearance.getAppearanceInspector();
+		
+		// texture apprearance
+		vi.setTextureScaleLock(mi.isTextureScaleLock());
+		vi.setTextureScaleU(mi.getTextureScaleU());
+		vi.setTextureScaleV(mi.getTextureScaleV());
+		vi.setTextureTranslationU(mi.getTextureTranslationU());
+		vi.setTextureTranslationV(mi.getTextureTranslationV());
+		vi.setTextureRotationAngle(mi.getTextureRotationAngle());
+		vi.setTextureShearAngle(mi.getTextureShearAngle());
+		vi.setTexture(mi.getTexture());
+		
+		// vertices, edges, and faces
+		vi.setShowPoints(mi.isShowPoints());
+		vi.setShowLines(mi.isShowLines());
+		vi.setShowFaces(mi.isShowFaces());
+		vi.setPointRadius(mi.getPointRadius());
+		vi.setSpheres(mi.isSpheres());
+		vi.setTubeRadius(mi.getTubeRadius());
+		vi.setTubes(mi.isTubes());
+		vi.setPointColor(mi.getPointColor());
+		vi.setLineColor(mi.getLineColor());
+		vi.setFaceColor(mi.getFaceColor());
 	}
 	
 	@Override

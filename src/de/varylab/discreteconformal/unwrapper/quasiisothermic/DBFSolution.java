@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.unwrapper.isothermic;
+package de.varylab.discreteconformal.unwrapper.quasiisothermic;
 
 import java.util.HashMap;
 import java.util.Map;

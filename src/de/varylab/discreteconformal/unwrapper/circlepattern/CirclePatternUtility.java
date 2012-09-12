@@ -14,8 +14,8 @@ import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
 import de.jtem.jtao.Tao.Method;
-import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
 import de.varylab.discreteconformal.unwrapper.numerics.CPEuclideanApplication;
+import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility;
 
 public class CirclePatternUtility {
 
@@ -47,7 +47,7 @@ public class CirclePatternUtility {
 		
 		CPEuclideanApplication<V, E, F, HDS> app = new CPEuclideanApplication<V, E, F, HDS>(hds, thetaMap, phiMap);
 		app.setInitialSolutionVec(rho);
-		Mat H = Mat.createSeqAIJ(dim, dim, PETSc.PETSC_DEFAULT, IsothermicUtility.getPETScNonZeros(hds, app.getFunctional()));
+		Mat H = Mat.createSeqAIJ(dim, dim, PETSc.PETSC_DEFAULT, QuasiisothermicUtility.getPETScNonZeros(hds, app.getFunctional()));
 		H.assemble();
 		app.setHessianMat(H, H);
 		

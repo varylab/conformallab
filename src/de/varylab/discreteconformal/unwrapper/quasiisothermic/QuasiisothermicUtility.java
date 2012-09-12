@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.unwrapper.isothermic;
+package de.varylab.discreteconformal.unwrapper.quasiisothermic;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static java.lang.Math.PI;
@@ -24,14 +24,18 @@ import de.jtem.halfedge.Node;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AbstractAdapter;
+import de.jtem.halfedgetools.adapter.Adapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.CurvatureFieldMin;
 import de.jtem.halfedgetools.adapter.type.Normal;
 import de.jtem.halfedgetools.adapter.type.Position;
+import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.BaryCenter4d;
 import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
+import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.functional.Functional;
+import de.jtem.halfedgetools.plugin.algorithm.vectorfield.EdgeVectorFieldMaxAdapter;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.KSP;
 import de.jtem.jpetsc.Mat;
@@ -40,48 +44,52 @@ import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.heds.CoEdge;
-import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.types.OppositeAngle;
 import de.varylab.discreteconformal.unwrapper.ConesUtility;
 
-public class IsothermicUtility {
+public class QuasiisothermicUtility {
 
 	static {
 		Tao.Initialize();
 	}
 	
 	@OppositeAngle
-	public static class OppositeAnglesAdapter extends AbstractAdapter<Double> {
+	public static class OppositeAnglesAdapter <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> extends AbstractAdapter<Double> {
 		
-		private Map<CoEdge, Double>
-			angleMap = new HashMap<CoEdge, Double>();
+		private Map<E, Double>
+			angleMap = new HashMap<E, Double>();
 		
-		public OppositeAnglesAdapter(Map<CoEdge, Double> betaMap) {
+		public OppositeAnglesAdapter(Map<E, Double> betaMap) {
 			super(Double.class, true, true);
 			this.angleMap = betaMap;
 		}
 		
 		@Override
 		public <
-			V extends Vertex<V, E, F>,
-			E extends Edge<V, E, F>,
-			F extends Face<V, E, F>
-		> Double getE(E e, AdapterSet a) {
+			VV extends Vertex<VV, EE, FF>,
+			EE extends Edge<VV, EE, FF>,
+			FF extends Face<VV, EE, FF>
+		> Double getE(EE e, AdapterSet a) {
 			if (!angleMap.containsKey(e)) {
 				return 0.0;
 			}
 			return angleMap.get(e);
 		}
 		
+		@SuppressWarnings("unchecked")
 		@Override
 		public <
-			V extends Vertex<V, E, F>,
-			E extends Edge<V, E, F>,
-			F extends Face<V, E, F>
-		> void setE(E e, Double value, AdapterSet a) {
-			angleMap.put((CoEdge)e, value);
+			VV extends Vertex<VV, EE, FF>,
+			EE extends Edge<VV, EE, FF>,
+			FF extends Face<VV, EE, FF>
+		> void setE(EE e, Double value, AdapterSet a) {
+			angleMap.put((E)e, value);
 		}
 		
 		@Override
@@ -100,9 +108,9 @@ public class IsothermicUtility {
 	 * @return
 	 */
 	public static double calculateBeta(double alpha1, double alpha2, double alpha3) {
-		alpha1 = IsothermicUtility.normalizeAngle(alpha1);
-		alpha2 = IsothermicUtility.normalizeAngle(alpha2);
-		alpha3 = IsothermicUtility.normalizeAngle(alpha3);
+		alpha1 = QuasiisothermicUtility.normalizeAngle(alpha1);
+		alpha2 = QuasiisothermicUtility.normalizeAngle(alpha2);
+		alpha3 = QuasiisothermicUtility.normalizeAngle(alpha3);
 		double beta = abs(alpha2 - alpha1);
 		if ((alpha3 > alpha2 && alpha3 > alpha1) || (alpha3 < alpha2 && alpha3 < alpha1)) {
 			return beta;
@@ -124,16 +132,22 @@ public class IsothermicUtility {
 	}
 
 	
-	public static void subdivideFaceSingularities(CoHDS hds, Map<CoEdge, Double> alpha, AdapterSet a) {
-		Set<CoFace> faces = new HashSet<CoFace>(hds.getFaces());
-		for (CoFace f : faces) {
-			double index = getSingularityIndex(f, a);
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void subdivideFaceSingularities(HDS hds, Map<E, Double> alpha, AdapterSet a) {
+		Set<F> faces = new HashSet<F>(hds.getFaces());
+		for (F f : faces) {
+			double index = getSingularityIndexF(f, alpha, a);
 			if (Math.abs(index) < 0.25) continue;
 			double[] p = a.getD(BaryCenter4d.class, f);
-			CoVertex v = TopologyAlgorithms.splitFace(f);
-			System.out.println("subdividing face " + f + " with index " + index + " -> " + v);
+			System.out.print("subdividing face " + f);
+			V v = TopologyAlgorithms.splitFace(f);
+			System.out.println("with index " + index + " -> " + v);
 			a.set(Position.class, v, p);
-			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+			for (E e : HalfEdgeUtils.incomingEdges(v)) {
 				double a1 = alpha.get(e.getPreviousEdge());
 				double a2 = alpha.get(e.getOppositeEdge().getNextEdge());
 				double a12 = (a1 + a2) / 2;
@@ -143,8 +157,30 @@ public class IsothermicUtility {
 		}
 	}
 	
-	public static double getSingularityIndex(CoFace f, AdapterSet a) {
-		return Math.round(2 * alphaRotation(f, a) / (2.0 * Math.PI)) / 2.0;
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double getSingularityIndexF(F f, Map<E, Double> alpha, AdapterSet a) {
+		return Math.round(2 * alphaRotationF(f, alpha, a) / (2.0 * Math.PI)) / 2.0;
+	}
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double getSingularityIndexV(V v, Map<E, Double> alpha, AdapterSet a) {
+		return Math.round(2 * alphaRotationV(v, alpha, a) / (2.0 * Math.PI)) / 2.0;
+	}
+	
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> int getSingularityIndexFromAdapterSet(F f, AdapterSet a) {
+		return (int)(Math.round(2 * alphaRotationFromAdapterSet(f, a) / (2.0 * Math.PI)) / 2.0);
 	}
 	
 	/**
@@ -166,7 +202,7 @@ public class IsothermicUtility {
 	}
 
 	
-	public static  <
+	public static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,
@@ -216,7 +252,7 @@ public class IsothermicUtility {
 	> double calculateAngleSumFromAlphas(V v, Map<E, Double> alphaMap) {
 		double sum = 0.0;
 		for (E e : HalfEdgeUtils.incomingEdges(v)) {
-			sum += IsothermicUtility.getOppositeBeta(e.getPreviousEdge(), alphaMap);
+			sum += QuasiisothermicUtility.getOppositeBeta(e.getPreviousEdge(), alphaMap);
 		}
 		return sum;
 	}
@@ -239,7 +275,7 @@ public class IsothermicUtility {
 	}
 	
 	
-	public static  <
+	public static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,
@@ -253,9 +289,14 @@ public class IsothermicUtility {
 		return nnz;
 	}
 	
-	public static Map<CoEdge, Double> calculateBetasFromAlphas(CoHDS hds, Map<CoEdge, Double> alphaMap) {
-		Map<CoEdge, Double> betaMap = new HashMap<CoEdge, Double>();
-		for (CoEdge e : hds.getEdges()) {
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> Map<E, Double> calculateBetasFromAlphas(HDS hds, Map<E, Double> alphaMap) {
+		Map<E, Double> betaMap = new HashMap<E, Double>();
+		for (E e : hds.getEdges()) {
 			if (e.getLeftFace() != null) {
 				double a1 = alphaMap.get(e);
 				double a2 = alphaMap.get(e.getNextEdge());
@@ -268,11 +309,16 @@ public class IsothermicUtility {
 	}
 	
 	
-	public static void checkTriangleAngles(CoHDS hds, Map<CoEdge, Double> betaMap) {
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void checkTriangleAngles(HDS hds, Map<E, Double> betaMap) {
 		double EPS = 1E-5;
-		for (CoFace f : hds.getFaces()) {
+		for (F f : hds.getFaces()) {
 			double sum = 0.0;
-			for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
+			for (E e : HalfEdgeUtils.boundaryEdges(f)) {
 				double beta = betaMap.get(e);
 				if (beta < 0) {
 					throw new RuntimeException("Negative angle at edge " + e + ": " + beta);
@@ -283,12 +329,12 @@ public class IsothermicUtility {
 				throw new RuntimeException("Angle sum at " + f + ": " + sum);
 			}
 		}
-		for (CoVertex v : hds.getVertices()) {
+		for (V v : hds.getVertices()) {
 			if (HalfEdgeUtils.isBoundaryVertex(v)) {
 				continue;
 			}
 			double sum = 0.0;
-			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+			for (E e : HalfEdgeUtils.incomingEdges(v)) {
 				double beta = betaMap.get(e.getPreviousEdge());
 				sum += beta;
 			}
@@ -306,16 +352,26 @@ public class IsothermicUtility {
 	 * @param hds
 	 * @param betaMap
 	 */
-	public static void createDelaunayAngleSystem(CoHDS hds, Map<CoEdge, Double> betaMap) {
-		OppositeAnglesAdapter anglesAdapter = new OppositeAnglesAdapter(betaMap);
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void createDelaunayAngleSystem(HDS hds, Map<E, Double> betaMap) {
+		OppositeAnglesAdapter<V, E, F> anglesAdapter = new OppositeAnglesAdapter<V, E, F>(betaMap);
 		AdapterSet a = new AdapterSet(anglesAdapter);
-		IsothermicDelaunay.constructDelaunay(hds, a);
+		QuasiisothermicDelaunay.constructDelaunay(hds, a);
 	}
 	
 	
-	public static Map<CoEdge, Double> calculateThetasFromBetas(CoHDS hds, Map<CoEdge, Double> betaMap) {
-		Map<CoEdge, Double> thetas = new HashMap<CoEdge, Double>();
-		for (CoEdge e : hds.getPositiveEdges()) {
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> Map<E, Double> calculateThetasFromBetas(HDS hds, Map<E, Double> betaMap) {
+		Map<E, Double> thetas = new HashMap<E, Double>();
+		for (E e : hds.getPositiveEdges()) {
 			double theta = PI;
 			if (e.getRightFace() != null) {
 				double betaRight = betaMap.get(e.getOppositeEdge());
@@ -332,9 +388,14 @@ public class IsothermicUtility {
 	}
 
 	
-	public static Map<CoFace, Double> calculatePhisFromBetas(CoHDS hds, Map<CoEdge, Double> betaMap) {
-		Map<CoFace, Double> phiMap = new HashMap<CoFace, Double>();
-		for (CoFace f : hds.getFaces()) {
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> Map<F, Double> calculatePhisFromBetas(HDS hds, Map<E, Double> betaMap) {
+		Map<F, Double> phiMap = new HashMap<F, Double>();
+		for (F f : hds.getFaces()) {
 			phiMap.put(f, 2*PI);
 		}
 		return phiMap;
@@ -363,11 +424,16 @@ public class IsothermicUtility {
 	}
 	
 	
-	public static void layoutEars(CoHDS hds, Map<CoEdge, Double> alphaMap) {
-//		List<CoEdge> earEdges = findEarsEdge(hds);
-//		for (CoEdge ear : earEdges) {
-//			CoEdge base = ear.getPreviousEdge();
-//			CoVertex v = ear.getTargetVertex();
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void layoutEars(HDS hds, Map<E, Double> alphaMap) {
+//		List<E> earEdges = findEarsEdge(hds);
+//		for (E ear : earEdges) {
+//			E base = ear.getPreviousEdge();
+//			V v = ear.getTargetVertex();
 //			double[] p2 = base.getTargetVertex().T;
 //			double[] p1 = base.getStartVertex().T;
 //			double lBase = Pn.distanceBetween(p2, p1, Pn.EUCLIDEAN);
@@ -377,27 +443,34 @@ public class IsothermicUtility {
 	}
 	
 	
-	public static void alignLayout(CoHDS hds, Map<CoEdge, Double> alphaMap) {
-		 List<CoEdge> b = HalfEdgeUtils.boundaryEdges(hds);
-		 List<CoEdge> earEdges = findEarsEdge(hds);
-		 for (CoEdge e : earEdges) {
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void alignLayout(HDS hds, Map<E, Double> alphaMap, AdapterSet a) {
+		 List<E> b = HalfEdgeUtils.boundaryEdges(hds);
+		 List<E> earEdges = findEarsEdge(hds);
+		 for (E e : earEdges) {
 			 b.remove(e);
 			 b.remove(e.getNextEdge());
 		 }
-		 CoEdge refEdge = hds.getEdge(0);
+		 E refEdge = hds.getEdge(0);
 		 if (b.size() != 0) {
 			 refEdge = b.get(0);
 		 }
 		 double alpha = alphaMap.get(refEdge);
-		 double[] s = refEdge.getStartVertex().T;
-		 double[] t = refEdge.getTargetVertex().T;
+		 double[] s = a.getD(TexturePosition4d.class, refEdge.getStartVertex());
+		 double[] t = a.getD(TexturePosition4d.class, refEdge.getTargetVertex());
 		 double angle = atan((s[1] - t[1]) / (s[0] - t[0]));
 		 double difAngle = alpha - angle;
 		 MatrixBuilder mb = MatrixBuilder.euclidean();
 		 mb.rotate(difAngle, new double[] {0,0,1});
 		 Matrix T = mb.getMatrix();
-		 for (CoVertex v : hds.getVertices()) {
-			 T.transformVector(v.T);
+		 for (V v : hds.getVertices()) {
+			 double[] vt = a.getD(TexturePosition4d.class, v);
+			 T.transformVector(vt);
+			 a.set(TexturePosition.class, v, vt);
 		 }
 	}
 	
@@ -437,28 +510,40 @@ public class IsothermicUtility {
 	 * @param hds
 	 * @param betaMap
 	 */
-	public static void cutConesToBoundary(CoHDS hds, Map<CoEdge, Double> betaMap) {
-		Set<CoVertex> innerVerts = new HashSet<CoVertex>(hds.getVertices());
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void cutConesToBoundary(HDS hds, Map<E, Double> betaMap) {
+		Set<V> innerVerts = new HashSet<V>(hds.getVertices());
 		innerVerts.removeAll(HalfEdgeUtils.boundaryVertices(hds));
-		for (CoVertex v : innerVerts) {
+		for (V v : innerVerts) {
+			if (!(v instanceof CoVertex)) throw new IllegalArgumentException("cutConesToBoundary() only works with CoVertex");
+			CoVertex cv = (CoVertex)v;
 			double sum = calculateAngleSumFromBetas(v, betaMap);
 			if (abs(abs(sum) - 2*PI) > Math.PI/4) {
 				System.out.println("angle sum " + sum);
 				int index = (int)Math.round(sum / PI);
-				v.setTheta(index * PI);
+				cv.setTheta(index * PI);
 				if((index % 2) != 0) {
 					System.out.println("singularity: " + v + ", " + index + " pi");
 				}
 			} else {
-				v.setTheta(2 * PI);
+				cv.setTheta(2 * PI);
 			}
 		}
-		ConesUtility.cutMesh(hds);
+		ConesUtility.cutMesh((CoHDS)hds);
 	}
 
-	public static Map<CoEdge, Double> calculateAlphasFromCurvature(AdapterSet a, CoHDS hds) {
-		Map<CoEdge, Double> alphaMap = new HashMap<CoEdge, Double>();
-		for(CoEdge e : hds.getEdges()) {
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> Map<E, Double> calculateAlphasFromCurvature(AdapterSet a, HDS hds) {
+		Map<E, Double> alphaMap = new HashMap<E, Double>();
+		for(E e : hds.getEdges()) {
 			double[] N = a.getD(Normal.class, e);
 			double[] Kmin = a.getD(CurvatureFieldMin.class, e);
 			double[] E = a.getD(EdgeVector.class, e);
@@ -481,20 +566,25 @@ public class IsothermicUtility {
 		double[] N = a.getD(Normal.class, e);
 		double[] Kmin = a.getD(CurvatureFieldMin.class, e);
 		double[] E = a.getD(EdgeVector.class, e);
-		return IsothermicUtility.getSignedAngle(N, Kmin, E);
+		return QuasiisothermicUtility.getSignedAngle(N, Kmin, E);
 	}
 	
 
-	public static Map<CoFace, Double> calculateOrientationFromAlphas(CoHDS hds,	Map<CoEdge, Double> alphaMap) {
-		Map<CoFace, Double> orientationMap = new HashMap<CoFace, Double>(hds.numFaces());
-		for(CoFace f : hds.getFaces()) {
-			CoEdge e = f.getBoundaryEdge();
-			orientationMap.put(f, 
-					angleOrientation(
-						alphaMap.get(e), 
-						alphaMap.get(e.getNextEdge()), 
-						alphaMap.get(e.getPreviousEdge())
-					));
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> Map<F, Double> calculateOrientationFromAlphas(HDS hds, Map<E, Double> alphaMap) {
+		Map<F, Double> orientationMap = new HashMap<F, Double>(hds.numFaces());
+		for(F f : hds.getFaces()) {
+			E e = f.getBoundaryEdge();
+			double orientation = angleOrientation(
+				alphaMap.get(e), 
+				alphaMap.get(e.getNextEdge()), 
+				alphaMap.get(e.getPreviousEdge())
+			);
+			orientationMap.put(f, orientation);
 		}
 		return orientationMap;
 	}
@@ -502,9 +592,9 @@ public class IsothermicUtility {
 
 	public static double angleOrientation(double alpha1, double alpha2,	double alpha3) {
 		return (
-				((alpha1 < alpha2) && (alpha2 < alpha3)) ||
-				((alpha2 < alpha3) && (alpha3 < alpha1)) ||
-				((alpha3 < alpha1) && (alpha1 < alpha2)) 
+			((alpha1 < alpha2) && (alpha2 < alpha3)) ||
+			((alpha2 < alpha3) && (alpha3 < alpha1)) ||
+			((alpha3 < alpha1) && (alpha1 < alpha2)) 
 				)? -1.0 : 1.0;
 	}
 	
@@ -512,7 +602,7 @@ public class IsothermicUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> double alphaOrientation(F f, AdapterSet a) {
+	> double alphaOrientationFromAdapterSet(F f, AdapterSet a) {
 		E e = f.getBoundaryEdge();
 		double alpha1 = calculateAlpha(e,a);
 		double alpha2 = calculateAlpha(e.getNextEdge(),a);
@@ -524,12 +614,12 @@ public class IsothermicUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> double alphaRotation(F f, AdapterSet a) {
+	> double alphaRotationFromAdapterSet(F f, AdapterSet a) {
 		E se = f.getBoundaryEdge();
 		E e = se;
 		double rotation = 0.0;
 		do {
-			rotation += alphaRotation(e,a);
+			rotation += alphaRotationFromAdapterSet(e,a);
 			e = e.getNextEdge();
 		} while(e != se); 
 		return rotation;
@@ -539,12 +629,12 @@ public class IsothermicUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> double alphaRotation(V v, AdapterSet a) {
+	> double alphaRotationFromAdapterSet(V v, AdapterSet a) {
 		E se = v.getIncomingEdge();
 		E e = se;
 		double rotation = 0.0;
 		do {
-			rotation += alphaRotation(e,a);
+			rotation += alphaRotationFromAdapterSet(e,a);
 			e = e.getNextEdge().getOppositeEdge();
 		} while(e != se);
 		return rotation;
@@ -554,7 +644,7 @@ public class IsothermicUtility {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
-	> double alphaRotation(E e, AdapterSet a) {
+	> double alphaRotationFromAdapterSet(E e, AdapterSet a) {
 		double alpha1 = calculateAlpha(e,a);
 		double[] edge1 = a.getD(EdgeVector.class,e);
 		double alpha2 = calculateAlpha(e.getNextEdge(),a);
@@ -564,13 +654,63 @@ public class IsothermicUtility {
 		return rotation;
 	}
 	
-	public static Map<CoVertex, Double> calculateQuasiconformalFactors(CoHDS hds, Map<CoEdge, Double> edgeLengths, Map<CoEdge, Double> texLengths) {
-		Map<CoEdge, Integer> eIndexMap = createSolverEdgeIndexMap(hds, false);
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double alphaRotationF(F f, Map<E, Double> alpha, AdapterSet a) {
+		E se = f.getBoundaryEdge();
+		E e = se;
+		double rotation = 0.0;
+		do {
+			rotation += alphaRotationE(e, alpha, a);
+			e = e.getNextEdge();
+		} while(e != se); 
+		return rotation;
+	}
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double alphaRotationV(V v, Map<E, Double> alpha, AdapterSet a) {
+		E se = v.getIncomingEdge();
+		E e = se;
+		double rotation = 0.0;
+		do {
+			rotation += alphaRotationE(e, alpha, a);
+			e = e.getNextEdge().getOppositeEdge();
+		} while(e != se);
+		return rotation;
+	}
+	
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> double alphaRotationE(E e, Map<E, Double> alpha, AdapterSet a) {
+		double alpha1 = alpha.get(e);
+		double[] edge1 = a.getD(EdgeVector.class,e);
+		double alpha2 = alpha.get(e.getNextEdge());
+		double[] edge2 = a.getD(EdgeVector.class,e.getNextEdge());
+		double gamma = Rn.euclideanAngle(edge1, edge2);
+		double rotation = normalizeAngle(gamma + alpha1 -alpha2 - Math.PI);
+		return rotation;
+	}
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> Map<V, Double> calculateQuasiconformalFactors(HDS hds, Map<E, Double> edgeLengths, Map<E, Double> texLengths) {
+		Map<E, Integer> eIndexMap = createSolverEdgeIndexMap(hds, false);
 		int m = hds.numEdges() / 2;
 		Vec u = new Vec(m);
 		Vec l = new Vec(m);
 		Mat A = Mat.createSeqAIJ(m, m, 2, null);
-		for (CoEdge e : hds.getPositiveEdges()) {
+		for (E e : hds.getPositiveEdges()) {
 			int eIndex = eIndexMap.get(e);
 			int i = e.getStartVertex().getIndex();
 			int j = e.getTargetVertex().getIndex();
@@ -590,12 +730,37 @@ public class IsothermicUtility {
 		ksp.setOperators(A, A, MatStructure.SAME_NONZERO_PATTERN);
 		ksp.solve(l, u);
 		System.out.println("ksp residual: " + ksp.getResidualNorm());
-		Map<CoVertex, Double> result = new HashMap<CoVertex, Double>();
-		for (CoVertex v : hds.getVertices()) {
+		Map<V, Double> result = new HashMap<V, Double>();
+		for (V v : hds.getVertices()) {
 			double ui = u.getValue(v.getIndex());
 			result.put(v, ui);
 		}
 		return result;
+	}
+
+
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> Adapter<double[]> createAlphaField(HDS hds, Map<E, Double> alpha, AdapterSet a, String name) {
+		Map<E, double[]> vMap = new HashMap<E, double[]>();
+		for (E e : hds.getPositiveEdges()) {
+			if (!alpha.containsKey(e)) continue;
+			double al = alpha.get(e);
+			double[] ev = a.getD(EdgeVector.class, e);
+			Rn.normalize(ev, ev);
+			double[] n = a.getD(Normal.class, e);
+			double[] vp = Rn.crossProduct(null, ev, n);
+			Rn.times(ev, Math.cos(al), ev);
+			Rn.times(vp, Math.sin(al), vp);
+			double[] vec = Rn.add(null, ev, vp);
+			vMap.put(e, vec);
+			vMap.put(e.getOppositeEdge(), vec);
+		}
+		EdgeVectorFieldMaxAdapter aMax = new EdgeVectorFieldMaxAdapter(vMap, name);
+		return aMax;
 	}
 	
 }

@@ -21,6 +21,8 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicLayout;
+import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility;
 
 public class IsothermicLayoutTest {
 
@@ -50,11 +52,11 @@ public class IsothermicLayoutTest {
 			angleMap.put(e.getOppositeEdge(), angleMap.get(e));
 		}
 		
-		Map<CoFace, Double> orientationMap = IsothermicUtility.calculateOrientationFromAlphas(hds, angleMap);
+		Map<CoFace, Double> orientationMap = QuasiisothermicUtility.calculateOrientationFromAlphas(hds, angleMap);
 		
 		AdapterSet aSet = new ConformalAdapterSet();
-		IsothermicLayout.setInitialLength(2.0);
-		IsothermicLayout.doTexLayout(hds, angleMap, orientationMap, aSet);
+		QuasiisothermicLayout.setInitialLength(2.0);
+		QuasiisothermicLayout.doTexLayout(hds, angleMap, orientationMap, aSet);
 		
 		double[] tv0 = {0, 1, 0, 1};
 		double[] tv1 = {-1, 0, 0, 1};

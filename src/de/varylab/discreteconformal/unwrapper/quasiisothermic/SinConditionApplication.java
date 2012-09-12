@@ -1,10 +1,10 @@
-package de.varylab.discreteconformal.unwrapper.isothermic;
+package de.varylab.discreteconformal.unwrapper.quasiisothermic;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
 import static de.jtem.jpetsc.PETSc.PETSC_DEFAULT;
-import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateBeta;
+import static de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility.calculateBeta;
 import static java.lang.Math.log;
 import static java.lang.Math.sin;
 import static java.lang.Math.tan;
@@ -75,7 +75,7 @@ public class SinConditionApplication <
 			if (N == null || Kmin == null || E == null) {
 				throw new RuntimeException("Could not get curvature information at edge " + e);
 			}
-			double ae = IsothermicUtility.getSignedAngle(N, Kmin, E);
+			double ae = QuasiisothermicUtility.getSignedAngle(N, Kmin, E);
 			initialAlphas.put(e, ae);
 			initialAlphas.put(e.getOppositeEdge(), ae);
 		}
@@ -83,8 +83,8 @@ public class SinConditionApplication <
 	}
 	
 	public void initialize(Map<E, Double> initAlphas, boolean excludeBoundary) {
-		this.solverEdgeIndices = IsothermicUtility.createSolverEdgeIndexMap(hds, excludeBoundary);
-		this.solverVertexIndices = IsothermicUtility.createSolverVertexIndexMap(hds);
+		this.solverEdgeIndices = QuasiisothermicUtility.createSolverEdgeIndexMap(hds, excludeBoundary);
+		this.solverVertexIndices = QuasiisothermicUtility.createSolverVertexIndexMap(hds);
 		this.initialAlphas = initAlphas;
 		int maxIndex = -1;
 		for (E e : hds.getEdges()) {
@@ -399,9 +399,9 @@ public class SinConditionApplication <
 		double alpha_ki = getAlpha(e, aVec);
 		double alpha_ij = getAlpha(e.getNextEdge(), aVec);
 		double alpha_jk = getAlpha(e.getPreviousEdge(), aVec);
-		alpha_ki = IsothermicUtility.normalizeAngle(alpha_ki);
-		alpha_ij = IsothermicUtility.normalizeAngle(alpha_ij);
-		alpha_jk = IsothermicUtility.normalizeAngle(alpha_jk);
+		alpha_ki = QuasiisothermicUtility.normalizeAngle(alpha_ki);
+		alpha_ij = QuasiisothermicUtility.normalizeAngle(alpha_ij);
+		alpha_jk = QuasiisothermicUtility.normalizeAngle(alpha_jk);
 		double betaSign = Math.signum(alpha_jk - alpha_ij);
 		if ((alpha_ki > alpha_jk && alpha_ki > alpha_ij) || (alpha_ki < alpha_jk && alpha_ki < alpha_ij)) {
 			return -1*betaSign;
@@ -414,9 +414,9 @@ public class SinConditionApplication <
 		double alpha_ki = getAlpha(e, aVec);
 		double alpha_ij = getAlpha(e.getNextEdge(), aVec);
 		double alpha_jk = getAlpha(e.getPreviousEdge(), aVec);
-		alpha_ki = IsothermicUtility.normalizeAngle(alpha_ki);
-		alpha_ij = IsothermicUtility.normalizeAngle(alpha_ij);
-		alpha_jk = IsothermicUtility.normalizeAngle(alpha_jk);
+		alpha_ki = QuasiisothermicUtility.normalizeAngle(alpha_ki);
+		alpha_ij = QuasiisothermicUtility.normalizeAngle(alpha_ij);
+		alpha_jk = QuasiisothermicUtility.normalizeAngle(alpha_jk);
 		double betaSign = Math.signum(alpha_jk - alpha_ij);
 		if ((alpha_ki > alpha_jk && alpha_ki > alpha_ij) || (alpha_ki < alpha_jk && alpha_ki < alpha_ij)) {
 			return 1*betaSign;

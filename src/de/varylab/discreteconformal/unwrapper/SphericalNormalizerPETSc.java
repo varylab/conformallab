@@ -11,6 +11,7 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import de.jreality.math.Pn;
+import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -31,6 +32,8 @@ public class SphericalNormalizerPETSc {
 		maxIterations = 400;
 	
 	static {
+		NativePathUtility.set("native");
+		NativePathUtility.set("../DiscreteConformalLab/native");
 		Tao.Initialize();		
 	}
 	

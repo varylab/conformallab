@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.adapter;
 
-import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.alphaOrientation;
+import static de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility.alphaOrientationFromAdapterSet;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.Node;
@@ -21,7 +21,7 @@ public class TriangleOrientationAdapter extends AbstractAdapter<Double> {
 		F extends Face<V, E, F>
 	> Double getF(F f, AdapterSet a) {
 		try {
-			return alphaOrientation(f, a);
+			return alphaOrientationFromAdapterSet(f, a);
 		} catch (Exception e) {
 			return -1.0;
 		}

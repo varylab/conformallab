@@ -26,10 +26,10 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternUtility;
-import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicDelaunay;
-import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility;
-import de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.OppositeAnglesAdapter;
 import de.varylab.discreteconformal.unwrapper.numerics.TaoDomain;
+import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicDelaunay;
+import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility;
+import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility.OppositeAnglesAdapter;
 import de.varylab.discreteconformal.util.TestUtility;
 
 public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
@@ -88,9 +88,9 @@ public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFa
 			alphaMap.put(e.getOppositeEdge(), alphaMap.get(e));
 		}
 		
-		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
-		Map<CoEdge, Double> thetaMap = IsothermicUtility.calculateThetasFromBetas(hds, betaMap);
-		Map<CoFace, Double> phiMap = IsothermicUtility.calculatePhisFromBetas(hds, betaMap);
+		Map<CoEdge, Double> betaMap = QuasiisothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
+		Map<CoEdge, Double> thetaMap = QuasiisothermicUtility.calculateThetasFromBetas(hds, betaMap);
+		Map<CoFace, Double> phiMap = QuasiisothermicUtility.calculatePhisFromBetas(hds, betaMap);
 		CPEuclideanFunctional<CoVertex, CoEdge, CoFace>
 			fun = new CPEuclideanFunctional<CoVertex, CoEdge, CoFace>(thetaMap, phiMap);
 		setFunctional(fun);
@@ -111,29 +111,29 @@ public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFa
 	
 	@Test
 	public void testCalculateTriangleAngle() throws Exception {
-		double a1 = IsothermicUtility.calculateBeta(PI/2, 0, PI/4);
+		double a1 = QuasiisothermicUtility.calculateBeta(PI/2, 0, PI/4);
 		Assert.assertEquals(PI/2, a1, 1E-10);
-		double a2 = IsothermicUtility.calculateBeta(PI/2, 0, -PI/4);
+		double a2 = QuasiisothermicUtility.calculateBeta(PI/2, 0, -PI/4);
 		Assert.assertEquals(PI/2, a2, 1E-10);
-		double a3 = IsothermicUtility.calculateBeta(-PI/2 + EPS, PI/2 - EPS, 0);
+		double a3 = QuasiisothermicUtility.calculateBeta(-PI/2 + EPS, PI/2 - EPS, 0);
 		Assert.assertEquals(2*EPS, a3, 1E-10);
-		double a4 = IsothermicUtility.calculateBeta(-PI/2 + EPS, PI/2 - EPS, PI/2);
+		double a4 = QuasiisothermicUtility.calculateBeta(-PI/2 + EPS, PI/2 - EPS, PI/2);
 		Assert.assertEquals(PI - 2*EPS, a4, 1E-10); // TODO check fails if EPS=0
-		double a5 = IsothermicUtility.calculateBeta(-PI/8, -3*PI/8, PI/2);
+		double a5 = QuasiisothermicUtility.calculateBeta(-PI/8, -3*PI/8, PI/2);
 		Assert.assertEquals(PI/4, a5, 1E-10);
-		double a6 = IsothermicUtility.calculateBeta(PI/8, 3*PI/8, PI/2);
+		double a6 = QuasiisothermicUtility.calculateBeta(PI/8, 3*PI/8, PI/2);
 		Assert.assertEquals(PI/4, a6, 1E-10);
-		double a7 = IsothermicUtility.calculateBeta(-PI/4, PI/4, PI/2);
+		double a7 = QuasiisothermicUtility.calculateBeta(-PI/4, PI/4, PI/2);
 		Assert.assertEquals(PI/2, a7, 1E-10);
-		double a8 = IsothermicUtility.calculateBeta(-PI/4, PI/4, 0);
+		double a8 = QuasiisothermicUtility.calculateBeta(-PI/4, PI/4, 0);
 		Assert.assertEquals(PI/2, a8, 1E-10);
 	}
 	
 	@Test
 	public void testCalculateCirclePatternRadii() throws Exception {
-		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
-		Map<CoEdge, Double> thetaMap = IsothermicUtility.calculateThetasFromBetas(hds, betaMap);
-		Map<CoFace, Double> phiMap = IsothermicUtility.calculatePhisFromBetas(hds, betaMap);
+		Map<CoEdge, Double> betaMap = QuasiisothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
+		Map<CoEdge, Double> thetaMap = QuasiisothermicUtility.calculateThetasFromBetas(hds, betaMap);
+		Map<CoFace, Double> phiMap = QuasiisothermicUtility.calculatePhisFromBetas(hds, betaMap);
 
 		Map<CoFace, Double> rhoMap = CirclePatternUtility.calculateCirclePatternRhos(hds, thetaMap, phiMap);
 		Assert.assertEquals(0.0, rhoMap.get(hds.getFace(0)), 1E-10);
@@ -145,11 +145,11 @@ public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFa
 	
 	@Test
 	public void testCreateDelaunayAngleSystem() throws Exception {
-		Map<CoEdge, Double> betaMap = IsothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
-		OppositeAnglesAdapter oppositeAnglesAdapter = new OppositeAnglesAdapter(betaMap);
+		Map<CoEdge, Double> betaMap = QuasiisothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
+		OppositeAnglesAdapter<CoVertex, CoEdge, CoFace> oppositeAnglesAdapter = new OppositeAnglesAdapter<CoVertex, CoEdge, CoFace>(betaMap);
 		AdapterSet a = new AdapterSet(oppositeAnglesAdapter);
 
-		IsothermicDelaunay.flip(e0, a);
+		QuasiisothermicDelaunay.flip(e0, a);
 		
 		double g1 = betaMap.get(e0.getNextEdge());
 		double g2 = betaMap.get(e0.getPreviousEdge());
@@ -178,7 +178,7 @@ public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFa
 			texLengthMap.put(e.getOppositeEdge(), checkFactor*l);
 		}
 		
-		Map<CoVertex, Double> uMap = IsothermicUtility.calculateQuasiconformalFactors(conformal, edgeLengthMap, texLengthMap);
+		Map<CoVertex, Double> uMap = QuasiisothermicUtility.calculateQuasiconformalFactors(conformal, edgeLengthMap, texLengthMap);
 		
 		for (CoVertex v : conformal.getVertices()) {
 			double u1 = uMap.get(v);

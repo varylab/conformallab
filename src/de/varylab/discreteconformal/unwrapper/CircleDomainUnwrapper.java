@@ -25,6 +25,7 @@ import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.data.Attribute;
 import de.jreality.scene.data.DataList;
 import de.jreality.scene.data.DoubleArrayArray;
+import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
@@ -66,7 +67,9 @@ public class CircleDomainUnwrapper implements Unwrapper{
 	
 	
 	static {
-		Tao.Initialize();		
+		NativePathUtility.set("native");
+		NativePathUtility.set("../DiscreteConformalLab/native");
+		Tao.Initialize();	
 	}
 	
 	

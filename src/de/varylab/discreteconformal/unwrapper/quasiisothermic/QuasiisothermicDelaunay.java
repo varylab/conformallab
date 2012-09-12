@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.unwrapper.isothermic;
+package de.varylab.discreteconformal.unwrapper.quasiisothermic;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryEdge;
 import static java.lang.Math.PI;
@@ -29,7 +29,7 @@ import de.varylab.discreteconformal.heds.adapter.types.OppositeAngle;
  * <a href="http://www.math.tu-berlin.de/geometrie">TU-Berlin</a> 
  * @author Stefan Sechelmann
  */
-public class IsothermicDelaunay {
+public class QuasiisothermicDelaunay {
 
 	
 	/**

@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.plugin;
 
-import static de.varylab.discreteconformal.unwrapper.isothermic.IsothermicUtility.calculateQuasiconformalFactors;
+import static de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility.calculateQuasiconformalFactors;
 import static java.lang.Math.exp;
 
 import java.util.HashMap;

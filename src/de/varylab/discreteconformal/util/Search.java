@@ -83,6 +83,9 @@ public class Search {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> List<E> bFS(Collection<E> valid, V start, Collection<V> endPoints, boolean avoidBorderEdges, Comparator<E> comp) throws NoSuchElementException{
+		if (endPoints.contains(start)) {
+			return Collections.emptyList();
+		}
 		HashMap<V, Stack<E>> pathMap = new HashMap<V, Stack<E>>();
 		LinkedList<V> queue = new LinkedList<V>();
 		HashSet<V> visited = new HashSet<V>();
