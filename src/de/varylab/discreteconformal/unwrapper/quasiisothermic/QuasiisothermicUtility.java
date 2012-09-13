@@ -142,17 +142,26 @@ public class QuasiisothermicUtility {
 		for (F f : faces) {
 			double index = getSingularityIndexF(f, alpha, a);
 			if (Math.abs(index) < 0.25) continue;
+			
+			// calulate alpha rotations for edges
+			Map<E, Double> alphaRot = new HashMap<E, Double>();
+			for (E e : HalfEdgeUtils.boundaryEdges(f)) {
+				double ar = alphaRotationE(e, alpha, a);
+				alphaRot.put(e, ar);
+			}
+			// subdivide and interpolate according to the transport
 			double[] p = a.getD(BaryCenter4d.class, f);
 			System.out.print("subdividing face " + f);
 			V v = TopologyAlgorithms.splitFace(f);
 			System.out.println("with index " + index + " -> " + v);
 			a.set(Position.class, v, p);
 			for (E e : HalfEdgeUtils.incomingEdges(v)) {
+				E ep = e.getPreviousEdge();
+				double ar = alphaRot.get(ep);
 				double a1 = alpha.get(e.getPreviousEdge());
-				double a2 = alpha.get(e.getOppositeEdge().getNextEdge());
-				double a12 = (a1 + a2) / 2;
-				alpha.put(e, a12);
-				alpha.put(e.getOppositeEdge(), a12);
+				double newAlpha = a1 + ar/2;
+				alpha.put(e, newAlpha);
+				alpha.put(e.getOppositeEdge(), newAlpha);
 			}
 		}
 	}
