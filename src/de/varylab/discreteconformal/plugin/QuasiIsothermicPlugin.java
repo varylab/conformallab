@@ -10,6 +10,8 @@ import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk
 import static java.awt.GridBagConstraints.HORIZONTAL;
 import static java.awt.GridBagConstraints.RELATIVE;
 import static java.awt.GridBagConstraints.REMAINDER;
+import static java.lang.Math.PI;
+import static java.lang.Math.abs;
 import static javax.swing.ListSelectionModel.SINGLE_SELECTION;
 
 import java.awt.Dimension;
@@ -42,6 +44,7 @@ import javax.swing.table.DefaultTableModel;
 
 import de.jreality.plugin.basic.View;
 import de.jtem.halfedge.Edge;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.Adapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.CurvatureFieldMax;
@@ -334,10 +337,9 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		inspectAlphas(hds, alphaMap, a);
 		subdivideFaceSingularities(hds, alphaMap, a);
-		inspectAlphas(hds, alphaMap, a);
 		
 		Map<CoFace, Double> orientationMap = calculateOrientationFromAlphas(hds,alphaMap);
-//		Map<CoEdge, Double> betaMap = QuasiisothermicUtility.calculateBetasFromAlphas(hds, alphaMap);
+
 		
 		cutManifoldToDisk(hds, hds.getVertex(0), null);
 		cutMesh(hds, alphaMap, a);
@@ -352,20 +354,26 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	
 	
 	public static void cutMesh(CoHDS hds, Map<CoEdge, Double> alpha, AdapterSet a) {
+		Map<CoEdge, Double> beta =  QuasiisothermicUtility.calculateBetasFromAlphas(hds, alpha);
 		Set<CoVertex> cones = new HashSet<CoVertex>();
 		for (CoVertex v : hds.getVertices()) {
-			double index = QuasiisothermicUtility.getSingularityIndexV(v, alpha, a);
-			if (Math.abs(index) > 0.25) {
+			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
+			double betaSum = QuasiisothermicUtility.calculateAngleSumFromBetas(v, beta);
+			double index = betaSum / PI;
+			if (abs(index - 2) > 0.1) {
 				cones.add(v);
 			}
 		}
 		Set<CoEdge> validSet = new HashSet<CoEdge>(hds.getEdges());
-		Set<CoVertex> targetVertices = new HashSet<CoVertex>(boundaryVertices(hds));
 		
 		CuttingInfo<CoVertex, CoEdge, CoFace> info = new CuttingInfo<CoVertex, CoEdge, CoFace>();
 		for (CoVertex c : cones) {
+			if (HalfEdgeUtils.isBoundaryVertex(c)) {
+				System.out.println("vertex " + c + " already on boundary");
+				continue;
+			}
 			System.out.println("cutting from cone " + c);
-			List<CoEdge> path = Search.bFS(validSet, c, targetVertices, true, null);
+			List<CoEdge> path = Search.bFS(validSet, c, boundaryVertices(hds), true, null);
 			CuttingUtility.cutAlongPath(path, info);
 		}
 	}
@@ -373,16 +381,19 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 	
 	
 	public void inspectAlphas(CoHDS hds, Map<CoEdge, Double> alpha, AdapterSet a) {
+		Map<CoEdge, Double> beta =  QuasiisothermicUtility.calculateBetasFromAlphas(hds, alpha);
 		System.out.println("alpha inspection -------------");
 		Map<CoFace, Double> orientationMap = calculateOrientationFromAlphas(hds, alpha);
 		for (CoFace f : hds.getFaces()) {
 			Double orientation = orientationMap.get(f);
 			if (orientation < 0) {
-				System.out.println(f + " -> flipped");
+				List<CoVertex> bv = HalfEdgeUtils.boundaryVertices(f);
+				System.out.println(f + " -> flipped: " + bv);
 			}
 		}
 		System.out.println("singularities -----");
 		for (CoVertex v : hds.getVertices()) {
+			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
 			double index = QuasiisothermicUtility.getSingularityIndexV(v, alpha, a);
 			if (Math.abs(index) > 0.25) {
 				System.out.println(v + " -> index = " + index);
@@ -392,6 +403,15 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 			double index = QuasiisothermicUtility.getSingularityIndexF(f, alpha, a);
 			if (Math.abs(index) > 0.25) {
 				System.out.println(f + " -> index = " + index);
+			}
+		}
+		System.out.println("angle sums (beta) --");
+		for (CoVertex v : hds.getVertices()) {
+			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
+			double betaSum = QuasiisothermicUtility.calculateAngleSumFromBetas(v, beta);
+			double index = betaSum / PI;
+			if (abs(index - 2) > 0.1) {
+				System.out.println(v + " -> sum / PI = " + index);
 			}
 		}
 		System.out.println("------------------------------");
