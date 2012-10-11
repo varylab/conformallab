@@ -26,6 +26,7 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.Adapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.CurvatureFieldMax;
 import de.jtem.halfedgetools.adapter.type.CurvatureFieldMin;
 import de.jtem.halfedgetools.adapter.type.Normal;
 import de.jtem.halfedgetools.adapter.type.Position;
@@ -573,7 +574,7 @@ public class QuasiisothermicUtility {
 		F extends Face<V, E, F>
 	> double calculateAlpha(E e, AdapterSet a) {
 		double[] N = a.getD(Normal.class, e);
-		double[] Kmin = a.getD(CurvatureFieldMin.class, e);
+		double[] Kmin = a.getD(CurvatureFieldMax.class, e);
 		double[] E = a.getD(EdgeVector.class, e);
 		return QuasiisothermicUtility.getSignedAngle(N, Kmin, E);
 	}

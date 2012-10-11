@@ -32,6 +32,7 @@ import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeListener;
 import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.halfedgetools.plugin.SelectionListener;
+import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
 import de.jtem.halfedgetools.plugin.widget.MarqueeWidget;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
@@ -67,7 +68,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 	public class TextureDomainPositionAdapter extends AbstractAdapter<double[]> {
 		
 		public TextureDomainPositionAdapter() {
-			super(double[].class, true, false);
+			super(double[].class, true, true);
 		}
 		
 		@Override
@@ -88,6 +89,16 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		}
 		
 		@Override
+		public <
+			V extends Vertex<V, E, F>,
+			E extends Edge<V, E, F>,
+			F extends Face<V, E, F>
+		> void setV(V v, double[] coords, AdapterSet a) {
+			a.setPriorityBound(getPriority());
+			a.set(TexturePosition.class, v, coords);
+			a.removePriorityBound();
+		}
+		@Override
 		public double getPriority() {
 			return 1000.0;
 		}
@@ -105,7 +116,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 //		HyperbolicModel model = conformalVisualizationPlugin.getSelectedHyperbolicModel();
 //		texturePositionAdapter.setModel(model);
 		for (Adapter<?> a : mainHif.getAdapters()) {
-			visHif.addAdapter(a, false);
+			visHif.addAdapter(a, true);
 		}
 		visHif.set(mainHif.get());
 		JRViewerUtility.encompassEuclidean(domainScene);
@@ -123,6 +134,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		domainViewer.registerPlugin(HalfedgeInterface.class);
 		domainViewer.registerPlugin(ContentAppearance.class);
 		domainViewer.registerPlugin(MarqueeWidget.class);
+		domainViewer.registerPlugin(VertexEditorPlugin.class);
 		domainViewer.setShowPanelSlots(false, false, false, false);
 		domainViewer.setShowToolBar(true);
 		JRootPane viewerRoot = domainViewer.startupLocal();
