@@ -6,19 +6,16 @@ import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jreality.math.Pn;
-import de.jreality.plugin.JRViewer;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
 import de.jtem.halfedgetools.functional.MyGradient;
 import de.jtem.halfedgetools.functional.MyHessian;
-import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
@@ -48,21 +45,6 @@ public class SphericalFunctionalTest extends FunctionalTest<CoVertex, CoEdge, Co
 		rnd = new Random(); 
 	
 	
-	public static void main(String[] args) {
-		JRViewer v = new JRViewer();
-		v.addContentUI();
-		v.addBasicUI();
-		HalfedgeInterface hif = new HalfedgeInterface();
-		v.registerPlugin(hif);
-		v.startup();
-		
-		CoHDS hds = new CoHDS(); 
-		AdapterSet aSet = new ConformalAdapterSet();
-		createOctahedron(hds, aSet);
-		hif.addAdapter(new CoPositionAdapter(), true);
-		hif.set(hds);
-	}
-	
 	@Override
 	public void init() {
 		rnd.setSeed(1);
@@ -71,14 +53,11 @@ public class SphericalFunctionalTest extends FunctionalTest<CoVertex, CoEdge, Co
 		AdapterSet aSet = new ConformalAdapterSet();
 		createOctahedron(hds, aSet);
 		
-		Random rnd = new Random();
-		rnd.setSeed(1);
 		for (CoVertex v : hds.getVertices()) {
 			Pn.setToLength(v.P, v.P, 0.5 + 1E-2*rnd.nextDouble(), Pn.EUCLIDEAN);
 		}
 		int n = hds.numVertices();
 
-		// we need small length at start for corresponding spherical length to exist
 		Vector x = new DenseVector(n);
 		for (int i = 0; i < n; i++) x.set(i, 0);
 		MyDomainValue u = new MyDomainValue(x);

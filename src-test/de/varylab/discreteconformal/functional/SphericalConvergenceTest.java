@@ -1,6 +1,5 @@
 package de.varylab.discreteconformal.functional;
 
-import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 
 import java.util.Random;
@@ -8,31 +7,32 @@ import java.util.Random;
 import junit.framework.Assert;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
+import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 
 import org.junit.Test;
 
+import de.jreality.math.Pn;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.functional.FunctionalTest;
+import de.jtem.halfedgetools.functional.MyDomainValue;
 import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.CustomEdgeInfo;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
-import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
-import de.varylab.discreteconformal.util.TestUtility;
+import de.varylab.discreteconformal.unwrapper.numerics.CSphericalOptimizable;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
-import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
-public class EuclideanConvergenceTest  {
+public class SphericalConvergenceTest  {
 
 	private CTheta
 		theta = new CTheta();
@@ -44,41 +44,53 @@ public class EuclideanConvergenceTest  {
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	public EuclideanFunctional<CoVertex, CoEdge, CoFace>
-		functional = new EuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	private SphericalFunctional<CoVertex, CoEdge, CoFace>
+		functional = new SphericalFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	private Random 
+		rnd = new Random();
 	
 	@Test
-	public void testEuclideanConvergence() {
-		CoHDS hds = TestUtility.readOBJ(EuclideanCircularHolesConvergenceTest.class, "cathead.obj");
-		
-		AdapterSet a = new ConformalAdapterSet();
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(functional, hds, a);
-		Random rnd = new Random(); 
+	public void testSphericalConvergence() {
 		rnd.setSeed(1);
 		
-//		 one edge is circular
-		for (CoEdge e : hds.getPositiveEdges()) {
-			CoVertex s = e.getStartVertex();
-			CoVertex t = e.getTargetVertex();
-			if (isBoundaryVertex(s) || isBoundaryVertex(t)) {
-				continue;
-			}
-			e.info = new CustomEdgeInfo();
-			e.info.circularHoleEdge = true;
-			break;
+		CoHDS hds = new CoHDS(); 
+		AdapterSet aSet = new ConformalAdapterSet();
+		FunctionalTest.createOctahedron(hds, aSet);
+		
+		for (CoVertex v : hds.getVertices()) {
+			Pn.setToLength(v.P, v.P, 0.5 + 1E-2*rnd.nextDouble(), Pn.EUCLIDEAN);
 		}
 		
-		CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
+		int n = hds.numVertices();
+		Vector x = new DenseVector(n);
+		for (int i = 0; i < n; i++) x.set(i, 0);
+		MyDomainValue u = new MyDomainValue(x);
+		UnwrapUtility.prepareInvariantDataHyperbolicAndSpherical(functional, hds, aSet, u);
+		
+////		 one edge is circular
+//		for (CoEdge e : hds.getPositiveEdges()) {
+//			CoVertex s = e.getStartVertex();
+//			CoVertex t = e.getTargetVertex();
+//			if (isBoundaryVertex(s) || isBoundaryVertex(t)) {
+//				continue;
+//			}
+//			e.info = new CustomEdgeInfo();
+//			e.info.circularHoleEdge = true;
+//			break;
+//		}
+		
+		CSphericalOptimizable opt = new CSphericalOptimizable(hds);
 		// optimization
-		DenseVector u = new DenseVector(n);
-		Matrix H = new CompRowMatrix(n,n,makeNonZeros(hds));
+		DenseVector ux = new DenseVector(n);
+		Matrix H = new CompRowMatrix(n,n, makeNonZeros(hds));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
-		optimizer.setStepController(new ArmijoStepController());
+//	cannot use a step controller here, it stops the gradient flow		
+//		optimizer.setStepController(new ArmijoStepController());
 		optimizer.setSolver(Solver.CGS);
-		optimizer.setError(1E-13);
-		optimizer.setMaxIterations(500);
+		optimizer.setError(1E-10);
+		optimizer.setMaxIterations(10);
 		try {
-			optimizer.minimize(u, opt);
+			optimizer.minimize(ux, opt);
 		} catch (NotConvergentException e) {
 			Assert.fail(e.getLocalizedMessage());
 		}
