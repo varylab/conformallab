@@ -43,7 +43,7 @@ public class HyperbolicFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 	public void init() {
 		CoHDS hds = new CoHDS(); 
 		AdapterSet aSet = new ConformalAdapterSet();
-		createCube(hds, aSet);
+		createTriangulatedCube(hds, aSet);
 		
 		ZeroU zeroU = new ZeroU();
 		UnwrapUtility.prepareInvariantDataHyperbolicAndSpherical(functional, hds, aSet, zeroU);

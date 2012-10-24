@@ -223,7 +223,7 @@ public class SphericalFunctional <
 			final double 
 				lEuc = exp(λij / 2);
 			if (lEuc > 1) {
-				throw new RuntimeException("new spherical lengths cannot be greater that PI/2 here");
+				throw new RuntimeException("new spherical lengths cannot be greater than PI here");
 			}
 			final double
 				lij = 2*asin(lEuc);
@@ -231,11 +231,8 @@ public class SphericalFunctional <
 				tan2 = tan(lij / 2);
 			tan2 *= tan2;
 			final double 
-				Hii = 0.5 * cot * (1 + tan2),
-				Hij = 0.5 * cot * (tan2 - 1);
-			if (Double.isInfinite(Hii) || Double.isInfinite(Hij)) {
-				System.out.println("inifinit!");
-			}
+				Hii = 0.5 * cot * (1 - tan2),
+				Hij = 0.5 * cot * (-tan2 - 1);
 			if (var.isVariable(vi)) {
 				H.add(i, i, Hii);
 			}
@@ -283,7 +280,7 @@ public class SphericalFunctional <
 		final double ljkEuc = exp(λjk / 2);
 		final double lkiEuc = exp(λki / 2);
 		if (lijEuc > 1 || ljkEuc > 1 || lkiEuc > 1) {
-			throw new RuntimeException("New spherical lengths cannot be greater that PI/2 here");
+			throw new RuntimeException("New spherical lengths cannot be greater than PI here");
 		}
 		final double
 			lij = 2 * asin(lijEuc),
@@ -389,7 +386,7 @@ public class SphericalFunctional <
 		Double u1 = var.isVariable(v1) ? u.get(i1) : 0.0; 
 		Double u2 = var.isVariable(v2) ? u.get(i2) : 0.0;
 		double l2 = var.isVariable(e) ? u.get(ei) : lambda.getLambda(e) + u1 + u2;
-		return 2 * asin(exp(l2 / 2) );
+		return 2 * asin(exp(l2 / 2));
 	}
 	@Override
 	public double getVertexU(V v, DomainValue u) {

@@ -49,7 +49,7 @@ public class HyperbolicCircularHolesFunctionalTest extends FunctionalTest<CoVert
 	public void init() {
 		CoHDS hds = new CoHDS(); 
 		AdapterSet aSet = new ConformalAdapterSet();
-		createCube(hds, aSet);
+		createTriangulatedCube(hds, aSet);
 		hds.removeFace(hds.getFace(0));
 		
 //		one triangle of edges is circular

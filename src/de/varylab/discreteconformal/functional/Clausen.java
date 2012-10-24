@@ -21,7 +21,8 @@ public class Clausen {
 	private Clausen() {}
 	
 	public static double lob(double x) {
-		return (0 <= x && x <= PI) ? Clausen.clausen2(2*x)/2 : -1e10;
+		x %= PI; x = x > 0 ? x : x + PI;
+		return Clausen.clausen2(2*x)/2;
 	}
 	
 	public static double clausen(double x) {

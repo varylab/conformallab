@@ -21,6 +21,7 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.halfedgetools.functional.Gradient;
+import de.jtem.halfedgetools.functional.Hessian;
 import de.jtem.halfedgetools.functional.MyEnergy;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.jtem.jpetsc.Mat;
@@ -96,7 +97,6 @@ public class TestUtility {
 	}
 	
 	public static void calculateFDHessian(TaoAppAddCombinedObjectiveAndGrad app, Vec x, Mat H) {
-		H.zeroEntries();
 		double y = app.evaluateObjectiveAndGradient(x, null);
 		for (int i = 0; i < x.getSize(); i++){
 			for (int j = 0; j < x.getSize(); j++){
@@ -134,6 +134,60 @@ public class TestUtility {
 			}
 		}
 		H.assemble();
+	}
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void calculateFDHessian(HDS hds, Functional<V, E, F> app, int dim, DomainValue x, Hessian H) {
+		MyEnergy E = new MyEnergy();
+		app.evaluate(hds, x, E, null, null);
+		double y = E.get();
+		for (int i = 0; i < dim; i++){
+			for (int j = 0; j < dim; j++){
+				double fdHessian = 0.0;
+				double xi = x.get(i);
+				double xj = x.get(j);
+				if (i == j) {
+					x.set(i, xi + eps);
+					app.evaluate(hds, x, E, null, null);
+					double iPlus = E.get();
+					x.set(i, xi + 2*eps);
+					app.evaluate(hds, x, E, null, null);
+					double i2Plus = E.get();
+					x.set(i, xi - eps);
+					app.evaluate(hds, x, E, null, null);
+					double iMinus = E.get();
+					x.set(i, xi - 2*eps);
+					app.evaluate(hds, x, E, null, null);
+					double i2Minus = E.get();
+					fdHessian = (-i2Plus/eps + 16*iPlus/eps - 30*y/eps + 16*iMinus/eps - i2Minus/eps) / (12 * eps);
+				} else {
+					x.set(i, xi + eps);
+					x.set(j, xj + eps);
+					app.evaluate(hds, x, E, null, null);
+					double iPlusjPlus = E.get();
+					x.set(i, xi + eps);
+					x.set(j, xj - eps);
+					app.evaluate(hds, x, E, null, null);
+					double iPlusjMinus = E.get();
+					x.set(i, xi - eps);
+					x.set(j, xj + eps);
+					app.evaluate(hds, x, E, null, null);
+					double iMinusjPlus = E.get();
+					x.set(i, xi - eps);
+					x.set(j, xj - eps);
+					app.evaluate(hds, x, E, null, null);
+					double iMinusjMinus = E.get();
+					fdHessian = (iPlusjPlus/eps - iPlusjMinus/eps - iMinusjPlus/eps + iMinusjMinus/eps) / (4 * eps);
+				}
+				x.set(i, xi);
+				x.set(j, xj);
+				H.set(i, j, fdHessian);
+			}
+		}
 	}
 	
 	public static <
