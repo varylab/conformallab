@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.functional;
 
 import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
+import static java.lang.Math.PI;
 
 import java.util.Random;
 
@@ -13,6 +14,7 @@ import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.junit.Test;
 
 import de.jreality.math.Pn;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
@@ -58,7 +60,7 @@ public class SphericalConvergenceTest  {
 		FunctionalTest.createOctahedron(hds, aSet);
 		
 		for (CoVertex v : hds.getVertices()) {
-			Pn.setToLength(v.P, v.P, 0.5 + 1E-2*rnd.nextDouble(), Pn.EUCLIDEAN);
+			Pn.setToLength(v.P, v.P, 0.5 + 1E-1*rnd.nextDouble(), Pn.EUCLIDEAN);
 		}
 		
 		int n = hds.numVertices();
@@ -94,6 +96,17 @@ public class SphericalConvergenceTest  {
 		} catch (NotConvergentException e) {
 			Assert.fail(e.getLocalizedMessage());
 		}
+		
+		// check triangle area sum
+		double area = 0.0;
+		for (CoFace f : hds.getFaces()) {
+			double sum = 0.0;
+			for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
+				sum += e.getAlpha();
+			}
+			area += sum - PI;
+		}
+		Assert.assertEquals(0, area % (4*PI), 1E-8);
 	}
 	
 	

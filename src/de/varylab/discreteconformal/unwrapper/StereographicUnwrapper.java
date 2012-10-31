@@ -34,10 +34,10 @@ import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 
-public class SphericalUnwrapper implements Unwrapper{
+public class StereographicUnwrapper implements Unwrapper{
 
 	private Logger
-		log = Logger.getLogger(SphericalUnwrapper.class.getName());
+		log = Logger.getLogger(StereographicUnwrapper.class.getName());
 	private double
 		gradTolerance = 1E-8;
 	private int
@@ -46,9 +46,8 @@ public class SphericalUnwrapper implements Unwrapper{
 		unwrapRoot = null,
 		layoutRoot = null;
 	
-
 	static {
-		Tao.Initialize();		
+		Tao.Initialize();
 	}
 	
 	@Override
