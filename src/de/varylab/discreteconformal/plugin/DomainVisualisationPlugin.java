@@ -180,6 +180,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		vi.setPointColor(mi.getPointColor());
 		vi.setLineColor(mi.getLineColor());
 		vi.setFaceColor(mi.getFaceColor());
+		vi.setFacesFlat(mi.isFacesFlat());
 	}
 	
 	@Override

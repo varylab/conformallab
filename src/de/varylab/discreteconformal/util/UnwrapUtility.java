@@ -319,13 +319,29 @@ public class UnwrapUtility {
 		AdapterSet a,
 		DomainValue initialU
 	) {
+		return prepareInvariantDataHyperbolicAndSpherical(fun, hds, a, initialU, 1.0);
+	}
+	
+	/**
+	 * Compute algorithm invariant data
+	 * @param boundary the boundary vertices which do not belong to the solver system
+	 * @return the dimension of the parameter space
+	 */
+	public static int prepareInvariantDataHyperbolicAndSpherical(
+		ConformalFunctional<CoVertex, CoEdge, CoFace> fun, 
+		CoHDS hds, 
+		AdapterSet a,
+		DomainValue initialU,
+		double scale
+	) {
 		// set initial lambdas
 		for (final CoEdge e : hds.getPositiveEdges()) {
 			try {
 				double l = a.get(Length.class, e, Double.class);
+				l*= scale;
 				double lambda = fun.getLambda(l);
 				e.setLambda(lambda);
-				e.getOppositeEdge().setLambda(e.getLambda());
+				e.getOppositeEdge().setLambda(lambda);
 			} catch (Exception e1) {
 				System.err.println("error setting lambdas in prepareInvariantData(): " + e1);
 				return -1;

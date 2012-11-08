@@ -22,7 +22,7 @@ import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
 import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
-public class HyperbolicUnwrapper implements Unwrapper{
+public class HyperbolicUnwrapper implements Unwrapper {
 
 	private double
 		gradTolerance = 1E-8;

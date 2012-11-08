@@ -97,7 +97,16 @@ public class SphericalConvergenceTest  {
 			Assert.fail(e.getLocalizedMessage());
 		}
 		
-		// check triangle area sum
+		// check flatness
+		for (CoVertex v : hds.getVertices()) {
+			double a = 0.0;
+			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+				a += e.getPreviousEdge().getAlpha();
+			}
+			Assert.assertEquals(2*PI, a, 1E-8);
+		}
+		
+		// check triangle area sum quantization
 		double area = 0.0;
 		for (CoFace f : hds.getFaces()) {
 			double sum = 0.0;

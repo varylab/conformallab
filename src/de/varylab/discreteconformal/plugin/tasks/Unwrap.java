@@ -28,7 +28,8 @@ import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.QuantizationMode;
-import de.varylab.discreteconformal.unwrapper.StereographicUnwrapper;
+import de.varylab.discreteconformal.unwrapper.SphericalUnwrapper;
+import de.varylab.discreteconformal.unwrapper.SphericalUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
@@ -91,7 +92,12 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			Unwrapper unwrapper = null;
 			if (isSphere) {
 				System.out.println("unwrapping a sphere...");
-				unwrapper = new StereographicUnwrapper();
+				if (usePetsc) {
+					unwrapper = new SphericalUnwrapperPETSc();
+				} else {
+					unwrapper = new SphericalUnwrapper();
+//					unwrapper = new StereographicUnwrapper();
+				}
 			} else {
 				if (boundaryMode == BoundaryMode.Circle) {
 					CircleDomainUnwrapper.flipAtEars(surface, aSet);

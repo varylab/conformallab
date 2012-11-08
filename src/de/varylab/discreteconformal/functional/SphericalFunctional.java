@@ -301,7 +301,7 @@ public class SphericalFunctional <
 			αj = 0.0,
 			αk = 0.0;
 		final boolean 
-			valid = Δij > 0 && Δjk > 0 && Δki > 0;
+			valid = Δij > 0 && Δjk > 0 && Δki > 0 && Δijk < 2*PI;
 		if (valid) {
 			αi = 2 * atan2(sqrt(sj * sk), sqrt(si * s));
 			αj = 2 * atan2(sqrt(sk * si), sqrt(sj * s));
@@ -312,6 +312,10 @@ public class SphericalFunctional <
 			αi = PI;
 		} else if (Δki <= 0) {
 			αj = PI;
+		} else if (Δijk >= 2*PI) {
+			αi = PI;
+			αj = PI;
+			αk = PI;
 		}
 		final double
 			βi = 0.5 * (PI + αi - αj - αk),

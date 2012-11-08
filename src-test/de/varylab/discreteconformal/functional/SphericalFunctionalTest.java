@@ -1,16 +1,24 @@
 package de.varylab.discreteconformal.functional;
 
+import static java.lang.Math.log;
+
 import java.util.Random;
 
-import no.uib.cipr.matrix.DenseMatrix;
+import junit.framework.Assert;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
+import no.uib.cipr.matrix.Vector.Norm;
+
+import org.junit.Test;
+
 import de.jreality.math.Pn;
+import de.jreality.math.Rn;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Length;
+import de.jtem.halfedgetools.adapter.type.Position;
+import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
-import de.jtem.halfedgetools.functional.MyGradient;
-import de.jtem.halfedgetools.functional.MyHessian;
 import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -21,8 +29,9 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
-import de.varylab.discreteconformal.util.TestUtility;
+import de.varylab.discreteconformal.unwrapper.numerics.MTJGradient;
 import de.varylab.discreteconformal.util.UnwrapUtility;
+import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 
 public class SphericalFunctionalTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
 
@@ -70,22 +79,78 @@ public class SphericalFunctionalTest extends FunctionalTest<CoVertex, CoEdge, Co
 		setXHessian(u);
 		setEps(eps);
 		setError(error);
+//		MyGradient g = new MyGradient(new DenseVector(n));
+//		functional.evaluate(hds, u, null, g, null);
+//		System.out.println("hand coded: \n" + g);
+//		
+//		MyGradient gfd = new MyGradient(new DenseVector(n));
+//		TestUtility.calculateFDGradient(hds, functional, n, u, gfd);
+//		System.out.println("finite differences: \n" + gfd);
+//		
+//		MyHessian H = new MyHessian(new DenseMatrix(n, n));
+//		functional.evaluate(hds, u, null, null, H);
+//		System.out.println("hand coded: \n" + H);
+//		
+//		MyHessian Hfd = new MyHessian(new DenseMatrix(n, n));
+//		TestUtility.calculateFDHessian(hds, functional, n, u, Hfd);
+//		System.out.println("finite differences: \n" + Hfd);
+	}
+	
+	
+	@Test
+	public void testCriticalPoint() throws Exception {
+		rnd.setSeed(2);
 		
-		MyGradient g = new MyGradient(new DenseVector(n));
-		functional.evaluate(hds, u, null, g, null);
-		System.out.println("hand coded: \n" + g);
+		CoHDS hds = new CoHDS(); 
+		AdapterSet aSet = new ConformalAdapterSet();
+		hds.addNewVertices(12);
+		for (CoVertex v : hds.getVertices()) {
+			double[] pos = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};
+			Rn.setEuclideanNorm(pos, 1.0, pos);
+			aSet.set(Position.class, v, pos);
+		}
+		ConvexHull.convexHull(hds, aSet);
 		
-		MyGradient gfd = new MyGradient(new DenseVector(n));
-		TestUtility.calculateFDGradient(hds, functional, n, u, gfd);
-		System.out.println("finite differences: \n" + gfd);
+//		ConverterHeds2JR converter = new ConverterHeds2JR();
+//		IndexedFaceSet ifs = converter.heds2ifs(hds, aSet);
+//		WriterOBJ.write(ifs, new FileOutputStream("critical.obj"));
 		
-		MyHessian H = new MyHessian(new DenseMatrix(n, n));
-		functional.evaluate(hds, u, null, null, H);
-		System.out.println("hand coded: \n" + H);
+		for (CoEdge e : hds.getPositiveEdges()) {
+			double l = aSet.get(Length.class, e, Double.class);
+			double lambda = 2 * log(l / 2);
+			e.setLambda(lambda);
+			e.getOppositeEdge().setLambda(lambda);
+		}
 		
-		MyHessian Hfd = new MyHessian(new DenseMatrix(n, n));
-		TestUtility.calculateFDHessian(hds, functional, n, u, Hfd);
-		System.out.println("finite differences: \n" + Hfd);
+		
+//		CoHDS hds = new CoHDS(); 
+//		HalfEdgeUtils.addIcosahedron(hds);
+//		double l = 1 / Math.sin(2 * PI / 5);
+//		for (CoEdge e : hds.getEdges()) {
+//			e.setLambda(2 * log(l / 2));
+//		}
+
+		for (CoVertex v : hds.getVertices()) {
+			v.setSolverIndex(v.getIndex());
+		}
+		
+		Vector gVec = new DenseVector(hds.numVertices());
+		MTJGradient G = new MTJGradient(gVec);
+		ZeroU zeroU = new ZeroU();
+		functional.conformalEnergyAndGradient(hds, zeroU, null, G);
+		
+		// check flatness
+//		for (CoVertex v : hds.getVertices()) {
+//			double a = 0.0;
+//			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+//				a += e.getPreviousEdge().getAlpha();
+//			}
+//			Assert.assertEquals(2*PI, a, 1E-8);
+//		}
+		
+		System.out.println(gVec);
+		// check critical point
+		Assert.assertEquals(0.0, gVec.norm(Norm.Two), 1E-8);
 	}
 	
 }

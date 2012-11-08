@@ -17,7 +17,7 @@ import de.jreality.util.NativePathUtility;
 import de.jtem.halfedgetools.JRHalfedgeViewer;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgePluginFactory;
-import de.jtem.halfedgetools.plugin.algorithm.geometry.PrimitivesGenerator;
+import de.jtem.halfedgetools.plugin.algorithm.generator.PrimitivesGenerator;
 import de.jtem.halfedgetools.plugin.algorithm.vectorfield.CurvatureVectorFields;
 import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
 import de.jtem.jrworkspace.plugin.Plugin;

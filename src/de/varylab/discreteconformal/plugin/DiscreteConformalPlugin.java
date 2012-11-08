@@ -268,6 +268,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		toleranceExpSpinner = new JSpinner(toleranceExpModel),
 		maxIterationsSpinner = new JSpinner(maxIterationsModel);
 	private JCheckBox
+		rescaleChecker = new JCheckBox("Rescale Geometry", true),
 		circularEdgeChecker = new JCheckBox("Is Circular Edge"), 
 		useDistanceToCanonicalize = new JCheckBox("Use Isometry Distances"),
 		useCustomThetaChecker = new JCheckBox("Custom Theta"),
@@ -398,6 +399,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		shrinkPanel.add(toleranceExpSpinner, c2);
 		shrinkPanel.add(new JLabel("Max Iterations"), c1);
 		shrinkPanel.add(maxIterationsSpinner, c2);
+		shrinkPanel.add(rescaleChecker, c2);
 		shrinkPanel.add(checkGaussBonnetBtn, c1);
 		shrinkPanel.add(unwrapBtn, c2);
 		
@@ -682,7 +684,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		if (unwrapBtn == s) {
 			CoHDS surface = getLoaderGeometry();
 			if (surface == null) return;
-			surface.normalizeCoordinates();
+			if (isRescaleGeometry()) {
+				surface.normalizeCoordinates();
+			}
 			AdapterSet aSet = hif.getAdapters();
 			Unwrap uw = new Unwrap(surface, aSet);
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());
@@ -1177,6 +1181,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	@Override
 	public Class<? extends SideContainerPerspective> getPerspectivePluginClass() {
 		return View.class;
+	}
+	
+	public boolean isRescaleGeometry() {
+		return rescaleChecker.isSelected();
 	}
 	
 }

@@ -9,8 +9,9 @@ import no.uib.cipr.matrix.Vector;
 
 import org.junit.Test;
 
-import cern.colt.Arrays;
+import de.jreality.math.Rn;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.generic.TexturePosition3d;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -53,12 +54,15 @@ public class SphericalLayoutTest {
 		Vector u = new DenseVector(6);
 		SphericalLayout.doLayout(hds, hds.getVertex(0), functional, u);
 		
-		for (CoVertex v : hds.getVertices()) {
-			System.out.println(Arrays.toString(v.T));
+		for (CoEdge e : hds.getPositiveEdges()) {
+			double[] t1 = aSet.getD(TexturePosition3d.class, e.getStartVertex());
+			double[] t2 = aSet.getD(TexturePosition3d.class, e.getTargetVertex());
+			double l = Rn.euclideanDistance(t1, t2);
+			Assert.assertEquals(sqrt(2), l, 1E-8);
 		}
 		
-		Assert.fail("Implement assertion");
 	}
 	
 	
 }
+

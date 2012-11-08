@@ -99,6 +99,10 @@ public class SphericalLayout {
 			tp.projectTo(tc);
 			double x = tc.re;
 			double y = tc.im;
+//			v.T[0] = x;
+//			v.T[1] = y;
+//			v.T[2] = 0;
+//			v.T[3] = 1;
 			double nx = 2 * x;
 			double ny = x*x + y*y - 1;
 			double nz = 2 * y;
@@ -108,7 +112,6 @@ public class SphericalLayout {
 		
 		return v1;
 	}
-	
 	
 	
 	private static double[] layoutTriangle(double[] A, double[] B, double alpha, double d, double dd, double dP) {
