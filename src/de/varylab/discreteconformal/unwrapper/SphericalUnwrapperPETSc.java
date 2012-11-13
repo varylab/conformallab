@@ -2,6 +2,8 @@ package de.varylab.discreteconformal.unwrapper;
 
 import java.util.Map;
 
+import cern.colt.Arrays;
+
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -48,6 +50,7 @@ public class SphericalUnwrapperPETSc implements Unwrapper {
 
 		double[] u = calculateConformalFactors(hds, a, opt); 
 		Vector uVec = new DenseVector(u);
+		System.out.println("u: " + Arrays.toString(u));
 		
 		layoutRoot = hds.getVertex(0);
 		SphericalLayout.doLayout(hds, layoutRoot, opt.getFunctional(), uVec);

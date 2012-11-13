@@ -73,11 +73,10 @@ public class SphericalLayout {
 				}
 				if (!visited.contains(cVertex)) {
 					d = lMap.get(e);
-					double dCheck = lMap.get(next);
 					double dd = lMap.get(prev);
 					double[] A = aVertex.T;
 					double[] B = bVertex.T;
-					double[] C = layoutTriangle(A, B, alpha, d, dd, dCheck);
+					double[] C = layoutTriangle(A, B, alpha, d, dd);
 					if (C != null) {
 						cVertex.T = C;
 						visited.add(cVertex);
@@ -114,7 +113,7 @@ public class SphericalLayout {
 	}
 	
 	
-	private static double[] layoutTriangle(double[] A, double[] B, double alpha, double d, double dd, double dP) {
+	static double[] layoutTriangle(double[] A, double[] B, double alpha, double d, double dd) {
 		double logScale = Math.log(d / dd);
 		Moebius M = new Moebius();
 		ComplexProjective1 Ac = new ComplexProjective1(A[0], A[1], A[2], A[3]);
