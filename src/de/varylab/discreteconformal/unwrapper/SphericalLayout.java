@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.unwrapper;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static java.lang.Math.PI;
+import static java.lang.Math.log;
 import static java.lang.Math.tan;
 
 import java.util.HashMap;
@@ -114,7 +115,7 @@ public class SphericalLayout {
 	
 	
 	static double[] layoutTriangle(double[] A, double[] B, double alpha, double d, double dd) {
-		double logScale = Math.log(d / dd);
+		double logScale = log(tan(d/2) / tan(dd/2));
 		Moebius M = new Moebius();
 		ComplexProjective1 Ac = new ComplexProjective1(A[0], A[1], A[2], A[3]);
 		ComplexProjective1 Bc = new ComplexProjective1(B[0], B[1], B[2], B[3]);

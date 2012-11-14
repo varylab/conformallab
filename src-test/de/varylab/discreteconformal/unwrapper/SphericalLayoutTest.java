@@ -5,6 +5,7 @@ import static java.lang.Math.asin;
 import static java.lang.Math.log;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
+import static java.lang.Math.tan;
 
 import java.io.FileOutputStream;
 
@@ -29,6 +30,7 @@ import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.jtem.mfc.field.Complex;
 import de.jtem.mfc.geometry.ComplexProjective1;
+import de.jtem.mfc.group.Moebius;
 import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.functional.SphericalFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -89,7 +91,7 @@ public class SphericalLayoutTest {
 			Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 		}
 		
-		CoEdge e0 = hds.getEdge(4);
+		CoEdge e0 = hds.getEdge(1);
 		TopologyAlgorithms.flipEdge(e0);
 
 		double lEuclidean = 1.0 / sin(2*PI / 5);
@@ -105,14 +107,17 @@ public class SphericalLayoutTest {
 				Assert.assertEquals(l, lEuclideanFlip, 1E-6);
 				e.setLambda(2 * log(lEuclideanFlip / 2));
 				e.setAlpha(2 * aSpherical);
-				e.getNextEdge().setAlpha(aSpherical / 2);
-				e.getPreviousEdge().setAlpha(aSpherical / 2);
 				continue;
 			}
 			double l = aSet.get(Length.class, e, Double.class);
 			Assert.assertEquals(lEuclidean, l, 1E-6);
-			e.setAlpha(aSpherical);
 			e.setLambda(2 * log(lEuclidean / 2));
+			if (e == e0.getNextEdge() || e == e0.getPreviousEdge() || 
+				e == e0.getOppositeEdge().getNextEdge() || e == e0.getOppositeEdge().getPreviousEdge()) {
+				e.setAlpha(aSpherical / 2);
+			} else {
+				e.setAlpha(aSpherical);
+			}
 		}
 		
 		Vector u = new DenseVector(6);
@@ -160,6 +165,19 @@ public class SphericalLayoutTest {
 		Assert.assertEquals(1.0, z.abs(), 1E-8);
 		Assert.assertEquals(-1, z.re, 1E-8);
 		Assert.assertEquals(0, z.im, 1E-8);
+	}
+	
+	@Test
+	public void testAssignSphericalLogScaleRotation() throws Exception {
+		ComplexProjective1 center = new ComplexProjective1(0, 0, 1, 0);
+		Moebius M = new Moebius();
+		M.assignSphericalLogScaleRotation(center, log(tan(PI/4)), 0);
+		ComplexProjective1 R = new ComplexProjective1(1, 0, 1, 0);
+		M.applyTo(R);
+		Complex z = new Complex();
+		R.projectTo(z);
+		System.out.println(z);
+		Assert.assertEquals(tan(PI/4), z.re, 1E-8);
 	}
 	
 }

@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.Icon;
+import javax.swing.JPopupMenu;
 
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 import org.pushingpixels.substance.api.skin.GraphiteAquaSkin;
@@ -26,8 +27,8 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.plugin.ConformalVisualizationPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
-import de.varylab.discreteconformal.plugin.EllipticImageGenerator;
 import de.varylab.discreteconformal.plugin.DomainVisualisationPlugin;
+import de.varylab.discreteconformal.plugin.EllipticImageGenerator;
 import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
 import de.varylab.discreteconformal.plugin.KoebePolyhedronPlugin;
 import de.varylab.discreteconformal.plugin.ProjectiveTexturePlugin;
@@ -84,6 +85,7 @@ public class ConformalLab implements Runnable {
 	
 	@Override
 	public void run() {
+		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 		JRViewer.setApplicationTitle("Conformal Lab");
 		JRViewer v = new JRViewer();
 		installLookAndFeel();

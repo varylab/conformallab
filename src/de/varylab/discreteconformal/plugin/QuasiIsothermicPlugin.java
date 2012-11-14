@@ -452,6 +452,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		c.getPlugin(TestVectorFieldGenerator.class);
 		dataTable.setModel(new VecTableModel());
 		c.getPlugin(DiscreteConformalPlugin.class);
+		c.getPlugin(ProjectiveTexturePlugin.class);
 	}
 	
 	
