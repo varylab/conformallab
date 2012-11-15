@@ -6,9 +6,6 @@ import static java.lang.Math.log;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
 import static java.lang.Math.tan;
-
-import java.io.FileOutputStream;
-
 import junit.framework.Assert;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
@@ -18,15 +15,12 @@ import org.junit.Test;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
-import de.jreality.scene.IndexedFaceSet;
-import de.jreality.writer.WriterOBJ;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.LengthTex;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition3d;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.functional.FunctionalTest;
-import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.jtem.mfc.field.Complex;
 import de.jtem.mfc.geometry.ComplexProjective1;
@@ -131,10 +125,6 @@ public class SphericalLayoutTest {
 				Assert.assertEquals(lEuclidean, l, 1E-8);
 			}
 		}
-		
-		ConverterHeds2JR c = new ConverterHeds2JR();
-		IndexedFaceSet ifs = c.heds2ifs(hds, aSet);
-		WriterOBJ.write(ifs, new FileOutputStream("test.obj"));
 	}
 	
 	

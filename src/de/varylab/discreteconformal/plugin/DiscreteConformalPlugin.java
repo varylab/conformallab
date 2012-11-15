@@ -257,7 +257,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		texQuantizationPanel = new ShrinkPanel("Cone Texture Quantization");
 	private SpinnerNumberModel
 		coverRecursionModel = new SpinnerNumberModel(2, 0, 10, 1),
-		customThetaModel = new SpinnerNumberModel(360.0, 0.0, 1000.0, 1.0),
+		customThetaModel = new SpinnerNumberModel(360.0, 0.0, 10000.0, 1.0),
 		numConesModel = new SpinnerNumberModel(0, 0, 100, 1),
 		toleranceExpModel = new SpinnerNumberModel(-8, -30, -1, 1),
 		maxIterationsModel = new SpinnerNumberModel(150, 1, 10000, 1);

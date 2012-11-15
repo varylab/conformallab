@@ -220,10 +220,10 @@ public class SphericalFunctional <
 				uj = var.isVariable(vj) ? u.get(var.getVarIndex(vj)) : 0.0;
 			final double 
 				λij = lambda.getLambda(e) + ui + uj;
-			final double 
-				lEuc = exp(λij / 2);
-			if (lEuc > 1) {
-				throw new RuntimeException("new spherical lengths cannot be greater than PI here");
+			double lEuc = exp(λij / 2);
+			lEuc = lEuc > 1 ? 1 : lEuc;
+			if (lEuc == 1) {
+				System.err.println("warning (hessian): length clamped to PI");
 			}
 			final double
 				lij = 2*asin(lEuc);
@@ -276,11 +276,14 @@ public class SphericalFunctional <
 			λij = λk + (var.isVariable(eij) ? 0 : ui + uj),
 			λjk = λi + (var.isVariable(ejk) ? 0 : uj + uk),
 			λki = λj + (var.isVariable(eki) ? 0 : uk + ui);
-		final double lijEuc = exp(λij / 2);
-		final double ljkEuc = exp(λjk / 2);
-		final double lkiEuc = exp(λki / 2);
-		if (lijEuc > 1 || ljkEuc > 1 || lkiEuc > 1) {
-			throw new RuntimeException("New spherical lengths cannot be greater than PI here");
+		double lijEuc = exp(λij / 2);
+		double ljkEuc = exp(λjk / 2);
+		double lkiEuc = exp(λki / 2);
+		lijEuc = lijEuc > 1 ? 1 : lijEuc;
+		ljkEuc = ljkEuc > 1 ? 1 : ljkEuc;
+		lkiEuc = lkiEuc > 1 ? 1 : lkiEuc;
+		if (lijEuc == 1 || ljkEuc == 1 || lkiEuc == 1) {
+			System.err.println("warning (energy): length clamped to PI");
 		}
 		final double
 			lij = 2 * asin(lijEuc),

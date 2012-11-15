@@ -13,6 +13,7 @@ import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.ConvergenceFlags;
 import de.jtem.jtao.Tao;
+import de.jtem.jtao.TaoVec;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -78,11 +79,16 @@ public class SphericalUnwrapperPETSc implements Unwrapper {
 		app.computeGradient(u, G);
 		System.out.println(G);
 		
-		Tao optimizer = new Tao(hasCircularEdges ? Tao.Method.LMVM : Tao.Method.NTR);
+		Tao optimizer = new Tao(hasCircularEdges ? Tao.Method.LMVM : Tao.Method.TRON);
 		optimizer.setApplication(app);
 		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance); 
 		optimizer.setTolerances(0, 0, 0, 0);
 		optimizer.setMaximumIterates(maxIterations);
+		TaoVec lowerBounds = new TaoVec(n);
+		TaoVec upperBounds = new TaoVec(n);
+		lowerBounds.setToConstant(Double.NEGATIVE_INFINITY);
+		upperBounds.setToConstant(0.0);
+//		optimizer.setVariableBounds(lowerBounds, upperBounds);
 		System.out.println("Using grad tolerance " + gradTolerance);
 		optimizer.solve();
 		if (optimizer.getSolutionStatus().reason != ConvergenceFlags.CONVERGED_ATOL) {

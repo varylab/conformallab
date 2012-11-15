@@ -33,6 +33,7 @@ import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
+import de.varylab.mtjoptimization.stepcontrol.ShortGradientStepController;
 
 public class SphericalConvergenceTest  {
 
@@ -86,9 +87,8 @@ public class SphericalConvergenceTest  {
 		DenseVector ux = new DenseVector(n);
 		Matrix H = new CompRowMatrix(n,n, makeNonZeros(hds));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
-//	cannot use a step controller here, it stops the gradient flow		
-//		optimizer.setStepController(new ArmijoStepController());
-		optimizer.setSolver(Solver.CGS);
+		optimizer.setStepController(new ShortGradientStepController());
+		optimizer.setSolver(Solver.BiCGstab);
 		optimizer.setError(1E-10);
 		optimizer.setMaxIterations(10);
 		try {

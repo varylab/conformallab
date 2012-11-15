@@ -17,6 +17,7 @@ import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
+import de.varylab.mtjoptimization.stepcontrol.ShortGradientStepController;
 
 public class SphericalUnwrapper implements Unwrapper {
 
@@ -34,7 +35,7 @@ public class SphericalUnwrapper implements Unwrapper {
 			double l = a.get(Length.class, e, Double.class);
 			maxLength = maxLength < l ? l : maxLength;
 		}
-		double scale = 1.0/2.0;
+		double scale = 1.0/2.0/maxLength;
 		
 		CSphericalOptimizable opt = new CSphericalOptimizable(hds);
 		ZeroU zeroU = new ZeroU();
@@ -45,8 +46,8 @@ public class SphericalUnwrapper implements Unwrapper {
 		DenseVector u = new DenseVector(n);
 		Matrix H = opt.getHessianTemplate();
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
-//		optimizer.setStepController(new ArmijoStepController());
-		optimizer.setSolver(Solver.BiCGstab); 
+		optimizer.setStepController(new ShortGradientStepController());
+		optimizer.setSolver(Solver.BiCGstab);
 		optimizer.setError(gradTolerance);
 		optimizer.setMaxIterations(maxIterations);
 		try {

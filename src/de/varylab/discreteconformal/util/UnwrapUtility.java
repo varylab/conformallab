@@ -351,7 +351,11 @@ public class UnwrapUtility {
 		// set thetas and solver indices
 		int dim = 0;
 		for (final CoVertex v : hds.getVertices()) {
-			v.setTheta(2 * PI);
+			if (v.info != null && v.info.useCustomTheta) {
+				v.setTheta(v.info.theta);
+			} else {
+				v.setTheta(2 * PI);
+			}
 			v.setSolverIndex(dim++);
 		}
 		

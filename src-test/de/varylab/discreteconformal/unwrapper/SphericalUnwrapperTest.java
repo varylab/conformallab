@@ -30,7 +30,7 @@ public class SphericalUnwrapperTest {
 	}
 	
 	@Test
-	public void testUnwrap() throws Exception {
+	public void testCalculateConformalFactors() throws Exception {
 		rnd.setSeed(2);
 		
 		CoHDS hds = new CoHDS(); 
