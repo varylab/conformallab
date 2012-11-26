@@ -42,6 +42,13 @@ public class SphericalUnwrapper implements Unwrapper {
 		UnwrapUtility.prepareInvariantDataHyperbolicAndSpherical(opt.getFunctional(), hds, a, zeroU, scale);
 
 		// optimization
+		DenseVector u = calculateConformalFactors(opt);
+
+		layoutRoot = hds.getVertex(0);
+		SphericalLayout.doLayout(hds, layoutRoot, opt.getFunctional(), u);
+	}
+
+	DenseVector calculateConformalFactors(CSphericalOptimizable opt) throws UnwrapException {
 		int n = opt.getDomainDimension();
 		DenseVector u = new DenseVector(n);
 		Matrix H = opt.getHessianTemplate();
@@ -55,9 +62,7 @@ public class SphericalUnwrapper implements Unwrapper {
 		} catch (NotConvergentException e) {
 			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
 		}
-
-		layoutRoot = hds.getVertex(0);
-		SphericalLayout.doLayout(hds, layoutRoot, opt.getFunctional(), u);
+		return u;
 	}
 
 	@Override

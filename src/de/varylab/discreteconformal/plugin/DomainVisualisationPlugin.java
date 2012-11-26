@@ -113,13 +113,20 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 	}
 	
 	public void updateVisualization() {
+		if (shrinkPanel.isShrinked()) {
+			return;
+		}
 //		HyperbolicModel model = conformalVisualizationPlugin.getSelectedHyperbolicModel();
 //		texturePositionAdapter.setModel(model);
+		updateAdapters();
+		visHif.set(mainHif.get());
+		JRViewerUtility.encompassEuclidean(domainScene);
+	}
+
+	public void updateAdapters() {
 		for (Adapter<?> a : mainHif.getAdapters()) {
 			visHif.addAdapter(a, true);
 		}
-		visHif.set(mainHif.get());
-		JRViewerUtility.encompassEuclidean(domainScene);
 	}
 	
 	@Override
@@ -137,6 +144,9 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		domainViewer.registerPlugin(VertexEditorPlugin.class);
 		domainViewer.setShowPanelSlots(false, false, false, false);
 		domainViewer.setShowToolBar(true);
+		domainViewer.getController().setSaveOnExit(true);
+		domainViewer.getController().setAskBeforeSaveOnExit(false);
+		domainViewer.getController().setLoadFromUserPropertyFile(true);
 		JRootPane viewerRoot = domainViewer.startupLocal();
 		viewerRoot.setJMenuBar(null);
 		viewerRoot.setPreferredSize(new Dimension(200, 400));
@@ -213,10 +223,14 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 	private boolean ignoreSelectionChanged = false;
 	@Override
 	public void selectionChanged(HalfedgeSelection s, HalfedgeInterface sif) {
+		if (shrinkPanel.isShrinked()) {
+			return;
+		}
 		if (ignoreSelectionChanged) return;
 		ignoreSelectionChanged = true;
 			try {
 			if (sif == mainHif) {
+				updateAdapters();
 				visHif.setSelection(s);
 			}
 			if (sif == visHif) {
