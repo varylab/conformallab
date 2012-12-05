@@ -5,7 +5,6 @@ import static de.varylab.discreteconformal.unwrapper.quasiisothermic.Quasiisothe
 import static de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility.calculateOrientationFromAlphas;
 import static de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility.createAlphaField;
 import static de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility.cutConesToBoundary;
-import static de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility.subdivideFaceSingularities;
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 import static java.awt.GridBagConstraints.HORIZONTAL;
 import static java.awt.GridBagConstraints.RELATIVE;
@@ -336,7 +335,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		}
 		
 		inspectAlphas(hds, alphaMap, a);
-		subdivideFaceSingularities(hds, alphaMap, a);
+//		subdivideFaceSingularities(hds, alphaMap, a);
 		
 		Map<CoFace, Double> orientationMap = calculateOrientationFromAlphas(hds,alphaMap);
 

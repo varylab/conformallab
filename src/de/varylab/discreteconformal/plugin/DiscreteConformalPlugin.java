@@ -602,7 +602,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				return;
 			} finally {
 				unwrapper.getSurface().revertNormalization();
-				updateSurface();
 			}
 			genus = unwrapper.genus;
 			cutInfo = unwrapper.cutInfo;

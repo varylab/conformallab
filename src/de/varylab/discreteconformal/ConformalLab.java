@@ -87,13 +87,13 @@ public class ConformalLab implements Runnable {
 	public void run() {
 		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 		JRViewer.setApplicationTitle("Conformal Lab");
+		JRHalfedgeViewer.initHalfedgeFronted();
 		JRViewer v = new JRViewer();
 		installLookAndFeel();
 		Icon splashImage = ImageHook.getIcon("splash01.png");
 		JRealitySplashScreen splash = new JRealitySplashScreen(splashImage);
 		splash.setVisible(true);
 		v.setSplashScreen(splash);
-		JRHalfedgeViewer.initHalfedgeFronted();
 		v.addBasicUI();
 		v.addContentUI();
 		v.setShowToolBar(true);

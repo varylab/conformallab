@@ -7,7 +7,6 @@ public class BranchedCoverTorusTest {
 	@Test
 	public void testCreateBranchedCover() throws Exception {
 		
-	
 	}
 	
 }
