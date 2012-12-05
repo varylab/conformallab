@@ -41,7 +41,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/riemann"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/blas"/>
 	<classpathentry kind="lib" path="lib/MTJOptimization.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/jrworkspace"/>
 	<classpathentry kind="lib" path="lib/arpack-combo.jar"/>
 	<classpathentry kind="lib" path="lib/netlib-java.jar"/>
 	<classpathentry kind="lib" path="lib/parallelcolt-0.9.4.jar"/>
