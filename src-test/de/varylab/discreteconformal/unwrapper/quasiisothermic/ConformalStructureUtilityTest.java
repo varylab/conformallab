@@ -33,7 +33,8 @@ public class ConformalStructureUtilityTest {
 	public CoHDS
 		hds = null;
 	public CoVertex
-		v0 = null;
+		v0 = null,
+		v1 = null;
 	public CoEdge
 		e0 = null,
 		e1 = null,
@@ -50,7 +51,7 @@ public class ConformalStructureUtilityTest {
 	public void init() {
 		hds = new CoHDS();
 		v0 = hds.addNewVertex();
-		CoVertex v1 = hds.addNewVertex();
+		v1 = hds.addNewVertex();
 		CoVertex v2 = hds.addNewVertex();
 		CoVertex v3 = hds.addNewVertex();
 		CoVertex v4 = hds.addNewVertex();
@@ -91,6 +92,10 @@ public class ConformalStructureUtilityTest {
 		Assert.assertEquals(1.0, lcr.get(e1), 1E-8);
 		Assert.assertEquals(1.0, lcr.get(e2), 1E-8);
 		Assert.assertEquals(1.0, lcr.get(e3), 1E-8);
+		Assert.assertEquals(1.0, lcr.get(e4), 1E-8);
+		Assert.assertEquals(1.0, lcr.get(e5), 1E-8);
+		Assert.assertEquals(1.0, lcr.get(e6), 1E-8);
+		Assert.assertEquals(1.0, lcr.get(e7), 1E-8);
 		
 		alphaMap.put(e4, -PI/4 + EPS2);
 		alphaMap.put(e7,  PI/4 - EPS2);
@@ -125,6 +130,52 @@ public class ConformalStructureUtilityTest {
 		Map<CoEdge, Double> lcr = ConformalStructureUtility.calculateConformalStructure(hds, lcrPseudoMap);
 		double p = ConformalStructureUtility.calculateVertexCrossRatioProduct(v0, lcr);
 		Assert.assertEquals(1.0, p, 1E-8);
+	}
+	
+	
+	@Test
+	public void testLengthsFromCrossRatios() throws Exception {
+		alphaMap.put(e4, -PI/4 + EPS2);
+		Map<CoEdge, Double> lcrPseudoMap = ConformalStructureUtility.calculatePseudoConformalStructure(hds, alphaMap);
+		Map<CoEdge, Double> lcrMap = ConformalStructureUtility.calculateConformalStructure(hds, lcrPseudoMap);
+		System.out.println("lcr: " + lcrMap);
+		Map<CoEdge, Double> lMap = ConformalStructureUtility.lengthsFromCrossRatios(hds, lcrMap);
+		for (CoEdge e : hds.getPositiveEdges()) {
+			if (e.getLeftFace() == null) {
+				e = e.getOppositeEdge();
+			}
+			double a = lMap.get(e.getNextEdge());
+			double b = lMap.get(e.getOppositeEdge().getNextEdge());
+			double c = lMap.get(e.getPreviousEdge());
+			double d = lMap.get(e.getOppositeEdge().getPreviousEdge());
+			if (e.getRightFace() == null) {
+				b = 1.0;
+				d = 1.0;
+			}
+			double lcr = (a*b) / (c*d);
+			double lcrCheck = lcrMap.get(e); 
+			Assert.assertEquals(lcrCheck, lcr, 1E-8);
+		}
+		System.out.println(lMap);
+	}
+	
+	
+	@Test
+	public void testBoundaryAnglesFromAlphas() throws Exception {
+		Map<CoVertex, Double> thetaMap = ConformalStructureUtility.boundaryAnglesFromAlphas(hds, alphaMap);
+		for (CoVertex v : thetaMap.keySet()) {
+			double theta = thetaMap.get(v); 
+			Assert.assertEquals(PI / 2, theta, 1E-8);
+		}
+		
+		alphaMap.put(e4, -PI/4 + EPS2);
+		alphaMap.put(e7,  PI/4 - EPS2);
+		thetaMap = ConformalStructureUtility.boundaryAnglesFromAlphas(hds, alphaMap);
+		double thetaSum = 0.0;
+		for (CoVertex v : thetaMap.keySet()) {
+			thetaSum += thetaMap.get(v); 
+		} 
+		Assert.assertEquals(2 * PI, thetaSum, 1E-8);
 	}
 	
 	
