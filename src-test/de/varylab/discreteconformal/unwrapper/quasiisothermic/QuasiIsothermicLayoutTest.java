@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.unwrapper.isothermic;
+package de.varylab.discreteconformal.unwrapper.quasiisothermic;
 
 import static java.lang.Math.PI;
 
@@ -24,7 +24,7 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicLayout;
 import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility;
 
-public class IsothermicLayoutTest {
+public class QuasiIsothermicLayoutTest {
 
 	static {
 		NativePathUtility.set("native");

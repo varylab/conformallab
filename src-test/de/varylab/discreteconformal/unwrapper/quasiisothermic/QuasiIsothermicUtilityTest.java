@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.unwrapper;
+package de.varylab.discreteconformal.unwrapper.quasiisothermic;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.log;
@@ -32,7 +32,7 @@ import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUti
 import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility.OppositeAnglesAdapter;
 import de.varylab.discreteconformal.util.TestUtility;
 
-public class IsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
+public class QuasiIsothermicUtilityTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
 
 	static {
 		NativePathUtility.set("native");

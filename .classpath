@@ -3,7 +3,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="src-test"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedge"/>
-	<classpathentry exported="true" kind="lib" path="lib/jPETScTao.jar" sourcepath="/jTao"/>
+	<classpathentry exported="true" kind="lib" path="lib/jPETScTao.jar" sourcepath="/jPETSc"/>
 	<classpathentry kind="lib" path="lib/mtj.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://matrix-toolkits-java.googlecode.com/svn/branches/0.9.13/javadoc"/>

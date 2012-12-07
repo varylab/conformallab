@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.unwrapper.isothermic;
+package de.varylab.discreteconformal.unwrapper.quasiisothermic;
 
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.PICKABLE;

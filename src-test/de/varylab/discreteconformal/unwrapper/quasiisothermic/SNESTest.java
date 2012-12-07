@@ -1,4 +1,4 @@
-package de.varylab.discreteconformal.unwrapper.isothermic;
+package de.varylab.discreteconformal.unwrapper.quasiisothermic;
 
 import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
 import junit.framework.Assert;
