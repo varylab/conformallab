@@ -203,10 +203,10 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 				hif.addLayerAdapter(pathVisualizer, true);
 			}
 			
-			Adapter<Double> modifiedLengths = introduceNonHyperellipicity(hds, 3.0, 3.0);
+//			Adapter<Double> modifiedLengths = introduceNonHyperellipicity(hds, 3.0, 3.0);
 			
 			hif.set(hds);
-			hif.addAdapter(modifiedLengths, false);
+//			hif.addAdapter(modifiedLengths, false);
 			HalfedgeSelection branchSelection = new HalfedgeSelection(branchVertices);
 			hif.setSelection(branchSelection);
 		}
