@@ -154,15 +154,20 @@ public class ConformalStructureUtility {
 		// define lengths from cross-ratios
 		Map<E, Double> aMap = new HashMap<E, Double>();
 		for (V v : hds.getVertices()) {
-			double ai = 100.0;
+			double ai = 1.0;
 			for (E e : HalfEdgeUtils.incomingEdges(v)) {
 				double q = lcrMap.get(e);
+				if (e.getRightFace() == null) {
+					q /= calculateVertexCrossRatioProduct(v, lcrMap);
+				}
 				ai *= q;
 				aMap.put(e, ai);
 			}
 		}
 		for (E e : hds.getEdges()) {
-			if (e.getLeftFace() == null) continue;
+			if (e.getLeftFace() == null) {
+				e = e.getOppositeEdge();
+			}
 			double ai = aMap.get(e);
 			double aj = aMap.get(e.getPreviousEdge());
 			double l = sqrt(1 / (ai * aj));

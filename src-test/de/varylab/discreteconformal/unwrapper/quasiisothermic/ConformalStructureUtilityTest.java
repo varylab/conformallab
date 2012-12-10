@@ -112,6 +112,8 @@ public class ConformalStructureUtilityTest {
 		Map<CoEdge, Double> lcr = ConformalStructureUtility.calculatePseudoConformalStructure(hds, alphaMap);
 		double p = ConformalStructureUtility.calculateVertexCrossRatioProduct(v0, lcr);
 		Assert.assertEquals(1.0, p, 1E-8);
+		p = ConformalStructureUtility.calculateVertexCrossRatioProduct(v1, lcr);
+		Assert.assertEquals(1.0, p, 1E-8);
 		
 		alphaMap.put(e4, -PI/4 + EPS1);
 		lcr = ConformalStructureUtility.calculatePseudoConformalStructure(hds, alphaMap);
