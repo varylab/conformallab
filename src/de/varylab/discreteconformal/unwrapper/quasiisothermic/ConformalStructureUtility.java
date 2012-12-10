@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.unwrapper.quasiisothermic;
 
 import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
+import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
@@ -8,6 +9,8 @@ import static java.lang.Math.sqrt;
 import java.util.HashMap;
 import java.util.Map;
 
+import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -18,6 +21,17 @@ import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.MatStructure;
 import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
+import de.jtem.jtao.Tao;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
+import de.varylab.discreteconformal.unwrapper.UnwrapException;
+import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
+import de.varylab.discreteconformal.unwrapper.numerics.SimpleEnergy;
+import de.varylab.discreteconformal.util.UnwrapUtility.ZeroInitialEnergy;
+import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 
 public class ConformalStructureUtility {
 
@@ -116,6 +130,7 @@ public class ConformalStructureUtility {
 		ksp.setOptionsPrefix("cs_");
 		PETSc.optionsSetValue("-cs_ksp_type", "lsqr");
 		ksp.setFromOptions();
+		ksp.setTolerances(1E-12, PETSc.PETSC_DEFAULT, PETSc.PETSC_DEFAULT, 200);
 		ksp.setOperators(A, A, MatStructure.SAME_NONZERO_PATTERN);
 		ksp.solve(r, g);
 		System.out.println("conformal structure calculation ------------");
@@ -158,7 +173,8 @@ public class ConformalStructureUtility {
 			for (E e : HalfEdgeUtils.incomingEdges(v)) {
 				double q = lcrMap.get(e);
 				if (e.getRightFace() == null) {
-					q /= calculateVertexCrossRatioProduct(v, lcrMap);
+					double p = calculateVertexCrossRatioProduct(v, lcrMap);
+					q /= p;
 				}
 				ai *= q;
 				aMap.put(e, ai);
@@ -170,7 +186,7 @@ public class ConformalStructureUtility {
 			}
 			double ai = aMap.get(e);
 			double aj = aMap.get(e.getPreviousEdge());
-			double l = sqrt(1 / (ai * aj));
+			double l = sqrt(ai * aj);
 			lMap.put(e, l);
 			if (e.getRightFace() == null) {
 				lMap.put(e.getOppositeEdge(), l);	
@@ -209,5 +225,151 @@ public class ConformalStructureUtility {
 		}
 		return thetaMap;
 	}
+	
+	
+
+//	public static <
+//		V extends Vertex<V, E, F>,
+//		E extends Edge<V, E, F>,
+//		F extends Face<V, E, F>,
+//		HDS extends HalfEdgeDataStructure<V, E, F>
+//	> Map<V, double[]> creckCrossRatios(HDS hds, Map<E, Double> lengthMap) throws UnwrapException {
+//		for (V v : hds.getVertices()) {
+//			if (HalfEdgeUtils.isBoundaryVertex(v)) continue;
+//			
+//		}
+//	}
+
+	
+	
+	
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> Map<V, double[]> calculateFlatRepresentation(HDS hds, Map<E, Double> lengthMap, Map<V, Double> thetaMap) throws UnwrapException {
+		System.out.println("flat representation ---------------");
+		System.out.println("lengths: " + lengthMap);
+		System.out.println("thetas: " + thetaMap);
+		// create conformal structure and boundary conditions
+		Map<V, double[]> pMap = new HashMap<V, double[]>(); 
+		
+		// prepare to solve
+		CoHDS coHds = new CoHDS();
+		hds.createCombinatoriallyEquivalentCopy(coHds);
+		CEuclideanApplication app = new CEuclideanApplication(coHds);
+		double gbSum = 0.0;
+		for (CoVertex cov : coHds.getVertices()) {
+			cov.setSolverIndex(cov.getIndex());
+			if (HalfEdgeUtils.isBoundaryVertex(cov)) {
+				V v = hds.getVertex(cov.getIndex());
+				double theta = thetaMap.get(v);
+				System.out.println("theta: " + theta);
+				cov.setTheta(theta);
+				gbSum += PI - theta;
+				System.out.println("k: " + (PI - theta) + ", " + gbSum);
+			} else {
+				cov.setTheta(2 * PI);
+			}
+		}
+		assert abs(gbSum - 2*PI) < 1E-8 : "expected boundary curvature to be 2PI but was " + gbSum;
+		
+		for (CoEdge coe : coHds.getPositiveEdges()) {
+			E e = hds.getEdge(coe.getIndex());
+			double l = lengthMap.get(e);
+			double lambda = app.getFunctional().getLambda(l);
+			coe.setLambda(lambda);
+			coe.getOppositeEdge().setLambda(lambda);
+		}
+		ZeroU zeroU = new ZeroU();
+		SimpleEnergy E = new SimpleEnergy();
+		ZeroInitialEnergy zeroEnergy = new ZeroInitialEnergy();
+		for (CoFace f : coHds.getFaces()) {
+			E.setZero();
+			app.getFunctional().triangleEnergyAndAlphas(zeroU, f, E, zeroEnergy);
+			f.setInitialEnergy(E.get());
+		}
+		
+		// solve
+		int n = app.getDomainDimension();
+		Vec u = new Vec(n);
+		u.zeroEntries();
+		app.setInitialSolutionVec(u);
+		Mat H = app.getHessianTemplate();
+		app.setHessianMat(H, H);
+		Tao optimizer = new Tao(Tao.Method.NTR);
+		optimizer.setApplication(app);
+		optimizer.setTolerances(1E-12, 1E-12, 1E-12, 1E-12);
+		optimizer.setGradientTolerances(1E-12, 1E-12, 1E-12);
+		optimizer.setMaximumIterates(200);
+		optimizer.solve();
+		System.out.println(optimizer.getSolutionStatus());
+
+		// check angles
+		for (CoVertex v : coHds.getVertices()) {
+			double aSum = 0.0;
+			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+				if (e.getLeftFace() == null) continue;
+				aSum += e.getPreviousEdge().getAlpha();
+			}
+			if (HalfEdgeUtils.isBoundaryVertex(v)) {
+				assert abs(aSum - v.getTheta()) < 1E-5 : "expected angle sum of " + v.getTheta() + " got " + aSum;
+			} else {
+				assert abs(aSum - 2 * PI) < 1E-5 : "expected angle sum of 2PI got " + aSum;
+			}
+		}
+		
+		double[] uArr = u.getArray();
+		Vector uVec = new DenseVector(uArr);
+		EuclideanLayout.doLayout(coHds, app.getFunctional(), uVec);
+		
+		// store
+		for (V v : hds.getVertices()) {
+			CoVertex cov = coHds.getVertex(v.getIndex());
+			pMap.put(v, cov.T);
+		}
+		return pMap;
+	}
+	
+	
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> Map<V, double[]> createDomainLayout(HDS hds, Map<E, Double> lengthMap, Map<V, Double> uMap) {
+		Map<V, double[]> pMap = new HashMap<V, double[]>();
+		Vector uVec = new DenseVector(hds.numVertices());
+		for (V v : hds.getVertices()) {
+			uVec.set(v.getIndex(), uMap.get(v));
+		}
+		
+		CoHDS coHds = new CoHDS();
+		hds.createCombinatoriallyEquivalentCopy(coHds);
+		CEuclideanApplication app = new CEuclideanApplication(coHds);
+		
+		for (CoEdge coe : coHds.getPositiveEdges()) {
+			E e = hds.getEdge(coe.getIndex());
+			double l = lengthMap.get(e);
+			double lambda = app.getFunctional().getLambda(l);
+			coe.setLambda(lambda);
+			coe.getOppositeEdge().setLambda(lambda);
+		}
+		
+		EuclideanLayout.doLayout(coHds, app.getFunctional(), uVec);
+
+		for (V v : hds.getVertices()) {
+			CoVertex cov = coHds.getVertex(v.getIndex());
+			double[] T = cov.T;
+			pMap.put(v, T);
+		}
+		
+		return pMap;
+	}
+	
+	
 	
 }

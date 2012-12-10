@@ -41,6 +41,10 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
+import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.Vector;
+
+import de.jreality.math.Pn;
 import de.jreality.plugin.basic.View;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.util.HalfEdgeUtils;
@@ -63,13 +67,18 @@ import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.jtao.Tao;
 import de.jtem.jtao.Tao.Method;
 import de.varylab.discreteconformal.adapter.MappedWeightAdapter;
+import de.varylab.discreteconformal.functional.EuclideanFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.generator.TestVectorFieldGenerator;
+import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
+import de.varylab.discreteconformal.unwrapper.UnwrapException;
 import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternLayout;
 import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternUtility;
+import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
+import de.varylab.discreteconformal.unwrapper.quasiisothermic.ConformalStructureUtility;
 import de.varylab.discreteconformal.unwrapper.quasiisothermic.DBFSolution;
 import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicLayout;
 import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility;
@@ -77,6 +86,7 @@ import de.varylab.discreteconformal.unwrapper.quasiisothermic.SinConditionApplic
 import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.Search;
+import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionListener, HalfedgeListener {
 
@@ -101,7 +111,8 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		goCirclePatternButton = new JButton("Calculate Circle Pattern"),
 		goDBFButton = new JButton("Calculate DBF Variational"),
 		goVectorfieldButton = new JButton("Calculate Flat Vectorfield"),
-		goDBFSnesButton = new JButton("Calculate DBF SNES");
+		goDBFSnesButton = new JButton("Calculate DBF SNES"),
+		goConformalStructureButton = new JButton("Calculate via Conformal Structure");
 	private JTable
 		dataTable = new JTable();
 	private JScrollPane
@@ -143,6 +154,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		dbfPanel.add(goDBFButton, c);
 		dbfPanel.add(goVectorfieldButton, c);
+		dbfPanel.add(goConformalStructureButton, c);
 //		dbfPanel.add(goDBFSnesButton, c);
 		
 		circlePatternPanel.setLayout(new GridBagLayout());
@@ -153,6 +165,7 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		goDBFButton.addActionListener(this);
 		goDBFSnesButton.addActionListener(this);
 		goVectorfieldButton.addActionListener(this);
+		goConformalStructureButton.addActionListener(this);
 	}
 	
 	protected class VecTableModel extends DefaultTableModel {
@@ -282,11 +295,33 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 			if (goVectorfieldButton == s) {
 				calculateWithSinFunctional(hds, edgeAlphaMap, a, true);
 			}
+			if (goConformalStructureButton == s) {
+				calculateWithConformalStructure(hds, edgeAlphaMap, a);
+			}
 		} catch (Exception e) {
 			Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
 			JOptionPane.showMessageDialog(w, e.toString());
 			e.printStackTrace();
 		}
+	}
+	
+	
+	protected void calculateWithConformalStructure(CoHDS hds, Map<CoEdge, Double> initAlphas, AdapterSet a) {
+		try {
+			Map<CoVertex, Double> thetaMap = ConformalStructureUtility.boundaryAnglesFromAlphas(hds, initAlphas);
+			Map<CoEdge, Double> lcrPseudoMap = ConformalStructureUtility.calculatePseudoConformalStructure(hds, initAlphas);
+			Map<CoEdge, Double> lcrMap = ConformalStructureUtility.calculateConformalStructure(hds, lcrPseudoMap);
+			Map<CoEdge, Double> lengthMap = ConformalStructureUtility.lengthsFromCrossRatios(hds, lcrMap);
+			Map<CoVertex, double[]> pMap = ConformalStructureUtility.calculateFlatRepresentation(hds, lengthMap, thetaMap);
+			for (CoVertex v : hds.getVertices()) {
+				double[] T = pMap.get(v);
+				Pn.dehomogenize(T, T);
+				v.T = T;
+			}
+		} catch (UnwrapException e) {
+			e.printStackTrace();
+		}
+		hif.update();
 	}
 	
 	

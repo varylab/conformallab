@@ -358,7 +358,6 @@ public class EuclideanNewFunctional <
 	
 	
 	
-	
 	public void triangleHessian(
 		// combinatorics	
 			final HalfEdgeDataStructure<V, E, F> hds,

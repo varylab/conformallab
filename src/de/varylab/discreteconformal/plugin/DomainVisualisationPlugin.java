@@ -65,7 +65,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 	
 	@TexturePosition
 	@Position
-	public class TextureDomainPositionAdapter extends AbstractAdapter<double[]> {
+	public static class TextureDomainPositionAdapter extends AbstractAdapter<double[]> {
 		
 		public TextureDomainPositionAdapter() {
 			super(double[].class, true, true);
