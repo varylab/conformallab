@@ -169,7 +169,7 @@ public class ConformalStructureUtility {
 		// define lengths from cross-ratios
 		Map<E, Double> aMap = new HashMap<E, Double>();
 		for (V v : hds.getVertices()) {
-			double ai = 1.0;
+			double ai = 10.0;
 			for (E e : HalfEdgeUtils.incomingEdges(v)) {
 				double q = lcrMap.get(e);
 				if (e.getRightFace() == null) {
@@ -266,10 +266,8 @@ public class ConformalStructureUtility {
 			if (HalfEdgeUtils.isBoundaryVertex(cov)) {
 				V v = hds.getVertex(cov.getIndex());
 				double theta = thetaMap.get(v);
-				System.out.println("theta: " + theta);
 				cov.setTheta(theta);
 				gbSum += PI - theta;
-				System.out.println("k: " + (PI - theta) + ", " + gbSum);
 			} else {
 				cov.setTheta(2 * PI);
 			}

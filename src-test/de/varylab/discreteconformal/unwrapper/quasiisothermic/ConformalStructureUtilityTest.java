@@ -12,21 +12,14 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import cern.colt.Arrays;
 import de.jreality.math.Pn;
-import de.jreality.plugin.JRViewer;
-import de.jreality.scene.IndexedFaceSet;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
-import de.varylab.discreteconformal.plugin.DomainVisualisationPlugin;
 
 public class ConformalStructureUtilityTest {
 
@@ -207,46 +200,22 @@ public class ConformalStructureUtilityTest {
 		Map<CoEdge, Double> lMap = ConformalStructureUtility.lengthsFromCrossRatios(hds, lcrMap);
 		Map<CoVertex, Double> thetaMap = ConformalStructureUtility.boundaryAnglesFromAlphas(hds, alphaMap);
 		Map<CoVertex, double[]> pMap = ConformalStructureUtility.calculateFlatRepresentation(hds, lMap, thetaMap);
-		for (CoVertex v : hds.getVertices()) {
-			double[] T = pMap.get(v);
-			Pn.dehomogenize(T, T);
-			v.T = T;
-			System.out.println(Arrays.toString(T));
-		}
-		
-		ConverterHeds2JR c = new ConverterHeds2JR();
-		AdapterSet a = new AdapterSet();
-		a.add(new CoTexturePositionAdapter());
-		a.add(new DomainVisualisationPlugin.TextureDomainPositionAdapter());
-		IndexedFaceSet ifs = c.heds2ifs(hds, a);
-		JRViewer.display(ifs);
-	}
-	
-	
-	public static void main(String[] args) {
-		ConformalStructureUtilityTest test = new ConformalStructureUtilityTest();
-		test.init();
-		try {
-			test.testCalculateFlatRepresentation();
-		} catch (Exception e) {
-			e.printStackTrace();
+		// check length cross-ratios
+		for (CoEdge e : hds.getPositiveEdges()) {
+			if (HalfEdgeUtils.isBoundaryEdge(e)) {
+				continue;
+			}
+			double[] vi = pMap.get(e.getTargetVertex());
+			double[] vj = pMap.get(e.getStartVertex());
+			double[] vk = pMap.get(e.getNextEdge().getTargetVertex());
+			double[] vm = pMap.get(e.getOppositeEdge().getNextEdge().getTargetVertex());
+			double ik = Pn.distanceBetween(vi, vk, Pn.EUCLIDEAN);
+			double jm = Pn.distanceBetween(vj, vm, Pn.EUCLIDEAN);
+			double mi = Pn.distanceBetween(vm, vi, Pn.EUCLIDEAN);
+			double kj = Pn.distanceBetween(vk, vj, Pn.EUCLIDEAN);
+			double elcr = (ik*jm)/(mi*kj);
+			Assert.assertTrue("length cross-ratio", abs(elcr - lcrMap.get(e)) < 1E-8); 
 		}
 	}
-	
-	
-//	@Test
-//	public void testCreateDomainLayout() throws Exception {
-//		Map<CoEdge, Double> lcrPseudoMap = ConformalStructureUtility.calculatePseudoConformalStructure(hds, alphaMap);
-//		Map<CoEdge, Double> lcrMap = ConformalStructureUtility.calculateConformalStructure(hds, lcrPseudoMap);
-//		Map<CoEdge, Double> lMap = ConformalStructureUtility.lengthsFromCrossRatios(hds, lcrMap);
-//		Map<CoVertex, Double> thetaMap = ConformalStructureUtility.boundaryAnglesFromAlphas(hds, alphaMap);
-//		Map<CoVertex, Double> uMap = ConformalStructureUtility.calculateFlatConformalFactors(hds, lMap, thetaMap);
-//		Map<CoVertex, double[]> pMap = ConformalStructureUtility.createDomainLayout(hds, lMap, uMap);
-//		for (CoVertex v : hds.getVertices()) {
-//			System.out.println(Arrays.toString(pMap.get(v)));
-//		}
-//	}
-//	
-	
-	
+
 }

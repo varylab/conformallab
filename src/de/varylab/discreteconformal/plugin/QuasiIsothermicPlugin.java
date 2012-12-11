@@ -41,9 +41,6 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
-import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.Vector;
-
 import de.jreality.math.Pn;
 import de.jreality.plugin.basic.View;
 import de.jtem.halfedge.Edge;
@@ -67,17 +64,14 @@ import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.jtao.Tao;
 import de.jtem.jtao.Tao.Method;
 import de.varylab.discreteconformal.adapter.MappedWeightAdapter;
-import de.varylab.discreteconformal.functional.EuclideanFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.generator.TestVectorFieldGenerator;
-import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
 import de.varylab.discreteconformal.unwrapper.UnwrapException;
 import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternLayout;
 import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternUtility;
-import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
 import de.varylab.discreteconformal.unwrapper.quasiisothermic.ConformalStructureUtility;
 import de.varylab.discreteconformal.unwrapper.quasiisothermic.DBFSolution;
 import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicLayout;
@@ -86,7 +80,6 @@ import de.varylab.discreteconformal.unwrapper.quasiisothermic.SinConditionApplic
 import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.Search;
-import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionListener, HalfedgeListener {
 
@@ -318,6 +311,23 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 				Pn.dehomogenize(T, T);
 				v.T = T;
 			}
+			// check length cross-ratios
+			for (CoEdge e : hds.getPositiveEdges()) {
+				if (HalfEdgeUtils.isBoundaryEdge(e)) continue;
+				double[] vi = e.getTargetVertex().T;
+				double[] vj = e.getStartVertex().T;
+				double[] vk = e.getNextEdge().getTargetVertex().T;
+				double[] vm = e.getOppositeEdge().getNextEdge().getTargetVertex().T;
+				double ik = Pn.distanceBetween(vi, vk, Pn.EUCLIDEAN);
+				double jm = Pn.distanceBetween(vj, vm, Pn.EUCLIDEAN);
+				double mi = Pn.distanceBetween(vm, vi, Pn.EUCLIDEAN);
+				double kj = Pn.distanceBetween(vk, vj, Pn.EUCLIDEAN);
+				double elcr = (ik*jm)/(mi*kj);
+				double lcrExpected = lcrMap.get(e);
+				assert Math.abs(elcr - lcrExpected) < 1E-5 : "length cross-ratio is not as expected: " + elcr + " : " + lcrExpected; 
+			}
+			
+			QuasiisothermicUtility.alignLayout(hds, initAlphas, a);
 		} catch (UnwrapException e) {
 			e.printStackTrace();
 		}
