@@ -98,6 +98,19 @@ public class SphericalFunctionalTest extends FunctionalTest<CoVertex, CoEdge, Co
 	
 	
 	@Test
+	public void testGradientWithMaximization() throws Exception {
+		functional.setMaximizeNegative(true);
+		testGradient();
+	}
+	
+//	@Test
+//	public void testHessianWithMaximization() throws Exception {
+//		functional.setMaximizeNegative(true);
+//		testHessian();
+//	}
+//	
+	
+	@Test
 	public void testCriticalPoint() throws Exception {
 		rnd.setSeed(2);
 		

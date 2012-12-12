@@ -169,7 +169,7 @@ public class SphericalUnwrapper implements Unwrapper {
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		MaximizingStepController stepController = new MaximizingStepController();
 		optimizer.setStepController(stepController);
-		optimizer.setSolver(Solver.GMRES);
+		optimizer.setSolver(Solver.CGS);
 		optimizer.setError(gradTolerance);
 		optimizer.setMaxIterations(maxIterations);
 //		Vector G = new DenseVector(opt.getDomainDimension());
@@ -179,6 +179,7 @@ public class SphericalUnwrapper implements Unwrapper {
 		} catch (NotConvergentException e) {
 			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
 		}
+		System.out.println("u: " + u);
 		return u;
 	}
 

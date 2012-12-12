@@ -41,6 +41,7 @@ public class CSphericalApplication extends TaoApplication implements
 
 	public CSphericalApplication(CoHDS hds) {
 		this.hds = hds;
+		functional.setMaximizeNegative(true);
 	}
 	
 	public ConformalFunctional<CoVertex, CoEdge, CoFace> getFunctional() {

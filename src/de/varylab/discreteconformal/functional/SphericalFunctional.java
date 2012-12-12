@@ -14,6 +14,7 @@ import static java.lang.Math.tan;
 import java.util.LinkedList;
 import java.util.List;
 
+import no.uib.cipr.matrix.DenseVector;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -22,11 +23,17 @@ import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Energy;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
+import de.jtem.numericalMethods.calculus.function.RealFunctionOfOneVariable;
+import de.jtem.numericalMethods.calculus.minimizing.DBrent;
+import de.jtem.numericalMethods.calculus.minimizing.Info;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Lambda;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Theta;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
+import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
+import de.varylab.discreteconformal.unwrapper.numerics.MTJGradient;
+import de.varylab.discreteconformal.unwrapper.numerics.SimpleEnergy;
 
 public class SphericalFunctional <
 	V extends Vertex<V, E, F>,
@@ -44,7 +51,8 @@ public class SphericalFunctional <
 		alpha = null;
 	private InitialEnergy<F> 
 		initE = null;
-	
+	private boolean
+		maximizeNegative = false;
 	
 	public SphericalFunctional(
 		Variable<V, E> var,
@@ -71,6 +79,19 @@ public class SphericalFunctional <
 		Gradient G, 
 		Hessian H
 	) {
+		if (maximizeNegative) u = maximizeInNegativeDirection(hds, u);
+		evaluate_internal(hds, u, E, G, H);
+	};
+	
+	public <
+		HDS extends HalfEdgeDataStructure<V,E,F>
+	> void evaluate_internal(
+		HDS hds, 
+		DomainValue u,
+		Energy E, 
+		Gradient G, 
+		Hessian H
+	) {
 		if (E != null || G != null) {
 			conformalEnergyAndGradient(hds, u, E, G);
 		}
@@ -78,6 +99,85 @@ public class SphericalFunctional <
 			conformalHessian(hds, u, H);
 		}
 	};
+
+	private class MaximizingFunctional implements RealFunctionOfOneVariable {
+
+		private DomainValue
+			baseU = null;
+		private int	
+			dim = 0;
+		private HalfEdgeDataStructure<V, E, F>
+			hds = null;
+		
+		private MaximizingFunctional(HalfEdgeDataStructure<V, E, F> hds, DomainValue baseU, int dim) {
+			this.hds = hds;
+			this.baseU = baseU;
+			this.dim = dim;
+		}
+
+		@Override
+		public double eval(double x) {
+			DomainValue u = new MTJDomain(new DenseVector(dim));
+			for (int i = 0; i < dim; i++) {
+				u.add(i, baseU.get(i) + x);
+			}
+			SimpleEnergy e = new SimpleEnergy();
+			evaluate_internal(hds, u, e, null, null);
+			return -e.get();
+		}
+
+	}
+	
+	private class MaximizingDerivative implements RealFunctionOfOneVariable {
+
+		private DomainValue
+			baseU = null;
+		private int	
+			dim = 0;
+		private HalfEdgeDataStructure<V, E, F>
+			hds = null;
+		
+		private MaximizingDerivative(HalfEdgeDataStructure<V, E, F> hds, DomainValue baseU, int dim) {
+			this.hds = hds;
+			this.baseU = baseU;
+			this.dim = dim;
+		}
+		
+		@Override
+		public double eval(double x) {
+			DomainValue u = new MTJDomain(new DenseVector(dim));
+			for (int i = 0; i < dim; i++) {
+				u.add(i, baseU.get(i) + x);
+			}
+			Gradient G = new MTJGradient(new DenseVector(dim));
+			evaluate_internal(hds, u, null, G, null);
+			double sum = 0.0;
+			for (int i = 0; i < dim; i++) {
+				sum += G.get(i);
+			}
+			return -sum;
+		}
+
+	}	
+
+	
+	public <
+		HDS extends HalfEdgeDataStructure<V,E,F>
+	> DomainValue maximizeInNegativeDirection(HDS hds, DomainValue u) {
+		double[] x = {0.0, 0.0};
+		int dim = getDimension(hds);
+		MaximizingFunctional f = new MaximizingFunctional(hds, u, dim);
+		MaximizingDerivative df = new MaximizingDerivative(hds, u, dim);
+		Info info = new Info();
+		DBrent.search(-1E5, 0.0, 1E5, x, f, df, 1E-15, info);
+		System.out.println("maximizeInNegativeDirection() dbrent iterations: " + info.getCurrentIter());
+		DomainValue newU = new MTJDomain(new DenseVector(dim));
+		for (int i = 0; i < dim; i++) {
+			newU.add(i, u.get(i) + x[0]);
+		}
+		return newU;
+	}
+	
 	
 	@Override
 	public <
@@ -401,6 +501,10 @@ public class SphericalFunctional <
 		int i = var.getVarIndex(v);
 		return var.isVariable(v) ? u.get(i) : 0.0; 
 	};
+	
+	public void setMaximizeNegative(boolean maximizeNegative) {
+		this.maximizeNegative = maximizeNegative;
+	}
 	
 }
 

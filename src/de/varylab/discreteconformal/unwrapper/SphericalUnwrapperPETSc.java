@@ -2,18 +2,14 @@ package de.varylab.discreteconformal.unwrapper;
 
 import java.util.Map;
 
-import cern.colt.Arrays;
-
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
+import cern.colt.Arrays;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
-import de.jtem.jpetsc.InsertMode;
-import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.ConvergenceFlags;
 import de.jtem.jtao.Tao;
-import de.jtem.jtao.TaoVec;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -58,36 +54,35 @@ public class SphericalUnwrapperPETSc implements Unwrapper {
 	}
 	
 	double[] calculateConformalFactors(CoHDS surface, AdapterSet aSet, CSphericalApplication app) {
-
 		int n = app.getDomainDimension(); 
 		Vec u = new Vec(n);
 		// set variable lambda start values
-		boolean hasCircularEdges = false;
-		for (CoEdge e : surface.getPositiveEdges()) {
-			if (e.getSolverIndex() >= 0) {
-				u.setValue(e.getSolverIndex(), e.getLambda(), InsertMode.INSERT_VALUES);
-				hasCircularEdges = true;
-			}
-		}
+//		boolean hasCircularEdges = false;
+//		for (CoEdge e : surface.getPositiveEdges()) {
+//			if (e.getSolverIndex() >= 0) {
+//				u.setValue(e.getSolverIndex(), e.getLambda(), InsertMode.INSERT_VALUES);
+//				hasCircularEdges = true;
+//			}
+//		}
 		app.setInitialSolutionVec(u);
-		if (!hasCircularEdges) {
-			Mat H = app.getHessianTemplate();
-			app.setHessianMat(H, H);
-		}
+//		if (!hasCircularEdges) {
+//			Mat H = app.getHessianTemplate();
+//			app.setHessianMat(H, H);
+//		}
 		
-		Vec G = new Vec(n);
-		app.computeGradient(u, G);
-		System.out.println(G);
+//		Vec G = new Vec(n);
+//		app.computeGradient(u, G);
+//		System.out.println(G);
 		
-		Tao optimizer = new Tao(hasCircularEdges ? Tao.Method.LMVM : Tao.Method.TRON);
+		Tao optimizer = new Tao(Tao.Method.CG);
 		optimizer.setApplication(app);
 		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance); 
 		optimizer.setTolerances(0, 0, 0, 0);
 		optimizer.setMaximumIterates(maxIterations);
-		TaoVec lowerBounds = new TaoVec(n);
-		TaoVec upperBounds = new TaoVec(n);
-		lowerBounds.setToConstant(Double.NEGATIVE_INFINITY);
-		upperBounds.setToConstant(0.0);
+//		TaoVec lowerBounds = new TaoVec(n);
+//		TaoVec upperBounds = new TaoVec(n);
+//		lowerBounds.setToConstant(Double.NEGATIVE_INFINITY);
+//		upperBounds.setToConstant(0.0);
 //		optimizer.setVariableBounds(lowerBounds, upperBounds);
 		System.out.println("Using grad tolerance " + gradTolerance);
 		optimizer.solve();
