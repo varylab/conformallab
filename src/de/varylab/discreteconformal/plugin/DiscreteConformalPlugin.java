@@ -241,6 +241,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		coverToTextureButton = new JButton("Create Texture"),
 		checkGaussBonnetBtn = new JButton("Check Gauß-Bonnet"),
 		unwrapBtn = new JButton("Unwrap"),
+		spherizeButton = new JButton("Spherize"),
 		quantizeToQuads = new JButton("Quads");
 	private ColorChooseJButton
 		triangulationColorButton = new ColorChooseJButton(Color.GRAY, true),
@@ -400,8 +401,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		shrinkPanel.add(new JLabel("Max Iterations"), c1);
 		shrinkPanel.add(maxIterationsSpinner, c2);
 		shrinkPanel.add(rescaleChecker, c2);
-		shrinkPanel.add(checkGaussBonnetBtn, c1);
+		shrinkPanel.add(checkGaussBonnetBtn, c2);
 		shrinkPanel.add(unwrapBtn, c2);
+		shrinkPanel.add(spherizeButton, c2);
 		
 		boundaryPanel.setLayout(new GridBagLayout());
 		boundaryPanel.add(new JLabel("Mode"), c1);
@@ -480,6 +482,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		polygonColorButton.addColorChangedListener(this);
 		axesColorButton.addColorChangedListener(this);
 		triangulationColorButton.addColorChangedListener(this);
+		spherizeButton.addActionListener(this);
 	}
 	
 	public static void main(String[] args) {
@@ -581,7 +584,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		if (SwingWorker.StateValue.DONE == evt.getNewValue()) {
 			Unwrap unwrapper = (Unwrap)evt.getSource();
 			if (unwrapper.isCancelled()) {
-				System.out.println("Unwrap jop cancelled: " + unwrapper.getState());
+				System.out.println("Unwrap job cancelled: " + unwrapper.getState());
 				return;
 			}
 			try {
@@ -680,7 +683,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			ti.setTextureRotation(0.0);
 			ti.setTextureShear(0.0);
 		}
-		if (unwrapBtn == s) {
+		if (unwrapBtn == s || spherizeButton == s) {
 			CoHDS surface = getLoaderGeometry();
 			if (surface == null) return;
 			if (isRescaleGeometry()) {
@@ -688,6 +691,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			}
 			AdapterSet aSet = hif.getAdapters();
 			Unwrap uw = new Unwrap(surface, aSet);
+			uw.setSpherize(spherizeButton == s);
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());
 			uw.setMaxIterations(maxIterationsModel.getNumber().intValue());
 			uw.setNumCones(numConesModel.getNumber().intValue());

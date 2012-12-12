@@ -43,7 +43,8 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 	private Set<CoVertex>
 		selectedVertices = new HashSet<CoVertex>();
 	private boolean
-		usePetsc = false;
+		usePetsc = false,
+		spherize = false;
 	private QuantizationMode
 		coneMode = QuantizationMode.AllAngles,
 		boundaryQuantMode = QuantizationMode.AllAngles;
@@ -83,6 +84,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			throw new RuntimeException("Surface is not valid");
 		}
 		genus = HalfEdgeUtils.getGenus(surface);
+		if (spherize) genus = 0;
 		double gradTolerance = Math.pow(10, toleranceExp);
 		switch (genus) {
 		// disk or sphere---------------------
@@ -131,6 +133,26 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			unwrapper.unwrap(surface, genus, aSet);
 			unwrapTime = System.currentTimeMillis();
 			setProgress(50);
+			
+			// check sphere conditions
+			for (CoFace f : surface.getFaces()) {
+				CoEdge a = f.getBoundaryEdge();
+				CoEdge b = a.getNextEdge();
+				CoEdge c = b.getNextEdge();
+				double A = a.getAlpha() + b.getAlpha() + c.getAlpha() - PI;
+				if (A > 2*PI) {
+					System.err.println("face " + f + " has an area greater than 2PI");
+				}
+			}
+			for (CoVertex v : surface.getVertices()) {
+				double sum = 0.0;
+				for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+					sum += e.getPreviousEdge().getAlpha();
+				}
+				if (Math.abs(sum - v.getTheta()) > 1E-5) {
+					System.err.println("angle sum at vertex " + v + " is incorrect: expected " + v.getTheta() + ", actual: " + sum);
+				}
+			}
 			
 			cutInfo = unwrapper.getCutInfo();
 			lengthMap = unwrapper.getlengthMap();
@@ -282,4 +304,11 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		this.selectedVertices = selectedVertices;
 	}
 
+	public void setSpherize(boolean spherize) {
+		this.spherize = spherize;
+	}
+	public boolean isSpherize() {
+		return spherize;
+	}
+	
 }

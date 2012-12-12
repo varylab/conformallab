@@ -222,9 +222,9 @@ public class SphericalFunctional <
 				λij = lambda.getLambda(e) + ui + uj;
 			double lEuc = exp(λij / 2);
 			lEuc = lEuc > 1 ? 1 : lEuc;
-			if (lEuc == 1) {
-				System.err.println("warning (hessian): length clamped to PI");
-			}
+//			if (lEuc == 1) {
+//				System.err.println("warning (hessian): length clamped to PI");
+//			}
 			final double
 				lij = 2*asin(lEuc);
 			double
@@ -282,9 +282,9 @@ public class SphericalFunctional <
 		lijEuc = lijEuc > 1 ? 1 : lijEuc;
 		ljkEuc = ljkEuc > 1 ? 1 : ljkEuc;
 		lkiEuc = lkiEuc > 1 ? 1 : lkiEuc;
-		if (lijEuc == 1 || ljkEuc == 1 || lkiEuc == 1) {
-			System.err.println("warning (energy): length clamped to PI");
-		}
+//		if (lijEuc == 1 || ljkEuc == 1 || lkiEuc == 1) {
+//			System.err.println("warning (energy): length clamped to PI");
+//		}
 		final double
 			lij = 2 * asin(lijEuc),
 			ljk = 2 * asin(ljkEuc),

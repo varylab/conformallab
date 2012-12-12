@@ -1,11 +1,19 @@
 package de.varylab.discreteconformal.unwrapper;
 
+import static no.uib.cipr.matrix.Vector.Norm.Two;
+
+import java.util.Arrays;
 import java.util.Map;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
+import no.uib.cipr.matrix.Vector;
+import no.uib.cipr.matrix.Vector.Norm;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
+import de.jtem.numericalMethods.calculus.function.RealFunctionOfOneVariable;
+import de.jtem.numericalMethods.calculus.minimizing.DBrent;
+import de.jtem.numericalMethods.calculus.minimizing.Info;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -15,9 +23,10 @@ import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 import de.varylab.mtjoptimization.NotConvergentException;
+import de.varylab.mtjoptimization.Optimizable;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
-import de.varylab.mtjoptimization.stepcontrol.ShortGradientStepController;
+import de.varylab.mtjoptimization.stepcontrol.StepController;
 
 public class SphericalUnwrapper implements Unwrapper {
 
@@ -47,16 +56,124 @@ public class SphericalUnwrapper implements Unwrapper {
 		layoutRoot = hds.getVertex(0);
 		SphericalLayout.doLayout(hds, layoutRoot, opt.getFunctional(), u);
 	}
+	
+	private class MaximizingFunctional implements RealFunctionOfOneVariable {
+
+		private Optimizable
+			f = null;
+		private Vector
+			baseX = null;
+		
+		private MaximizingFunctional(Optimizable f, Vector baseX) {
+			this.f = f;
+			this.baseX = baseX;
+		}
+
+		@Override
+		public double eval(double x) {
+			double[] dxArr = new double[f.getDomainDimension()];
+			Arrays.fill(dxArr, x);
+			Vector xEval = new DenseVector(dxArr);
+			xEval.add(baseX);
+			return -f.evaluate(xEval);
+		}
+
+	}
+	
+	private class MaximizingDerivative implements RealFunctionOfOneVariable {
+
+		private Optimizable
+			f = null;
+		private Vector
+			baseX = null;
+		
+		private MaximizingDerivative(Optimizable f, Vector baseX) {
+			this.f = f;
+			this.baseX = baseX;
+		}
+		
+		@Override
+		public double eval(double x) {
+			double[] dxArr = new double[f.getDomainDimension()];
+			Arrays.fill(dxArr, x);
+			Vector xEval = new DenseVector(dxArr);
+			xEval.add(baseX);
+			Vector gEval = new DenseVector(f.getDomainDimension());
+			f.evaluate(xEval, gEval);
+			double sum = 0.0;
+			for (int i = 0; i < f.getDomainDimension(); i++) {
+				sum += gEval.get(i);
+			}
+			return -sum;
+		}
+
+	}	
+	
+	private class MaximizingStepController implements StepController {
+
+		@Override
+		public Double step(Vector x, Double value, Vector dx, Optimizable func, Vector grad, Matrix hess) {
+			Vector oldX = new DenseVector(x);
+			Vector oldGrad = new DenseVector(grad);
+			Double oldGradLength = oldGrad.norm(Two);
+			
+			x.add(dx);
+			Double result = func.evaluate(x, grad, hess);
+			Double gradLength = grad.norm(Two);
+			int counter = 0;
+			boolean success = true;
+			while (oldGradLength <= gradLength || gradLength.equals(Double.NaN)) {
+				dx.scale(0.5);
+				x.set(oldX).add(dx);
+				result = func.evaluate(x, grad, hess);
+				gradLength = grad.norm(Two);
+				counter++;
+				if (counter == 100) {
+					success = false;
+//					throw new RuntimeException("No valid step in step controller!");
+				}
+			}
+			if (!success) {
+				result = maximize(x, func, grad, hess);
+			}
+			return result;
+		}
+
+		protected Double maximize(Vector x, Optimizable func, Vector grad, Matrix hess) {
+			Double result;
+			// maximize in negative direction
+			Info info = new Info();
+			info.setDebug(true);
+			double[] xm = {0.0, 0.0};
+			MaximizingFunctional f = new MaximizingFunctional(func, x);
+			MaximizingDerivative df = new MaximizingDerivative(func, x);
+			DBrent.search(-1E5, 0, 1E5, xm, f, df, 1E-8, info);
+			System.out.println("dbrent iterations: " + info.getCurrentIter());
+			
+			double[] dxArr = new double[func.getDomainDimension()];
+			Arrays.fill(dxArr, xm[0]);
+			Vector dxMinimize = new DenseVector(dxArr);
+			x.add(dxMinimize);
+			result = func.evaluate(x, grad, hess);
+			
+			System.out.println("grad length: " + grad.norm(Norm.Two));
+			return result;
+		}
+		
+	}
 
 	DenseVector calculateConformalFactors(CSphericalOptimizable opt) throws UnwrapException {
 		int n = opt.getDomainDimension();
 		DenseVector u = new DenseVector(n);
 		Matrix H = opt.getHessianTemplate();
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
-		optimizer.setStepController(new ShortGradientStepController());
-		optimizer.setSolver(Solver.BiCGstab);
+		MaximizingStepController stepController = new MaximizingStepController();
+		optimizer.setStepController(stepController);
+		optimizer.setSolver(Solver.GMRES);
 		optimizer.setError(gradTolerance);
 		optimizer.setMaxIterations(maxIterations);
+//		Vector G = new DenseVector(opt.getDomainDimension());
+//		stepController.maximize(u, opt, G, H);
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
@@ -92,6 +209,5 @@ public class SphericalUnwrapper implements Unwrapper {
 	public CoVertex getLayoutRoot() {
 		return layoutRoot;
 	}
-	
 	
 }

@@ -14,6 +14,7 @@ import java.util.Queue;
 import java.util.Set;
 
 import no.uib.cipr.matrix.Vector;
+import de.jreality.math.Pn;
 import de.jtem.mfc.field.Complex;
 import de.jtem.mfc.geometry.ComplexProjective1;
 import de.jtem.mfc.group.Moebius;
@@ -43,6 +44,12 @@ public class SphericalLayout {
 		Qe.offer(e1);
 		Qe.offer(e0);
 
+		for (CoEdge e : hds.getEdges()) {
+			if (e.getAlpha() + 1E-8 >= PI) {
+				System.err.println("warning: angle at edge " + e + " is critical: " + e.getAlpha());
+			}
+		}
+		
 		// vertices
 		Double d = lMap.get(e0);
 		
@@ -108,6 +115,18 @@ public class SphericalLayout {
 			double nz = 2 * y;
 			double nw = ny + 2;
 			v.T = new double[] {nx / nw, ny / nw, nz / nw, 1.0};
+		}
+		
+		// check target lengths
+		for (CoEdge e : hds.getPositiveEdges()) {
+			double[] s = e.getStartVertex().T;
+			double[] t = e.getTargetVertex().T;
+			double distEuclidean = Pn.distanceBetween(s, t, Pn.EUCLIDEAN);
+			double distSpherical = 2 * Math.asin(distEuclidean / 2);
+			double distExpected = lMap.get(e);
+			if (Math.abs(distSpherical - distExpected) > 1E-8) {
+				System.err.println("error in spherical layout: expected length: " + distExpected + ", actual: " + distSpherical);
+			}
 		}
 		
 		return v1;

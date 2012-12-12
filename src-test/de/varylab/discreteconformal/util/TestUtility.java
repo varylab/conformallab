@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import de.jreality.geometry.IndexedFaceSetUtility;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
@@ -213,6 +214,7 @@ public class TestUtility {
 			Input in = new Input("Obj File", root.getResourceAsStream(name));
 			c =reader.read(in);
 			ifs = (IndexedFaceSet)c.getChildComponent(0).getGeometry();
+			IndexedFaceSetUtility.makeConsistentOrientation(ifs);
 			ConverterJR2Heds converter = new ConverterJR2Heds();
 			CoHDS hds = new CoHDS();
 			AdapterSet a = new AdapterSet();

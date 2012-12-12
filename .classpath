@@ -28,7 +28,6 @@
 	<classpathentry kind="lib" path="lib/substance-6.0.jar"/>
 	<classpathentry kind="lib" path="lib/trident-6.0.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jreality"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/halfedgetools"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/mfc"/>
@@ -44,5 +43,6 @@
 	<classpathentry kind="lib" path="lib/arpack-combo.jar"/>
 	<classpathentry kind="lib" path="lib/netlib-java.jar"/>
 	<classpathentry kind="lib" path="lib/parallelcolt-0.9.4.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
