@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
 import de.jtem.jpetsc.Mat;
-import de.jtem.jpetsc.NormType;
 import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
@@ -55,7 +54,6 @@ public class CSphericalApplication extends TaoApplication implements
 		SimpleEnergy E = new SimpleEnergy();
 		functional.evaluate(hds, u, E, G, null);
 		g.assemble();
-		System.out.println("glen " + g.norm(NormType.NORM_FROBENIUS));
 		return E.get();
 	}
 

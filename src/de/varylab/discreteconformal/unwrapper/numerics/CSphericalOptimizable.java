@@ -34,6 +34,7 @@ public class CSphericalOptimizable implements Optimizable {
 
 	public CSphericalOptimizable(CoHDS hds) {
 		this.hds = hds;
+		functional.setMaximizeNegative(true);
 	}
 	
 	public SphericalFunctional<CoVertex, CoEdge, CoFace> getFunctional() {

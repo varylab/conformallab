@@ -121,7 +121,7 @@ public class SphericalUnwrapper implements Unwrapper {
 			Double result = func.evaluate(x, grad, hess);
 			Double gradLength = grad.norm(Two);
 			int counter = 0;
-			boolean success = true;
+//			boolean success = true;
 			while (oldGradLength <= gradLength || gradLength.equals(Double.NaN)) {
 				dx.scale(0.5);
 				x.set(oldX).add(dx);
@@ -129,13 +129,14 @@ public class SphericalUnwrapper implements Unwrapper {
 				gradLength = grad.norm(Two);
 				counter++;
 				if (counter == 100) {
-					success = false;
+//					success = false;
 //					throw new RuntimeException("No valid step in step controller!");
+					break;
 				}
 			}
-			if (!success) {
+//			if (!success) {
 				result = maximize(x, func, grad, hess);
-			}
+//			}
 			return result;
 		}
 
@@ -169,7 +170,7 @@ public class SphericalUnwrapper implements Unwrapper {
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		MaximizingStepController stepController = new MaximizingStepController();
 		optimizer.setStepController(stepController);
-		optimizer.setSolver(Solver.CGS);
+		optimizer.setSolver(Solver.GMRES);
 		optimizer.setError(gradTolerance);
 		optimizer.setMaxIterations(maxIterations);
 //		Vector G = new DenseVector(opt.getDomainDimension());
