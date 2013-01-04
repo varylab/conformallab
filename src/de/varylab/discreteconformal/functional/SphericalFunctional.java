@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.Vector.Norm;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -53,6 +54,8 @@ public class SphericalFunctional <
 		initE = null;
 	private boolean
 		maximizeNegative = false;
+	private double
+		logScale = 0.0;
 	
 	public SphericalFunctional(
 		Variable<V, E> var,
@@ -79,8 +82,18 @@ public class SphericalFunctional <
 		Gradient G, 
 		Hessian H
 	) {
-		if (maximizeNegative) u = maximizeInNegativeDirection(hds, u);
+		if (maximizeNegative) {
+			u = maximizeInNegativeDirection(hds, u);
+		}
 		evaluate_internal(hds, u, E, G, H);
+		if (G != null && G instanceof MTJGradient) {
+			System.out.print("|G|: " + ((MTJGradient)G).getG().norm(Norm.Two) + " - ");
+			if (E != null) {
+				System.out.println(E.get());
+			} else {
+				System.out.println(" ");
+			}
+		}
 	};
 	
 	public <
@@ -168,12 +181,13 @@ public class SphericalFunctional <
 		int dim = getDimension(hds);
 		MaximizingFunctional f = new MaximizingFunctional(hds, u, dim);
 		MaximizingDerivative df = new MaximizingDerivative(hds, u, dim);
-		Info info = new Info();
-		DBrent.search(-1E5, 0.0, 1E5, x, f, df, 1E-15, info);
-		System.out.println("maximizeInNegativeDirection() dbrent iterations: " + info.getCurrentIter());
+		Info info = new Info(true);
+		DBrent.search(-1E5, logScale, 1E5, x, f, df, 1E-8, info);
+		System.out.println("maximization iter: " + info.getCurrentIter());
 		DomainValue newU = new MTJDomain(new DenseVector(dim));
+		logScale = x[0];
 		for (int i = 0; i < dim; i++) {
-			newU.add(i, u.get(i) + x[0]);
+			newU.add(i, u.get(i) + logScale);
 		}
 		return newU;
 	}

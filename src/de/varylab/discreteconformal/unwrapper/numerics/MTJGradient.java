@@ -32,4 +32,8 @@ public class MTJGradient implements Gradient {
 		return G.get(i);
 	}
 	
+	public Vector getG() {
+		return G;
+	}
+	
 }

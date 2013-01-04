@@ -88,8 +88,8 @@ public class SphericalConvergenceTest  {
 		Matrix H = new CompRowMatrix(n,n, makeNonZeros(hds));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ShortGradientStepController());
-		optimizer.setSolver(Solver.BiCGstab);
-		optimizer.setError(1E-10);
+		optimizer.setSolver(Solver.CGS);
+		optimizer.setError(1E-11);
 		optimizer.setMaxIterations(10);
 		try {
 			optimizer.minimize(ux, opt);
@@ -115,7 +115,7 @@ public class SphericalConvergenceTest  {
 			}
 			area += sum - PI;
 		}
-		Assert.assertEquals(0, area % (4*PI), 1E-8);
+		Assert.assertEquals(1, area / (4*PI), 1E-10);
 	}
 	
 	

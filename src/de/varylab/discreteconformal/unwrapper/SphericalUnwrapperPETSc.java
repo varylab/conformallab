@@ -39,7 +39,7 @@ public class SphericalUnwrapperPETSc implements Unwrapper {
 			double l = a.get(Length.class, e, Double.class);
 			maxLength = maxLength < l ? l : maxLength;
 		}
-		double scale = 1.0/2.0;
+		double scale = 1.0/2.0/maxLength;
 		
 		CSphericalApplication opt = new CSphericalApplication(hds);
 		ZeroU zeroU = new ZeroU();
@@ -74,10 +74,10 @@ public class SphericalUnwrapperPETSc implements Unwrapper {
 //		app.computeGradient(u, G);
 //		System.out.println(G);
 		
-		Tao optimizer = new Tao(Tao.Method.CG);
+		Tao optimizer = new Tao(Tao.Method.LMVM);
 		optimizer.setApplication(app);
 		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance); 
-		optimizer.setTolerances(0, 0, 0, 0);
+		optimizer.setTolerances(gradTolerance, gradTolerance, gradTolerance, gradTolerance);
 		optimizer.setMaximumIterates(maxIterations);
 //		TaoVec lowerBounds = new TaoVec(n);
 //		TaoVec upperBounds = new TaoVec(n);
@@ -87,7 +87,7 @@ public class SphericalUnwrapperPETSc implements Unwrapper {
 		System.out.println("Using grad tolerance " + gradTolerance);
 		optimizer.solve();
 		if (optimizer.getSolutionStatus().reason != ConvergenceFlags.CONVERGED_ATOL) {
-			throw new RuntimeException("Optinizer did not converge: \n" + optimizer.getSolutionStatus());
+			throw new RuntimeException("Optimizer did not converge: \n" + optimizer.getSolutionStatus());
 		}
 		System.out.println(optimizer.getSolutionStatus());
 		double[] uVec = u.getArray();
