@@ -8,7 +8,6 @@ import cern.colt.Arrays;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.jpetsc.Vec;
-import de.jtem.jtao.ConvergenceFlags;
 import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -86,10 +85,11 @@ public class SphericalUnwrapperPETSc implements Unwrapper {
 //		optimizer.setVariableBounds(lowerBounds, upperBounds);
 		System.out.println("Using grad tolerance " + gradTolerance);
 		optimizer.solve();
-		if (optimizer.getSolutionStatus().reason != ConvergenceFlags.CONVERGED_ATOL) {
-			throw new RuntimeException("Optimizer did not converge: \n" + optimizer.getSolutionStatus());
+		if (optimizer.getSolutionStatus().reason.name().contains("DIVERGED")) {
+			System.out.println("Warning: Optimizer did not converge: \n" + optimizer.getSolutionStatus());
+		} else {
+			System.out.println(optimizer.getSolutionStatus());
 		}
-		System.out.println(optimizer.getSolutionStatus());
 		double[] uVec = u.getArray();
 		u.restoreArray();
 		return uVec;

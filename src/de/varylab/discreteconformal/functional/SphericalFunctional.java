@@ -24,6 +24,7 @@ import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Energy;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
+import de.jtem.jpetsc.NormType;
 import de.jtem.numericalMethods.calculus.function.RealFunctionOfOneVariable;
 import de.jtem.numericalMethods.calculus.minimizing.DBrent;
 import de.jtem.numericalMethods.calculus.minimizing.Info;
@@ -35,6 +36,7 @@ import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
 import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
 import de.varylab.discreteconformal.unwrapper.numerics.MTJGradient;
 import de.varylab.discreteconformal.unwrapper.numerics.SimpleEnergy;
+import de.varylab.discreteconformal.unwrapper.numerics.TaoGradient;
 
 public class SphericalFunctional <
 	V extends Vertex<V, E, F>,
@@ -53,7 +55,7 @@ public class SphericalFunctional <
 	private InitialEnergy<F> 
 		initE = null;
 	private boolean
-		maximizeNegative = false;
+		reduced = false;
 	private double
 		logScale = 0.0;
 	
@@ -82,12 +84,20 @@ public class SphericalFunctional <
 		Gradient G, 
 		Hessian H
 	) {
-		if (maximizeNegative) {
+		if (isReduced()) {
 			u = maximizeInNegativeDirection(hds, u);
 		}
 		evaluate_internal(hds, u, E, G, H);
 		if (G != null && G instanceof MTJGradient) {
 			System.out.print("|G|: " + ((MTJGradient)G).getG().norm(Norm.Two) + " - ");
+			if (E != null) {
+				System.out.println(E.get());
+			} else {
+				System.out.println(" ");
+			}
+		}
+		if (G != null && G instanceof TaoGradient) {
+			System.out.print("|G|: " + ((TaoGradient)G).getG().norm(NormType.NORM_FROBENIUS) + " - ");
 			if (E != null) {
 				System.out.println(E.get());
 			} else {
@@ -183,7 +193,7 @@ public class SphericalFunctional <
 		MaximizingDerivative df = new MaximizingDerivative(hds, u, dim);
 		Info info = new Info(true);
 		DBrent.search(-1E5, logScale, 1E5, x, f, df, 1E-8, info);
-		System.out.println("maximization iter: " + info.getCurrentIter());
+//		System.out.println("maximization iter: " + info.getCurrentIter());
 		DomainValue newU = new MTJDomain(new DenseVector(dim));
 		logScale = x[0];
 		for (int i = 0; i < dim; i++) {
@@ -516,8 +526,11 @@ public class SphericalFunctional <
 		return var.isVariable(v) ? u.get(i) : 0.0; 
 	};
 	
-	public void setMaximizeNegative(boolean maximizeNegative) {
-		this.maximizeNegative = maximizeNegative;
+	public void setReduced(boolean reduced) {
+		this.reduced = reduced;
+	}
+	public boolean isReduced() {
+		return reduced;
 	}
 	
 }
