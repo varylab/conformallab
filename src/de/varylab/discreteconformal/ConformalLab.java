@@ -96,6 +96,7 @@ public class ConformalLab implements Runnable {
 		v.setSplashScreen(splash);
 		v.addBasicUI();
 		v.addContentUI();
+		v.addPythonSupport();
 		v.setShowToolBar(true);
 		v.setShowPanelSlots(true, true, true, true);
 		v.addContentSupport(ContentType.Raw);
