@@ -147,6 +147,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		domainViewer.getController().setSaveOnExit(true);
 		domainViewer.getController().setAskBeforeSaveOnExit(false);
 		domainViewer.getController().setLoadFromUserPropertyFile(true);
+		domainViewer.getController().setRegisterSPIPlugins(false);
 		JRootPane viewerRoot = domainViewer.startupLocal();
 		viewerRoot.setJMenuBar(null);
 		viewerRoot.setPreferredSize(new Dimension(200, 400));
