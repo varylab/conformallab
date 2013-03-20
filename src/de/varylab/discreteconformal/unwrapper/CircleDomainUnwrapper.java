@@ -29,7 +29,9 @@ import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
+import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
+import de.jtem.halfedgetools.adapter.type.generic.BaryCenter3d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
@@ -161,7 +163,8 @@ public class CircleDomainUnwrapper implements Unwrapper {
 				oldI = oldV0Index;
 			}
 			toKlein(v.T);
-			texArr[oldI] = v.T;
+			if (oldI < ifs.getNumPoints())
+				texArr[oldI] = v.T;
 		}
 		
 		// center
