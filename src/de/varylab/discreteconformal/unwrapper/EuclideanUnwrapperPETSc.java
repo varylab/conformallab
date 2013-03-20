@@ -248,16 +248,17 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		
 		// set boundary conditions
 		for (CoVertex v : HalfEdgeUtils.boundaryVertices(hds)) {
-			v.info = new CustomVertexInfo();
-			v.info.quantizationMode = QuantizationMode.Straight;
 			if (boundaryAngles.containsKey(v.getIndex())) {
 				Double angle = boundaryAngles.get(v.getIndex());
+				v.info = new CustomVertexInfo();
 				v.info.useCustomTheta = true;
-				v.info.theta = angle;	
+				v.info.theta = angle;
 			}
 		}
 		
 		EuclideanUnwrapperPETSc unwrap = new EuclideanUnwrapperPETSc();
+		unwrap.setBoundaryQuantMode(QuantizationMode.Straight);
+		unwrap.setBoundaryMode(BoundaryMode.Conformal);
 		unwrap.setGradientTolerance(1E-12);
 		unwrap.setMaxIterations(50);
 		try {
