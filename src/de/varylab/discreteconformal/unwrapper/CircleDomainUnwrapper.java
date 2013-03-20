@@ -53,7 +53,7 @@ import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 
-public class CircleDomainUnwrapper implements Unwrapper{
+public class CircleDomainUnwrapper implements Unwrapper {
 
 	private Logger
 		log = Logger.getLogger(CircleDomainUnwrapper.class.getName());

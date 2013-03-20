@@ -7,7 +7,15 @@ import java.util.Map;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
+import de.jreality.geometry.IndexedFaceSetUtility;
+import de.jreality.scene.IndexedFaceSet;
+import de.jreality.scene.data.Attribute;
+import de.jreality.scene.data.DataList;
+import de.jreality.scene.data.DoubleArrayArray;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
+import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
@@ -18,6 +26,9 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.CustomVertexInfo;
+import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
 import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
 import de.varylab.discreteconformal.util.CuttingUtility;
@@ -224,5 +235,47 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 	public ConformalFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
 		return app.getFunctional();
 	}
+	
+	public static void unwrap(IndexedFaceSet ifs, Map<Integer, Double> boundaryAngles) {
+		IndexedFaceSetUtility.makeConsistentOrientation(ifs);
+		CoHDS hds = new CoHDS();
+		AdapterSet a = AdapterSet.createGenericAdapters();
+		a.add(new CoPositionAdapter());
+		a.add(new CoTexturePositionAdapter());
+		ConverterJR2Heds cTo = new ConverterJR2Heds();
+		cTo.ifs2heds(ifs, hds, a);
+		CircleDomainUnwrapper.flipAtEars(hds, a);
+		
+		// set boundary conditions
+		for (CoVertex v : HalfEdgeUtils.boundaryVertices(hds)) {
+			v.info = new CustomVertexInfo();
+			v.info.quantizationMode = QuantizationMode.Straight;
+			if (boundaryAngles.containsKey(v.getIndex())) {
+				Double angle = boundaryAngles.get(v.getIndex());
+				v.info.useCustomTheta = true;
+				v.info.theta = angle;	
+			}
+		}
+		
+		EuclideanUnwrapperPETSc unwrap = new EuclideanUnwrapperPETSc();
+		unwrap.setGradientTolerance(1E-12);
+		unwrap.setMaxIterations(50);
+		try {
+			unwrap.unwrap(hds, 0, a);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		double[][] texArr = new double[hds.numVertices()][];
+		for (int i = 0; i < texArr.length; i++) {
+			CoVertex v = hds.getVertex(i);
+			texArr[i] = a.getD(TexturePosition4d.class, v);
+		}
+		
+		DataList newTexCoords = new DoubleArrayArray.Array(texArr);
+		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, null);
+		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, newTexCoords);
+	}
+	
 	
 }
