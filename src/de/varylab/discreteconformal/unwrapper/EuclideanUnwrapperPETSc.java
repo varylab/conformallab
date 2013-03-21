@@ -8,6 +8,10 @@ import java.util.Map;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jreality.geometry.IndexedFaceSetUtility;
+import de.jreality.math.Matrix;
+import de.jreality.math.MatrixBuilder;
+import de.jreality.math.Pn;
+import de.jreality.math.Rn;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.data.Attribute;
 import de.jreality.scene.data.DataList;
@@ -236,7 +240,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		return app.getFunctional();
 	}
 	
-	public static void unwrap(IndexedFaceSet ifs, Map<Integer, Double> boundaryAngles) {
+	public static void unwrap(IndexedFaceSet ifs, int layoutRoot, Map<Integer, Double> boundaryAngles) {
 		IndexedFaceSetUtility.makeConsistentOrientation(ifs);
 		CoHDS hds = new CoHDS();
 		AdapterSet a = AdapterSet.createGenericAdapters();
@@ -271,6 +275,18 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		for (int i = 0; i < texArr.length; i++) {
 			CoVertex v = hds.getVertex(i);
 			texArr[i] = a.getD(TexturePosition4d.class, v);
+		}
+
+		double[] t = Pn.dehomogenize(null, texArr[layoutRoot]);
+		MatrixBuilder bT = MatrixBuilder.euclidean();
+		bT.translate(-t[0], -t[1], 0);
+		Matrix T = bT.getMatrix();
+		for (int i = 0; i < texArr.length; i++) {
+			double[] tc = texArr[i];
+			double e = tc[3];
+			Pn.dehomogenize(tc, tc);
+			T.transformVector(tc);
+			Rn.times(tc, e, tc);
 		}
 		
 		DataList newTexCoords = new DoubleArrayArray.Array(texArr);
