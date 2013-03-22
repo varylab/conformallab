@@ -84,7 +84,7 @@ public class EuclideanUnwrapperPetscTest {
 		bdMap.put(445, PI / 2);
 		bdMap.put(601, PI / 2);
 		bdMap.put(574, PI / 2);
-		EuclideanUnwrapperPETSc.unwrap(ifs, 300, bdMap);
+		EuclideanUnwrapperPETSc.unwrap(ifs, 514, bdMap);
 		
 		DataList texCoords = ifs.getVertexAttributes(Attribute.TEXTURE_COORDINATES);
 		double[][] texArr = texCoords.toDoubleArrayArray(new double[ifs.getNumPoints()][4]);
@@ -106,8 +106,8 @@ public class EuclideanUnwrapperPetscTest {
 		angle = Rn.euclideanAngle(v1, v3);
 		Assert.assertEquals(PI/2, angle, 1E-7);
 		
-		Assert.assertEquals(texArr[300][0], 0.0, 1E-7);
-		Assert.assertEquals(texArr[300][1], 0.0, 1E-7);
+		Assert.assertEquals(texArr[514][0], 0.0, 1E-7);
+		Assert.assertEquals(texArr[514][1], 0.0, 1E-7);
 	}
 	
 	public static void main(String[] args) throws Exception {

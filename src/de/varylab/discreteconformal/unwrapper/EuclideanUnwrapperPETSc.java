@@ -277,8 +277,24 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 			texArr[i] = a.getD(TexturePosition4d.class, v);
 		}
 
+		
+		CoVertex layoutRootVertex = hds.getVertex(layoutRoot);
+		CoEdge bdIn = layoutRootVertex.getIncomingEdge();
+		// find a boundary edge if there is any
+		for (CoEdge e : HalfEdgeUtils.incomingEdges(layoutRootVertex)) {
+			if (e.getLeftFace() == null) {
+				bdIn = e;
+				break;
+			}
+		}
+		CoVertex nearVertex = bdIn.getStartVertex();
+		int nearIndex = nearVertex.getIndex();
+		
 		double[] t = Pn.dehomogenize(null, texArr[layoutRoot]);
+		double[] t2 = Pn.dehomogenize(null, texArr[nearIndex]);
+		double angle = Math.atan2(t2[1] - t[1], t2[0] - t[0]);
 		MatrixBuilder bT = MatrixBuilder.euclidean();
+		bT.rotate(-angle, 0, 0, 1);
 		bT.translate(-t[0], -t[1], 0);
 		Matrix T = bT.getMatrix();
 		for (int i = 0; i < texArr.length; i++) {
