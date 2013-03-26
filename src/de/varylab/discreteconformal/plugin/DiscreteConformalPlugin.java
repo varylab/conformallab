@@ -43,15 +43,12 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 import javax.imageio.ImageIO;
 import javax.swing.DefaultListModel;
@@ -67,7 +64,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
@@ -91,6 +87,9 @@ import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.basic.View;
 import de.jreality.plugin.content.ContentAppearance;
+import de.jreality.plugin.job.Job;
+import de.jreality.plugin.job.JobListener;
+import de.jreality.plugin.job.JobQueuePlugin;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.PointSet;
@@ -158,7 +157,7 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin 
-	implements ListSelectionListener, ChangeListener, ActionListener, PropertyChangeListener, SelectionListener, ColorChangedListener {
+	implements ListSelectionListener, ChangeListener, ActionListener, SelectionListener, ColorChangedListener, JobListener {
 
 	private static int
 		coverResolution = 1024;
@@ -179,6 +178,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		contentAppearance = null;
 	private DomainVisualisationPlugin
 		domainVisualisationPlugin = null;
+	private JobQueuePlugin
+		jobQueue = null;
 	
 	// data section ---------------------
 	private CoHDS
@@ -577,46 +578,31 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 	}
 	
-	
 	@Override
-	public void propertyChange(PropertyChangeEvent evt) {
-		Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
-		if (SwingWorker.StateValue.DONE == evt.getNewValue()) {
-			Unwrap unwrapper = (Unwrap)evt.getSource();
-			if (unwrapper.isCancelled()) {
-				System.out.println("Unwrap job cancelled: " + unwrapper.getState());
-				return;
-			}
-			try {
-				surface = unwrapper.get();
-			} catch (InterruptedException e) {
-				return;
-			} catch (ExecutionException e) {
-				String name = e.getCause().getClass().getSimpleName();
-				String msg = e.getCause().getLocalizedMessage();
-				StringBuffer stackBuffer = new StringBuffer(name + ": " + msg + "\n");
-				for (StackTraceElement ste : e.getCause().getStackTrace()) {
-					stackBuffer.append(ste.toString() + "\n");
-				}
-				int result = JOptionPane.showConfirmDialog(w, msg + "\nShow stack trace?", name, OK_CANCEL_OPTION, ERROR_MESSAGE);
-				if (result == JOptionPane.OK_OPTION) {
-					JOptionPane.showMessageDialog(w, stackBuffer.toString(), name, ERROR_MESSAGE);
-				}
-				return;
-			} finally {
-				unwrapper.getSurface().revertNormalization();
-			}
-			genus = unwrapper.genus;
-			cutInfo = unwrapper.cutInfo;
-			metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
-			metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
-
-			createVisualization(surface, genus, cutInfo);
-			updateSurface();
-			updateDomainImage();
-		}
+	public void jobFinished(Job job) {
+		Unwrap unwrapper = (Unwrap)job;
+		surface = unwrapper.getSurface();
+		surface.revertNormalization();
+		genus = unwrapper.genus;
+		cutInfo = unwrapper.cutInfo;
+		metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
+		metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
+		createVisualization(surface, genus, cutInfo);
+		updateSurface();
+		updateDomainImage();
 	}
-	
+	@Override
+	public void jobFailed(Job job, Exception e) {
+	}
+	@Override
+	public void jobCancelled(Job job) {
+	}
+	@Override
+	public void jobProgress(Job job, double progress) {
+	}
+	@Override
+	public void jobStarted(Job job) {
+	}
 	
 	public void createVisualization(CoHDS surface, int genus, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		this.genus = genus;
@@ -700,8 +686,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			uw.setBoundaryMode((BoundaryMode)boundaryModeCombo.getSelectedItem());
 			uw.setUsePetsc(numericsCombo.getSelectedIndex() == 1);
 			uw.setSelectedVertices(hif.getSelection().getVertices(surface));
-			uw.addPropertyChangeListener(this);
-			uw.execute();
+			uw.addJobListener(this);
+			jobQueue.queueJob(uw);
 		}
 		if (customModeCombo == s) {
 			for (Object sel : customNodesList.getSelectedValues()) {
@@ -1125,6 +1111,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		vis = c.getPlugin(ConformalVisualizationPlugin.class);
 		contentAppearance = c.getPlugin(ContentAppearance.class);
 		domainVisualisationPlugin = c.getPlugin(DomainVisualisationPlugin.class);
+		jobQueue = c.getPlugin(JobQueuePlugin.class);
 	}
 
 	

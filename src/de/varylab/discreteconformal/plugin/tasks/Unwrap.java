@@ -9,8 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.swing.SwingWorker;
-
+import de.jreality.plugin.job.AbstractJob;
 import de.jtem.blas.ComplexMatrix;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -34,7 +33,7 @@ import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 
-public class Unwrap extends SwingWorker<CoHDS, Void> {
+public class Unwrap extends AbstractJob {
 
 	private CoHDS
 		surface = null;
@@ -73,13 +72,18 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		this.aSet = aSet;
 	}
 	
+	@Override
+	public String getJobName() {
+		return "Discrete Conformal";
+	}
+	
 	
 	@Override
-	protected CoHDS doInBackground() throws Exception {
+	public void executeJob() throws Exception {
 		long startTime = System.currentTimeMillis();
 		long unwrapTime = -1;
 		long layoutTime = -1;
-		setProgress(0);
+		fireJobProgress(0.0);
 		if (!HalfEdgeUtils.isValidSurface(surface, true)) {
 			throw new RuntimeException("Surface is not valid");
 		}
@@ -132,7 +136,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			
 			unwrapper.unwrap(surface, genus, aSet);
 			unwrapTime = System.currentTimeMillis();
-			setProgress(50);
+			fireJobProgress(0.5);
 			
 			// check sphere conditions
 			for (CoFace f : surface.getFaces()) {
@@ -158,7 +162,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			lengthMap = unwrapper.getlengthMap();
 			layoutRoot = unwrapper.getLayoutRoot();
 			layoutTime = System.currentTimeMillis();
-			setProgress(100);
+			fireJobProgress(1.0);
 			break;
 		// torus ----------------------------
 		case 1:
@@ -172,7 +176,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			unwrapper.setMaxIterations(maxIterations);
 			unwrapper.unwrap(surface, genus, aSet);
 			unwrapTime = System.currentTimeMillis();
-			setProgress(50);
+			fireJobProgress(0.5);
 			
 			cutInfo = unwrapper.getCutInfo();
 			lengthMap = unwrapper.getlengthMap();
@@ -192,7 +196,7 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			setProgress(100);
+			fireJobProgress(1.0);
 			break;
 		// genus > 1 -------------------------
 		default:
@@ -216,12 +220,12 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 			unwrapper.setMaxIterations(maxIterations);
 			unwrapper.unwrap(surface, genus, aSet);
 			unwrapTime = System.currentTimeMillis();
-			setProgress(50);
+			fireJobProgress(0.5);
 			cutInfo = unwrapper.getCutInfo();
 			lengthMap = unwrapper.getlengthMap();
 			layoutRoot = unwrapper.getLayoutRoot();
 			layoutTime = System.currentTimeMillis();
-			setProgress(100);
+			fireJobProgress(1.0);
 			break;
 		}
 		NumberFormat nf = new DecimalFormat("0.00");
@@ -249,7 +253,6 @@ public class Unwrap extends SwingWorker<CoHDS, Void> {
 		if (curveVertices > 0) {
 			System.err.println("WARNING: there are " + curveVertices + " internal vertices with angle sum != 2PI.");
 		}
-		return surface;
 	}
 	
 	public CoHDS getSurface() {
