@@ -60,6 +60,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		setInitialPosition(SHRINKER_TOP);
 		shrinkPanel.setLayout(new GridLayout());
 		shrinkPanel.add(viewerPanel);
+		shrinkPanel.setShrinked(true);
 	}
 
 	
