@@ -137,8 +137,9 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		domainViewer.addBasicUI();
 		domainViewer.addContentSupport(ContentType.Raw);
 		domainViewer.addContentUI();
-		domainViewer.setPropertiesFile("ConformalDomain.jrw");
-		domainViewer.setPropertiesResource(DomainVisualisationPlugin.class, "ConformalDomain.jrw");
+//		domainViewer.setPropertiesFile("ConformalDomain.jrw");
+//		domainViewer.setPropertiesResource(DomainVisualisationPlugin.class, "ConformalDomain.jrw");
+		domainViewer.getController().setPropertyEngineEnabled(false);
 		domainViewer.registerPlugin(HalfedgeInterface.class);
 		domainViewer.registerPlugin(ContentAppearance.class);
 		domainViewer.registerPlugin(MarqueeWidget.class);
