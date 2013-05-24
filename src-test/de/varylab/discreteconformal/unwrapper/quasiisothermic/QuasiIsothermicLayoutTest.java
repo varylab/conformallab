@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.Assert;
 import org.junit.Test;
 
-import de.jreality.junitutils.Assert;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -21,8 +21,6 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicLayout;
-import de.varylab.discreteconformal.unwrapper.quasiisothermic.QuasiisothermicUtility;
 
 public class QuasiIsothermicLayoutTest {
 

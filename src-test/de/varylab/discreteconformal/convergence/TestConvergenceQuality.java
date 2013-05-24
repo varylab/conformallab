@@ -1,8 +1,8 @@
 package de.varylab.discreteconformal.convergence;
 
+import org.junit.Assert;
 import org.junit.Test;
 
-import de.jreality.junitutils.Assert;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;

@@ -153,7 +153,7 @@ public class Unwrap extends AbstractJob {
 				for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
 					sum += e.getPreviousEdge().getAlpha();
 				}
-				if (Math.abs(sum - v.getTheta()) > 1E-5) {
+				if (!HalfEdgeUtils.isBoundaryVertex(v) && Math.abs(sum - v.getTheta()) > 1E-5) {
 					System.err.println("angle sum at vertex " + v + " is incorrect: expected " + v.getTheta() + ", actual: " + sum);
 				}
 			}

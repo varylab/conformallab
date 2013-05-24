@@ -520,30 +520,23 @@ public class QuasiisothermicUtility {
 	 * @param hds
 	 * @param betaMap
 	 */
-	public static <
-		V extends Vertex<V, E, F>,
-		E extends Edge<V, E, F>,
-		F extends Face<V, E, F>,
-		HDS extends HalfEdgeDataStructure<V, E, F>
-	> void cutConesToBoundary(HDS hds, Map<E, Double> betaMap) {
-		Set<V> innerVerts = new HashSet<V>(hds.getVertices());
+	public static void cutConesToBoundary(CoHDS hds, Map<CoEdge, Double> betaMap) {
+		Set<CoVertex> innerVerts = new HashSet<CoVertex>(hds.getVertices());
 		innerVerts.removeAll(HalfEdgeUtils.boundaryVertices(hds));
-		for (V v : innerVerts) {
-			if (!(v instanceof CoVertex)) throw new IllegalArgumentException("cutConesToBoundary() only works with CoVertex");
-			CoVertex cv = (CoVertex)v;
+		for (CoVertex v : innerVerts) {
 			double sum = calculateAngleSumFromBetas(v, betaMap);
 			if (abs(abs(sum) - 2*PI) > Math.PI/4) {
 				System.out.println("angle sum " + sum);
 				int index = (int)Math.round(sum / PI);
-				cv.setTheta(index * PI);
+				v.setTheta(index * PI);
 				if((index % 2) != 0) {
 					System.out.println("singularity: " + v + ", " + index + " pi");
 				}
 			} else {
-				cv.setTheta(2 * PI);
+				v.setTheta(2 * PI);
 			}
 		}
-		ConesUtility.cutMesh((CoHDS)hds);
+		ConesUtility.cutMesh(hds);
 	}
 
 	public static <

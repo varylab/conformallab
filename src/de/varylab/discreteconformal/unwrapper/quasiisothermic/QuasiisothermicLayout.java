@@ -60,7 +60,7 @@ public class QuasiisothermicLayout {
 		Qa.offer(e0a);
 
 		// vertices
-		Double l = INITIAL_LENGTH;
+		double l = INITIAL_LENGTH;
 		lengthMap.put(e0, l);
 		lengthMap.put(e1, l);
 		aSet.set(TexturePosition.class, v1, new double[] {-cos(e0a)*INITIAL_LENGTH/2, -sin(e0a)*INITIAL_LENGTH/2, 0, 1});
@@ -87,7 +87,7 @@ public class QuasiisothermicLayout {
 					break;
 //					alpha = 2*PI - calculateAngleSum(v, angleMap);
 				}
-				Double alpha = QuasiisothermicUtility.getOppositeBeta(next, angleMap);
+				double alpha = QuasiisothermicUtility.getOppositeBeta(next, angleMap);
 				alpha *= orientationMap.get(next.getLeftFace());
 				
 				globalAngle -= alpha;

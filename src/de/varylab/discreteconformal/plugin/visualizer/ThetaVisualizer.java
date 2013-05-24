@@ -62,7 +62,7 @@ public class ThetaVisualizer extends VisualizerPlugin {
 			if (!HalfEdgeUtils.isBoundaryVertex(v) && boundaryOnlyChecker.isSelected()) {
 				return "";
 			} else {
-				CoVertex cv = (CoVertex)v;
+				CoVertex cv = CoVertex.class.cast(v);
 				return nf.format(cv.getTheta() / Math.PI) + "pi";
 			}
 		}
