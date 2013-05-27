@@ -234,7 +234,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		@Override
 		public Double getEdgeValue(CoEdge e, AdapterSet a) {
 			a.setPriorityBound(getPriority());
-			double l = a.get(Length.class, e, Double.class);
+			Double l = a.get(Length.class, e, Double.class);
 			a.removePriorityBound();
 			if (generator1.contains(e) || generator1.contains(e.getOppositeEdge())) {
 				return l * factor1;

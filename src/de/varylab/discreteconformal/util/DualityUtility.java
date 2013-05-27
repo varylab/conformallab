@@ -251,8 +251,8 @@ public class DualityUtility {
 		CotanWeightAdapter ca = new CotanWeightAdapter();
 		adapters.add(ca);
 		
-		double ratio;
-		int id;
+		Double ratio;
+		Integer id;
 
 		for (E e : delaunay.getPositiveEdges()) {
 			ratio = adapters.get(Weight.class, e, Double.class);
@@ -291,8 +291,8 @@ public class DualityUtility {
 		CotanWeightAdapter ca = new CotanWeightAdapter();
 		adapters.add(ca);
 		
-		double ratio;
-		int id;
+		Double ratio;
+		Integer id;
 
 		for (E e : delaunay.getPositiveEdges()) {
 			ratio = adapters.get(Weight.class, e, Double.class);

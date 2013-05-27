@@ -75,7 +75,7 @@ public class UnwrapUtility {
 		// set initial lambdas
 		TypedAdapterSet<double[]> da = aSet.querySet(double[].class);
 		for (final CoEdge e : hds.getPositiveEdges()) {
-			double l = aSet.get(Length.class, e, Double.class);
+			Double l = aSet.get(Length.class, e, Double.class);
 			double lambda = fun.getLambda(l);
 			e.setLambda(lambda);
 			e.getOppositeEdge().setLambda(e.getLambda());
@@ -337,7 +337,7 @@ public class UnwrapUtility {
 		// set initial lambdas
 		for (final CoEdge e : hds.getPositiveEdges()) {
 			try {
-				double l = a.get(Length.class, e, Double.class);
+				Double l = a.get(Length.class, e, Double.class);
 				l*= scale;
 				double lambda = fun.getLambda(l);
 				e.setLambda(lambda);

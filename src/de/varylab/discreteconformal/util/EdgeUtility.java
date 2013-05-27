@@ -170,7 +170,7 @@ public class EdgeUtility {
 				cycles.size());
 
 		// needed to fill the matrices
-		int currEdgeId;
+		Integer currEdgeId;
 		double currval;
 
 		// fill the matrix of a-cycles
@@ -218,7 +218,7 @@ public class EdgeUtility {
 		}
 
 		// needed to fill the matrices
-		int posEdgeId;
+		Integer posEdgeId;
 		double currval;
 
 		// iterate over positive edges to build up the new cycles

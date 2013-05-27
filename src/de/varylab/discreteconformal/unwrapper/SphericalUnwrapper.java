@@ -41,7 +41,7 @@ public class SphericalUnwrapper implements Unwrapper {
 	public void unwrap(CoHDS hds, int g, AdapterSet a) throws Exception {
 		double maxLength = 0.0;
 		for (CoEdge e : hds.getPositiveEdges()) {
-			double l = a.get(Length.class, e, Double.class);
+			Double l = a.get(Length.class, e, Double.class);
 			maxLength = maxLength < l ? l : maxLength;
 		}
 		double scale = 1.0/2.0/maxLength;

@@ -38,9 +38,9 @@ public class CotanWeightAdapter extends AbstractAdapter<Double> {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> double getLeftWeight(E e, AdapterSet adapters) {
-		double a = adapters.get(Length.class, e, Double.class);
-		double b = adapters.get(Length.class, e.getNextEdge(), Double.class);
-		double c = adapters.get(Length.class, e.getNextEdge().getNextEdge(), Double.class);
+		double a = adapters.get(Length.class, e, Double.class).doubleValue();
+		double b = adapters.get(Length.class, e.getNextEdge(), Double.class).doubleValue();
+		double c = adapters.get(Length.class, e.getNextEdge().getNextEdge(), Double.class).doubleValue();
 		if (!e.getNextEdge().getNextEdge().getNextEdge().equals(e)) {
 			throw new RuntimeException("Face is not a triangle.");
 		}

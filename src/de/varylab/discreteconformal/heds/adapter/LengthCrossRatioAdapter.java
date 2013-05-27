@@ -45,10 +45,10 @@ public class LengthCrossRatioAdapter extends AbstractAdapter<Double> {
 		if (lcrMap.containsKey(e)) {
 			return lcrMap.get(e);
 		}
-		double l_kj = a.get(Length.class, e.getOppositeEdge().getPreviousEdge(), Double.class);
-		double l_li = a.get(Length.class, e.getPreviousEdge(), Double.class);
-		double l_ik = a.get(Length.class, e.getOppositeEdge().getNextEdge(), Double.class);
-		double l_jl = a.get(Length.class, e.getNextEdge(), Double.class);
+		Double l_kj = a.get(Length.class, e.getOppositeEdge().getPreviousEdge(), Double.class);
+		Double l_li = a.get(Length.class, e.getPreviousEdge(), Double.class);
+		Double l_ik = a.get(Length.class, e.getOppositeEdge().getNextEdge(), Double.class);
+		Double l_jl = a.get(Length.class, e.getNextEdge(), Double.class);
 		return (l_kj * l_li) / (l_ik * l_jl);
 	}
 	

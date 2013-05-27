@@ -65,7 +65,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		@Override
 		public Double getEdgeValue(CoEdge e, AdapterSet a) {
-			int index = a.get(EdgeIndex.class, e, Integer.class);
+			Integer index = a.get(EdgeIndex.class, e, Integer.class);
 			return dh[index];
 		};
 		
@@ -94,7 +94,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		@Override
 		public Double getEdgeValue(CoEdge e, AdapterSet a) {
-			int index = a.get(EdgeIndex.class, e, Integer.class);
+			Integer index = a.get(EdgeIndex.class, e, Integer.class);
 			return showReal ? dh[index].re : dh[index].im;
 		};
 		
@@ -124,7 +124,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		@Override
 		public double[] getEdgeValue(CoEdge e, AdapterSet a) {
-			int index = a.get(EdgeIndex.class, e, Integer.class);
+			Integer index = a.get(EdgeIndex.class, e, Integer.class);
 			double val = showReal ? dh[index].re : dh[index].im;
 			return new double[] {10*val, 0, 0};
 		};
@@ -149,7 +149,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		
 		@Override
 		public double[] getEdgeValue(CoEdge e, AdapterSet a) {
-			int index = a.get(EdgeIndex.class, e, Integer.class);
+			Integer index = a.get(EdgeIndex.class, e, Integer.class);
 			double val = Math.abs(dh[index]);
 			return new double[] {10*val, 0, 0};
 		};

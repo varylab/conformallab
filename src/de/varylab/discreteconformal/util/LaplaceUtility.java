@@ -45,9 +45,9 @@ public class LaplaceUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	> double getLeftWeight(E e, AdapterSet aSet) {
-		double a = aSet.get(Length.class, e, Double.class);
-		double b = aSet.get(Length.class, e.getNextEdge(), Double.class);
-		double c = aSet.get(Length.class, e.getNextEdge().getNextEdge(), Double.class);
+		Double a = aSet.get(Length.class, e, Double.class);
+		Double b = aSet.get(Length.class, e.getNextEdge(), Double.class);
+		Double c = aSet.get(Length.class, e.getNextEdge().getNextEdge(), Double.class);
 		if (!e.getNextEdge().getNextEdge().getNextEdge().equals(e)) {
 			throw new RuntimeException("Face is not a triangle.");
 		}
@@ -82,7 +82,7 @@ public class LaplaceUtility {
 		CotanWeightAdapter ca= new CotanWeightAdapter();
 		adapters.add(ca);
 		
-		double weight;
+		Double weight;
 		int i, j;
 		
 		for (E e : hds.getPositiveEdges()) {

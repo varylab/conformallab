@@ -19,12 +19,26 @@
 	<property name="build" value="build"/>
 	<property name="release" value="release/${date}"/>
 
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+		<classpath>
+			<pathelement location="etc/ant/ant-contrib-1.0b3.jar" />
+		</classpath>
+	</taskdef>
 	
-    <target name="default" depends="compile"/>
+    <target name="default" depends="release"/>
 
 	<path id="classpath">
 		<fileset dir="lib" includes="**/*.jar"/>
 	</path>
+	
+	<target name="assemble manifest classpath">
+		<manifestclasspath property="manifest.classpath" jarfile="DiscreteConformalLab.jar">
+			<classpath refid="classpath"/>
+		</manifestclasspath>
+		<property name="manifest.classpath" value="
+			${manifest.classpath}
+		"/>
+	</target>
 	
 	<target name="create build folders">
 		<mkdir dir="${build}"/>
@@ -33,14 +47,20 @@
 			
 	<target name="compile" depends="create build folders">
 		<javac destdir="${build}" excludesfile="build.exclude" source="1.6" target="1.6" includeantruntime="false" encoding="UTF-8">
+			<compilerarg value="-Xlint:deprecation"/>
+			<compilerarg value="-Xlint:unchecked"/>
 			<src path="${src}"/>
 			<classpath refid="classpath"/>
 		</javac>
+		<copy todir="${build}">
+			<fileset dir="${src}" includes="**/*.png **/*.jpg"/>
+		</copy>
 	</target>
 	
 	<target name="release" depends="compile">
 		<property name="jarName" value="${release}/DiscreteConformalLab.jar"/>
 		<property name="main-class" value="de.varylab.discreteconformal.ConformalLab"/>
+		<antcallback target="assemble manifest classpath" return="manifest.classpath"/>
 		<jar destfile="${jarName}" update="false">
 			<fileset dir="${build}" includes="**"/>
 			<manifest>
@@ -48,9 +68,14 @@
 				<attribute name="Implementation-Vendor" value="${vendor}"/>
 				<attribute name="Implementation-Title" value="Discrete Conformal Lab"/>
 				<attribute name="Implementation-Version" value="${date}"/>
+				<attribute name="Class-Path" value="${manifest.classpath}"/>
 				<attribute name="Main-Class" value="${main-class}"/>
 			</manifest>
 		</jar>
+	</target>
+	
+	<target name="clean">
+		<delete dir="${build}"/>
 	</target>
 	
 </project>

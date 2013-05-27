@@ -8,10 +8,10 @@ public class ConformalEdge <
 	F extends ConformalFace<V, E, F>
 > extends Edge<V, E, F> {
 
-    private double
+    protected double
     	lambda = 1.0,
     	alpha = 0.0;
-	private Integer
+	protected Integer
 		solverIndex = -1;
 	
 	public Integer getSolverIndex() {

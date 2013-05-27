@@ -160,12 +160,12 @@ public class QuasiisothermicDelaunay {
 		E b2 = b1.getNextEdge();
 		
 		// calculate new angles
-		double a1a = a.get(OppositeAngle.class, a1, Double.class); 
-		double a2a = a.get(OppositeAngle.class, a2, Double.class); 
-		double b1a = a.get(OppositeAngle.class, b1, Double.class); 
-		double b2a = a.get(OppositeAngle.class, b2, Double.class); 
-		double ea = a.get(OppositeAngle.class, e, Double.class);
-		double eoa = a.get(OppositeAngle.class, e.getOppositeEdge(), Double.class);
+		Double a1a = a.get(OppositeAngle.class, a1, Double.class); 
+		Double a2a = a.get(OppositeAngle.class, a2, Double.class); 
+		Double b1a = a.get(OppositeAngle.class, b1, Double.class); 
+		Double b2a = a.get(OppositeAngle.class, b2, Double.class); 
+		Double ea = a.get(OppositeAngle.class, e, Double.class);
+		Double eoa = a.get(OppositeAngle.class, e.getOppositeEdge(), Double.class);
 		
 		double la1 = sin(ea)*sin(a1a)/(sin(b2a)*sin(eoa));
 		double lep = sqrt(la1*la1 + 1 - 2*la1*cos(a2a + b1a));
@@ -199,12 +199,12 @@ public class QuasiisothermicDelaunay {
 		E b2 = b1.getNextEdge();
 		
 		// calculate new angles
-		double a1a = a.get(OppositeAngle.class, a1, Double.class); 
-		double a2a = a.get(OppositeAngle.class, a2, Double.class); 
-		double b1a = a.get(OppositeAngle.class, b1, Double.class); 
-		double b2a = a.get(OppositeAngle.class, b2, Double.class); 
-		double ea = a.get(OppositeAngle.class, e, Double.class);
-		double eoa = a.get(OppositeAngle.class, e.getOppositeEdge(), Double.class);
+		Double a1a = a.get(OppositeAngle.class, a1, Double.class); 
+		Double a2a = a.get(OppositeAngle.class, a2, Double.class); 
+		Double b1a = a.get(OppositeAngle.class, b1, Double.class); 
+		Double b2a = a.get(OppositeAngle.class, b2, Double.class); 
+		Double ea = a.get(OppositeAngle.class, e, Double.class);
+		Double eoa = a.get(OppositeAngle.class, e.getOppositeEdge(), Double.class);
 		
 		
 		double le = sin(ea) / sin(b2a);

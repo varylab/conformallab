@@ -21,7 +21,7 @@ public class TriangleOrientationAdapter extends AbstractAdapter<Double> {
 		F extends Face<V, E, F>
 	> Double getF(F f, AdapterSet a) {
 		try {
-			return alphaOrientationFromAdapterSet(f, a);
+			return (Double)alphaOrientationFromAdapterSet(f, a);
 		} catch (Exception e) {
 			return -1.0;
 		}

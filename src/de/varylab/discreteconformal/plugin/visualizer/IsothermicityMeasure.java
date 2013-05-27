@@ -80,9 +80,9 @@ public class IsothermicityMeasure extends Plugin {
 				return 0.0;
 			}
 			for (E e : HalfEdgeUtils.incomingEdges(v)) {
-				double alphaE = a.get(CurvatureAngle.class, e, Double.class);
-				double alphaEPrev = a.get(CurvatureAngle.class, e.getPreviousEdge(), Double.class);
-				double alphaENext = a.get(CurvatureAngle.class, e.getNextEdge(), Double.class);
+				Double alphaE = a.get(CurvatureAngle.class, e, Double.class);
+				Double alphaEPrev = a.get(CurvatureAngle.class, e.getPreviousEdge(), Double.class);
+				Double alphaENext = a.get(CurvatureAngle.class, e.getNextEdge(), Double.class);
 				double alphaRight = QuasiisothermicUtility.calculateBeta(alphaE, alphaEPrev, alphaENext);
 				double alphaLeft = QuasiisothermicUtility.calculateBeta(alphaENext, alphaEPrev, alphaE);
 				sr *= sin(alphaRight);

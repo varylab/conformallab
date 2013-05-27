@@ -280,7 +280,7 @@ public class DiscreteHarmonicFormUtility {
 
 		// build the differences for each edge
 		for (E e : hds.getPositiveEdges()) {
-			int k = adapters.get(EdgeIndex.class, e, Integer.class);
+			Integer k = adapters.get(EdgeIndex.class, e, Integer.class);
 			if (edgesEndingAtLeft.contains(e.getOppositeEdge())) {
 				dh.setQuick(k, h.getQuick(e.getTargetVertex().getIndex()) + 1
 						- h.getQuick(e.getStartVertex().getIndex()));
@@ -337,7 +337,7 @@ public class DiscreteHarmonicFormUtility {
 
 		// build the differences for each edge
 		for (E e : hds.getPositiveEdges()) {
-			int k = adapters.get(EdgeIndex.class, e, Integer.class);
+			Integer k = adapters.get(EdgeIndex.class, e, Integer.class);
 			if (edgesEndingAtLeft.contains(e.getOppositeEdge())) {
 				dh.setQuick(k, h.getQuick(e.getLeftFace().getIndex()) + 1
 						- h.getQuick(e.getRightFace().getIndex()));
@@ -365,8 +365,9 @@ public class DiscreteHarmonicFormUtility {
 			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
 			DoubleMatrix1D form) {
 
-		int id;
-		double weight, res = 0;
+		Integer id;
+		Double weight; 
+		double res = 0.0;
 		CotanWeightAdapter ca = new CotanWeightAdapter();
 		adapters.add(ca);
 		// int counter=0;
@@ -399,7 +400,7 @@ public class DiscreteHarmonicFormUtility {
 			HalfEdgeDataStructure<V, E, F> hds, AdapterSet adapters,
 			DoubleMatrix1D form) {
 
-		int id;
+		Integer id;
 		double weight, res = 0;
 		CotanWeightAdapter ca = new CotanWeightAdapter();
 		adapters.add(ca);
@@ -460,7 +461,7 @@ public class DiscreteHarmonicFormUtility {
 		DoubleMatrix1D x = DoubleFactory1D.dense.make(n);
 
 		double[] bcond = new double[n];
-		double weight;
+		Double weight;
 
 		CotanWeightAdapter ca = new CotanWeightAdapter();
 		adapters.add(ca);

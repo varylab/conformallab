@@ -51,7 +51,7 @@ public class ProjectiveTexturePlugin extends AlgorithmPlugin {
 		Map<CoEdge, Double> edgeLengthMap = new HashMap<CoEdge, Double>();
 		Map<CoEdge, Double> texLengthMap = new HashMap<CoEdge, Double>();
 		for (CoEdge e : hds.getPositiveEdges()) {
-			double l = a.get(Length.class, e, Double.class);
+			Double l = a.get(Length.class, e, Double.class);
 			double[] t1 = a.getD(TexturePosition2d.class, e.getStartVertex());
 			double[] t2 = a.getD(TexturePosition2d.class, e.getTargetVertex());
 			double l2 = Rn.euclideanDistance(t1, t2);
