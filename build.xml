@@ -72,6 +72,9 @@
 				<attribute name="Main-Class" value="${main-class}"/>
 			</manifest>
 		</jar>
+		<copy todir="${release}">
+			<fileset dir="." includes="lib/** native/**"/>
+		</copy>
 	</target>
 	
 	<target name="clean">
