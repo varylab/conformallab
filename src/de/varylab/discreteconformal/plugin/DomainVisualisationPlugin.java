@@ -3,8 +3,8 @@ package de.varylab.discreteconformal.plugin;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
+import javax.swing.AbstractAction;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 
@@ -13,6 +13,7 @@ import de.jreality.plugin.JRViewer.ContentType;
 import de.jreality.plugin.JRViewerUtility;
 import de.jreality.plugin.basic.Scene;
 import de.jreality.plugin.basic.View;
+import de.jreality.plugin.basic.ViewToolBar;
 import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.plugin.menu.BackgroundColor;
 import de.jreality.scene.event.AppearanceEvent;
@@ -28,8 +29,6 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
-import de.jtem.halfedgetools.plugin.HalfedgeLayer;
-import de.jtem.halfedgetools.plugin.HalfedgeListener;
 import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.halfedgetools.plugin.SelectionListener;
 import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
@@ -38,7 +37,7 @@ import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 
-public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements ActionListener, HalfedgeListener, AppearanceListener, SelectionListener {
+public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements AppearanceListener, SelectionListener {
 
 	private HalfedgeInterface
 		mainHif = null,
@@ -63,6 +62,21 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		shrinkPanel.setShrinked(true);
 	}
 
+	private class UpdateAction extends AbstractAction {
+		
+		private static final long serialVersionUID = 1L;
+
+		public UpdateAction() {
+			putValue(NAME, "Update Domain");
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			updateVisualization();
+		}
+		
+	}
+	
 	
 	@TexturePosition
 	@Position
@@ -104,13 +118,6 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 			return 1000.0;
 		}
 		
-	}
-	
-	
-	
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		updateVisualization();
 	}
 	
 	public void updateVisualization() {
@@ -155,7 +162,6 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		viewerRoot.setPreferredSize(new Dimension(200, 400));
 		viewerPanel.add(viewerRoot);
 		mainHif = c.getPlugin(HalfedgeInterface.class);
-		mainHif.addHalfedgeListener(this);
 		mainAppearance = c.getPlugin(ContentAppearance.class);
 		mainAppearance.getAppearanceInspector().getAppearance().addAppearanceListener(this);
 		visHif = domainViewer.getPlugin(HalfedgeInterface.class);
@@ -165,6 +171,9 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		visHif.addSelectionListener(this);
 		domainScene = domainViewer.getPlugin(Scene.class);
 		domainViewer.getPlugin(BackgroundColor.class).setColor("Transparent Black");
+		ViewToolBar toolBar = domainViewer.getPlugin(ViewToolBar.class);
+		toolBar.addSeparator(DomainVisualisationPlugin.class, 9999.0);
+		toolBar.addAction(DomainVisualisationPlugin.class, 10000.0, new UpdateAction());
 	}
 	
 	@Override
@@ -205,24 +214,6 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		return visHif;
 	}
 
-	@Override
-	public void dataChanged(HalfedgeLayer layer) {
-		updateVisualization();
-	}
-
-	@Override
-	public void adaptersChanged(HalfedgeLayer layer) {
-	}
-	@Override
-	public void activeLayerChanged(HalfedgeLayer old, HalfedgeLayer active) {
-	}
-	@Override
-	public void layerCreated(HalfedgeLayer layer) {
-	}
-	@Override
-	public void layerRemoved(HalfedgeLayer layer) {
-	}
-	
 	private boolean ignoreSelectionChanged = false;
 	@Override
 	public void selectionChanged(HalfedgeSelection s, HalfedgeInterface sif) {
@@ -232,11 +223,11 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Acti
 		if (ignoreSelectionChanged) return;
 		ignoreSelectionChanged = true;
 			try {
-			if (sif == mainHif) {
+			if (sif == mainHif && !visHif.getSelection().equals(s)) {
 				updateAdapters();
 				visHif.setSelection(s);
 			}
-			if (sif == visHif) {
+			if (sif == visHif && !mainHif.getSelection().equals(s)) {
 				mainHif.setSelection(s);
 			}
 		} finally {

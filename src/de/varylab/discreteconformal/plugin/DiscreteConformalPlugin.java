@@ -258,7 +258,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		visualizationPanel = new ShrinkPanel("Visualization"),
 		texQuantizationPanel = new ShrinkPanel("Cone Texture Quantization");
 	private SpinnerNumberModel
-		coverRecursionModel = new SpinnerNumberModel(2, 0, 10, 1),
+		coverRecursionModel = new SpinnerNumberModel(0, 0, 10, 1),
 		customThetaModel = new SpinnerNumberModel(360.0, 0.0, 10000.0, 1.0),
 		numConesModel = new SpinnerNumberModel(0, 0, 100, 1),
 		toleranceExpModel = new SpinnerNumberModel(-8, -30, -1, 1),
@@ -905,13 +905,14 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			drawCurvesOnSurface == s
 		) {
 			updateSurface();
-			updateDomainImage();
+			updateDomainImage();				
 		}
 	}
 	
 
 	public void updateDomainImage() {
 		if (domainVisualisationPlugin == null) return;
+		domainVisualisationPlugin.updateVisualization();
 		HalfedgeInterface domInterface = domainVisualisationPlugin.getDomainInterface();
 		domInterface.removeTemporaryGeometry(domainRoot);
 		if (genus > 1) {
@@ -925,6 +926,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			ImageData imgData = new ImageData(img);
 			Texture2D tex2d = TextureUtility.createTexture(universalCoverAppearance, POLYGON_SHADER, imgData);
 			tex2d.setTextureMatrix(polygonTextureMatrix);
+			System.out.println("DiscreteConformalPlugin.updateDomainImage()");
 		}
 		
 		// add curves
