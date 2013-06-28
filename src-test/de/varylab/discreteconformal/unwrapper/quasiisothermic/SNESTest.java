@@ -1,8 +1,8 @@
 package de.varylab.discreteconformal.unwrapper.quasiisothermic;
 
 import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
-import junit.framework.Assert;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import de.jreality.util.NativePathUtility;

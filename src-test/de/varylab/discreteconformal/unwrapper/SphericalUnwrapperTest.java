@@ -4,11 +4,11 @@ import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
 
 import java.util.Random;
 
-import junit.framework.Assert;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.Vector.Norm;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import de.jreality.math.Rn;

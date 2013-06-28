@@ -5,11 +5,11 @@ import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 
 import java.util.Random;
 
-import junit.framework.Assert;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import de.jtem.halfedgetools.adapter.AdapterSet;

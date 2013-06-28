@@ -6,10 +6,10 @@ import static java.lang.Math.log;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
 import static java.lang.Math.tan;
-import junit.framework.Assert;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import de.jreality.geometry.Primitives;
