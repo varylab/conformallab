@@ -23,8 +23,6 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
-import de.jtem.halfedgetools.plugin.HalfedgeToolBar;
-import de.jtem.halfedgetools.symmetry.decoration.IsBoundary;
 import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
