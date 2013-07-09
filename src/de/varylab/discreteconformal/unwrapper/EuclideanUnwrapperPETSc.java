@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.unwrapper;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import no.uib.cipr.matrix.DenseVector;
@@ -30,6 +31,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.CustomEdgeInfo;
 import de.varylab.discreteconformal.heds.CustomVertexInfo;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
@@ -240,7 +242,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		return app.getFunctional();
 	}
 	
-	public static void unwrap(IndexedFaceSet ifs, int layoutRoot, Map<Integer, Double> boundaryAngles) {
+	public static void unwrap(IndexedFaceSet ifs, int layoutRoot, Map<Integer, Double> boundaryAngles, List<int[]> circularEdges) {
 		IndexedFaceSetUtility.makeConsistentOrientation(ifs);
 		CoHDS hds = new CoHDS();
 		AdapterSet a = AdapterSet.createGenericAdapters();
@@ -257,6 +259,21 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 				v.info = new CustomVertexInfo();
 				v.info.useCustomTheta = true;
 				v.info.theta = angle;
+			}
+		}
+		
+		// find circular edges
+		if (circularEdges != null) {
+			for (int[] eIndex : circularEdges) {
+				CoVertex v1 = hds.getVertex(eIndex[0]);
+				CoVertex v2 = hds.getVertex(eIndex[1]);
+				CoEdge ce = HalfEdgeUtils.findEdgeBetweenVertices(v1, v2);
+				if (ce == null) throw new RuntimeException("could not find circular edge between vertex " + v1 + " and " + v2);
+				CoEdge ceOpp = ce.getOppositeEdge(); 
+				ce.info = new CustomEdgeInfo();
+				ce.info.circularHoleEdge = true;
+				ceOpp.info = new CustomEdgeInfo();
+				ceOpp.info.circularHoleEdge = true;
 			}
 		}
 		
