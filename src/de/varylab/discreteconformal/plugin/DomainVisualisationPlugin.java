@@ -5,6 +5,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 
@@ -157,6 +158,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		domainViewer.getController().setAskBeforeSaveOnExit(false);
 		domainViewer.getController().setLoadFromUserPropertyFile(true);
 		domainViewer.getController().setRegisterSPIPlugins(false);
+		JFrame.setDefaultLookAndFeelDecorated(false);
 		JRootPane viewerRoot = domainViewer.startupLocal();
 		viewerRoot.setJMenuBar(null);
 		viewerRoot.setPreferredSize(new Dimension(200, 400));
