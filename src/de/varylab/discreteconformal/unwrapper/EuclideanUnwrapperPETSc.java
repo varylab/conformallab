@@ -276,6 +276,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 				List<CoEdge> edges = HalfEdgeUtils.incomingEdges(v1);
 				CoEdge bedge = null;
 				for (CoEdge e : edges)	{
+					System.err.println("Start vertex = "+e.getStartVertex().getIndex());
 					if (HalfEdgeUtils.isBoundaryEdge(e)) {
 						bedge = e;
 						break;
@@ -285,7 +286,11 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 					throw new IllegalStateException("No boundary edge on vertex "+vIndex);
 				}
 				CoFace filler = HalfEdgeUtils.fillHole(bedge);
+				int n = circularEdges.size();
+				// weird error message when I try to assign the triangulateFace()  call to local variable!
 				circularEdges.addAll(Triangulator.triangulateFace(filler, hds));
+				int m = circularEdges.size();
+				System.err.println("Added "+(m-n)+" edges");
 			}
 			for (CoEdge ce : circularEdges) {
 //				CoVertex v2 = hds.getVertex(eIndex[1]);
