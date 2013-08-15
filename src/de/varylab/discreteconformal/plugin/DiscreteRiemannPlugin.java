@@ -177,7 +177,7 @@ public class DiscreteRiemannPlugin extends ShrinkPanelPlugin implements ActionLi
 		EuclideanLengthWeightAdapter wa = new EuclideanLengthWeightAdapter(null);
 		
 		// First make clear that we are working with a delaunay triangulation.
-		List<CoEdge> newEdges = Triangulator.triangulate(S);
+		List<CoEdge> newEdges = Triangulator.triangulateByCuttingCorners(S, hif.getAdapters());
 		MappedLengthAdapter la = constructDelaunay(S, a);
 		a.add(la);
 		MappedWeightAdapter cotanWeights = calculateCotanWeights(S, a);

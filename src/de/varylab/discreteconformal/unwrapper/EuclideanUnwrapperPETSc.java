@@ -288,7 +288,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 				CoFace filler = HalfEdgeUtils.fillHole(bedge);
 				int n = circularEdges.size();
 				// weird error message when I try to assign the triangulateFace()  call to local variable!
-				circularEdges.addAll(Triangulator.triangulateFace(filler, hds));
+				circularEdges.addAll(Triangulator.triangulateByCuttingCorners(filler, a));
 				int m = circularEdges.size();
 				System.err.println("Added "+(m-n)+" edges");
 			}

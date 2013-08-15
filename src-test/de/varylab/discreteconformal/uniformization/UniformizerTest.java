@@ -47,7 +47,7 @@ public class UniformizerTest {
 		IndexedFaceSet ifs = (IndexedFaceSet)SceneGraphUtility.getFirstGeometry(c);
 		ConverterJR2Heds converterJR2Heds = new ConverterJR2Heds();
 		converterJR2Heds.ifs2heds(ifs, wente, a);
-		Triangulator.triangulate(wente);
+		Triangulator.triangulateByCuttingCorners(wente, a);
 		
 		// load lawsons surface
 		lawson = new CoHDS();

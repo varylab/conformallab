@@ -1001,7 +1001,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				v.info = null;
 			}
 		}
-		Triangulator.triangulate(surface);
+		Triangulator.triangulateByCuttingCorners(surface, hif.getAdapters());
 		return surface;
 	}
 	
