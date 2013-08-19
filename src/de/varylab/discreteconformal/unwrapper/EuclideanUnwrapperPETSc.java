@@ -244,7 +244,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		return app.getFunctional();
 	}
 	
-	public static void unwrapcg(IndexedFaceSet ifs, int layoutRoot, Map<Integer, Double> boundaryAngles, List<Integer> circularVerts) {
+	public static void unwrapcg(IndexedFaceSet ifs, int layoutRoot, Map<Integer, Double> boundaryAngles, List<Integer> circularVerts, double tol) {
 
 		IndexedFaceSetUtility.makeConsistentOrientation(ifs);
 		CoHDS hds = new CoHDS();
@@ -307,8 +307,8 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		EuclideanUnwrapperPETSc unwrap = new EuclideanUnwrapperPETSc();
 		unwrap.setBoundaryQuantMode(QuantizationMode.Straight);
 		unwrap.setBoundaryMode(BoundaryMode.Conformal);
-		unwrap.setGradientTolerance(1E-6);
-		unwrap.setMaxIterations(100);
+		unwrap.setGradientTolerance(tol);
+		unwrap.setMaxIterations(200);
 		try {
 			unwrap.unwrap(hds, 0, a);
 		} catch (Exception e) {
