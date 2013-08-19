@@ -90,11 +90,11 @@ public class TwoHoleExample {
 		holes.add(indices[2][0]);		
 
 		try {
-			EuclideanUnwrapperPETSc.unwrapcg(triang, 1, indexToAngle, doholes ? holes : null);
+			EuclideanUnwrapperPETSc.unwrapcg(triang, 1, indexToAngle, doholes ? holes : null, 10E-6);
 			double[][] tv = triang.getVertexAttributes(Attribute.TEXTURE_COORDINATES).toDoubleArrayArray(null);
 			System.err.println("unwrapped verts = "+Rn.toString(tv));
-//			triang.setVertexAttributes(Attribute.COORDINATES, null);
-//			triang.setVertexAttributes(Attribute.COORDINATES, triang.getVertexAttributes(Attribute.TEXTURE_COORDINATES));
+			triang.setVertexAttributes(Attribute.COORDINATES, null);
+			triang.setVertexAttributes(Attribute.COORDINATES, triang.getVertexAttributes(Attribute.TEXTURE_COORDINATES));
 			} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
