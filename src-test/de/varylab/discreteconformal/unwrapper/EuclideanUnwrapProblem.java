@@ -19,8 +19,8 @@ import de.jtem.jtao.Tao;
 public class EuclideanUnwrapProblem {
 
 	static HashMap<Integer, Double> indexToAngle = new HashMap<Integer, Double>();
-//	static int[] corners = {24, 39, 57, 7, 34};
-	static int[] corners = {0, 2, 4, 6};
+//	static int[] corners = {24, 39, 57, 7, 34};  // for the disk example
+	static int[] corners = {0, 5, 6, 7};			// for the letter A
 
 	static {
 		NativePathUtility.set("native");
@@ -47,17 +47,17 @@ public class EuclideanUnwrapProblem {
 //		holes = null;
 		EuclideanUnwrapperPETSc.unwrapcg(ifs, 1, indexToAngle, holes, 10E-6);
 
-//		double[][] verts = ifs.getVertexAttributes(Attribute.COORDINATES).toDoubleArrayArray(null);
-//		double[][] cornerpts = {verts[corners[0]], verts[corners[1]], verts[corners[2]], verts[corners[3]]};
-//		PointSetFactory psf = new PointSetFactory();
-//		psf.setVertexCount(4);
-//		psf.setVertexCoordinates(cornerpts);
-//		psf.update();
-//		SceneGraphComponent cornerSGC = SceneGraphUtility.createFullSceneGraphComponent("corners");
-//		triangulation.addChild(cornerSGC);
-//		cornerSGC.setGeometry(psf.getGeometry());
-//		cornerSGC.getAppearance().setAttribute(CommonAttributes.VERTEX_DRAW, true);
-//		cornerSGC.getAppearance().setAttribute(CommonAttributes.POINT_RADIUS, .2);
+		double[][] verts = ifs.getVertexAttributes(Attribute.COORDINATES).toDoubleArrayArray(null);
+		double[][] cornerpts = {verts[corners[0]], verts[corners[1]], verts[corners[2]], verts[corners[3]]};
+		PointSetFactory psf = new PointSetFactory();
+		psf.setVertexCount(4);
+		psf.setVertexCoordinates(cornerpts);
+		psf.update();
+		SceneGraphComponent cornerSGC = SceneGraphUtility.createFullSceneGraphComponent("corners");
+		triangulation.addChild(cornerSGC);
+		cornerSGC.setGeometry(psf.getGeometry());
+		cornerSGC.getAppearance().setAttribute(CommonAttributes.VERTEX_DRAW, true);
+		cornerSGC.getAppearance().setAttribute(CommonAttributes.POINT_RADIUS, .2);
 		triangulation.getAppearance().setAttribute(CommonAttributes.FACE_DRAW, false);
 		JRViewer.display(triangulation);
 	}
