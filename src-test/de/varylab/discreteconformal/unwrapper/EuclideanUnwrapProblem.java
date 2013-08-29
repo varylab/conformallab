@@ -35,7 +35,7 @@ public class EuclideanUnwrapProblem {
 			e.printStackTrace();
 		}
 		IndexedFaceSet ifs = (IndexedFaceSet) SceneGraphUtility.getFirstGeometry(triangulation);
-		int n = ifs.getNumPoints();
+//		int n = ifs.getNumPoints();
 //		for (int i = 0; i<n ; ++i)	{
 //			indexToAngle.put(i,Math.PI);
 //		}

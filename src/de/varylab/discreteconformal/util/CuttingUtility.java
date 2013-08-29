@@ -308,12 +308,12 @@ public class CuttingUtility {
 			}
 			E b2 = b.getNextEdge();
 			List<E> newTargetEdges = new LinkedList<E>();
-			E actEdge = edge;
+			E actEdge = new1;
 			do {
 				newTargetEdges.add(actEdge);
-				actEdge = actEdge.getNextEdge().getOppositeEdge();
-			} while (actEdge != b);
-			newTargetEdges.add(b);
+				actEdge = actEdge.getOppositeEdge().getPreviousEdge();
+			} while (actEdge != b2.getOppositeEdge());
+			newTargetEdges.add(b2.getOppositeEdge());
 			
 			V newV = hds.addNewVertex();
 			newV.copyData(v2);

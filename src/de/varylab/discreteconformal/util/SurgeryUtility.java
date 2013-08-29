@@ -25,6 +25,7 @@ public class SurgeryUtility {
 	 * @param <F>
 	 * @param e1
 	 * @param e2
+	 * @return a set of edges forming the resulting cycle
 	 */
 	public static <
 		V extends Vertex<V, E, F>,
@@ -58,7 +59,7 @@ public class SurgeryUtility {
 			E opp = oppMap.get(e);
 			e.linkOppositeEdge(opp);
 			edgeCycle.add(e);
-			edgeCycle.add(opp);
+//			edgeCycle.add(e.getOppositeEdge());
 		}
 		// set targets
 		for (V v : targetMap.keySet()) {

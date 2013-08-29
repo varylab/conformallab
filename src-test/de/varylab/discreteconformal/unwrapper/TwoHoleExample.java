@@ -7,17 +7,14 @@ import java.util.HashMap;
 import java.util.List;
 
 import de.jreality.geometry.IndexedLineSetFactory;
-import de.jreality.geometry.IndexedLineSetUtility;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
 import de.jreality.reader.Readers;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
-import de.jreality.scene.IndexedLineSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.data.Attribute;
-import de.jreality.scene.data.StorageModel;
 import de.jreality.shader.CommonAttributes;
 import de.jreality.util.Input;
 import de.jreality.util.SceneGraphUtility;
@@ -52,7 +49,7 @@ public class TwoHoleExample {
 		ilsf.setEdgeCount(indices.length);
 		ilsf.setEdgeIndices(indices);
 		ilsf.update();
-		IndexedLineSet[] AB  = null;
+//		IndexedLineSet[] AB  = null;
 			triangleArea = .05;
 
 		SceneGraphComponent triangulation = null;

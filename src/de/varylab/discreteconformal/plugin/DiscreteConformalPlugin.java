@@ -243,7 +243,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		checkGaussBonnetBtn = new JButton("Check Gauß-Bonnet"),
 		unwrapBtn = new JButton("Unwrap"),
 		spherizeButton = new JButton("Spherize"),
-		quantizeToQuads = new JButton("Quads");
+		quantizeToQuads = new JButton("Quads"),
+		extendDomainButton = new JButton("Extend Fundamental Domain");
 	private ColorChooseJButton
 		triangulationColorButton = new ColorChooseJButton(Color.GRAY, true),
 		polygonColorButton = new ColorChooseJButton(Color.RED, true),
@@ -906,6 +907,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		) {
 			updateSurface();
 			updateDomainImage();				
+		}
+		if (extendDomainButton == s) {
+			throw new RuntimeException("not yet implemented!");
 		}
 	}
 	
