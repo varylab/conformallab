@@ -47,7 +47,7 @@ public class SchottkyModelContainer implements ModelContainer {
 			generators.remove(model);
 		}
 		if (modelType.equals("schottky base point")) {
-			throw new RuntimeException("Cannot remove base point");
+			throw new RuntimeException("base point cannot be removed");
 		}
 		fireStateChanged(this);
 	}

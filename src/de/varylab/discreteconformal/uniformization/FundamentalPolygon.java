@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import de.jtem.discretegroup.core.DiscreteGroup;
+import de.jtem.discretegroup.core.DiscreteGroupElement;
 import de.varylab.discreteconformal.math.RnBig;
 
 public class FundamentalPolygon {
@@ -166,4 +168,25 @@ public class FundamentalPolygon {
 		return 1 - X/2;
 	}
 	
+	
+	public DiscreteGroup getDiscreteGroup() {
+		int dim = edgeList.size() / 2;
+		DiscreteGroupElement[] gArr = new DiscreteGroupElement[dim];
+		DiscreteGroup G = new DiscreteGroup();
+		FundamentalEdge start = edgeList.get(0);
+		FundamentalEdge active = start;
+		int index = 0;
+		do {
+			DiscreteGroupElement g = new DiscreteGroupElement();
+			g.setMatrix(active.motion);
+			gArr[index++] = g;
+			active = active.partner.nextEdge;
+		} while (active != start);
+		G.calculateGenerators();
+		G.generateElements();
+		assert !G.isFree() : "a fuchsian uniformization group has at least one relation";
+		assert !G.isFinite() : "these groups should tesselate hyperbolic space and hence are not finite";
+		return G;
+	}
+		
 }

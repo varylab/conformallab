@@ -22,7 +22,7 @@
 	<classpathentry kind="lib" path="lib/jtem/jpetsctao.jar"/>
 	<classpathentry kind="lib" path="lib/jreality/colorpicker.jar"/>
 	<classpathentry kind="lib" path="lib/jreality/janino.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/jreality/jReality.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jreality/jReality.jar" sourcepath="/jreality"/>
 	<classpathentry kind="lib" path="lib/jreality/jython_console.jar"/>
 	<classpathentry kind="lib" path="lib/jreality/jython-standalone-2.5.3.jar"/>
 	<classpathentry kind="lib" path="lib/jreality/NetUtil.jar"/>
@@ -48,6 +48,7 @@
 	<classpathentry kind="lib" path="lib/jogamp/jogl-all.jar"/>
 	<classpathentry kind="lib" path="lib/jfreechart/jcommon-1.0.18.jar"/>
 	<classpathentry kind="lib" path="lib/jfreechart/jfreechart-1.0.14.jar"/>
+	<classpathentry kind="lib" path="lib/jtem/discretegroup.jar" sourcepath="/discretegroup"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="lib/MTJOptimization.jar"/>
 	<classpathentry kind="lib" path="lib/arpack-combo.jar"/>

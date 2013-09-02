@@ -10,6 +10,7 @@ import de.jtem.java2d.Viewer2D;
 import de.jtem.java2dx.modelling.ModellingTool2D;
 import de.jtem.java2dx.modelling.SimpleModeller2D;
 import de.jtem.mfc.field.Complex;
+import de.jtem.modelling.ActionTree;
 import de.jtem.modelling.Modeller;
 
 public class SchottkyModeller extends SimpleModeller2D {
@@ -29,7 +30,11 @@ public class SchottkyModeller extends SimpleModeller2D {
 		m.setModelContainer(modelContainer);
 		v.setGridEnabled(true);
 		v.setTranslateToolEnabled(true);
-		setActionTree(m.getViewerMenu());
+		ActionTree menu = m.getViewerMenu();
+		menu.add(m.getFileMenu());
+		menu.add(m.getEditMenu());
+		menu.add(m.getInspectMenu());
+		setActionTree(menu);
 		
 		m.addTool(new SchottkyCenterTool(), null);
 		m.addTool(new SchottkyGeneratorTool(), "Generator");
