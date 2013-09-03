@@ -30,6 +30,7 @@ public class SchottkyModeller extends SimpleModeller2D {
 		m.setModelContainer(modelContainer);
 		v.setGridEnabled(true);
 		v.setTranslateToolEnabled(true);
+		v.setScaleToolEnabled(true);
 		ActionTree menu = m.getViewerMenu();
 		menu.add(m.getFileMenu());
 		menu.add(m.getEditMenu());
@@ -46,8 +47,16 @@ public class SchottkyModeller extends SimpleModeller2D {
 		return modelContainer.getGenerators();
 	}
 	
+	public void removeGenerator(SchottkyGenerator g) {
+		modelContainer.removeModel(g, "schottky generator");
+	}
+	
 	public Complex getBasePoint() {
 		return modelContainer.getBasePoint();
+	}
+	
+	public SchottkyModelContainer getModelContainer() {
+		return modelContainer;
 	}
 	
 	

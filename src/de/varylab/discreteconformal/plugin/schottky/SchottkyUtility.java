@@ -492,12 +492,12 @@ public class SchottkyUtility {
 			HyperbolicUnwrapperPETSc hypUnwrapper = (HyperbolicUnwrapperPETSc)unwrapper;
 			ConformalFunctional<CoVertex, CoEdge, CoFace> fun = hypUnwrapper.getFunctional();
 			Vector u = hypUnwrapper.getUResult();
-			rootVertex = HyperbolicLayout.doLayout(hds, rootVertex, fun,  u);
+			rootVertex = HyperbolicLayout.doLayout(hds, null, fun,  u);
 		} else {
 			EuclideanUnwrapperPETSc eucUnwrapper = (EuclideanUnwrapperPETSc)unwrapper;
 			ConformalFunctional<CoVertex, CoEdge, CoFace> fun = eucUnwrapper.getFunctional();
 			Vector u = eucUnwrapper.getUResult();
-			rootVertex = EuclideanLayout.doLayout(hds, fun,  u);
+			rootVertex = EuclideanLayout.doLayout(hds, fun, u);
 		}
 		return cutInfo;
 	}

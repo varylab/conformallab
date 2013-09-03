@@ -347,7 +347,8 @@ public class EuclideanNewFunctional <
 		if (E != null) {
 			E.add(a1*λt2 + a2*λt3 + a3*λt1);
 			E.add(2*lob(a1) + 2*lob(a2) + 2*lob(a3));
-			E.add(- PI * (λt1 + λt2 + λt3) / 2);
+//			E.add(- PI * (λt1 + λt2 + λt3) / 2);
+			E.add(- PI * (λ1 + λ2 + λ3) / 2 - PI * (u1 + u2 + u3));
 			E.add(- initialEnergy.getInitialEnergy(f));
 		}
 		alpha.setAlpha(e1, a2);

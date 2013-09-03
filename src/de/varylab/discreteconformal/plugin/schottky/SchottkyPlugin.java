@@ -13,16 +13,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
+import javax.swing.JTable;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.table.AbstractTableModel;
 
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.basic.View;
+import de.jreality.plugin.scripting.swing.ButtonCellEditor;
+import de.jreality.plugin.scripting.swing.ButtonCellRenderer;
 import de.jreality.ui.LayoutFactory;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
@@ -38,6 +46,7 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
+import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener {
@@ -66,6 +75,15 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	private JCheckBox
 		spherialChecker = new JCheckBox("Spherical"),
 		cutFromRootChecker = new JCheckBox("Use Cut Root");
+	private GeneratorModel
+		generatorModel = new GeneratorModel();
+	private JTable 
+		generatorTable = new JTable(generatorModel);
+	private JScrollPane
+		generatorScroller = new JScrollPane(generatorTable);
+	private Icon
+		removeIcon = ImageHook.getIcon("remove.png");
+	
 	
 	public SchottkyPlugin() {
 		GridBagConstraints c1 = LayoutFactory.createLeftConstraint();
@@ -84,6 +102,15 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		c2.weighty = 1.0;
 		shrinkPanel.add(scrollProtector, c2);
 		c2.weighty = 0.0;
+		generatorScroller.setPreferredSize(new Dimension(10, 100));
+		generatorTable.setFillsViewportHeight(true);
+		generatorScroller.setBorder(BorderFactory.createTitledBorder("Generators"));
+		generatorTable.setDefaultRenderer(JButton.class, new ButtonCellRenderer());
+		generatorTable.setDefaultEditor(JButton.class, new ButtonCellEditor());
+		generatorTable.getColumnModel().getColumn(0).setMaxWidth(40);
+		generatorTable.getColumnModel().getColumn(2).setMaxWidth(40);
+		generatorTable.setRowHeight(22);
+		shrinkPanel.add(generatorScroller, c2);
 		shrinkPanel.add(new JLabel("Random Seed"), c1);
 		shrinkPanel.add(randomSeedSpinner, c2);
 		shrinkPanel.add(new JLabel("Num Extra Points"), c1);
@@ -103,6 +130,15 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		viewer.setScaleToolEnabled(true);
 		viewer.setTranslateToolEnabled(true);
 		viewer.setMenuToolEnabled(true);
+		
+		schottkyModeller.getModelContainer().addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				generatorTable.updateUI();
+				schottkyModeller.getModeller().updateTools();
+				schottkyModeller.getViewer().updateUI();
+			}
+		});
 	}
 	
 	
@@ -148,7 +184,91 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			dcp.updateDomainImage();
 		}
 	}
+	
+	private class RemoveGeneratorButton extends JButton implements ActionListener {
+		
+		private static final long serialVersionUID = 1L;
+		private SchottkyGenerator generator = null;
 
+		public RemoveGeneratorButton(SchottkyGenerator generator) {
+			super(removeIcon);
+			this.generator = generator;
+			addActionListener(this);
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			schottkyModeller.removeGenerator(generator);
+			schottkyModeller.getModeller().updateTools();
+		}
+		
+	}
+	
+
+	private class GeneratorModel extends AbstractTableModel {
+
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public int getColumnCount() {
+			return 3;
+		}
+
+		@Override
+		public int getRowCount() {
+			return schottkyModeller.getGenerators().size();
+		}
+		
+		@Override
+		public boolean isCellEditable(int rowIndex, int columnIndex) {
+			return columnIndex == 1 || columnIndex == 2;
+		}
+		
+		@Override
+		public String getColumnName(int col) {
+			switch (col) {
+			case 0: return "ID";
+			case 1: return "|μ|";
+			default: return "";
+			}
+		}
+		
+		@Override
+		public Class<?> getColumnClass(int columnIndex) {
+			switch (columnIndex) {
+			case 0: return Integer.class;
+			case 1: return Double.class;
+			case 2: return JButton.class;
+			default: return String.class;
+			}
+		}
+
+		@Override
+		public Object getValueAt(int row, int col) {
+			SchottkyGenerator g = schottkyModeller.getGenerators().get(row);
+			switch (col) {
+			case 0: return col;
+			case 1: return g.getMu().abs();
+			case 2: return new RemoveGeneratorButton(g);
+			default: return 0;
+			}
+		}
+		
+		@Override
+		public void setValueAt(Object value, int row, int col) {
+			SchottkyGenerator g = schottkyModeller.getGenerators().get(row);
+			switch (col) {
+			case 1: 
+				double abs = (Double)value;
+				double oldAbs = g.getMu().abs();
+				Complex newMu = g.getMu().times(abs / oldAbs);
+				g.setMu(newMu);
+				schottkyModeller.getModeller().updateTools();
+			}
+		}
+		
+	}
+	
 
 	@Override
 	public void install(Controller c) throws Exception {
