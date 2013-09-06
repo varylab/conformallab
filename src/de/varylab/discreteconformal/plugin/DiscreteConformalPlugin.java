@@ -94,6 +94,7 @@ import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.PointSet;
 import de.jreality.scene.SceneGraphComponent;
+import de.jreality.shader.CommonAttributes;
 import de.jreality.shader.ImageData;
 import de.jreality.shader.Texture2D;
 import de.jreality.shader.TextureUtility;
@@ -322,6 +323,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		universalCoverAppearance.setAttribute(TRANSPARENCY_ENABLED, true);
 		universalCoverAppearance.setAttribute(POLYGON_SHADER + "." + DIFFUSE_COLOR, WHITE);
 		universalCoverAppearance.setAttribute(POLYGON_SHADER + "." + TRANSPARENCY, 0.0);
+		universalCoverAppearance.setAttribute(CommonAttributes.PICKABLE, false);
 		
 		Appearance circleApp = new Appearance();
 		circleApp.setAttribute(EDGE_DRAW, false);
@@ -1184,6 +1186,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	
 	public boolean isRescaleGeometry() {
 		return rescaleChecker.isSelected();
+	}
+	public CuttingInfo<CoVertex, CoEdge, CoFace> getCurrentCutInfo() {
+		return cutInfo;
+	}
+	public int getCurrentGenus() {
+		return genus;
 	}
 	
 }

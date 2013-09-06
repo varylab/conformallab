@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import cern.colt.Arrays;
 import de.jreality.math.Matrix;
 import de.jreality.math.P2;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -635,6 +636,9 @@ public class FundamentalPolygonUtility {
 					HYPERBOLIC
 				);
 				Matrix A = new Matrix(P2.imbedMatrixP2InP3(null, T));
+				
+				System.out.println("lastStart " + Arrays.toString(lastStartPoint));
+				System.out.println("T * lastStart " + Arrays.toString(lastStartPoint));
 	
 				// arbitrary precision isometry
 				BigDecimal[] TBig = P2Big.makeDirectIsometryFromFrames(null, 

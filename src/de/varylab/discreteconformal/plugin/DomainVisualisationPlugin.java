@@ -1,14 +1,23 @@
 package de.varylab.discreteconformal.plugin;
 
+import static de.jreality.math.Pn.EUCLIDEAN;
+import static de.jreality.math.Pn.HYPERBOLIC;
+
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 
+import cern.colt.Arrays;
+import de.jreality.math.Matrix;
+import de.jreality.math.P2;
+import de.jreality.math.Pn;
+import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
 import de.jreality.plugin.JRViewerUtility;
@@ -17,19 +26,26 @@ import de.jreality.plugin.basic.View;
 import de.jreality.plugin.basic.ViewToolBar;
 import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.plugin.menu.BackgroundColor;
+import de.jreality.scene.SceneGraphComponent;
+import de.jreality.scene.SceneGraphPath;
 import de.jreality.scene.event.AppearanceEvent;
 import de.jreality.scene.event.AppearanceListener;
+import de.jreality.scene.tool.Tool;
 import de.jreality.ui.AppearanceInspector;
+import de.jreality.util.SceneGraphUtility;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.Node;
 import de.jtem.halfedge.Vertex;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AbstractAdapter;
+import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
 import de.jtem.halfedgetools.adapter.Adapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.halfedgetools.plugin.SelectionListener;
 import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
@@ -37,6 +53,11 @@ import de.jtem.halfedgetools.plugin.widget.MarqueeWidget;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements AppearanceListener, SelectionListener {
 
@@ -50,6 +71,10 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		visAppearance = null;
 	private TextureDomainPositionAdapter
 		domainAdapter = new TextureDomainPositionAdapter();
+	private DiscreteConformalPlugin
+		conformalPlugin = null;
+	private ConformalVisualizationPlugin
+		conformalVisualizationPlugin = null;
 	
 	private JRViewer
 		domainViewer = new JRViewer();
@@ -125,10 +150,9 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		if (shrinkPanel.isShrinked()) {
 			return;
 		}
-//		HyperbolicModel model = conformalVisualizationPlugin.getSelectedHyperbolicModel();
-//		texturePositionAdapter.setModel(model);
 		updateAdapters();
 		visHif.set(mainHif.get());
+		addCopyTool(visHif.getActiveLayer());
 		JRViewerUtility.encompassEuclidean(domainScene);
 	}
 
@@ -138,15 +162,34 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		}
 	}
 	
+	private void addCopyTool(HalfedgeLayer layer) {
+		List<SceneGraphPath> paths = SceneGraphUtility.getPathsToNamedNodes(layer.getLayerRoot(), "Geometry");
+		SceneGraphComponent comp = null;
+		for (SceneGraphPath path : paths) {
+			comp = path.getLastComponent();
+			boolean hasTool = false;
+			for (Tool tool : comp.getTools()) {
+				if (tool instanceof HyperbolicCopyTool) {
+					hasTool = true;
+					break;
+				}
+			}
+			if (!hasTool) {
+				Tool copyDomainTool = new HyperbolicCopyTool(this, layer);
+				comp.addTool(copyDomainTool);
+			}
+		}
+	}
+	
 	@Override
 	public void install(Controller c) throws Exception {
 		super.install(c);
+		conformalPlugin = c.getPlugin(DiscreteConformalPlugin.class);
+		conformalVisualizationPlugin = c.getPlugin(ConformalVisualizationPlugin.class);
 		viewerPanel.setLayout(new GridLayout());
 		domainViewer.addBasicUI();
 		domainViewer.addContentSupport(ContentType.Raw);
 		domainViewer.addContentUI();
-//		domainViewer.setPropertiesFile("ConformalDomain.jrw");
-//		domainViewer.setPropertiesResource(DomainVisualisationPlugin.class, "ConformalDomain.jrw");
 		domainViewer.getController().setPropertyEngineEnabled(false);
 		domainViewer.registerPlugin(HalfedgeInterface.class);
 		domainViewer.registerPlugin(ContentAppearance.class);
@@ -235,6 +278,117 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		} finally {
 			ignoreSelectionChanged = false;
 		}
+	}
+	
+	@Position
+	private class TransformDomainAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
+		
+		private Matrix
+			transform = null;
+		
+		public TransformDomainAdapter(Matrix transform) {
+			super(CoVertex.class, null, null, double[].class, true, false);
+			this.transform = transform;
+		}
+		
+		@Override
+		public double[] getVertexValue(CoVertex v, AdapterSet a) {
+			double[] t = transform.multiplyVector(v.T);
+			switch (conformalVisualizationPlugin.getSelectedHyperbolicModel()) {
+			case Klein:
+				return t;
+			case Poincaré: 
+			default:
+				return new double[] {t[0], t[1], 0.0, t[3] + 1};
+			case Halfplane:
+				return new double[] {t[1], 1, 0.0, t[3] - t[0]};
+			}
+		}
+		
+		@Override
+		public double getPriority() {
+			return 10000.0;
+		}
+	}
+	
+	
+	public void copyDomainAtEdge(int pickIndex, HalfedgeLayer layer) {
+		CoHDS surface = layer.get(new CoHDS());
+		CoFace pickFace = surface.getFace(pickIndex);
+		CoEdge edge = null;
+		for (CoEdge e : HalfEdgeUtils.boundaryEdges(pickFace)) {
+			if (e.getRightFace() == null) {
+				edge = e;
+				break;
+			}
+		}
+		if (edge == null) {
+			System.out.println("no boundary face selected for domain copy");
+			return;
+		}
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = conformalPlugin.getCurrentCutInfo();
+		if (cutInfo == null) {
+			return;
+		}
+		CoEdge coEdge = cutInfo.edgeCutMap.get(edge);
+		if (coEdge == null) {
+			System.err.println("CoEdge not found");
+			return;
+		}
+		if (edge.getOppositeEdge().getLeftFace() != null) {
+			System.err.println("Picked no boundary edge!");
+			return;
+		}
+		System.out.println("hyperbolic motion: " + edge + " -> " + coEdge);
+
+		int genus = conformalPlugin.getCurrentGenus();
+		int signature = genus > 1 ? HYPERBOLIC : EUCLIDEAN;
+		double[] s1 = Pn.normalize(null, edge.getStartVertex().T, signature); 
+		double[] t1 = Pn.normalize(null, edge.getTargetVertex().T, signature); 
+		double[] s2 = Pn.normalize(null, coEdge.getStartVertex().T, signature); 
+		double[] t2 = Pn.normalize(null, coEdge.getTargetVertex().T, signature); 
+		
+		double dist1 = Pn.distanceBetween(s1, t1, signature);
+		double dist2 = Pn.distanceBetween(s2, t2, signature);
+		
+		assert Math.abs(dist1 - dist2) < 1E-8 : "corresponding edges have different lengths";
+		System.out.println("distances: " + dist1 + " != " + dist2);
+		
+		double[] a = P2.makeDirectIsometryFromFrames(null, 
+			P2.projectP3ToP2(null, s2), 
+			P2.projectP3ToP2(null, t2), 
+			P2.projectP3ToP2(null, t1), 
+			P2.projectP3ToP2(null, s1), 
+			signature
+		);
+		Matrix A = new Matrix(P2.imbedMatrixP2InP3(null, a));
+		System.out.println("det: " + A.getDeterminant());
+		
+		double[] checkS1 = A.multiplyVector(s1);
+		double[] checkT1 = A.multiplyVector(t1);
+		System.out.println(Arrays.toString(checkS1) + " == " + Arrays.toString(t2));
+		System.out.println(Arrays.toString(checkT1) + " == " + Arrays.toString(s2));
+		
+		TransformDomainAdapter adapter = new TransformDomainAdapter(A);
+		
+		HalfedgeLayer copy = visHif.createLayer("Isometric Copy");
+		copy.addAdapter(adapter, true);
+		copy.set(surface);
+		addCopyTool(copy);
+	}
+	
+	
+	public static void main(String[] args) {
+		double[] p0 = {0,0,1};
+		double[] p1 = {1,0,1};
+		double[] q0 = {0,1,1};
+		double[] q1 = {1,1,1};
+		double[] a = P2.makeDirectIsometryFromFrames(null, p0, p1, q0, q1, Pn.EUCLIDEAN);
+		System.out.println("det: " + Rn.determinant(a));
+		double[] checkQ0 = Rn.matrixTimesVector(null, a, p0);
+		double[] checkQ1 = Rn.matrixTimesVector(null, a, p1);
+		System.out.println(Arrays.toString(checkQ0) + " == " + Arrays.toString(q0));
+		System.out.println(Arrays.toString(checkQ1) + " == " + Arrays.toString(q1));
 	}
 
 }
