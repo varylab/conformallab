@@ -6,7 +6,9 @@ import static de.jreality.math.Pn.HYPERBOLIC;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFrame;
@@ -75,6 +77,8 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		conformalPlugin = null;
 	private ConformalVisualizationPlugin
 		conformalVisualizationPlugin = null;
+	private Map<HalfedgeLayer, Matrix>
+		copyTransformMap = new HashMap<HalfedgeLayer, Matrix>();
 	
 	private JRViewer
 		domainViewer = new JRViewer();
@@ -150,6 +154,10 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		if (shrinkPanel.isShrinked()) {
 			return;
 		}
+		for (HalfedgeLayer l : copyTransformMap.keySet()) {
+			visHif.removeLayer(l);
+		}
+		copyTransformMap.clear();
 		updateAdapters();
 		visHif.set(mainHif.get());
 		addCopyTool(visHif.getActiveLayer());
@@ -219,6 +227,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		ViewToolBar toolBar = domainViewer.getPlugin(ViewToolBar.class);
 		toolBar.addSeparator(DomainVisualisationPlugin.class, 9999.0);
 		toolBar.addAction(DomainVisualisationPlugin.class, 10000.0, new UpdateAction());
+		toolBar.addAction(DomainVisualisationPlugin.class, 10000.0, new MarkBoundariesAction());
 	}
 	
 	@Override
@@ -280,6 +289,28 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		}
 	}
 	
+	private class MarkBoundariesAction extends AbstractAction {
+
+		private static final long serialVersionUID = 1L;
+
+		public MarkBoundariesAction() {
+			putValue(NAME, "Mark Boundaries");
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			for (HalfedgeLayer l : visHif.getAllLayers()) {
+				HalfedgeSelection s = new HalfedgeSelection();
+				List<CoEdge> bEdges = HalfEdgeUtils.boundaryEdges(l.get(new CoHDS()));
+				s.addAll(bEdges);
+				l.setSelection(s);
+			}
+		}
+		
+	}
+	
+	
+	
 	@Position
 	private class TransformDomainAdapter extends AbstractTypedAdapter<CoVertex, CoEdge, CoFace, double[]> {
 		
@@ -339,8 +370,12 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 			System.err.println("Picked no boundary edge!");
 			return;
 		}
-		System.out.println("hyperbolic motion: " + edge + " -> " + coEdge);
 
+		Matrix T = copyTransformMap.get(layer);
+		if (T == null) {
+			T = new Matrix();
+		}
+		
 		int genus = conformalPlugin.getCurrentGenus();
 		int signature = genus > 1 ? HYPERBOLIC : EUCLIDEAN;
 		double[] s1 = Pn.normalize(null, edge.getStartVertex().T, signature); 
@@ -352,7 +387,6 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		double dist2 = Pn.distanceBetween(s2, t2, signature);
 		
 		assert Math.abs(dist1 - dist2) < 1E-8 : "corresponding edges have different lengths";
-		System.out.println("distances: " + dist1 + " != " + dist2);
 		
 		double[] a = P2.makeDirectIsometryFromFrames(null, 
 			P2.projectP3ToP2(null, s2), 
@@ -362,19 +396,14 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 			signature
 		);
 		Matrix A = new Matrix(P2.imbedMatrixP2InP3(null, a));
-		System.out.println("det: " + A.getDeterminant());
-		
-		double[] checkS1 = A.multiplyVector(s1);
-		double[] checkT1 = A.multiplyVector(t1);
-		System.out.println(Arrays.toString(checkS1) + " == " + Arrays.toString(t2));
-		System.out.println(Arrays.toString(checkT1) + " == " + Arrays.toString(s2));
+		A = Matrix.times(T, A);
 		
 		TransformDomainAdapter adapter = new TransformDomainAdapter(A);
-		
 		HalfedgeLayer copy = visHif.createLayer("Isometric Copy");
 		copy.addAdapter(adapter, true);
 		copy.set(surface);
 		addCopyTool(copy);
+		copyTransformMap.put(copy, A);
 	}
 	
 	

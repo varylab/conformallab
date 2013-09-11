@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import de.jreality.math.Pn;
+import de.jreality.scene.Geometry;
 import de.jtem.discretegroup.core.DiscreteGroup;
 import de.jtem.discretegroup.core.DiscreteGroupElement;
 import de.varylab.discreteconformal.math.RnBig;
@@ -170,20 +172,17 @@ public class FundamentalPolygon {
 	
 	
 	public DiscreteGroup getDiscreteGroup() {
-		int dim = edgeList.size() / 2;
+		int dim = edgeList.size();
 		DiscreteGroupElement[] gArr = new DiscreteGroupElement[dim];
 		DiscreteGroup G = new DiscreteGroup();
-		FundamentalEdge start = edgeList.get(0);
-		FundamentalEdge active = start;
-		int index = 0;
-		do {
+		for (FundamentalEdge e : edgeList) {
 			DiscreteGroupElement g = new DiscreteGroupElement();
-			g.setMatrix(active.motion);
-			gArr[index++] = g;
-			active = active.partner.nextEdge;
-		} while (active != start);
+			g.setMatrix(e.motion);
+			gArr[e.index] = g;
+		}
+		G.setGenerators(gArr);
 		G.calculateGenerators();
-		G.generateElements();
+		G.setMetric(Pn.HYPERBOLIC);
 		assert !G.isFree() : "a fuchsian uniformization group has at least one relation";
 		assert !G.isFinite() : "these groups should tesselate hyperbolic space and hence are not finite";
 		return G;

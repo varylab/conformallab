@@ -22,19 +22,30 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.EVD;
 import no.uib.cipr.matrix.NotConvergedException;
+import de.jreality.math.P2;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
+import de.jtem.discretegroup.core.DiscreteGroup;
+import de.jtem.discretegroup.core.DiscreteGroupConstraint;
+import de.jtem.discretegroup.core.DiscreteGroupElement;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.math.PnBig;
 import de.varylab.discreteconformal.math.RnBig;
+import de.varylab.discreteconformal.util.CuttingUtility;
+import de.varylab.discreteconformal.util.SurgeryUtility;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class VisualizationUtility {
 	
@@ -94,7 +105,8 @@ public class VisualizationUtility {
 		FundamentalPolygon poly,
 		boolean drawPolygon,
 		boolean drawAxes,
-		int depth,
+		int maxDrawDepth,
+		double maxDrawDistance,
 		HyperbolicModel model,
 		Graphics2D g,
 		int res,
@@ -108,7 +120,7 @@ public class VisualizationUtility {
 
 		g.setStroke(new BasicStroke(4 * ls));
 		g.setColor(polygonColor);
-		drawUniversalCover(poly, depth, drawPolygon, drawAxes, g, model, res, polygonColor, axesColor, null, null);
+		drawUniversalCover(poly, maxDrawDepth, maxDrawDistance, drawPolygon, drawAxes, g, model, res, polygonColor, axesColor, null, null);
 		
 		if (model == HyperbolicModel.Klein || model == HyperbolicModel.Poincaré) {
 			Ellipse2D boundary = new Ellipse2D.Double(-res + ls, -res + ls, 2*res - 2*ls, 2*res - 2*ls);
@@ -288,6 +300,7 @@ public class VisualizationUtility {
 	protected static void getUniversalCoverSegments(
 		FundamentalPolygon poly,
 		int maxDepth,
+		double maxDrawDistance,
 		boolean drawPolygon,
 		boolean drawAxes,
 		Color polygonColor,
@@ -295,13 +308,14 @@ public class VisualizationUtility {
 		List<double[][]> axesSegments,
 		List<double[][]> polygonSegments
 	) {
-		drawUniversalCover(poly, maxDepth, drawPolygon, drawAxes, null, HyperbolicModel.Klein, -1, polygonColor, axesColor, axesSegments, polygonSegments);
+		drawUniversalCover(poly, maxDepth, maxDrawDistance, drawPolygon, drawAxes, null, HyperbolicModel.Klein, -1, polygonColor, axesColor, axesSegments, polygonSegments);
 	}
 	
 	
 	private static void drawUniversalCover(
 		FundamentalPolygon poly,
-		int maxDepth,
+		final int maxDrawElements,
+		final double maxDrawDistance,
 		boolean drawPolygon,
 		boolean drawAxes,
 		Graphics2D g,
@@ -314,7 +328,34 @@ public class VisualizationUtility {
 	) {
 		BigDecimal[] id = new BigDecimal[16];
 		RnBig.setIdentityMatrix(id);
-		drawUniversalCoverR(poly, id, 0, maxDepth, drawPolygon, drawAxes, g, model, resolution, polygonColor, axesColor, axesSegments, polygonSegments);
+		DiscreteGroupConstraint constraint = new DiscreteGroupConstraint() {
+			double[] zero = {0,0,0,1};
+			@Override
+			public void update() {
+			}
+			@Override
+			public void setMaxNumberElements(int arg0) {
+			}
+			@Override
+			public int getMaxNumberElements() {
+				return maxDrawElements;
+			}
+			@Override
+			public boolean acceptElement(DiscreteGroupElement s) {
+				double[] sZero = s.getMatrix().multiplyVector(zero);
+				double dist = Pn.distanceBetween(zero, sZero, Pn.HYPERBOLIC);
+				return dist <= maxDrawDistance;
+			}
+		};
+		DiscreteGroup G = poly.getDiscreteGroup();
+		G.setConstraint(constraint);
+		G.generateElements();
+		boolean isFirst = true;
+		for (DiscreteGroupElement s : G.getElementList()) {
+			BigDecimal[] sBig = RnBig.toBig(null, s.getArray());
+			drawUniversalCoverR(poly, sBig, 0, 0, drawPolygon, isFirst, g, model, resolution, polygonColor, axesColor, axesSegments, polygonSegments);
+			isFirst = false;
+		}
 	}
 		
 		
@@ -341,7 +382,7 @@ public class VisualizationUtility {
 			RnBig.matrixTimesVector(ce.startPosition, domain, ce.startPosition, context);
 			PnBig.normalize(ce.startPosition, ce.startPosition, HYPERBOLIC, context);
 		}
-		if (drawAxes) {
+		if (drawAxes && depth == 0) {
 			if (g != null) {
 				float ls = resolution / 500f;
 				Stroke storedStroke = g.getStroke();
@@ -439,5 +480,50 @@ public class VisualizationUtility {
 		r[2] = (ca*A[2] + cb*B[2] + cc*C[2]) / l;
 		return r;
 	}
+	
+	
+	public static void reglueVertex(CoVertex v, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		if (!HalfEdgeUtils.isBoundaryVertex(v)) {
+			throw new IllegalArgumentException("No Boundary Vertex");
+		}
+		CoEdge tEdge = null;
+		List<CoEdge> cutPath = new LinkedList<CoEdge>();
+		for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+			if (e.getRightFace() == null) {
+				tEdge = e;
+				break;
+			}
+			if (e.getPreviousEdge().getRightFace() != null) {
+				cutPath.add(e);
+			}
+		}
+		assert tEdge != null : "the vertex has to have a boundary edge here";
+		double[] T = createIsometryFromEdge(tEdge, cutInfo);
+		CoEdge tEdgePartner = cutInfo.edgeCutMap.get(tEdge);
+		assert tEdgePartner != null : "every boundary edge has to be in the cut info";
+		
+		CuttingInfo<CoVertex, CoEdge, CoFace> pathCutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+		CuttingUtility.cutAlongPath(cutPath, pathCutInfo);
+		int boundaryComponents = HalfEdgeUtils.boundaryComponents(v.getHalfEdgeDataStructure()).size();
+		assert boundaryComponents == 2 : "we should have cut the thing in two parts";
+		
+	}
+	
+	
+	protected static double[] createIsometryFromEdge(CoEdge e, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		if (!HalfEdgeUtils.isBoundaryEdge(e)) {
+			throw new IllegalArgumentException("No boundary edge");
+		}
+		CoEdge ePartner = cutInfo.edgeCutMap.get(e);
+		assert ePartner != null : "every boundary edge has to be in the cut info";
+		double[] s1 = e.getStartVertex().T;
+		double[] t1 = e.getTargetVertex().T;
+		double[] s2 = ePartner.getStartVertex().T;
+		double[] t2 = ePartner.getTargetVertex().T;
+		double[] a = P2.makeDirectIsometryFromFrames(null, s1, t1, t2, s2, Pn.HYPERBOLIC);
+		return P2.imbedMatrixP2InP3(null, a);
+	}
+	
+	
 	
 }

@@ -260,13 +260,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		visualizationPanel = new ShrinkPanel("Visualization"),
 		texQuantizationPanel = new ShrinkPanel("Cone Texture Quantization");
 	private SpinnerNumberModel
-		coverRecursionModel = new SpinnerNumberModel(0, 0, 10, 1),
+		coverMaxDisctanceModel = new SpinnerNumberModel(6.0, 0.0, 100.0, 10.0),
+		coverElementsModel = new SpinnerNumberModel(10000, 0, 100000, 1),
 		customThetaModel = new SpinnerNumberModel(360.0, 0.0, 10000.0, 1.0),
 		numConesModel = new SpinnerNumberModel(0, 0, 100, 1),
 		toleranceExpModel = new SpinnerNumberModel(-8, -30, -1, 1),
 		maxIterationsModel = new SpinnerNumberModel(150, 1, 10000, 1);
 	private JSpinner
-		coverRecursionSpinner = new JSpinner(coverRecursionModel),
+		coverMaxDistanceSpinner = new JSpinner(coverMaxDisctanceModel),
+		coverElementsSpinner = new JSpinner(coverElementsModel),
 		customThetaSpinner = new JSpinner(customThetaModel),
 		numConesSpinner = new JSpinner(numConesModel),
 		toleranceExpSpinner = new JSpinner(toleranceExpModel),
@@ -443,8 +445,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		visualizationPanel.setLayout(new GridBagLayout());
 		visualizationPanel.add(new JLabel("Domain"), c1);
 		visualizationPanel.add(domainCombo, c2);
-		visualizationPanel.add(new JLabel("Cover Recursion"), c1);
-		visualizationPanel.add(coverRecursionSpinner, c2);
+		visualizationPanel.add(new JLabel("Cover Elements"), c1);
+		visualizationPanel.add(coverElementsSpinner, c2);
+		visualizationPanel.add(new JLabel("Cover Distance"), c1);
+		visualizationPanel.add(coverMaxDistanceSpinner, c2);
 		visualizationPanel.add(drawTriangulationChecker, c1);
 		visualizationPanel.add(triangulationColorButton, c2);
 		visualizationPanel.add(drawPolygonChecker, c1);
@@ -479,7 +483,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		drawTriangulationChecker.addActionListener(this);
 		exportHyperbolicButton.addActionListener(this);
 		exportHyperbolicSVGButton.addActionListener(this);
-		coverRecursionSpinner.addChangeListener(this);
+		coverElementsSpinner.addChangeListener(this);
+		coverMaxDistanceSpinner.addChangeListener(this);
 		drawPolygonChecker.addActionListener(this);
 		drawAxesChecker.addActionListener(this);
 		drawCurvesOnSurface.addActionListener(this);
@@ -576,7 +581,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				v.info.theta = Math.toRadians(thetaDeg);
 			}
 		}
-		if (coverRecursionSpinner == e.getSource()) {
+		if (coverElementsSpinner == e.getSource()) {
+			updateDomainImage();
+		}
+		if (coverMaxDistanceSpinner == e.getSource()) {
 			updateDomainImage();
 		}
 	}
@@ -941,7 +949,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		hif.removeTemporaryGeometry(axesCurvesRoot);
 		if (genus > 1 && drawCurves) {
 			AdapterSet aSet = hif.getActiveAdapters();
-			int depth = coverRecursionModel.getNumber().intValue();
+			int depth = coverElementsModel.getNumber().intValue();
+			double maxDrawDistance = coverMaxDisctanceModel.getNumber().doubleValue();
 			Domain domain = (Domain)domainCombo.getSelectedItem();
 			boolean drawPolygon = drawPolygonChecker.isSelected();
 			boolean drawAxes = drawAxesChecker.isSelected();
@@ -952,16 +961,16 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				CoHDS curves = null;
 				switch (domain) {
 					case Cut:
-						curves = SurfaceCurveUtility.createSurfaceCurves(cuttedPolygon, surface, aSet, depth, true, false);
+						curves = SurfaceCurveUtility.createSurfaceCurves(cuttedPolygon, surface, aSet, depth, maxDrawDistance, true, false);
 						break;
 					case Minimal:
-						curves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, surface, aSet, depth, true, false);
+						curves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, surface, aSet, depth, maxDrawDistance, true, false);
 						break;
 					case Canonical:
-						curves = SurfaceCurveUtility.createSurfaceCurves(canonicalPolygon, surface, aSet, depth, true, false);
+						curves = SurfaceCurveUtility.createSurfaceCurves(canonicalPolygon, surface, aSet, depth, maxDrawDistance, true, false);
 						break;
 					case Opposite:
-						curves = SurfaceCurveUtility.createSurfaceCurves(oppositePolygon, surface, aSet, depth, true, false);
+						curves = SurfaceCurveUtility.createSurfaceCurves(oppositePolygon, surface, aSet, depth, maxDrawDistance, true, false);
 						break;				
 				}
 				IndexedFaceSet curvesGeom = converter.heds2ifs(curves, aSet);
@@ -973,16 +982,16 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				CoHDS axesCurves = null;
 				switch (domain) {
 					case Cut:
-						axesCurves = SurfaceCurveUtility.createSurfaceCurves(cuttedPolygon, surface, aSet, depth, false, true);
+						axesCurves = SurfaceCurveUtility.createSurfaceCurves(cuttedPolygon, surface, aSet, depth, maxDrawDistance, false, true);
 						break;
 					case Minimal:
-						axesCurves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, surface, aSet, depth, false, true);
+						axesCurves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, surface, aSet, depth, maxDrawDistance, false, true);
 						break;
 					case Canonical:
-						axesCurves = SurfaceCurveUtility.createSurfaceCurves(canonicalPolygon, surface, aSet, depth, false, true);
+						axesCurves = SurfaceCurveUtility.createSurfaceCurves(canonicalPolygon, surface, aSet, depth, maxDrawDistance, false, true);
 						break;
 					case Opposite:
-						axesCurves = SurfaceCurveUtility.createSurfaceCurves(oppositePolygon, surface, aSet, depth, false, true);
+						axesCurves = SurfaceCurveUtility.createSurfaceCurves(oppositePolygon, surface, aSet, depth, maxDrawDistance, false, true);
 						break;				
 				}
 				IndexedFaceSet axesGeom = converter.heds2ifs(axesCurves, aSet);
@@ -1034,7 +1043,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	
 
 	public void drawDomainImage(Graphics2D g2d, int res) {
-		int depth = coverRecursionModel.getNumber().intValue();
 		HyperbolicModel model = vis.getSelectedHyperbolicModel();
 		VisualizationUtility.drawDomainBackground(g2d, res, model);
 		if (drawTriangulationChecker.isSelected()) {
@@ -1049,30 +1057,32 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		boolean drawPolygon = drawPolygonChecker.isSelected();
 		boolean drawAxes = drawAxesChecker.isSelected();
 		Domain domain = (Domain)domainCombo.getSelectedItem();
+		int maxDrawDepth = coverElementsModel.getNumber().intValue();
+		double maxDrawDisctance = coverMaxDisctanceModel.getNumber().doubleValue();
 		switch (domain) {
 			case Cut:
 				if (cuttedPolygon == null) {
 					throw new RuntimeException("No fundamental polygon available");
 				}
-				drawUniversalCoverImage(cuttedPolygon, drawPolygon, drawAxes, depth, model, g2d, res, polygonColor, axesColor);
+				drawUniversalCoverImage(cuttedPolygon, drawPolygon, drawAxes, maxDrawDepth, maxDrawDisctance, model, g2d, res, polygonColor, axesColor);
 				break;
 			case Minimal:
 				if (minimalPolygon == null) {
 					throw new RuntimeException("No fundamental polygon available");
 				}
-				drawUniversalCoverImage(minimalPolygon, drawPolygon, drawAxes, depth, model, g2d, res, polygonColor, axesColor);
+				drawUniversalCoverImage(minimalPolygon, drawPolygon, drawAxes, maxDrawDepth, maxDrawDisctance, model, g2d, res, polygonColor, axesColor);
 				break;
 			case Canonical:
 				if (canonicalPolygon == null) {
 					throw new RuntimeException("No fundamental polygon available");
 				}	
-				drawUniversalCoverImage(canonicalPolygon, drawPolygon, drawAxes, depth, model, g2d, res, polygonColor, axesColor);
+				drawUniversalCoverImage(canonicalPolygon, drawPolygon, drawAxes, maxDrawDepth, maxDrawDisctance, model, g2d, res, polygonColor, axesColor);
 				break;
 			case Opposite:
 				if (oppositePolygon == null) {
 					throw new RuntimeException("No fundamental polygon available");
 				}
-				drawUniversalCoverImage(oppositePolygon, drawPolygon, drawAxes, depth, model, g2d, res, polygonColor, axesColor);
+				drawUniversalCoverImage(oppositePolygon, drawPolygon, drawAxes, maxDrawDepth, maxDrawDisctance, model, g2d, res, polygonColor, axesColor);
 				break;
 		}
 	}
@@ -1134,7 +1144,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		c.storeProperty(getClass(), "boundaryModeIndex", boundaryModeCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "boundaryQuantModeIndex", boundaryQuantizationCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "numericsMethod", numericsCombo.getSelectedIndex());
-		c.storeProperty(getClass(), "coverRecursion", coverRecursionModel.getNumber());
+		c.storeProperty(getClass(), "coverRecursion", coverElementsModel.getNumber());
 		c.storeProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected());
 		c.storeProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber());
 		c.storeProperty(getClass(), "maxIterations", maxIterationsModel.getNumber());
@@ -1153,7 +1163,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		super.restoreStates(c);
 		numConesModel.setValue(c.getProperty(getClass(), "numCones", numConesModel.getNumber().intValue()));
 		numericsCombo.setSelectedIndex(c.getProperty(getClass(), "numericsMethod", numericsCombo.getSelectedIndex()));
-		coverRecursionModel.setValue(c.getProperty(getClass(), "coverRecursion", coverRecursionModel.getNumber()));
+		coverElementsModel.setValue(c.getProperty(getClass(), "coverRecursion", coverElementsModel.getNumber()));
 		useProjectiveTexture.setSelected(c.getProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected()));
 		toleranceExpModel.setValue(c.getProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber()));
 		maxIterationsModel.setValue(c.getProperty(getClass(), "maxIterations", maxIterationsModel.getNumber()));
