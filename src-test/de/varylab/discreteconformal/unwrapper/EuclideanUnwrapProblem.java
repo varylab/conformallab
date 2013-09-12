@@ -43,8 +43,11 @@ public class EuclideanUnwrapProblem {
 			indexToAngle.put(corners[i],Math.PI/2);
 		}
 		ArrayList<Integer> holes = new ArrayList<Integer>();
-		holes.add(9);
+		holes.add(9);	// for "A"
 //		holes = null;
+//		holes.add(51);	// for "B"
+//		holes.add(75);
+		
 		EuclideanUnwrapperPETSc.unwrapcg(ifs, 1, indexToAngle, holes, 10E-6);
 
 		double[][] verts = ifs.getVertexAttributes(Attribute.COORDINATES).toDoubleArrayArray(null);

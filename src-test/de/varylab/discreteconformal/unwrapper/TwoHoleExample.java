@@ -35,26 +35,18 @@ public class TwoHoleExample {
 		{2, 4, 0},
 		{1, 4, 0}
 	};
-	public static int[][] indices = {{0,1,2,3, 0},{4,5,6,7, 4}, {8,9,10,11,8}};
+	public static int[][] indices  = {{0, 12, 13, 1,2,3, 0},{4,5,6,7, 4}, {8,9,10,11,8}}; //{{0,1,2,3, 0},{4,5,6,7, 4}, {8,9,10,11,8}};
 	static double  rt = Math.PI/2,
 			triangleArea = .005;
-	static boolean letter = false, doholes = true;
-	public static double[] angles = {rt, rt, rt, rt,  rt, rt,  rt, rt,  rt, rt, rt, rt};
+	static boolean letter = true, doholes = false;
+	public static double[] angles = {rt, rt, rt, rt};
 	public static void main(String[] args) {
-		// test out a domain with a hole in it.
-		IndexedLineSetFactory ilsf = new IndexedLineSetFactory();
-		verts = Pn.homogenize(null, verts);
-		ilsf.setVertexCount(verts.length);
-		ilsf.setVertexCoordinates(verts);
-		ilsf.setEdgeCount(indices.length);
-		ilsf.setEdgeIndices(indices);
-		ilsf.update();
-//		IndexedLineSet[] AB  = null;
+
 			triangleArea = .05;
 
 		SceneGraphComponent triangulation = null;
 		try {
-			triangulation = Readers.read(new Input(EuclideanUnwrapProblem.class.getResource("TwoHoleExample.off")));
+			triangulation = Readers.read(new Input(EuclideanUnwrapProblem.class.getResource("foo46408680-0000.1.off")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -83,11 +75,13 @@ public class TwoHoleExample {
 			indexToAngle.put(i, angles[i]);
 		}
 		List<Integer> holes = new ArrayList<Integer>();
-		holes.add(indices[1][0]);
-		holes.add(indices[2][0]);		
+		if (doholes)	{
+			holes.add(indices[1][0]);
+//			holes.add(indices[2][0]);					
+		}
 
 		try {
-			EuclideanUnwrapperPETSc.unwrapcg(triang, 1, indexToAngle, doholes ? holes : null, 10E-6);
+			EuclideanUnwrapperPETSc.unwrapcg(triang, 1, indexToAngle, doholes ? holes : null, 1E-6);
 			double[][] tv = triang.getVertexAttributes(Attribute.TEXTURE_COORDINATES).toDoubleArrayArray(null);
 			System.err.println("unwrapped verts = "+Rn.toString(tv));
 			triang.setVertexAttributes(Attribute.COORDINATES, null);
