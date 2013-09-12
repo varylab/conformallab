@@ -929,7 +929,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	private void reorderFaces() {
 		FundamentalPolygon p = getActiveFundamentalPoygon();
 		int signature = getActiveSignature();
-		VisualizationUtility.reglueOutsideFaces(surface, 1, p, cutInfo, signature);
+		VisualizationUtility.reglueOutsideFaces(surface, 100, p, cutInfo, signature);
 		updateSurface();
 		updateDomainImage();
 	}
@@ -973,7 +973,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			ImageData imgData = new ImageData(img);
 			Texture2D tex2d = TextureUtility.createTexture(universalCoverAppearance, POLYGON_SHADER, imgData);
 			tex2d.setTextureMatrix(polygonTextureMatrix);
-			System.out.println("DiscreteConformalPlugin.updateDomainImage()");
 		}
 		
 		// add curves

@@ -22,13 +22,17 @@ import java.awt.geom.Line2D;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Set;
 
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.EVD;
 import no.uib.cipr.matrix.NotConvergedException;
+import de.jreality.math.Matrix;
 import de.jreality.math.P2;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
@@ -482,6 +486,17 @@ public class VisualizationUtility {
 	}
 	
 	
+	public static class ValenceComparator implements Comparator<CoVertex> {
+
+		@Override
+		public int compare(CoVertex o1, CoVertex o2) {
+			int v1 = HalfEdgeUtils.incomingEdges(o1).size();
+			int v2 = HalfEdgeUtils.incomingEdges(o2).size();
+			return v1 - v2;
+		}
+		
+	}
+	
 	
 	public static Set<CoFace> reglueOutsideFaces(
 		CoHDS hds, 
@@ -492,19 +507,53 @@ public class VisualizationUtility {
 	) {
 		int counter = 0;
 		Set<CoFace> reglued = new HashSet<CoFace>(); 
-		for (CoFace f : HalfEdgeUtils.boundaryFaces(hds)) {
-			if (counter >= maxFaces) return reglued;
-			if (!isOutsideFundamentalPolygon(f, p)) continue;
-			reglueFace(f, cutInfo, signature);
-			reglued.add(f);
-			System.out.println("face " + f + " is outside.");
-			counter++;
-			assert HalfEdgeUtils.isValidSurface(hds, true) : "surface should be valid after face reglue";
+		Collection<CoVertex> bList = HalfEdgeUtils.boundaryVertices(hds);
+		PriorityQueue<CoVertex> lowValenceFirst = new PriorityQueue<CoVertex>(bList.size(), new ValenceComparator());
+		lowValenceFirst.addAll(bList);
+		for (CoVertex v : lowValenceFirst) {
+			if (!v.isValid()) continue;
+			List<CoFace> faces = HalfEdgeUtils.facesIncidentWithVertex(v);
+			for (CoFace f : faces) {
+				if (counter >= maxFaces) {
+					System.out.println(counter + " faces reglued");
+					return reglued;
+				}
+				if (HalfEdgeUtils.isInteriorFace(f)) continue;
+				if (!isFaceMovable(f)) continue;
+				if (!isOutsideFundamentalPolygon(f, p)) continue;
+				if (!isFaceMovedToFundamentalDomainByReglue(f, cutInfo, p, signature))continue;
+				try {
+					reglueFace(f, cutInfo, signature);
+				} catch (AssertionError e) {
+					System.err.println(e.getLocalizedMessage());
+				}
+				reglued.add(f);
+				System.out.println("face " + f + " reglued.");
+				counter++;
+	//			assert HalfEdgeUtils.isValidSurface(hds, true) : "surface should be valid after face reglue";
+			}
 		}
+		System.out.println(counter + " faces reglued");
 		return reglued;
 	}
 	
-	public static void reglueFace(
+	
+	
+	protected static boolean isFaceMovable(CoFace f) {
+		for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
+			if (HalfEdgeUtils.isBoundaryEdge(e)) continue;
+			CoVertex v = e.getNextEdge().getTargetVertex();
+			boolean ear = HalfEdgeUtils.incomingEdges(v).size() == 2;
+			boolean sb = HalfEdgeUtils.isBoundaryVertex(e.getStartVertex());
+			boolean tb = HalfEdgeUtils.isBoundaryVertex(e.getTargetVertex());
+			if (sb && tb && !ear) return false;
+		}
+		return true;
+	}
+	
+	
+	
+	protected static void reglueFace(
 		CoFace f,
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo,
 		int signature
@@ -540,8 +589,8 @@ public class VisualizationUtility {
 			// vertex geometry
 			double[] sourcePosT = sourceVertex.T;
 			double[] sourcePosP = sourceVertex.P;
-			double[] a = createIsometryFromEdge(e, cutInfo, signature);
-			double[] newPos = Rn.matrixTimesVector(null, a, sourcePosT);
+			Matrix A = new Matrix(createIsometryFromEdge(e, cutInfo, signature));
+			double[] newPos = A.multiplyVector(sourcePosT);
 			CoVertex newVertex = hds.addNewVertex();
 			newVertex.T = newPos;
 			newVertex.P = sourcePosP.clone();
@@ -671,14 +720,14 @@ public class VisualizationUtility {
 	}
 	
 
-	public static boolean isOutsideFundamentalPolygon(CoFace f, FundamentalPolygon p) {
+	protected static boolean isOutsideFundamentalPolygon(CoFace f, FundamentalPolygon p) {
 		for (CoVertex v : HalfEdgeUtils.boundaryVertices(f)) {
 			if (isInsideFundamentalPolygon(v, p)) return false;
 		}
 		return true;
 	}
 	
-	public static boolean isInsideFundamentalPolygon(CoVertex v, FundamentalPolygon p) {
+	protected static boolean isInsideFundamentalPolygon(CoVertex v, FundamentalPolygon p) {
 		double[] vt = P2.projectP3ToP2(null, v.T); 
 		for (FundamentalEdge e : p.getEdges()) {
 			double[] s = P2.projectP3ToP2(null, RnBig.toDouble(null, e.startPosition));
@@ -690,6 +739,22 @@ public class VisualizationUtility {
 		return true;
 	}
 	
+	protected static boolean isFaceMovedToFundamentalDomainByReglue(
+		CoFace f, 
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo, 
+		FundamentalPolygon p, 
+		int signature
+	) {
+		for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
+			CoEdge pe = cutInfo.edgeCutMap.get(e);
+			if (pe != null) {
+				if (!isInsideFundamentalPolygon(pe.getStartVertex(), p)) return false;
+				if (!isInsideFundamentalPolygon(pe.getTargetVertex(), p)) return false;
+			}
+		}
+		return true;
+	}
+	
 	
 	protected static double[] createIsometryFromEdge(CoEdge e, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo, int signature) {
 		if (!HalfEdgeUtils.isBoundaryEdge(e)) {
@@ -697,10 +762,10 @@ public class VisualizationUtility {
 		}
 		CoEdge ePartner = cutInfo.edgeCutMap.get(e);
 		assert ePartner != null : "every boundary edge has to be in the cut info";
-		double[] s1 = e.getStartVertex().T;
-		double[] t1 = e.getTargetVertex().T;
-		double[] s2 = ePartner.getStartVertex().T;
-		double[] t2 = ePartner.getTargetVertex().T;
+		double[] s1 = P2.projectP3ToP2(null, e.getStartVertex().T);
+		double[] t1 = P2.projectP3ToP2(null, e.getTargetVertex().T);
+		double[] s2 = P2.projectP3ToP2(null, ePartner.getStartVertex().T);
+		double[] t2 = P2.projectP3ToP2(null, ePartner.getTargetVertex().T);
 		double[] a = P2.makeDirectIsometryFromFrames(null, s1, t1, t2, s2, signature);
 		return P2.imbedMatrixP2InP3(null, a);
 	}

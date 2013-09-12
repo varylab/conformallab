@@ -135,7 +135,7 @@ public class SurfaceCurveUtility {
 		double l = Pn.distanceBetween(s[0], s[1], Pn.EUCLIDEAN);
 		double l1 = Pn.distanceBetween(s[0], p, Pn.EUCLIDEAN);
 		double l2 = Pn.distanceBetween(s[1], p, Pn.EUCLIDEAN);
-		return Math.abs(l1 + l2 - l) < l*1E-7;
+		return Math.abs(l1 + l2 - l) < 1E-7;
 	}
 	
 	

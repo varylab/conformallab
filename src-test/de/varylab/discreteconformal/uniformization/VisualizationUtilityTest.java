@@ -8,12 +8,18 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import de.jreality.math.Pn;
+import de.jreality.plugin.JRViewer;
+import de.jreality.plugin.JRViewer.ContentType;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
+import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.adapter.CoTextureDomainPositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.math.RnBig;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
@@ -69,6 +75,59 @@ public class VisualizationUtilityTest {
 		VisualizationUtility.reglueFace(reglueFace, cutInfo, Pn.EUCLIDEAN);
 		Assert.assertTrue(HalfEdgeUtils.isValidSurface(hds, true));
 		VisualizationUtility.reglueFace(reglueFace, cutInfo, Pn.EUCLIDEAN);
+		Assert.assertTrue(HalfEdgeUtils.isValidSurface(hds, true));
+	}
+	
+	public static void main(String[] args) {
+		CoHDS hds = new CoHDS();
+		CoFace f = HalfEdgeUtils.addNGon(hds, 4);
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+		CoEdge e1 = f.getBoundaryEdge();
+		CoEdge e2 = e1.getNextEdge();
+		CoEdge e3 = e2.getNextEdge();
+		CoEdge e4 = e3.getNextEdge();
+		cutInfo.edgeCutMap.put(e1, e3);
+		cutInfo.edgeCutMap.put(e1.getOppositeEdge(), e3.getOppositeEdge());
+		cutInfo.edgeCutMap.put(e2, e4);
+		cutInfo.edgeCutMap.put(e4.getOppositeEdge(), e4.getOppositeEdge());
+		cutInfo.cutRoot = e1.getStartVertex();
+		TopologyAlgorithms.splitFace(f);
+		CoVertex v0 = hds.getVertex(0);
+		CoVertex v1 = hds.getVertex(1);
+		CoVertex v2 = hds.getVertex(2);
+		CoVertex v3 = hds.getVertex(3);
+		CoVertex v4 = hds.getVertex(4);
+		v0.T = new double[]{0,0,0,1};
+		v1.T = new double[]{1,0,0,1};
+		v2.T = new double[]{1,1,0,1};
+		v3.T = new double[]{0,1,0,1};
+		v4.T = new double[]{0.5,0.5,0,1};
+		
+		HalfedgeInterface hif = new HalfedgeInterface();
+		hif.addAdapter(new CoTexturePositionAdapter(), true);
+		hif.addAdapter(new CoTextureDomainPositionAdapter(), true);
+		JRViewer v = new JRViewer();
+		v.registerPlugin(hif);
+		v.addBasicUI();
+		v.addContentSupport(ContentType.Raw);
+		v.addContentUI();
+		v.startup();
+		
+		HalfedgeLayer main = hif.getActiveLayer();
+		HalfedgeLayer reglued1 = new HalfedgeLayer(hif);
+		HalfedgeLayer reglued2 = new HalfedgeLayer(hif);
+		hif.addLayer(reglued1);
+		hif.addLayer(reglued2);
+		main.set(hds);
+		reglued1.setName("Reglued 1");
+		reglued2.setName("Reglued 2");
+		CoFace reglueFace = e1.getLeftFace();
+		Assert.assertTrue(HalfEdgeUtils.isValidSurface(hds, true));
+		VisualizationUtility.reglueFace(reglueFace, cutInfo, Pn.EUCLIDEAN);
+		reglued1.set(hds);
+		Assert.assertTrue(HalfEdgeUtils.isValidSurface(hds, true));
+		VisualizationUtility.reglueFace(reglueFace, cutInfo, Pn.EUCLIDEAN);
+		reglued2.set(hds);
 		Assert.assertTrue(HalfEdgeUtils.isValidSurface(hds, true));
 	}
 	

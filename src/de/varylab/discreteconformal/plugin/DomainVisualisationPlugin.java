@@ -35,17 +35,11 @@ import de.jreality.scene.event.AppearanceListener;
 import de.jreality.scene.tool.Tool;
 import de.jreality.ui.AppearanceInspector;
 import de.jreality.util.SceneGraphUtility;
-import de.jtem.halfedge.Edge;
-import de.jtem.halfedge.Face;
-import de.jtem.halfedge.Node;
-import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
 import de.jtem.halfedgetools.adapter.Adapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Position;
-import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeSelection;
@@ -59,6 +53,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.adapter.CoTextureDomainPositionAdapter;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements AppearanceListener, SelectionListener {
@@ -71,8 +66,8 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 	private ContentAppearance
 		mainAppearance = null,
 		visAppearance = null;
-	private TextureDomainPositionAdapter
-		domainAdapter = new TextureDomainPositionAdapter();
+	private CoTextureDomainPositionAdapter
+		domainAdapter = new CoTextureDomainPositionAdapter();
 	private DiscreteConformalPlugin
 		conformalPlugin = null;
 	private ConformalVisualizationPlugin
@@ -107,48 +102,6 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		
 	}
 	
-	
-	@TexturePosition
-	@Position
-	public static class TextureDomainPositionAdapter extends AbstractAdapter<double[]> {
-		
-		public TextureDomainPositionAdapter() {
-			super(double[].class, true, true);
-		}
-		
-		@Override
-		public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
-			return Vertex.class.isAssignableFrom(nodeClass);
-		}
-		
-		@Override
-		public <
-			V extends Vertex<V, E, F>,
-			E extends Edge<V, E, F>,
-			F extends Face<V, E, F>
-		> double[] getV(V v, AdapterSet a) {
-			a.setPriorityBound(getPriority());
-			double[] tp = a.getD(TexturePosition.class, v);
-			a.removePriorityBound();
-			return tp;
-		}
-		
-		@Override
-		public <
-			V extends Vertex<V, E, F>,
-			E extends Edge<V, E, F>,
-			F extends Face<V, E, F>
-		> void setV(V v, double[] coords, AdapterSet a) {
-			a.setPriorityBound(getPriority());
-			a.set(TexturePosition.class, v, coords);
-			a.removePriorityBound();
-		}
-		@Override
-		public double getPriority() {
-			return 1000.0;
-		}
-		
-	}
 	
 	public void updateVisualization() {
 		if (shrinkPanel.isShrinked()) {
