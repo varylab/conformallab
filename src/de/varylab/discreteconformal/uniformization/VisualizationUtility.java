@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.uniformization;
 
 import static de.jreality.math.Pn.HYPERBOLIC;
+import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryEdge;
 import static de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility.context;
 import static java.awt.BasicStroke.CAP_SQUARE;
 import static java.awt.BasicStroke.JOIN_ROUND;
@@ -22,7 +23,6 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -35,16 +35,16 @@ import de.jreality.math.Rn;
 import de.jtem.discretegroup.core.DiscreteGroup;
 import de.jtem.discretegroup.core.DiscreteGroupConstraint;
 import de.jtem.discretegroup.core.DiscreteGroupElement;
+import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.CustomVertexInfo;
 import de.varylab.discreteconformal.math.PnBig;
 import de.varylab.discreteconformal.math.RnBig;
-import de.varylab.discreteconformal.util.CuttingUtility;
-import de.varylab.discreteconformal.util.SurgeryUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class VisualizationUtility {
@@ -482,35 +482,216 @@ public class VisualizationUtility {
 	}
 	
 	
-	public static void reglueVertex(CoVertex v, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
-		if (!HalfEdgeUtils.isBoundaryVertex(v)) {
-			throw new IllegalArgumentException("No Boundary Vertex");
+	
+	public static Set<CoFace> reglueOutsideFaces(
+		CoHDS hds, 
+		int maxFaces, 
+		FundamentalPolygon p, 
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo,
+		int signature
+	) {
+		int counter = 0;
+		Set<CoFace> reglued = new HashSet<CoFace>(); 
+		for (CoFace f : HalfEdgeUtils.boundaryFaces(hds)) {
+			if (counter >= maxFaces) return reglued;
+			if (!isOutsideFundamentalPolygon(f, p)) continue;
+			reglueFace(f, cutInfo, signature);
+			reglued.add(f);
+			System.out.println("face " + f + " is outside.");
+			counter++;
+			assert HalfEdgeUtils.isValidSurface(hds, true) : "surface should be valid after face reglue";
 		}
-		CoEdge tEdge = null;
-		List<CoEdge> cutPath = new LinkedList<CoEdge>();
-		for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
-			if (e.getRightFace() == null) {
-				tEdge = e;
-				break;
-			}
-			if (e.getPreviousEdge().getRightFace() != null) {
-				cutPath.add(e);
-			}
+		return reglued;
+	}
+	
+	public static void reglueFace(
+		CoFace f,
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo,
+		int signature
+	) {
+		if (HalfEdgeUtils.isInteriorFace(f)) {
+			throw new IllegalArgumentException("can only reglue boundary faces");
 		}
-		assert tEdge != null : "the vertex has to have a boundary edge here";
-		double[] T = createIsometryFromEdge(tEdge, cutInfo);
-		CoEdge tEdgePartner = cutInfo.edgeCutMap.get(tEdge);
-		assert tEdgePartner != null : "every boundary edge has to be in the cut info";
-		
-		CuttingInfo<CoVertex, CoEdge, CoFace> pathCutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
-		CuttingUtility.cutAlongPath(cutPath, pathCutInfo);
-		int boundaryComponents = HalfEdgeUtils.boundaryComponents(v.getHalfEdgeDataStructure()).size();
-		assert boundaryComponents == 2 : "we should have cut the thing in two parts";
-		
+		HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> hds = f.getHalfEdgeDataStructure();
+		CoEdge e1 = f.getBoundaryEdge();
+		CoEdge e2 = e1.getNextEdge();
+		CoEdge e3 = e2.getNextEdge();
+		int numBoundaryEdges = 0;
+		numBoundaryEdges += isBoundaryEdge(e1) ? 1 : 0;
+		numBoundaryEdges += isBoundaryEdge(e2) ? 1 : 0;
+		numBoundaryEdges += isBoundaryEdge(e3) ? 1 : 0;
+		assert numBoundaryEdges < 3 : "a face must have at most two boundary edges";
+		if (numBoundaryEdges == 1) {
+			CoEdge e = null;
+			for (CoEdge be : HalfEdgeUtils.boundaryEdges(f)) {
+				if (be.getRightFace() == null) {
+					e = be; break;
+				}
+			}
+			assert e != null : "we should have found the boundary edge of face f";
+			
+			// treat source location
+			CoEdge opp = e.getOppositeEdge();
+			CoEdge oppNext = opp.getNextEdge();
+			CoEdge oppPrev = opp.getPreviousEdge();
+			CoEdge eNext = e.getNextEdge();
+			CoEdge ePrev = e.getPreviousEdge();
+			CoVertex sourceVertex = eNext.getTargetVertex();
+			// vertex geometry
+			double[] sourcePosT = sourceVertex.T;
+			double[] sourcePosP = sourceVertex.P;
+			double[] a = createIsometryFromEdge(e, cutInfo, signature);
+			double[] newPos = Rn.matrixTimesVector(null, a, sourcePosT);
+			CoVertex newVertex = hds.addNewVertex();
+			newVertex.T = newPos;
+			newVertex.P = sourcePosP.clone();
+			if (sourceVertex.info != null) {
+				newVertex.info = new CustomVertexInfo(sourceVertex.info);
+			}
+			// relink boundary
+			oppPrev.linkNextEdge(eNext);
+			ePrev.linkNextEdge(oppNext);
+			eNext.setLeftFace(null);
+			ePrev.setLeftFace(null);
+			// remove old boundary
+			hds.removeEdge(e);
+			hds.removeEdge(opp);
+			// fix incoming edges
+			oppPrev.setTargetVertex(eNext.getStartVertex());
+			ePrev.setTargetVertex(oppNext.getStartVertex());
+			
+			// target location
+			CoEdge pe = cutInfo.edgeCutMap.get(e);
+			CoEdge peOpp = pe.getOppositeEdge();
+			CoEdge peOppNext = peOpp.getNextEdge();
+			CoEdge peOppPrev = peOpp.getPreviousEdge();
+			CoEdge newEdge1 = hds.addNewEdge();
+			CoEdge newEdge1Opp = hds.addNewEdge();
+			CoEdge newEdge2 = hds.addNewEdge();			
+			CoEdge newEdge2Opp = hds.addNewEdge();			
+			// link boundary
+			peOppPrev.linkNextEdge(newEdge1Opp);
+			newEdge1Opp.linkNextEdge(newEdge2Opp);
+			newEdge2Opp.linkNextEdge(peOppNext);
+			peOpp.linkNextEdge(newEdge2);
+			newEdge2.linkNextEdge(newEdge1);
+			newEdge1.linkNextEdge(peOpp);
+			newEdge2.setTargetVertex(newVertex);
+			newEdge1Opp.setTargetVertex(newVertex);
+			newEdge1.setTargetVertex(pe.getTargetVertex());
+			newEdge2Opp.setTargetVertex(pe.getStartVertex());
+			newEdge1.setLeftFace(f);
+			newEdge2.setLeftFace(f);
+			peOpp.setLeftFace(f);
+			newEdge1.linkOppositeEdge(newEdge1Opp);
+			newEdge2.linkOppositeEdge(newEdge2Opp);
+			
+			// fix cut info
+			cutInfo.edgeCutMap.put(ePrev, newEdge1Opp);
+			cutInfo.edgeCutMap.put(newEdge1Opp, ePrev);
+			cutInfo.edgeCutMap.put(eNext, newEdge2Opp);
+			cutInfo.edgeCutMap.put(newEdge2Opp, eNext);
+			cutInfo.edgeCutMap.put(ePrev.getOppositeEdge(), newEdge1);
+			cutInfo.edgeCutMap.put(newEdge1, ePrev.getOppositeEdge());
+			cutInfo.edgeCutMap.put(eNext.getOppositeEdge(), newEdge2);
+			cutInfo.edgeCutMap.put(newEdge2, eNext.getOppositeEdge());
+			cutInfo.edgeCutMap.remove(e);
+			cutInfo.edgeCutMap.remove(opp);
+			cutInfo.edgeCutMap.remove(pe);
+			cutInfo.edgeCutMap.remove(peOpp);
+			cutInfo.vertexCopyMap.put(sourceVertex, newVertex);
+		} else {
+			CoEdge e = null;
+			for (CoEdge be : HalfEdgeUtils.boundaryEdges(f)) {
+				if (be.getRightFace() != null) {
+					e = be; break;
+				}
+			}
+			assert e != null : "we should have found the non-boundary edge of face f";
+			CoEdge b1 = e.getNextEdge();
+			CoEdge b2 = e.getPreviousEdge();
+			CoEdge pb1 = cutInfo.edgeCutMap.get(b1);
+			CoEdge pb2 = cutInfo.edgeCutMap.get(b2);
+			if (pb1.getOppositeEdge().getNextEdge() != pb2.getOppositeEdge()) {
+				System.out.println("no continuous edge identification at face " + f);
+				return;
+			}
+			CoEdge b1Opp = b1.getOppositeEdge();
+			CoEdge b2Opp = b2.getOppositeEdge();
+			CoEdge b1OppNext = b1Opp.getNextEdge();
+			CoEdge b2OppPrev = b2Opp.getPreviousEdge();
+			CoVertex v = b1.getTargetVertex();
+			CoVertex v1 = b1.getStartVertex();
+			CoVertex v2 = e.getStartVertex();
+			// relink source boundary
+			b2OppPrev.linkNextEdge(e);
+			e.linkNextEdge(b1OppNext);
+			e.setLeftFace(null);
+			// delete old boundary
+			hds.removeEdge(b1);
+			hds.removeEdge(b2);
+			hds.removeEdge(b1Opp);
+			hds.removeEdge(b2Opp);
+			hds.removeVertex(v);
+			// fix incoming edges
+			b2OppPrev.setTargetVertex(v2);
+			e.setTargetVertex(v1);
+			
+			// target location
+			CoEdge newEdge = hds.addNewEdge();
+			CoEdge newEdgeOpp = hds.addNewEdge();
+			CoEdge pb1Opp = pb1.getOppositeEdge();
+			CoEdge pb2Opp = pb2.getOppositeEdge();
+			CoEdge pb1OppPrev = pb1Opp.getPreviousEdge();
+			CoEdge pb2OppNext = pb2Opp.getNextEdge();
+			// link new boundary
+			pb1OppPrev.linkNextEdge(newEdgeOpp);
+			newEdgeOpp.linkNextEdge(pb2OppNext);
+			// relink face
+			newEdge.linkOppositeEdge(newEdgeOpp);
+			pb2Opp.linkNextEdge(newEdge);
+			newEdge.linkNextEdge(pb1Opp);
+			newEdge.setLeftFace(f);
+			pb1Opp.setLeftFace(f);
+			pb2Opp.setLeftFace(f);
+			newEdge.setTargetVertex(pb1.getTargetVertex());
+			newEdgeOpp.setTargetVertex(pb2.getStartVertex());
+			
+			// fix cut info
+			cutInfo.edgeCutMap.put(e, newEdgeOpp);
+			cutInfo.edgeCutMap.put(newEdgeOpp, e);
+			cutInfo.edgeCutMap.put(e.getOppositeEdge(), newEdge);
+			cutInfo.edgeCutMap.put(newEdge, e.getOppositeEdge());
+			cutInfo.edgeCutMap.remove(b1);
+			cutInfo.edgeCutMap.remove(b2);
+			cutInfo.edgeCutMap.remove(b1Opp);
+			cutInfo.edgeCutMap.remove(b1Opp);
+			cutInfo.vertexCopyMap.remove(v);
+		}
+	}
+	
+
+	public static boolean isOutsideFundamentalPolygon(CoFace f, FundamentalPolygon p) {
+		for (CoVertex v : HalfEdgeUtils.boundaryVertices(f)) {
+			if (isInsideFundamentalPolygon(v, p)) return false;
+		}
+		return true;
+	}
+	
+	public static boolean isInsideFundamentalPolygon(CoVertex v, FundamentalPolygon p) {
+		double[] vt = P2.projectP3ToP2(null, v.T); 
+		for (FundamentalEdge e : p.getEdges()) {
+			double[] s = P2.projectP3ToP2(null, RnBig.toDouble(null, e.startPosition));
+			double[] t = P2.projectP3ToP2(null, RnBig.toDouble(null, e.nextEdge.startPosition));
+			double[] line = P2.lineFromPoints(null, s, t);
+			double dot = Rn.innerProduct(line, vt);
+			if (dot < 0) return false;
+		}
+		return true;
 	}
 	
 	
-	protected static double[] createIsometryFromEdge(CoEdge e, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+	protected static double[] createIsometryFromEdge(CoEdge e, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo, int signature) {
 		if (!HalfEdgeUtils.isBoundaryEdge(e)) {
 			throw new IllegalArgumentException("No boundary edge");
 		}
@@ -520,10 +701,8 @@ public class VisualizationUtility {
 		double[] t1 = e.getTargetVertex().T;
 		double[] s2 = ePartner.getStartVertex().T;
 		double[] t2 = ePartner.getTargetVertex().T;
-		double[] a = P2.makeDirectIsometryFromFrames(null, s1, t1, t2, s2, Pn.HYPERBOLIC);
+		double[] a = P2.makeDirectIsometryFromFrames(null, s1, t1, t2, s2, signature);
 		return P2.imbedMatrixP2InP3(null, a);
 	}
-	
-	
 	
 }

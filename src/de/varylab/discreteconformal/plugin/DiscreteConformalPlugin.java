@@ -245,7 +245,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		unwrapBtn = new JButton("Unwrap"),
 		spherizeButton = new JButton("Spherize"),
 		quantizeToQuads = new JButton("Quads"),
-		extendDomainButton = new JButton("Extend Fundamental Domain");
+		reorderFacesButton = new JButton("Faces To Fundamental Domain");
 	private ColorChooseJButton
 		triangulationColorButton = new ColorChooseJButton(Color.GRAY, true),
 		polygonColorButton = new ColorChooseJButton(Color.RED, true),
@@ -468,6 +468,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		
 		modelPanel.setLayout(new GridBagLayout());
 		modelPanel.add(moveToCenterButton, c2);
+		modelPanel.add(reorderFacesButton, c2);
 		modelPanel.setShrinked(true);
 		shrinkPanel.add(modelPanel, c2);
 		
@@ -492,6 +493,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		axesColorButton.addColorChangedListener(this);
 		triangulationColorButton.addColorChangedListener(this);
 		spherizeButton.addActionListener(this);
+		reorderFacesButton.addActionListener(this);
 	}
 	
 	public static void main(String[] args) {
@@ -918,9 +920,40 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			updateSurface();
 			updateDomainImage();				
 		}
-		if (extendDomainButton == s) {
-			throw new RuntimeException("not yet implemented!");
+		if (reorderFacesButton == s) {
+			reorderFaces();
 		}
+	}
+	
+	
+	private void reorderFaces() {
+		FundamentalPolygon p = getActiveFundamentalPoygon();
+		int signature = getActiveSignature();
+		VisualizationUtility.reglueOutsideFaces(surface, 1, p, cutInfo, signature);
+		updateSurface();
+		updateDomainImage();
+	}
+	
+	private FundamentalPolygon getActiveFundamentalPoygon() {
+		Domain domain = (Domain)domainCombo.getSelectedItem();
+		switch (domain) {
+			default:
+			case Cut:
+				return cuttedPolygon;
+			case Minimal:
+				return minimalPolygon;
+			case Canonical:
+				return canonicalPolygon;
+			case Opposite:
+				return oppositePolygon;			
+		}
+	}
+	
+	private int getActiveSignature() {
+		if (genus > 1) return Pn.HYPERBOLIC;
+		if (genus == 1) return Pn.EUCLIDEAN;
+		if (genus == 0) return Pn.ELLIPTIC;
+		return Pn.PROJECTIVE;
 	}
 	
 
@@ -951,49 +984,22 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			AdapterSet aSet = hif.getActiveAdapters();
 			int depth = coverElementsModel.getNumber().intValue();
 			double maxDrawDistance = coverMaxDisctanceModel.getNumber().doubleValue();
-			Domain domain = (Domain)domainCombo.getSelectedItem();
 			boolean drawPolygon = drawPolygonChecker.isSelected();
 			boolean drawAxes = drawAxesChecker.isSelected();
 			Color polygonColor = polygonColorButton.getColor();
 			Color axesColor = axesColorButton.getColor();
 			ConverterHeds2JR converter = new ConverterHeds2JR();
 			if (drawPolygon) {
-				CoHDS curves = null;
-				switch (domain) {
-					case Cut:
-						curves = SurfaceCurveUtility.createSurfaceCurves(cuttedPolygon, surface, aSet, depth, maxDrawDistance, true, false);
-						break;
-					case Minimal:
-						curves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, surface, aSet, depth, maxDrawDistance, true, false);
-						break;
-					case Canonical:
-						curves = SurfaceCurveUtility.createSurfaceCurves(canonicalPolygon, surface, aSet, depth, maxDrawDistance, true, false);
-						break;
-					case Opposite:
-						curves = SurfaceCurveUtility.createSurfaceCurves(oppositePolygon, surface, aSet, depth, maxDrawDistance, true, false);
-						break;				
-				}
+				FundamentalPolygon p = getActiveFundamentalPoygon();
+				CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(p, surface, aSet, depth, maxDrawDistance, true, false);
 				IndexedFaceSet curvesGeom = converter.heds2ifs(curves, aSet);
 				polygonCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, polygonColor);
 				polygonCurvesRoot.setGeometry(curvesGeom);
 				hif.addTemporaryGeometry(polygonCurvesRoot);
 			}
 			if (drawAxes) {
-				CoHDS axesCurves = null;
-				switch (domain) {
-					case Cut:
-						axesCurves = SurfaceCurveUtility.createSurfaceCurves(cuttedPolygon, surface, aSet, depth, maxDrawDistance, false, true);
-						break;
-					case Minimal:
-						axesCurves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, surface, aSet, depth, maxDrawDistance, false, true);
-						break;
-					case Canonical:
-						axesCurves = SurfaceCurveUtility.createSurfaceCurves(canonicalPolygon, surface, aSet, depth, maxDrawDistance, false, true);
-						break;
-					case Opposite:
-						axesCurves = SurfaceCurveUtility.createSurfaceCurves(oppositePolygon, surface, aSet, depth, maxDrawDistance, false, true);
-						break;				
-				}
+				FundamentalPolygon p = getActiveFundamentalPoygon();
+				CoHDS axesCurves = SurfaceCurveUtility.createSurfaceCurves(p, surface, aSet, depth, maxDrawDistance, false, true);
 				IndexedFaceSet axesGeom = converter.heds2ifs(axesCurves, aSet);
 				axesCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, axesColor);
 				axesCurvesRoot.setGeometry(axesGeom);

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 
 import de.jreality.math.Pn;
-import de.jreality.scene.Geometry;
 import de.jtem.discretegroup.core.DiscreteGroup;
 import de.jtem.discretegroup.core.DiscreteGroupElement;
 import de.varylab.discreteconformal.math.RnBig;
