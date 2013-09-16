@@ -87,6 +87,9 @@ public class TwoHoleExample {
 				,  1.91932904730549
 				,  1.1993786306578298
 				,  1.9422140229319633
+				,  2*Math.PI
+				,  2*Math.PI
+				,  2*Math.PI
 				,  1.9516553161736694};
 	
 		HashMap<Integer, Double> indexToAngle = new HashMap<Integer, Double>();
