@@ -49,7 +49,7 @@ public class TwoHoleExample {
 
 		SceneGraphComponent triangulation = null;
 		try {
-			triangulation = Readers.read(new Input(EuclideanUnwrapProblem.class.getResource("letterA-02.off")));
+			triangulation = Readers.read(new Input(EuclideanUnwrapProblem.class.getResource("letterA-03.off")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -72,10 +72,18 @@ public class TwoHoleExample {
 //		Matrix m = MatrixBuilder.euclidean().scale(2).getMatrix();
 //		tex.setTextureMatrix(m);
 		sgc.setGeometry(triang);
-			
+		double[] Aangles =  {  1.1899373374161235
+				,  1.937769234708022
+				,  4.345416072471565
+				,  4.363856259874096
+				,  1.91932904730549
+				,  1.1993786306578298
+				,  1.9422140229319633
+				,  1.9516553161736694};
+	
 		HashMap<Integer, Double> indexToAngle = new HashMap<Integer, Double>();
-		for (int i = 0; i<4; ++i) 	{
-			indexToAngle.put(i, angles[i]);
+		for (int i = 0; i<Aangles.length; ++i) 	{
+			indexToAngle.put(i, Aangles[i]);
 		}
 		List<Integer> holes = new ArrayList<Integer>();
 		if (doholes)	{
