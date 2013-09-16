@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
 import de.jreality.reader.Readers;
@@ -41,7 +42,7 @@ public class TwoHoleExample {
 	public static int[][] indices  = {{0, 12, 13, 1,2,3, 0},{4,5,6,7, 4}, {8,9,10,11,8}}; //{{0,1,2,3, 0},{4,5,6,7, 4}, {8,9,10,11,8}};
 	static double  rt = Math.PI/2,
 			triangleArea = .005;
-	static boolean letter = true, doholes = true;
+	static boolean letter = true, doholes = true, originalAngles = true;
 	public static double[] angles = {rt, rt, rt, rt};
 	public static void main(String[] args) {
 
@@ -53,11 +54,19 @@ public class TwoHoleExample {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		IndexedFaceSet triang2 = (IndexedFaceSet) SceneGraphUtility.getFirstGeometry(triangulation);
+		SceneGraphComponent origSgc = SceneGraphUtility.createFullSceneGraphComponent("sgc");
+		origSgc.setGeometry(triang2);
+
+		try {
+			triangulation = Readers.read(new Input(EuclideanUnwrapProblem.class.getResource("letterA-03.off")));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		IndexedFaceSet triang = (IndexedFaceSet) SceneGraphUtility.getFirstGeometry(triangulation);
-
-		JRViewer.display(triang);
-
 		SceneGraphComponent sgc = SceneGraphUtility.createFullSceneGraphComponent("sgc");
+		sgc.setGeometry(triang);
+
 		Appearance ap = sgc.getAppearance();
 		ap.setAttribute("polygonShader.diffuseColor", Color.white);
 		ap.setAttribute(CommonAttributes.FACE_DRAW, false);
@@ -71,7 +80,6 @@ public class TwoHoleExample {
 //		Texture2D tex = TextureUtility.createTexture(ap, "polygonShader", stf.getImageData());
 //		Matrix m = MatrixBuilder.euclidean().scale(2).getMatrix();
 //		tex.setTextureMatrix(m);
-		sgc.setGeometry(triang);
 		double[] Aangles =  {  1.1899373374161235
 				,  1.937769234708022
 				,  4.345416072471565
@@ -82,8 +90,9 @@ public class TwoHoleExample {
 				,  1.9516553161736694};
 	
 		HashMap<Integer, Double> indexToAngle = new HashMap<Integer, Double>();
-		for (int i = 0; i<Aangles.length; ++i) 	{
-			indexToAngle.put(i, Aangles[i]);
+		if (originalAngles) angles = Aangles;
+		for (int i = 0; i<angles.length; ++i) 	{
+			indexToAngle.put(i, angles[i]);
 		}
 		List<Integer> holes = new ArrayList<Integer>();
 		if (doholes)	{
@@ -101,8 +110,11 @@ public class TwoHoleExample {
 			// TODO: handle exception
 			e.printStackTrace();
 		}
+		SceneGraphComponent world = SceneGraphUtility.createFullSceneGraphComponent();
+		MatrixBuilder.euclidean().translate(2,0,0).assignTo(sgc);
+		world.addChildren(sgc, origSgc);
 
-		JRViewer.display(sgc);
+		JRViewer.display(world);
 		
 
 	}
