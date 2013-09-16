@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import de.jreality.geometry.IndexedLineSetFactory;
-import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
 import de.jreality.reader.Readers;
@@ -17,10 +15,15 @@ import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.data.Attribute;
 import de.jreality.shader.CommonAttributes;
 import de.jreality.util.Input;
+import de.jreality.util.NativePathUtility;
 import de.jreality.util.SceneGraphUtility;
 
 public class TwoHoleExample {
 
+	static {
+		NativePathUtility.set("native");
+	}
+	
 	public static double[][] verts = {
 		{0, 0, 0},
 		{3, 0, 0},
@@ -38,7 +41,7 @@ public class TwoHoleExample {
 	public static int[][] indices  = {{0, 12, 13, 1,2,3, 0},{4,5,6,7, 4}, {8,9,10,11,8}}; //{{0,1,2,3, 0},{4,5,6,7, 4}, {8,9,10,11,8}};
 	static double  rt = Math.PI/2,
 			triangleArea = .005;
-	static boolean letter = true, doholes = false;
+	static boolean letter = true, doholes = true;
 	public static double[] angles = {rt, rt, rt, rt};
 	public static void main(String[] args) {
 
@@ -46,7 +49,7 @@ public class TwoHoleExample {
 
 		SceneGraphComponent triangulation = null;
 		try {
-			triangulation = Readers.read(new Input(EuclideanUnwrapProblem.class.getResource("foo46408680-0000.1.off")));
+			triangulation = Readers.read(new Input(EuclideanUnwrapProblem.class.getResource("letterA-02.off")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -76,7 +79,7 @@ public class TwoHoleExample {
 		}
 		List<Integer> holes = new ArrayList<Integer>();
 		if (doholes)	{
-			holes.add(indices[1][0]);
+			holes.add(9);
 //			holes.add(indices[2][0]);					
 		}
 

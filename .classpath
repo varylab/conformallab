@@ -29,7 +29,7 @@
 	<classpathentry kind="lib" path="lib/jreality/sunflow.jar"/>
 	<classpathentry kind="lib" path="lib/jtem/beans.jar"/>
 	<classpathentry kind="lib" path="lib/jtem/blas.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/jtem/halfedge.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jtem/halfedge.jar" sourcepath="/halfedge"/>
 	<classpathentry exported="true" kind="lib" path="lib/jtem/halfedgetools.jar" sourcepath="/halfedgetools"/>
 	<classpathentry kind="lib" path="lib/jtem/java2d.jar"/>
 	<classpathentry kind="lib" path="lib/jtem/java2dx.jar"/>
