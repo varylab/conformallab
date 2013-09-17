@@ -42,7 +42,7 @@ public class TwoHoleExample {
 	public static int[][] indices  = {{0, 12, 13, 1,2,3, 0},{4,5,6,7, 4}, {8,9,10,11,8}}; //{{0,1,2,3, 0},{4,5,6,7, 4}, {8,9,10,11,8}};
 	static double  rt = Math.PI/2,
 			triangleArea = .005;
-	static boolean letter = true, doholes = true, originalAngles = true;
+	static boolean letter = true, doholes = true, originalAngles = false;
 	public static double[] angles = {rt, rt, rt, rt};
 	public static void main(String[] args) {
 
@@ -50,16 +50,16 @@ public class TwoHoleExample {
 
 		SceneGraphComponent triangulation = null;
 		try {
-			triangulation = Readers.read(new Input(EuclideanUnwrapProblem.class.getResource("letterA-03.off")));
+			triangulation = Readers.read(new Input(EuclideanUnwrapProblem.class.getResource("letterB-bad.off")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		IndexedFaceSet triang2 = (IndexedFaceSet) SceneGraphUtility.getFirstGeometry(triangulation);
 		SceneGraphComponent origSgc = SceneGraphUtility.createFullSceneGraphComponent("sgc");
 		origSgc.setGeometry(triang2);
-
+		// sigh ... there is no simple way in jReality I know of to "deep" copy a geometry
 		try {
-			triangulation = Readers.read(new Input(EuclideanUnwrapProblem.class.getResource("letterA-03.off")));
+			triangulation = Readers.read(new Input(EuclideanUnwrapProblem.class.getResource("letterB-bad.off")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -80,6 +80,8 @@ public class TwoHoleExample {
 //		Texture2D tex = TextureUtility.createTexture(ap, "polygonShader", stf.getImageData());
 //		Matrix m = MatrixBuilder.euclidean().scale(2).getMatrix();
 //		tex.setTextureMatrix(m);
+		// BE CAREFUL!  This is a mish-mash of settings for "A" and "B".  Currently works for "B"
+		// I dont have original angles for "B"
 		double[] Aangles =  {  1.1899373374161235
 				,  1.937769234708022
 				,  4.345416072471565
@@ -87,19 +89,18 @@ public class TwoHoleExample {
 				,  1.91932904730549
 				,  1.1993786306578298
 				,  1.9422140229319633
-				,  2*Math.PI
-				,  2*Math.PI
-				,  2*Math.PI
 				,  1.9516553161736694};
-	
+		int[] inds = {10,0,1,2,3,4,5,6};
 		HashMap<Integer, Double> indexToAngle = new HashMap<Integer, Double>();
 		if (originalAngles) angles = Aangles;
+		else inds = new int[]{0,5,45,47};
 		for (int i = 0; i<angles.length; ++i) 	{
-			indexToAngle.put(i, angles[i]);
+			indexToAngle.put(inds[i], angles[i]);
 		}
 		List<Integer> holes = new ArrayList<Integer>();
 		if (doholes)	{
-			holes.add(9);
+			holes.add(51);
+			holes.add(75);
 //			holes.add(indices[2][0]);					
 		}
 
