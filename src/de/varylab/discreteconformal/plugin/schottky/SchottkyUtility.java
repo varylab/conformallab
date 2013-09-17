@@ -64,27 +64,28 @@ public class SchottkyUtility {
 			cutInfo.cutRoot = bc.get(0).get(0).getStartVertex();
 			while (bc.size() > 1) {
 				Set<CoVertex> cycle1 = PathUtility.getVerticesOnPath(bc.get(0));
-				List<CoEdge> path = null;
-				Set<CoVertex> cycle2 = PathUtility.getVerticesOnPath(bc.get(1));
+				List<CoEdge> allOtherCycles = new LinkedList<CoEdge>();
+				for (int i = 1; i < bc.size(); i++) {
+					allOtherCycles.addAll(bc.get(i));
+				}
+				Set<CoVertex> otherVertices = PathUtility.getVerticesOnPath(allOtherCycles);
 				
 				Set<CoVertex> inter = new HashSet<CoVertex>(cycle1);
-				inter.retainAll(cycle2);
+				inter.retainAll(otherVertices);
 				if (!inter.isEmpty()) {
 					throw new RuntimeException("paths cannot intersect!");
 				}
+				List<CoEdge> cutPath = new LinkedList<CoEdge>();
 				for (CoVertex s : cycle1) {
-					List<CoEdge> checkPath = Search.getShortestPath(s, cycle2, null);
-					if (path == null) {
-						path = checkPath;
-					}
-					if (checkPath.size() < path.size() && !checkPath.isEmpty()) {
-						path = checkPath;
+					List<CoEdge> checkPath = Search.getShortestPath(s, otherVertices, null);
+					if (checkPath.size() < cutPath.size() || cutPath.isEmpty()) {
+						cutPath = checkPath;
 					}
 				}
-				if (path == null || path.isEmpty()) {
+				if (cutPath.isEmpty()) {
 					throw new RuntimeException("no path between cycles found!");
 				}
-				CuttingUtility.cutAlongPath(path, cutInfo);
+				CuttingUtility.cutAlongPath(cutPath, cutInfo);
 				bc = HalfEdgeUtils.boundaryComponents(hds);
 			}
 		}

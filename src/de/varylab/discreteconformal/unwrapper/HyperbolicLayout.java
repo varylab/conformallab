@@ -72,6 +72,11 @@ public class HyperbolicLayout {
 			}
 		}
 		
+		if (mcSet.isEmpty()) {
+			// no interior vertex
+			return hds.getVertex(0);
+		}
+		
 		for (CoVertex v : mcSet) {
 			double mean = 0;
 			Map<CoVertex, Double> distMap = new HashMap<CoVertex, Double>();

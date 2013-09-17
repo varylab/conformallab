@@ -357,7 +357,7 @@ public class VisualizationUtility {
 		boolean isFirst = true;
 		for (DiscreteGroupElement s : G.getElementList()) {
 			BigDecimal[] sBig = RnBig.toBig(null, s.getArray());
-			drawUniversalCoverR(poly, sBig, 0, 0, drawPolygon, isFirst, g, model, resolution, polygonColor, axesColor, axesSegments, polygonSegments);
+			drawUniversalCoverR(poly, sBig, 0, 0, drawPolygon, isFirst & drawAxes, g, model, resolution, polygonColor, axesColor, axesSegments, polygonSegments);
 			isFirst = false;
 		}
 	}
