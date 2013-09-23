@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema 
+	xmlns="http://www.w3.org/2001/XMLSchema" 
+	targetNamespace="http://www.varylab.org/conformallab/types"
+	xmlns:types="http://www.varylab.org/conformallab/types" 
+	elementFormDefault="qualified"
+>
+
+	<complexType name="Complex">
+		<attribute name="x" type="double"/>
+		<attribute name="y" type="double"/>
+	</complexType>
+
+	<complexType name="Circle">
+		<attribute name="radius" type="double"/>
+		<sequence>
+			<element name="Center" type="types:Complex"/>
+		</sequence>
+	</complexType>
+	
+	<complexType name="Moebius">
+		<attribute name="a" type="double"/>
+		<attribute name="b" type="double"/>
+		<attribute name="c" type="double"/>
+		<attribute name="d" type="double"/>
+	</complexType>
+
+</schema>

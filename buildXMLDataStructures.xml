@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="Conformal Lab XML Data Structures" default="build bindings">
+
+	<taskdef name="xjc" classname="com.sun.tools.xjc.XJCTask">
+		<classpath>
+			<fileset dir="etc/ant">
+				<include name="jaxb-xjc.jar"/>
+			</fileset>
+		</classpath>	
+	</taskdef>
+	
+	<target name="build bindings">
+		<property name="src-xsd" value="src/"/>
+		<xjc 
+			schema="${src}/rvldata.xsd" 
+			binding="${src}/rvldata.xjb"
+			destdir="src"
+			package="de.varylab.varylab.plugin.grasshopper.data.binding"
+			extension="false"
+		>
+			<produces dir="${src}/binding" includes="*"/>
+		</xjc>
+	
+	</target>
+	
+</project>

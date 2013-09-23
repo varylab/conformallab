@@ -2,6 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="src-test"/>
+	<classpathentry kind="src" path="src-data"/>
 	<classpathentry kind="lib" path="lib/mtj.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://matrix-toolkits-java.googlecode.com/svn/branches/0.9.13/javadoc"/>
