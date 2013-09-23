@@ -285,7 +285,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		drawPolygonChecker = new JCheckBox("Draw Polygon", true),
 		drawCurvesOnSurface = new JCheckBox("Draw Curves On Surface");
 	private JComboBox
-		numericsCombo = new JComboBox(new String[] {"Java/MTJ Numerics", "Petsc/Tao Numerics"}),
+		numericsCombo = new JComboBox(new String[] {"Petsc/Tao Numerics", "Java/MTJ Numerics"}),
 		conesQuantizationModeCombo = new JComboBox(QuantizationMode.values()),
 		boundaryModeCombo = new JComboBox(BoundaryMode.values()),
 		boundaryQuantizationCombo = new JComboBox(QuantizationMode.values()),
@@ -732,7 +732,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			uw.setQuantizationMode((QuantizationMode)conesQuantizationModeCombo.getSelectedItem());
 			uw.setBoundaryQuantMode((QuantizationMode)boundaryQuantizationCombo.getSelectedItem());
 			uw.setBoundaryMode((BoundaryMode)boundaryModeCombo.getSelectedItem());
-			uw.setUsePetsc(numericsCombo.getSelectedIndex() == 1);
+			uw.setUsePetsc(numericsCombo.getSelectedIndex() == 0);
 			uw.setSelectedVertices(hif.getSelection().getVertices(surface));
 			uw.addJobListener(this);
 			jobQueue.queueJob(uw);
