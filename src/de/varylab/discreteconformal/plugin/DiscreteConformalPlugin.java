@@ -274,6 +274,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		toleranceExpSpinner = new JSpinner(toleranceExpModel),
 		maxIterationsSpinner = new JSpinner(maxIterationsModel);
 	private JCheckBox
+		expertChecker = new JCheckBox("Expert Mode"),
 		rescaleChecker = new JCheckBox("Rescale Geometry", true),
 		circularEdgeChecker = new JCheckBox("Is Circular Edge"), 
 		useDistanceToCanonicalize = new JCheckBox("Use Isometry Distances"),
@@ -300,14 +301,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		svgChooser = new JFileChooser();
 		
 	public DiscreteConformalPlugin() {
-		createLayout();
-		unwrapBtn.addActionListener(this);
-		checkGaussBonnetBtn.addActionListener(this);
-		domainCombo.addActionListener(this);
-		useProjectiveTexture.addActionListener(this);
-		coverToTextureButton.addActionListener(this);
-		quantizeToQuads.addActionListener(this);
-		
 		IndexedFaceSetFactory ifsf = new IndexedFaceSetFactory();
 		ifsf.setVertexCount(4);
 		ifsf.setFaceCount(1);
@@ -384,94 +377,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 
 	
-	private void createLayout() {
-		shrinkPanel.setLayout(new GridBagLayout());
-		GridBagConstraints c1 = new GridBagConstraints();
-		c1.insets = new Insets(1,1,1,1);
-		c1.fill = GridBagConstraints.BOTH;
-		c1.anchor = GridBagConstraints.WEST;
-		c1.weightx = 1.0;
-		c1.gridwidth = 1;
-		GridBagConstraints c2 = new GridBagConstraints();
-		c2.insets = new Insets(1,1,1,1);
-		c2.fill = GridBagConstraints.BOTH;
-		c2.anchor = GridBagConstraints.WEST;
-		c2.weightx = 1.0;
-		c2.gridwidth = GridBagConstraints.REMAINDER;
-		
-		numericsCombo.setLightWeightPopupEnabled(true);
-		numericsCombo.setSelectedIndex(0);
-		shrinkPanel.add(numericsCombo, c2);
-		shrinkPanel.add(new JLabel("Tolerance Exp"), c1);
-		shrinkPanel.add(toleranceExpSpinner, c2);
-		shrinkPanel.add(new JLabel("Max Iterations"), c1);
-		shrinkPanel.add(maxIterationsSpinner, c2);
-		shrinkPanel.add(rescaleChecker, c2);
-		shrinkPanel.add(checkGaussBonnetBtn, c2);
-		shrinkPanel.add(unwrapBtn, c2);
-		shrinkPanel.add(spherizeButton, c2);
-		
-		boundaryPanel.setLayout(new GridBagLayout());
-		boundaryPanel.add(new JLabel("Mode"), c1);
-		boundaryPanel.add(boundaryModeCombo, c2);
-		boundaryPanel.add(new JLabel("Quantization"), c1);
-		boundaryPanel.add(boundaryQuantizationCombo, c2);
-		boundaryPanel.setShrinked(true);
-		shrinkPanel.add(boundaryPanel, c2);
-		
-		coneConfigPanel.setLayout(new GridBagLayout());
-		coneConfigPanel.add(new JLabel("Cones"), c1);
-		coneConfigPanel.add(numConesSpinner, c2);
-		coneConfigPanel.add(new JLabel("Quantization"), c1);
-		coneConfigPanel.add(conesQuantizationModeCombo, c2);
-		coneConfigPanel.setShrinked(true);
-		shrinkPanel.add(coneConfigPanel, c2);
-		
-		customNodePanel.add(selectionScroller, c2);
-		selectionScroller.setPreferredSize(new Dimension(10, 70));
-		selectionScroller.setMinimumSize(new Dimension(10, 70));
-		customNodePanel.add(useCustomThetaChecker, c1);
-		customNodePanel.add(customThetaSpinner, c2);
-		customNodePanel.add(new JLabel("Mode"), c1);
-		customNodePanel.add(customModeCombo, c2);
-		customNodePanel.add(new JLabel("Quantization"), c1);
-		customNodePanel.add(customQuantizationCombo, c2);
-		customNodePanel.add(circularEdgeChecker, c2);
-		shrinkPanel.add(customNodePanel, c2);
-		
-		texQuantizationPanel.add(quantizeToQuads, c2);
-		shrinkPanel.add(texQuantizationPanel, c2);
-		
-		visualizationPanel.setLayout(new GridBagLayout());
-		visualizationPanel.add(new JLabel("Domain"), c1);
-		visualizationPanel.add(domainCombo, c2);
-		visualizationPanel.add(new JLabel("Cover Elements"), c1);
-		visualizationPanel.add(coverElementsSpinner, c2);
-		visualizationPanel.add(new JLabel("Cover Distance"), c1);
-		visualizationPanel.add(coverMaxDistanceSpinner, c2);
-		visualizationPanel.add(drawTriangulationChecker, c1);
-		visualizationPanel.add(triangulationColorButton, c2);
-		visualizationPanel.add(drawPolygonChecker, c1);
-		visualizationPanel.add(polygonColorButton, c2);
-		visualizationPanel.add(drawAxesChecker, c1);
-		visualizationPanel.add(axesColorButton, c2);
-		visualizationPanel.add(drawCurvesOnSurface, c2);
-		visualizationPanel.add(useDistanceToCanonicalize, c2);
-		visualizationPanel.add(coverToTextureButton, c2);
-		visualizationPanel.add(visButtonsPanel, c2);
-		shrinkPanel.add(visualizationPanel, c2);
-
-		visButtonsPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-		visButtonsPanel.add(saveTextureButton);
-		visButtonsPanel.add(exportHyperbolicButton);
-		visButtonsPanel.add(exportHyperbolicSVGButton);
-		
-		modelPanel.setLayout(new GridBagLayout());
-		modelPanel.add(moveToCenterButton, c2);
-		modelPanel.add(reorderFacesButton, c2);
-		modelPanel.setShrinked(true);
-		shrinkPanel.add(modelPanel, c2);
-		
+	private void connectGUIListeners() {
 		customNodesList.getSelectionModel().addListSelectionListener(this);
 		customModeCombo.addActionListener(this);
 		customQuantizationCombo.addActionListener(this);
@@ -494,6 +400,132 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		triangulationColorButton.addColorChangedListener(this);
 		spherizeButton.addActionListener(this);
 		reorderFacesButton.addActionListener(this);
+		
+		unwrapBtn.addActionListener(this);
+		checkGaussBonnetBtn.addActionListener(this);
+		domainCombo.addActionListener(this);
+		useProjectiveTexture.addActionListener(this);
+		coverToTextureButton.addActionListener(this);
+		quantizeToQuads.addActionListener(this);
+		
+		expertChecker.addActionListener(this);
+	}
+	
+	private void createLayout() {
+		boolean expert = expertChecker.isSelected();
+		shrinkPanel.removeAll();
+		shrinkPanel.setLayout(new GridBagLayout());
+		GridBagConstraints c1 = new GridBagConstraints();
+		c1.insets = new Insets(1,1,1,1);
+		c1.fill = GridBagConstraints.BOTH;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.weightx = 1.0;
+		c1.gridwidth = 1;
+		GridBagConstraints c2 = new GridBagConstraints();
+		c2.insets = new Insets(1,1,1,1);
+		c2.fill = GridBagConstraints.BOTH;
+		c2.anchor = GridBagConstraints.WEST;
+		c2.weightx = 1.0;
+		c2.gridwidth = GridBagConstraints.REMAINDER;
+		
+		shrinkPanel.add(expertChecker, c2);
+		
+		if (expert) {
+			numericsCombo.setLightWeightPopupEnabled(true);
+			numericsCombo.setSelectedIndex(0);
+			shrinkPanel.add(numericsCombo, c2);
+			shrinkPanel.add(new JLabel("Tolerance Exp"), c1);
+			shrinkPanel.add(toleranceExpSpinner, c2);
+			shrinkPanel.add(new JLabel("Max Iterations"), c1);
+			shrinkPanel.add(maxIterationsSpinner, c2);
+			shrinkPanel.add(rescaleChecker, c2);
+		}
+		shrinkPanel.add(unwrapBtn, c2);
+		if (expert) {
+			shrinkPanel.add(spherizeButton, c2);
+			shrinkPanel.add(checkGaussBonnetBtn, c2);
+		}
+		
+		boundaryPanel.setLayout(new GridBagLayout());
+		boundaryPanel.removeAll();
+		boundaryPanel.add(new JLabel("Mode"), c1);
+		boundaryPanel.add(boundaryModeCombo, c2);
+		boundaryPanel.add(new JLabel("Quantization"), c1);
+		boundaryPanel.add(boundaryQuantizationCombo, c2);
+		boundaryPanel.setShrinked(true);
+		shrinkPanel.add(boundaryPanel, c2);
+		
+		if (expert) {
+			coneConfigPanel.setLayout(new GridBagLayout());
+			coneConfigPanel.removeAll();
+			coneConfigPanel.add(new JLabel("Cones"), c1);
+			coneConfigPanel.add(numConesSpinner, c2);
+			coneConfigPanel.add(new JLabel("Quantization"), c1);
+			coneConfigPanel.add(conesQuantizationModeCombo, c2);
+			coneConfigPanel.setShrinked(true);
+			shrinkPanel.add(coneConfigPanel, c2);
+		}
+		
+		customNodePanel.setLayout(new GridBagLayout());
+		customNodePanel.removeAll();
+		customNodePanel.add(selectionScroller, c2);
+		selectionScroller.setPreferredSize(new Dimension(10, 70));
+		selectionScroller.setMinimumSize(new Dimension(10, 70));
+		customNodePanel.add(useCustomThetaChecker, c1);
+		customNodePanel.add(customThetaSpinner, c2);
+		if (expert) {
+			customNodePanel.add(new JLabel("Mode"), c1);
+			customNodePanel.add(customModeCombo, c2);
+			customNodePanel.add(new JLabel("Quantization"), c1);
+			customNodePanel.add(customQuantizationCombo, c2);
+			customNodePanel.add(circularEdgeChecker, c2);
+		}
+		shrinkPanel.add(customNodePanel, c2);
+		
+		if (expert) {
+			texQuantizationPanel.setLayout(new GridBagLayout());
+			texQuantizationPanel.removeAll();
+			texQuantizationPanel.add(quantizeToQuads, c2);
+			shrinkPanel.add(texQuantizationPanel, c2);
+		}
+		if (expert) {
+			visualizationPanel.setLayout(new GridBagLayout());
+			visualizationPanel.removeAll();
+			visualizationPanel.add(new JLabel("Domain"), c1);
+			visualizationPanel.add(domainCombo, c2);
+			visualizationPanel.add(new JLabel("Cover Elements"), c1);
+			visualizationPanel.add(coverElementsSpinner, c2);
+			visualizationPanel.add(new JLabel("Cover Distance"), c1);
+			visualizationPanel.add(coverMaxDistanceSpinner, c2);
+			visualizationPanel.add(drawTriangulationChecker, c1);
+			visualizationPanel.add(triangulationColorButton, c2);
+			visualizationPanel.add(drawPolygonChecker, c1);
+			visualizationPanel.add(polygonColorButton, c2);
+			visualizationPanel.add(drawAxesChecker, c1);
+			visualizationPanel.add(axesColorButton, c2);
+			visualizationPanel.add(drawCurvesOnSurface, c2);
+			visualizationPanel.add(useDistanceToCanonicalize, c2);
+			visualizationPanel.add(coverToTextureButton, c2);
+			visualizationPanel.add(visButtonsPanel, c2);
+			shrinkPanel.add(visualizationPanel, c2);
+		}
+		if (expert) {
+			visButtonsPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
+			visButtonsPanel.removeAll();
+			visButtonsPanel.add(saveTextureButton);
+			visButtonsPanel.add(exportHyperbolicButton);
+			visButtonsPanel.add(exportHyperbolicSVGButton);
+		}
+		if (expert) {
+			modelPanel.setLayout(new GridBagLayout());
+			modelPanel.removeAll();
+			modelPanel.add(moveToCenterButton, c2);
+			modelPanel.add(reorderFacesButton, c2);
+			modelPanel.setShrinked(true);
+			shrinkPanel.add(modelPanel, c2);
+		}
+
+		shrinkPanel.revalidate();
 	}
 	
 	public static void main(String[] args) {
@@ -923,6 +955,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		if (reorderFacesButton == s) {
 			reorderFaces();
 		}
+		if (expertChecker == s) {
+			createLayout();
+		}
 	}
 	
 	
@@ -1021,7 +1056,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				v.info = null;
 			}
 		}
-		Triangulator.triangulateByCuttingCorners(surface, hif.getAdapters());
+		Triangulator.triangulateSingleSource(surface);
 		return surface;
 	}
 	
@@ -1138,12 +1173,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		contentAppearance = c.getPlugin(ContentAppearance.class);
 		domainVisualisationPlugin = c.getPlugin(DomainVisualisationPlugin.class);
 		jobQueue = c.getPlugin(JobQueuePlugin.class);
+		createLayout();
+		connectGUIListeners();
 	}
 
 	
 	@Override
 	public void storeStates(Controller c) throws Exception {
 		super.storeStates(c);
+		c.storeProperty(getClass(), "expertMode", expertChecker.isSelected());
 		c.storeProperty(getClass(), "numCones", numConesModel.getNumber().intValue());
 		c.storeProperty(getClass(), "conesQuantizationModeIndex", conesQuantizationModeCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "boundaryModeIndex", boundaryModeCombo.getSelectedIndex());
@@ -1166,6 +1204,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	@Override
 	public void restoreStates(Controller c) throws Exception { 
 		super.restoreStates(c);
+		expertChecker.setSelected(c.getProperty(getClass(), "expertMode", expertChecker.isSelected()));
 		numConesModel.setValue(c.getProperty(getClass(), "numCones", numConesModel.getNumber().intValue()));
 		numericsCombo.setSelectedIndex(c.getProperty(getClass(), "numericsMethod", numericsCombo.getSelectedIndex()));
 		coverElementsModel.setValue(c.getProperty(getClass(), "coverRecursion", coverElementsModel.getNumber()));
