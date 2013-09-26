@@ -638,6 +638,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 	@Override
 	public void jobFailed(Job job, Exception e) {
+		Unwrap unwrapper = (Unwrap)job;
+		surface = unwrapper.getSurface();
+		surface.revertNormalization();
 		Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
 		JOptionPane.showMessageDialog(w, e, "Optimization Error", JOptionPane.WARNING_MESSAGE);
 		e.printStackTrace();
@@ -718,7 +721,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			ti.setTextureShear(0.0);
 		}
 		if (unwrapBtn == s || spherizeButton == s) {
-			CoHDS surface = getLoaderGeometry();
+			surface = getLoaderGeometry();
 			if (surface == null) return;
 			if (isRescaleGeometry()) {
 				surface.normalizeCoordinates();
