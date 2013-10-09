@@ -49,7 +49,7 @@ public class EuclideanUnwrapperPetscTest {
 		bdMap.put(1, PI / 3);
 		bdMap.put(2, PI / 3 + 0.1);
 		bdMap.put(3, PI / 3 - 0.1);
-		EuclideanUnwrapperPETSc.unwrap(ifs, 0, bdMap, null);
+		EuclideanUnwrapperPETSc.unwrap(ifs, 0, bdMap, null, null);
 		
 		DataList texCoords = ifs.getVertexAttributes(Attribute.TEXTURE_COORDINATES);
 		double[][] texArr = texCoords.toDoubleArrayArray(new double[ifs.getNumPoints()][4]);
@@ -84,13 +84,17 @@ public class EuclideanUnwrapperPetscTest {
 		circularEdges.add(new int[]{23,22});
 		circularEdges.add(new int[]{22,24});
 		circularEdges.add(new int[]{22,60});
+		List<Double> circularAngleSums = new LinkedList<Double>();
+		circularAngleSums.add(Math.PI);
+		circularAngleSums.add(Math.PI - 0.2);
+		circularAngleSums.add(Math.PI);
 		
 		Map<Integer, Double> bdMap = new HashMap<Integer, Double>();
 		bdMap.put(476, PI / 2);
 		bdMap.put(445, PI / 2);
 		bdMap.put(601, PI / 2);
 		bdMap.put(574, PI / 2);
-		EuclideanUnwrapperPETSc.unwrap(ifs, 514, bdMap, circularEdges);
+		EuclideanUnwrapperPETSc.unwrap(ifs, 514, bdMap, circularEdges, circularAngleSums);
 		
 		DataList texCoords = ifs.getVertexAttributes(Attribute.TEXTURE_COORDINATES);
 		double[][] texArr = texCoords.toDoubleArrayArray(new double[ifs.getNumPoints()][4]);
@@ -137,7 +141,7 @@ public class EuclideanUnwrapperPetscTest {
 		bdMap.put(445, PI / 2);
 		bdMap.put(601, PI / 2);
 		bdMap.put(574, PI / 2);
-		EuclideanUnwrapperPETSc.unwrap(ifs, 514, bdMap, null);
+		EuclideanUnwrapperPETSc.unwrap(ifs, 514, bdMap, null, null);
 		
 		DataList texCoords = ifs.getVertexAttributes(Attribute.TEXTURE_COORDINATES);
 		double[][] texArr = texCoords.toDoubleArrayArray(new double[ifs.getNumPoints()][4]);

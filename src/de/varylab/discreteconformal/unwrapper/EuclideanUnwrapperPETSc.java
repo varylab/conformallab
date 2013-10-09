@@ -244,8 +244,15 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		return app.getFunctional();
 	}
 	
+	/**
+	 * Unwraps a surface with specified boundary angles and circular
+	 * boundaries defined by a vertex per boundary component
+	 * @param ifs
+	 * @param layoutRoot
+	 * @param boundaryAngles
+	 * @param circularEdges
+	 */
 	public static void unwrapcg(IndexedFaceSet ifs, int layoutRoot, Map<Integer, Double> boundaryAngles, List<Integer> circularVerts, double tol) {
-
 		IndexedFaceSetUtility.makeConsistentOrientation(ifs);
 		CoHDS hds = new CoHDS();
 		AdapterSet a = AdapterSet.createGenericAdapters();
@@ -304,58 +311,21 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 			}
 		}
 		
-		EuclideanUnwrapperPETSc unwrap = new EuclideanUnwrapperPETSc();
-		unwrap.setBoundaryQuantMode(QuantizationMode.Straight);
-		unwrap.setBoundaryMode(BoundaryMode.Conformal);
-		unwrap.setGradientTolerance(tol);
-		unwrap.setMaxIterations(200);
-		try {
-			unwrap.unwrap(hds, 0, a);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		double[][] texArr = new double[hds.numVertices()][];
-		for (int i = 0; i < texArr.length; i++) {
-			CoVertex v = hds.getVertex(i);
-			texArr[i] = a.getD(TexturePosition4d.class, v);
-		}
-
-		
-		CoVertex layoutRootVertex = hds.getVertex(layoutRoot);
-		CoEdge bdIn = layoutRootVertex.getIncomingEdge();
-		// find a boundary edge if there is any
-		for (CoEdge e : HalfEdgeUtils.incomingEdges(layoutRootVertex)) {
-			if (e.getLeftFace() == null) {
-				bdIn = e;
-				break;
-			}
-		}
-		CoVertex nearVertex = bdIn.getStartVertex();
-		int nearIndex = nearVertex.getIndex();
-		
-		double[] t = Pn.dehomogenize(null, texArr[layoutRoot]);
-		double[] t2 = Pn.dehomogenize(null, texArr[nearIndex]);
-		double angle = Math.atan2(t2[1] - t[1], t2[0] - t[0]);
-		MatrixBuilder bT = MatrixBuilder.euclidean();
-		bT.rotate(-angle, 0, 0, 1);
-		bT.translate(-t[0], -t[1], 0);
-		Matrix T = bT.getMatrix();
-		for (int i = 0; i < texArr.length; i++) {
-			double[] tc = texArr[i];
-			double e = tc[3];
-			Pn.dehomogenize(tc, tc);
-			T.transformVector(tc);
-			Rn.times(tc, e, tc);
-		}
-		
+		double[][] texArr = unwrap(layoutRoot, hds, a);
 		DataList newTexCoords = new DoubleArrayArray.Array(texArr);
 		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, null);
 		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, newTexCoords);
 	}
 	
 	
-	public static void unwrap(IndexedFaceSet ifs, int layoutRoot, Map<Integer, Double> boundaryAngles, List<int[]> circularEdges) {
+	/**
+	 * unwraps a surface with specified boundary angles and circular edges;
+	 * @param ifs
+	 * @param layoutRoot
+	 * @param boundaryAngles
+	 * @param circularEdges
+	 */
+	public static void unwrap(IndexedFaceSet ifs, int layoutRoot, Map<Integer, Double> boundaryAngles, List<int[]> circularEdges, List<Double> circularAngleSums) {
 		IndexedFaceSetUtility.makeConsistentOrientation(ifs);
 		CoHDS hds = new CoHDS();
 		AdapterSet a = AdapterSet.createGenericAdapters();
@@ -377,7 +347,11 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		
 		// find circular edges
 		if (circularEdges != null) {
-			for (int[] eIndex : circularEdges) {
+			if (circularAngleSums != null && circularEdges.size() != circularAngleSums.size()) {
+				throw new RuntimeException("circular edges and angle sums do not match");
+			}
+			for (int i = 0; i < circularEdges.size(); i++) {
+				int[] eIndex = circularEdges.get(i);
 				CoVertex v1 = hds.getVertex(eIndex[0]);
 				CoVertex v2 = hds.getVertex(eIndex[1]);
 				CoEdge ce = HalfEdgeUtils.findEdgeBetweenVertices(v1, v2);
@@ -387,9 +361,29 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 				ce.info.circularHoleEdge = true;
 				ceOpp.info = new CustomEdgeInfo();
 				ceOpp.info.circularHoleEdge = true;
+				if (circularAngleSums != null) {
+					Double phi = circularAngleSums.get(i);
+					ce.info.phi = phi;
+					ceOpp.info.phi = phi;
+				}
 			}
 		}
 		
+		double[][] texArr = unwrap(layoutRoot, hds, a);
+		DataList newTexCoords = new DoubleArrayArray.Array(texArr);
+		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, null);
+		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, newTexCoords);
+	}
+
+	
+	/**
+	 * Calculate flat texture coordinates for a Euclidean structure
+	 * @param layoutRoot
+	 * @param hds
+	 * @param a
+	 * @return
+	 */
+	private static double[][] unwrap(int layoutRoot, CoHDS hds, AdapterSet a) {
 		EuclideanUnwrapperPETSc unwrap = new EuclideanUnwrapperPETSc();
 		unwrap.setBoundaryQuantMode(QuantizationMode.Straight);
 		unwrap.setBoundaryMode(BoundaryMode.Conformal);
@@ -434,10 +428,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 			T.transformVector(tc);
 			Rn.times(tc, e, tc);
 		}
-		
-		DataList newTexCoords = new DoubleArrayArray.Array(texArr);
-		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, null);
-		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, newTexCoords);
+		return texArr;
 	}
 	
 }
