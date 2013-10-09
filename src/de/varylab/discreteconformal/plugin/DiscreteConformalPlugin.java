@@ -253,7 +253,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	private JComboBox
 		domainCombo = new JComboBox(Domain.values());
 	private ShrinkPanel
-		customNodePanel = new ShrinkPanel("Custom Vertices"),
+		customNodePanel = new ShrinkPanel("Custom Nodes"),
 		boundaryPanel = new ShrinkPanel("Boundary"),
 		coneConfigPanel = new ShrinkPanel("Automatic Cones"),
 		modelPanel = new ShrinkPanel("Hyperbolic Model"),
@@ -263,6 +263,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		coverMaxDisctanceModel = new SpinnerNumberModel(6.0, 0.0, 100.0, 10.0),
 		coverElementsModel = new SpinnerNumberModel(10000, 0, 100000, 1),
 		customThetaModel = new SpinnerNumberModel(360.0, 0.0, 10000.0, 1.0),
+		customPhiModel = new SpinnerNumberModel(180.0, 0.0, 360.0, 1.0),
 		numConesModel = new SpinnerNumberModel(0, 0, 100, 1),
 		toleranceExpModel = new SpinnerNumberModel(-8, -30, -1, 1),
 		maxIterationsModel = new SpinnerNumberModel(150, 1, 10000, 1);
@@ -270,13 +271,14 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		coverMaxDistanceSpinner = new JSpinner(coverMaxDisctanceModel),
 		coverElementsSpinner = new JSpinner(coverElementsModel),
 		customThetaSpinner = new JSpinner(customThetaModel),
+		customPhiSpinner = new JSpinner(customPhiModel),
 		numConesSpinner = new JSpinner(numConesModel),
 		toleranceExpSpinner = new JSpinner(toleranceExpModel),
 		maxIterationsSpinner = new JSpinner(maxIterationsModel);
 	private JCheckBox
 		expertChecker = new JCheckBox("Expert Mode"),
 		rescaleChecker = new JCheckBox("Rescale Geometry", true),
-		circularEdgeChecker = new JCheckBox("Is Circular Edge"), 
+		circularEdgeChecker = new JCheckBox("Circular Edge"), 
 		useDistanceToCanonicalize = new JCheckBox("Use Isometry Distances"),
 		useCustomThetaChecker = new JCheckBox("Custom Theta"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
@@ -384,6 +386,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		customNodePanel.setShrinked(true);
 		useCustomThetaChecker.addActionListener(this);
 		customThetaSpinner.addChangeListener(this);
+		customPhiSpinner.addChangeListener(this);
 		circularEdgeChecker.addActionListener(this);
 		moveToCenterButton.addActionListener(this);
 		saveTextureButton.addActionListener(this);
@@ -478,7 +481,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			customNodePanel.add(customModeCombo, c2);
 			customNodePanel.add(new JLabel("Quantization"), c1);
 			customNodePanel.add(customQuantizationCombo, c2);
-			customNodePanel.add(circularEdgeChecker, c2);
+			customNodePanel.add(circularEdgeChecker, c1);
+			customNodePanel.add(customPhiSpinner, c2);
 		}
 		shrinkPanel.add(customNodePanel, c2);
 		
@@ -599,6 +603,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		if (val instanceof CoEdge) {
 			CoEdge edge = (CoEdge)val;
 			circularEdgeChecker.setSelected(edge.info.circularHoleEdge);
+			customPhiModel.setValue(Math.toDegrees(edge.info.phi));
 		}
 		hif.removeTemporaryGeometry(selectedCustomNodesRoot);
 		hif.addTemporaryGeometry(selectedCustomNodesRoot);
@@ -613,6 +618,16 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				CoVertex v = (CoVertex)s;
 				double thetaDeg = customThetaModel.getNumber().doubleValue();
 				v.info.theta = Math.toRadians(thetaDeg);
+			}
+		}
+		if (customPhiSpinner == e.getSource()) {
+			if (customNodesList.getSelectedValue() == null) return;
+			for (Object s : customNodesList.getSelectedValues()) {
+				if (!(s instanceof CoEdge)) continue;
+				CoEdge edge = (CoEdge)s;
+				double phiDeg = customPhiModel.getNumber().doubleValue();
+				edge.info.phi = Math.toRadians(phiDeg);
+				edge.getOppositeEdge().info.phi = Math.toRadians(phiDeg);
 			}
 		}
 		if (coverElementsSpinner == e.getSource()) {
