@@ -324,9 +324,9 @@ public class EuclideanNewFunctional <
 			Φ2 = phi.getPhi(e2),
 			Φ3 = phi.getPhi(e3);
 		final double 
-			λ͠1 = λ2 + u1 + u2,
-			λ͠2 = λ3 + u2 + u3,
-			λ͠3 = λ1 + u3 + u1;
+			λ̃1 = λ2 + u1 + u2,
+			λ̃2 = λ3 + u2 + u3,
+			λ̃3 = λ1 + u3 + u1;
 		final double 
 			x12 = λ2 + u1 + u2 - 2*umean,
 			x23 = λ3 + u2 + u3 - 2*umean,
@@ -354,7 +354,7 @@ public class EuclideanNewFunctional <
 			α3 = PI;
 		}
 		if (E != null) {
-			E.add(α1*λ͠2 + α2*λ͠3 + α3*λ͠1);
+			E.add(α1*λ̃2 + α2*λ̃3 + α3*λ̃1);
 			E.add(2*Л(α1) + 2*Л(α2) + 2*Л(α3));
 //			E.add(-PI * (λt1 + λt2 + λt3) / 2);
 			E.add(-(Φ1*λ1 + Φ2*λ2 + Φ3*λ3) / 2 - PI * (u1 + u2 + u3));

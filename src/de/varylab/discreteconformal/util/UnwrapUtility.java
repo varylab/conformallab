@@ -263,6 +263,7 @@ public class UnwrapUtility {
 				e.setSolverIndex(index);
 				e.getOppositeEdge().setSolverIndex(index);
 				e.setPhi(e.info.phi);
+				e.getOppositeEdge().setPhi(e.info.phi);
 			} else {
 				e.setSolverIndex(-1);
 				e.getOppositeEdge().setSolverIndex(-1);

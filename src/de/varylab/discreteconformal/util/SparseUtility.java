@@ -1,6 +1,8 @@
 package de.varylab.discreteconformal.util;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -38,23 +40,67 @@ public class SparseUtility {
 				n++;
 			}
 		}
-		int[][] nz = new int[n][];
+		for (CoEdge e : hds.getPositiveEdges()) {
+			if (e.getSolverIndex() >= 0) {
+				n++;
+			}
+		}
+		Map<Integer, TreeSet<Integer>> nonZeros = new HashMap<Integer, TreeSet<Integer>>();
+		for (int i = 0; i < n; i++) {
+			nonZeros.put(i, new TreeSet<Integer>());
+		}
 		for (CoVertex v : hds.getVertices()) {
-			if (v.getSolverIndex() < 0)
+			if (v.getSolverIndex() < 0) {
 				continue;
+			}
 			List<CoEdge> star = HalfEdgeUtils.incomingEdges(v);
-			Set<Integer> nonZeroIndices = new TreeSet<Integer>();
+			Set<Integer> nonZeroIndices = nonZeros.get(v.getSolverIndex());
 			nonZeroIndices.add(v.getSolverIndex());
 			for (CoEdge e : star) {
 				CoVertex connectedVertex = e.getOppositeEdge().getTargetVertex();
-				if (connectedVertex.getSolverIndex() < 0)
-					continue;
-				nonZeroIndices.add(connectedVertex.getSolverIndex());
+				if (connectedVertex.getSolverIndex() >= 0) {
+					nonZeroIndices.add(connectedVertex.getSolverIndex());
+				}
+				if (e.getSolverIndex() >= 0) {
+					nonZeroIndices.add(e.getSolverIndex());
+				}
+				if (e.getPreviousEdge().getSolverIndex() >= 0) {
+					nonZeroIndices.add(e.getPreviousEdge().getSolverIndex());
+				}
 			}
-			nz[v.getSolverIndex()] = new int[nonZeroIndices.size()];
+		}
+		for (CoEdge e : hds.getEdges()) {
+			if (e.getSolverIndex() < 0) {
+				continue;
+			}
+			Set<Integer> nonZeroIndices = nonZeros.get(e.getSolverIndex());
+			
+			// quadratic derivative
+			nonZeroIndices.add(e.getSolverIndex());
+			
+			// mixed edge derivatives
+			if (e.getNextEdge().getSolverIndex() >= 0) {
+				nonZeroIndices.add(e.getNextEdge().getSolverIndex());
+			}
+			if (e.getPreviousEdge().getSolverIndex() >= 0) {
+				nonZeroIndices.add(e.getPreviousEdge().getSolverIndex());
+			}
+			
+			// mixed vertex derivatives
+			if (e.getTargetVertex().getSolverIndex() >= 0) {
+				nonZeroIndices.add(e.getTargetVertex().getSolverIndex());
+			}
+			if (e.getNextEdge().getTargetVertex().getSolverIndex() >= 0) {
+				nonZeroIndices.add(e.getNextEdge().getTargetVertex().getSolverIndex());
+			}
+		}
+		int[][] nz = new int[n][];
+		for (int j = 0; j < n; j++) {
+			Set<Integer> nonZeroIndices = nonZeros.get(j);
+			nz[j] = new int[nonZeroIndices.size()];
 			int i = 0;
 			for (Integer index : nonZeroIndices) {
-				nz[v.getSolverIndex()][i++] = index;
+				nz[j][i++] = index;
 			}
 		}
 		return nz;

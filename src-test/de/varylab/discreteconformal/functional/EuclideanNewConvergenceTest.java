@@ -2,9 +2,6 @@ package de.varylab.discreteconformal.functional;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
-
-import java.util.Random;
-
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
@@ -53,38 +50,47 @@ public class EuclideanNewConvergenceTest  {
 	@Test
 	public void testEuclideanConvergence() {
 		CoHDS hds = TestUtility.readOBJ(EuclideanNewConvergenceTest.class, "cathead.obj"); 
-
-		CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
-		AdapterSet a = new ConformalAdapterSet();
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(opt.getFunctional(), hds, a);
-		Random rnd = new Random(); 
-		rnd.setSeed(1);
 		
 //		 one edge is circular
+		CoEdge circularEdge = null;
 		for (CoEdge e : hds.getPositiveEdges()) {
 			CoVertex s = e.getStartVertex();
 			CoVertex t = e.getTargetVertex();
 			if (isBoundaryVertex(s) || isBoundaryVertex(t)) {
 				continue;
 			}
+			circularEdge = e;
 			e.info = new CustomEdgeInfo();
 			e.info.circularHoleEdge = true;
+			e.info.phi = Math.PI - 0.1; // with modified angle sum phi
+			e.getOppositeEdge().info = e.info;
 			break;
 		}
 		
 		// optimization
+		CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
+		AdapterSet a = new ConformalAdapterSet();
+		int n = UnwrapUtility.prepareInvariantDataEuclidean(opt.getFunctional(), hds, a);
 		DenseVector u = new DenseVector(n);
-		Matrix H = new CompRowMatrix(n,n,makeNonZeros(hds));
+		// set variable lambda start values
+		for (CoEdge e : hds.getPositiveEdges()) {
+			if (e.getSolverIndex() >= 0) {
+				u.set(e.getSolverIndex(), e.getLambda());
+			}
+		}
+		
+		Matrix H = new CompRowMatrix(n, n, makeNonZeros(hds));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
-		optimizer.setSolver(Solver.GMRES);
-		optimizer.setError(1E-13);
-		optimizer.setMaxIterations(5);
+		optimizer.setSolver(Solver.BiCGstab);
+		optimizer.setError(1E-11);
+		optimizer.setMaxIterations(10);
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {
 			Assert.fail(e.getLocalizedMessage());
 		}
+		Assert.assertEquals(Math.PI - 0.1, circularEdge.getAlpha() + circularEdge.getOppositeEdge().getAlpha(), 1E-12);
 	}
 	
 	
