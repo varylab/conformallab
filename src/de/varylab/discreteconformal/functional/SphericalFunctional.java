@@ -1,7 +1,7 @@
 package de.varylab.discreteconformal.functional;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
-import static de.varylab.discreteconformal.functional.Clausen.lob;
+import static de.varylab.discreteconformal.functional.Clausen.Л;
 import static java.lang.Math.PI;
 import static java.lang.Math.asin;
 import static java.lang.Math.atan2;
@@ -15,7 +15,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.Vector.Norm;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -24,7 +23,6 @@ import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Energy;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
-import de.jtem.jpetsc.NormType;
 import de.jtem.numericalMethods.calculus.function.RealFunctionOfOneVariable;
 import de.jtem.numericalMethods.calculus.minimizing.DBrent;
 import de.jtem.numericalMethods.calculus.minimizing.Info;
@@ -36,7 +34,6 @@ import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
 import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
 import de.varylab.discreteconformal.unwrapper.numerics.MTJGradient;
 import de.varylab.discreteconformal.unwrapper.numerics.SimpleEnergy;
-import de.varylab.discreteconformal.unwrapper.numerics.TaoGradient;
 
 public class SphericalFunctional <
 	V extends Vertex<V, E, F>,
@@ -55,7 +52,7 @@ public class SphericalFunctional <
 	private InitialEnergy<F> 
 		initE = null;
 	private boolean
-		reduced = false;
+		reduced = true;
 	private double
 		logScale = 0.0;
 	
@@ -88,22 +85,22 @@ public class SphericalFunctional <
 			u = maximizeInNegativeDirection(hds, u);
 		}
 		evaluate_internal(hds, u, E, G, H);
-		if (G != null && G instanceof MTJGradient) {
-			System.out.print("|G|: " + ((MTJGradient)G).getG().norm(Norm.Two) + " - ");
-			if (E != null) {
-				System.out.println(E.get());
-			} else {
-				System.out.println(" ");
-			}
-		}
-		if (G != null && G instanceof TaoGradient) {
-			System.out.print("|G|: " + ((TaoGradient)G).getG().norm(NormType.NORM_FROBENIUS) + " - ");
-			if (E != null) {
-				System.out.println(E.get());
-			} else {
-				System.out.println(" ");
-			}
-		}
+//		if (G != null && G instanceof MTJGradient) {
+//			System.out.print("|G|: " + ((MTJGradient)G).getG().norm(Norm.Two) + " - ");
+//			if (E != null) {
+//				System.out.println(E.get());
+//			} else {
+//				System.out.println(" ");
+//			}
+//		}
+//		if (G != null && G instanceof TaoGradient) {
+//			System.out.print("|G|: " + ((TaoGradient)G).getG().norm(NormType.NORM_FROBENIUS) + " - ");
+//			if (E != null) {
+//				System.out.println(E.get());
+//			} else {
+//				System.out.println(" ");
+//			}
+//		}
 	};
 	
 	public <
@@ -451,8 +448,8 @@ public class SphericalFunctional <
 		if (E != null) {
 			E.add(- αi*ui - αj*uj - αk*uk);
 			E.add(βi*λi + βj*λj + βk*λk);
-			E.add(+ lob(αi) + lob(αj) + lob(αk) + lob(βi) + lob(βj) + lob(βk));
-			E.add(+ lob(0.5 * (PI - αi - αj - αk)));
+			E.add(+ Л(αi) + Л(αj) + Л(αk) + Л(βi) + Л(βj) + Л(βk));
+			E.add(+ Л(0.5 * (PI - αi - αj - αk)));
 			E.add(-initialEnergy.getInitialEnergy(f));
 		}
 		if (alpha != null) {
@@ -531,6 +528,10 @@ public class SphericalFunctional <
 	}
 	public boolean isReduced() {
 		return reduced;
+	}
+	
+	public double getLogScale() {
+		return logScale;
 	}
 	
 }

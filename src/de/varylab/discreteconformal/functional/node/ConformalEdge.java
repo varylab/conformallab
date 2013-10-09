@@ -10,7 +10,8 @@ public class ConformalEdge <
 
     protected double
     	lambda = 1.0,
-    	alpha = 0.0;
+    	alpha = 0.0,
+    	phi = Math.PI;
 	protected Integer
 		solverIndex = -1;
 	
@@ -24,7 +25,6 @@ public class ConformalEdge <
 	public double getLambda() {
 		return lambda;
 	}
-	
 	public void setLambda(double lambda) {
 		this.lambda = lambda;
 	}
@@ -32,9 +32,15 @@ public class ConformalEdge <
 	public double getAlpha() {
 		return alpha;
 	}
-
 	public void setAlpha(double alpha) {
 		this.alpha = alpha;
+	}
+	
+	public double getPhi() {
+		return phi;
+	}
+	public void setPhi(double phi) {
+		this.phi = phi;
 	}
 	
 	@Override

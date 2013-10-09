@@ -1,7 +1,7 @@
 package de.varylab.discreteconformal.functional;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
-import static de.varylab.discreteconformal.functional.Clausen.lob;
+import static de.varylab.discreteconformal.functional.Clausen.Л;
 import static java.lang.Math.PI;
 import static java.lang.Math.atan2;
 import static java.lang.Math.exp;
@@ -346,8 +346,8 @@ public class HyperbolicCircularHolesFunctional <
 			βk = 0.5 * (PI - αi - αj + αk);
 		if (E != null) {
 			E.add(βi*λjk + βj*λki + βk*λij);
-			E.add(+ lob(αi) + lob(αj) + lob(αk) + lob(βi) + lob(βj) + lob(βk));
-			E.add(+ lob(0.5 * (PI - αi - αj - αk)));
+			E.add(+ Л(αi) + Л(αj) + Л(αk) + Л(βi) + Л(βj) + Л(βk));
+			E.add(+ Л(0.5 * (PI - αi - αj - αk)));
 			E.add(-0.5 * PI * (λjk + λki + λij));
 			E.add(-initialEnergy.getInitialEnergy(f));
 		}

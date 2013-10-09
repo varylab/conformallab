@@ -30,6 +30,10 @@ public interface FunctionalAdapters {
 		public double getTheta(V v);
 	}
 	
+	public static interface Phi <E extends Edge<?, E, ?>> {
+		public double getPhi(E e);
+	}
+	
 	public static interface InitialEnergy <F extends Face<?, ?, F>> {
 		public double getInitialEnergy(F f);
 	}

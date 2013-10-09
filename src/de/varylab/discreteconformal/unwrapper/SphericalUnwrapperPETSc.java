@@ -7,6 +7,7 @@ import no.uib.cipr.matrix.Vector;
 import cern.colt.Arrays;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
+import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -56,18 +57,19 @@ public class SphericalUnwrapperPETSc implements Unwrapper {
 		int n = app.getDomainDimension(); 
 		Vec u = new Vec(n);
 		// set variable lambda start values
-//		boolean hasCircularEdges = false;
+		boolean hasCircularEdges = false;
 //		for (CoEdge e : surface.getPositiveEdges()) {
 //			if (e.getSolverIndex() >= 0) {
 //				u.setValue(e.getSolverIndex(), e.getLambda(), InsertMode.INSERT_VALUES);
 //				hasCircularEdges = true;
 //			}
 //		}
+		u.set(-5.0);
 		app.setInitialSolutionVec(u);
-//		if (!hasCircularEdges) {
-//			Mat H = app.getHessianTemplate();
-//			app.setHessianMat(H, H);
-//		}
+		if (!hasCircularEdges) {
+			Mat H = app.getHessianTemplate();
+			app.setHessianMat(H, H);
+		}
 		
 //		Vec G = new Vec(n);
 //		app.computeGradient(u, G);
@@ -90,6 +92,7 @@ public class SphericalUnwrapperPETSc implements Unwrapper {
 		} else {
 			System.out.println(optimizer.getSolutionStatus());
 		}
+		u = app.getScaledSolutionVec();
 		double[] uVec = u.getArray();
 		u.restoreArray();
 		return uVec;
@@ -124,6 +127,5 @@ public class SphericalUnwrapperPETSc implements Unwrapper {
 	public CoVertex getLayoutRoot() {
 		return layoutRoot;
 	}
-	
 	
 }

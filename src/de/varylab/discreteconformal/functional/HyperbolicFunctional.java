@@ -1,7 +1,7 @@
 package de.varylab.discreteconformal.functional;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
-import static de.varylab.discreteconformal.functional.Clausen.lob;
+import static de.varylab.discreteconformal.functional.Clausen.Л;
 import static java.lang.Math.PI;
 import static java.lang.Math.atan2;
 import static java.lang.Math.exp;
@@ -282,8 +282,8 @@ public class HyperbolicFunctional <
 		if (E != null) {
 			E.add(- αi*ui - αj*uj - αk*uk);
 			E.add(βi*lambda.getLambda(ejk) + βj*lambda.getLambda(eki) + βk*lambda.getLambda(eij));
-			E.add(+ lob(αi) + lob(αj) + lob(αk) + lob(βi) + lob(βj) + lob(βk));
-			E.add(+ lob(0.5 * (PI - αi - αj - αk)));
+			E.add(+ Л(αi) + Л(αj) + Л(αk) + Л(βi) + Л(βj) + Л(βk));
+			E.add(+ Л(0.5 * (PI - αi - αj - αk)));
 			E.add(-initialEnergy.getInitialEnergy(f));
 		}
 		if (alpha != null) {

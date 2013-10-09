@@ -11,6 +11,7 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CPhi;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 import de.varylab.mtjoptimization.Optimizable;
@@ -21,6 +22,8 @@ public class CEuclideanOptimizable implements Optimizable {
 		hds = null;
 	private CTheta
 		theta = new CTheta();
+	private CPhi
+		phi = new CPhi();
 	private CVariable
 		variable = new CVariable();
 	private CLambda
@@ -30,7 +33,7 @@ public class CEuclideanOptimizable implements Optimizable {
 	private CAlpha
 		alpha = new CAlpha();
 	private EuclideanNewFunctional<CoVertex, CoEdge, CoFace>
-		functional = new EuclideanNewFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+		functional = new EuclideanNewFunctional<CoVertex, CoEdge, CoFace>(variable, theta, phi, lambda, alpha, energy);
 
 	public CEuclideanOptimizable(CoHDS hds) {
 		this.hds = hds;

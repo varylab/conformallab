@@ -19,6 +19,7 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.io.HalfedgeIO;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.varylab.discreteconformal.functional.EuclideanNewFunctional;
+import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CPhi;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -42,6 +43,8 @@ public class EuclideanLayoutTest {
 		converter = new ConverterJR2Heds();
 	private CTheta
 		theta = new CTheta();
+	private CPhi
+		phi = new CPhi();
 	private CVariable
 		variable = new CVariable();
 	private CLambda
@@ -69,7 +72,7 @@ public class EuclideanLayoutTest {
 		hds01.normalizeCoordinates();
 		hdsCat = (CoHDS)HalfedgeIO.readHDS(getClass().getResourceAsStream("cathead.heml"));
 
-		fun = new EuclideanNewFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+		fun = new EuclideanNewFunctional<CoVertex, CoEdge, CoFace>(variable, theta, phi, lambda, alpha, energy);
 	}
 
 	@Test

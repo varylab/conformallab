@@ -1,7 +1,7 @@
 package de.varylab.discreteconformal.functional;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
-import static de.varylab.discreteconformal.functional.Clausen.lob;
+import static de.varylab.discreteconformal.functional.Clausen.Л;
 import static java.lang.Math.PI;
 import static java.lang.Math.atan2;
 import static java.lang.Math.exp;
@@ -257,7 +257,7 @@ public class EuclideanFunctional <
 		}
 		if (E != null) {
 			E.add(a1*x23 + a2*x31 + a3*x12);
-			E.add(lob(a1) + lob(a2) + lob(a3));
+			E.add(Л(a1) + Л(a2) + Л(a3));
 			E.add(- PI * umean - initialEnergy.getInitialEnergy(f));
 		}
 		alpha.setAlpha(e1, a2);

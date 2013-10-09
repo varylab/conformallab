@@ -1,7 +1,7 @@
 package de.varylab.discreteconformal.functional;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
-import static de.varylab.discreteconformal.functional.Clausen.lob;
+import static de.varylab.discreteconformal.functional.Clausen.Л;
 import static java.lang.Math.PI;
 import static java.lang.Math.atan2;
 import static java.lang.Math.exp;
@@ -312,7 +312,7 @@ public class EuclideanCircularHolesFunctional <
 		}
 		if (E != null) {
 			E.add(a1*λt2 + a2*λt3 + a3*λt1);
-			E.add(2*lob(a1) + 2*lob(a2) + 2*lob(a3));
+			E.add(2*Л(a1) + 2*Л(a2) + 2*Л(a3));
 			E.add(- PI * (λt1 + λt2 + λt3) / 2);
 			E.add(- initialEnergy.getInitialEnergy(f));
 		}

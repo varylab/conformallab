@@ -3,8 +3,10 @@ package de.varylab.discreteconformal.functional.hds;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Lambda;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Phi;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Theta;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
+import de.varylab.discreteconformal.heds.CoEdge;
 
 
 public abstract class MyConformalAdapters {
@@ -56,6 +58,13 @@ public abstract class MyConformalAdapters {
 		@Override
 		public double getTheta(MyConformalVertex v) {
 			return v.getTheta();
+		}
+	}
+	
+	public static class CPhi implements Phi<CoEdge> {
+		@Override
+		public double getPhi(CoEdge e) {
+			return e.getPhi();
 		}
 	}
 	

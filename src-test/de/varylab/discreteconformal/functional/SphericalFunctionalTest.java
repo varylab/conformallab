@@ -109,6 +109,20 @@ public class SphericalFunctionalTest extends FunctionalTest<CoVertex, CoEdge, Co
 		testHessian();
 	}
 	
+	@Override
+	@Test
+	public void testGradient() throws Exception {
+		functional.setReduced(false);
+		super.testGradient();
+	}
+	
+	@Override
+	@Test
+	public void testHessian() throws Exception {
+		functional.setReduced(false);
+		super.testHessian();
+	}
+	
 	
 	@Test
 	public void testCriticalPoint() throws Exception {

@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.ConformalAdapterSet;
+import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CPhi;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -36,6 +37,8 @@ public class EuclideanNewConvergenceTest  {
 
 	private CTheta
 		theta = new CTheta();
+	private CPhi
+		phi = new CPhi();
 	private CVariable
 		variable = new CVariable();
 	private CLambda
@@ -45,7 +48,7 @@ public class EuclideanNewConvergenceTest  {
 	private CInitialEnergy
 		energy = new CInitialEnergy();
 	public EuclideanNewFunctional<CoVertex, CoEdge, CoFace>
-		functional = new EuclideanNewFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+		functional = new EuclideanNewFunctional<CoVertex, CoEdge, CoFace>(variable, theta, phi, lambda, alpha, energy);
 	
 	@Test
 	public void testEuclideanConvergence() {

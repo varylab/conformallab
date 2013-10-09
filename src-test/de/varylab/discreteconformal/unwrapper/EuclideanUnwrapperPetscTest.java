@@ -133,10 +133,10 @@ public class EuclideanUnwrapperPetscTest {
 		cTo.ifs2heds(ifs, hds, a);
 		
 		Map<Integer, Double> bdMap = new HashMap<Integer, Double>();
-//		bdMap.put(476, PI / 2);
-//		bdMap.put(445, PI / 2);
-//		bdMap.put(601, PI / 2);
-//		bdMap.put(574, PI / 2);
+		bdMap.put(476, PI / 2);
+		bdMap.put(445, PI / 2);
+		bdMap.put(601, PI / 2);
+		bdMap.put(574, PI / 2);
 		EuclideanUnwrapperPETSc.unwrap(ifs, 514, bdMap, null);
 		
 		DataList texCoords = ifs.getVertexAttributes(Attribute.TEXTURE_COORDINATES);

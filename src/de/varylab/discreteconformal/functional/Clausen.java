@@ -20,7 +20,12 @@ public class Clausen {
 	
 	private Clausen() {}
 	
-	public static double lob(double x) {
+	/**
+	 * Milnor's Lobachevsky function Л
+	 * @param x
+	 * @return
+	 */
+	public static double Л(double x) {
 		x %= PI; x = x > 0 ? x : x + PI;
 		return Clausen.clausen2(2*x)/2;
 	}

@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
+import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
@@ -40,7 +41,6 @@ public class CSphericalApplication extends TaoApplication implements
 
 	public CSphericalApplication(CoHDS hds) {
 		this.hds = hds;
-		functional.setReduced(true);
 	}
 	
 	public ConformalFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
@@ -80,5 +80,18 @@ public class CSphericalApplication extends TaoApplication implements
 		return H;
 	}
 	
+	public void setReducedFunctional(boolean reduced) {
+		functional.setReduced(reduced);
+	}
+	
+	
+	public Vec getScaledSolutionVec() {
+		Vec solution = getSolutionVec();
+		Vec scaled = solution.duplicate();
+		for (int i = 0; i < scaled.getSize(); i++) {
+			scaled.setValue(i, solution.getValue(i) + functional.getLogScale(), InsertMode.INSERT_VALUES);
+		}
+		return scaled;
+	}
 	
 }

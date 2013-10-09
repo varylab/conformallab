@@ -13,6 +13,7 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
+import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CPhi;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -30,6 +31,8 @@ public class EuclideanNewFunctionalTest extends FunctionalTest<CoVertex, CoEdge,
 
 	private CTheta
 		theta = new CTheta();
+	private CPhi
+		phi = new CPhi();	
 	private CVariable
 		variable = new CVariable();
 	private CLambda
@@ -39,7 +42,7 @@ public class EuclideanNewFunctionalTest extends FunctionalTest<CoVertex, CoEdge,
 	private CInitialEnergy
 		energy = new CInitialEnergy();
 	public EuclideanNewFunctional<CoVertex, CoEdge, CoFace>
-		functional = new EuclideanNewFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+		functional = new EuclideanNewFunctional<CoVertex, CoEdge, CoFace>(variable, theta, phi, lambda, alpha, energy);
 	
 	@Override
 	public void init() {
@@ -68,12 +71,13 @@ public class EuclideanNewFunctionalTest extends FunctionalTest<CoVertex, CoEdge,
 			CoEdge e3 = e2.getNextEdge();
 			CustomEdgeInfo info = new CustomEdgeInfo();
 			info.circularHoleEdge = true;
-			e1.info = info;
-			e2.info = info;
-			e3.info = info;
-			e1.getOppositeEdge().info = info;
-			e2.getOppositeEdge().info = info;
-			e3.getOppositeEdge().info = info;
+			e1.info = new CustomEdgeInfo(info);
+			e2.info = new CustomEdgeInfo(info);
+			e3.info = new CustomEdgeInfo(info);
+			e1.getOppositeEdge().info = e1.info;
+			e2.getOppositeEdge().info = e2.info;
+			e3.getOppositeEdge().info = e3.info;
+//			e1.info.phi = Math.PI - 0.3; // one with a modified opposite angle sum
 			break;
 		}
 		
