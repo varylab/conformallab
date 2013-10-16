@@ -16,7 +16,7 @@
 	<target name="build bindings">
 		<xjc 
 			destdir="${src}"
-			removeOldOutput="yes"	
+			removeOldOutput="yes"
 		>
 			<schema dir="${src-xsd}" includes="*.xsd"/>
 			<binding dir="${src-xsd}" includes="*.xjb"/>

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema 
-	xmlns="http://www.w3.org/2001/XMLSchema" 
+<xs:schema 
+	xmlns:xs="http://www.w3.org/2001/XMLSchema" 
 	targetNamespace="http://www.varylab.com/conformallab/surface" 
 	xmlns:surface="http://www.varylab.com/conformallab/surface" 
 	xmlns:types="http://www.varylab.com/conformallab/types"
 	elementFormDefault="qualified"
 >
-	<import namespace="http://www.varylab.com/conformallab/types" schemaLocation="types.xsd"/>
+	<xs:import namespace="http://www.varylab.com/conformallab/types" schemaLocation="types.xsd"/>
 
-	<element name="Surface" type="surface:Surface"/>
+	<xs:element name="Surface" type="surface:Surface"/>
 
-	<complexType name="Surface">
-		<choice>
-			<element name="SchottkyData" type="types:SchottkyData"/>
-		</choice>
-	</complexType>
+	<xs:complexType name="Surface">
+		<xs:choice>
+			<xs:element name="SchottkyData" type="types:SchottkyData"/>
+		</xs:choice>
+	</xs:complexType>
 
-</schema>
+</xs:schema>

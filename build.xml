@@ -16,6 +16,7 @@
 	</tstamp>
 	<property name="vendor" value="Stefan Sechelmann"/>
 	<property name="src" value="src"/>
+	<property name="src-data" value="src-data"/>
 	<property name="build" value="build"/>
 	<property name="release" value="release/${date}"/>
 
@@ -50,6 +51,7 @@
 			<compilerarg value="-Xlint:deprecation"/>
 			<compilerarg value="-Xlint:unchecked"/>
 			<src path="${src}"/>
+			<src path="${src-data}"/>
 			<classpath refid="classpath"/>
 		</javac>
 		<copy todir="${build}">

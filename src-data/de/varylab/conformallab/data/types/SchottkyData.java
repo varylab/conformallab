@@ -1,8 +1,8 @@
 //
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
-// \u00c4nderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.10.16 um 01:18:19 PM CEST 
+// Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
+// Generiert: 2013.10.16 um 05:25:04 PM CEST 
 //
 
 
@@ -17,7 +17,7 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse f\u00fcr SchottkyData complex type.
+ * <p>Java-Klasse für SchottkyData complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
@@ -37,26 +37,26 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "SchottkyData", propOrder = {
-    "schottkyGenerator"
+    "generators"
 })
 public class SchottkyData {
 
     @XmlElement(name = "SchottkyGenerator", required = true)
-    protected List<SchottkyGenerator> schottkyGenerator;
+    protected List<SchottkyGenerator> generators;
 
     /**
-     * Gets the value of the schottkyGenerator property.
+     * Gets the value of the generators property.
      * 
      * <p>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the schottkyGenerator property.
+     * This is why there is not a <CODE>set</CODE> method for the generators property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
      * <pre>
-     *    getSchottkyGenerator().add(newItem);
+     *    getGenerators().add(newItem);
      * </pre>
      * 
      * 
@@ -66,11 +66,11 @@ public class SchottkyData {
      * 
      * 
      */
-    public List<SchottkyGenerator> getSchottkyGenerator() {
-        if (schottkyGenerator == null) {
-            schottkyGenerator = new ArrayList<SchottkyGenerator>();
+    public List<SchottkyGenerator> getGenerators() {
+        if (generators == null) {
+            generators = new ArrayList<SchottkyGenerator>();
         }
-        return this.schottkyGenerator;
+        return this.generators;
     }
 
 }

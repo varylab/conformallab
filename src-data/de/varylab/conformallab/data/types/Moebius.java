@@ -1,8 +1,8 @@
 //
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
-// \u00c4nderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.10.16 um 01:18:19 PM CEST 
+// Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
+// Generiert: 2013.10.16 um 05:25:04 PM CEST 
 //
 
 
@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse f\u00fcr Moebius complex type.
+ * <p>Java-Klasse für Moebius complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
@@ -23,10 +23,10 @@ import javax.xml.bind.annotation.XmlType;
  * &lt;complexType name="Moebius">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;attribute name="a" type="{http://www.w3.org/2001/XMLSchema}double" />
- *       &lt;attribute name="b" type="{http://www.w3.org/2001/XMLSchema}double" />
- *       &lt;attribute name="c" type="{http://www.w3.org/2001/XMLSchema}double" />
- *       &lt;attribute name="d" type="{http://www.w3.org/2001/XMLSchema}double" />
+ *       &lt;attribute name="a" use="required" type="{http://www.w3.org/2001/XMLSchema}double" />
+ *       &lt;attribute name="b" use="required" type="{http://www.w3.org/2001/XMLSchema}double" />
+ *       &lt;attribute name="c" use="required" type="{http://www.w3.org/2001/XMLSchema}double" />
+ *       &lt;attribute name="d" use="required" type="{http://www.w3.org/2001/XMLSchema}double" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -38,108 +38,76 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "Moebius")
 public class Moebius {
 
-    @XmlAttribute(name = "a")
-    protected Double a;
-    @XmlAttribute(name = "b")
-    protected Double b;
-    @XmlAttribute(name = "c")
-    protected Double c;
-    @XmlAttribute(name = "d")
-    protected Double d;
+    @XmlAttribute(name = "a", required = true)
+    protected double a;
+    @XmlAttribute(name = "b", required = true)
+    protected double b;
+    @XmlAttribute(name = "c", required = true)
+    protected double c;
+    @XmlAttribute(name = "d", required = true)
+    protected double d;
 
     /**
      * Ruft den Wert der a-Eigenschaft ab.
      * 
-     * @return
-     *     possible object is
-     *     {@link Double }
-     *     
      */
-    public Double getA() {
+    public double getA() {
         return a;
     }
 
     /**
      * Legt den Wert der a-Eigenschaft fest.
      * 
-     * @param value
-     *     allowed object is
-     *     {@link Double }
-     *     
      */
-    public void setA(Double value) {
+    public void setA(double value) {
         this.a = value;
     }
 
     /**
      * Ruft den Wert der b-Eigenschaft ab.
      * 
-     * @return
-     *     possible object is
-     *     {@link Double }
-     *     
      */
-    public Double getB() {
+    public double getB() {
         return b;
     }
 
     /**
      * Legt den Wert der b-Eigenschaft fest.
      * 
-     * @param value
-     *     allowed object is
-     *     {@link Double }
-     *     
      */
-    public void setB(Double value) {
+    public void setB(double value) {
         this.b = value;
     }
 
     /**
      * Ruft den Wert der c-Eigenschaft ab.
      * 
-     * @return
-     *     possible object is
-     *     {@link Double }
-     *     
      */
-    public Double getC() {
+    public double getC() {
         return c;
     }
 
     /**
      * Legt den Wert der c-Eigenschaft fest.
      * 
-     * @param value
-     *     allowed object is
-     *     {@link Double }
-     *     
      */
-    public void setC(Double value) {
+    public void setC(double value) {
         this.c = value;
     }
 
     /**
      * Ruft den Wert der d-Eigenschaft ab.
      * 
-     * @return
-     *     possible object is
-     *     {@link Double }
-     *     
      */
-    public Double getD() {
+    public double getD() {
         return d;
     }
 
     /**
      * Legt den Wert der d-Eigenschaft fest.
      * 
-     * @param value
-     *     allowed object is
-     *     {@link Double }
-     *     
      */
-    public void setD(Double value) {
+    public void setD(double value) {
         this.d = value;
     }
 

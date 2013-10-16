@@ -1,8 +1,8 @@
 //
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
-// \u00c4nderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.10.16 um 01:18:19 PM CEST 
+// Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
+// Generiert: 2013.10.16 um 05:25:04 PM CEST 
 //
 
 
@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse f\u00fcr Complex complex type.
+ * <p>Java-Klasse für Complex complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
@@ -23,8 +23,8 @@ import javax.xml.bind.annotation.XmlType;
  * &lt;complexType name="Complex">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;attribute name="x" type="{http://www.w3.org/2001/XMLSchema}double" />
- *       &lt;attribute name="y" type="{http://www.w3.org/2001/XMLSchema}double" />
+ *       &lt;attribute name="re" use="required" type="{http://www.w3.org/2001/XMLSchema}double" />
+ *       &lt;attribute name="im" use="required" type="{http://www.w3.org/2001/XMLSchema}double" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -36,57 +36,41 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "Complex")
 public class Complex {
 
-    @XmlAttribute(name = "x")
-    protected Double x;
-    @XmlAttribute(name = "y")
-    protected Double y;
+    @XmlAttribute(name = "re", required = true)
+    protected double re;
+    @XmlAttribute(name = "im", required = true)
+    protected double im;
 
     /**
-     * Ruft den Wert der x-Eigenschaft ab.
+     * Ruft den Wert der re-Eigenschaft ab.
      * 
-     * @return
-     *     possible object is
-     *     {@link Double }
-     *     
      */
-    public Double getX() {
-        return x;
+    public double getRe() {
+        return re;
     }
 
     /**
-     * Legt den Wert der x-Eigenschaft fest.
+     * Legt den Wert der re-Eigenschaft fest.
      * 
-     * @param value
-     *     allowed object is
-     *     {@link Double }
-     *     
      */
-    public void setX(Double value) {
-        this.x = value;
+    public void setRe(double value) {
+        this.re = value;
     }
 
     /**
-     * Ruft den Wert der y-Eigenschaft ab.
+     * Ruft den Wert der im-Eigenschaft ab.
      * 
-     * @return
-     *     possible object is
-     *     {@link Double }
-     *     
      */
-    public Double getY() {
-        return y;
+    public double getIm() {
+        return im;
     }
 
     /**
-     * Legt den Wert der y-Eigenschaft fest.
+     * Legt den Wert der im-Eigenschaft fest.
      * 
-     * @param value
-     *     allowed object is
-     *     {@link Double }
-     *     
      */
-    public void setY(Double value) {
-        this.y = value;
+    public void setIm(double value) {
+        this.im = value;
     }
 
 }

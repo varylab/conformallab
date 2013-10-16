@@ -1,44 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema 
-	xmlns="http://www.w3.org/2001/XMLSchema" 
+<xs:schema 
+	xmlns:xs="http://www.w3.org/2001/XMLSchema" 
 	targetNamespace="http://www.varylab.com/conformallab/types"
 	xmlns:types="http://www.varylab.com/conformallab/types" 
 	elementFormDefault="qualified"
+	xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+    jxb:version="2.0"	
 >
-	<element name="SchottkyData" type="types:SchottkyData"/>
+	<xs:element name="SchottkyData" type="types:SchottkyData"/>
 
-	<complexType name="SchottkyData">
-		<sequence>
-			<element name="SchottkyGenerator" type="types:SchottkyGenerator" maxOccurs="unbounded"/>
-		</sequence>
-	</complexType>
+	<xs:complexType name="SchottkyData">
+		<xs:sequence>
+			<xs:element name="SchottkyGenerator" type="types:SchottkyGenerator" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
 
-	<complexType name="SchottkyGenerator">
-		<sequence>
-			<element name="A" type="types:Complex"/>
-			<element name="B" type="types:Complex"/>
-			<element name="Mu" type="types:Complex"/>
-			<element name="Circle" type="types:Circle"/>
-		</sequence>
-	</complexType>
+	<xs:complexType name="SchottkyGenerator">
+		<xs:sequence>
+			<xs:element name="A" type="types:Complex"/>
+			<xs:element name="B" type="types:Complex"/>
+			<xs:element name="Mu" type="types:Complex"/>
+			<xs:element name="Circle" type="types:Circle"/>
+		</xs:sequence>
+	</xs:complexType>
 
-	<complexType name="Complex">
-		<attribute name="x" type="double"/>
-		<attribute name="y" type="double"/>
-	</complexType>
+	<xs:complexType name="Complex">
+		<xs:attribute name="re" type="xs:double" use="required"/>
+		<xs:attribute name="im" type="xs:double" use="required"/>
+	</xs:complexType>
 
-	<complexType name="Circle">
-		<sequence>
-			<element name="Center" type="types:Complex"/>
-		</sequence>
-		<attribute name="radius" type="double"/>
-	</complexType>
+	<xs:complexType name="Circle">
+		<xs:sequence>
+			<xs:element name="Center" type="types:Complex"/>
+		</xs:sequence>
+		<xs:attribute name="radius" type="xs:double" use="required"/>
+	</xs:complexType>
 	
-	<complexType name="Moebius">
-		<attribute name="a" type="double"/>
-		<attribute name="b" type="double"/>
-		<attribute name="c" type="double"/>
-		<attribute name="d" type="double"/>
-	</complexType>
+	<xs:complexType name="Moebius">
+		<xs:attribute name="a" type="xs:double" use="required"/>
+		<xs:attribute name="b" type="xs:double" use="required"/>
+		<xs:attribute name="c" type="xs:double" use="required"/>
+		<xs:attribute name="d" type="xs:double" use="required"/>
+	</xs:complexType>
 
-</schema>
+</xs:schema>

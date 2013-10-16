@@ -1,8 +1,8 @@
 //
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
-// \u00c4nderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.10.16 um 01:18:19 PM CEST 
+// Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
+// Generiert: 2013.10.16 um 05:25:04 PM CEST 
 //
 
 
@@ -16,7 +16,7 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse f\u00fcr Circle complex type.
+ * <p>Java-Klasse für Circle complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
@@ -27,7 +27,7 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;sequence>
  *         &lt;element name="Center" type="{http://www.varylab.com/conformallab/types}Complex"/>
  *       &lt;/sequence>
- *       &lt;attribute name="radius" type="{http://www.w3.org/2001/XMLSchema}double" />
+ *       &lt;attribute name="radius" use="required" type="{http://www.w3.org/2001/XMLSchema}double" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -43,8 +43,8 @@ public class Circle {
 
     @XmlElement(name = "Center", required = true)
     protected Complex center;
-    @XmlAttribute(name = "radius")
-    protected Double radius;
+    @XmlAttribute(name = "radius", required = true)
+    protected double radius;
 
     /**
      * Ruft den Wert der center-Eigenschaft ab.
@@ -73,24 +73,16 @@ public class Circle {
     /**
      * Ruft den Wert der radius-Eigenschaft ab.
      * 
-     * @return
-     *     possible object is
-     *     {@link Double }
-     *     
      */
-    public Double getRadius() {
+    public double getRadius() {
         return radius;
     }
 
     /**
      * Legt den Wert der radius-Eigenschaft fest.
      * 
-     * @param value
-     *     allowed object is
-     *     {@link Double }
-     *     
      */
-    public void setRadius(Double value) {
+    public void setRadius(double value) {
         this.radius = value;
     }
 

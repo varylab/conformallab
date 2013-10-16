@@ -3,7 +3,7 @@ package de.varylab.discreteconformal.plugin.schottky;
 import de.jtem.mfc.field.Complex;
 import de.jtem.mfc.group.Moebius;
 
-class SchottkyGenerator {
+public class SchottkyGenerator {
 	
 	private Complex
 		A = new Complex(-1),

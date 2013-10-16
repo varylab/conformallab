@@ -1,0 +1,10 @@
+<SchottkyData xmlns="http://www.varylab.com/conformallab/types">
+	<SchottkyGenerator>
+		<A re="-1.0" im="2.0"/>
+		<B re="1.0" im="3.0"/>
+		<Mu re="0.05" im="0.0"/>
+		<Circle radius="0.5">
+			<Center re="-1.0" im="0.0"/>
+		</Circle>
+	</SchottkyGenerator>
+</SchottkyData>
