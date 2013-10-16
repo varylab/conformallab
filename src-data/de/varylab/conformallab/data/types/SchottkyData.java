@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // \u00c4nderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.10.10 um 12:59:01 PM CEST 
+// Generiert: 2013.10.16 um 01:18:19 PM CEST 
 //
 
 
@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="Generator" type="{http://www.varylab.com/conformallab/types}SchottkyGenerator" maxOccurs="unbounded"/>
+ *         &lt;element name="SchottkyGenerator" type="{http://www.varylab.com/conformallab/types}SchottkyGenerator" maxOccurs="unbounded"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -37,26 +37,26 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "SchottkyData", propOrder = {
-    "generator"
+    "schottkyGenerator"
 })
 public class SchottkyData {
 
-    @XmlElement(name = "Generator", required = true)
-    protected List<SchottkyGenerator> generator;
+    @XmlElement(name = "SchottkyGenerator", required = true)
+    protected List<SchottkyGenerator> schottkyGenerator;
 
     /**
-     * Gets the value of the generator property.
+     * Gets the value of the schottkyGenerator property.
      * 
      * <p>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the generator property.
+     * This is why there is not a <CODE>set</CODE> method for the schottkyGenerator property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
      * <pre>
-     *    getGenerator().add(newItem);
+     *    getSchottkyGenerator().add(newItem);
      * </pre>
      * 
      * 
@@ -66,11 +66,11 @@ public class SchottkyData {
      * 
      * 
      */
-    public List<SchottkyGenerator> getGenerator() {
-        if (generator == null) {
-            generator = new ArrayList<SchottkyGenerator>();
+    public List<SchottkyGenerator> getSchottkyGenerator() {
+        if (schottkyGenerator == null) {
+            schottkyGenerator = new ArrayList<SchottkyGenerator>();
         }
-        return this.generator;
+        return this.schottkyGenerator;
     }
 
 }

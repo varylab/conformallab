@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // \u00c4nderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.10.10 um 12:59:01 PM CEST 
+// Generiert: 2013.10.16 um 01:18:19 PM CEST 
 //
 
 
@@ -26,7 +26,8 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;sequence>
  *         &lt;element name="A" type="{http://www.varylab.com/conformallab/types}Complex"/>
  *         &lt;element name="B" type="{http://www.varylab.com/conformallab/types}Complex"/>
- *         &lt;element name="mu" type="{http://www.varylab.com/conformallab/types}Complex"/>
+ *         &lt;element name="Mu" type="{http://www.varylab.com/conformallab/types}Complex"/>
+ *         &lt;element name="Circle" type="{http://www.varylab.com/conformallab/types}Circle"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -39,7 +40,8 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "SchottkyGenerator", propOrder = {
     "a",
     "b",
-    "mu"
+    "mu",
+    "circle"
 })
 public class SchottkyGenerator {
 
@@ -47,8 +49,10 @@ public class SchottkyGenerator {
     protected Complex a;
     @XmlElement(name = "B", required = true)
     protected Complex b;
-    @XmlElement(required = true)
+    @XmlElement(name = "Mu", required = true)
     protected Complex mu;
+    @XmlElement(name = "Circle", required = true)
+    protected Circle circle;
 
     /**
      * Ruft den Wert der a-Eigenschaft ab.
@@ -120,6 +124,30 @@ public class SchottkyGenerator {
      */
     public void setMu(Complex value) {
         this.mu = value;
+    }
+
+    /**
+     * Ruft den Wert der circle-Eigenschaft ab.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Circle }
+     *     
+     */
+    public Circle getCircle() {
+        return circle;
+    }
+
+    /**
+     * Legt den Wert der circle-Eigenschaft fest.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Circle }
+     *     
+     */
+    public void setCircle(Circle value) {
+        this.circle = value;
     }
 
 }

@@ -127,8 +127,13 @@ public class ConformalLab implements Runnable {
 	}
 	
 	
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new ConformalLab());
+	public static void main(final String[] args) throws Exception {
+		if (args.length == 0) { // gui mode
+			EventQueue.invokeLater(new ConformalLab());
+		} else { // batch mode
+			ConformalLabBatch cl = new ConformalLabBatch();
+			cl.process(args);
+		}
 	} 
 
 }

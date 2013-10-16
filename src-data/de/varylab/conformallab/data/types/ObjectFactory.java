@@ -2,13 +2,16 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // \u00c4nderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.10.10 um 12:59:01 PM CEST 
+// Generiert: 2013.10.16 um 01:18:19 PM CEST 
 //
 
 
 package de.varylab.conformallab.data.types;
 
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.annotation.XmlElementDecl;
 import javax.xml.bind.annotation.XmlRegistry;
+import javax.xml.namespace.QName;
 
 
 /**
@@ -28,6 +31,7 @@ import javax.xml.bind.annotation.XmlRegistry;
 @XmlRegistry
 public class ObjectFactory {
 
+    private final static QName _SchottkyData_QNAME = new QName("http://www.varylab.com/conformallab/types", "SchottkyData");
 
     /**
      * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: de.varylab.conformallab.data.types
@@ -74,6 +78,15 @@ public class ObjectFactory {
      */
     public Complex createComplex() {
         return new Complex();
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link SchottkyData }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "SchottkyData")
+    public JAXBElement<SchottkyData> createSchottkyData(SchottkyData value) {
+        return new JAXBElement<SchottkyData>(_SchottkyData_QNAME, SchottkyData.class, null, value);
     }
 
 }

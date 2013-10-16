@@ -5,9 +5,11 @@
 	xmlns:types="http://www.varylab.com/conformallab/types" 
 	elementFormDefault="qualified"
 >
+	<element name="SchottkyData" type="types:SchottkyData"/>
+
 	<complexType name="SchottkyData">
 		<sequence>
-			<element name="Generator" type="types:SchottkyGenerator" maxOccurs="unbounded"/>
+			<element name="SchottkyGenerator" type="types:SchottkyGenerator" maxOccurs="unbounded"/>
 		</sequence>
 	</complexType>
 
@@ -15,7 +17,8 @@
 		<sequence>
 			<element name="A" type="types:Complex"/>
 			<element name="B" type="types:Complex"/>
-			<element name="mu" type="types:Complex"/>
+			<element name="Mu" type="types:Complex"/>
+			<element name="Circle" type="types:Circle"/>
 		</sequence>
 	</complexType>
 
