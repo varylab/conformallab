@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project name="Conformal Lab XML Data Structures" default="build bindings">
-
+	
+	<property name="src" value="src-data"/>
+	<property name="src-xsd" value="src-data/de/varylab/conformallab/data"/>
+	
 	<taskdef name="xjc" classname="com.sun.tools.xjc.XJCTask">
 		<classpath>
 			<fileset dir="etc/ant">
@@ -11,17 +14,14 @@
 	</taskdef>
 	
 	<target name="build bindings">
-		<property name="src-xsd" value="src/"/>
 		<xjc 
-			schema="${src}/rvldata.xsd" 
-			binding="${src}/rvldata.xjb"
-			destdir="src"
-			package="de.varylab.varylab.plugin.grasshopper.data.binding"
-			extension="false"
+			destdir="${src}"
+			removeOldOutput="yes"	
 		>
-			<produces dir="${src}/binding" includes="*"/>
+			<schema dir="${src-xsd}" includes="*.xsd"/>
+			<binding dir="${src-xsd}" includes="*.xjb"/>
+			<produces dir="${src-xsd}" includes="types/* surface/*"/>
 		</xjc>
-	
 	</target>
 	
 </project>
