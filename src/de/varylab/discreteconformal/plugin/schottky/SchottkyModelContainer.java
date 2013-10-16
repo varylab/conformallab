@@ -22,9 +22,17 @@ public class SchottkyModelContainer implements ModelContainer {
 	public List<SchottkyGenerator> getGenerators() {
 		return generators;
 	}
+	public void setGenerators(List<SchottkyGenerator> generators) {
+		this.generators = generators;
+		fireStateChanged(this);
+	}
 	
 	public Complex getBasePoint() {
 		return new Complex(basePoint.x, basePoint.y);
+	}
+	public void setBasePoint(Point2DDouble basePoint) {
+		this.basePoint = basePoint;
+		fireStateChanged(this);
 	}
 	
 	@Override
@@ -47,7 +55,7 @@ public class SchottkyModelContainer implements ModelContainer {
 			generators.remove(model);
 		}
 		if (modelType.equals("schottky base point")) {
-			throw new RuntimeException("base point cannot be removed");
+//			throw new RuntimeException("base point cannot be removed");
 		}
 		fireStateChanged(this);
 	}

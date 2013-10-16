@@ -1,28 +1,38 @@
 package de.varylab.discreteconformal.plugin.schottky;
 
+import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.WARNING_MESSAGE;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.AbstractTableModel;
@@ -83,6 +93,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		generatorScroller = new JScrollPane(generatorTable);
 	private Icon
 		removeIcon = ImageHook.getIcon("remove.png");
+	private JFileChooser
+		fileChooser = new JFileChooser(".");
 	
 	
 	public SchottkyPlugin() {
@@ -123,6 +135,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		shrinkPanel.add(generateButton, c1);
 		shrinkPanel.add(toFuchsianButton, c2);
 		shrinkPanel.add(spherialChecker, c2);
+		shrinkPanel.add(new JButton(new SaveSchottkyDataAction()), c1);
+		shrinkPanel.add(new JButton(new LoadSchottkyDataAction()), c2);
 
 		generateButton.addActionListener(this);
 		toFuchsianButton.addActionListener(this);
@@ -269,7 +283,78 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		
 	}
 	
+	
+	public class SaveSchottkyDataAction extends AbstractAction {
+		
+		private static final long serialVersionUID = 1L;
 
+		public SaveSchottkyDataAction() {
+			putValue(NAME, "Save");
+			putValue(SMALL_ICON, ImageHook.getIcon("disk.png"));
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			Window parent = SwingUtilities.getWindowAncestor(SchottkyPlugin.this.shrinkPanel);
+			int result = fileChooser.showSaveDialog(parent);
+			if (result != JFileChooser.APPROVE_OPTION) {
+				return;
+			}
+			File file = fileChooser.getSelectedFile();
+			List<SchottkyGenerator> data = schottkyModeller.getGenerators();
+			try {
+				OutputStream out = new FileOutputStream(file);
+				SchottkyIO.writeSchottkyData(data, out);
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(parent, e.getMessage(), "Error", ERROR_MESSAGE);
+			}
+		}
+		
+	}
+	
+	
+	public class LoadSchottkyDataAction extends AbstractAction {
+		
+		private static final long serialVersionUID = 1L;
+
+		public LoadSchottkyDataAction() {
+			putValue(NAME, "Load");
+			putValue(SMALL_ICON, ImageHook.getIcon("folder.png"));
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			Window parent = SwingUtilities.getWindowAncestor(SchottkyPlugin.this.shrinkPanel);
+			int result = fileChooser.showOpenDialog(parent);
+			if (result != JFileChooser.APPROVE_OPTION) {
+				return;
+			}
+			File file = fileChooser.getSelectedFile();
+			try {
+				InputStream in = new FileInputStream(file);
+				List<SchottkyGenerator> data = SchottkyIO.readSchottkyData(in);
+				schottkyModeller.setGenerators(data);
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(parent, e.getMessage(), "Error", ERROR_MESSAGE);
+			}
+		}
+		
+	}
+	
+	
+	@Override
+	public void storeStates(Controller c) throws Exception {
+		super.storeStates(c);
+		c.storeProperty(SchottkyPlugin.class, "fileChooserLocation", fileChooser.getCurrentDirectory().getAbsolutePath());
+	}
+
+	@Override
+	public void restoreStates(Controller c) throws Exception {
+		super.restoreStates(c);
+		File curDir = new File(c.getProperty(SchottkyPlugin.class, "fileChooserLocation", "."));
+		fileChooser.setCurrentDirectory(curDir);
+	}
+	
 	@Override
 	public void install(Controller c) throws Exception {
 		super.install(c);

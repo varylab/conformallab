@@ -2,49 +2,52 @@ package de.varylab.discreteconformal.plugin.schottky;
 
 import de.jtem.mfc.field.Complex;
 
-class SchottkyCircle {
+public class SchottkyCircle {
 	
 	private boolean 
 		orientation = true;
 	private Complex 
-		c = new Complex();
+		center = new Complex();
 	private double 
-		r = 1.0;
+		radius = 1.0;
+	
+	public SchottkyCircle() {
+	}
 	
 	public SchottkyCircle(SchottkyCircle c) {
-		this.c = new Complex(c.c);
+		this.center = new Complex(c.center);
 		this.orientation = c.orientation;
-		this.r = c.r;
+		this.radius = c.radius;
 	}
 	
 	public SchottkyCircle(Complex c, double r, boolean o) {
 		super();
-		this.c = c;
-		this.r = r;
+		this.center = c;
+		this.radius = r;
 		this.orientation = o;
 	}
 	
 	public boolean isInside(Complex z, double tol) {
-		Complex d = z.minus(c);
+		Complex d = z.minus(center);
 		if (orientation) {
-			return d.abs() < r + tol;
+			return d.abs() < radius + tol;
 		} else {
-			return d.abs() > r - tol;
+			return d.abs() > radius - tol;
 		}
 	}
 	
 	public Complex getCenter() {
-		return c;
+		return center;
 	}
 	public void setCenter(Complex c) {
-		this.c = c;
+		this.center = c;
 	}
 	
 	public double getRadius() {
-		return r;
+		return radius;
 	}
 	public void setRadius(double r) {
-		this.r = r;
+		this.radius = r;
 	}
 	
 	public boolean getOrientation() {
@@ -56,7 +59,7 @@ class SchottkyCircle {
 	
 	@Override
 	public String toString() {
-		return "Circle: " + c + " r=" + r + " o=" + orientation;
+		return "Circle: " + center + " r=" + radius + " o=" + orientation;
 	}
 	
 }
