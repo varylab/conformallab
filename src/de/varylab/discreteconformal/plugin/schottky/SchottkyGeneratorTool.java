@@ -33,12 +33,14 @@ public class SchottkyGeneratorTool extends ModellingTool2D implements ChangeList
 	public SchottkyGeneratorTool(SchottkyGenerator G) {
 		this();
 		this.generator = G;
+		updateFromModel();
 	}
 	
 	public SchottkyGeneratorTool(SchottkyGeneratorTool tool) {
 		this();
 		SchottkyGenerator G = tool.getModel();
 		generator = new SchottkyGenerator(G);
+		updateFromModel();
 	}
 	
 	public SchottkyGeneratorTool() {

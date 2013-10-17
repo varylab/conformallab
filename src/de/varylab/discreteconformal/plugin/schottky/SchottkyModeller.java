@@ -1,69 +1,84 @@
 package de.varylab.discreteconformal.plugin.schottky;
 
 import java.awt.GridLayout;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JFrame;
 
 import de.jtem.java2d.SceneComponent;
-import de.jtem.java2d.Viewer2D;
 import de.jtem.java2dx.modelling.ModellingTool2D;
 import de.jtem.java2dx.modelling.SimpleModeller2D;
 import de.jtem.mfc.field.Complex;
-import de.jtem.modelling.ActionTree;
 import de.jtem.modelling.Modeller;
+import de.jtem.modelling.ModellingTool;
 
 public class SchottkyModeller extends SimpleModeller2D {
 
-	private SchottkyModelContainer 
-		modelContainer = new SchottkyModelContainer();
+	private static final String
+		TEMPLATE_GENERATOR = "Generator";
 	
 	public SchottkyModeller() {
 		Modeller m = getModeller();
-		Viewer2D v = getViewer();
-		
-		// generator template
+		getModeller().setModelContainer(new SchottkyModelContainer());
+		m.clear();
 		ModellingTool2D generatorTemplate = new SchottkyGeneratorTool();
-		SceneComponent genScene = new SceneComponent();
-		m.addTemplate(generatorTemplate, genScene);
-		
-		m.setModelContainer(modelContainer);
-		v.setGridEnabled(true);
-		v.setTranslateToolEnabled(true);
-		v.setScaleToolEnabled(true);
-		ActionTree menu = m.getViewerMenu();
-//		menu.add(m.getFileMenu());
-//		menu.add(m.getEditMenu());
-//		menu.add(m.getInspectMenu());
-//		setActionTree(menu);
-		setActionTree(menu);
-		
-		m.addTool(new SchottkyCenterTool(), null);
-		m.addTool(new SchottkyGeneratorTool(), "Generator");
-		m.updateTools();
+		SceneComponent generatorScene = new SceneComponent();
+		m.addTemplate(generatorTemplate, generatorScene);
+		reset();
+		createDefaultData();
 	}
-
 	
 	public List<SchottkyGenerator> getGenerators() {
-		return modelContainer.getGenerators();
+		return getModelContainer().getGenerators();
 	}
 	
 	public void setGenerators(List<SchottkyGenerator> generators) {
-		modelContainer.setGenerators(generators);
-		getModeller().updateTools();
-		getViewer().repaint();
+		reset();
+		for (SchottkyGenerator s : generators) {
+			SchottkyGeneratorTool tool = new SchottkyGeneratorTool(s);
+			getModeller().addTool(tool, TEMPLATE_GENERATOR);
+		}
 	}
 	
+	public void reset() {
+		getModeller().clear();
+	}
+	
+	public void createDefaultData() {
+		Modeller m = getModeller();
+		m.addTool(new SchottkyCenterTool(), null);
+		m.addTool(new SchottkyGeneratorTool(), TEMPLATE_GENERATOR);
+		m.updateTools();
+		setActionTree(m.getViewerMenu());
+	}
+	
+	private List<SchottkyGeneratorTool> getGeneratorTools() {
+		List<SchottkyGeneratorTool> tools = new LinkedList<SchottkyGeneratorTool>();
+		for (ModellingTool tool : getModeller().getToolToTemplate().keySet()) {
+			if (tool instanceof SchottkyGeneratorTool) {
+				SchottkyGeneratorTool st = (SchottkyGeneratorTool)tool;
+				tools.add(st);
+			}
+		}
+		return tools;
+	}
+	
+	
 	public void removeGenerator(SchottkyGenerator g) {
-		modelContainer.removeModel(g, "schottky generator");
+		for (SchottkyGeneratorTool tool : getGeneratorTools()) {
+			if (tool.getModel() == g) {
+				getModeller().removeTool(tool);
+			}
+		}
 	}
 	
 	public Complex getBasePoint() {
-		return modelContainer.getBasePoint();
+		return getModelContainer().getBasePoint();
 	}
 	
 	public SchottkyModelContainer getModelContainer() {
-		return modelContainer;
+		return (SchottkyModelContainer)getModeller().getModelContainer();
 	}
 	
 	

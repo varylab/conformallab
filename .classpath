@@ -32,12 +32,12 @@
 	<classpathentry kind="lib" path="lib/jtem/blas.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/jtem/halfedge.jar" sourcepath="/halfedge"/>
 	<classpathentry exported="true" kind="lib" path="lib/jtem/halfedgetools.jar" sourcepath="/halfedgetools"/>
-	<classpathentry kind="lib" path="lib/jtem/java2d.jar"/>
-	<classpathentry kind="lib" path="lib/jtem/java2dx.jar"/>
+	<classpathentry kind="lib" path="lib/jtem/java2d.jar" sourcepath="/java2d"/>
+	<classpathentry kind="lib" path="lib/jtem/java2dx.jar" sourcepath="/java2dx"/>
 	<classpathentry kind="lib" path="lib/jtem/jrworkspace.jar"/>
 	<classpathentry kind="lib" path="lib/jtem/jterm.jar"/>
 	<classpathentry kind="lib" path="lib/jtem/mfc.jar"/>
-	<classpathentry kind="lib" path="lib/jtem/modelling.jar"/>
+	<classpathentry kind="lib" path="lib/jtem/modelling.jar" sourcepath="/modelling"/>
 	<classpathentry kind="lib" path="lib/jtem/numericalMethods.jar"/>
 	<classpathentry kind="lib" path="lib/jtem/projgeom.jar"/>
 	<classpathentry kind="lib" path="lib/jtem/riemann.jar"/>

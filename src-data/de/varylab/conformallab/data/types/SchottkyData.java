@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.10.16 um 05:25:04 PM CEST 
+// Generiert: 2013.10.17 um 02:00:13 PM CEST 
 //
 
 
@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="SchottkyGenerator" type="{http://www.varylab.com/conformallab/types}SchottkyGenerator" maxOccurs="unbounded"/>
+ *         &lt;element name="SchottkyGenerator" type="{http://www.varylab.com/conformallab/types}SchottkyGenerator" maxOccurs="unbounded" minOccurs="0"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -41,7 +41,7 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class SchottkyData {
 
-    @XmlElement(name = "SchottkyGenerator", required = true)
+    @XmlElement(name = "SchottkyGenerator")
     protected List<SchottkyGenerator> generators;
 
     /**

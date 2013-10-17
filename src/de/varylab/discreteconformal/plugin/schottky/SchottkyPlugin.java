@@ -71,7 +71,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		viewer = schottkyModeller.getViewer();
 	private JButton
 		generateButton = new JButton("Generate Surface"),
-		toFuchsianButton = new JButton("Uniformize");
+		toFuchsianButton = new JButton("Uniformize"),
+		resetButton = new JButton("Reset");
 	private SpinnerNumberModel
 		randomSeedModel = new SpinnerNumberModel(0, 0, 10000000, 1),
 		equalizationIterationsModel = new SpinnerNumberModel(10, 0, 100, 1),
@@ -115,13 +116,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		shrinkPanel.add(scrollProtector, c2);
 		c2.weighty = 0.0;
 		generatorScroller.setPreferredSize(new Dimension(10, 100));
-		generatorTable.setFillsViewportHeight(true);
 		generatorScroller.setBorder(BorderFactory.createTitledBorder("Generators"));
-		generatorTable.setDefaultRenderer(JButton.class, new ButtonCellRenderer());
-		generatorTable.setDefaultEditor(JButton.class, new ButtonCellEditor());
-		generatorTable.getColumnModel().getColumn(0).setMaxWidth(40);
-		generatorTable.getColumnModel().getColumn(2).setMaxWidth(40);
-		generatorTable.setRowHeight(22);
+
 		shrinkPanel.add(generatorScroller, c2);
 		shrinkPanel.add(new JLabel("Random Seed"), c1);
 		shrinkPanel.add(randomSeedSpinner, c2);
@@ -136,10 +132,12 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		shrinkPanel.add(toFuchsianButton, c2);
 		shrinkPanel.add(spherialChecker, c2);
 		shrinkPanel.add(new JButton(new SaveSchottkyDataAction()), c1);
-		shrinkPanel.add(new JButton(new LoadSchottkyDataAction()), c2);
+		shrinkPanel.add(new JButton(new LoadSchottkyDataAction()), c1);
+		shrinkPanel.add(resetButton, c2);
 
 		generateButton.addActionListener(this);
 		toFuchsianButton.addActionListener(this);
+		resetButton.addActionListener(this);
 		
 		viewer.setScaleToolEnabled(true);
 		viewer.setTranslateToolEnabled(true);
@@ -148,56 +146,72 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		schottkyModeller.getModelContainer().addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent arg0) {
-				generatorTable.updateUI();
-				schottkyModeller.getModeller().updateTools();
-				schottkyModeller.getViewer().updateUI();
+				updateGeneratorTable();
 			}
 		});
+		updateGeneratorTable();
 	}
 	
 	
 	@Override
 	public void actionPerformed(ActionEvent event) {
-		List<SchottkyGenerator> pairs = schottkyModeller.getGenerators();
-		Complex root = schottkyModeller.getBasePoint();
-		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
-		Set<Set<CoEdge>> cycles = new HashSet<Set<CoEdge>>();
-		CoHDS hds = new CoHDS();
-		Map<CoVertex, double[]> mapCycleMap = new HashMap<CoVertex, double[]>();
-		
-		int randomSeed = randomSeedModel.getNumber().intValue();
-		int circleRes = cirleResModel.getNumber().intValue();
-		int numExtraPoints = extraPointsModel.getNumber().intValue();
-		int numSpreadIterations = equalizationIterationsModel.getNumber().intValue();
-		CoVertex rootVertex = SchottkyUtility.generateSurface(hds, pairs, root, lMap, cycles, mapCycleMap, randomSeed, circleRes, numExtraPoints, numSpreadIterations);
-		SchottkyLengthAdapter schottkyMetric = new SchottkyLengthAdapter(lMap);
-		
-		if (generateButton == event.getSource()) {
-			hif.set(hds);
-			hif.addLayerAdapter(schottkyMetric, false);
-			return;
+		if (resetButton == event.getSource()) {
+			schottkyModeller.reset();
+			schottkyModeller.createDefaultData();
 		}
-		if (toFuchsianButton == event.getSource()) {
-			AdapterSet aSet = hif.getAdapters();
-			aSet.add(schottkyMetric);
+		if (generateButton == event.getSource() || toFuchsianButton == event.getSource()) {
+			List<SchottkyGenerator> pairs = schottkyModeller.getGenerators();
+			Complex root = schottkyModeller.getBasePoint();
+			Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
+			Set<Set<CoEdge>> cycles = new HashSet<Set<CoEdge>>();
+			CoHDS hds = new CoHDS();
+			Map<CoVertex, double[]> mapCycleMap = new HashMap<CoVertex, double[]>();
 			
-			int genus = HalfEdgeUtils.getGenus(hds);
-			System.out.println("unwrapping surface of genus " + genus + "...");
-			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = null;
-			try {
-				boolean onSphere = spherialChecker.isSelected();
-				boolean cuFromRoot = cutFromRootChecker.isSelected();
-				cutInfo = SchottkyUtility.unwrapSchottkySurface(hds, cycles, mapCycleMap, rootVertex, aSet, onSphere, cuFromRoot);
-			} catch (Exception e) {
-				JOptionPane.showMessageDialog(shrinkPanel, e.getMessage(), "Optimizer error", WARNING_MESSAGE);
-				e.printStackTrace();
+			int randomSeed = randomSeedModel.getNumber().intValue();
+			int circleRes = cirleResModel.getNumber().intValue();
+			int numExtraPoints = extraPointsModel.getNumber().intValue();
+			int numSpreadIterations = equalizationIterationsModel.getNumber().intValue();
+			CoVertex rootVertex = SchottkyUtility.generateSurface(hds, pairs, root, lMap, cycles, mapCycleMap, randomSeed, circleRes, numExtraPoints, numSpreadIterations);
+			SchottkyLengthAdapter schottkyMetric = new SchottkyLengthAdapter(lMap);
+			
+			if (generateButton == event.getSource()) {
+				hif.set(hds);
+				hif.addLayerAdapter(schottkyMetric, false);
 				return;
 			}
-			dcp.createVisualization(hds, genus, cutInfo);
-			dcp.updateSurface();
-			dcp.updateDomainImage();
+			if (toFuchsianButton == event.getSource()) {
+				AdapterSet aSet = hif.getAdapters();
+				aSet.add(schottkyMetric);
+				
+				int genus = HalfEdgeUtils.getGenus(hds);
+				System.out.println("unwrapping surface of genus " + genus + "...");
+				CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = null;
+				try {
+					boolean onSphere = spherialChecker.isSelected();
+					boolean cuFromRoot = cutFromRootChecker.isSelected();
+					cutInfo = SchottkyUtility.unwrapSchottkySurface(hds, cycles, mapCycleMap, rootVertex, aSet, onSphere, cuFromRoot);
+				} catch (Exception e) {
+					JOptionPane.showMessageDialog(shrinkPanel, e.getMessage(), "Optimizer error", WARNING_MESSAGE);
+					e.printStackTrace();
+					return;
+				}
+				dcp.createVisualization(hds, genus, cutInfo);
+				dcp.updateSurface();
+				dcp.updateDomainImage();
+			}
 		}
 	}
+	
+	private void updateGeneratorTable() {
+		generatorTable.setFillsViewportHeight(true);
+		generatorTable.setModel(new GeneratorModel());
+		generatorTable.setDefaultRenderer(JButton.class, new ButtonCellRenderer());
+		generatorTable.setDefaultEditor(JButton.class, new ButtonCellEditor());
+		generatorTable.getColumnModel().getColumn(0).setMaxWidth(60);
+		generatorTable.getColumnModel().getColumn(2).setMaxWidth(60);
+		generatorTable.setRowHeight(22);
+	}
+	
 	
 	private class RemoveGeneratorButton extends JButton implements ActionListener {
 		
@@ -213,7 +227,6 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			schottkyModeller.removeGenerator(generator);
-			schottkyModeller.getModeller().updateTools();
 		}
 		
 	}
@@ -261,7 +274,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		public Object getValueAt(int row, int col) {
 			SchottkyGenerator g = schottkyModeller.getGenerators().get(row);
 			switch (col) {
-			case 0: return col;
+			case 0: return row;
 			case 1: return g.getMu().abs();
 			case 2: return new RemoveGeneratorButton(g);
 			default: return 0;
@@ -306,7 +319,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				OutputStream out = new FileOutputStream(file);
 				SchottkyIO.writeSchottkyData(data, out);
 			} catch (Exception e) {
-				JOptionPane.showMessageDialog(parent, e.getMessage(), "Error", ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(parent, e.toString(), "Error", ERROR_MESSAGE);
+				e.printStackTrace();
 			}
 		}
 		
@@ -335,7 +349,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				List<SchottkyGenerator> data = SchottkyIO.readSchottkyData(in);
 				schottkyModeller.setGenerators(data);
 			} catch (Exception e) {
-				JOptionPane.showMessageDialog(parent, e.getMessage(), "Error", ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(parent, e.toString(), "Error", ERROR_MESSAGE);
+				e.printStackTrace();
 			}
 		}
 		

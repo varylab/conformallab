@@ -11,7 +11,7 @@
 
 	<xs:complexType name="SchottkyData">
 		<xs:sequence>
-			<xs:element name="SchottkyGenerator" type="types:SchottkyGenerator" maxOccurs="unbounded"/>
+			<xs:element name="SchottkyGenerator" type="types:SchottkyGenerator" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
 
