@@ -6,9 +6,7 @@ import java.util.Set;
 
 import javax.swing.Icon;
 import javax.swing.JPopupMenu;
-
-import org.pushingpixels.substance.api.SubstanceLookAndFeel;
-import org.pushingpixels.substance.api.skin.GraphiteAquaSkin;
+import javax.swing.UIManager;
 
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
@@ -76,7 +74,8 @@ public class ConformalLab implements Runnable {
 	
 	public static void installLookAndFeel() {
 		try {
-			SubstanceLookAndFeel.setSkin(new GraphiteAquaSkin());
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//			SubstanceLookAndFeel.setSkin(new GraphiteAquaSkin());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

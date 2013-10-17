@@ -228,7 +228,7 @@ public class SchottkyUtility {
 		}
 		
 		// create triangulation and remove hole caps
-		ConvexHull.convexHull(hds, a, 1E-8);
+		ConvexHull.convexHull(hds, a, 1E-8, true);
 		List<ArrayList<CoVertex>> vertexCircles = new LinkedList<ArrayList<CoVertex>>();
 		vertexCircles.addAll(sourceVertexCircles);
 		vertexCircles.addAll(targetVertexCircles);

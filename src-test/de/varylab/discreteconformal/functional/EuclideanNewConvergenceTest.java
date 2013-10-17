@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.functional;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
-import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
@@ -79,7 +78,7 @@ public class EuclideanNewConvergenceTest  {
 			}
 		}
 		
-		Matrix H = new CompRowMatrix(n, n, makeNonZeros(hds));
+		Matrix H = new CompRowMatrix(n, n, functional.getNonZeroPattern(hds));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
 		optimizer.setSolver(Solver.BiCGstab);

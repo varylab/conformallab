@@ -4,7 +4,6 @@ import static de.jtem.halfedge.util.HalfEdgeUtils.boundaryEdges;
 import static de.jtem.halfedge.util.HalfEdgeUtils.boundaryVertices;
 import static de.varylab.discreteconformal.unwrapper.EuclideanLayout.calculateAngleSum;
 import static de.varylab.discreteconformal.util.PathUtility.getIncomingEdges;
-import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 
@@ -89,7 +88,7 @@ public class ConesUtility {
 			int n = opt.getDomainDimension();
 			Vector u = new DenseVector(n);
 			Vector G = new DenseVector(n);
-			Matrix H = new CompRowMatrix(n, n, makeNonZeros(hds));
+			Matrix H = new CompRowMatrix(n, n, opt.getFunctional().getNonZeroPattern(hds));
 			CG cg = new CG(u);
 			opt.evaluate(u, G, H);
 			try {

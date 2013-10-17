@@ -49,7 +49,7 @@ public class SurfaceCurveUtilityTest {
 	}
 	
 	public void unwrapSurface() throws Exception {
-		unwrapper.setGradientTolerance(1E-4);
+		unwrapper.setGradientTolerance(1E-5);
 		unwrapper.setMaxIterations(200);
 		unwrapper.unwrap(lawson, 2, a);
 	}
@@ -67,7 +67,7 @@ public class SurfaceCurveUtilityTest {
 	@Test
 	public void testCreateSurfaceCurves() throws Exception {
 		CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, lawson, a, 0, 0.0, true, true);
-		Assert.assertEquals("Surface Curve Edge Number", 614, curves.numEdges() / 2);
+		Assert.assertEquals("Surface Curve Edge Number", 612, curves.numEdges() / 2);
 	}
 	
 }

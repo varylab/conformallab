@@ -49,7 +49,7 @@ public class HyperbolicLayout {
 		int mcSamples
 	) {
 		// deterministic random numbers
-		Random rnd = new Random();
+		Random rnd = new Random(0);
 		rnd.setSeed(hds.numVertices());
 		
 		Set<CoVertex> boundary = new TreeSet<CoVertex>(new NodeIndexComparator<CoVertex>());
@@ -63,7 +63,7 @@ public class HyperbolicLayout {
 		LengthMapWeightAdapter wa = new LengthMapWeightAdapter(lMap);
 		Map<CoVertex, Double> sMap = new HashMap<CoVertex, Double>();
 		
-		Set<CoVertex> mcSet = new HashSet<CoVertex>();
+		Set<CoVertex> mcSet = new HashSet<CoVertex>();// TreeSet<CoVertex>(new NodeIndexComparator<CoVertex>());
 		for (int i = 0; i < Math.min(mcSamples, hds.numVertices()); i++) {
 			int sampleIndex = rnd.nextInt(hds.numVertices());
 			CoVertex sampleVertex = hds.getVertex(sampleIndex);
@@ -131,7 +131,15 @@ public class HyperbolicLayout {
 		} else {
 			v1 = guessRootVertex(hds, lMap, 200);
 		}
-		final CoEdge e1 = v1.getIncomingEdge();
+		System.out.println("Leyout root is " + v1.getIndex());
+		
+		// get a deterministic first edge
+		CoEdge e1 = v1.getIncomingEdge();
+		for (CoEdge e : HalfEdgeUtils.incomingEdges(v1)) {
+			if (e.getIndex() < e1.getIndex()) {
+				e1 = e;
+			}
+		}
 		final CoEdge e0 = e1.getOppositeEdge();
 		final CoVertex v2 = e0.getTargetVertex();
 		// queued data

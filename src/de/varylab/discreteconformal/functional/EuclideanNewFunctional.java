@@ -1,6 +1,5 @@
 package de.varylab.discreteconformal.functional;
 
-import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.varylab.discreteconformal.functional.Clausen.Л;
 import static java.lang.Math.PI;
 import static java.lang.Math.atan2;
@@ -8,13 +7,17 @@ import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
 
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Energy;
 import de.jtem.halfedgetools.functional.Gradient;
@@ -433,72 +436,73 @@ public class EuclideanNewFunctional <
 	public <
 		HDS extends HalfEdgeDataStructure<V,E,F>
 	> int[][] getNonZeroPattern(HDS hds) {
-		int n = getDimension(hds);
-		int[][] nz = new int[n][];
+		int n = 0;
 		for (V v : hds.getVertices()) {
-			if (!var.isVariable(v)) {
-				continue;
-			}
-			int i = var.getVarIndex(v);
-			List<E> star = incomingEdges(v);
-			List<Integer> nzList = new LinkedList<Integer>();
-			nzList.add(var.getVarIndex(v));
-			for (E e : star) {
-				V sv = e.getOppositeEdge().getTargetVertex();
-				if (var.isVariable(sv)) {
-					nzList.add(var.getVarIndex(sv));
-				}
-				if (var.isVariable(e)) {
-					nzList.add(var.getVarIndex(e));
-				}
-				if (var.isVariable(e.getPreviousEdge())) {
-					nzList.add(var.getVarIndex(e.getPreviousEdge()));
-				}
-			}
-			nz[i] = new int[nzList.size()];
-			int j = 0;
-			for (Integer index : nzList) {
-				nz[i][j++] = index;
+			if (var.isVariable(v)) {
+				n++;
 			}
 		}
 		for (E e : hds.getPositiveEdges()) {
-			if (!var.isVariable(e)) {
-				continue;
+			if (var.isVariable(e)) {
+				n++;
 			}
-			int i = var.getVarIndex(e);
-			List<Integer> nzList = new LinkedList<Integer>();
-			nzList.add(var.getVarIndex(e));
+		}
+		Map<Integer, TreeSet<Integer>> nonZeros = new HashMap<Integer, TreeSet<Integer>>();
+		for (int i = 0; i < n; i++) {
+			nonZeros.put(i, new TreeSet<Integer>());
+		}
+		for (V v : hds.getVertices()) {
+			if (!var.isVariable(v)) continue;
+			List<E> star = HalfEdgeUtils.incomingEdges(v);
+			Set<Integer> nonZeroIndices = nonZeros.get(var.getVarIndex(v));
+			nonZeroIndices.add(var.getVarIndex(v));
+			for (E e : star) {
+				V connectedVertex = e.getOppositeEdge().getTargetVertex();
+				if (var.isVariable(connectedVertex)) {
+					nonZeroIndices.add(var.getVarIndex(connectedVertex));
+				}
+				if (var.isVariable(e)) {
+					nonZeroIndices.add(var.getVarIndex(e));
+				}
+				if (var.isVariable(e.getPreviousEdge())) {
+					nonZeroIndices.add(var.getVarIndex(e.getPreviousEdge()));
+				}
+			}
+		}
+		for (E e : hds.getEdges()) {
+			if (!var.isVariable(e)) continue;
+			Set<Integer> nonZeroIndices = nonZeros.get(var.getVarIndex(e));
+			
+			// quadratic derivative
+			nonZeroIndices.add(var.getVarIndex(e));
+			
+			// mixed edge derivatives
 			if (var.isVariable(e.getNextEdge())) {
-				nzList.add(var.getVarIndex(e.getNextEdge()));
+				nonZeroIndices.add(var.getVarIndex(e.getNextEdge()));
 			}
 			if (var.isVariable(e.getPreviousEdge())) {
-				nzList.add(var.getVarIndex(e.getPreviousEdge()));
+				nonZeroIndices.add(var.getVarIndex(e.getPreviousEdge()));
 			}
-			if (var.isVariable(e.getOppositeEdge().getNextEdge())) {
-				nzList.add(var.getVarIndex(e.getOppositeEdge().getNextEdge()));
-			}
-			if (var.isVariable(e.getOppositeEdge().getPreviousEdge())) {
-				nzList.add(var.getVarIndex(e.getOppositeEdge().getPreviousEdge()));
-			}
-			if (var.isVariable(e.getStartVertex())) {
-				nzList.add(var.getVarIndex(e.getStartVertex()));
-			}
+			
+			// mixed vertex derivatives
 			if (var.isVariable(e.getTargetVertex())) {
-				nzList.add(var.getVarIndex(e.getTargetVertex()));
+				nonZeroIndices.add(var.getVarIndex(e.getTargetVertex()));
 			}
 			if (var.isVariable(e.getNextEdge().getTargetVertex())) {
-				nzList.add(var.getVarIndex(e.getNextEdge().getTargetVertex()));
+				nonZeroIndices.add(var.getVarIndex(e.getNextEdge().getTargetVertex()));
 			}
-			if (var.isVariable(e.getOppositeEdge().getNextEdge().getTargetVertex())) {
-				nzList.add(var.getVarIndex(e.getOppositeEdge().getNextEdge().getTargetVertex()));
-			}		
-			nz[i] = new int[nzList.size()];
-			int j = 0;
-			for (Integer index : nzList) {
-				nz[i][j++] = index;
+		}
+		int[][] nz = new int[n][];
+		for (int j = 0; j < n; j++) {
+			Set<Integer> nonZeroIndices = nonZeros.get(j);
+			nz[j] = new int[nonZeroIndices.size()];
+			int i = 0;
+			for (Integer index : nonZeroIndices) {
+				nz[j][i++] = index;
 			}
 		}
 		return nz;
+
 	}
 	
 	@Override

@@ -1,6 +1,5 @@
 package de.varylab.discreteconformal.functional;
 
-import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 import static java.lang.Math.PI;
 
 import java.util.Random;
@@ -85,7 +84,7 @@ public class SphericalConvergenceTest  {
 		CSphericalOptimizable opt = new CSphericalOptimizable(hds);
 		// optimization
 		DenseVector ux = new DenseVector(n);
-		Matrix H = new CompRowMatrix(n,n, makeNonZeros(hds));
+		Matrix H = new CompRowMatrix(n,n, functional.getNonZeroPattern(hds));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ShortGradientStepController());
 		optimizer.setSolver(Solver.CGS);

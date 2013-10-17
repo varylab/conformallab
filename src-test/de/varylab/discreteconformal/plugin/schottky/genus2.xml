@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SchottkyData xmlns="http://www.varylab.com/conformallab/types">
+    <SchottkyGenerator>
+        <A re="-0.6396396396396398" im="-0.7387387387387387"/>
+        <B re="1.0" im="0.0"/>
+        <Mu re="0.05" im="0.0"/>
+        <Circle radius="0.415539696558674">
+            <Center re="-0.6828142834731713" im="-0.676281783685483"/>
+        </Circle>
+    </SchottkyGenerator>
+    <SchottkyGenerator>
+        <A re="-1.2252252252252256" im="1.4504504504504503"/>
+        <B re="0.36036036036036023" im="1.1621621621621618"/>
+        <Mu re="0.05" im="0.0"/>
+        <Circle radius="0.332685052324149">
+            <Center re="-1.2323069491941783" im="1.425274452919022"/>
+        </Circle>
+    </SchottkyGenerator>
+</SchottkyData>

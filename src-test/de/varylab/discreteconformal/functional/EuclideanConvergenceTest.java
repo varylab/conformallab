@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.functional;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
-import static de.varylab.discreteconformal.util.SparseUtility.makeNonZeros;
 
 import java.util.Random;
 
@@ -71,7 +70,7 @@ public class EuclideanConvergenceTest  {
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
 		// optimization
 		DenseVector u = new DenseVector(n);
-		Matrix H = new CompRowMatrix(n,n,makeNonZeros(hds));
+		Matrix H = new CompRowMatrix(n, n, functional.getNonZeroPattern(hds));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
 		optimizer.setSolver(Solver.CGS);
