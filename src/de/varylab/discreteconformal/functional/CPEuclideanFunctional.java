@@ -36,9 +36,9 @@ import static java.lang.Math.cos;
 import static java.lang.Math.cosh;
 import static java.lang.Math.sin;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -105,7 +105,7 @@ public class CPEuclideanFunctional <
 		int[][] nz = new int[n][];
 		for (F f : hds.getFaces()) {
 			int i = f.getIndex();
-			List<Integer> nzList = new LinkedList<Integer>();
+			Set<Integer> nzList = new HashSet<Integer>();
 			nzList.add(i);
 			for (E e : HalfEdgeUtils.boundaryEdges(f)) {
 				F neighbourFace = e.getRightFace();

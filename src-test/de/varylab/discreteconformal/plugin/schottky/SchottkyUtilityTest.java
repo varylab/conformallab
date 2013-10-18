@@ -2,7 +2,7 @@ package de.varylab.discreteconformal.plugin.schottky;
 
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,7 +34,7 @@ public class SchottkyUtilityTest {
 		List<SchottkyGenerator> data = SchottkyIO.readSchottkyData(dataIn);
 		CoHDS hds = new CoHDS();
 		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
-		Set<Set<CoEdge>> cycles = new HashSet<Set<CoEdge>>();
+		List<Set<CoEdge>> cycles = new LinkedList<Set<CoEdge>>();
 		Map<CoVertex, double[]> mapCycleMap = new HashMap<CoVertex, double[]>();
 		Complex rootPos = new Complex(0, 0);
 		SchottkyUtility.generateSurface(hds, data, rootPos, lMap, cycles, mapCycleMap, 0, 10, 10, 10);
@@ -48,10 +48,10 @@ public class SchottkyUtilityTest {
 		List<SchottkyGenerator> data = SchottkyIO.readSchottkyData(dataIn);
 		CoHDS hds = new CoHDS();
 		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
-		Set<Set<CoEdge>> cycles = new HashSet<Set<CoEdge>>();
+		List<Set<CoEdge>> cycles = new LinkedList<Set<CoEdge>>();
 		Map<CoVertex, double[]> mapCycleMap = new HashMap<CoVertex, double[]>();
 		Complex rootPos = new Complex(0, 0);
-		CoVertex root = SchottkyUtility.generateSurface(hds, data, rootPos, lMap, cycles, mapCycleMap, 0, 4, 1, 0);
+		CoVertex root = SchottkyUtility.generateSurface(hds, data, rootPos, lMap, cycles, mapCycleMap, 0, 4, 0, 0);
 		SchottkyLengthAdapter schottkyMetric = new SchottkyLengthAdapter(lMap);
 		AdapterSet aSet = new ConformalAdapterSet();
 		aSet.add(schottkyMetric);
@@ -61,7 +61,6 @@ public class SchottkyUtilityTest {
 		TreeSet<CoVertex> boundary = new TreeSet<CoVertex>(new NodeIndexComparator<CoVertex>());
 		boundary.addAll(HalfEdgeUtils.boundaryVertices(hds));
 		System.out.println(boundary);
-		
 	}
 	
 	

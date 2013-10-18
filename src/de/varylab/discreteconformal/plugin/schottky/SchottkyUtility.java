@@ -70,7 +70,8 @@ public class SchottkyUtility {
 				}
 				Set<CoVertex> otherVertices = PathUtility.getVerticesOnPath(allOtherCycles);
 				
-				Set<CoVertex> inter = new HashSet<CoVertex>(cycle1);
+				Set<CoVertex> inter = new TreeSet<CoVertex>(new NodeIndexComparator<CoVertex>());
+				inter.addAll(cycle1);
 				inter.retainAll(otherVertices);
 				if (!inter.isEmpty()) {
 					throw new RuntimeException("paths cannot intersect!");
@@ -127,7 +128,7 @@ public class SchottkyUtility {
 		List<SchottkyGenerator> pairs, 
 		Complex rootPos, 
 		Map<CoEdge, Double> lMap, 
-		Set<Set<CoEdge>> cyclesReturn, 
+		List<Set<CoEdge>> cyclesReturn, 
 		Map<CoVertex, double[]> mapCycleMap,
 		long randomSeed,
 		int circleResolution,
@@ -440,7 +441,7 @@ public class SchottkyUtility {
 
 	public static CuttingInfo<CoVertex, CoEdge, CoFace> unwrapSchottkySurface(
 		CoHDS hds, 
-		Set<Set<CoEdge>> cycles,
+		List<Set<CoEdge>> cycles,
 		Map<CoVertex, double[]> mapCycleMap, 
 		CoVertex rootVertex,
 		AdapterSet aSet,

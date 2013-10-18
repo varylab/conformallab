@@ -24,6 +24,13 @@
 		</copy>
 	</target>
 	
+	<target name="halfedge">
+		<ant antfile="build.xml" dir="../halfedge" target="release"/>
+		<copy todir="lib/jtem">
+			<fileset dir="../halfedge/release" includes="halfedge.jar"/>
+		</copy>
+	</target>	
+	
 	<target name="jrworkspace">
 		<ant antfile="build.xml" dir="../jrworkspace" target="jrworkspace"/>
 		<copy todir="lib/jtem">

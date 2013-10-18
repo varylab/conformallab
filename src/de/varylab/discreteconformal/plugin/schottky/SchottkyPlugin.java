@@ -15,7 +15,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -163,7 +163,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			List<SchottkyGenerator> pairs = schottkyModeller.getGenerators();
 			Complex root = schottkyModeller.getBasePoint();
 			Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
-			Set<Set<CoEdge>> cycles = new HashSet<Set<CoEdge>>();
+			List<Set<CoEdge>> cycles = new LinkedList<Set<CoEdge>>();
 			CoHDS hds = new CoHDS();
 			Map<CoVertex, double[]> mapCycleMap = new HashMap<CoVertex, double[]>();
 			

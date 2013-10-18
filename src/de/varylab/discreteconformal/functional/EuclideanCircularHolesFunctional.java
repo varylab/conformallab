@@ -8,8 +8,9 @@ import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
 
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -394,7 +395,7 @@ public class EuclideanCircularHolesFunctional <
 			}
 			int i = var.getVarIndex(v);
 			List<E> star = incomingEdges(v);
-			List<Integer> nzList = new LinkedList<Integer>();
+			Set<Integer> nzList = new HashSet<Integer>();
 			nzList.add(var.getVarIndex(v));
 			for (E e : star) {
 				V sv = e.getOppositeEdge().getTargetVertex();
