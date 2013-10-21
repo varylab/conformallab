@@ -89,7 +89,7 @@ public class ConformalLab implements Runnable {
 		JRHalfedgeViewer.initHalfedgeFronted();
 		JRViewer v = new JRViewer();
 		installLookAndFeel();
-		Icon splashImage = ImageHook.getIcon("splash01.png");
+		Icon splashImage = ImageHook.getIcon("splash02.png");
 		JRealitySplashScreen splash = new JRealitySplashScreen(splashImage);
 		splash.setVisible(true);
 		v.setSplashScreen(splash);
