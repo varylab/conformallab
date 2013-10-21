@@ -44,12 +44,12 @@ public class VisualizationUtilityTest {
 		CoHDS hds = new CoHDS();
 		CoVertex v1 = hds.addNewVertex();
 		v1.T = new double[]{0.25, 0.25, 0, 1};
-		boolean check1 = VisualizationUtility.isInsideFundamentalPolygon(v1, p);
+		boolean check1 = VisualizationUtility.isInsideFundamentalPolygon(v1, p, 0);
 		Assert.assertTrue("v1 is inside", check1);
 		
 		CoVertex v2 = hds.addNewVertex();
 		v2.T = new double[]{-0.25, 0.25, 0, 1};
-		boolean check2 = VisualizationUtility.isInsideFundamentalPolygon(v2, p);
+		boolean check2 = VisualizationUtility.isInsideFundamentalPolygon(v2, p, 0);
 		Assert.assertFalse("v2 is outside", check2);
 	}
 	

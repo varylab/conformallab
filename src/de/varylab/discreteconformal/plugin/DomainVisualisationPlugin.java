@@ -151,7 +151,9 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		String oldViewerProperty = System.getProperty(SystemProperties.VIEWER); 
 		System.setProperty(SystemProperties.VIEWER, SystemProperties.VIEWER_DEFAULT_JOGL);
 		JRViewer domainViewer = new JRViewer();
-		System.setProperty(SystemProperties.VIEWER, oldViewerProperty);
+		if (oldViewerProperty != null) {
+			System.setProperty(SystemProperties.VIEWER, oldViewerProperty);
+		}
 		
 		domainViewer.addBasicUI();
 		domainViewer.addContentSupport(ContentType.Raw);

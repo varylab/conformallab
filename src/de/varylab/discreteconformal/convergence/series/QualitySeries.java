@@ -1,7 +1,5 @@
 package de.varylab.discreteconformal.convergence.series;
 
-import org.junit.Test;
-
 import de.varylab.discreteconformal.convergence.ConvergenceSeries;
 
 public class QualitySeries {
@@ -140,7 +138,6 @@ public class QualitySeries {
 	
 /** random configuration **/
 	
-	@Test
 	public void randomMultiRatioExp1RandOpt() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Quality",
@@ -155,7 +152,6 @@ public class QualitySeries {
 			"--QM", "MeanMultiRatio"
 		);
 	}
-	@Test
 	public void randomMultiRatioExp1NoOpt() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Quality",

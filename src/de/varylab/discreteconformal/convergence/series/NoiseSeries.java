@@ -1,13 +1,10 @@
 package de.varylab.discreteconformal.convergence.series;
 
-import org.junit.Test;
-
 import de.varylab.discreteconformal.convergence.ConvergenceSeries;
 
 
 public class NoiseSeries {
 
-	@Test
 	public void icosahedron011011Reference() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Noise",

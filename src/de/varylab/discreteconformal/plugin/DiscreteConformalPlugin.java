@@ -245,7 +245,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		unwrapBtn = new JButton("Unwrap"),
 		spherizeButton = new JButton("Spherize"),
 		quantizeToQuads = new JButton("Quads"),
-		reorderFacesButton = new JButton("Faces To Fundamental Domain");
+		reorderFacesButton = new JButton("Move Faces");
 	private ColorChooseJButton
 		triangulationColorButton = new ColorChooseJButton(Color.GRAY, true),
 		polygonColorButton = new ColorChooseJButton(Color.RED, true),
@@ -266,7 +266,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		customPhiModel = new SpinnerNumberModel(180.0, 0.0, 360.0, 1.0),
 		numConesModel = new SpinnerNumberModel(0, 0, 100, 1),
 		toleranceExpModel = new SpinnerNumberModel(-8, -30, -1, 1),
-		maxIterationsModel = new SpinnerNumberModel(150, 1, 10000, 1);
+		maxIterationsModel = new SpinnerNumberModel(150, 1, 10000, 1),
+		reorderFacesCountModel = new SpinnerNumberModel(100, 1, 100000, 100);
 	private JSpinner
 		coverMaxDistanceSpinner = new JSpinner(coverMaxDisctanceModel),
 		coverElementsSpinner = new JSpinner(coverElementsModel),
@@ -274,7 +275,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		customPhiSpinner = new JSpinner(customPhiModel),
 		numConesSpinner = new JSpinner(numConesModel),
 		toleranceExpSpinner = new JSpinner(toleranceExpModel),
-		maxIterationsSpinner = new JSpinner(maxIterationsModel);
+		maxIterationsSpinner = new JSpinner(maxIterationsModel),
+		reorderFacesCountSpinner = new JSpinner(reorderFacesCountModel);
 	private JCheckBox
 		expertChecker = new JCheckBox("Expert Mode"),
 		rescaleChecker = new JCheckBox("Rescale Geometry", true),
@@ -524,6 +526,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			modelPanel.setLayout(new GridBagLayout());
 			modelPanel.removeAll();
 			modelPanel.add(moveToCenterButton, c2);
+			modelPanel.add(reorderFacesCountSpinner, c1);
 			modelPanel.add(reorderFacesButton, c2);
 			modelPanel.setShrinked(true);
 			shrinkPanel.add(modelPanel, c2);
@@ -980,9 +983,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	
 	
 	private void reorderFaces() {
+		int numFaces = reorderFacesCountModel.getNumber().intValue();	
 		FundamentalPolygon p = getActiveFundamentalPoygon();
 		int signature = getActiveSignature();
-		VisualizationUtility.reglueOutsideFaces(surface, 100, p, cutInfo, signature);
+		VisualizationUtility.reglueOutsideFaces(surface, numFaces, p, cutInfo, signature);
 		updateSurface();
 		updateDomainImage();
 	}

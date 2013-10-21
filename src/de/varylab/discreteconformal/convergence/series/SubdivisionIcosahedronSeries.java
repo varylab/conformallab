@@ -1,7 +1,5 @@
 package de.varylab.discreteconformal.convergence.series;
 
-import org.junit.Test;
-
 import de.varylab.discreteconformal.convergence.ConvergenceSeries;
 
 public class SubdivisionIcosahedronSeries {
@@ -43,7 +41,6 @@ public class SubdivisionIcosahedronSeries {
 //	}
 	
 
-	@Test
 	public void icosahedron14711Rand() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Subdivision",
@@ -55,7 +52,6 @@ public class SubdivisionIcosahedronSeries {
 		);
 	}
 	
-	@Test
 	public void icosahedron15711() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Subdivision",
@@ -67,7 +63,6 @@ public class SubdivisionIcosahedronSeries {
 		);
 	}
 	
-	@Test
 	public void icosahedron13711() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Subdivision",

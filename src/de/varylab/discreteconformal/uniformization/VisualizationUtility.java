@@ -518,10 +518,11 @@ public class VisualizationUtility {
 					System.out.println(counter + " faces reglued");
 					return reglued;
 				}
+				if (reglued.contains(f)) continue;
 				if (HalfEdgeUtils.isInteriorFace(f)) continue;
 				if (!isFaceMovable(f)) continue;
-				if (!isOutsideFundamentalPolygon(f, p)) continue;
-				if (!isFaceMovedToFundamentalDomainByReglue(f, cutInfo, p, signature))continue;
+				if (!isOutsideFundamentalPolygon(f, p, 0)) continue;
+				if (!isFaceMovedToFundamentalDomainByReglue(f, cutInfo, p, 0)) continue;
 				try {
 					reglueFace(f, cutInfo, signature);
 				} catch (AssertionError e) {
@@ -720,21 +721,21 @@ public class VisualizationUtility {
 	}
 	
 
-	protected static boolean isOutsideFundamentalPolygon(CoFace f, FundamentalPolygon p) {
+	protected static boolean isOutsideFundamentalPolygon(CoFace f, FundamentalPolygon p, double tol) {
 		for (CoVertex v : HalfEdgeUtils.boundaryVertices(f)) {
-			if (isInsideFundamentalPolygon(v, p)) return false;
+			if (isInsideFundamentalPolygon(v, p, tol)) return false;
 		}
 		return true;
 	}
 	
-	protected static boolean isInsideFundamentalPolygon(CoVertex v, FundamentalPolygon p) {
+	protected static boolean isInsideFundamentalPolygon(CoVertex v, FundamentalPolygon p, double tol) {
 		double[] vt = P2.projectP3ToP2(null, v.T); 
 		for (FundamentalEdge e : p.getEdges()) {
 			double[] s = P2.projectP3ToP2(null, RnBig.toDouble(null, e.startPosition));
 			double[] t = P2.projectP3ToP2(null, RnBig.toDouble(null, e.nextEdge.startPosition));
 			double[] line = P2.lineFromPoints(null, s, t);
 			double dot = Rn.innerProduct(line, vt);
-			if (dot < 0) return false;
+			if (dot < tol) return false;
 		}
 		return true;
 	}
@@ -743,13 +744,13 @@ public class VisualizationUtility {
 		CoFace f, 
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo, 
 		FundamentalPolygon p, 
-		int signature
+		double tol
 	) {
 		for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
 			CoEdge pe = cutInfo.edgeCutMap.get(e);
 			if (pe != null) {
-				if (!isInsideFundamentalPolygon(pe.getStartVertex(), p)) return false;
-				if (!isInsideFundamentalPolygon(pe.getTargetVertex(), p)) return false;
+				if (!isInsideFundamentalPolygon(pe.getStartVertex(), p, tol)) return false;
+				if (!isInsideFundamentalPolygon(pe.getTargetVertex(), p, tol)) return false;
 			}
 		}
 		return true;

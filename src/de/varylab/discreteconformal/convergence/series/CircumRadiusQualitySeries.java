@@ -1,12 +1,9 @@
 package de.varylab.discreteconformal.convergence.series;
 
-import org.junit.Test;
-
 import de.varylab.discreteconformal.convergence.ConvergenceSeries;
 
 public class CircumRadiusQualitySeries {
 	
-	@Test
 	public void randomCircumCircle() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Quality",

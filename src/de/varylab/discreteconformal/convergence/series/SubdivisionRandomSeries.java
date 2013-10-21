@@ -1,7 +1,5 @@
 package de.varylab.discreteconformal.convergence.series;
 
-import org.junit.Test;
-
 import de.varylab.discreteconformal.convergence.ConvergenceSeries;
 
 public class SubdivisionRandomSeries {
@@ -44,7 +42,6 @@ public class SubdivisionRandomSeries {
 //	}
 	
 	
-	@Test
 	public void random02_extra4() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Subdivision",
@@ -57,7 +54,6 @@ public class SubdivisionRandomSeries {
 		);
 	}
 	
-	@Test
 	public void random03_extra4() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Subdivision",
@@ -70,7 +66,6 @@ public class SubdivisionRandomSeries {
 		);
 	}
 	
-	@Test
 	public void random04_extra4() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Subdivision",

@@ -1,7 +1,5 @@
 package de.varylab.discreteconformal.convergence.series;
 
-import org.junit.Test;
-
 import de.varylab.discreteconformal.convergence.ConvergenceSeries;
 
 public class RandomSeries {
@@ -22,7 +20,6 @@ public class RandomSeries {
 //		);
 //	}
 	
-	@Test
 	public void pointsMultiRatioExp10() throws Exception {
 		ConvergenceSeries.performConvergenceSeries(
 			"-M", "Random",
