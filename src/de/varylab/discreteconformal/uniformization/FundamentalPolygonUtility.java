@@ -1,6 +1,5 @@
 package de.varylab.discreteconformal.uniformization;
 
-import static de.jreality.math.Pn.HYPERBOLIC;
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 
 import java.math.BigDecimal;
@@ -559,7 +558,8 @@ public class FundamentalPolygonUtility {
 	 * @return
 	 */
 	public static FundamentalPolygon constructFundamentalPolygon(
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo,
+		int signature
 	) {
 		List<FundamentalEdge> edgeList = new ArrayList<FundamentalEdge>();
 		// find max valence branch
@@ -633,7 +633,7 @@ public class FundamentalPolygonUtility {
 					P2.projectP3ToP2(s2, actStartPoint), 
 					P2.projectP3ToP2(t1, lastTargetPoint), 
 					P2.projectP3ToP2(t2, actTargetPoint), 
-					HYPERBOLIC
+					signature
 				);
 				Matrix A = new Matrix(P2.imbedMatrixP2InP3(null, T));
 				
@@ -646,7 +646,7 @@ public class FundamentalPolygonUtility {
 					P2Big.projectP3ToP2(s2b, RnBig.toBig(null, actStartPoint)), 
 					P2Big.projectP3ToP2(t1b, RnBig.toBig(null, lastTargetPoint)), 
 					P2Big.projectP3ToP2(t2b, RnBig.toBig(null, actTargetPoint)), 
-					HYPERBOLIC,
+					signature,
 					FundamentalPolygonUtility.context
 				);
 				BigDecimal[] ABig = P2Big.imbedMatrixP2InP3(null, TBig);

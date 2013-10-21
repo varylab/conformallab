@@ -36,6 +36,9 @@ import de.jreality.scene.tool.Tool;
 import de.jreality.ui.AppearanceInspector;
 import de.jreality.util.SceneGraphUtility;
 import de.jreality.util.SystemProperties;
+import de.jtem.discretegroup.core.DiscreteGroup;
+import de.jtem.discretegroup.core.DiscreteGroupConstraint;
+import de.jtem.discretegroup.core.DiscreteGroupElement;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
 import de.jtem.halfedgetools.adapter.Adapter;
@@ -78,6 +81,9 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 	
 	private JPanel
 		viewerPanel = new JPanel();
+	
+	private SceneGraphComponent
+		copiesComponent = new SceneGraphComponent("Copies"); 
 
 	public DomainVisualisationPlugin() {
 		setInitialPosition(SHRINKER_TOP);
@@ -364,6 +370,33 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		copy.set(surface);
 		addCopyTool(copy);
 		copyTransformMap.put(copy, A);
+	}
+	
+	public void createCopies(DiscreteGroup G, final int numCopies) {
+		G.setDefaultFundamentalDomain(visHif.getActiveLayer().getGeometry());
+		DiscreteGroupConstraint constraint = new DiscreteGroupConstraint() {
+			@Override
+			public void update() {
+			}
+			@Override
+			public void setMaxNumberElements(int arg0) {
+			}
+			@Override
+			public int getMaxNumberElements() {
+				return numCopies;
+			}
+			@Override
+			public boolean acceptElement(DiscreteGroupElement s) {
+				return true;
+			}
+		};
+		G.setConstraint(constraint);
+		G.generateElements();
+		G.calculateGenerators();
+		visHif.removeTemporaryGeometry(copiesComponent);
+		copiesComponent = new SceneGraphComponent("Copies");
+		copiesComponent.addChild(G.getGeneratorRepresentations());
+		visHif.addTemporaryGeometry(copiesComponent);
 	}
 	
 	

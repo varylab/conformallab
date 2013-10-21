@@ -1,6 +1,8 @@
 package de.varylab.discreteconformal.plugin;
 
 import static de.jreality.math.MatrixBuilder.euclidean;
+import static de.jreality.math.Pn.EUCLIDEAN;
+import static de.jreality.math.Pn.HYPERBOLIC;
 import static de.jreality.scene.Appearance.DEFAULT;
 import static de.jreality.shader.CommonAttributes.DIFFUSE_COLOR;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
@@ -105,6 +107,7 @@ import de.jreality.ui.ColorChooseJButton.ColorChangedListener;
 import de.jreality.ui.TextureInspector;
 import de.jreality.ui.viewerapp.FileFilter;
 import de.jreality.util.NativePathUtility;
+import de.jtem.discretegroup.core.DiscreteGroup;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -245,7 +248,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		unwrapBtn = new JButton("Unwrap"),
 		spherizeButton = new JButton("Spherize"),
 		quantizeToQuads = new JButton("Quads"),
-		reorderFacesButton = new JButton("Move Faces");
+		reorderFacesButton = new JButton("Move Faces"),
+		createCopiesButton = new JButton("Create Copies");
 	private ColorChooseJButton
 		triangulationColorButton = new ColorChooseJButton(Color.GRAY, true),
 		polygonColorButton = new ColorChooseJButton(Color.RED, true),
@@ -267,7 +271,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		numConesModel = new SpinnerNumberModel(0, 0, 100, 1),
 		toleranceExpModel = new SpinnerNumberModel(-8, -30, -1, 1),
 		maxIterationsModel = new SpinnerNumberModel(150, 1, 10000, 1),
-		reorderFacesCountModel = new SpinnerNumberModel(100, 1, 100000, 100);
+		reorderFacesCountModel = new SpinnerNumberModel(100, 1, 100000, 100),
+		createCopiesModel = new SpinnerNumberModel(10, 1, 1000, 1);
 	private JSpinner
 		coverMaxDistanceSpinner = new JSpinner(coverMaxDisctanceModel),
 		coverElementsSpinner = new JSpinner(coverElementsModel),
@@ -276,7 +281,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		numConesSpinner = new JSpinner(numConesModel),
 		toleranceExpSpinner = new JSpinner(toleranceExpModel),
 		maxIterationsSpinner = new JSpinner(maxIterationsModel),
-		reorderFacesCountSpinner = new JSpinner(reorderFacesCountModel);
+		reorderFacesCountSpinner = new JSpinner(reorderFacesCountModel),
+		createCopiesSpinner = new JSpinner(createCopiesModel);
 	private JCheckBox
 		expertChecker = new JCheckBox("Expert Mode"),
 		rescaleChecker = new JCheckBox("Rescale Geometry", true),
@@ -405,6 +411,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		triangulationColorButton.addColorChangedListener(this);
 		spherizeButton.addActionListener(this);
 		reorderFacesButton.addActionListener(this);
+		createCopiesButton.addActionListener(this);
 		
 		unwrapBtn.addActionListener(this);
 		checkGaussBonnetBtn.addActionListener(this);
@@ -526,6 +533,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			modelPanel.setLayout(new GridBagLayout());
 			modelPanel.removeAll();
 			modelPanel.add(moveToCenterButton, c2);
+			modelPanel.add(createCopiesSpinner, c1);
+			modelPanel.add(createCopiesButton, c2);
 			modelPanel.add(reorderFacesCountSpinner, c1);
 			modelPanel.add(reorderFacesButton, c2);
 			modelPanel.setShrinked(true);
@@ -683,10 +692,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			pointRadiusAdapter.setContext(cutInfo);
 			pointColorAdapter.setContext(cutInfo);
 		}
-		if (genus > 1) {
+		if (genus > 0) {
+			int signature = genus == 1 ? EUCLIDEAN : HYPERBOLIC;
 			try {
 				System.out.println("Constructing fundamental cut polygon...");
-				cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo);
+				cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo, signature);
 				System.out.println(cuttedPolygon);
 				FundamentalVertex root = cuttedPolygon.getMaxValenceVertex();
 				System.out.println("Constructing minimal polygon...");
@@ -701,7 +711,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon, useDistanceToCanonicalize.isSelected());
 				System.out.println(canonicalPolygon);
 				canonicalPolygon.checkRelation();
-				metricErrorAdapter.setSignature(Pn.HYPERBOLIC);
+				metricErrorAdapter.setSignature(signature);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -979,6 +989,17 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		if (expertChecker == s) {
 			createLayout();
 		}
+		if (createCopiesButton == s) {
+			createCopies();
+		}
+	}
+	
+	private void createCopies() {
+		FundamentalPolygon p = getActiveFundamentalPoygon();
+		if (p == null) return;
+		int numCopies = createCopiesModel.getNumber().intValue();
+		DiscreteGroup g = p.getDiscreteGroup();
+		domainVisualisationPlugin.createCopies(g, numCopies);
 	}
 	
 	

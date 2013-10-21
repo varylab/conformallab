@@ -1,5 +1,7 @@
 package de.varylab.discreteconformal.uniformization;
 
+import static de.jreality.math.Pn.HYPERBOLIC;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +44,7 @@ public class SurfaceCurveUtilityTest {
 	
 	public void calculateFundamentalPoygon() {
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = unwrapper.getCutInfo();
-		FundamentalPolygon cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo);
+		FundamentalPolygon cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo, HYPERBOLIC);
 		FundamentalVertex root = cuttedPolygon.getMaxValenceVertex();
 		minimalPolygon = FundamentalPolygonUtility.minimize(cuttedPolygon, root);
 		System.out.println(minimalPolygon);
