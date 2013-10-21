@@ -30,6 +30,7 @@ import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.plugin.menu.BackgroundColor;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.SceneGraphPath;
+import de.jreality.scene.Transformation;
 import de.jreality.scene.event.AppearanceEvent;
 import de.jreality.scene.event.AppearanceListener;
 import de.jreality.scene.tool.Tool;
@@ -177,7 +178,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		domainViewer.getController().setRegisterSPIPlugins(false);
 		JFrame.setDefaultLookAndFeelDecorated(false);
 		JRootPane viewerRoot = domainViewer.startupLocal();
-		viewerRoot.setJMenuBar(null);
+//		viewerRoot.setJMenuBar(null);
 		viewerRoot.setPreferredSize(new Dimension(200, 400));
 		viewerPanel.add(viewerRoot);
 		mainHif = c.getPlugin(HalfedgeInterface.class);
@@ -392,10 +393,15 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		};
 		G.setConstraint(constraint);
 		G.generateElements();
-		G.calculateGenerators();
 		visHif.removeTemporaryGeometry(copiesComponent);
 		copiesComponent = new SceneGraphComponent("Copies");
-		copiesComponent.addChild(G.getGeneratorRepresentations());
+		for (DiscreteGroupElement s : G.getElementList()) {
+			SceneGraphComponent element = new SceneGraphComponent(s.getWord());
+			element.setGeometry(visHif.getActiveLayer().getGeometry());
+			Transformation T = new Transformation(s.getArray());
+			element.setTransformation(T);
+			copiesComponent.addChild(element);
+		}
 		visHif.addTemporaryGeometry(copiesComponent);
 	}
 	
