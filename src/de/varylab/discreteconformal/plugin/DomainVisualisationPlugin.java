@@ -35,6 +35,7 @@ import de.jreality.scene.event.AppearanceListener;
 import de.jreality.scene.tool.Tool;
 import de.jreality.ui.AppearanceInspector;
 import de.jreality.util.SceneGraphUtility;
+import de.jreality.util.SystemProperties;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
 import de.jtem.halfedgetools.adapter.Adapter;
@@ -75,8 +76,6 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 	private Map<HalfedgeLayer, Matrix>
 		copyTransformMap = new HashMap<HalfedgeLayer, Matrix>();
 	
-	private JRViewer
-		domainViewer = new JRViewer();
 	private JPanel
 		viewerPanel = new JPanel();
 
@@ -148,6 +147,12 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		conformalPlugin = c.getPlugin(DiscreteConformalPlugin.class);
 		conformalVisualizationPlugin = c.getPlugin(ConformalVisualizationPlugin.class);
 		viewerPanel.setLayout(new GridLayout());
+		// setup viewer, inject viewer system property
+		String oldViewerProperty = System.getProperty(SystemProperties.VIEWER); 
+		System.setProperty(SystemProperties.VIEWER, SystemProperties.VIEWER_DEFAULT_JOGL);
+		JRViewer domainViewer = new JRViewer();
+		System.setProperty(SystemProperties.VIEWER, oldViewerProperty);
+		
 		domainViewer.addBasicUI();
 		domainViewer.addContentSupport(ContentType.Raw);
 		domainViewer.addContentUI();
@@ -176,7 +181,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		mainHif.addSelectionListener(this);
 		visHif.addSelectionListener(this);
 		domainScene = domainViewer.getPlugin(Scene.class);
-		domainViewer.getPlugin(BackgroundColor.class).setColor("Transparent Black");
+		domainViewer.getPlugin(BackgroundColor.class).setColor("UI Background");
 		ViewToolBar toolBar = domainViewer.getPlugin(ViewToolBar.class);
 		toolBar.addSeparator(DomainVisualisationPlugin.class, 9999.0);
 		toolBar.addAction(DomainVisualisationPlugin.class, 10000.0, new UpdateAction());
