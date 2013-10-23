@@ -29,7 +29,9 @@ import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
+import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
+import de.jtem.halfedgetools.adapter.type.generic.BaryCenter3d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
@@ -167,10 +169,13 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		
 		// center
 		MatrixBuilder zeroBuilder = MatrixBuilder.hyperbolic();
-		int i0 = zeroBaryFace[0];
-		int i1 = zeroBaryFace[1];
+		int i0 = 0, i1 = 0;
+		if (zeroBaryFace != null) {
+			 i0 = zeroBaryFace[0];
+			 i1 = zeroBaryFace[1];			
+		}
 		double[][] allverts = ifs.getVertexAttributes(Attribute.COORDINATES).toDoubleArrayArray(null);
-		if (useExtraPoints) {
+		if (useExtraPoints && zeroBaryFace != null) {
 			zeroBuilder.translate(texArr[i0], P3.originP3);
 			System.err.println("unwrap center = "+Rn.toString(texArr[i0]));
 		}
@@ -201,13 +206,13 @@ public class CircleDomainUnwrapper implements Unwrapper {
 			double[] p = texArr[oneIndex].clone();	
 			SR.scale(1 / Pn.norm(p, Pn.EUCLIDEAN));
 			alpha = Math.atan2(p[1], p[0]);
-		} else if (useExtraPoints) {  // guarantee that f'(0) = 1
+		} else if (useExtraPoints && zeroBaryFace != null) {  // guarantee that f'(0) = 1
 			double[] coordDiff = Rn.subtract(null, allverts[i1], allverts[i0]);
 			double[] confDiff = Rn.subtract(null, texArr[i1], texArr[i0]);
 			double angle1 = Math.atan2(coordDiff[1], coordDiff[0]);
 			double angle2 = Math.atan2(confDiff[1], confDiff[0]);
 			alpha = angle2 - angle1;
-		} else {
+		} else if (zeroBaryWeights != null){
 			double[][] verts = new double[3][];
 			double[][] face = {texArr[i0], texArr[i1], texArr[zeroBaryFace[2]]};			
 			Pn.dehomogenize(face, face);
@@ -316,7 +321,7 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		meanLength /= numIncident;
 		Map<CoVertex, Double> uMap = new HashMap<CoVertex, Double>();
 		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
-			Double l = aSet.get(Length.class, e, Double.class);
+			double l = aSet.get(Length.class, e, Double.class);
 			double u = meanLength / l;
 			uMap.put(e.getStartVertex(), u);
 		}
@@ -324,7 +329,7 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
 			CoVertex v = e.getStartVertex();
 			for (CoEdge ee : HalfEdgeUtils.incomingEdges(v)) {
-				Double l = aSet.get(Length.class, ee, Double.class);
+				double l = aSet.get(Length.class, ee, Double.class);
 				CoVertex vs = ee.getStartVertex();
 				CoVertex vt = ee.getTargetVertex();
 				double us = uMap.containsKey(vs) ? uMap.get(vs) : 1.0;
