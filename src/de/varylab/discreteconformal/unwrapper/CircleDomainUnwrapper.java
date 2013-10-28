@@ -29,9 +29,7 @@ import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
-import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
-import de.jtem.halfedgetools.adapter.type.generic.BaryCenter3d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
@@ -128,9 +126,12 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		}
 	}
 	
+	public static void unwrap(IndexedFaceSet ifs, int oneIndex, int[] zeroBaryFace, double[] zeroBaryWeights, boolean usePoolarCoords) throws Exception {
+		unwrap(ifs, oneIndex, zeroBaryFace, zeroBaryWeights, usePoolarCoords, null);
+	}
 	
 	static boolean useExtraPoints = true;
-	public static void unwrap(IndexedFaceSet ifs, int oneIndex, int[] zeroBaryFace, double[] zeroBaryWeights, boolean usePoolarCoords) throws Exception {
+	public static void unwrap(IndexedFaceSet ifs, int oneIndex, int[] zeroBaryFace, double[] zeroBaryWeights, boolean usePoolarCoords, List<Integer> circularVerts) throws Exception {
 		IndexedFaceSetUtility.makeConsistentOrientation(ifs);
 		CoHDS hds = new CoHDS();
 		AdapterSet a = AdapterSet.createGenericAdapters();
@@ -145,6 +146,10 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		Map<CoVertex, Integer> indexMap = new HashMap<CoVertex, Integer>();
 		for (CoVertex v : hds.getVertices()) {
 			indexMap.put(v, v.getIndex());
+		}
+		
+		if (circularVerts != null) {
+			EuclideanUnwrapperPETSc.prepareCircularHoles(hds, circularVerts, a);
 		}
 		
 		// unwrap

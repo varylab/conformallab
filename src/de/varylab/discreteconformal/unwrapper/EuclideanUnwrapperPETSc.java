@@ -272,49 +272,51 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 			}
 		}
 		
-		// find circular edges
-		List<CoEdge> circularEdges = new LinkedList<CoEdge>();
-		
 		if (circularVerts != null) {
-			// find the boundary components associated to each vertex in the list of circular vertices
-			for (int vIndex : circularVerts) {
-				System.err.println("Processing circ vertex "+vIndex);
-				CoVertex v1 = hds.getVertex(vIndex);
-				List<CoEdge> edges = HalfEdgeUtils.incomingEdges(v1);
-				CoEdge bedge = null;
-				for (CoEdge e : edges)	{
-					System.err.println("Start vertex = "+e.getStartVertex().getIndex());
-					if (HalfEdgeUtils.isBoundaryEdge(e)) {
-						bedge = e;
-						break;
-					}
-				}
-				if (bedge == null)	{
-					throw new IllegalStateException("No boundary edge on vertex "+vIndex);
-				}
-				CoFace filler = HalfEdgeUtils.fillHole(bedge);
-				int n = circularEdges.size();
-				// weird error message when I try to assign the triangulateFace()  call to local variable!
-				circularEdges.addAll(Triangulator.triangulateByCuttingCorners(filler, a));
-				int m = circularEdges.size();
-				System.err.println("Added "+(m-n)+" edges");
-			}
-			for (CoEdge ce : circularEdges) {
-//				CoVertex v2 = hds.getVertex(eIndex[1]);
-//				CoEdge ce = HalfEdgeUtils.findEdgeBetweenVertices(v1, v2);
-//				if (ce == null) throw new RuntimeException("could not find circular edge between vertex " + v1 + " and " + v2);
-				CoEdge ceOpp = ce.getOppositeEdge(); 
-				ce.info = new CustomEdgeInfo();
-				ce.info.circularHoleEdge = true;
-				ceOpp.info = new CustomEdgeInfo();
-				ceOpp.info.circularHoleEdge = true;
-			}
+			prepareCircularHoles(hds, circularVerts, a);
 		}
 		
 		double[][] texArr = unwrap(layoutRoot, hds, a);
 		DataList newTexCoords = new DoubleArrayArray.Array(texArr);
 		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, null);
 		ifs.setVertexAttributes(Attribute.TEXTURE_COORDINATES, newTexCoords);
+	}
+
+	public static void prepareCircularHoles(CoHDS hds, List<Integer> circularVerts, AdapterSet a) {
+		// find the boundary components associated to each vertex in the list of circular vertices
+		List<CoEdge> circularEdges = new LinkedList<CoEdge>();
+		for (int vIndex : circularVerts) {
+			System.err.println("Processing circ vertex "+vIndex);
+			CoVertex v1 = hds.getVertex(vIndex);
+			List<CoEdge> edges = HalfEdgeUtils.incomingEdges(v1);
+			CoEdge bedge = null;
+			for (CoEdge e : edges)	{
+				System.err.println("Start vertex = "+e.getStartVertex().getIndex());
+				if (HalfEdgeUtils.isBoundaryEdge(e)) {
+					bedge = e;
+					break;
+				}
+			}
+			if (bedge == null)	{
+				throw new IllegalStateException("No boundary edge on vertex "+vIndex);
+			}
+			CoFace filler = HalfEdgeUtils.fillHole(bedge);
+			int n = circularEdges.size();
+			// weird error message when I try to assign the triangulateFace()  call to local variable!
+			circularEdges.addAll(Triangulator.triangulateByCuttingCorners(filler, a));
+			int m = circularEdges.size();
+			System.err.println("Added "+(m-n)+" edges");
+		}
+		for (CoEdge ce : circularEdges) {
+//				CoVertex v2 = hds.getVertex(eIndex[1]);
+//				CoEdge ce = HalfEdgeUtils.findEdgeBetweenVertices(v1, v2);
+//				if (ce == null) throw new RuntimeException("could not find circular edge between vertex " + v1 + " and " + v2);
+			CoEdge ceOpp = ce.getOppositeEdge(); 
+			ce.info = new CustomEdgeInfo();
+			ce.info.circularHoleEdge = true;
+			ceOpp.info = new CustomEdgeInfo();
+			ceOpp.info.circularHoleEdge = true;
+		}
 	}
 	
 	
