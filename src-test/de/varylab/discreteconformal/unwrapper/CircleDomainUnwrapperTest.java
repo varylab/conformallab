@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import de.jreality.math.Pn;
@@ -25,17 +26,35 @@ import de.varylab.discreteconformal.heds.CustomEdgeInfo;
 
 public class CircleDomainUnwrapperTest {
 
-	@Test
-	public void testUnwrap() throws Exception {
-		CoHDS hds = new CoHDS();
-		CoVertex v0 = hds.addNewVertex();
-		CoVertex v1 = hds.addNewVertex();
-		CoVertex v2 = hds.addNewVertex();
-		CoVertex v3 = hds.addNewVertex();
-		CoVertex v4 = hds.addNewVertex();
-		CoVertex v5 = hds.addNewVertex();
-		CoVertex v6 = hds.addNewVertex();
-		CoVertex v7 = hds.addNewVertex();
+	private CoHDS
+		hds = null;
+	private CoVertex
+		v0 = null,
+		v1 = null,
+		v2 = null,
+		v3 = null,
+		v4 = null,
+		v5 = null,
+		v6 = null,
+		v7 = null;
+	private CoFace
+		innerFace01 = null,
+		innerFace02 = null;
+	private AdapterSet 
+		a = new ConformalAdapterSet();
+	
+	
+	@Before
+	public void createDataStructure() {
+		hds = new CoHDS();
+		v0 = hds.addNewVertex();
+		v1 = hds.addNewVertex();
+		v2 = hds.addNewVertex();
+		v3 = hds.addNewVertex();
+		v4 = hds.addNewVertex();
+		v5 = hds.addNewVertex();
+		v6 = hds.addNewVertex();
+		v7 = hds.addNewVertex();
 		HalfEdgeUtils.constructFaceByVertices(hds, v0, v5, v4);
 		HalfEdgeUtils.constructFaceByVertices(hds, v0, v1, v5);
 		HalfEdgeUtils.constructFaceByVertices(hds, v1, v6, v5);
@@ -43,13 +62,12 @@ public class CircleDomainUnwrapperTest {
 		HalfEdgeUtils.constructFaceByVertices(hds, v2, v7, v6);
 		HalfEdgeUtils.constructFaceByVertices(hds, v2, v3, v7);
 		
-		HalfEdgeUtils.constructFaceByVertices(hds, v4, v5, v6);
-		HalfEdgeUtils.constructFaceByVertices(hds, v6, v7, v4);
+		innerFace01 = HalfEdgeUtils.constructFaceByVertices(hds, v4, v5, v6).getLeftFace();
+		innerFace02 = HalfEdgeUtils.constructFaceByVertices(hds, v6, v7, v4).getLeftFace();
 		
 		HalfEdgeUtils.constructFaceByVertices(hds, v3, v4, v7);
 		HalfEdgeUtils.constructFaceByVertices(hds, v0, v4, v3);
 		
-		AdapterSet a = new ConformalAdapterSet();
 		a.set(Position.class, v0, new double[]{0,0});
 		 // make it a rectangle
 		a.set(Position.class, v1, new double[]{3,0});
@@ -59,20 +77,22 @@ public class CircleDomainUnwrapperTest {
 		a.set(Position.class, v5, new double[]{2,1});
 		a.set(Position.class, v6, new double[]{2,2});
 		a.set(Position.class, v7, new double[]{1,2});
-		
+	}
+	
+	
+	@Test
+	public void testUnwrap() throws Exception {
 		CircleDomainUnwrapper unwrapper = new CircleDomainUnwrapper();
-		unwrapper.setUnwrapRoot(v2);
+		unwrapper.setUnwrapRoot(hds.getVertex(0));
 		unwrapper.setGradientTolerance(1E-10);
 		unwrapper.setMaxIterations(50);
 		unwrapper.unwrap(hds, 0, a);
 		
-		// vertex moved to infinity and back
-		v2 = hds.getVertex(7);
-		
-		Pn.dehomogenize(v0.T, v0.T);
-		Pn.dehomogenize(v1.T, v1.T);
-		Pn.dehomogenize(v2.T, v2.T);
-		Pn.dehomogenize(v3.T, v3.T);
+//		TestUtility.display(hds, true);
+//		synchronized (this) {
+//			wait();	
+//		}
+//		
 		
 		double[] vec1 = Rn.subtract(null, v1.T, v0.T);
 		double[] vec2 = Rn.subtract(null, v3.T, v0.T);
@@ -80,62 +100,21 @@ public class CircleDomainUnwrapperTest {
 		double[] vec3 = Rn.subtract(null, v3.T, v2.T);
 		double[] vec4 = Rn.subtract(null, v1.T, v2.T);
 		double angle2 = Rn.euclideanAngle(vec3, vec4);
-		Assert.assertEquals(Math.PI, angle1 + angle2, 1E-10);
+		Assert.assertEquals(Math.PI, angle1 + angle2, 1E-8);
 	}
 	
 	@Test
 	public void testUnwrapWithCircularEdges() throws Exception {
-		CoHDS hds = new CoHDS();
-		CoVertex v0 = hds.addNewVertex();
-		CoVertex v1 = hds.addNewVertex();
-		CoVertex v2 = hds.addNewVertex();
-		CoVertex v3 = hds.addNewVertex();
-		CoVertex v4 = hds.addNewVertex();
-		CoVertex v5 = hds.addNewVertex();
-		CoVertex v6 = hds.addNewVertex();
-		CoVertex v7 = hds.addNewVertex();
-		HalfEdgeUtils.constructFaceByVertices(hds, v0, v5, v4);
-		HalfEdgeUtils.constructFaceByVertices(hds, v0, v1, v5);
-		HalfEdgeUtils.constructFaceByVertices(hds, v1, v6, v5);
-		HalfEdgeUtils.constructFaceByVertices(hds, v1, v2, v6);
-		HalfEdgeUtils.constructFaceByVertices(hds, v2, v7, v6);
-		HalfEdgeUtils.constructFaceByVertices(hds, v2, v3, v7);
-		
-		CoFace f0 = HalfEdgeUtils.constructFaceByVertices(hds, v4, v5, v6).getLeftFace();
-		CoFace f1 = HalfEdgeUtils.constructFaceByVertices(hds, v6, v7, v4).getLeftFace();
-		
-		HalfEdgeUtils.constructFaceByVertices(hds, v3, v4, v7);
-		HalfEdgeUtils.constructFaceByVertices(hds, v0, v4, v3);
-		
-		AdapterSet a = new ConformalAdapterSet();
-		a.set(Position.class, v0, new double[]{0,0});
-		a.set(Position.class, v1, new double[]{5,0});
-		a.set(Position.class, v2, new double[]{3,3});
-		a.set(Position.class, v3, new double[]{0,3});
-		a.set(Position.class, v4, new double[]{1,1});
-		// make the inner quad a rectangle
-		a.set(Position.class, v5, new double[]{2,1});
-		a.set(Position.class, v6, new double[]{3,2});
-		a.set(Position.class, v7, new double[]{1,2});
-		
-		CoEdge ce = HalfEdgeUtils.findEdgeBetweenFaces(f0, f1);
-		ce.info = new CustomEdgeInfo();
-		ce.info.circularHoleEdge = true;
-		ce.getOppositeEdge().info = new CustomEdgeInfo();
-		ce.getOppositeEdge().info.circularHoleEdge = true;
+		CoEdge ce = HalfEdgeUtils.findEdgeBetweenFaces(innerFace01, innerFace02);
+		CustomEdgeInfo info = new CustomEdgeInfo();
+		info.circularHoleEdge = true;
+		ce.info = info;
+		ce.getOppositeEdge().info = info;
 		
 		CircleDomainUnwrapper unwrapper = new CircleDomainUnwrapper();
-		unwrapper.setUnwrapRoot(v2);
+		unwrapper.setUnwrapRoot(hds.getVertex(1));
 		unwrapper.unwrap(hds, 0, a);
 		
-		// vertex moved to infinity and back
-		v2 = hds.getVertex(7);
-		
-		Pn.dehomogenize(v0.T, v0.T);
-		Pn.dehomogenize(v1.T, v1.T);
-		Pn.dehomogenize(v2.T, v2.T);
-		Pn.dehomogenize(v3.T, v3.T);
-
 		// outer circle
 		double[] vec1 = Rn.subtract(null, v1.T, v0.T);
 		double[] vec2 = Rn.subtract(null, v3.T, v0.T);
@@ -143,13 +122,8 @@ public class CircleDomainUnwrapperTest {
 		double[] vec3 = Rn.subtract(null, v3.T, v2.T);
 		double[] vec4 = Rn.subtract(null, v1.T, v2.T);
 		double angle2 = Rn.euclideanAngle(vec3, vec4);
-		Assert.assertEquals(Math.PI, angle1 + angle2, 1E-10);		
+		Assert.assertEquals(Math.PI, angle1 + angle2, 1E-8);		
 	
-		Pn.dehomogenize(v4.T, v4.T);
-		Pn.dehomogenize(v5.T, v5.T);
-		Pn.dehomogenize(v6.T, v6.T);
-		Pn.dehomogenize(v7.T, v7.T);
-		
 		// inner circle
 		Rn.subtract(vec1, v5.T, v4.T);
 		Rn.subtract(vec2, v7.T, v4.T);
@@ -157,46 +131,13 @@ public class CircleDomainUnwrapperTest {
 		Rn.subtract(vec3, v7.T, v6.T);
 		Rn.subtract(vec4, v5.T, v6.T);
 		angle2 = Rn.euclideanAngle(vec3, vec4);
-		Assert.assertEquals(Math.PI, angle1 + angle2, 1E-10);	
+		Assert.assertEquals(Math.PI, angle1 + angle2, 1E-8);	
 	}
 	
 	
 	@Test
 	public void testStaticUnwrap() throws Exception {
-		CoHDS hds = new CoHDS();
-		CoVertex v0 = hds.addNewVertex();
-		CoVertex v1 = hds.addNewVertex();
-		CoVertex v2 = hds.addNewVertex();
-		CoVertex v3 = hds.addNewVertex();
-		CoVertex v4 = hds.addNewVertex();
-		CoVertex v5 = hds.addNewVertex();
-		CoVertex v6 = hds.addNewVertex();
-		CoVertex v7 = hds.addNewVertex();
-		HalfEdgeUtils.constructFaceByVertices(hds, v0, v5, v4);
-		HalfEdgeUtils.constructFaceByVertices(hds, v0, v1, v5);
-		HalfEdgeUtils.constructFaceByVertices(hds, v1, v6, v5);
-		HalfEdgeUtils.constructFaceByVertices(hds, v1, v2, v6);
-		HalfEdgeUtils.constructFaceByVertices(hds, v2, v7, v6);
-		HalfEdgeUtils.constructFaceByVertices(hds, v2, v3, v7);
-		
-		CoFace f0 = HalfEdgeUtils.constructFaceByVertices(hds, v4, v5, v6).getLeftFace();
-		CoFace f1 = HalfEdgeUtils.constructFaceByVertices(hds, v6, v7, v4).getLeftFace();
-		
-		HalfEdgeUtils.constructFaceByVertices(hds, v3, v4, v7);
-		HalfEdgeUtils.constructFaceByVertices(hds, v0, v4, v3);
-		
-		AdapterSet a = new ConformalAdapterSet();
-		a.set(Position.class, v0, new double[]{0,0});
-		a.set(Position.class, v1, new double[]{5,0});
-		a.set(Position.class, v2, new double[]{3,3});
-		a.set(Position.class, v3, new double[]{0,3});
-		a.set(Position.class, v4, new double[]{1,1});
-		// make the inner quad a rectangle
-		a.set(Position.class, v5, new double[]{2,1});
-		a.set(Position.class, v6, new double[]{3,2});
-		a.set(Position.class, v7, new double[]{1,2});
-		
-		CoEdge innerEdge = HalfEdgeUtils.findEdgeBetweenFaces(f0, f1);
+		CoEdge innerEdge = HalfEdgeUtils.findEdgeBetweenFaces(innerFace01, innerFace02);
 		TopologyAlgorithms.removeEdge(innerEdge);
 		
 		int circleIndex = v4.getIndex();

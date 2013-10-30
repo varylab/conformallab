@@ -128,7 +128,6 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		ConverterJR2Heds cTo = new ConverterJR2Heds();
 		cTo.ifs2heds(ifs, hds, a);
 		flipAtEars(hds, a);
-		Set<CoVertex> oldVertices = new HashSet<CoVertex>(hds.getVertices());
 
 		// store initial indices
 		Map<CoVertex, Integer> indexMap = new HashMap<CoVertex, Integer>();
@@ -142,22 +141,15 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		
 		// unwrap
 		CircleDomainUnwrapper unwrapper = new CircleDomainUnwrapper();
+		unwrapper.setUnwrapRoot(hds.getVertex(1));
 		unwrapper.setMaxIterations(300);
 		unwrapper.setGradientTolerance(10E-12);
 		unwrapper.unwrap(hds, 0, a);
 		
-		oldVertices.removeAll(hds.getVertices());
-		int oldV0Index = oldVertices.iterator().next().getIndex(); 
-		
 		double[][] texArr = new double[ifs.getNumPoints()][];
 		for (CoVertex v : hds.getVertices()) {
-			Integer oldI = indexMap.get(v);
-			if (oldI == null) {
-				oldI = oldV0Index;
-			}
 			toKlein(v.T);
-			if (oldI < ifs.getNumPoints())
-				texArr[oldI] = v.T;
+			texArr[v.getIndex()] = v.T;
 		}
 		
 		// center
@@ -264,8 +256,30 @@ public class CircleDomainUnwrapper implements Unwrapper {
 	}
 	
 	@Override
-	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
-		CoVertex v0 = unwrapRoot;
+	public void unwrap(CoHDS hds, int genus, AdapterSet aSet) throws Exception {
+		// create a copy to work with
+		CoHDS surface = new CoHDS();
+		HalfEdgeUtils.copy(hds, surface);
+		Map<CoVertex, CoVertex> vertexMap = new HashMap<CoVertex, CoVertex>();
+		for (int i = 0; i < hds.numVertices(); i++) {
+			CoVertex v = hds.getVertex(i);
+			CoVertex vv = surface.getVertex(i);
+			vv.P = v.P;
+			vv.info = v.info;
+			vertexMap.put(v, vv);
+		}
+		for (int i = 0; i < hds.numEdges(); i++) {
+			CoEdge e = hds.getEdge(i);
+			CoEdge ee = surface.getEdge(i);
+			ee.info = e.info; 
+		}
+		
+//		TestUtility.display(surface, false);
+		
+		CoVertex v0 = null;
+		if (unwrapRoot != null) {
+			v0 = surface.getVertex(unwrapRoot.getIndex());
+		}
 		// find boundary vertex with high valence
 		if (v0 == null || !HalfEdgeUtils.isBoundaryVertex(v0)) {
 			int maxValence = 0;
@@ -502,6 +516,16 @@ public class CircleDomainUnwrapper implements Unwrapper {
 			} else {
 				assert cp.re*cp.re + cp.im*cp.im < 1.0 : "vertex not inside the unit circle";
 			}
+		}
+		
+		// write back texture coordinates
+		for (int i = 0; i < hds.numVertices(); i++) {
+			CoVertex v = hds.getVertex(i);
+			CoVertex vv = vertexMap.get(v);
+			if (vv == v0) {
+				vv = v0New;
+			}
+			v.T = vv.T;
 		}
 	}
 
