@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.Test;
+
 import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
@@ -25,100 +27,50 @@ public class TwoHoleExample {
 		NativePathUtility.set("native");
 	}
 	
-	public static double[][] verts = {
-		{0, 0, 0},
-		{3, 0, 0},
-		{3, 5, 0},
-		{0, 5, 0},
-		{1, 1, 0},
-		{2, 1, 0},
-		{2, 2, 0},
-		{1, 2, 0},
-		{1, 3, 0},
-		{2, 3, 0},
-		{2, 4, 0},
-		{1, 4, 0}
-	};
-	public static int[][] indices  = {{0, 12, 13, 1,2,3, 0},{4,5,6,7, 4}, {8,9,10,11,8}}; //{{0,1,2,3, 0},{4,5,6,7, 4}, {8,9,10,11,8}};
 	static double  rt = Math.PI/2,
 			triangleArea = .005;
 	static boolean letter = true, doholes = true, originalAngles = false;
-	public static double[] angles = {rt, rt, rt, rt};
-	public static void main(String[] args) {
-
-			triangleArea = .05;
+	@Test
+	public void testLetterB() {
 
 		SceneGraphComponent triangulation = null;
 		try {
-			triangulation = Readers.read(new Input(EuclideanUnwrapProblem.class.getResource("letterB-bad.off")));
+			triangulation = Readers.read(new Input(EuclideanUnwrapProblem.class.getResource("letterB-TA01.off")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		IndexedFaceSet triang2 = (IndexedFaceSet) SceneGraphUtility.getFirstGeometry(triangulation);
 		SceneGraphComponent origSgc = SceneGraphUtility.createFullSceneGraphComponent("sgc");
 		origSgc.setGeometry(triang2);
-		// sigh ... there is no simple way in jReality I know of to "deep" copy a geometry
-		try {
-			triangulation = Readers.read(new Input(EuclideanUnwrapProblem.class.getResource("letterB-bad.off")));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		IndexedFaceSet triang = (IndexedFaceSet) SceneGraphUtility.getFirstGeometry(triangulation);
-		SceneGraphComponent sgc = SceneGraphUtility.createFullSceneGraphComponent("sgc");
-		sgc.setGeometry(triang);
 
-		Appearance ap = sgc.getAppearance();
+		Appearance ap = origSgc.getAppearance();
 		ap.setAttribute("polygonShader.diffuseColor", Color.white);
 		ap.setAttribute(CommonAttributes.FACE_DRAW, false);
 		ap.setAttribute(CommonAttributes.EDGE_DRAW, true);
 		ap.setAttribute(CommonAttributes.VERTEX_DRAW, false);
-//		SimpleTextureFactory stf = new SimpleTextureFactory();
-//		stf.setType(TextureType.CHECKERBOARD);
-//		stf.setColor(1, Color.black);
-//		stf.update();
-//		
-//		Texture2D tex = TextureUtility.createTexture(ap, "polygonShader", stf.getImageData());
-//		Matrix m = MatrixBuilder.euclidean().scale(2).getMatrix();
-//		tex.setTextureMatrix(m);
-		// BE CAREFUL!  This is a mish-mash of settings for "A" and "B".  Currently works for "B"
-		// I dont have original angles for "B"
-		double[] Aangles =  {  1.1899373374161235
-				,  1.937769234708022
-				,  4.345416072471565
-				,  4.363856259874096
-				,  1.91932904730549
-				,  1.1993786306578298
-				,  1.9422140229319633
-				,  1.9516553161736694};
-		int[] inds = {10,0,1,2,3,4,5,6};
 		HashMap<Integer, Double> indexToAngle = new HashMap<Integer, Double>();
-		if (originalAngles) angles = Aangles;
-		else inds = new int[]{0,5,45,47};
-		for (int i = 0; i<angles.length; ++i) 	{
-			indexToAngle.put(inds[i], angles[i]);
+		int[]	inds = new int[]{0,5,45,47};
+		for (int i = 0; i<inds.length; ++i) 	{
+			indexToAngle.put(inds[i], Math.PI/2);
 		}
 		List<Integer> holes = new ArrayList<Integer>();
 		if (doholes)	{
 			holes.add(51);
-			holes.add(75);
-//			holes.add(indices[2][0]);					
+			holes.add(80);
 		}
 
 		try {
-			EuclideanUnwrapperPETSc.unwrapcg(triang, 1, indexToAngle, doholes ? holes : null, 1E-6);
-			double[][] tv = triang.getVertexAttributes(Attribute.TEXTURE_COORDINATES).toDoubleArrayArray(null);
+			EuclideanUnwrapperPETSc.unwrapcg(triang2, 1, indexToAngle, doholes ? holes : null, 1E-4);
+			double[][] tv = triang2.getVertexAttributes(Attribute.TEXTURE_COORDINATES).toDoubleArrayArray(null);
 			System.err.println("unwrapped verts = "+Rn.toString(tv));
-			triang.setVertexAttributes(Attribute.COORDINATES, null);
-			triang.setVertexAttributes(Attribute.COORDINATES, triang.getVertexAttributes(Attribute.TEXTURE_COORDINATES));
+			triang2.setVertexAttributes(Attribute.COORDINATES, null);
+			triang2.setVertexAttributes(Attribute.COORDINATES, triang2.getVertexAttributes(Attribute.TEXTURE_COORDINATES));
 			} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
 		}
-		SceneGraphComponent world = SceneGraphUtility.createFullSceneGraphComponent();
-		MatrixBuilder.euclidean().translate(2,0,0).assignTo(sgc);
-		world.addChildren(sgc, origSgc);
 
-		JRViewer.display(world);
+		JRViewer.display(origSgc);
 		
 
 	}
