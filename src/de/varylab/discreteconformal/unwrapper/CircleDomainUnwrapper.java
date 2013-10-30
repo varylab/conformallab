@@ -141,9 +141,8 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		
 		// unwrap
 		CircleDomainUnwrapper unwrapper = new CircleDomainUnwrapper();
-		unwrapper.setUnwrapRoot(hds.getVertex(1));
 		unwrapper.setMaxIterations(300);
-		unwrapper.setGradientTolerance(10E-12);
+		unwrapper.setGradientTolerance(1E-8);
 		unwrapper.unwrap(hds, 0, a);
 		
 		double[][] texArr = new double[ifs.getNumPoints()][];
@@ -274,8 +273,6 @@ public class CircleDomainUnwrapper implements Unwrapper {
 			ee.info = e.info; 
 		}
 		
-//		TestUtility.display(surface, false);
-		
 		CoVertex v0 = null;
 		if (unwrapRoot != null) {
 			v0 = surface.getVertex(unwrapRoot.getIndex());
@@ -395,6 +392,7 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		DenseVector uVec = new DenseVector(uValues);
 		layoutRoot = EuclideanLayout.doLayout(surface, opt.getFunctional(), uVec);
 		
+//		TestUtility.display(surface, true);
 		
 		// pre-normalize before projection
 		double[] v1T = Pn.dehomogenize(v1.T, v1.T);
@@ -436,8 +434,9 @@ public class CircleDomainUnwrapper implements Unwrapper {
 			Pn.dehomogenize(v.T, v.T);
 			Complex hp = new Complex(v.T[0], v.T[1]);
 			if (!uMap.containsKey(v) && HalfEdgeUtils.isBoundaryVertex(v)) {
-				System.out.println(v);
-				assert Math.abs(hp.im) < 1E-8 : "boundary vertex not on the real axis";
+				if (Math.abs(hp.im) > 1E-8) {
+					log.warning(v + " not on the real axis: im = " + hp.im);
+				}
 			}
 			hp = hp.times(10);
 			double[] sp = ComplexUtility.inverseStereographic(hp, spherePoint);
@@ -448,7 +447,6 @@ public class CircleDomainUnwrapper implements Unwrapper {
 			v.T[1] = sp[1];
 			v.T[2] = sp[2];
 			v.T[3] = 1.0;
-//			assert Math.abs(sp[1]) < 1E-8 : "vertex not on vertical plane through the real axis";
 		}
 		
 		// reinsert vertex 0
@@ -510,11 +508,16 @@ public class CircleDomainUnwrapper implements Unwrapper {
 			v.T[0] = cp.re;
 			v.T[1] = cp.im;
 			v.T[2] = 0;
-			v.T[3] = 1;	
+			v.T[3] = 1;
+			double ns = cp.re*cp.re + cp.im*cp.im;
 			if (HalfEdgeUtils.isBoundaryVertex(v)) {
-				assert Math.abs(cp.re*cp.re + cp.im*cp.im - 1.0) < 1E-8 : "vertex not on unit circle";
+				if (Math.abs(ns - 1.0) > 1E-8){
+					log.warning(v + " not on unit circle: " + ns);
+				}
 			} else {
-				assert cp.re*cp.re + cp.im*cp.im < 1.0 : "vertex not inside the unit circle";
+				if (ns > 1.0) {
+					log.warning("vertex not inside the unit circle");
+				}
 			}
 		}
 		

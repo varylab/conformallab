@@ -21,7 +21,6 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.CircleDomainUnwrapper;
-import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapper;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapper;
@@ -148,15 +147,15 @@ public class Unwrap extends AbstractJob {
 					System.err.println("face " + f + " has an area greater than 2PI");
 				}
 			}
-			for (CoVertex v : surface.getVertices()) {
-				double sum = 0.0;
-				for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
-					sum += e.getPreviousEdge().getAlpha();
-				}
-				if (!HalfEdgeUtils.isBoundaryVertex(v) && Math.abs(sum - v.getTheta()) > 1E-5) {
-					System.err.println("angle sum at vertex " + v + " is incorrect: expected " + v.getTheta() + ", actual: " + sum);
-				}
-			}
+//			for (CoVertex v : surface.getVertices()) {
+//				double sum = 0.0;
+//				for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+//					sum += e.getPreviousEdge().getAlpha();
+//				}
+//				if (!HalfEdgeUtils.isBoundaryVertex(v) && Math.abs(sum - v.getTheta()) > 1E-5) {
+//					System.err.println("angle sum at vertex " + v + " is incorrect: expected " + v.getTheta() + ", actual: " + sum);
+//				}
+//			}
 			
 			cutInfo = unwrapper.getCutInfo();
 			lengthMap = unwrapper.getlengthMap();
@@ -231,28 +230,28 @@ public class Unwrap extends AbstractJob {
 		NumberFormat nf = new DecimalFormat("0.00");
 		System.out.println("minimization took " + nf.format((unwrapTime - startTime) / 1000.0) + "sec.");
 		System.out.println("layout took " + nf.format((layoutTime - unwrapTime) / 1000.0) + "sec.");
-		int brokenCount = 0;
-		int curveVertices = 0;
-		for (CoEdge e : surface.getEdges()) {
-			if (e.getAlpha() >= Math.PI) {
-				brokenCount++;
-			}
-		}
-		for (CoVertex v : surface.getVertices()) {
-			if (HalfEdgeUtils.isBoundaryVertex(v)) {
-				continue;
-			}
-			double sum = EuclideanLayout.calculateAngleSum(v);
-			if (Math.abs(sum - 2*Math.PI) > 1E-6) {
-				curveVertices++;
-			}
-		}
-		if (brokenCount > 0) {
-			System.err.println("WARNING: there are " + brokenCount + " broken triangles in the solution.");
-		}
-		if (curveVertices > 0) {
-			System.err.println("WARNING: there are " + curveVertices + " internal vertices with angle sum != 2PI.");
-		}
+//		int brokenCount = 0;
+//		int curveVertices = 0;
+//		for (CoEdge e : surface.getEdges()) {
+//			if (e.getAlpha() >= Math.PI) {
+//				brokenCount++;
+//			}
+//		}
+//		for (CoVertex v : surface.getVertices()) {
+//			if (HalfEdgeUtils.isBoundaryVertex(v)) {
+//				continue;
+//			}
+//			double sum = EuclideanLayout.calculateAngleSum(v);
+//			if (Math.abs(sum - 2*Math.PI) > 1E-6) {
+//				curveVertices++;
+//			}
+//		}
+//		if (brokenCount > 0) {
+//			System.err.println("WARNING: there are " + brokenCount + " broken triangles in the solution.");
+//		}
+//		if (curveVertices > 0) {
+//			System.err.println("WARNING: there are " + curveVertices + " internal vertices with angle sum != 2PI.");
+//		}
 	}
 	
 	public CoHDS getSurface() {

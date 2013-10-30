@@ -23,6 +23,7 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.CustomEdgeInfo;
+import de.varylab.discreteconformal.util.TestUtility;
 
 public class CircleDomainUnwrapperTest {
 
@@ -83,16 +84,15 @@ public class CircleDomainUnwrapperTest {
 	@Test
 	public void testUnwrap() throws Exception {
 		CircleDomainUnwrapper unwrapper = new CircleDomainUnwrapper();
-		unwrapper.setUnwrapRoot(hds.getVertex(0));
+		unwrapper.setUnwrapRoot(hds.getVertex(1));
 		unwrapper.setGradientTolerance(1E-10);
 		unwrapper.setMaxIterations(50);
 		unwrapper.unwrap(hds, 0, a);
 		
-//		TestUtility.display(hds, true);
-//		synchronized (this) {
-//			wait();	
-//		}
-//		
+		TestUtility.display(hds, true);
+		synchronized (this) {
+			wait();	
+		}
 		
 		double[] vec1 = Rn.subtract(null, v1.T, v0.T);
 		double[] vec2 = Rn.subtract(null, v3.T, v0.T);
@@ -160,7 +160,7 @@ public class CircleDomainUnwrapperTest {
 		double[] vec3 = Rn.subtract(null, tArr[3], tArr[2]);
 		double[] vec4 = Rn.subtract(null, tArr[1], tArr[2]);
 		double angle2 = Rn.euclideanAngle(vec3, vec4);
-//		Assert.assertEquals(Math.PI, angle1 + angle2, 1E-8);	
+		Assert.assertEquals(Math.PI, angle1 + angle2, 1E-8);	
 		
 		Pn.dehomogenize(tArr, tArr);
 		// inner circle
