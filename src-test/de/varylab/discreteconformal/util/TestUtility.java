@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import de.jreality.geometry.IndexedFaceSetUtility;
+import de.jreality.plugin.JRViewer;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.SceneGraphComponent;
@@ -25,11 +26,14 @@ import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
 import de.jtem.halfedgetools.functional.MyEnergy;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
+import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.plugin.visualizers.NodeIndexVisualizer;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoTextureDomainPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 
 public class TestUtility {
@@ -226,6 +230,23 @@ public class TestUtility {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+
+	public static void display(CoHDS hds, boolean tex) {
+		HalfedgeInterface hif = new HalfedgeInterface();
+		JRViewer v = new JRViewer();
+		v.addContentUI();
+		v.addBasicUI();
+		v.registerPlugin(hif);
+		v.registerPlugin(NodeIndexVisualizer.class);
+		v.startup();
+		hif.addAdapter(new CoPositionAdapter(), true);
+		hif.addAdapter(new CoTexturePositionAdapter(), true);
+		if (tex) {
+			hif.addAdapter(new CoTextureDomainPositionAdapter(), true);
+		}
+		hif.set(hds);
 	}
 	
 	

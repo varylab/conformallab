@@ -110,19 +110,7 @@ public class CircleDomainUnwrapper implements Unwrapper {
 			CoFace fl = e.getRightFace();
 			if (fl != ne.getRightFace()) continue;
 			CoEdge ee = e.getOppositeEdge().getNextEdge();
-			
 			TopologyAlgorithms.flipEdge(ee);
-			
-			
-//			CoFace fr = ee.getRightFace();
-//			CoVertex vl = e.getTargetVertex();
-//			CoVertex vr = ee.getOppositeEdge().getNextEdge().getTargetVertex();
-//			double[] vmPos = a.getD(BaryCenter3d.class, ee);
-//			CoVertex vm = TopologyAlgorithms.splitEdge(ee);
-//			TopologyAlgorithms.splitFaceAt(fl, vl, vm);
-//			TopologyAlgorithms.splitFaceAt(fr, vr, vm);
-//			a.set(Position.class, vm, vmPos);
-//			System.out.println("subdivided ear " + ee);
 		}
 	}
 	
@@ -433,6 +421,10 @@ public class CircleDomainUnwrapper implements Unwrapper {
 			N.transformVector(v.T);
 			Pn.dehomogenize(v.T, v.T);
 			Complex hp = new Complex(v.T[0], v.T[1]);
+			if (!uMap.containsKey(v) && HalfEdgeUtils.isBoundaryVertex(v)) {
+				System.out.println(v);
+				assert Math.abs(hp.im) < 1E-8 : "boundary vertex not on the real axis";
+			}
 			hp = hp.times(10);
 			double[] sp = ComplexUtility.inverseStereographic(hp, spherePoint);
 			double tmp1 = sp[1];
@@ -442,6 +434,7 @@ public class CircleDomainUnwrapper implements Unwrapper {
 			v.T[1] = sp[1];
 			v.T[2] = sp[2];
 			v.T[3] = 1.0;
+//			assert Math.abs(sp[1]) < 1E-8 : "vertex not on vertical plane through the real axis";
 		}
 		
 		// reinsert vertex 0
@@ -504,6 +497,11 @@ public class CircleDomainUnwrapper implements Unwrapper {
 			v.T[1] = cp.im;
 			v.T[2] = 0;
 			v.T[3] = 1;	
+			if (HalfEdgeUtils.isBoundaryVertex(v)) {
+				assert Math.abs(cp.re*cp.re + cp.im*cp.im - 1.0) < 1E-8 : "vertex not on unit circle";
+			} else {
+				assert cp.re*cp.re + cp.im*cp.im < 1.0 : "vertex not inside the unit circle";
+			}
 		}
 	}
 
@@ -573,6 +571,10 @@ public class CircleDomainUnwrapper implements Unwrapper {
 	@Override
 	public void setCutRoot(CoVertex root) {
 		unwrapRoot = root;
+	}
+	
+	public void setUnwrapRoot(CoVertex unwrapRoot) {
+		this.unwrapRoot = unwrapRoot;
 	}
 
 	@Override
