@@ -161,7 +161,7 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		double[][] allverts = ifs.getVertexAttributes(Attribute.COORDINATES).toDoubleArrayArray(null);
 		if (useExtraPoints && zeroBaryFace != null) {
 			zeroBuilder.translate(texArr[i0], P3.originP3);
-			System.err.println("unwrap center = "+Rn.toString(texArr[i0]));
+//			System.err.println("unwrap center = "+Rn.toString(texArr[i0]));
 		}
 		else if (zeroBaryFace != null && zeroBaryWeights != null) {
 			double[][] face = {texArr[i0], texArr[i1], texArr[zeroBaryFace[2]]};
@@ -224,7 +224,7 @@ public class CircleDomainUnwrapper implements Unwrapper {
 			}
 			alpha = (1.0/3.0) * (alphaL[0]+alphaL[1]+alphaL[2]);
 		}
-		System.err.println("Alpha = "+alpha);
+//		System.err.println("Alpha = "+alpha);
 		SR.rotate(-alpha, 0, 0, 1);
 		Matrix SRm = SR.getMatrix();
 	
@@ -258,111 +258,87 @@ public class CircleDomainUnwrapper implements Unwrapper {
 	public void unwrap(CoHDS hds, int genus, AdapterSet aSet) throws Exception {
 		// create a copy to work with
 		CoHDS surface = new CoHDS();
-		HalfEdgeUtils.copy(hds, surface);
 		Map<CoVertex, CoVertex> vertexMap = new HashMap<CoVertex, CoVertex>();
-		for (int i = 0; i < hds.numVertices(); i++) {
-			CoVertex v = hds.getVertex(i);
-			CoVertex vv = surface.getVertex(i);
-			vv.P = v.P;
-			vv.info = v.info;
-			vertexMap.put(v, vv);
-		}
-		for (int i = 0; i < hds.numEdges(); i++) {
-			CoEdge e = hds.getEdge(i);
-			CoEdge ee = surface.getEdge(i);
-			ee.info = e.info; 
-		}
+		createSurfaceCopy(hds, surface, vertexMap);
 		
-		CoVertex v0 = null;
-		if (unwrapRoot != null) {
-			v0 = surface.getVertex(unwrapRoot.getIndex());
-		}
-		// find boundary vertex with high valence
-		if (v0 == null || !HalfEdgeUtils.isBoundaryVertex(v0)) {
-			int maxValence = 0;
-			for (CoVertex v : boundaryVertices(surface)) {
-				int val = incomingEdges(v).size();
-				if (val > maxValence) {
-					v0 = v;
-					maxValence = val;
-				}
-			}
-		}
-		assert v0 != null;
+		CoVertex v0 = getVertexAtInfinity(surface);
 		
 		// find reference vertices
 		CoVertex v1 = null;
 		CoVertex v2 = null;
 		CoVertex v3 = null;
-		double meanLength = 0.0;
-		int numIncident = 0;
 		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
-			meanLength += aSet.get(Length.class, e, Double.class);
-			numIncident++;
-			if (HalfEdgeUtils.isBoundaryEdge(e)) {
-				if (v1 == null) {
-					v1 = e.getStartVertex();
-				} else {
-					v2 = e.getStartVertex();
-				}
+			if (e.getLeftFace() == null) {
+				v1 = e.getStartVertex();
+			} else
+			if (e.getRightFace() == null) {
+				v2 = e.getStartVertex();
 			} else {
 				v3 = e.getStartVertex();
 			}
 		}
 		assert v1 != null && v2 != null && v3 != null;
 		
-		// get cut border
-		Set<CoEdge> cutEdges = new HashSet<CoEdge>();
-		for (CoFace f : HalfEdgeUtils.facesIncidentWithVertex(v0)) {
-			cutEdges.addAll(HalfEdgeUtils.boundaryEdges(f));
-		}
-		Set<CoEdge> inEdges = new HashSet<CoEdge>(incomingEdges(v0));
-		Set<CoEdge> outEdges = new HashSet<CoEdge>(outgoingEdges(v0));
-		cutEdges.removeAll(inEdges);
-		cutEdges.removeAll(outEdges);
+//		System.out.println(v1);
+//		System.out.println(v2);
+//		System.out.println(v3);
+//		TestUtility.display(surface, false);
+//		TestUtility.display(surface, true);
 		
-		// change edge lengths conformally such that the edges incident with vertex 0 are of equal length
-		meanLength /= numIncident;
-		Map<CoVertex, Double> uMap = new HashMap<CoVertex, Double>();
-		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
-			double l = aSet.get(Length.class, e, Double.class);
-			double u = meanLength / l;
-			uMap.put(e.getStartVertex(), u);
-		}
-		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
-		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
-			CoVertex v = e.getStartVertex();
-			for (CoEdge ee : HalfEdgeUtils.incomingEdges(v)) {
-				double l = aSet.get(Length.class, ee, Double.class);
-				CoVertex vs = ee.getStartVertex();
-				CoVertex vt = ee.getTargetVertex();
-				double us = uMap.containsKey(vs) ? uMap.get(vs) : 1.0;
-				double ut = uMap.containsKey(vt) ? uMap.get(vt) : 1.0;
-				double nl = l * us * ut;
-				lMap.put(ee, nl);
-				lMap.put(ee.getOppositeEdge(), nl);
-			}
-		}
+		// get cut border
+		Map<CoEdge, Double> lMap = getConformalLengthsAtInfinity(v0, aSet);
+		MappedEdgeLengthAdapter eAdapter = new MappedEdgeLengthAdapter(lMap, 100);
+		aSet.add(eAdapter);
+		
+		// set boundary conditions
 		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
 			CoVertex s = e.getStartVertex();
 			CustomVertexInfo info = new CustomVertexInfo();
 			info.boundaryMode = BoundaryMode.Isometric;
 			s.info = info;
 		}
-		MappedEdgeLengthAdapter eAdapter = new MappedEdgeLengthAdapter(lMap, 100);
-		aSet.add(eAdapter);
 		
 		// punch out the first vertex
 		TopologyAlgorithms.removeVertex(v0);
-		Map<CoEdge, CoEdge> nextOnCutBoundaryMap = new HashMap<CoEdge, CoEdge>();
-		for (CoEdge e : cutEdges) {
-			CoEdge next = e.getNextEdge();
-			if (cutEdges.contains(next)) {
-				nextOnCutBoundaryMap.put(e, next);
-			}
+
+		// map to the upper half space
+		unwrapToHalfSpace(aSet, surface);
+		
+		// pre-normalize before projection
+		moveToUpperHalfSpace(surface, v1, v2, v3);
+		
+		// project stereographically
+		projectInverseStereographicAndRotate(surface);
+		
+		// reinsert vertex 0
+		CoVertex v0New = surface.addNewVertex();
+		v0New.P = v0.P;
+		v0New.T = new double[] {0,1,0,1};
+		
+		// normalize
+		try {
+			List<CoVertex> bVerts = new LinkedList<CoVertex>(boundaryVertices(surface));
+			bVerts.add(v0New);
+			SphericalNormalizerPETSc.normalize(surface, bVerts, aSet, TexturePosition4d.class, TexturePosition.class);
+		} catch (Exception e) {
+			log.info("Sphere normalization did not succeed: " + e.getMessage());
 		}
 		
-		// map to the upper half space
+		// project back
+		projectStereographic(surface);
+		
+		// write back texture coordinates
+		for (int i = 0; i < hds.numVertices(); i++) {
+			CoVertex v = hds.getVertex(i);
+			CoVertex vv = vertexMap.get(v);
+			if (vv == v0) {
+				vv = v0New;
+			}
+			v.T = vv.T;
+		}
+	}
+
+	public void unwrapToHalfSpace(AdapterSet aSet, CoHDS surface) {
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
 		int n = prepareInvariantDataEuclidean(opt.getFunctional(), surface, BoundaryMode.Conformal, QuantizationMode.Straight, aSet);
 		CEuclideanApplication app = new CEuclideanApplication(surface);
@@ -391,10 +367,111 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		double[] uValues = u.getArray();
 		DenseVector uVec = new DenseVector(uValues);
 		layoutRoot = EuclideanLayout.doLayout(surface, opt.getFunctional(), uVec);
+	}
+
+	public void projectStereographic(CoHDS surface) {
+		for (CoVertex v : surface.getVertices()) {
+			Pn.dehomogenize(v.T, v.T);
+			Complex cp = ComplexUtility.stereographic(v.T);
+			v.T[0] = cp.re;
+			v.T[1] = cp.im;
+			v.T[2] = 0;
+			v.T[3] = 1;
+		}
+	}
+
+	public void projectInverseStereographicAndRotate(CoHDS surface) {
+		double[] spherePoint = new double[3];
+		for (CoVertex v : surface.getVertices()) {
+			Complex hp = new Complex(v.T[0], v.T[1]);
+			hp = hp.times(5); // stretch it a little
+			double[] sp = ComplexUtility.inverseStereographic(hp, spherePoint);
+			double tmp1 = sp[1];
+			sp[1] = sp[2];
+			sp[2] = -tmp1;
+			v.T[0] = sp[0];
+			v.T[1] = sp[1];
+			v.T[2] = sp[2];
+			v.T[3] = 1.0;
+		}
+	}
+
+	public Map<CoEdge, Double> getConformalLengthsAtInfinity(CoVertex v0, AdapterSet aSet) {
+		double meanLength = 0.0;
+		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
+			meanLength += aSet.get(Length.class, e, Double.class);
+		}
+		meanLength /= HalfEdgeUtils.incomingEdges(v0).size();
 		
-//		TestUtility.display(surface, true);
+		Set<CoEdge> cutEdges = new HashSet<CoEdge>();
+		for (CoFace f : HalfEdgeUtils.facesIncidentWithVertex(v0)) {
+			cutEdges.addAll(HalfEdgeUtils.boundaryEdges(f));
+		}
+		Set<CoEdge> inEdges = new HashSet<CoEdge>(incomingEdges(v0));
+		Set<CoEdge> outEdges = new HashSet<CoEdge>(outgoingEdges(v0));
+		cutEdges.removeAll(inEdges);
+		cutEdges.removeAll(outEdges);
 		
-		// pre-normalize before projection
+		// change edge lengths conformally such that the edges incident with vertex 0 are of equal length
+		Map<CoVertex, Double> uMap = new HashMap<CoVertex, Double>();
+		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
+			double l = aSet.get(Length.class, e, Double.class);
+			double u = meanLength / l;
+			uMap.put(e.getStartVertex(), u);
+		}
+		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
+		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
+			CoVertex v = e.getStartVertex();
+			for (CoEdge ee : HalfEdgeUtils.incomingEdges(v)) {
+				double l = aSet.get(Length.class, ee, Double.class);
+				CoVertex vs = ee.getStartVertex();
+				CoVertex vt = ee.getTargetVertex();
+				double us = uMap.containsKey(vs) ? uMap.get(vs) : 1.0;
+				double ut = uMap.containsKey(vt) ? uMap.get(vt) : 1.0;
+				double nl = l * us * ut;
+				lMap.put(ee, nl);
+				lMap.put(ee.getOppositeEdge(), nl);
+			}
+		}
+		return lMap;
+	}
+
+	public CoVertex getVertexAtInfinity(CoHDS surface) {
+		CoVertex v0 = null;
+		if (unwrapRoot != null) {
+			v0 = surface.getVertex(unwrapRoot.getIndex());
+		}
+		// find boundary vertex with high valence
+		if (v0 == null || !HalfEdgeUtils.isBoundaryVertex(v0)) {
+			int maxValence = 0;
+			for (CoVertex v : boundaryVertices(surface)) {
+				int val = incomingEdges(v).size();
+				if (val > maxValence) {
+					v0 = v;
+					maxValence = val;
+				}
+			}
+		}
+		return v0;
+	}
+
+	public void createSurfaceCopy(CoHDS source, CoHDS target, Map<CoVertex, CoVertex> vertexMap) {
+		HalfEdgeUtils.copy(source, target);
+		for (int i = 0; i < source.numVertices(); i++) {
+			CoVertex v = source.getVertex(i);
+			CoVertex vv = target.getVertex(i);
+			vv.P = v.P;
+			vv.info = v.info;
+			vertexMap.put(v, vv);
+		}
+		for (int i = 0; i < source.numEdges(); i++) {
+			CoEdge e = source.getEdge(i);
+			CoEdge ee = target.getEdge(i);
+			ee.info = e.info; 
+		}
+	}
+
+	public void moveToUpperHalfSpace(CoHDS surface, CoVertex v1, CoVertex v2, CoVertex v3) {
 		double[] v1T = Pn.dehomogenize(v1.T, v1.T);
 		double[] v2T = Pn.dehomogenize(v2.T, v2.T);
 		double[] v3T = Pn.dehomogenize(v3.T, v3.T);
@@ -407,150 +484,32 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		Matrix M = mb.getMatrix();
 		double[] check = M.multiplyVector(v3T);
 		MatrixBuilder nb = MatrixBuilder.euclidean();
-		nb.translate(check[0] < 0 ? 1 : -1, 0, 0);
+		
 		Matrix N = nb.getMatrix();
-		M = Matrix.times(N, M);
-		nb = MatrixBuilder.euclidean().scale(1, check[1] > 0 ? -1 : 1, 1);
+//		M = Matrix.times(N, M);
+		nb = nb.translate(check[0] < 0 ? 1 : -1, 0, 0);
+		nb = nb.scale(1, check[1] < 0 ? -1 : 1, 1);
 		N = nb.getMatrix();
 		M = Matrix.times(N, M);
-		double[] baryCenter = new double[2];
-		double[] tmp = new double[2];
+//		double[] baryCenter = new double[2];
+//		double[] tmp = new double[2];
 		for (CoVertex v : surface.getVertices()) {
 			M.transformVector(v.T);
 			Pn.dehomogenize(v.T, v.T);
-			tmp[0] = v.T[0];
-			tmp[1] = v.T[1];
-			Rn.add(baryCenter, baryCenter, tmp);
+//			tmp[0] = v.T[0];
+//			tmp[1] = v.T[1];
+//			Rn.add(baryCenter, baryCenter, tmp);
 		}
-		Rn.times(baryCenter, 1.0 / surface.numVertices(), baryCenter);
-		nb = MatrixBuilder.euclidean();
-		nb.translate(-baryCenter[0], 0, 0);
-		N = nb.getMatrix();
-		
-		// project stereographically
-		double[] spherePoint = new double[3];
-		for (CoVertex v : surface.getVertices()) {
-			N.transformVector(v.T);
-			Pn.dehomogenize(v.T, v.T);
-			Complex hp = new Complex(v.T[0], v.T[1]);
-			if (!uMap.containsKey(v) && HalfEdgeUtils.isBoundaryVertex(v)) {
-				if (Math.abs(hp.im) > 1E-8) {
-					log.warning(v + " not on the real axis: im = " + hp.im);
-				}
-			}
-			hp = hp.times(10);
-			double[] sp = ComplexUtility.inverseStereographic(hp, spherePoint);
-			double tmp1 = sp[1];
-			sp[1] = sp[2];
-			sp[2] = tmp1;
-			v.T[0] = sp[0];
-			v.T[1] = sp[1];
-			v.T[2] = sp[2];
-			v.T[3] = 1.0;
-		}
-		
-		// reinsert vertex 0
-		CoVertex v0New = surface.addNewVertex();
-		v0New.P = v0.P;
-		v0New.T = new double[] {0,1,0,1};
-		CoEdge onBoundaryIn = null;
-		CoEdge onBoundaryOut = null;
-		CoEdge inNextOpp = null;
-		CoEdge outPrevOpp = null;
-		for (CoEdge e : cutEdges) {
-			CoEdge in = surface.addNewEdge();
-			CoEdge out = surface.addNewEdge();
-			CoFace face = surface.addNewFace();
-			if (!cutEdges.contains(e.getNextEdge()) && e.getNextEdge() != null) {
-				onBoundaryOut = e.getNextEdge();
-				outPrevOpp = in;
-			}
-			if (!cutEdges.contains(e.getPreviousEdge()) && e.getPreviousEdge() != null) {
-				onBoundaryIn = e.getPreviousEdge();
-				inNextOpp = out;
-			}
-			in.setLeftFace(face);
-			out.setLeftFace(face);
-			e.setLeftFace(face);
-			in.setTargetVertex(v0New);
-			out.setTargetVertex(e.getStartVertex());
-			in.linkNextEdge(out);
-			out.linkNextEdge(e);
-			e.linkNextEdge(in);
-		}
-		assert onBoundaryIn != null && onBoundaryOut != null;
-		for (CoEdge e : nextOnCutBoundaryMap.keySet()) {
-			CoEdge next = nextOnCutBoundaryMap.get(e);
-			e.getNextEdge().linkOppositeEdge(next.getPreviousEdge());
-		}
-		CoEdge inNext = surface.addNewEdge();
-		CoEdge outPrev = surface.addNewEdge();
-		inNext.setTargetVertex(v0New);
-		outPrev.setTargetVertex(onBoundaryOut.getStartVertex());
-		onBoundaryIn.linkNextEdge(inNext);
-		onBoundaryOut.linkPreviousEdge(outPrev);
-		inNext.linkOppositeEdge(inNextOpp);
-		outPrev.linkOppositeEdge(outPrevOpp);
-		inNext.linkNextEdge(outPrev);
-		
-		// normalize
-		try {
-			List<CoVertex> bVerts = new LinkedList<CoVertex>(boundaryVertices(surface));
-			SphericalNormalizerPETSc.normalize(surface, bVerts, aSet, TexturePosition4d.class, TexturePosition.class);
-		} catch (Exception e) {
-			log.info("Sphere normalization did not succeed: " + e.getMessage());
-		}
-		
-		// project back
-		for (CoVertex v : surface.getVertices()) {
-			Pn.dehomogenize(v.T, v.T);
-			Complex cp = ComplexUtility.stereographic(v.T);
-			v.T[0] = cp.re;
-			v.T[1] = cp.im;
-			v.T[2] = 0;
-			v.T[3] = 1;
-			double ns = cp.re*cp.re + cp.im*cp.im;
-			if (HalfEdgeUtils.isBoundaryVertex(v)) {
-				if (Math.abs(ns - 1.0) > 1E-8){
-					log.warning(v + " not on unit circle: " + ns);
-				}
-			} else {
-				if (ns > 1.0) {
-					log.warning("vertex not inside the unit circle");
-				}
-			}
-		}
-		
-		// write back texture coordinates
-		for (int i = 0; i < hds.numVertices(); i++) {
-			CoVertex v = hds.getVertex(i);
-			CoVertex vv = vertexMap.get(v);
-			if (vv == v0) {
-				vv = v0New;
-			}
-			v.T = vv.T;
-		}
+//		Rn.times(baryCenter, 1.0 / surface.numVertices(), baryCenter);
+//		nb = MatrixBuilder.euclidean();
+//		nb.translate(-baryCenter[0], 0, 0);
+//		N = nb.getMatrix();
+//		for (CoVertex v : surface.getVertices()) {
+//			M.transformVector(v.T);
+//			Pn.dehomogenize(v.T, v.T);
+//		}
 	}
 
-	
-	/**
-	 * Project stereographically onto the sphere
-	 * @param graph
-	 * @param scale
-	 */
-	public static void inverseStereographicProjection(CoHDS hds, double scale){
-		for (CoVertex v : hds.getVertices()){
-			Pn.dehomogenize(v.T, v.T);
-			double x = v.T[0] / scale;
-			double y = v.T[1] / scale;
-			double nx = 2 * x;
-			double ny = x*x + y*y - 1;
-			double nz = 2 * y;
-			double nw = ny + 2;
-			v.T = new double[] {nx / nw, ny / nw, nz / nw, 1.0};
-		}
-	}
-	
 	
 	public static double[] baryCenter(CoHDS hds){
 		double[] result = {0,0,0,1};

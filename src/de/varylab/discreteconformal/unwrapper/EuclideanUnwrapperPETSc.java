@@ -286,12 +286,12 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		// find the boundary components associated to each vertex in the list of circular vertices
 		List<CoEdge> circularEdges = new LinkedList<CoEdge>();
 		for (int vIndex : circularVerts) {
-			System.err.println("Processing circ vertex "+vIndex);
+//			System.err.println("Processing circ vertex "+vIndex);
 			CoVertex v1 = hds.getVertex(vIndex);
 			List<CoEdge> edges = HalfEdgeUtils.incomingEdges(v1);
 			CoEdge bedge = null;
 			for (CoEdge e : edges)	{
-				System.err.println("Start vertex = "+e.getStartVertex().getIndex());
+//				System.err.println("Start vertex = "+e.getStartVertex().getIndex());
 				if (HalfEdgeUtils.isBoundaryEdge(e)) {
 					bedge = e;
 					break;
@@ -301,11 +301,11 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 				throw new IllegalStateException("No boundary edge on vertex "+vIndex);
 			}
 			CoFace filler = HalfEdgeUtils.fillHole(bedge);
-			int n = circularEdges.size();
+//			int n = circularEdges.size();
 			// weird error message when I try to assign the triangulateFace()  call to local variable!
 			circularEdges.addAll(Triangulator.triangulateByCuttingCorners(filler, a));
-			int m = circularEdges.size();
-			System.err.println("Added "+(m-n)+" edges");
+//			int m = circularEdges.size();
+//			System.err.println("Added "+(m-n)+" edges");
 		}
 		for (CoEdge ce : circularEdges) {
 //				CoVertex v2 = hds.getVertex(eIndex[1]);

@@ -23,7 +23,6 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.CustomEdgeInfo;
-import de.varylab.discreteconformal.util.TestUtility;
 
 public class CircleDomainUnwrapperTest {
 
@@ -69,15 +68,15 @@ public class CircleDomainUnwrapperTest {
 		HalfEdgeUtils.constructFaceByVertices(hds, v3, v4, v7);
 		HalfEdgeUtils.constructFaceByVertices(hds, v0, v4, v3);
 		
-		a.set(Position.class, v0, new double[]{0,0});
+		a.set(Position.class, v0, new double[]{0, -0.5});
 		 // make it a rectangle
-		a.set(Position.class, v1, new double[]{3,0});
-		a.set(Position.class, v2, new double[]{5,3});
-		a.set(Position.class, v3, new double[]{0,3});
-		a.set(Position.class, v4, new double[]{1,1});
-		a.set(Position.class, v5, new double[]{2,1});
-		a.set(Position.class, v6, new double[]{2,2});
-		a.set(Position.class, v7, new double[]{1,2});
+		a.set(Position.class, v1, new double[]{3, 0});
+		a.set(Position.class, v2, new double[]{2.5, 3});
+		a.set(Position.class, v3, new double[]{0, 3});
+		a.set(Position.class, v4, new double[]{1, 1});
+		a.set(Position.class, v5, new double[]{2, 1});
+		a.set(Position.class, v6, new double[]{2, 2});
+		a.set(Position.class, v7, new double[]{1, 2});
 	}
 	
 	
@@ -88,11 +87,6 @@ public class CircleDomainUnwrapperTest {
 		unwrapper.setGradientTolerance(1E-10);
 		unwrapper.setMaxIterations(50);
 		unwrapper.unwrap(hds, 0, a);
-		
-		TestUtility.display(hds, true);
-		synchronized (this) {
-			wait();	
-		}
 		
 		double[] vec1 = Rn.subtract(null, v1.T, v0.T);
 		double[] vec2 = Rn.subtract(null, v3.T, v0.T);
@@ -171,11 +165,6 @@ public class CircleDomainUnwrapperTest {
 		Rn.subtract(vec4, tArr[5], tArr[6]);
 		angle2 = Rn.euclideanAngle(vec3, vec4);
 		Assert.assertEquals(Math.PI, angle1 + angle2, 1E-8);	
-	}
-	
-	
-	public static void main(String[] args) throws Exception {
-		new CircleDomainUnwrapperTest().testUnwrap();
 	}
 	
 }

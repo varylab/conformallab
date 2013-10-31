@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
 import de.jreality.reader.Readers;
