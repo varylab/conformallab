@@ -48,6 +48,7 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
+import de.jtem.halfedgetools.plugin.HalfedgeListener;
 import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.halfedgetools.plugin.SelectionListener;
 import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
@@ -90,6 +91,8 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 	private SelectionListener
 		visSelectionListener = null,
 		mainSelectionListener = null;
+	private HalfedgeListener
+		mainHalfedgeListener = null;
 
 	public DomainVisualisationPlugin() {
 		shrinkPanel.setTitle("Parameterization Domain");
@@ -232,6 +235,25 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		};
 		mainHif.addSelectionListener(mainSelectionListener);
 		visHif.addSelectionListener(visSelectionListener);
+		mainHalfedgeListener = new HalfedgeListener() {
+			@Override
+			public void layerRemoved(HalfedgeLayer layer) {
+			}
+			@Override
+			public void layerCreated(HalfedgeLayer layer) {
+			}
+			@Override
+			public void dataChanged(HalfedgeLayer layer) {
+				updateVisualization();
+			}
+			@Override
+			public void adaptersChanged(HalfedgeLayer layer) {
+			}
+			@Override
+			public void activeLayerChanged(HalfedgeLayer old, HalfedgeLayer active) {
+			}
+		};
+		mainHif.addHalfedgeListener(mainHalfedgeListener);
 		domainScene = domainViewer.getPlugin(Scene.class);
 		domainViewer.getPlugin(BackgroundColor.class).setColor("UI Background");
 		domainViewer.getPlugin(CameraMenu.class).setZoomEnabled(true);
@@ -239,6 +261,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		toolBar.addSeparator(DomainVisualisationPlugin.class, 9999.0);
 		toolBar.addAction(DomainVisualisationPlugin.class, 10000.0, new UpdateAction());
 		toolBar.addAction(DomainVisualisationPlugin.class, 10000.0, new MarkBoundariesAction());
+		updateVisualization();
 	}
 	
 	boolean transferInProgress = false;
@@ -246,7 +269,6 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		if (transferInProgress) return;
 		try {
 			transferInProgress = true;
-			System.out.println("transfer ");
 			// texture apprearance
 			dst.setTextureScaleLock(src.isTextureScaleLock());
 			dst.setTextureScaleU(src.getTextureScaleU());
