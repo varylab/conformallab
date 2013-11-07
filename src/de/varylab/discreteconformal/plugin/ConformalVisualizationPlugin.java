@@ -87,21 +87,48 @@ public class ConformalVisualizationPlugin extends ShrinkPanelPlugin implements A
 		return HyperbolicModel.Klein;
 	}
 	
-	public void setInterpolation(InterpolationMethod method) {
-		interpolationCombo.setSelectedItem(method);
-		updateAdapters();
+	public void setInterpolation(InterpolationMethod method, boolean updateGeometry) {
+		try {
+			interpolationCombo.removeActionListener(this);
+			interpolationCombo.setSelectedItem(method);
+		} finally {
+			interpolationCombo.addActionListener(this);
+		}
+		if (updateGeometry) {
+			updateGeometry();
+		} else {
+			updateAdapters();
+		}
 	}
 
-	public void setHyperbolicModel(HyperbolicModel model) {
-		kleinButton.setSelected(model == HyperbolicModel.Klein);
-		poincareButton.setSelected(model == HyperbolicModel.Poincaré);
-		halfplaneButton.setSelected(model == HyperbolicModel.Halfplane);
-		updateAdapters();
+	public void setHyperbolicModel(HyperbolicModel model, boolean updateGeometry) {
+		try {
+			kleinButton.removeActionListener(this);
+			poincareButton.removeActionListener(this);
+			halfplaneButton.removeActionListener(this);
+			kleinButton.setSelected(model == HyperbolicModel.Klein);
+			poincareButton.setSelected(model == HyperbolicModel.Poincaré);
+			halfplaneButton.setSelected(model == HyperbolicModel.Halfplane);
+		} finally {
+			kleinButton.addActionListener(this);
+			poincareButton.addActionListener(this);
+			halfplaneButton.addActionListener(this);
+		}
+		if (updateGeometry) {
+			updateGeometry();
+		} else {
+			updateAdapters();
+		}
 	}
 	
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		updateGeometry();
+	}
+
+
+	private void updateGeometry() {
 		updateAdapters();
 		hif.updateNoUndo();
 	}

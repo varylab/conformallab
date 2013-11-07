@@ -5,6 +5,7 @@ import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -13,7 +14,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import cern.colt.Arrays;
 import de.jreality.math.Matrix;
 import de.jreality.math.P2;
 import de.varylab.discreteconformal.heds.CoEdge;

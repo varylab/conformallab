@@ -18,6 +18,7 @@ import static de.jreality.shader.CommonAttributes.TRANSPARENCY_ENABLED;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Klein;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Poincaré;
+import static de.varylab.discreteconformal.plugin.InterpolationMethod.Incircle;
 import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawTriangulation;
 import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawUniversalCoverImage;
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
@@ -35,6 +36,7 @@ import static javax.swing.SwingUtilities.getWindowAncestor;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -1036,6 +1038,16 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	
 
 	public void updateDomainImage() {
+		Runnable r = new Runnable() {
+			@Override
+			public void run() {
+				updateDomainImageDirect();
+			}
+		};
+		EventQueue.invokeLater(r);
+	}
+	
+	public void updateDomainImageDirect() {
 		if (domainVisualisationPlugin == null) return;
 		domainVisualisationPlugin.updateVisualization();
 		HalfedgeInterface domInterface = domainVisualisationPlugin.getDomainInterface();
@@ -1109,9 +1121,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			return;
 		}
 		HyperbolicModel model = genus <= 1 ? Klein : Poincaré;
-		vis.setHyperbolicModel(model);
+		vis.setHyperbolicModel(model, false);
 		hif.addLayerAdapter(metricErrorAdapter, false);
-		vis.setInterpolation(InterpolationMethod.Incircle);
+		vis.setInterpolation(Incircle, false);
 		hif.set(surface);
 	}
 	
