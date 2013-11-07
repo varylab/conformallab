@@ -85,7 +85,6 @@ public class ConformalLab implements Runnable {
 	@Override
 	public void run() {
 		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
-		JRViewer.setApplicationTitle("Conformal Lab");
 		JRHalfedgeViewer.initHalfedgeFronted();
 		JRViewer v = new JRViewer();
 		installLookAndFeel();
@@ -127,6 +126,7 @@ public class ConformalLab implements Runnable {
 	
 	
 	public static void main(final String[] args) throws Exception {
+		JRViewer.setApplicationTitle("Discrete Conformal Lab");
 		if (args.length == 0) { // gui mode
 			EventQueue.invokeLater(new ConformalLab());
 		} else { // batch mode

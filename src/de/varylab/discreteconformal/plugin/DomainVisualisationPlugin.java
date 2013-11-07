@@ -28,6 +28,7 @@ import de.jreality.plugin.basic.View;
 import de.jreality.plugin.basic.ViewToolBar;
 import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.plugin.menu.BackgroundColor;
+import de.jreality.plugin.menu.CameraMenu;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.SceneGraphPath;
 import de.jreality.scene.Transformation;
@@ -61,7 +62,7 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoTextureDomainPositionAdapter;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
-public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements AppearanceListener, SelectionListener {
+public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 
 	private HalfedgeInterface
 		mainHif = null,
@@ -85,8 +86,13 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 	
 	private SceneGraphComponent
 		copiesComponent = new SceneGraphComponent("Copies"); 
+	
+	private SelectionListener
+		visSelectionListener = null,
+		mainSelectionListener = null;
 
 	public DomainVisualisationPlugin() {
+		shrinkPanel.setTitle("Parameterization Domain");
 		setInitialPosition(SHRINKER_TOP);
 		shrinkPanel.setLayout(new GridLayout());
 		shrinkPanel.add(viewerPanel);
@@ -172,58 +178,101 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		domainViewer.registerPlugin(VertexEditorPlugin.class);
 		domainViewer.setShowPanelSlots(false, false, false, false);
 		domainViewer.setShowToolBar(true);
-		domainViewer.getController().setSaveOnExit(true);
-		domainViewer.getController().setAskBeforeSaveOnExit(false);
-		domainViewer.getController().setLoadFromUserPropertyFile(true);
+		domainViewer.setShowMenuBar(true);
 		domainViewer.getController().setRegisterSPIPlugins(false);
 		JFrame.setDefaultLookAndFeelDecorated(false);
 		JRootPane viewerRoot = domainViewer.startupLocal();
-//		viewerRoot.setJMenuBar(null);
 		viewerRoot.setPreferredSize(new Dimension(200, 400));
 		viewerPanel.add(viewerRoot);
 		mainHif = c.getPlugin(HalfedgeInterface.class);
 		mainAppearance = c.getPlugin(ContentAppearance.class);
-		mainAppearance.getAppearanceInspector().getAppearance().addAppearanceListener(this);
+		mainAppearance.getAppearanceInspector().getAppearance().addAppearanceListener(new AppearanceListener() {
+			@Override
+			public void appearanceChanged(AppearanceEvent ev) {
+				AppearanceInspector vi = visAppearance.getAppearanceInspector();
+				AppearanceInspector mi = mainAppearance.getAppearanceInspector();
+				transferAppearance(mi, vi);
+			}
+		});
 		visHif = domainViewer.getPlugin(HalfedgeInterface.class);
-		visAppearance = domainViewer.getPlugin(ContentAppearance.class);
 		visHif.addAdapter(domainAdapter, true);
-		mainHif.addSelectionListener(this);
-		visHif.addSelectionListener(this);
+		visAppearance = domainViewer.getPlugin(ContentAppearance.class);
+		visAppearance.getAppearanceInspector().getAppearance().addAppearanceListener(new AppearanceListener() {
+			@Override
+			public void appearanceChanged(AppearanceEvent ev) {
+				AppearanceInspector vi = visAppearance.getAppearanceInspector();
+				AppearanceInspector mi = mainAppearance.getAppearanceInspector();
+				transferAppearance(vi, mi);
+			}
+		});
+		AppearanceInspector vi = visAppearance.getAppearanceInspector();
+		AppearanceInspector mi = mainAppearance.getAppearanceInspector();
+		transferAppearance(mi, vi);
+		mainSelectionListener = new SelectionListener() {
+			@Override
+			public void selectionChanged(HalfedgeSelection s, HalfedgeInterface sif) {
+				visHif.removeSelectionListener(visSelectionListener);
+				try {
+					visHif.setSelection(mainHif.getSelection());
+				} finally {
+					visHif.addSelectionListener(visSelectionListener);
+				}
+			}
+		};
+		visSelectionListener = new SelectionListener() {
+			@Override
+			public void selectionChanged(HalfedgeSelection s, HalfedgeInterface sif) {
+				mainHif.removeSelectionListener(mainSelectionListener);
+				try {
+					mainHif.setSelection(visHif.getSelection());
+				} finally {
+					mainHif.addSelectionListener(mainSelectionListener);
+				}
+			}
+		};
+		mainHif.addSelectionListener(mainSelectionListener);
+		visHif.addSelectionListener(visSelectionListener);
 		domainScene = domainViewer.getPlugin(Scene.class);
 		domainViewer.getPlugin(BackgroundColor.class).setColor("UI Background");
+		domainViewer.getPlugin(CameraMenu.class).setZoomEnabled(true);
 		ViewToolBar toolBar = domainViewer.getPlugin(ViewToolBar.class);
 		toolBar.addSeparator(DomainVisualisationPlugin.class, 9999.0);
 		toolBar.addAction(DomainVisualisationPlugin.class, 10000.0, new UpdateAction());
 		toolBar.addAction(DomainVisualisationPlugin.class, 10000.0, new MarkBoundariesAction());
 	}
 	
-	@Override
-	public void appearanceChanged(AppearanceEvent ev) {
-		AppearanceInspector vi = visAppearance.getAppearanceInspector();
-		AppearanceInspector mi = mainAppearance.getAppearanceInspector();
-		
-		// texture apprearance
-		vi.setTextureScaleLock(mi.isTextureScaleLock());
-		vi.setTextureScaleU(mi.getTextureScaleU());
-		vi.setTextureScaleV(mi.getTextureScaleV());
-		vi.setTextureTranslationU(mi.getTextureTranslationU());
-		vi.setTextureTranslationV(mi.getTextureTranslationV());
-		vi.setTextureRotationAngle(mi.getTextureRotationAngle());
-		vi.setTextureShearAngle(mi.getTextureShearAngle());
-		vi.setTexture(mi.getTexture());
-		
-		// vertices, edges, and faces
-		vi.setShowPoints(mi.isShowPoints());
-		vi.setShowLines(mi.isShowLines());
-		vi.setShowFaces(mi.isShowFaces());
-		vi.setPointRadius(mi.getPointRadius());
-		vi.setSpheres(mi.isSpheres());
-		vi.setTubeRadius(mi.getTubeRadius());
-		vi.setTubes(mi.isTubes());
-		vi.setPointColor(mi.getPointColor());
-		vi.setLineColor(mi.getLineColor());
-		vi.setFaceColor(mi.getFaceColor());
-		vi.setFacesFlat(mi.isFacesFlat());
+	boolean transferInProgress = false;
+	public void transferAppearance(AppearanceInspector src, AppearanceInspector dst) {
+		if (transferInProgress) return;
+		try {
+			transferInProgress = true;
+			System.out.println("transfer ");
+			// texture apprearance
+			dst.setTextureScaleLock(src.isTextureScaleLock());
+			dst.setTextureScaleU(src.getTextureScaleU());
+			dst.setTextureScaleV(src.getTextureScaleV());
+			dst.setTextureTranslationU(src.getTextureTranslationU());
+			dst.setTextureTranslationV(src.getTextureTranslationV());
+			dst.setTextureRotationAngle(src.getTextureRotationAngle());
+			dst.setTextureShearAngle(src.getTextureShearAngle());
+			dst.setTextures(src.getTextures());
+			dst.setTexture(src.getTexture());
+			
+			// vertices, edges, and faces
+			dst.setShowPoints(src.isShowPoints());
+			dst.setShowLines(src.isShowLines());
+			dst.setShowFaces(src.isShowFaces());
+			dst.setPointRadius(src.getPointRadius());
+			dst.setSpheres(src.isSpheres());
+			dst.setTubeRadius(src.getTubeRadius());
+			dst.setTubes(src.isTubes());
+			dst.setPointColor(src.getPointColor());
+			dst.setLineColor(src.getLineColor());
+			dst.setFaceColor(src.getFaceColor());
+			dst.setFacesFlat(src.isFacesFlat());
+		} finally {
+			transferInProgress = false;
+		}
 	}
 	
 	@Override
@@ -235,26 +284,6 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		return visHif;
 	}
 
-	private boolean ignoreSelectionChanged = false;
-	@Override
-	public void selectionChanged(HalfedgeSelection s, HalfedgeInterface sif) {
-		if (shrinkPanel.isShrinked()) {
-			return;
-		}
-		if (ignoreSelectionChanged) return;
-		ignoreSelectionChanged = true;
-			try {
-			if (sif == mainHif && !visHif.getSelection().equals(s)) {
-				updateAdapters();
-				visHif.setSelection(s);
-			}
-			if (sif == visHif && !mainHif.getSelection().equals(s)) {
-				mainHif.setSelection(s);
-			}
-		} finally {
-			ignoreSelectionChanged = false;
-		}
-	}
 	
 	private class MarkBoundariesAction extends AbstractAction {
 
@@ -275,7 +304,6 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin implements Appe
 		}
 		
 	}
-	
 	
 	
 	@Position
