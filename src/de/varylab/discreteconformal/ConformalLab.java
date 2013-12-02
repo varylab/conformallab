@@ -22,6 +22,7 @@ import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
 import de.jtem.jrworkspace.plugin.Plugin;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.SystemLookAndFeel;
 import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.ConformalVisualizationPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
@@ -69,6 +70,7 @@ public class ConformalLab implements Runnable {
 		s.add(new ConformalVisualizationPlugin());
 		s.add(new DomainVisualisationPlugin());
 		s.add(new IndexMedialGraph());
+		s.add(new ConformalDataPlugin());
 		return s;
 	}
 	

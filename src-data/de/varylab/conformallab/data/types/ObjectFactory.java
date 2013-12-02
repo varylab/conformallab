@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.12.02 um 03:45:01 PM CET 
+// Generiert: 2013.12.02 um 05:45:19 PM CET 
 //
 
 
@@ -33,6 +33,7 @@ public class ObjectFactory {
 
     private final static QName _DiscreteMetric_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteMetric");
     private final static QName _SchottkyData_QNAME = new QName("http://www.varylab.com/conformallab/types", "SchottkyData");
+    private final static QName _ConformalDataList_QNAME = new QName("http://www.varylab.com/conformallab/types", "ConformalDataList");
     private final static QName _DiscreteEmbedding_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteEmbedding");
 
     /**
@@ -67,19 +68,11 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link MetricEdge }
+     * Create an instance of {@link ConformalDataList }
      * 
      */
-    public MetricEdge createMetricEdge() {
-        return new MetricEdge();
-    }
-
-    /**
-     * Create an instance of {@link Moebius }
-     * 
-     */
-    public Moebius createMoebius() {
-        return new Moebius();
+    public ConformalDataList createConformalDataList() {
+        return new ConformalDataList();
     }
 
     /**
@@ -88,22 +81,6 @@ public class ObjectFactory {
      */
     public EmbeddedTriangle createEmbeddedTriangle() {
         return new EmbeddedTriangle();
-    }
-
-    /**
-     * Create an instance of {@link MetricTriangle }
-     * 
-     */
-    public MetricTriangle createMetricTriangle() {
-        return new MetricTriangle();
-    }
-
-    /**
-     * Create an instance of {@link Circle }
-     * 
-     */
-    public Circle createCircle() {
-        return new Circle();
     }
 
     /**
@@ -131,6 +108,46 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link MetricEdge }
+     * 
+     */
+    public MetricEdge createMetricEdge() {
+        return new MetricEdge();
+    }
+
+    /**
+     * Create an instance of {@link Moebius }
+     * 
+     */
+    public Moebius createMoebius() {
+        return new Moebius();
+    }
+
+    /**
+     * Create an instance of {@link ConformalData }
+     * 
+     */
+    public ConformalData createConformalData() {
+        return new ConformalData();
+    }
+
+    /**
+     * Create an instance of {@link MetricTriangle }
+     * 
+     */
+    public MetricTriangle createMetricTriangle() {
+        return new MetricTriangle();
+    }
+
+    /**
+     * Create an instance of {@link Circle }
+     * 
+     */
+    public Circle createCircle() {
+        return new Circle();
+    }
+
+    /**
      * Create an instance of {@link JAXBElement }{@code <}{@link DiscreteMetric }{@code >}}
      * 
      */
@@ -146,6 +163,15 @@ public class ObjectFactory {
     @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "SchottkyData")
     public JAXBElement<SchottkyData> createSchottkyData(SchottkyData value) {
         return new JAXBElement<SchottkyData>(_SchottkyData_QNAME, SchottkyData.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link ConformalDataList }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "ConformalDataList")
+    public JAXBElement<ConformalDataList> createConformalDataList(ConformalDataList value) {
+        return new JAXBElement<ConformalDataList>(_ConformalDataList_QNAME, ConformalDataList.class, null, value);
     }
 
     /**

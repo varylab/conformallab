@@ -7,6 +7,11 @@
         <jxb:schemaBindings>
             <jxb:package name="de.varylab.conformallab.data.types"/>
         </jxb:schemaBindings>
+        
+        <jxb:bindings node="//xs:complexType[@name='ConformalDataList']//xs:choice">
+    		<jxb:property name="data"/>
+    	</jxb:bindings>       
+    	    	    	    
         <jxb:bindings node="//xs:complexType[@name='SchottkyData']//xs:element[@name='SchottkyGenerator']">
     		<jxb:property name="generators"/>
     	</jxb:bindings>

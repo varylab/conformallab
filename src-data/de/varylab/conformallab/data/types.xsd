@@ -7,30 +7,52 @@
 	xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
     jxb:version="2.0"	
 >
+	<xs:element name="ConformalDataList" type="types:ConformalDataList"/>
 	<xs:element name="SchottkyData" type="types:SchottkyData"/>
-	
 	<xs:element name="DiscreteMetric" type="types:DiscreteMetric"/>
-	
 	<xs:element name="DiscreteEmbedding" type="types:DiscreteEmbedding"/>
+
+	<xs:complexType name="ConformalData"/>
+	<xs:complexType name="ConformalDataList">
+		<xs:sequence>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="SchottkyData" type="types:SchottkyData"/>
+				<xs:element name="DiscreteMetric" type="types:DiscreteMetric"/>
+				<xs:element name="DiscreteEmbedding" type="types:DiscreteEmbedding"/>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
 	
 	<xs:complexType name="DiscreteEmbedding">
-		<xs:sequence>
-			<xs:element name="EmbeddedVertex" type="types:EmbeddedVertex" minOccurs="0" maxOccurs="unbounded"/>
-			<xs:element name="EmbeddedTriangle" type="types:EmbeddedTriangle" minOccurs="0" maxOccurs="unbounded"/>
-		</xs:sequence>
+		<xs:complexContent>
+			<xs:extension base="types:ConformalData">
+				<xs:sequence>
+					<xs:element name="EmbeddedVertex" type="types:EmbeddedVertex" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="EmbeddedTriangle" type="types:EmbeddedTriangle" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>	
+			</xs:extension>
+		</xs:complexContent>
 	</xs:complexType>
 
 	<xs:complexType name="DiscreteMetric">
-		<xs:sequence>
-			<xs:element name="MetricEdge" type="types:MetricEdge" minOccurs="0" maxOccurs="unbounded"/>
-			<xs:element name="MetricTriangle" type="types:MetricTriangle" minOccurs="0" maxOccurs="unbounded"/>
-		</xs:sequence>
+		<xs:complexContent>
+			<xs:extension base="types:ConformalData">
+				<xs:sequence>
+					<xs:element name="MetricEdge" type="types:MetricEdge" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="MetricTriangle" type="types:MetricTriangle" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
 	</xs:complexType>
 
 	<xs:complexType name="SchottkyData">
-		<xs:sequence>
-			<xs:element name="SchottkyGenerator" type="types:SchottkyGenerator" minOccurs="0" maxOccurs="unbounded"/>
-		</xs:sequence>
+		<xs:complexContent>
+			<xs:extension base="types:ConformalData">	
+				<xs:sequence>
+					<xs:element name="SchottkyGenerator" type="types:SchottkyGenerator" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
 	</xs:complexType>
 
 	<xs:complexType name="SchottkyGenerator">

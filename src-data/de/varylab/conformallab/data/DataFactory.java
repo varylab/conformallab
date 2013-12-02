@@ -17,6 +17,7 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import de.varylab.conformallab.data.types.ConformalDataList;
 import de.varylab.conformallab.data.types.DiscreteEmbedding;
 import de.varylab.conformallab.data.types.DiscreteMetric;
 import de.varylab.conformallab.data.types.ObjectFactory;
@@ -81,6 +82,17 @@ public class DataFactory {
 	public static void writeDiscreteEmbedding(DiscreteEmbedding data, OutputStream out) throws JAXBException {
 		ObjectFactory of = new ObjectFactory();
 		JAXBElement<DiscreteEmbedding> e = of.createDiscreteEmbedding(data);
+		typesMarshaller.marshal(e, out);
+	}
+	
+	public static ConformalDataList readConformalDataList(InputStream in) throws JAXBException {
+		StreamSource inSource = new StreamSource(in);
+		JAXBElement<ConformalDataList> e = typesUnmarshaller.unmarshal(inSource, ConformalDataList.class);
+		return e.getValue();
+	}
+	public static void writeConformalDataList(ConformalDataList data, OutputStream out) throws JAXBException {
+		ObjectFactory of = new ObjectFactory();
+		JAXBElement<ConformalDataList> e = of.createConformalDataList(data);
 		typesMarshaller.marshal(e, out);
 	}
 	
