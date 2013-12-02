@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.10.17 um 02:00:13 PM CEST 
+// Generiert: 2013.12.02 um 03:45:01 PM CET 
 //
 
 
@@ -31,7 +31,9 @@ import javax.xml.namespace.QName;
 @XmlRegistry
 public class ObjectFactory {
 
+    private final static QName _DiscreteMetric_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteMetric");
     private final static QName _SchottkyData_QNAME = new QName("http://www.varylab.com/conformallab/types", "SchottkyData");
+    private final static QName _DiscreteEmbedding_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteEmbedding");
 
     /**
      * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: de.varylab.conformallab.data.types
@@ -49,11 +51,51 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link DiscreteMetric }
+     * 
+     */
+    public DiscreteMetric createDiscreteMetric() {
+        return new DiscreteMetric();
+    }
+
+    /**
+     * Create an instance of {@link DiscreteEmbedding }
+     * 
+     */
+    public DiscreteEmbedding createDiscreteEmbedding() {
+        return new DiscreteEmbedding();
+    }
+
+    /**
+     * Create an instance of {@link MetricEdge }
+     * 
+     */
+    public MetricEdge createMetricEdge() {
+        return new MetricEdge();
+    }
+
+    /**
      * Create an instance of {@link Moebius }
      * 
      */
     public Moebius createMoebius() {
         return new Moebius();
+    }
+
+    /**
+     * Create an instance of {@link EmbeddedTriangle }
+     * 
+     */
+    public EmbeddedTriangle createEmbeddedTriangle() {
+        return new EmbeddedTriangle();
+    }
+
+    /**
+     * Create an instance of {@link MetricTriangle }
+     * 
+     */
+    public MetricTriangle createMetricTriangle() {
+        return new MetricTriangle();
     }
 
     /**
@@ -81,12 +123,38 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link EmbeddedVertex }
+     * 
+     */
+    public EmbeddedVertex createEmbeddedVertex() {
+        return new EmbeddedVertex();
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link DiscreteMetric }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "DiscreteMetric")
+    public JAXBElement<DiscreteMetric> createDiscreteMetric(DiscreteMetric value) {
+        return new JAXBElement<DiscreteMetric>(_DiscreteMetric_QNAME, DiscreteMetric.class, null, value);
+    }
+
+    /**
      * Create an instance of {@link JAXBElement }{@code <}{@link SchottkyData }{@code >}}
      * 
      */
     @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "SchottkyData")
     public JAXBElement<SchottkyData> createSchottkyData(SchottkyData value) {
         return new JAXBElement<SchottkyData>(_SchottkyData_QNAME, SchottkyData.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link DiscreteEmbedding }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "DiscreteEmbedding")
+    public JAXBElement<DiscreteEmbedding> createDiscreteEmbedding(DiscreteEmbedding value) {
+        return new JAXBElement<DiscreteEmbedding>(_DiscreteEmbedding_QNAME, DiscreteEmbedding.class, null, value);
     }
 
 }

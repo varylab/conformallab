@@ -17,6 +17,8 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import de.varylab.conformallab.data.types.DiscreteEmbedding;
+import de.varylab.conformallab.data.types.DiscreteMetric;
 import de.varylab.conformallab.data.types.ObjectFactory;
 import de.varylab.conformallab.data.types.SchottkyData;
 
@@ -54,12 +56,32 @@ public class DataFactory {
 		JAXBElement<SchottkyData> e = typesUnmarshaller.unmarshal(inSource, SchottkyData.class);
 		return e.getValue();
 	}
-	
 	public static void writeSchottkyData(SchottkyData data, OutputStream out) throws JAXBException {
 		ObjectFactory of = new ObjectFactory();
 		JAXBElement<SchottkyData> e = of.createSchottkyData(data);
 		typesMarshaller.marshal(e, out);
 	}
 	
+	public static DiscreteMetric readDiscreteMetric(InputStream in) throws JAXBException {
+		StreamSource inSource = new StreamSource(in);
+		JAXBElement<DiscreteMetric> e = typesUnmarshaller.unmarshal(inSource, DiscreteMetric.class);
+		return e.getValue();
+	}
+	public static void writeDiscreteMetric(DiscreteMetric data, OutputStream out) throws JAXBException {
+		ObjectFactory of = new ObjectFactory();
+		JAXBElement<DiscreteMetric> e = of.createDiscreteMetric(data);
+		typesMarshaller.marshal(e, out);
+	}
+	
+	public static DiscreteEmbedding readDiscreteEmbedding(InputStream in) throws JAXBException {
+		StreamSource inSource = new StreamSource(in);
+		JAXBElement<DiscreteEmbedding> e = typesUnmarshaller.unmarshal(inSource, DiscreteEmbedding.class);
+		return e.getValue();
+	}
+	public static void writeDiscreteEmbedding(DiscreteEmbedding data, OutputStream out) throws JAXBException {
+		ObjectFactory of = new ObjectFactory();
+		JAXBElement<DiscreteEmbedding> e = of.createDiscreteEmbedding(data);
+		typesMarshaller.marshal(e, out);
+	}
 	
 }

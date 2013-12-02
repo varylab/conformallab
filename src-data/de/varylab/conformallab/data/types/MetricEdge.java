@@ -15,16 +15,16 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse für Complex complex type.
+ * <p>Java-Klasse für MetricEdge complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
  * <pre>
- * &lt;complexType name="Complex">
+ * &lt;complexType name="MetricEdge">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;attribute name="re" use="required" type="{http://www.w3.org/2001/XMLSchema}double" />
- *       &lt;attribute name="im" use="required" type="{http://www.w3.org/2001/XMLSchema}double" />
+ *       &lt;attribute name="length" use="required" type="{http://www.w3.org/2001/XMLSchema}double" />
+ *       &lt;attribute name="index" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -33,44 +33,44 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "Complex")
-public class Complex {
+@XmlType(name = "MetricEdge")
+public class MetricEdge {
 
-    @XmlAttribute(name = "re", required = true)
-    protected double re;
-    @XmlAttribute(name = "im", required = true)
-    protected double im;
+    @XmlAttribute(name = "length", required = true)
+    protected double length;
+    @XmlAttribute(name = "index", required = true)
+    protected int index;
 
     /**
-     * Ruft den Wert der re-Eigenschaft ab.
+     * Ruft den Wert der length-Eigenschaft ab.
      * 
      */
-    public double getRe() {
-        return re;
+    public double getLength() {
+        return length;
     }
 
     /**
-     * Legt den Wert der re-Eigenschaft fest.
+     * Legt den Wert der length-Eigenschaft fest.
      * 
      */
-    public void setRe(double value) {
-        this.re = value;
+    public void setLength(double value) {
+        this.length = value;
     }
 
     /**
-     * Ruft den Wert der im-Eigenschaft ab.
+     * Ruft den Wert der index-Eigenschaft ab.
      * 
      */
-    public double getIm() {
-        return im;
+    public int getIndex() {
+        return index;
     }
 
     /**
-     * Legt den Wert der im-Eigenschaft fest.
+     * Legt den Wert der index-Eigenschaft fest.
      * 
      */
-    public void setIm(double value) {
-        this.im = value;
+    public void setIndex(int value) {
+        this.index = value;
     }
 
 }

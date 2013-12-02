@@ -10,6 +10,18 @@
         <jxb:bindings node="//xs:complexType[@name='SchottkyData']//xs:element[@name='SchottkyGenerator']">
     		<jxb:property name="generators"/>
     	</jxb:bindings>
+        <jxb:bindings node="//xs:complexType[@name='DiscreteEmbedding']//xs:element[@name='EmbeddedVertex']">
+    		<jxb:property name="vertices"/>
+    	</jxb:bindings>      	
+        <jxb:bindings node="//xs:complexType[@name='DiscreteEmbedding']//xs:element[@name='EmbeddedTriangle']">
+    		<jxb:property name="triangles"/>
+    	</jxb:bindings>  
+    	<jxb:bindings node="//xs:complexType[@name='DiscreteMetric']//xs:element[@name='MetricEdge']">
+    		<jxb:property name="edges"/>
+    	</jxb:bindings> 
+        <jxb:bindings node="//xs:complexType[@name='DiscreteMetric']//xs:element[@name='MetricTriangle']">
+    		<jxb:property name="triangles"/>
+    	</jxb:bindings>     	
     </jxb:bindings>
     
     <jxb:bindings namespace="http://www.varylab.com/conformallab/surface" schemaLocation="surface.xsd" >

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DiscreteMetric xmlns="http://www.varylab.com/conformallab/types">
+	<MetricEdge index="0" length="3.141592653589793"/>
+	<MetricEdge index="1" length="2.718281828459045"/>
+	<MetricEdge index="2" length="1.0"/>
+	<MetricTriangle edge1="0" edge2="1" edge3="2"/>
+</DiscreteMetric>

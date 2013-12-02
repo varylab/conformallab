@@ -8,6 +8,24 @@
     jxb:version="2.0"	
 >
 	<xs:element name="SchottkyData" type="types:SchottkyData"/>
+	
+	<xs:element name="DiscreteMetric" type="types:DiscreteMetric"/>
+	
+	<xs:element name="DiscreteEmbedding" type="types:DiscreteEmbedding"/>
+	
+	<xs:complexType name="DiscreteEmbedding">
+		<xs:sequence>
+			<xs:element name="EmbeddedVertex" type="types:EmbeddedVertex" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="EmbeddedTriangle" type="types:EmbeddedTriangle" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="DiscreteMetric">
+		<xs:sequence>
+			<xs:element name="MetricEdge" type="types:MetricEdge" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="MetricTriangle" type="types:MetricTriangle" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
 
 	<xs:complexType name="SchottkyData">
 		<xs:sequence>
@@ -22,6 +40,32 @@
 			<xs:element name="Mu" type="types:Complex"/>
 			<xs:element name="Circle" type="types:Circle"/>
 		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="EmbeddedVertex">
+		<xs:attribute name="x" type="xs:double" use="required"/>
+		<xs:attribute name="y" type="xs:double" use="required"/>
+		<xs:attribute name="z" type="xs:double" use="required"/>
+		<xs:attribute name="w" type="xs:double" use="required"/>
+		<xs:attribute name="index" type="xs:int" use="required"/>
+	</xs:complexType>
+	
+	<xs:complexType name="EmbeddedTriangle">
+		<xs:attribute name="vertex1" type="xs:int" use="required"/>
+		<xs:attribute name="vertex2" type="xs:int" use="required"/>
+		<xs:attribute name="vertex3" type="xs:int" use="required"/>
+	</xs:complexType>
+
+
+	<xs:complexType name="MetricEdge">
+		<xs:attribute name="length" type="xs:double" use="required"/>
+		<xs:attribute name="index" type="xs:int" use="required"/>
+	</xs:complexType>
+	
+	<xs:complexType name="MetricTriangle">
+		<xs:attribute name="edge1" type="xs:int" use="required"/>
+		<xs:attribute name="edge2" type="xs:int" use="required"/>
+		<xs:attribute name="edge3" type="xs:int" use="required"/>
 	</xs:complexType>
 
 	<xs:complexType name="Complex">
