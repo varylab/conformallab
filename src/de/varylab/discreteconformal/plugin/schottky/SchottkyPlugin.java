@@ -45,16 +45,19 @@ import de.jreality.ui.LayoutFactory;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.java2d.Viewer2D;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.mfc.field.Complex;
+import de.varylab.conformallab.data.types.SchottkyData;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
@@ -65,6 +68,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		hif = null;
 	private DiscreteConformalPlugin
 		dcp = null;
+	private ConformalDataPlugin
+		conformalDataPlugin = null;
 	private SchottkyModeller
 		schottkyModeller = new SchottkyModeller();
 	private Viewer2D
@@ -161,6 +166,9 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		}
 		if (generateButton == event.getSource() || toFuchsianButton == event.getSource()) {
 			List<SchottkyGenerator> pairs = schottkyModeller.getGenerators();
+			SchottkyData data = SchottkyIO.toSchottkyData("Schottky Data g" + pairs.size(), pairs);
+			conformalDataPlugin.addData(data);
+			
 			Complex root = schottkyModeller.getBasePoint();
 			Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
 			List<Set<CoEdge>> cycles = new LinkedList<Set<CoEdge>>();
@@ -177,11 +185,13 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			if (generateButton == event.getSource()) {
 				hif.set(hds);
 				hif.addLayerAdapter(schottkyMetric, false);
+				conformalDataPlugin.addDiscreteMetric("Input Schottky Data Metric", hds, hif.getAdapters());
 				return;
 			}
 			if (toFuchsianButton == event.getSource()) {
 				AdapterSet aSet = hif.getAdapters();
 				aSet.add(schottkyMetric);
+				conformalDataPlugin.addDiscreteMetric("Input Schottky Data Metric", hds, aSet);
 				
 				int genus = HalfEdgeUtils.getGenus(hds);
 				System.out.println("unwrapping surface of genus " + genus + "...");
@@ -194,6 +204,11 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 					JOptionPane.showMessageDialog(shrinkPanel, e.getMessage(), "Optimizer error", WARNING_MESSAGE);
 					e.printStackTrace();
 					return;
+				}
+				if (genus == 1) {
+					conformalDataPlugin.addDiscreteEmbedding("Output Euclidean Embedding", hds, aSet, TexturePosition4d.class);
+				} else {
+					conformalDataPlugin.addDiscreteEmbedding("Output Klein Model Fuchsian Embedding", hds, aSet, TexturePosition4d.class);
 				}
 				dcp.createVisualization(hds, genus, cutInfo);
 				dcp.updateSurface();
@@ -375,6 +390,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
 		dcp = c.getPlugin(DiscreteConformalPlugin.class);
+		conformalDataPlugin = c.getPlugin(ConformalDataPlugin.class);
 	}
 	
 	@Override

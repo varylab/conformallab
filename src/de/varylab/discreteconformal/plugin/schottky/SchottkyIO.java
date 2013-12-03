@@ -14,9 +14,11 @@ import de.varylab.conformallab.data.types.SchottkyData;
 
 public class SchottkyIO {
 
-	public static void writeSchottkyData(List<SchottkyGenerator> generators, OutputStream out) throws JAXBException {
+	
+	public static SchottkyData toSchottkyData(String name, List<SchottkyGenerator> generators) {
 		ObjectFactory of = new ObjectFactory();
 		SchottkyData schottkyData = of.createSchottkyData();
+		schottkyData.setName(name);
 		for (SchottkyGenerator s : generators) {
 			de.varylab.conformallab.data.types.SchottkyGenerator g = of.createSchottkyGenerator();
 			de.varylab.conformallab.data.types.Complex Ad = of.createComplex();
@@ -40,10 +42,17 @@ public class SchottkyIO {
 			g.setCircle(Cd);
 			schottkyData.getGenerators().add(g);
 		}
-		DataFactory.writeSchottkyData(schottkyData, out);
+		return schottkyData;
 	}
 	
-	public static List<SchottkyGenerator> readSchottkyData(InputStream in) throws JAXBException {
+	
+	public static void writeSchottkyData(List<SchottkyGenerator> generators, OutputStream out) throws JAXBException {
+		SchottkyData schottkyData = toSchottkyData("Schottky Data", generators);
+		DataFactory.writeSchottkyData(schottkyData, out);
+	}
+
+
+	public static List<SchottkyGenerator> toGeneratorList(InputStream in) throws JAXBException {
 		List<SchottkyGenerator> result = new LinkedList<SchottkyGenerator>();
 		SchottkyData data = DataFactory.loadSchottkyData(in);
 		for (de.varylab.conformallab.data.types.SchottkyGenerator s : data.getGenerators()) {
@@ -61,5 +70,12 @@ public class SchottkyIO {
 		}
 		return result;
 	}
+	
+	
+	public static List<SchottkyGenerator> readSchottkyData(InputStream in) throws JAXBException {
+		List<SchottkyGenerator> result = toGeneratorList(in);
+		return result;
+	}
+
 	
 }

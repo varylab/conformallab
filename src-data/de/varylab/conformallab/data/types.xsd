@@ -12,7 +12,9 @@
 	<xs:element name="DiscreteMetric" type="types:DiscreteMetric"/>
 	<xs:element name="DiscreteEmbedding" type="types:DiscreteEmbedding"/>
 
-	<xs:complexType name="ConformalData"/>
+	<xs:complexType name="ConformalData">
+		<xs:attribute name="name" type="xs:string" use="optional"/>
+	</xs:complexType>
 	<xs:complexType name="ConformalDataList">
 		<xs:sequence>
 			<xs:choice minOccurs="0" maxOccurs="unbounded">

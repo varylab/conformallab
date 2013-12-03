@@ -50,10 +50,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -115,8 +113,8 @@ import de.jtem.discretegroup.core.DiscreteGroup;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
+import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
@@ -129,9 +127,6 @@ import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.jrworkspace.plugin.sidecontainer.widget.ShrinkPanel;
-import de.varylab.conformallab.data.types.DiscreteMetric;
-import de.varylab.conformallab.data.types.MetricEdge;
-import de.varylab.conformallab.data.types.MetricTriangle;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.functional.EuclideanFunctional;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
@@ -669,6 +664,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		cutInfo = unwrapper.cutInfo;
 		metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
 		metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
+		conformalDataPlugin.addDiscreteEmbedding("Output Texture Embedding", surface, hif.getAdapters(), TexturePosition4d.class);
 		createVisualization(surface, genus, cutInfo);
 		updateSurface();
 		updateDomainImage();
@@ -765,7 +761,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				surface.normalizeCoordinates();
 			}
 			AdapterSet aSet = hif.getAdapters();
-			storeActiveDiscreteMetric(surface, aSet);
+			conformalDataPlugin.addDiscreteMetric("Input Discrete Metric", surface, aSet);
+			conformalDataPlugin.addDiscreteEmbedding("Input Discrete Position Embedding", surface, aSet, Position4d.class);
 			Unwrap uw = new Unwrap(surface, aSet);
 			uw.setSpherize(spherizeButton == s);
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());
@@ -1005,34 +1002,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 	}
 	
-	
-	private void storeActiveDiscreteMetric(CoHDS surface, AdapterSet a) {
-		DiscreteMetric dm = new DiscreteMetric();
-		int edgeIndex = 0;
-		Map<Integer, Integer> edgeIndexMap = new HashMap<Integer, Integer>();
-		for (CoEdge e : surface.getPositiveEdges()) {
-			MetricEdge me = new MetricEdge();
-			me.setIndex(edgeIndex);
-			me.setLength(a.get(Length.class, e, Double.class));
-			dm.getEdges().add(me);
-			edgeIndexMap.put(e.getIndex(), edgeIndex);
-			edgeIndex++;
-		}
-		for (CoFace f : surface.getFaces()) {
-			MetricTriangle mt = new MetricTriangle();
-			CoEdge e1 = f.getBoundaryEdge();
-			CoEdge e2 = e1.getNextEdge();
-			CoEdge e3 = e2.getNextEdge();
-			e1 = e1.isPositive() ? e1 : e1.getOppositeEdge(); 
-			e2 = e2.isPositive() ? e2 : e2.getOppositeEdge(); 
-			e3 = e3.isPositive() ? e3 : e3.getOppositeEdge();
-			mt.setEdge1(edgeIndexMap.get(e1.getIndex()));
-			mt.setEdge2(edgeIndexMap.get(e2.getIndex()));
-			mt.setEdge3(edgeIndexMap.get(e3.getIndex()));
-			dm.getTriangles().add(mt);
-		}
-		conformalDataPlugin.addData(dm);
-	}
 	
 	private void createCopies() {
 		FundamentalPolygon p = getActiveFundamentalPoygon();
