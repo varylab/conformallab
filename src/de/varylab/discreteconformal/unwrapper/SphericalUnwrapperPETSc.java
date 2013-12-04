@@ -1,10 +1,10 @@
 package de.varylab.discreteconformal.unwrapper;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
-import cern.colt.Arrays;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.jpetsc.Mat;

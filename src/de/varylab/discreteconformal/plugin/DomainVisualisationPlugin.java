@@ -216,6 +216,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 			public void selectionChanged(HalfedgeSelection s, HalfedgeInterface sif) {
 				visHif.removeSelectionListener(visSelectionListener);
 				try {
+					updateAdapters();
 					visHif.setSelection(mainHif.getSelection());
 				} finally {
 					visHif.addSelectionListener(visSelectionListener);
