@@ -12,9 +12,7 @@ import java.io.FileOutputStream;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,29 +33,25 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
 import de.jreality.plugin.basic.View;
-import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jreality.scene.IndexedFaceSet;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
+import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.image.ImageHook;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.varylab.conformallab.data.DataFactory;
+import de.varylab.conformallab.data.DataUtility;
 import de.varylab.conformallab.data.types.ConformalData;
 import de.varylab.conformallab.data.types.ConformalDataList;
 import de.varylab.conformallab.data.types.DiscreteEmbedding;
 import de.varylab.conformallab.data.types.DiscreteMetric;
-import de.varylab.conformallab.data.types.EmbeddedTriangle;
-import de.varylab.conformallab.data.types.EmbeddedVertex;
-import de.varylab.conformallab.data.types.MetricEdge;
-import de.varylab.conformallab.data.types.MetricTriangle;
 import de.varylab.conformallab.data.types.SchottkyData;
-import de.varylab.discreteconformal.heds.CoEdge;
-import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
-import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
+import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
 
 public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionListener {
 
@@ -65,6 +59,11 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		log = Logger.getLogger(ConformalDataPlugin.class.getName());
 	private List<ConformalData>
 		data = new ArrayList<ConformalData>();
+	
+	private HalfedgeInterface
+		hif = null;
+	private SchottkyPlugin
+		schottkyPlugin = null;
 	
 	private DataModel
 		dataModel = new DataModel();
@@ -90,8 +89,8 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		shrinkPanel.setLayout(new GridBagLayout());
 		shrinkPanel.add(dataScroller, c);
 		dataScroller.setPreferredSize(new Dimension(10, 150));
+		dataTable.setRowHeight(24);
 		dataTable.setDefaultRenderer(ConformalData.class, new DataCellRenderer());
-//		dataTable.setRowHeight(23);
 		dataTable.getColumnModel().getColumn(0).setCellEditor(new DataNameEditor());
 		dataTable.getColumnModel().getColumn(1).setMaxWidth(30);
 		dataTable.getColumnModel().getColumn(1).setCellRenderer(new LoadButtonEditor());
@@ -101,15 +100,14 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		dataTable.getColumnModel().getColumn(2).setCellEditor(new DeleteButtonEditor());
 		dataTable.getTableHeader().setPreferredSize(new Dimension(0, 0));
 		c.weighty = 0.0;
-		c.gridwidth = 1;
-		shrinkPanel.add(clearButton, c);
-		clearButton.addActionListener(this);
-		c.gridwidth = GridBagConstraints.REMAINDER;
+		c.gridwidth = GridBagConstraints.RELATIVE;
 		shrinkPanel.add(exportButton, c);
 		exportButton.addActionListener(this);
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		shrinkPanel.add(importButton, c);
 		importButton.addActionListener(this);
+		shrinkPanel.add(clearButton, c);
+		clearButton.addActionListener(this);
 		
 		fileChooser.setAcceptAllFileFilterUsed(true);
 		fileChooser.setFileFilter(new FileFilter() {
@@ -331,13 +329,9 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		
 	}
 	
-	
-	
 	private void updateUI() {
 		dataModel.fireTableDataChanged();
-		System.out.println("ConformalDataPlugin.updateUI()");
 	}
-	
 	
 	public void addData(ConformalData data) {
 		this.data.add(data);
@@ -357,47 +351,28 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 	
 	private void loadDataIntoUI(ConformalData data) {
 		if (data instanceof DiscreteEmbedding) {
-			System.out.println("loading as embedding...");
+			DiscreteEmbedding de = (DiscreteEmbedding)data;
+			IndexedFaceSet ifs = DataUtility.toIndexedFaceSet(de);
+			hif.set(ifs);
 		}
 		if (data instanceof DiscreteMetric) {
-			System.out.println("loading as metric...");
+			DiscreteMetric dm = (DiscreteMetric)data;
+			MappedEdgeLengthAdapter lMap = new MappedEdgeLengthAdapter(1000.0);
+			CoHDS hds = DataUtility.toHalfedgeAndLengths(dm, lMap);
+			hif.set(hds);
+			hif.addAdapter(lMap, false);
 		}
 		if (data instanceof SchottkyData) {
-			System.out.println("loading into Schottky editor...");
+			SchottkyData sd = (SchottkyData)data;
+			schottkyPlugin.setSchottkyData(sd);
 		}
 	}
-	
-	
+
 	public void addDiscreteMetric(String name, CoHDS surface, AdapterSet a) {
-		DiscreteMetric dm = new DiscreteMetric();
-		dm.setName(name);
-		int edgeIndex = 0;
-		Map<Integer, Integer> edgeIndexMap = new HashMap<Integer, Integer>();
-		for (CoEdge e : surface.getPositiveEdges()) {
-			MetricEdge me = new MetricEdge();
-			me.setIndex(edgeIndex);
-			me.setLength(a.get(Length.class, e, Double.class));
-			dm.getEdges().add(me);
-			edgeIndexMap.put(e.getIndex(), edgeIndex);
-			edgeIndex++;
-		}
-		for (CoFace f : surface.getFaces()) {
-			MetricTriangle mt = new MetricTriangle();
-			CoEdge e1 = f.getBoundaryEdge();
-			CoEdge e2 = e1.getNextEdge();
-			CoEdge e3 = e2.getNextEdge();
-			e1 = e1.isPositive() ? e1 : e1.getOppositeEdge(); 
-			e2 = e2.isPositive() ? e2 : e2.getOppositeEdge(); 
-			e3 = e3.isPositive() ? e3 : e3.getOppositeEdge();
-			mt.setEdge1(edgeIndexMap.get(e1.getIndex()));
-			mt.setEdge2(edgeIndexMap.get(e2.getIndex()));
-			mt.setEdge3(edgeIndexMap.get(e3.getIndex()));
-			dm.getTriangles().add(mt);
-		}
+		DiscreteMetric dm = DataUtility.toDiscreteMetric(name, surface, a);
 		addData(dm);
 	}
-	
-	
+
 	public void addDiscreteTextureEmbedding(CoHDS surface, AdapterSet a) {
 		addDiscreteEmbedding("Texture Embedding", surface, a, Position4d.class);
 	}
@@ -407,34 +382,10 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 	}
 		
 	public void addDiscreteEmbedding(String name, CoHDS surface, AdapterSet a, Class<? extends Annotation> type) {
-		DiscreteEmbedding de = new DiscreteEmbedding();
-		de.setName(name);
-		for (CoVertex v : surface.getVertices()) {
-			EmbeddedVertex ev = new EmbeddedVertex();
-			double[] pos = a.getD(type, v);
-			ev.setX(pos[0]);
-			ev.setY(pos[1]);
-			ev.setZ(pos[2]);
-			ev.setW(pos[3]);
-			ev.setIndex(v.getIndex());
-			de.getVertices().add(ev);
-		}
-		for (CoFace f : surface.getFaces()) {
-			List<CoEdge> b = HalfEdgeUtils.boundaryEdges(f);
-			assert b.size() == 3 : "only triangulations are supported";
-			CoVertex v0 = b.get(0).getStartVertex();
-			CoVertex v1 = b.get(1).getStartVertex();
-			CoVertex v2 = b.get(2).getStartVertex();
-			EmbeddedTriangle et = new EmbeddedTriangle();
-			et.setVertex1(v0.getIndex());
-			et.setVertex2(v1.getIndex());
-			et.setVertex3(v2.getIndex());
-			de.getTriangles().add(et);
-		}
+		DiscreteEmbedding de = DataUtility.toDiscreteEmbedding(name, surface, a, type);
 		addData(de);
 	}
-	
-	
+
 	@Override
 	public void storeStates(Controller c) throws Exception {
 		super.storeStates(c);
@@ -445,6 +396,13 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 	public void restoreStates(Controller c) throws Exception {
 		super.restoreStates(c);
 		fileChooser.setCurrentDirectory(new File(c.getProperty(getClass(), "exportDir", ".")));
+	}
+	
+	@Override
+	public void install(Controller c) throws Exception {
+		super.install(c);
+		hif = c.getPlugin(HalfedgeInterface.class);
+		schottkyPlugin = c.getPlugin(SchottkyPlugin.class);
 	}
 	
 	@Override

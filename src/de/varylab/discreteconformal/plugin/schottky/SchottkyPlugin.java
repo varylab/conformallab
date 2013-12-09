@@ -52,6 +52,7 @@ import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.mfc.field.Complex;
+import de.varylab.conformallab.data.DataUtility;
 import de.varylab.conformallab.data.types.SchottkyData;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -166,7 +167,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		}
 		if (generateButton == event.getSource() || toFuchsianButton == event.getSource()) {
 			List<SchottkyGenerator> pairs = schottkyModeller.getGenerators();
-			SchottkyData data = SchottkyIO.toSchottkyData("Schottky Data g" + pairs.size(), pairs);
+			SchottkyData data = DataUtility.toSchottkyData("Schottky Data g" + pairs.size(), pairs);
 			conformalDataPlugin.addData(data);
 			
 			Complex root = schottkyModeller.getBasePoint();
@@ -369,6 +370,12 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			}
 		}
 		
+	}
+	
+	
+	public void setSchottkyData(SchottkyData data) {
+		List<SchottkyGenerator> gList = DataUtility.toGeneratorsList(data);
+		schottkyModeller.setGenerators(gList);
 	}
 	
 	
