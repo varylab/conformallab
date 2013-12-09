@@ -14,11 +14,14 @@ import de.jreality.scene.IndexedFaceSet;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
+import de.jtem.riemann.surface.BranchPoint;
 import de.varylab.conformallab.data.types.Circle;
+import de.varylab.conformallab.data.types.Complex;
 import de.varylab.conformallab.data.types.DiscreteEmbedding;
 import de.varylab.conformallab.data.types.DiscreteMetric;
 import de.varylab.conformallab.data.types.EmbeddedTriangle;
 import de.varylab.conformallab.data.types.EmbeddedVertex;
+import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.conformallab.data.types.MetricEdge;
 import de.varylab.conformallab.data.types.MetricTriangle;
 import de.varylab.conformallab.data.types.ObjectFactory;
@@ -28,10 +31,33 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
+import de.varylab.discreteconformal.plugin.hyperelliptic.Curve;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyGenerator;
 
 public class DataUtility {
 
+	public static HyperEllipticAlgebraicCurve toHyperEllipticAlgebraicCurve(String name, Curve curve) {
+		HyperEllipticAlgebraicCurve c = new HyperEllipticAlgebraicCurve();
+		c.setName(name);
+		for (BranchPoint bp : curve.getBranchPoints()) {
+			Complex cbp = new Complex();
+			cbp.setRe(bp.getRe());
+			cbp.setIm(bp.getIm());
+			c.getBranchPoints().add(cbp);
+		}
+		return c;
+	}
+	
+	public static Curve toCurve(HyperEllipticAlgebraicCurve curve) {
+		BranchPoint[] bpArray = new BranchPoint[curve.getBranchPoints().size()];
+		int bpIndex = 0;
+		for (Complex cbp : curve.getBranchPoints()) {
+			BranchPoint bp = new BranchPoint(cbp.getRe(), cbp.getIm());
+			bpArray[bpIndex++] = bp;
+		}
+		return new Curve(bpArray);
+	}
+	
 	public static IndexedFaceSet toIndexedFaceSet(DiscreteEmbedding de) {
 		int numVertices = de.getVertices().size();
 		int numFaces = de.getTriangles().size();

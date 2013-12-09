@@ -20,6 +20,7 @@ import javax.xml.validation.SchemaFactory;
 import de.varylab.conformallab.data.types.ConformalDataList;
 import de.varylab.conformallab.data.types.DiscreteEmbedding;
 import de.varylab.conformallab.data.types.DiscreteMetric;
+import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.conformallab.data.types.ObjectFactory;
 import de.varylab.conformallab.data.types.SchottkyData;
 
@@ -50,6 +51,17 @@ public class DataFactory {
 		} catch (Exception e) {
 			log.severe(e.getMessage());
 		}
+	}
+	
+	public static HyperEllipticAlgebraicCurve loadHyperEllipticAlgebraicCurve(InputStream in) throws JAXBException {
+		StreamSource inSource = new StreamSource(in);
+		JAXBElement<HyperEllipticAlgebraicCurve> e = typesUnmarshaller.unmarshal(inSource, HyperEllipticAlgebraicCurve.class);
+		return e.getValue();
+	}
+	public static void writeHyperEllipticAlgebraicCurve(HyperEllipticAlgebraicCurve data, OutputStream out) throws JAXBException {
+		ObjectFactory of = new ObjectFactory();
+		JAXBElement<HyperEllipticAlgebraicCurve> e = of.createHyperEllipticAlgebraicCurve(data);
+		typesMarshaller.marshal(e, out);
 	}
 	
 	public static SchottkyData loadSchottkyData(InputStream in) throws JAXBException {

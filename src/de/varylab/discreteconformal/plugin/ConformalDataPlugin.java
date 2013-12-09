@@ -48,6 +48,7 @@ import de.varylab.conformallab.data.types.ConformalData;
 import de.varylab.conformallab.data.types.ConformalDataList;
 import de.varylab.conformallab.data.types.DiscreteEmbedding;
 import de.varylab.conformallab.data.types.DiscreteMetric;
+import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.conformallab.data.types.SchottkyData;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
@@ -64,6 +65,8 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		hif = null;
 	private SchottkyPlugin
 		schottkyPlugin = null;
+	private HyperellipticCurvePlugin
+		hyperellipticCurvePlugin = null;
 	
 	private DataModel
 		dataModel = new DataModel();
@@ -333,22 +336,6 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		dataModel.fireTableDataChanged();
 	}
 	
-	public void addData(ConformalData data) {
-		this.data.add(data);
-		updateUI();
-	}
-	public void removeData(ConformalData data) {
-		this.data.remove(data);
-		updateUI();
-	}
-	public void clearData() {
-		this.data.clear();
-		updateUI();
-	}
-	public List<ConformalData> getData() {
-		return Collections.unmodifiableList(data);
-	}
-	
 	private void loadDataIntoUI(ConformalData data) {
 		if (data instanceof DiscreteEmbedding) {
 			DiscreteEmbedding de = (DiscreteEmbedding)data;
@@ -366,24 +353,40 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			SchottkyData sd = (SchottkyData)data;
 			schottkyPlugin.setSchottkyData(sd);
 		}
+		if (data instanceof HyperEllipticAlgebraicCurve) {
+			HyperEllipticAlgebraicCurve curve = (HyperEllipticAlgebraicCurve)data;
+			hyperellipticCurvePlugin.setCurve(DataUtility.toCurve(curve));
+		}
 	}
 
 	public void addDiscreteMetric(String name, CoHDS surface, AdapterSet a) {
 		DiscreteMetric dm = DataUtility.toDiscreteMetric(name, surface, a);
 		addData(dm);
 	}
-
 	public void addDiscreteTextureEmbedding(CoHDS surface, AdapterSet a) {
 		addDiscreteEmbedding("Texture Embedding", surface, a, Position4d.class);
 	}
-	
 	public void addDiscretePositionEmbedding(CoHDS surface, AdapterSet a) {
 		addDiscreteEmbedding("Position Embedding", surface, a, TexturePosition4d.class);
 	}
-		
 	public void addDiscreteEmbedding(String name, CoHDS surface, AdapterSet a, Class<? extends Annotation> type) {
 		DiscreteEmbedding de = DataUtility.toDiscreteEmbedding(name, surface, a, type);
 		addData(de);
+	}
+	public void addData(ConformalData data) {
+		this.data.add(data);
+		updateUI();
+	}
+	public void removeData(ConformalData data) {
+		this.data.remove(data);
+		updateUI();
+	}
+	public void clearData() {
+		this.data.clear();
+		updateUI();
+	}
+	public List<ConformalData> getData() {
+		return Collections.unmodifiableList(data);
 	}
 
 	@Override
@@ -403,6 +406,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
 		schottkyPlugin = c.getPlugin(SchottkyPlugin.class);
+		hyperellipticCurvePlugin = c.getPlugin(HyperellipticCurvePlugin.class);
 	}
 	
 	@Override

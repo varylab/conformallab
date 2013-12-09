@@ -17,16 +17,16 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse für SchottkyData complex type.
+ * <p>Java-Klasse für HyperEllipticAlgebraicCurve complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
  * <pre>
- * &lt;complexType name="SchottkyData">
+ * &lt;complexType name="HyperEllipticAlgebraicCurve">
  *   &lt;complexContent>
  *     &lt;extension base="{http://www.varylab.com/conformallab/types}ConformalData">
  *       &lt;sequence>
- *         &lt;element name="SchottkyGenerator" type="{http://www.varylab.com/conformallab/types}SchottkyGenerator" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="BranchPoint" type="{http://www.varylab.com/conformallab/types}Complex" maxOccurs="unbounded" minOccurs="0"/>
  *       &lt;/sequence>
  *     &lt;/extension>
  *   &lt;/complexContent>
@@ -36,43 +36,43 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "SchottkyData", propOrder = {
-    "generators"
+@XmlType(name = "HyperEllipticAlgebraicCurve", propOrder = {
+    "branchPoints"
 })
-public class SchottkyData
+public class HyperEllipticAlgebraicCurve
     extends ConformalData
 {
 
-    @XmlElement(name = "SchottkyGenerator")
-    protected List<SchottkyGenerator> generators;
+    @XmlElement(name = "BranchPoint")
+    protected List<Complex> branchPoints;
 
     /**
-     * Gets the value of the generators property.
+     * Gets the value of the branchPoints property.
      * 
      * <p>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the generators property.
+     * This is why there is not a <CODE>set</CODE> method for the branchPoints property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
      * <pre>
-     *    getGenerators().add(newItem);
+     *    getBranchPoints().add(newItem);
      * </pre>
      * 
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link SchottkyGenerator }
+     * {@link Complex }
      * 
      * 
      */
-    public List<SchottkyGenerator> getGenerators() {
-        if (generators == null) {
-            generators = new ArrayList<SchottkyGenerator>();
+    public List<Complex> getBranchPoints() {
+        if (branchPoints == null) {
+            branchPoints = new ArrayList<Complex>();
         }
-        return this.generators;
+        return this.branchPoints;
     }
 
 }

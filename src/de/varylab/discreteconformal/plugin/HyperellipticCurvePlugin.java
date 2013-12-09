@@ -28,6 +28,7 @@ import javax.swing.SpinnerNumberModel;
 import de.jreality.math.Pn;
 import de.jreality.plugin.basic.View;
 import de.jtem.blas.ComplexMatrix;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
 import de.jtem.halfedgetools.adapter.Adapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -43,6 +44,8 @@ import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.surface.BranchPoint;
 import de.jtem.riemann.theta.SiegelReduction;
+import de.varylab.conformallab.data.DataUtility;
+import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -65,6 +68,8 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 
 	private HalfedgeInterface
 		hif = null;
+	private ConformalDataPlugin
+		conformalDataPlugin = null;
 	private Random
 		rnd = new Random();
 	
@@ -203,8 +208,10 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 				hif.addLayerAdapter(pathVisualizer, true);
 			}
 			
+			int genus = HalfEdgeUtils.getGenus(hds);
+			HyperEllipticAlgebraicCurve heac = DataUtility.toHyperEllipticAlgebraicCurve("Hyperelliptic Curve g" + genus, getCurve());
+			conformalDataPlugin.addData(heac);
 //			Adapter<Double> modifiedLengths = introduceNonHyperellipicity(hds, 3.0, 3.0);
-			
 			hif.set(hds);
 //			hif.addAdapter(modifiedLengths, false);
 			HalfedgeSelection branchSelection = new HalfedgeSelection(branchVertices);
@@ -264,8 +271,9 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 	
 	@Override
 	public void curveChanged(CurveChangeEvent e) {
-		if (e.type == EventType.CURVE_CHANGED)
+		if (e.type == EventType.CURVE_CHANGED) {
 			updatePeriodMatrix();
+		}
 	}
 
 	private ComplexMatrix getNormalizedPeriodMatrix() {
@@ -287,6 +295,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
+		conformalDataPlugin = c.getPlugin(ConformalDataPlugin.class);
 	}
 	
 	@Override

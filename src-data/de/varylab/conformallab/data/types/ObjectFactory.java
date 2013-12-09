@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.12.03 um 04:38:22 PM CET 
+// Generiert: 2013.12.09 um 01:49:47 PM CET 
 //
 
 
@@ -35,6 +35,7 @@ public class ObjectFactory {
     private final static QName _SchottkyData_QNAME = new QName("http://www.varylab.com/conformallab/types", "SchottkyData");
     private final static QName _ConformalDataList_QNAME = new QName("http://www.varylab.com/conformallab/types", "ConformalDataList");
     private final static QName _DiscreteEmbedding_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteEmbedding");
+    private final static QName _HyperEllipticAlgebraicCurve_QNAME = new QName("http://www.varylab.com/conformallab/types", "HyperEllipticAlgebraicCurve");
 
     /**
      * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: de.varylab.conformallab.data.types
@@ -73,6 +74,14 @@ public class ObjectFactory {
      */
     public ConformalDataList createConformalDataList() {
         return new ConformalDataList();
+    }
+
+    /**
+     * Create an instance of {@link HyperEllipticAlgebraicCurve }
+     * 
+     */
+    public HyperEllipticAlgebraicCurve createHyperEllipticAlgebraicCurve() {
+        return new HyperEllipticAlgebraicCurve();
     }
 
     /**
@@ -181,6 +190,15 @@ public class ObjectFactory {
     @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "DiscreteEmbedding")
     public JAXBElement<DiscreteEmbedding> createDiscreteEmbedding(DiscreteEmbedding value) {
         return new JAXBElement<DiscreteEmbedding>(_DiscreteEmbedding_QNAME, DiscreteEmbedding.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link HyperEllipticAlgebraicCurve }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "HyperEllipticAlgebraicCurve")
+    public JAXBElement<HyperEllipticAlgebraicCurve> createHyperEllipticAlgebraicCurve(HyperEllipticAlgebraicCurve value) {
+        return new JAXBElement<HyperEllipticAlgebraicCurve>(_HyperEllipticAlgebraicCurve_QNAME, HyperEllipticAlgebraicCurve.class, null, value);
     }
 
 }
