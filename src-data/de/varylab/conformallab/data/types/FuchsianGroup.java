@@ -17,18 +17,18 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse für HyperEllipticAlgebraicCurve complex type.
+ * <p>Java-Klasse für FuchsianGroup complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
  * <pre>
- * &lt;complexType name="HyperEllipticAlgebraicCurve">
+ * &lt;complexType name="FuchsianGroup">
  *   &lt;complexContent>
- *     &lt;extension base="{http://www.varylab.com/conformallab/types}ConformalData">
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="BranchPoint" type="{http://www.varylab.com/conformallab/types}Complex" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="HyperbolicMotion" type="{http://www.w3.org/2001/XMLSchema}anyType" maxOccurs="unbounded" minOccurs="4"/>
  *       &lt;/sequence>
- *     &lt;/extension>
+ *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
@@ -36,43 +36,41 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "HyperEllipticAlgebraicCurve", propOrder = {
-    "branchPoints"
+@XmlType(name = "FuchsianGroup", propOrder = {
+    "generators"
 })
-public class HyperEllipticAlgebraicCurve
-    extends ConformalData
-{
+public class FuchsianGroup {
 
-    @XmlElement(name = "BranchPoint")
-    protected List<Complex> branchPoints;
+    @XmlElement(name = "HyperbolicMotion", required = true)
+    protected List<Object> generators;
 
     /**
-     * Gets the value of the branchPoints property.
+     * Gets the value of the generators property.
      * 
      * <p>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the branchPoints property.
+     * This is why there is not a <CODE>set</CODE> method for the generators property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
      * <pre>
-     *    getBranchPoints().add(newItem);
+     *    getGenerators().add(newItem);
      * </pre>
      * 
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link Complex }
+     * {@link Object }
      * 
      * 
      */
-    public List<Complex> getBranchPoints() {
-        if (branchPoints == null) {
-            branchPoints = new ArrayList<Complex>();
+    public List<Object> getGenerators() {
+        if (generators == null) {
+            generators = new ArrayList<Object>();
         }
-        return this.branchPoints;
+        return this.generators;
     }
 
 }

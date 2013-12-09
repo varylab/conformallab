@@ -15,17 +15,17 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse für EmbeddedTriangle complex type.
+ * <p>Java-Klasse für FundamentalEdge complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
  * <pre>
- * &lt;complexType name="EmbeddedTriangle">
+ * &lt;complexType name="FundamentalEdge">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;attribute name="vertex1" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
  *       &lt;attribute name="vertex2" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
- *       &lt;attribute name="vertex3" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
+ *       &lt;attribute name="identificationIndex" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -34,15 +34,15 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "EmbeddedTriangle")
-public class EmbeddedTriangle {
+@XmlType(name = "FundamentalEdge")
+public class FundamentalEdge {
 
     @XmlAttribute(name = "vertex1", required = true)
     protected int vertex1;
     @XmlAttribute(name = "vertex2", required = true)
     protected int vertex2;
-    @XmlAttribute(name = "vertex3", required = true)
-    protected int vertex3;
+    @XmlAttribute(name = "identificationIndex", required = true)
+    protected int identificationIndex;
 
     /**
      * Ruft den Wert der vertex1-Eigenschaft ab.
@@ -77,19 +77,19 @@ public class EmbeddedTriangle {
     }
 
     /**
-     * Ruft den Wert der vertex3-Eigenschaft ab.
+     * Ruft den Wert der identificationIndex-Eigenschaft ab.
      * 
      */
-    public int getVertex3() {
-        return vertex3;
+    public int getIdentificationIndex() {
+        return identificationIndex;
     }
 
     /**
-     * Legt den Wert der vertex3-Eigenschaft fest.
+     * Legt den Wert der identificationIndex-Eigenschaft fest.
      * 
      */
-    public void setVertex3(int value) {
-        this.vertex3 = value;
+    public void setIdentificationIndex(int value) {
+        this.identificationIndex = value;
     }
 
 }

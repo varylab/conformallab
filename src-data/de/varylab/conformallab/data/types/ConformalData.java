@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.12.09 um 01:49:47 PM CET 
+// Generiert: 2013.12.09 um 07:42:44 PM CET 
 //
 
 
@@ -37,6 +37,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlSeeAlso({
     SchottkyData.class,
     DiscreteMetric.class,
+    FuchsianData.class,
     DiscreteEmbedding.class,
     HyperEllipticAlgebraicCurve.class
 })

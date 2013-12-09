@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FuchsianData xmlns="http://www.varylab.com/conformallab/types" name="g3 fuchian uniformization">
+	<FuchsianGroup>
+		<HyperbolicMotion>
+			
+		</HyperbolicMotion>
+	</FuchsianGroup>
+	<FundamentalPolygon>
+		<FundamentalVertex>
+		
+		</FundamentalVertex>
+		<FundamentalEdge>
+		
+		</FundamentalEdge>
+	</FundamentalPolygon>
+</FuchsianData>

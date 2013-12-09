@@ -17,19 +17,19 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse für DiscreteEmbedding complex type.
+ * <p>Java-Klasse für FundamentalPolygon complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
  * <pre>
- * &lt;complexType name="DiscreteEmbedding">
+ * &lt;complexType name="FundamentalPolygon">
  *   &lt;complexContent>
- *     &lt;extension base="{http://www.varylab.com/conformallab/types}ConformalData">
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="EmbeddedVertex" type="{http://www.varylab.com/conformallab/types}EmbeddedVertex" maxOccurs="unbounded" minOccurs="0"/>
- *         &lt;element name="EmbeddedTriangle" type="{http://www.varylab.com/conformallab/types}EmbeddedTriangle" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="FundamentalVertex" type="{http://www.varylab.com/conformallab/types}Complex" maxOccurs="unbounded" minOccurs="8"/>
+ *         &lt;element name="FundamentalEdge" type="{http://www.varylab.com/conformallab/types}FundamentalEdge" maxOccurs="unbounded" minOccurs="8"/>
  *       &lt;/sequence>
- *     &lt;/extension>
+ *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
@@ -37,18 +37,16 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "DiscreteEmbedding", propOrder = {
+@XmlType(name = "FundamentalPolygon", propOrder = {
     "vertices",
-    "triangles"
+    "edges"
 })
-public class DiscreteEmbedding
-    extends ConformalData
-{
+public class FundamentalPolygon {
 
-    @XmlElement(name = "EmbeddedVertex")
-    protected List<EmbeddedVertex> vertices;
-    @XmlElement(name = "EmbeddedTriangle")
-    protected List<EmbeddedTriangle> triangles;
+    @XmlElement(name = "FundamentalVertex", required = true)
+    protected List<Complex> vertices;
+    @XmlElement(name = "FundamentalEdge", required = true)
+    protected List<FundamentalEdge> edges;
 
     /**
      * Gets the value of the vertices property.
@@ -68,44 +66,44 @@ public class DiscreteEmbedding
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link EmbeddedVertex }
+     * {@link Complex }
      * 
      * 
      */
-    public List<EmbeddedVertex> getVertices() {
+    public List<Complex> getVertices() {
         if (vertices == null) {
-            vertices = new ArrayList<EmbeddedVertex>();
+            vertices = new ArrayList<Complex>();
         }
         return this.vertices;
     }
 
     /**
-     * Gets the value of the triangles property.
+     * Gets the value of the edges property.
      * 
      * <p>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the triangles property.
+     * This is why there is not a <CODE>set</CODE> method for the edges property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
      * <pre>
-     *    getTriangles().add(newItem);
+     *    getEdges().add(newItem);
      * </pre>
      * 
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link EmbeddedTriangle }
+     * {@link FundamentalEdge }
      * 
      * 
      */
-    public List<EmbeddedTriangle> getTriangles() {
-        if (triangles == null) {
-            triangles = new ArrayList<EmbeddedTriangle>();
+    public List<FundamentalEdge> getEdges() {
+        if (edges == null) {
+            edges = new ArrayList<FundamentalEdge>();
         }
-        return this.triangles;
+        return this.edges;
     }
 
 }

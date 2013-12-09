@@ -10,7 +10,10 @@ import java.util.Queue;
 import java.util.Set;
 
 import de.jreality.geometry.IndexedFaceSetFactory;
+import de.jreality.math.Matrix;
 import de.jreality.scene.IndexedFaceSet;
+import de.jtem.discretegroup.core.DiscreteGroup;
+import de.jtem.discretegroup.core.DiscreteGroupElement;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
@@ -21,7 +24,10 @@ import de.varylab.conformallab.data.types.DiscreteEmbedding;
 import de.varylab.conformallab.data.types.DiscreteMetric;
 import de.varylab.conformallab.data.types.EmbeddedTriangle;
 import de.varylab.conformallab.data.types.EmbeddedVertex;
+import de.varylab.conformallab.data.types.FuchsianData;
+import de.varylab.conformallab.data.types.FundamentalEdge;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
+import de.varylab.conformallab.data.types.HyperbolicMotion;
 import de.varylab.conformallab.data.types.MetricEdge;
 import de.varylab.conformallab.data.types.MetricTriangle;
 import de.varylab.conformallab.data.types.ObjectFactory;
@@ -33,9 +39,50 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
 import de.varylab.discreteconformal.plugin.hyperelliptic.Curve;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyGenerator;
+import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 
 public class DataUtility {
 
+	public static FuchsianData toFuchsianData(FundamentalPolygon p) {
+		FuchsianData result = new FuchsianData();
+		DiscreteGroup G = p.getDiscreteGroup();
+		for (DiscreteGroupElement s : G.getGenerators()) {
+			HyperbolicMotion m = new HyperbolicMotion();
+			Matrix M = s.getMatrix();
+			m.setM11(M.getEntry(1, 1));
+			m.setM12(M.getEntry(1, 2));
+			m.setM13(M.getEntry(1, 3));
+			m.setM14(M.getEntry(1, 4));
+			
+			m.setM21(M.getEntry(2, 1));
+			m.setM22(M.getEntry(2, 2));
+			m.setM23(M.getEntry(2, 3));
+			m.setM24(M.getEntry(2, 4));
+			
+			m.setM31(M.getEntry(3, 1));
+			m.setM32(M.getEntry(3, 2));
+			m.setM33(M.getEntry(3, 3));
+			m.setM34(M.getEntry(3, 4));
+			
+			m.setM41(M.getEntry(4, 1));
+			m.setM42(M.getEntry(4, 2));
+			m.setM43(M.getEntry(4, 3));
+			m.setM44(M.getEntry(4, 4));
+			result.getFuchsianGroup().getGenerators().add(m);
+		}
+//		for (FundamentalVertex fv : p.getVertices()) {
+//			Complex v = new Complex();
+//			v.setRe(fv.)
+//			result.getFundamentalPolygon().getVertices()
+//		}
+		for (de.varylab.discreteconformal.uniformization.FundamentalEdge e : p.getEdges()) {
+			FundamentalEdge fe = new FundamentalEdge();
+			fe.setIdentificationIndex(e.partner.index);
+		}
+		return result;
+	}
+	
+	
 	public static HyperEllipticAlgebraicCurve toHyperEllipticAlgebraicCurve(String name, Curve curve) {
 		HyperEllipticAlgebraicCurve c = new HyperEllipticAlgebraicCurve();
 		c.setName(name);

@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.12.09 um 01:49:47 PM CET 
+// Generiert: 2013.12.09 um 07:42:44 PM CET 
 //
 
 
@@ -33,6 +33,7 @@ public class ObjectFactory {
 
     private final static QName _DiscreteMetric_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteMetric");
     private final static QName _SchottkyData_QNAME = new QName("http://www.varylab.com/conformallab/types", "SchottkyData");
+    private final static QName _FuchianData_QNAME = new QName("http://www.varylab.com/conformallab/types", "FuchianData");
     private final static QName _ConformalDataList_QNAME = new QName("http://www.varylab.com/conformallab/types", "ConformalDataList");
     private final static QName _DiscreteEmbedding_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteEmbedding");
     private final static QName _HyperEllipticAlgebraicCurve_QNAME = new QName("http://www.varylab.com/conformallab/types", "HyperEllipticAlgebraicCurve");
@@ -61,6 +62,14 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link FuchsianData }
+     * 
+     */
+    public FuchsianData createFuchsianData() {
+        return new FuchsianData();
+    }
+
+    /**
      * Create an instance of {@link DiscreteEmbedding }
      * 
      */
@@ -82,6 +91,14 @@ public class ObjectFactory {
      */
     public HyperEllipticAlgebraicCurve createHyperEllipticAlgebraicCurve() {
         return new HyperEllipticAlgebraicCurve();
+    }
+
+    /**
+     * Create an instance of {@link HyperbolicMotion }
+     * 
+     */
+    public HyperbolicMotion createHyperbolicMotion() {
+        return new HyperbolicMotion();
     }
 
     /**
@@ -117,6 +134,14 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link FundamentalEdge }
+     * 
+     */
+    public FundamentalEdge createFundamentalEdge() {
+        return new FundamentalEdge();
+    }
+
+    /**
      * Create an instance of {@link MetricEdge }
      * 
      */
@@ -130,6 +155,14 @@ public class ObjectFactory {
      */
     public Moebius createMoebius() {
         return new Moebius();
+    }
+
+    /**
+     * Create an instance of {@link FuchsianGroup }
+     * 
+     */
+    public FuchsianGroup createFuchsianGroup() {
+        return new FuchsianGroup();
     }
 
     /**
@@ -157,6 +190,14 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link FundamentalPolygon }
+     * 
+     */
+    public FundamentalPolygon createFundamentalPolygon() {
+        return new FundamentalPolygon();
+    }
+
+    /**
      * Create an instance of {@link JAXBElement }{@code <}{@link DiscreteMetric }{@code >}}
      * 
      */
@@ -172,6 +213,15 @@ public class ObjectFactory {
     @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "SchottkyData")
     public JAXBElement<SchottkyData> createSchottkyData(SchottkyData value) {
         return new JAXBElement<SchottkyData>(_SchottkyData_QNAME, SchottkyData.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link FuchsianData }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "FuchianData")
+    public JAXBElement<FuchsianData> createFuchianData(FuchsianData value) {
+        return new JAXBElement<FuchsianData>(_FuchianData_QNAME, FuchsianData.class, null, value);
     }
 
     /**
