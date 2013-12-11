@@ -415,7 +415,7 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		// change edge lengths conformally such that the edges incident with vertex 0 are of equal length
 		Map<CoVertex, Double> uMap = new HashMap<CoVertex, Double>();
 		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
-			double l = aSet.get(Length.class, e, Double.class);
+			double l = (double)aSet.get(Length.class, e, Double.class);
 			double u = meanLength / l;
 			uMap.put(e.getStartVertex(), u);
 		}
@@ -423,7 +423,7 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
 			CoVertex v = e.getStartVertex();
 			for (CoEdge ee : HalfEdgeUtils.incomingEdges(v)) {
-				double l = aSet.get(Length.class, ee, Double.class);
+				double l = (double)aSet.get(Length.class, ee, Double.class);
 				CoVertex vs = ee.getStartVertex();
 				CoVertex vt = ee.getTargetVertex();
 				double us = uMap.containsKey(vs) ? uMap.get(vs) : 1.0;
