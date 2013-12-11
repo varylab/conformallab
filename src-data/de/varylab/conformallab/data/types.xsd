@@ -86,15 +86,15 @@
 	
 	<xs:complexType name="FundamentalPolygon">
 		<xs:sequence>
-			<xs:element name="FundamentalVertex" type="types:Complex" minOccurs="8" maxOccurs="unbounded"/>
 			<xs:element name="FundamentalEdge" type="types:FundamentalEdge" minOccurs="8" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
 	
 	<xs:complexType name="FundamentalEdge">
-		<xs:attribute name="vertex1" type="xs:int" use="required"/>
-		<xs:attribute name="vertex2" type="xs:int" use="required"/>
-		<xs:attribute name="identificationIndex" type="xs:int" use="required"/>
+		<xs:sequence>
+			<xs:element name="StartPosition" type="types:Complex"/>
+		</xs:sequence>
+		<xs:attribute name="identifiedEdge" type="xs:int" use="required"/>
 	</xs:complexType>
 	
 	<xs:complexType name="FuchsianGroup">

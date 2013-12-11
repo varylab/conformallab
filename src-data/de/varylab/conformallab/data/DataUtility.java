@@ -25,6 +25,7 @@ import de.varylab.conformallab.data.types.DiscreteMetric;
 import de.varylab.conformallab.data.types.EmbeddedTriangle;
 import de.varylab.conformallab.data.types.EmbeddedVertex;
 import de.varylab.conformallab.data.types.FuchsianData;
+import de.varylab.conformallab.data.types.FuchsianGroup;
 import de.varylab.conformallab.data.types.FundamentalEdge;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.conformallab.data.types.HyperbolicMotion;
@@ -44,7 +45,7 @@ import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 public class DataUtility {
 
 	public static FuchsianData toFuchsianData(FundamentalPolygon p) {
-		FuchsianData result = new FuchsianData();
+		FuchsianGroup fg = new FuchsianGroup();
 		DiscreteGroup G = p.getDiscreteGroup();
 		for (DiscreteGroupElement s : G.getGenerators()) {
 			HyperbolicMotion m = new HyperbolicMotion();
@@ -68,17 +69,16 @@ public class DataUtility {
 			m.setM42(M.getEntry(4, 2));
 			m.setM43(M.getEntry(4, 3));
 			m.setM44(M.getEntry(4, 4));
-			result.getFuchsianGroup().getGenerators().add(m);
+			fg.getGenerators().add(m);
 		}
-//		for (FundamentalVertex fv : p.getVertices()) {
-//			Complex v = new Complex();
-//			v.setRe(fv.)
-//			result.getFundamentalPolygon().getVertices()
-//		}
+		
 		for (de.varylab.discreteconformal.uniformization.FundamentalEdge e : p.getEdges()) {
 			FundamentalEdge fe = new FundamentalEdge();
-			fe.setIdentificationIndex(e.partner.index);
+			fe.setIdentifiedEdge(e.partner.index);
+			
 		}
+		FuchsianData result = new FuchsianData();
+		result.setFuchsianGroup(fg);
 		return result;
 	}
 	

@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.12.09 um 07:42:44 PM CET 
+// Generiert: 2013.12.10 um 06:00:53 PM CET 
 //
 
 
@@ -11,6 +11,7 @@ package de.varylab.conformallab.data.types;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 
@@ -23,9 +24,10 @@ import javax.xml.bind.annotation.XmlType;
  * &lt;complexType name="FundamentalEdge">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;attribute name="vertex1" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
- *       &lt;attribute name="vertex2" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
- *       &lt;attribute name="identificationIndex" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
+ *       &lt;sequence>
+ *         &lt;element name="StartPosition" type="{http://www.varylab.com/conformallab/types}Complex"/>
+ *       &lt;/sequence>
+ *       &lt;attribute name="identifiedEdge" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -34,62 +36,54 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "FundamentalEdge")
+@XmlType(name = "FundamentalEdge", propOrder = {
+    "startPosition"
+})
 public class FundamentalEdge {
 
-    @XmlAttribute(name = "vertex1", required = true)
-    protected int vertex1;
-    @XmlAttribute(name = "vertex2", required = true)
-    protected int vertex2;
-    @XmlAttribute(name = "identificationIndex", required = true)
-    protected int identificationIndex;
+    @XmlElement(name = "StartPosition", required = true)
+    protected Complex startPosition;
+    @XmlAttribute(name = "identifiedEdge", required = true)
+    protected int identifiedEdge;
 
     /**
-     * Ruft den Wert der vertex1-Eigenschaft ab.
+     * Ruft den Wert der startPosition-Eigenschaft ab.
      * 
+     * @return
+     *     possible object is
+     *     {@link Complex }
+     *     
      */
-    public int getVertex1() {
-        return vertex1;
+    public Complex getStartPosition() {
+        return startPosition;
     }
 
     /**
-     * Legt den Wert der vertex1-Eigenschaft fest.
+     * Legt den Wert der startPosition-Eigenschaft fest.
      * 
+     * @param value
+     *     allowed object is
+     *     {@link Complex }
+     *     
      */
-    public void setVertex1(int value) {
-        this.vertex1 = value;
+    public void setStartPosition(Complex value) {
+        this.startPosition = value;
     }
 
     /**
-     * Ruft den Wert der vertex2-Eigenschaft ab.
+     * Ruft den Wert der identifiedEdge-Eigenschaft ab.
      * 
      */
-    public int getVertex2() {
-        return vertex2;
+    public int getIdentifiedEdge() {
+        return identifiedEdge;
     }
 
     /**
-     * Legt den Wert der vertex2-Eigenschaft fest.
+     * Legt den Wert der identifiedEdge-Eigenschaft fest.
      * 
      */
-    public void setVertex2(int value) {
-        this.vertex2 = value;
-    }
-
-    /**
-     * Ruft den Wert der identificationIndex-Eigenschaft ab.
-     * 
-     */
-    public int getIdentificationIndex() {
-        return identificationIndex;
-    }
-
-    /**
-     * Legt den Wert der identificationIndex-Eigenschaft fest.
-     * 
-     */
-    public void setIdentificationIndex(int value) {
-        this.identificationIndex = value;
+    public void setIdentifiedEdge(int value) {
+        this.identifiedEdge = value;
     }
 
 }

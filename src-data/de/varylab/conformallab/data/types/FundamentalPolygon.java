@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.12.09 um 07:42:44 PM CET 
+// Generiert: 2013.12.10 um 06:00:53 PM CET 
 //
 
 
@@ -26,7 +26,6 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="FundamentalVertex" type="{http://www.varylab.com/conformallab/types}Complex" maxOccurs="unbounded" minOccurs="8"/>
  *         &lt;element name="FundamentalEdge" type="{http://www.varylab.com/conformallab/types}FundamentalEdge" maxOccurs="unbounded" minOccurs="8"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
@@ -38,44 +37,12 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "FundamentalPolygon", propOrder = {
-    "vertices",
     "edges"
 })
 public class FundamentalPolygon {
 
-    @XmlElement(name = "FundamentalVertex", required = true)
-    protected List<Complex> vertices;
     @XmlElement(name = "FundamentalEdge", required = true)
     protected List<FundamentalEdge> edges;
-
-    /**
-     * Gets the value of the vertices property.
-     * 
-     * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the vertices property.
-     * 
-     * <p>
-     * For example, to add a new item, do as follows:
-     * <pre>
-     *    getVertices().add(newItem);
-     * </pre>
-     * 
-     * 
-     * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link Complex }
-     * 
-     * 
-     */
-    public List<Complex> getVertices() {
-        if (vertices == null) {
-            vertices = new ArrayList<Complex>();
-        }
-        return this.vertices;
-    }
 
     /**
      * Gets the value of the edges property.
