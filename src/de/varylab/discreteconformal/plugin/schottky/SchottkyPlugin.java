@@ -207,9 +207,9 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 					return;
 				}
 				if (genus == 1) {
-					conformalDataPlugin.addDiscreteEmbedding("Output Euclidean Embedding", hds, aSet, TexturePosition4d.class);
+					conformalDataPlugin.addDiscreteEmbedding("Output Euclidean Embedding", hds, aSet, TexturePosition4d.class, cutInfo);
 				} else {
-					conformalDataPlugin.addDiscreteEmbedding("Output Klein Model Fuchsian Embedding", hds, aSet, TexturePosition4d.class);
+					conformalDataPlugin.addDiscreteEmbedding("Output Klein Model Fuchsian Embedding", hds, aSet, TexturePosition4d.class, cutInfo);
 				}
 				dcp.createVisualization(hds, genus, cutInfo);
 				dcp.updateSurface();

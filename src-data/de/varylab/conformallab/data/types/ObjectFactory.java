@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.12.10 um 06:00:53 PM CET 
+// Generiert: 2013.12.13 um 12:01:16 PM CET 
 //
 
 
@@ -91,6 +91,14 @@ public class ObjectFactory {
      */
     public HyperEllipticAlgebraicCurve createHyperEllipticAlgebraicCurve() {
         return new HyperEllipticAlgebraicCurve();
+    }
+
+    /**
+     * Create an instance of {@link VertexIdentification }
+     * 
+     */
+    public VertexIdentification createVertexIdentification() {
+        return new VertexIdentification();
     }
 
     /**

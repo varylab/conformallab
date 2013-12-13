@@ -41,6 +41,7 @@ import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
 import de.varylab.discreteconformal.plugin.hyperelliptic.Curve;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyGenerator;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class DataUtility {
 
@@ -161,7 +162,13 @@ public class DataUtility {
 		return dm;
 	}
 
-	public static DiscreteEmbedding toDiscreteEmbedding(String name, CoHDS surface, AdapterSet a, Class<? extends Annotation> type) {
+	public static DiscreteEmbedding toDiscreteEmbedding(
+		String name, 
+		CoHDS surface, 
+		AdapterSet a, 
+		Class<? extends Annotation> type, 
+		CuttingInfo<CoVertex, CoEdge, CoFace> identifications
+	) {
 		DiscreteEmbedding de = new DiscreteEmbedding();
 		de.setName(name);
 		for (CoVertex v : surface.getVertices()) {
@@ -185,6 +192,9 @@ public class DataUtility {
 			et.setVertex2(v1.getIndex());
 			et.setVertex3(v2.getIndex());
 			de.getTriangles().add(et);
+		}
+		if (identifications != null && !identifications.vertexCopyMap.isEmpty()) {
+			// TODO write identification
 		}
 		return de;
 	}

@@ -46,6 +46,7 @@
 			<xs:extension base="types:ConformalData">
 				<xs:sequence>
 					<xs:element name="EmbeddedVertex" type="types:EmbeddedVertex" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="Identification" type="types:VertexIdentification" minOccurs="0" maxOccurs="unbounded"/>				
 					<xs:element name="EmbeddedTriangle" type="types:EmbeddedTriangle" minOccurs="0" maxOccurs="unbounded"/>
 				</xs:sequence>	
 			</xs:extension>
@@ -82,6 +83,12 @@
 				</xs:sequence>
 			</xs:extension>
 		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="VertexIdentification">
+		<xs:sequence>
+			<xs:element name="Vertex" type="xs:int" minOccurs="1" maxOccurs="unbounded"/>			
+		</xs:sequence>
 	</xs:complexType>
 	
 	<xs:complexType name="FundamentalPolygon">

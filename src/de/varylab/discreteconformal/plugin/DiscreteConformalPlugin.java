@@ -664,7 +664,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		cutInfo = unwrapper.cutInfo;
 		metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
 		metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
-		conformalDataPlugin.addDiscreteEmbedding("Output Texture Embedding", surface, hif.getAdapters(), TexturePosition4d.class);
+		conformalDataPlugin.addDiscreteEmbedding("Output Texture Embedding", surface, hif.getAdapters(), TexturePosition4d.class, cutInfo);
 		createVisualization(surface, genus, cutInfo);
 		updateSurface();
 		updateDomainImage();
@@ -762,7 +762,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			}
 			AdapterSet aSet = hif.getAdapters();
 			conformalDataPlugin.addDiscreteMetric("Input Discrete Metric", surface, aSet);
-			conformalDataPlugin.addDiscreteEmbedding("Input Discrete Position Embedding", surface, aSet, Position4d.class);
+			conformalDataPlugin.addDiscreteEmbedding("Input Discrete Position Embedding", surface, aSet, Position4d.class, null);
 			Unwrap uw = new Unwrap(surface, aSet);
 			uw.setSpherize(spherizeButton == s);
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());

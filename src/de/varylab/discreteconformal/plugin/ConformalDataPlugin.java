@@ -50,9 +50,13 @@ import de.varylab.conformallab.data.types.DiscreteEmbedding;
 import de.varylab.conformallab.data.types.DiscreteMetric;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.conformallab.data.types.SchottkyData;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionListener {
 
@@ -363,14 +367,14 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		DiscreteMetric dm = DataUtility.toDiscreteMetric(name, surface, a);
 		addData(dm);
 	}
-	public void addDiscreteTextureEmbedding(CoHDS surface, AdapterSet a) {
-		addDiscreteEmbedding("Texture Embedding", surface, a, Position4d.class);
+	public void addDiscreteTextureEmbedding(CoHDS surface, AdapterSet a, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		addDiscreteEmbedding("Texture Embedding", surface, a, Position4d.class, cutInfo);
 	}
-	public void addDiscretePositionEmbedding(CoHDS surface, AdapterSet a) {
-		addDiscreteEmbedding("Position Embedding", surface, a, TexturePosition4d.class);
+	public void addDiscretePositionEmbedding(CoHDS surface, AdapterSet a, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		addDiscreteEmbedding("Position Embedding", surface, a, TexturePosition4d.class, cutInfo);
 	}
-	public void addDiscreteEmbedding(String name, CoHDS surface, AdapterSet a, Class<? extends Annotation> type) {
-		DiscreteEmbedding de = DataUtility.toDiscreteEmbedding(name, surface, a, type);
+	public void addDiscreteEmbedding(String name, CoHDS surface, AdapterSet a, Class<? extends Annotation> type, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		DiscreteEmbedding de = DataUtility.toDiscreteEmbedding(name, surface, a, type, cutInfo);
 		addData(de);
 	}
 	public void addData(ConformalData data) {

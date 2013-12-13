@@ -17,16 +17,16 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse für FuchsianGroup complex type.
+ * <p>Java-Klasse für VertexIdentification complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
  * <pre>
- * &lt;complexType name="FuchsianGroup">
+ * &lt;complexType name="VertexIdentification">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="HyperbolicMotion" type="{http://www.w3.org/2001/XMLSchema}anyType" maxOccurs="unbounded" minOccurs="4"/>
+ *         &lt;element name="Vertex" type="{http://www.w3.org/2001/XMLSchema}int" maxOccurs="unbounded"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -36,41 +36,41 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "FuchsianGroup", propOrder = {
-    "generators"
+@XmlType(name = "VertexIdentification", propOrder = {
+    "vertices"
 })
-public class FuchsianGroup {
+public class VertexIdentification {
 
-    @XmlElement(name = "HyperbolicMotion", required = true)
-    protected List<Object> generators;
+    @XmlElement(name = "Vertex", type = Integer.class)
+    protected List<Integer> vertices;
 
     /**
-     * Gets the value of the generators property.
+     * Gets the value of the vertices property.
      * 
      * <p>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the generators property.
+     * This is why there is not a <CODE>set</CODE> method for the vertices property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
      * <pre>
-     *    getGenerators().add(newItem);
+     *    getVertices().add(newItem);
      * </pre>
      * 
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link Object }
+     * {@link Integer }
      * 
      * 
      */
-    public List<Object> getGenerators() {
-        if (generators == null) {
-            generators = new ArrayList<Object>();
+    public List<Integer> getVertices() {
+        if (vertices == null) {
+            vertices = new ArrayList<Integer>();
         }
-        return this.generators;
+        return this.vertices;
     }
 
 }

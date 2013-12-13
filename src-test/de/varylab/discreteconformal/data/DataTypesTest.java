@@ -13,6 +13,7 @@ import de.varylab.conformallab.data.types.EmbeddedTriangle;
 import de.varylab.conformallab.data.types.EmbeddedVertex;
 import de.varylab.conformallab.data.types.MetricEdge;
 import de.varylab.conformallab.data.types.MetricTriangle;
+import de.varylab.conformallab.data.types.VertexIdentification;
 
 public class DataTypesTest {
 
@@ -41,6 +42,12 @@ public class DataTypesTest {
 		Assert.assertEquals(1.0, de.getVertices().get(2).getY(), 1E-20);
 		Assert.assertEquals(0.0, de.getVertices().get(2).getZ(), 1E-20);
 		Assert.assertEquals(1.0, de.getVertices().get(2).getW(), 1E-20);
+		
+		Assert.assertEquals(1, de.getIdentifications().size());
+		VertexIdentification id = de.getIdentifications().get(0);
+		Assert.assertEquals(2, id.getVertices().size());
+		Assert.assertEquals(0, (int)id.getVertices().get(0));
+		Assert.assertEquals(1, (int)id.getVertices().get(1));
 	}
 	
 	

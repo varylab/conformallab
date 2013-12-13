@@ -3,5 +3,9 @@
 	<EmbeddedVertex index="0" x="0.0" y="0.0" z="0.0" w="1.0"/>
 	<EmbeddedVertex index="1" x="1.0" y="0.0" z="0.0" w="1.0"/>
 	<EmbeddedVertex index="2" x="1.0" y="1.0" z="0.0" w="1.0"/>
+	<Identification>
+		<Vertex>0</Vertex>
+		<Vertex>1</Vertex>
+	</Identification>
 	<EmbeddedTriangle vertex1="0" vertex2="1" vertex3="2"/>
 </DiscreteEmbedding>
