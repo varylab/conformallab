@@ -33,12 +33,13 @@ public class CuttingUtility {
 			cutRoot = null;
 		public Map<E, E>
 			edgeCutMap = new HashMap<E, E>();
-		public Set<Set<E>>
-			paths = new HashSet<Set<E>>();
-		public Map<Set<E>, Set<E>>
-			pathCutMap = new HashMap<Set<E>, Set<E>>();
 		public Map<V, V>
 			vertexCopyMap = new HashMap<V, V>();
+		
+		private Set<Set<E>>
+			_paths = new HashSet<Set<E>>();
+		private Map<Set<E>, Set<E>>
+			_pathCutMap = new HashMap<Set<E>, Set<E>>();
 		
 		public Set<V> getCopies(V v) {
 			Set<V> copies = new TreeSet<V>(new NodeIndexComparator<V>());
@@ -92,7 +93,7 @@ public class CuttingUtility {
 				path0 = path;
 			}
 		}
-		context.paths.add(path0);
+		context._paths.add(path0);
 		cutAlongPath(path0, context);
 
 		List<E> path1 = null;
@@ -118,11 +119,11 @@ public class CuttingUtility {
 		assert cutRoot != null;
 		
 		context.cutRoot = cutRoot;
-		context.paths.add(new HashSet<E>(path1));
+		context._paths.add(new HashSet<E>(path1));
 		cutAlongPath(path1, context);
-		for (Set<E> path : context.paths) {
+		for (Set<E> path : context._paths) {
 			Set<E> coPath = new TreeSet<E>(new NodeIndexComparator<E>());
-			context.pathCutMap.put(path, coPath);
+			context._pathCutMap.put(path, coPath);
 			for (E e : path) {
 				E coE = context.edgeCutMap.get(e);
 				if (coE != null) {
@@ -186,10 +187,10 @@ public class CuttingUtility {
 			return context;
 		}
 		for(Set<E> path : HomotopyUtility.getGeneratorPaths(root, wa)) {
-			context.paths.add(path);
+			context._paths.add(path);
 		}
 		Set<E> masterPath = new TreeSet<E>(new NodeIndexComparator<E>());
-		for (Set<E> path : context.paths) {
+		for (Set<E> path : context._paths) {
 			masterPath.addAll(path);
 		}
 		for (E e : masterPath) { 
@@ -207,9 +208,9 @@ public class CuttingUtility {
 				}
 			}
 		}
-		for (Set<E> path : context.paths) {
+		for (Set<E> path : context._paths) {
 			Set<E> coPath = new TreeSet<E>(new NodeIndexComparator<E>());
-			context.pathCutMap.put(path, coPath);
+			context._pathCutMap.put(path, coPath);
 			for (E e : path) {
 				E coE = context.edgeCutMap.get(e);
 				if (coE != null) {

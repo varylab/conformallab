@@ -140,12 +140,8 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.CustomEdgeInfo;
 import de.varylab.discreteconformal.heds.CustomVertexInfo;
-import de.varylab.discreteconformal.heds.adapter.BranchPointColorAdapter;
-import de.varylab.discreteconformal.heds.adapter.BranchPointRadiusAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
-import de.varylab.discreteconformal.heds.adapter.MarkedEdgesColorAdapter;
-import de.varylab.discreteconformal.heds.adapter.MarkedEdgesRadiusAdapter;
 import de.varylab.discreteconformal.heds.adapter.MetricErrorAdapter;
 import de.varylab.discreteconformal.plugin.tasks.Unwrap;
 import de.varylab.discreteconformal.uniformization.CanonicalFormUtility;
@@ -215,14 +211,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		positionAdapter = new CoPositionAdapter();
 	public CoTexturePositionAdapter
 		texturePositionAdapter = new CoTexturePositionAdapter();
-	private MarkedEdgesColorAdapter
-		cutColorAdapter = new MarkedEdgesColorAdapter();
-	private MarkedEdgesRadiusAdapter
-		cutRadiusAdapter = new MarkedEdgesRadiusAdapter();
-	private BranchPointColorAdapter
-		pointColorAdapter = new BranchPointColorAdapter();
-	private BranchPointRadiusAdapter
-		pointRadiusAdapter = new BranchPointRadiusAdapter();
 	
 	private Appearance
 		yellowPointsAppearance = new Appearance(),
@@ -664,8 +652,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		cutInfo = unwrapper.cutInfo;
 		metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
 		metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
-		conformalDataPlugin.addDiscreteEmbedding("Output Texture Embedding", surface, hif.getAdapters(), TexturePosition4d.class, cutInfo);
-		createVisualization(surface, genus, cutInfo);
+		conformalDataPlugin.addDiscreteTextureEmbedding(surface, cutInfo);
+		conformalDataPlugin.addDiscretePositionEmbedding(surface, cutInfo);
+		createUniformization(surface, genus, cutInfo);
 		updateSurface();
 		updateDomainImage();
 	}
@@ -688,16 +677,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	public void jobStarted(Job job) {
 	}
 	
-	public void createVisualization(CoHDS surface, int genus, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+	public void createUniformization(CoHDS surface, int genus, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		this.genus = genus;
 		this.surface = surface;
 		this.cutInfo = cutInfo;
-		if (genus > 0) {
-			cutColorAdapter.setContext(cutInfo);
-			cutRadiusAdapter.setContext(cutInfo);
-			pointRadiusAdapter.setContext(cutInfo);
-			pointColorAdapter.setContext(cutInfo);
-		}
 		if (genus > 0) {
 			int signature = genus == 1 ? EUCLIDEAN : HYPERBOLIC;
 			try {
@@ -912,7 +895,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				T.transformVector(vv.T);
 			}
 			hif.update();
-			createVisualization(surface, genus, cutInfo);
+			createUniformization(surface, genus, cutInfo);
 			updateSurface();
 			updateDomainImage();
 		}

@@ -17,6 +17,7 @@ import de.jtem.discretegroup.core.DiscreteGroupElement;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
+import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.jtem.riemann.surface.BranchPoint;
 import de.varylab.conformallab.data.types.Circle;
 import de.varylab.conformallab.data.types.Complex;
@@ -33,6 +34,8 @@ import de.varylab.conformallab.data.types.MetricEdge;
 import de.varylab.conformallab.data.types.MetricTriangle;
 import de.varylab.conformallab.data.types.ObjectFactory;
 import de.varylab.conformallab.data.types.SchottkyData;
+import de.varylab.conformallab.data.types.VertexIdentification;
+import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -132,6 +135,86 @@ public class DataUtility {
 		IndexedFaceSet ifs = f.getIndexedFaceSet();
 		return ifs;
 	}
+	
+	
+	public static CoHDS toHDS(DiscreteEmbedding de, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfoOUT) {
+		IndexedFaceSet ifs = toIndexedFaceSet(de);
+		ConverterJR2Heds c = new ConverterJR2Heds();
+		CoHDS hds = new CoHDS();
+		ConformalAdapterSet aSet = new ConformalAdapterSet();
+		c.ifs2heds(ifs, hds, aSet);
+		createCuttingInfo(hds, de, cutInfoOUT);
+		return hds;
+	}
+	
+	
+	public static int calculateGenus(DiscreteEmbedding de) {
+		int v = de.getVertices().size();
+		int f = de.getTriangles().size();
+		int e = f * 3 / 2;
+		// compensate for vertex identifications
+		for (VertexIdentification vi : de.getIdentifications()) {
+			v -= vi.getVertices().size() - 1;
+		}
+		int X = v - e + f;
+		return (2 - X) / 2;
+	}
+	
+	
+	
+	private static void createCuttingInfo(CoHDS hds, DiscreteEmbedding de, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfoOUT) {
+		List<CoEdge> boundary = HalfEdgeUtils.boundaryEdges(hds);
+		if (boundary.size() == 0) return;
+		cutInfoOUT.vertexCopyMap.clear();
+		for (VertexIdentification vi : de.getIdentifications()) {
+			CoVertex copyRoot = hds.getVertex(vi.getVertices().get(0));
+			for (int i : vi.getVertices()) {
+				CoVertex copy = hds.getVertex(i);
+				if (copy == copyRoot) continue;
+				cutInfoOUT.vertexCopyMap.put(copyRoot, copy);
+				copyRoot = copy;
+			}
+		}
+		cutInfoOUT.edgeCutMap.clear();
+		Set<CoEdge> readyEdges = new HashSet<CoEdge>();
+		Map<CoVertex, VertexIdentification> idMap = new HashMap<CoVertex, VertexIdentification>();
+		for (VertexIdentification vi : de.getIdentifications()) {
+			for (int iv : vi.getVertices()) {
+				CoVertex v = hds.getVertex(iv);
+				idMap.put(v, vi);
+			}
+		}
+		for (CoEdge e : HalfEdgeUtils.boundaryEdges(hds)) {
+			if (readyEdges.contains(e)) continue;
+			CoVertex vs = e.getStartVertex();
+			CoVertex vt = e.getTargetVertex();
+			VertexIdentification si = idMap.get(vs);
+			VertexIdentification ti = idMap.get(vt);
+			Set<Integer> sIdSet = new HashSet<Integer>(si.getVertices());
+			Set<Integer> tIdSet = new HashSet<Integer>(ti.getVertices());
+			CoEdge copyEdge = null;
+			for (int i : sIdSet) {
+				if (vs.getIndex() == i) continue;
+				CoVertex sCopy = hds.getVertex(i);
+				for (CoEdge ee : HalfEdgeUtils.incomingEdges(sCopy)) {
+					if (tIdSet.contains(ee.getStartVertex().getIndex())) {
+						copyEdge = ee;
+						break;
+					}
+				}
+				if (copyEdge != null) break;
+			}
+			assert copyEdge != null;
+			cutInfoOUT.edgeCutMap.put(e, copyEdge);
+			cutInfoOUT.edgeCutMap.put(copyEdge, e);
+			cutInfoOUT.edgeCutMap.put(e.getOppositeEdge(), copyEdge.getOppositeEdge());
+			cutInfoOUT.edgeCutMap.put(copyEdge.getOppositeEdge(), e.getOppositeEdge());
+			readyEdges.add(e);
+			readyEdges.add(copyEdge);
+		}
+		cutInfoOUT.cutRoot = HalfEdgeUtils.boundaryVertices(hds).iterator().next();
+	}
+	
 
 	public static DiscreteMetric toDiscreteMetric(String name, CoHDS surface, AdapterSet a) {
 		DiscreteMetric dm = new DiscreteMetric();
@@ -194,7 +277,17 @@ public class DataUtility {
 			de.getTriangles().add(et);
 		}
 		if (identifications != null && !identifications.vertexCopyMap.isEmpty()) {
-			// TODO write identification
+			Set<CoVertex> ready = new HashSet<CoVertex>();
+			for (CoVertex v : HalfEdgeUtils.boundaryVertices(surface)) {
+				if (ready.contains(v)) continue;
+				Set<CoVertex> idSet = identifications.getCopies(v);
+				VertexIdentification vi = new VertexIdentification();
+				for (CoVertex iv : idSet) {
+					vi.getVertices().add(iv.getIndex());
+					ready.add(iv);
+				}
+				de.getIdentifications().add(vi);
+			}
 		}
 		return de;
 	}

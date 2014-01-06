@@ -33,8 +33,14 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
 import de.jreality.plugin.basic.View;
-import de.jreality.scene.IndexedFaceSet;
+import de.jtem.halfedge.Edge;
+import de.jtem.halfedge.Face;
+import de.jtem.halfedge.Node;
+import de.jtem.halfedge.Vertex;
+import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Position;
+import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -67,6 +73,8 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 	
 	private HalfedgeInterface
 		hif = null;
+	private DiscreteConformalPlugin
+		discreteConformalPlugin = null;
 	private SchottkyPlugin
 		schottkyPlugin = null;
 	private HyperellipticCurvePlugin
@@ -140,6 +148,9 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 				return;
 			}
 			File file = fileChooser.getSelectedFile();
+			if (!file.getName().toLowerCase().endsWith(".xml")) {
+				file = new File(file.getAbsolutePath() + ".xml");
+			}
 			if (file.exists()) {
 				result = JOptionPane.showConfirmDialog(w, "The file " + file.getName() + " exists. \nDo you want to overwrite this file?", "Overwrite?", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 				if (result != JOptionPane.OK_OPTION) {
@@ -343,8 +354,16 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 	private void loadDataIntoUI(ConformalData data) {
 		if (data instanceof DiscreteEmbedding) {
 			DiscreteEmbedding de = (DiscreteEmbedding)data;
-			IndexedFaceSet ifs = DataUtility.toIndexedFaceSet(de);
-			hif.set(ifs);
+			int genus = DataUtility.calculateGenus(de);
+			System.out.println("loading embedding of genus " + genus);
+			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+			CoHDS hds = DataUtility.toHDS(de, cutInfo);
+			for (CoVertex v : hds.getVertices()) {
+				System.arraycopy(v.P, 0, v.T, 0, 4);
+			}
+			discreteConformalPlugin.createUniformization(hds, genus, cutInfo);
+			discreteConformalPlugin.updateSurface();
+			discreteConformalPlugin.updateDomainImage();
 		}
 		if (data instanceof DiscreteMetric) {
 			DiscreteMetric dm = (DiscreteMetric)data;
@@ -367,11 +386,47 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		DiscreteMetric dm = DataUtility.toDiscreteMetric(name, surface, a);
 		addData(dm);
 	}
-	public void addDiscreteTextureEmbedding(CoHDS surface, AdapterSet a, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
-		addDiscreteEmbedding("Texture Embedding", surface, a, Position4d.class, cutInfo);
+
+	@Position
+	@Position4d
+	@TexturePosition
+	@TexturePosition4d
+	private static class DirectDataAdapter extends AbstractAdapter<double[]> {
+		private boolean
+			useTextureData = false;
+		public DirectDataAdapter(boolean useTextureData) {
+			super(double[].class, true, false);
+			this.useTextureData = useTextureData;
+		}
+		@Override
+		public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
+			return CoVertex.class.isAssignableFrom(nodeClass);
+		}
+		@Override
+		public double getPriority() {
+			return Double.MAX_VALUE;
+		}
+		@Override
+		public <
+			V extends Vertex<V, E, F>, 
+			E extends Edge<V, E, F>, 
+			F extends Face<V, E, F>
+		> double[] getV(V v, AdapterSet a) {
+			CoVertex cv = (CoVertex)v;
+			if (useTextureData) {
+				return cv.T;
+			} else {
+				return cv.P;
+			}
+		}
 	}
-	public void addDiscretePositionEmbedding(CoHDS surface, AdapterSet a, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
-		addDiscreteEmbedding("Position Embedding", surface, a, TexturePosition4d.class, cutInfo);
+	public void addDiscreteTextureEmbedding(CoHDS surface, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		AdapterSet aSet = new AdapterSet(new DirectDataAdapter(true));
+		addDiscreteEmbedding("Texture Embedding", surface, aSet, TexturePosition4d.class, cutInfo);
+	}
+	public void addDiscretePositionEmbedding(CoHDS surface, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		AdapterSet aSet = new AdapterSet(new DirectDataAdapter(false));
+		addDiscreteEmbedding("Position Embedding", surface, aSet, Position4d.class, cutInfo);
 	}
 	public void addDiscreteEmbedding(String name, CoHDS surface, AdapterSet a, Class<? extends Annotation> type, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		DiscreteEmbedding de = DataUtility.toDiscreteEmbedding(name, surface, a, type, cutInfo);
@@ -409,6 +464,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
+		discreteConformalPlugin = c.getPlugin(DiscreteConformalPlugin.class);
 		schottkyPlugin = c.getPlugin(SchottkyPlugin.class);
 		hyperellipticCurvePlugin = c.getPlugin(HyperellipticCurvePlugin.class);
 	}
