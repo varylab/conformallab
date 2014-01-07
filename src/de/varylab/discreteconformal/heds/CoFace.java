@@ -8,4 +8,11 @@ public class CoFace extends ConformalFace<CoVertex, CoEdge, CoFace> {
     	P = {0,0,0,1},
     	T = {0,0,0,1};
 
+    @Override
+    public void copyData(CoFace f) {
+    	super.copyData(f);
+    	P = f.P.clone();
+    	T = f.T.clone();
+    }
+    
 }

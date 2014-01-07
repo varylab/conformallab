@@ -212,7 +212,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 					conformalDataPlugin.addDiscreteEmbedding("Output Klein Model Fuchsian Embedding", hds, aSet, TexturePosition4d.class, cutInfo);
 				}
 				dcp.createUniformization(hds, genus, cutInfo);
-				dcp.updateSurface();
+				dcp.updateGeometry();
 				dcp.updateDomainImage();
 			}
 		}

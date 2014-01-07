@@ -78,6 +78,34 @@ public class CuttingUtility {
 	}
 	
 	
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void glueAll(HDS hds, CuttingInfo<V, E, F> cut) {
+		for (E e1 : cut.edgeCutMap.keySet()) {
+			E e2 = cut.edgeCutMap.get(e1);
+			glue(e1, e2);
+		}
+	}
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void glue(E e1, E e2) {
+		assert e1.getLeftFace() == null;
+		assert e2.getLeftFace() == null;
+//		E e = e1.getOppositeEdge();
+//		E eopp = e2.getOppositeEdge();
+		
+	}
+	
+	
+	
 	public static <
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
@@ -193,7 +221,27 @@ public class CuttingUtility {
 		for (Set<E> path : context._paths) {
 			masterPath.addAll(path);
 		}
-		for (E e : masterPath) { 
+		cutAtEdges(context, masterPath);
+		for (Set<E> path : context._paths) {
+			Set<E> coPath = new TreeSet<E>(new NodeIndexComparator<E>());
+			context._pathCutMap.put(path, coPath);
+			for (E e : path) {
+				E coE = context.edgeCutMap.get(e);
+				if (coE != null) {
+					coPath.add(coE);
+				}
+			}
+		}
+		return context;
+	}
+
+
+	public static <
+		V extends Vertex<V, E, F>, 
+		E extends Edge<V, E, F>, 
+		F extends Face<V, E, F>
+	> void cutAtEdges(CuttingInfo<V, E, F> context, Set<E> cutEdges) {
+		for (E e : cutEdges) { 
 			if (isInteriorEdge(e)) {
 				context.edgeCutMap.put(e, e.getOppositeEdge());
 				context.edgeCutMap.put(e.getOppositeEdge(), e);
@@ -208,20 +256,7 @@ public class CuttingUtility {
 				}
 			}
 		}
-		for (Set<E> path : context._paths) {
-			Set<E> coPath = new TreeSet<E>(new NodeIndexComparator<E>());
-			context._pathCutMap.put(path, coPath);
-			for (E e : path) {
-				E coE = context.edgeCutMap.get(e);
-				if (coE != null) {
-					coPath.add(coE);
-				}
-			}
-		}
-		return context;
 	}
-	
-
 	
 	
 	/**

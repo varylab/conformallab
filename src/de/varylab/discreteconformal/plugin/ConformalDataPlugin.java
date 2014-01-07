@@ -362,7 +362,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 				System.arraycopy(v.P, 0, v.T, 0, 4);
 			}
 			discreteConformalPlugin.createUniformization(hds, genus, cutInfo);
-			discreteConformalPlugin.updateSurface();
+			discreteConformalPlugin.updateGeometry();
 			discreteConformalPlugin.updateDomainImage();
 		}
 		if (data instanceof DiscreteMetric) {

@@ -112,6 +112,7 @@ import de.jreality.util.NativePathUtility;
 import de.jtem.discretegroup.core.DiscreteGroup;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Vertex;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
@@ -188,12 +189,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	
 	// data section ---------------------
 	private CoHDS
-		surface = null;
+		surface = null,
+		surfaceUnwrapped = null;
 	private List<CoVertex>
 		customVertices = new LinkedList<CoVertex>();
 	private List<CoEdge>
 		customEdges = new LinkedList<CoEdge>();	
-	private FundamentalPolygon 
+	private FundamentalPolygon
 		cuttedPolygon = null,
 		minimalPolygon = null,
 		oppositePolygon = null,
@@ -646,23 +648,21 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	@Override
 	public void jobFinished(Job job) {
 		Unwrap unwrapper = (Unwrap)job;
-		surface = unwrapper.getSurface();
-		surface.revertNormalization();
+		surfaceUnwrapped = unwrapper.getSurface();
+		surfaceUnwrapped.revertNormalization();
 		genus = unwrapper.genus;
 		cutInfo = unwrapper.cutInfo;
 		metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
 		metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
-		conformalDataPlugin.addDiscreteTextureEmbedding(surface, cutInfo);
-		conformalDataPlugin.addDiscretePositionEmbedding(surface, cutInfo);
-		createUniformization(surface, genus, cutInfo);
-		updateSurface();
+		conformalDataPlugin.addDiscreteTextureEmbedding(surfaceUnwrapped, cutInfo);
+		conformalDataPlugin.addDiscretePositionEmbedding(surfaceUnwrapped, cutInfo);
+		createUniformization(surfaceUnwrapped, genus, cutInfo);
+		updateGeometry();
 		updateDomainImage();
 	}
 	@Override
 	public void jobFailed(Job job, Exception e) {
-		Unwrap unwrapper = (Unwrap)job;
-		surface = unwrapper.getSurface();
-		surface.revertNormalization();
+		surfaceUnwrapped = null;
 		Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
 		JOptionPane.showMessageDialog(w, e, "Optimization Error", JOptionPane.WARNING_MESSAGE);
 		e.printStackTrace();
@@ -677,9 +677,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	public void jobStarted(Job job) {
 	}
 	
-	public void createUniformization(CoHDS surface, int genus, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+	public void createUniformization(CoHDS surfaceUnwrapped, int genus, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		this.genus = genus;
-		this.surface = surface;
+		this.surfaceUnwrapped = surfaceUnwrapped;
 		this.cutInfo = cutInfo;
 		if (genus > 0) {
 			int signature = genus == 1 ? EUCLIDEAN : HYPERBOLIC;
@@ -716,7 +716,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
 		if (domainCombo == s) {
-			updateSurface();
+			updateGeometry();
 			updateDomainImage();
 			return;
 		}
@@ -740,13 +740,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		if (unwrapBtn == s || spherizeButton == s) {
 			surface = getLoaderGeometry();
 			if (surface == null) return;
+			CoHDS unwrapped = copySurface(surface);
+			HalfedgeSelection selection = copySelection(hif.getSelection(), surface, unwrapped);
 			if (isRescaleGeometry()) {
-				surface.normalizeCoordinates();
+				unwrapped.normalizeCoordinates();
 			}
 			AdapterSet aSet = hif.getAdapters();
-			conformalDataPlugin.addDiscreteMetric("Input Discrete Metric", surface, aSet);
-			conformalDataPlugin.addDiscreteEmbedding("Input Discrete Position Embedding", surface, aSet, Position4d.class, null);
-			Unwrap uw = new Unwrap(surface, aSet);
+			conformalDataPlugin.addDiscreteMetric("Input Discrete Metric", unwrapped, aSet);
+			conformalDataPlugin.addDiscreteEmbedding("Input Discrete Position Embedding", unwrapped, aSet, Position4d.class, null);
+			Unwrap uw = new Unwrap(unwrapped, aSet);
 			uw.setSpherize(spherizeButton == s);
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());
 			uw.setMaxIterations(maxIterationsModel.getNumber().intValue());
@@ -755,7 +757,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			uw.setBoundaryQuantMode((QuantizationMode)boundaryQuantizationCombo.getSelectedItem());
 			uw.setBoundaryMode((BoundaryMode)boundaryModeCombo.getSelectedItem());
 			uw.setUsePetsc(numericsCombo.getSelectedIndex() == 0);
-			uw.setSelectedVertices(hif.getSelection().getVertices(surface));
+			uw.setSelectedVertices(selection.getVertices(unwrapped));
 			uw.addJobListener(this);
 			jobQueue.queueJob(uw);
 		}
@@ -884,19 +886,20 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			hif.update();
 		}
 		if (moveToCenterButton == s) {
-			Set<CoVertex> sel = hif.getSelection().getVertices(surface);
+			if (surfaceUnwrapped == null) return;
+			Set<CoVertex> sel = hif.getSelection().getVertices(surfaceUnwrapped);
 			if (sel.isEmpty()) return;
 			CoVertex v = sel.iterator().next();
 			double[] pos = v.T;
 			MatrixBuilder mb = MatrixBuilder.hyperbolic();
 			mb.translateFromTo(pos, new double[] {0,0,0,1});
 			Matrix T = mb.getMatrix();
-			for (CoVertex vv : surface.getVertices()) {
+			for (CoVertex vv : surfaceUnwrapped.getVertices()) {
 				T.transformVector(vv.T);
 			}
 			hif.update();
-			createUniformization(surface, genus, cutInfo);
-			updateSurface();
+			createUniformization(surfaceUnwrapped, genus, cutInfo);
+			updateGeometry();
 			updateDomainImage();
 		}
 		if (saveTextureButton == s) {
@@ -971,7 +974,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			drawPolygonChecker == s ||
 			drawCurvesOnSurface == s
 		) {
-			updateSurface();
+			updateGeometry();
 			updateDomainImage();				
 		}
 		if (reorderFacesButton == s) {
@@ -996,11 +999,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	
 	
 	private void reorderFaces() {
+		if (surfaceUnwrapped == null) return;
 		int numFaces = reorderFacesCountModel.getNumber().intValue();	
 		FundamentalPolygon p = getActiveFundamentalPoygon();
 		int signature = getActiveSignature();
-		VisualizationUtility.reglueOutsideFaces(surface, numFaces, p, cutInfo, signature);
-		updateSurface();
+		VisualizationUtility.reglueOutsideFaces(surfaceUnwrapped, numFaces, p, cutInfo, signature);
+		updateGeometry();
 		updateDomainImage();
 	}
 	
@@ -1070,7 +1074,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			ConverterHeds2JR converter = new ConverterHeds2JR();
 			if (drawPolygon) {
 				FundamentalPolygon p = getActiveFundamentalPoygon();
-				CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(p, surface, aSet, depth, maxDrawDistance, true, false);
+				CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(p, surfaceUnwrapped, aSet, depth, maxDrawDistance, true, false);
 				IndexedFaceSet curvesGeom = converter.heds2ifs(curves, aSet);
 				polygonCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, polygonColor);
 				polygonCurvesRoot.setGeometry(curvesGeom);
@@ -1078,7 +1082,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			}
 			if (drawAxes) {
 				FundamentalPolygon p = getActiveFundamentalPoygon();
-				CoHDS axesCurves = SurfaceCurveUtility.createSurfaceCurves(p, surface, aSet, depth, maxDrawDistance, false, true);
+				CoHDS axesCurves = SurfaceCurveUtility.createSurfaceCurves(p, surfaceUnwrapped, aSet, depth, maxDrawDistance, false, true);
 				IndexedFaceSet axesGeom = converter.heds2ifs(axesCurves, aSet);
 				axesCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, axesColor);
 				axesCurvesRoot.setGeometry(axesGeom);
@@ -1106,15 +1110,47 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 	
 	
-	public void updateSurface() {
-		if (surface == null) {
-			return;
+	private CoHDS copySurface(CoHDS hds) {
+		CoHDS copy = new CoHDS();
+		HalfEdgeUtils.copy(hds, copy);
+		for (CoVertex v : hds.getVertices()) {
+			CoVertex cv = copy.getVertex(v.getIndex());
+			cv.copyData(v);
 		}
+		for (CoEdge e : hds.getEdges()) {
+			CoEdge ce = copy.getEdge(e.getIndex());
+			ce.copyData(e);
+		}
+		for (CoFace f : hds.getFaces()){
+			CoFace cf = copy.getFace(f.getIndex());
+			cf.copyData(f);
+		}
+		return copy;
+	}
+	
+	
+	private HalfedgeSelection copySelection(HalfedgeSelection s, CoHDS surface, CoHDS copy) {
+		HalfedgeSelection sCopy = new HalfedgeSelection();
+		for (CoVertex v : s.getVertices(surface)) {
+			sCopy.add(copy.getVertex(v.getIndex()));
+		}
+		for (CoEdge e : s.getEdges(surface)) {
+			sCopy.add(copy.getEdge(e.getIndex()));
+		}
+		for (CoFace f : s.getFaces(surface)) {
+			sCopy.add(copy.getFace(f.getIndex()));
+		}
+		return sCopy;
+	}
+	
+	
+	public void updateGeometry() {
+		if (surfaceUnwrapped == null) return;
 		HyperbolicModel model = genus <= 1 ? Klein : Poincaré;
 		vis.setHyperbolicModel(model, false);
 		hif.addLayerAdapter(metricErrorAdapter, false);
 		vis.setInterpolation(Incircle, false);
-		hif.set(surface);
+		hif.set(surfaceUnwrapped);
 	}
 	
 
@@ -1131,11 +1167,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		HyperbolicModel model = vis.getSelectedHyperbolicModel();
 		VisualizationUtility.drawDomainBackground(g2d, res, model);
 		if (drawTriangulationChecker.isSelected()) {
-			if (surface == null) {
+			if (surfaceUnwrapped == null) {
 				throw new RuntimeException("No surface available");
 			}
 			Color triangulationColor = triangulationColorButton.getColor();
-			drawTriangulation(surface, model, g2d, res, triangulationColor);
+			drawTriangulation(surfaceUnwrapped, model, g2d, res, triangulationColor);
 		}
 		Color polygonColor = polygonColorButton.getColor();
 		Color axesColor = axesColorButton.getColor();

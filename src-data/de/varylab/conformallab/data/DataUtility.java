@@ -144,6 +144,8 @@ public class DataUtility {
 		ConformalAdapterSet aSet = new ConformalAdapterSet();
 		c.ifs2heds(ifs, hds, aSet);
 		createCuttingInfo(hds, de, cutInfoOUT);
+		
+		
 		return hds;
 	}
 	
