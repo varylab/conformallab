@@ -9,11 +9,13 @@ import java.util.List;
 import de.jreality.math.P2;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class SurfaceCurveUtility {
 
@@ -93,6 +95,33 @@ public class SurfaceCurveUtility {
 			}
 		}
 	}
+	
+	
+	private CoEdge findCorrespondingSurfaceEdge(
+		CoEdge sourceEdge, 
+		CoHDS source,
+		CuttingInfo<CoVertex, CoEdge, CoFace> sourceCutInfo,
+		CoHDS target
+	) {
+		CoFace flSource = sourceEdge.getLeftFace();
+		CoFace frSource = sourceEdge.getRightFace();
+		if (flSource == null) {
+			// TODO edgeCutMap may identify only internal edges
+			flSource = sourceCutInfo.edgeCutMap.get(sourceEdge).getRightFace();
+		}
+		if (frSource == null) {
+			// TODO edgeCutMap may identify only internal edges
+			frSource = sourceCutInfo.edgeCutMap.get(sourceEdge).getLeftFace();
+		}
+		assert flSource != null;
+		assert frSource != null;
+		CoFace flTarget = target.getFace(flSource.getIndex());
+		CoFace frTarget = target.getFace(frSource.getIndex());
+		CoEdge result = HalfEdgeUtils.findEdgeBetweenFaces(flTarget, frTarget);
+		assert result != null;
+		return result;
+	}
+	
 	
 
 	private static List<double[][][]> intersectTriangulation(CoHDS T, double[][] segment) {
