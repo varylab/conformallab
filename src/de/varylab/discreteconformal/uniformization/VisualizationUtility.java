@@ -303,7 +303,7 @@ public class VisualizationUtility {
 	
 	protected static void getUniversalCoverSegments(
 		FundamentalPolygon poly,
-		int maxDepth,
+		int maxElements,
 		double maxDrawDistance,
 		boolean drawPolygon,
 		boolean drawAxes,
@@ -312,7 +312,7 @@ public class VisualizationUtility {
 		List<double[][]> axesSegments,
 		List<double[][]> polygonSegments
 	) {
-		drawUniversalCover(poly, maxDepth, maxDrawDistance, drawPolygon, drawAxes, null, HyperbolicModel.Klein, -1, polygonColor, axesColor, axesSegments, polygonSegments);
+		drawUniversalCover(poly, maxElements, maxDrawDistance, drawPolygon, drawAxes, null, HyperbolicModel.Klein, -1, polygonColor, axesColor, axesSegments, polygonSegments);
 	}
 	
 	

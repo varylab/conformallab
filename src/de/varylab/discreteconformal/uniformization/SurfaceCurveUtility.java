@@ -17,18 +17,19 @@ import de.varylab.discreteconformal.heds.CoVertex;
 
 public class SurfaceCurveUtility {
 
+	
 	public static CoHDS createSurfaceCurves(
 		FundamentalPolygon poly, 
 		CoHDS surface,
 		AdapterSet aSet,
-		int depth,
+		int maxElements,
 		double maxDrawDistance,
 		boolean includePoygon,
 		boolean includeAxes
 	) {
 		List<double[][]> axesSegments = new ArrayList<double[][]>();
 		List<double[][]> polySegments = new ArrayList<double[][]>();
-		VisualizationUtility.getUniversalCoverSegments(poly, depth, maxDrawDistance, includePoygon, includeAxes, Color.BLACK, Color.BLACK, axesSegments, polySegments);
+		VisualizationUtility.getUniversalCoverSegments(poly, maxElements, maxDrawDistance, includePoygon, includeAxes, Color.BLACK, Color.BLACK, axesSegments, polySegments);
 		
 		List<double[][][]> allCurves = new ArrayList<double[][][]>();
 		if (includeAxes) {
@@ -67,6 +68,32 @@ public class SurfaceCurveUtility {
 		return result;
 	}
 
+	
+	public static void createIntersectingEdges(FundamentalPolygon poly, CoHDS surface, CoHDS unwrapped, AdapterSet aSet) {
+		List<double[][]> axesSegments = new ArrayList<double[][]>();
+		List<double[][]> polySegments = new ArrayList<double[][]>();
+		VisualizationUtility.getUniversalCoverSegments(poly, 200, 10, true, false, Color.BLACK, Color.BLACK, axesSegments, polySegments);
+		for (double[][] segment : polySegments) {
+			double[] sLine = P2.lineFromPoints(null, segment[0], segment[1]);
+			for (CoEdge e : unwrapped.getPositiveEdges()) {
+				CoVertex s = e.getStartVertex();
+				CoVertex t = e.getTargetVertex();
+				double[] st = {s.T[0] / s.T[3], s.T[1] / s.T[3], 1};
+				double[] tt = {t.T[0] / t.T[3], t.T[1] / t.T[3], 1};
+				double[][] edgePointSegment = {s.P, t.P};
+				double[][] edgeSegment = {st, tt};
+				double[] eLine = P2.lineFromPoints(null, st, tt);
+				double[] newPos = P2.pointFromLines(null, sLine, eLine);
+				if (isOnSegment(newPos, edgeSegment) && isOnSegment(newPos, segment)) {
+					double[] newPoint = getPointOnSegment(newPos, edgeSegment, edgePointSegment);
+					CoVertex newVertex = unwrapped.addNewVertex();
+					newVertex.P = newPoint;
+					newVertex.T = P2.imbedP2InP3(null, newPos);
+				}
+			}
+		}
+	}
+	
 
 	private static List<double[][][]> intersectTriangulation(CoHDS T, double[][] segment) {
 		List<double[][][]> result = new LinkedList<double[][][]>();
@@ -87,7 +114,7 @@ public class SurfaceCurveUtility {
 			double[] line = P2.lineFromPoints(null, segment[0], segment[1]);
 			double[][] tri = {p0, p1, p2};
 			double[][] chopped = P2.chopConvexPolygonWithLine(tri, line);
-			if (chopped == null) {
+			if (chopped == null || chopped == tri) {
 				continue;
 			} else {
 				double[] c0 = null;
@@ -146,5 +173,7 @@ public class SurfaceCurveUtility {
 		double l2 = Pn.distanceBetween(source[1], p, Pn.HYPERBOLIC) / l;
 		return Rn.linearCombination(null, l1, target[1], l2, target[0]);
 	}
+	
+	
 	
 }

@@ -120,6 +120,7 @@ import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.halfedgetools.plugin.SelectionListener;
 import de.jtem.halfedgetools.plugin.image.ImageHook;
@@ -244,7 +245,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		spherizeButton = new JButton("Spherize"),
 		quantizeToQuads = new JButton("Quads"),
 		reorderFacesButton = new JButton("Move Faces"),
-		createCopiesButton = new JButton("Create Copies");
+		createCopiesButton = new JButton("Create Copies"),
+		extractCutPrepatedButton = new JButton("Extract Cut-Prepared");
 	private ColorChooseJButton
 		triangulationColorButton = new ColorChooseJButton(Color.GRAY, true),
 		polygonColorButton = new ColorChooseJButton(Color.RED, true),
@@ -407,6 +409,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		spherizeButton.addActionListener(this);
 		reorderFacesButton.addActionListener(this);
 		createCopiesButton.addActionListener(this);
+		extractCutPrepatedButton.addActionListener(this);
 		
 		unwrapBtn.addActionListener(this);
 		checkGaussBonnetBtn.addActionListener(this);
@@ -514,6 +517,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			visualizationPanel.add(drawCurvesOnSurface, c2);
 			visualizationPanel.add(useDistanceToCanonicalize, c2);
 			visualizationPanel.add(coverToTextureButton, c2);
+			visualizationPanel.add(extractCutPrepatedButton, c2);
 			visualizationPanel.add(visButtonsPanel, c2);
 			shrinkPanel.add(visualizationPanel, c2);
 		}
@@ -985,6 +989,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 		if (createCopiesButton == s) {
 			createCopies();
+		}
+		if (extractCutPrepatedButton == s) {
+			AdapterSet a = hif.getAdapters();
+			SurfaceCurveUtility.createIntersectingEdges(getActiveFundamentalPoygon(), surface, surfaceUnwrapped, a);
+			HalfedgeLayer l = new HalfedgeLayer(hif);
+			hif.addLayer(l);
+			l.set(surfaceUnwrapped);
 		}
 	}
 	
