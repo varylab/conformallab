@@ -114,7 +114,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 
 	
 	public Map<CoVertex, Double> calculateConformalFactors(CoHDS surface, AdapterSet aSet) throws UnwrapException {
-		CEuclideanApplication app = new CEuclideanApplication(surface);
+		app = new CEuclideanApplication(surface);
 		double[] u = calculateConformalFactors(surface, aSet, app);
 		DenseVector uVec = new DenseVector(u);
 		MTJDomain uDomain = new MTJDomain(uVec);
