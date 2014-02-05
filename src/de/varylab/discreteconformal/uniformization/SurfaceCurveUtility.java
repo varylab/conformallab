@@ -11,6 +11,7 @@ import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -71,7 +72,7 @@ public class SurfaceCurveUtility {
 	}
 
 	
-	public static void createIntersectingEdges(FundamentalPolygon poly, CoHDS surface, CoHDS unwrapped, AdapterSet aSet) {
+	public static void createIntersectingEdges(FundamentalPolygon poly, CoHDS surface, CoHDS unwrapped, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo, AdapterSet aSet) {
 		List<double[][]> axesSegments = new ArrayList<double[][]>();
 		List<double[][]> polySegments = new ArrayList<double[][]>();
 		VisualizationUtility.getUniversalCoverSegments(poly, 200, 10, true, false, Color.BLACK, Color.BLACK, axesSegments, polySegments);
@@ -86,9 +87,26 @@ public class SurfaceCurveUtility {
 				double[][] edgeSegment = {st, tt};
 				double[] eLine = P2.lineFromPoints(null, st, tt);
 				double[] newPos = P2.pointFromLines(null, sLine, eLine);
-				if (isOnSegment(newPos, edgeSegment) && isOnSegment(newPos, segment)) {
+				if (isBetween(newPos, edgeSegment, 1E-6) && isBetween(newPos, segment, 5E-6)) {
+					List<CoEdge> surfaceEdges = findCorrespondingSurfaceEdges(e, cutInfo, surface);
 					double[] newPoint = getPointOnSegment(newPos, edgeSegment, edgePointSegment);
-					CoVertex newVertex = unwrapped.addNewVertex();
+					if (Double.isNaN(newPoint[0])) continue;
+					if (surfaceEdges.isEmpty()) continue;
+					boolean isAtEdgeEnd = false;
+					for (CoEdge se : surfaceEdges) {
+						CoVertex vs = se.getStartVertex();
+						CoVertex vt = se.getStartVertex();
+						if (Pn.distanceBetween(newPoint, vs.P, Pn.EUCLIDEAN) < 1.E-6){
+							isAtEdgeEnd = true;
+							break;
+						}
+						if (Pn.distanceBetween(newPoint, vt.P, Pn.EUCLIDEAN) < 1.E-6) {
+							isAtEdgeEnd = true;
+							break;
+						}
+					}
+					if (isAtEdgeEnd) continue;
+					CoVertex newVertex = TopologyAlgorithms.splitEdge(surfaceEdges.get(0));
 					newVertex.P = newPoint;
 					newVertex.T = P2.imbedP2InP3(null, newPos);
 				}
@@ -97,28 +115,24 @@ public class SurfaceCurveUtility {
 	}
 	
 	
-	private CoEdge findCorrespondingSurfaceEdge(
+	private static List<CoEdge> findCorrespondingSurfaceEdges(
 		CoEdge sourceEdge, 
-		CoHDS source,
 		CuttingInfo<CoVertex, CoEdge, CoFace> sourceCutInfo,
 		CoHDS target
 	) {
 		CoFace flSource = sourceEdge.getLeftFace();
 		CoFace frSource = sourceEdge.getRightFace();
 		if (flSource == null) {
-			// TODO edgeCutMap may identify only internal edges
 			flSource = sourceCutInfo.edgeCutMap.get(sourceEdge).getRightFace();
 		}
 		if (frSource == null) {
-			// TODO edgeCutMap may identify only internal edges
 			frSource = sourceCutInfo.edgeCutMap.get(sourceEdge).getLeftFace();
 		}
 		assert flSource != null;
 		assert frSource != null;
 		CoFace flTarget = target.getFace(flSource.getIndex());
 		CoFace frTarget = target.getFace(frSource.getIndex());
-		CoEdge result = HalfEdgeUtils.findEdgeBetweenFaces(flTarget, frTarget);
-		assert result != null;
+		List<CoEdge> result = HalfEdgeUtils.findEdgesBetweenFaces(flTarget, frTarget);
 		return result;
 	}
 	
@@ -186,8 +200,25 @@ public class SurfaceCurveUtility {
 		return result;
 	}
 	
+	static boolean isBetween(double[] p, double[][] s, double snapThresh) {
+		Pn.dehomogenize(p, p);
+		Pn.dehomogenize(s, s);
+		double[] ps0 = Rn.subtract(null, s[0], p);
+		double[] ps1 = Rn.subtract(null, s[1], p);
+		double d1 = Pn.norm(ps0, Pn.EUCLIDEAN);
+		double d2 = Pn.norm(ps0, Pn.EUCLIDEAN);
+		if (d1 < snapThresh || d2 < snapThresh) return false;
+		double[] s0s1 = Rn.subtract(null, s[0], s[1]);
+		double[] cross = Rn.crossProduct(null, ps0, ps1);
+		double dot = Rn.innerProduct(ps0, ps1);
+		if (Rn.euclideanNorm(cross) > 1E-7) return false;
+		if (dot > 0) return false;
+		if (dot > Rn.euclideanNormSquared(s0s1)) return false;
+	    return true;
+	}
 	
-	private static boolean isOnSegment(double[] p, double[][] s) {
+	
+	static boolean isOnSegment(double[] p, double[][] s) {
 		double l = Pn.distanceBetween(s[0], s[1], Pn.EUCLIDEAN);
 		double l1 = Pn.distanceBetween(s[0], p, Pn.EUCLIDEAN);
 		double l2 = Pn.distanceBetween(s[1], p, Pn.EUCLIDEAN);

@@ -992,10 +992,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 		if (extractCutPrepatedButton == s) {
 			AdapterSet a = hif.getAdapters();
-			SurfaceCurveUtility.createIntersectingEdges(getActiveFundamentalPoygon(), surface, surfaceUnwrapped, a);
+			CoHDS intersected = copySurface(surface);
+			SurfaceCurveUtility.createIntersectingEdges(getActiveFundamentalPoygon(), intersected, surfaceUnwrapped, cutInfo, a);
 			HalfedgeLayer l = new HalfedgeLayer(hif);
 			hif.addLayer(l);
-			l.set(surfaceUnwrapped);
+			l.set(intersected);
 		}
 	}
 	

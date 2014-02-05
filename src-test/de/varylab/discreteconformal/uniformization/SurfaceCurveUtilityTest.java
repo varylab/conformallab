@@ -72,4 +72,13 @@ public class SurfaceCurveUtilityTest {
 		Assert.assertEquals("Surface Curve Edge Number", 612, curves.numEdges() / 2);
 	}
 	
+	@Test
+	public void testIsBetween() {
+		double[] x1 = {1,1,1,1};
+		double[] x2 = {1 + 1E-5,1,1,1};
+		double[][] s = {{0,0,0,1},{2,2,2,1}};
+		Assert.assertTrue(SurfaceCurveUtility.isBetween(x1, s, 1E-10));
+		Assert.assertFalse(SurfaceCurveUtility.isBetween(x2, s, 1E-10));
+	}
+	
 }
