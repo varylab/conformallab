@@ -19,6 +19,7 @@ import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Klein;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Poincaré;
 import static de.varylab.discreteconformal.plugin.InterpolationMethod.Incircle;
+import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.createIntersectingEdges;
 import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawTriangulation;
 import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawUniversalCoverImage;
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
@@ -999,10 +1000,18 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		if (extractCutPrepatedButton == s) {
 			AdapterSet a = hif.getAdapters();
 			CoHDS intersected = copySurface(surface);
-			SurfaceCurveUtility.createIntersectingEdges(getActiveFundamentalPoygon(), intersected, surfaceUnwrapped, cutInfo, a);
+			Set<CoVertex> newVertices = createIntersectingEdges(getActiveFundamentalPoygon(), intersected, surfaceUnwrapped, cutInfo, a);
+			List<CoEdge> newEdges = Triangulator.triangulateByCuttingCorners(intersected, a);
+			HalfedgeSelection pathSelection = new HalfedgeSelection();
+			for (CoEdge edge : newEdges) {
+				if (newVertices.contains(edge.getTargetVertex()) && newVertices.contains(edge.getStartVertex())) {
+					pathSelection.add(edge);
+				}
+			}
 			HalfedgeLayer l = new HalfedgeLayer(hif);
 			hif.addLayer(l);
 			l.set(intersected);
+			l.setSelection(pathSelection);
 		}
 	}
 	

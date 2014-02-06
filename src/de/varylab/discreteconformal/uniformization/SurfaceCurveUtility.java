@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import de.jreality.math.P2;
@@ -18,6 +20,7 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.util.NodeIndexComparator;
 
 public class SurfaceCurveUtility {
 
@@ -75,57 +78,62 @@ public class SurfaceCurveUtility {
 	}
 
 	
-	public static void createIntersectingEdges(FundamentalPolygon poly, CoHDS surface, CoHDS unwrapped, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo, AdapterSet aSet) {
+	public static Set<CoVertex> createIntersectingEdges(FundamentalPolygon poly, CoHDS surface, CoHDS domain, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo, AdapterSet aSet) {
+		Set<CoVertex> result = new TreeSet<CoVertex>(new NodeIndexComparator<CoVertex>());
 		List<double[][]> axesSegments = new ArrayList<double[][]>();
 		List<double[][]> polySegments = new ArrayList<double[][]>();
 		VisualizationUtility.getUniversalCoverSegments(poly, 200, 10, true, false, Color.BLACK, Color.BLACK, axesSegments, polySegments);
 		for (double[][] segment : polySegments) {
-			double[] sLine = P2.lineFromPoints(null, segment[0], segment[1]);
-			for (CoEdge e : unwrapped.getPositiveEdges()) {
-				CoVertex s = e.getStartVertex();
-				CoVertex t = e.getTargetVertex();
+			double[] polygonLine = P2.lineFromPoints(null, segment[0], segment[1]);
+			for (CoEdge domainEdge : domain.getPositiveEdges()) {
+				CoVertex s = domainEdge.getStartVertex();
+				CoVertex t = domainEdge.getTargetVertex();
 				double[] st = {s.T[0] / s.T[3], s.T[1] / s.T[3], 1};
 				double[] tt = {t.T[0] / t.T[3], t.T[1] / t.T[3], 1};
-				double[][] edgeSegment = {st, tt};
-				double[][] edgePointSegment = {s.P, t.P};
-				double[] eLine = P2.lineFromPoints(null, st, tt);
-				double[] newPos = P2.pointFromLines(null, sLine, eLine);
+				double[][] domainSegment = {st, tt};
+				double[][] surfaceSegment = {s.P, t.P};
+				double[] domainEdgeLine = P2.lineFromPoints(null, st, tt);
+				double[] newDomainPoint = P2.pointFromLines(null, polygonLine, domainEdgeLine);
 				// split only if edge is really intersected
-				if (isBetween(newPos, edgeSegment, 1E-6) && isBetween(newPos, segment, 5E-6)) {
-					double[] newPoint = getPointOnSegment(newPos, edgeSegment, edgePointSegment);
-					List<CoEdge> surfaceEdges = findCorrespondingSurfaceEdges(e, cutInfo, surface);
+				if (isOnSegment(newDomainPoint, domainSegment) && isOnSegment(newDomainPoint, segment)) {
+					double[] newPoint = getPointOnCorrespondingSegment(newDomainPoint, domainSegment, surfaceSegment);
+					List<CoEdge> surfaceEdges = findCorrespondingSurfaceEdges(domainEdge, cutInfo, surface);
 					if (surfaceEdges.isEmpty()) continue;
 					CoEdge splitEdge = null;
-					double[] splitPoint = null;
 					// select intersected part
+					boolean snap = false;
 					for (CoEdge se : surfaceEdges) {
 						CoVertex vs = se.getStartVertex();
 						CoVertex vt = se.getTargetVertex();
 						double[][] pSegment = {vs.P, vt.P};
-						if (isBetween(newPoint, pSegment, 1E-20)) {
+						if (isOnSegment(newPoint, pSegment)) {
 							splitEdge = se;
-							splitPoint = newPoint;
+							double d1 = getDistanceBetween(newPoint, vs.P, Pn.EUCLIDEAN);
+							double d2 = getDistanceBetween(newPoint, vt.P, Pn.EUCLIDEAN);
+							if (d1 < 1E-3) {
+								result.add(vs);
+								snap = true;
+							}
+							if (d2 < 1E-3) {
+								result.add(vt);
+								snap = true;
+							}
+							break;
 						}
 					}
+					if (snap) continue;
 					if (splitEdge == null) {
 						log.warning("no corresponding intersected edge found on surface");
 						continue;
 					}
-					double[] splitStart = splitEdge.getStartVertex().P;
-					double[] splitTarget = splitEdge.getTargetVertex().P;
-					// do not split if split point snaps to an edge end
-					if (Pn.distanceBetween(splitPoint, splitStart, Pn.EUCLIDEAN) < 1.E-6) {
-						continue;
-					}
-					if (Pn.distanceBetween(splitPoint, splitTarget, Pn.EUCLIDEAN) < 1.E-6) {
-						continue;
-					}
 					CoVertex newVertex = TopologyAlgorithms.splitEdge(splitEdge);
-					newVertex.P = splitPoint;
-					newVertex.T = P2.imbedP2InP3(null, newPos);
+					result.add(newVertex);
+					newVertex.P = newPoint;
+					newVertex.T = P2.imbedP2InP3(null, newDomainPoint);
 				}
 			}
 		}
+		return result;
 	}
 	
 	
@@ -193,18 +201,18 @@ public class SurfaceCurveUtility {
 					double[] sp0 = v0.P;
 					double[] sp1 = v1.P;
 					if (isOnSegment(c0, ts0)) {
-						sp0 = getPointOnSegment(c0, ts0, ps0);
+						sp0 = getPointOnCorrespondingSegment(c0, ts0, ps0);
 					} else if (isOnSegment(c0, ts1)) {
-						sp0 = getPointOnSegment(c0, ts1, ps1);
+						sp0 = getPointOnCorrespondingSegment(c0, ts1, ps1);
 					} else if (isOnSegment(c0, ts2)) {
-						sp0 = getPointOnSegment(c0, ts2, ps2);
+						sp0 = getPointOnCorrespondingSegment(c0, ts2, ps2);
 					}
 					if (isOnSegment(c1, ts0)) {
-						sp1 = getPointOnSegment(c1, ts0, ps0);
+						sp1 = getPointOnCorrespondingSegment(c1, ts0, ps0);
 					} else if (isOnSegment(c1, ts1)) {
-						sp1 = getPointOnSegment(c1, ts1, ps1);
+						sp1 = getPointOnCorrespondingSegment(c1, ts1, ps1);
 					} else if (isOnSegment(c1, ts2)) {
-						sp1 = getPointOnSegment(c1, ts2, ps2);
+						sp1 = getPointOnCorrespondingSegment(c1, ts2, ps2);
 					}
 					double[][][] curveSegment = {{c0, c1}, {sp0, sp1}};
 					result.add(curveSegment);
@@ -214,14 +222,14 @@ public class SurfaceCurveUtility {
 		return result;
 	}
 	
-	static boolean isBetween(double[] p, double[][] s, double snapThresh) {
+	static boolean isOnSegment(double[] p, double[][] s) {
 		Pn.dehomogenize(p, p);
 		Pn.dehomogenize(s, s);
 		double[] ps0 = Rn.subtract(null, s[0], p);
 		double[] ps1 = Rn.subtract(null, s[1], p);
 		double d1 = Pn.norm(ps0, Pn.EUCLIDEAN);
 		double d2 = Pn.norm(ps0, Pn.EUCLIDEAN);
-		if (d1 < snapThresh || d2 < snapThresh) return false;
+		if (d1 < 0.0 || d2 < 0.0) return false;
 		double[] s0s1 = Rn.subtract(null, s[0], s[1]);
 		double[] cross = Rn.crossProduct(null, ps0, ps1);
 		double dot = Rn.innerProduct(ps0, ps1);
@@ -232,25 +240,35 @@ public class SurfaceCurveUtility {
 	}
 	
 	
-	static boolean isOnSegment(double[] p, double[][] s) {
-		double l = Pn.distanceBetween(s[0], s[1], Pn.EUCLIDEAN);
-		double l1 = Pn.distanceBetween(s[0], p, Pn.EUCLIDEAN);
-		double l2 = Pn.distanceBetween(s[1], p, Pn.EUCLIDEAN);
-		return Math.abs(l1 + l2 - l) < 1E-7;
-	}
+//	static boolean isOnSegment(double[] p, double[][] s) {
+//		double l = Pn.distanceBetween(s[0], s[1], Pn.EUCLIDEAN);
+//		double l1 = Pn.distanceBetween(s[0], p, Pn.EUCLIDEAN);
+//		double l2 = Pn.distanceBetween(s[1], p, Pn.EUCLIDEAN);
+//		return Math.abs(l1 + l2 - l) < 1E-7;
+//	}
 	
 	
-	private static double[] getPointOnSegment(double[] p, double[][] source, double[][] target) {
-//		Pn.dehomogenize(target, target);
+	static double[] getPointOnCorrespondingSegment(double[] p, double[][] source, double[][] target) {
 		double l = Pn.distanceBetween(source[0], source[1], Pn.HYPERBOLIC);
 		double l1 = Pn.distanceBetween(source[0], p, Pn.HYPERBOLIC) / l;
 		double l2 = Pn.distanceBetween(source[1], p, Pn.HYPERBOLIC) / l;
-		if (l1 < 1E-8 && l2 < 1E-8) {
-			log.warning("point is close to both segment ends");
+		if (Double.isNaN(l1)) {
+			return target[0];
+		}
+		if (Double.isNaN(l2)) {
+			return target[1];
 		}
 		return Rn.linearCombination(null, l1, target[1], l2, target[0]);
 	}
 	
 	
+	static double getDistanceBetween(double[] p1, double[] p2, int signature) {
+		double d = Pn.distanceBetween(p1, p2, signature);
+		if (Double.isNaN(d)) {
+			return 0.0;
+		} else {
+			return d;
+		}
+	}
 	
 }
