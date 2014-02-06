@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import de.jreality.math.P2;
 import de.jreality.math.Pn;
@@ -20,6 +21,8 @@ import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class SurfaceCurveUtility {
 
+	private static Logger
+		log = Logger.getLogger(SurfaceCurveUtility.class.getName());
 	
 	public static CoHDS createSurfaceCurves(
 		FundamentalPolygon poly, 
@@ -83,31 +86,42 @@ public class SurfaceCurveUtility {
 				CoVertex t = e.getTargetVertex();
 				double[] st = {s.T[0] / s.T[3], s.T[1] / s.T[3], 1};
 				double[] tt = {t.T[0] / t.T[3], t.T[1] / t.T[3], 1};
-				double[][] edgePointSegment = {s.P, t.P};
 				double[][] edgeSegment = {st, tt};
+				double[][] edgePointSegment = {s.P, t.P};
 				double[] eLine = P2.lineFromPoints(null, st, tt);
 				double[] newPos = P2.pointFromLines(null, sLine, eLine);
+				// split only if edge is really intersected
 				if (isBetween(newPos, edgeSegment, 1E-6) && isBetween(newPos, segment, 5E-6)) {
-					List<CoEdge> surfaceEdges = findCorrespondingSurfaceEdges(e, cutInfo, surface);
 					double[] newPoint = getPointOnSegment(newPos, edgeSegment, edgePointSegment);
-					if (Double.isNaN(newPoint[0])) continue;
+					List<CoEdge> surfaceEdges = findCorrespondingSurfaceEdges(e, cutInfo, surface);
 					if (surfaceEdges.isEmpty()) continue;
-					boolean isAtEdgeEnd = false;
+					CoEdge splitEdge = null;
+					double[] splitPoint = null;
+					// select intersected part
 					for (CoEdge se : surfaceEdges) {
 						CoVertex vs = se.getStartVertex();
-						CoVertex vt = se.getStartVertex();
-						if (Pn.distanceBetween(newPoint, vs.P, Pn.EUCLIDEAN) < 1.E-6){
-							isAtEdgeEnd = true;
-							break;
-						}
-						if (Pn.distanceBetween(newPoint, vt.P, Pn.EUCLIDEAN) < 1.E-6) {
-							isAtEdgeEnd = true;
-							break;
+						CoVertex vt = se.getTargetVertex();
+						double[][] pSegment = {vs.P, vt.P};
+						if (isBetween(newPoint, pSegment, 1E-20)) {
+							splitEdge = se;
+							splitPoint = newPoint;
 						}
 					}
-					if (isAtEdgeEnd) continue;
-					CoVertex newVertex = TopologyAlgorithms.splitEdge(surfaceEdges.get(0));
-					newVertex.P = newPoint;
+					if (splitEdge == null) {
+						log.warning("no corresponding intersected edge found on surface");
+						continue;
+					}
+					double[] splitStart = splitEdge.getStartVertex().P;
+					double[] splitTarget = splitEdge.getTargetVertex().P;
+					// do not split if split point snaps to an edge end
+					if (Pn.distanceBetween(splitPoint, splitStart, Pn.EUCLIDEAN) < 1.E-6) {
+						continue;
+					}
+					if (Pn.distanceBetween(splitPoint, splitTarget, Pn.EUCLIDEAN) < 1.E-6) {
+						continue;
+					}
+					CoVertex newVertex = TopologyAlgorithms.splitEdge(splitEdge);
+					newVertex.P = splitPoint;
 					newVertex.T = P2.imbedP2InP3(null, newPos);
 				}
 			}
@@ -231,6 +245,9 @@ public class SurfaceCurveUtility {
 		double l = Pn.distanceBetween(source[0], source[1], Pn.HYPERBOLIC);
 		double l1 = Pn.distanceBetween(source[0], p, Pn.HYPERBOLIC) / l;
 		double l2 = Pn.distanceBetween(source[1], p, Pn.HYPERBOLIC) / l;
+		if (l1 < 1E-8 && l2 < 1E-8) {
+			log.warning("point is close to both segment ends");
+		}
 		return Rn.linearCombination(null, l1, target[1], l2, target[0]);
 	}
 	
