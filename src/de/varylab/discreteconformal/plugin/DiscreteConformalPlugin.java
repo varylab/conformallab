@@ -245,6 +245,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		spherizeButton = new JButton("Spherize"),
 		quantizeToQuads = new JButton("Quads"),
 		reorderFacesButton = new JButton("Move Faces"),
+		reorderSelectedFacesButton = new JButton("Move Selected Faces"),
 		createCopiesButton = new JButton("Create Copies"),
 		extractCutPrepatedButton = new JButton("Extract Cut-Prepared");
 	private ColorChooseJButton
@@ -408,6 +409,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		triangulationColorButton.addColorChangedListener(this);
 		spherizeButton.addActionListener(this);
 		reorderFacesButton.addActionListener(this);
+		reorderSelectedFacesButton.addActionListener(this);
 		createCopiesButton.addActionListener(this);
 		extractCutPrepatedButton.addActionListener(this);
 		
@@ -536,6 +538,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			modelPanel.add(createCopiesButton, c2);
 			modelPanel.add(reorderFacesCountSpinner, c1);
 			modelPanel.add(reorderFacesButton, c2);
+			modelPanel.add(reorderSelectedFacesButton, c2);
 			modelPanel.setShrinked(true);
 			shrinkPanel.add(modelPanel, c2);
 		}
@@ -982,7 +985,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			updateDomainImage();				
 		}
 		if (reorderFacesButton == s) {
-			reorderFaces();
+			reorderFaces(false);
+		}
+		if (reorderSelectedFacesButton == s) {
+			reorderFaces(true);
 		}
 		if (expertChecker == s) {
 			createLayout();
@@ -1010,12 +1016,21 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 	
 	
-	private void reorderFaces() {
+	private void reorderFaces(boolean selctedOnly) {
 		if (surfaceUnwrapped == null) return;
-		int numFaces = reorderFacesCountModel.getNumber().intValue();	
-		FundamentalPolygon p = getActiveFundamentalPoygon();
 		int signature = getActiveSignature();
-		VisualizationUtility.reglueOutsideFaces(surfaceUnwrapped, numFaces, p, cutInfo, signature);
+		FundamentalPolygon p = getActiveFundamentalPoygon();
+		if (selctedOnly) {
+			HalfedgeSelection s = copySelection(hif.getSelection(), hif.get(new CoHDS()), surfaceUnwrapped);
+			Set<CoFace> selectedFaces = s.getFaces(surfaceUnwrapped);
+			System.out.println("moving " + selectedFaces.size() + " faces...");
+			for (CoFace f : selectedFaces) {
+				VisualizationUtility.reglueSingleFace(f, cutInfo, signature);
+			}
+		} else {
+			int numFaces = reorderFacesCountModel.getNumber().intValue();	
+			VisualizationUtility.reglueOutsideFaces(surfaceUnwrapped, numFaces, p, cutInfo, signature);
+		}
 		updateGeometry();
 		updateDomainImage();
 	}

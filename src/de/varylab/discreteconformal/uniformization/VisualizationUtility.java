@@ -538,7 +538,9 @@ public class VisualizationUtility {
 		return reglued;
 	}
 	
-	
+	public static void reglueSingleFace(CoFace f, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo, int signature) {
+		reglueFace(f, cutInfo, signature);
+	}
 	
 	protected static boolean isFaceMovable(CoFace f) {
 		for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
