@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.unwrapper;
 
 import java.util.Map;
+import java.util.Set;
 
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -16,6 +17,7 @@ public interface Unwrapper {
 	public void setGradientTolerance(double tol);
 	public void setMaxIterations(int maxIterations);
 	public void setCutRoot(CoVertex root);
+	public void setCutGraph(Set<CoEdge> cutEdges);
 	
 	public CuttingInfo<CoVertex, CoEdge, CoFace> getCutInfo();
 	public Map<CoEdge, Double> getlengthMap();

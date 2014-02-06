@@ -39,9 +39,12 @@ public class Unwrap extends AbstractJob {
 		aSet = new AdapterSet();
 	private Set<CoVertex>
 		selectedVertices = new HashSet<CoVertex>();
+	private Set<CoEdge>
+		selectedEdges = new HashSet<CoEdge>();
 	private boolean
 		usePetsc = false,
-		spherize = false;
+		spherize = false,
+		useSelectionCuts = false;
 	private QuantizationMode
 		coneMode = QuantizationMode.AllAngles,
 		boundaryQuantMode = QuantizationMode.AllAngles;
@@ -215,6 +218,7 @@ public class Unwrap extends AbstractJob {
 				}
 				unwrapper = uw;
 			}
+			if (useSelectionCuts) unwrapper.setCutGraph(selectedEdges);
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
 			unwrapper.unwrap(surface, genus, aSet);
@@ -305,12 +309,23 @@ public class Unwrap extends AbstractJob {
 	public void setSelectedVertices(Set<CoVertex> selectedVertices) {
 		this.selectedVertices = selectedVertices;
 	}
+	
+	public void setSelectedEdges(Set<CoEdge> selectedEdges) {
+		this.selectedEdges = selectedEdges;
+	}
 
 	public void setSpherize(boolean spherize) {
 		this.spherize = spherize;
 	}
 	public boolean isSpherize() {
 		return spherize;
+	}
+	
+	public void setUseSelectionCuts(boolean useSelectionCuts) {
+		this.useSelectionCuts = useSelectionCuts;
+	}
+	public boolean isUseSelectionCuts() {
+		return useSelectionCuts;
 	}
 	
 }

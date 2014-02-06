@@ -37,7 +37,7 @@ import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 public class StereographicUnwrapper implements Unwrapper{
 
 	private Logger
-		log = Logger.getLogger(StereographicUnwrapper.class.getName());
+		log = Logger.getLogger(getClass().getName());
 	private double
 		gradTolerance = 1E-8;
 	private int
@@ -265,6 +265,10 @@ public class StereographicUnwrapper implements Unwrapper{
 	@Override
 	public CoVertex getLayoutRoot() {
 		return layoutRoot;
+	}
+	@Override
+	public void setCutGraph(Set<CoEdge> cutEdges) {
+		log.warning("cut graph not used in " + getClass().getName());
 	}
 	
 }

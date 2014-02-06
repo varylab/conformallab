@@ -2,6 +2,8 @@ package de.varylab.discreteconformal.unwrapper;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
@@ -22,6 +24,8 @@ import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
 public class EuclideanUnwrapper implements Unwrapper {
 
+	private Logger
+		log = Logger.getLogger(getClass().getName());
 	private QuantizationMode
 		conesMode = QuantizationMode.AllAngles,
 		boundaryQuantMode = QuantizationMode.AllAngles;
@@ -132,6 +136,10 @@ public class EuclideanUnwrapper implements Unwrapper {
 	@Override
 	public CoVertex getLayoutRoot() {
 		return layoutRoot;
+	}
+	@Override
+	public void setCutGraph(Set<CoEdge> cutEdges) {
+		log.warning("cut graph not used in " + getClass().getName());
 	}
 	
 }

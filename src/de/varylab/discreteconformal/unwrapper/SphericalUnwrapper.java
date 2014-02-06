@@ -4,6 +4,8 @@ import static no.uib.cipr.matrix.Vector.Norm.Two;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
@@ -30,6 +32,8 @@ import de.varylab.mtjoptimization.stepcontrol.StepController;
 
 public class SphericalUnwrapper implements Unwrapper {
 
+	private Logger
+		log = Logger.getLogger(getClass().getName());
 	private double
 		gradTolerance = 1E-8;
 	private int
@@ -250,6 +254,10 @@ public class SphericalUnwrapper implements Unwrapper {
 	@Override
 	public CoVertex getLayoutRoot() {
 		return layoutRoot;
+	}
+	@Override
+	public void setCutGraph(Set<CoEdge> cutEdges) {
+		log.warning("cut graph not used in " + getClass().getName());
 	}
 	
 }

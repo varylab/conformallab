@@ -6,6 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
@@ -46,6 +48,8 @@ import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class EuclideanUnwrapperPETSc implements Unwrapper {
 
+	private Logger
+		log = Logger.getLogger(getClass().getName());	
 	private QuantizationMode
 		conesMode = QuantizationMode.AllAngles,
 		boundaryQuantMode = QuantizationMode.AllAngles;
@@ -431,6 +435,11 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 			Rn.times(tc, e, tc);
 		}
 		return texArr;
+	}
+	
+	@Override
+	public void setCutGraph(Set<CoEdge> cutEdges) {
+		log.warning("cut graph not used in " + getClass().getName());
 	}
 	
 }

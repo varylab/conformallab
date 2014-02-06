@@ -3,6 +3,8 @@ package de.varylab.discreteconformal.unwrapper;
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
@@ -24,6 +26,8 @@ import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
 public class HyperbolicUnwrapper implements Unwrapper {
 
+	private Logger
+		log = Logger.getLogger(getClass().getName());	
 	private double
 		gradTolerance = 1E-8;
 	private int
@@ -37,6 +41,8 @@ public class HyperbolicUnwrapper implements Unwrapper {
 		cutInfo = null;
 	public Map<CoEdge, Double>
 		lengthMap = null;
+	public Set<CoEdge>
+		cutGraph = null;
 	
 	
 	@Override
@@ -109,6 +115,10 @@ public class HyperbolicUnwrapper implements Unwrapper {
 	@Override
 	public CoVertex getLayoutRoot() {
 		return layoutRoot;
+	}
+	@Override
+	public void setCutGraph(Set<CoEdge> cutEdges) {
+		this.cutGraph = cutEdges;
 	}
 
 }

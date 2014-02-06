@@ -2,6 +2,8 @@ package de.varylab.discreteconformal.unwrapper;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
@@ -21,6 +23,8 @@ import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 
 public class SphericalUnwrapperPETSc implements Unwrapper {
 
+	private Logger
+		log = Logger.getLogger(getClass().getName());
 	private double
 		gradTolerance = 1E-8;
 	private int
@@ -126,6 +130,10 @@ public class SphericalUnwrapperPETSc implements Unwrapper {
 	@Override
 	public CoVertex getLayoutRoot() {
 		return layoutRoot;
+	}
+	@Override
+	public void setCutGraph(Set<CoEdge> cutEdges) {
+		log.warning("cut graph not used in " + getClass().getName());
 	}
 	
 }

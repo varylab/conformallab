@@ -575,5 +575,9 @@ public class CircleDomainUnwrapper implements Unwrapper {
 	public CoVertex getLayoutRoot() {
 		return layoutRoot;
 	}
+	@Override
+	public void setCutGraph(Set<CoEdge> cutEdges) {
+		log.warning("cut graph not used in " + getClass().getName());
+	}
 	
 }

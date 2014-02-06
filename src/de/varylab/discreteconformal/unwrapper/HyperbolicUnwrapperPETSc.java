@@ -4,6 +4,8 @@ import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
@@ -27,6 +29,8 @@ import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class HyperbolicUnwrapperPETSc implements Unwrapper {
 
+	private Logger
+		log = Logger.getLogger(getClass().getName());
 	private double
 		gradTolerance = 1E-8;
 	private int
@@ -38,6 +42,8 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper {
 	
 	private CoVertex
 		layoutRoot = null;
+	private Set<CoEdge>
+		cutGraph = null;
 	private CuttingInfo<CoVertex, CoEdge, CoFace> 
 		cutInfo = null;
 	private Map<CoEdge, Double>
@@ -167,6 +173,10 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper {
 	@Override
 	public CoVertex getLayoutRoot() {
 		return layoutRoot;
+	}
+	@Override
+	public void setCutGraph(Set<CoEdge> cutEdges) {
+		log.warning("cut graph not used in " + getClass().getName());
 	}
 	
 }

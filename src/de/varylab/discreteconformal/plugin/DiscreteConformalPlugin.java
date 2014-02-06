@@ -19,7 +19,7 @@ import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Klein;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Poincaré;
 import static de.varylab.discreteconformal.plugin.InterpolationMethod.Incircle;
-import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.createIntersectingEdges;
+import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.createIntersectingVertices;
 import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawTriangulation;
 import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawUniversalCoverImage;
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
@@ -271,7 +271,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		toleranceExpModel = new SpinnerNumberModel(-8, -30, -1, 1),
 		maxIterationsModel = new SpinnerNumberModel(150, 1, 10000, 1),
 		reorderFacesCountModel = new SpinnerNumberModel(100, 1, 100000, 100),
-		createCopiesModel = new SpinnerNumberModel(10, 1, 1000, 1);
+		createCopiesModel = new SpinnerNumberModel(10, 1, 1000, 1),
+		snapToleranceExpModel = new SpinnerNumberModel(-5, -20, 1, 1);
 	private JSpinner
 		coverMaxDistanceSpinner = new JSpinner(coverMaxDisctanceModel),
 		coverElementsSpinner = new JSpinner(coverElementsModel),
@@ -281,7 +282,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		toleranceExpSpinner = new JSpinner(toleranceExpModel),
 		maxIterationsSpinner = new JSpinner(maxIterationsModel),
 		reorderFacesCountSpinner = new JSpinner(reorderFacesCountModel),
-		createCopiesSpinner = new JSpinner(createCopiesModel);
+		createCopiesSpinner = new JSpinner(createCopiesModel),
+		snapToleranceExpSpinner = new JSpinner(snapToleranceExpModel);
 	private JCheckBox
 		expertChecker = new JCheckBox("Expert Mode"),
 		rescaleChecker = new JCheckBox("Rescale Geometry", true),
@@ -520,6 +522,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			visualizationPanel.add(drawCurvesOnSurface, c2);
 			visualizationPanel.add(useDistanceToCanonicalize, c2);
 			visualizationPanel.add(coverToTextureButton, c2);
+			visualizationPanel.add(new JLabel("Snap Tolerance Exp"), c1);
+			visualizationPanel.add(snapToleranceExpSpinner, c2);
 			visualizationPanel.add(extractCutPrepatedButton, c2);
 			visualizationPanel.add(visButtonsPanel, c2);
 			shrinkPanel.add(visualizationPanel, c2);
@@ -766,6 +770,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			uw.setBoundaryMode((BoundaryMode)boundaryModeCombo.getSelectedItem());
 			uw.setUsePetsc(numericsCombo.getSelectedIndex() == 0);
 			uw.setSelectedVertices(selection.getVertices(unwrapped));
+			uw.setSelectedEdges(selection.getEdges(unwrapped));
 			uw.addJobListener(this);
 			jobQueue.queueJob(uw);
 		}
@@ -1000,7 +1005,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		if (extractCutPrepatedButton == s) {
 			AdapterSet a = hif.getAdapters();
 			CoHDS intersected = copySurface(surface);
-			Set<CoVertex> newVertices = createIntersectingEdges(getActiveFundamentalPoygon(), intersected, surfaceUnwrapped, cutInfo, a);
+			double snapTolerance = Math.pow(10, snapToleranceExpModel.getNumber().intValue());
+			Set<CoVertex> newVertices = createIntersectingVertices(getActiveFundamentalPoygon(), intersected, surfaceUnwrapped, cutInfo, a, snapTolerance);
 			List<CoEdge> newEdges = Triangulator.triangulateByCuttingCorners(intersected, a);
 			HalfedgeSelection pathSelection = new HalfedgeSelection();
 			for (CoEdge edge : newEdges) {

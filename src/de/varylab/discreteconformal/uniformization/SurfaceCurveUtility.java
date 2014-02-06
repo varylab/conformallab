@@ -78,7 +78,13 @@ public class SurfaceCurveUtility {
 	}
 
 	
-	public static Set<CoVertex> createIntersectingEdges(FundamentalPolygon poly, CoHDS surface, CoHDS domain, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo, AdapterSet aSet) {
+	public static Set<CoVertex> createIntersectingVertices(
+		FundamentalPolygon poly, 
+		CoHDS surface, 
+		CoHDS domain, 
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo, AdapterSet aSet,
+		double snapTolerance
+	) {
 		Set<CoVertex> result = new TreeSet<CoVertex>(new NodeIndexComparator<CoVertex>());
 		List<double[][]> axesSegments = new ArrayList<double[][]>();
 		List<double[][]> polySegments = new ArrayList<double[][]>();
@@ -110,11 +116,11 @@ public class SurfaceCurveUtility {
 							splitEdge = se;
 							double d1 = getDistanceBetween(newPoint, vs.P, Pn.EUCLIDEAN);
 							double d2 = getDistanceBetween(newPoint, vt.P, Pn.EUCLIDEAN);
-							if (d1 < 1E-3) {
+							if (d1 < snapTolerance) {
 								result.add(vs);
 								snap = true;
 							}
-							if (d2 < 1E-3) {
+							if (d2 < snapTolerance) {
 								result.add(vt);
 								snap = true;
 							}
