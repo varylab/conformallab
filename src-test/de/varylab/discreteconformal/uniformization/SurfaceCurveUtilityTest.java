@@ -60,7 +60,7 @@ public class SurfaceCurveUtilityTest {
 		AdapterSet a = new ConformalAdapterSet();
 		CoHDS lawson = loadSurface();
 		FundamentalPolygon minimalPolygon = calculateFundamentalPoygon(lawson);
-		CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, lawson, a, 0, 0.0, true, true);
+		CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, lawson, a, 0, 0.0, true, true, Pn.HYPERBOLIC);
 		Assert.assertEquals("Surface Curve Edge Number", 612, curves.numEdges() / 2);
 	}
 	
@@ -85,7 +85,7 @@ public class SurfaceCurveUtilityTest {
 			{-0.2896352574166635, 0.03146361746587523, 0.10643898885661185, 0.44373020886051084}, 
 			{-0.2666822290964323, 0.019034256494171405, 0.10525293907970201, 0.44373020886051084}
 		}; 
-		double[] result = SurfaceCurveUtility.getPointOnCorrespondingSegment(edgePoint, edgeSegment, targetSegment);
+		double[] result = SurfaceCurveUtility.getPointOnCorrespondingSegment(edgePoint, edgeSegment, targetSegment, Pn.HYPERBOLIC);
 		Assert.assertTrue(Arrays.equals(result, targetSegment[1]));
 	}
 	

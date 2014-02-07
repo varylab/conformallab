@@ -135,7 +135,6 @@ public class Unwrap extends AbstractJob {
 			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
-			
 			unwrapper.unwrap(surface, genus, aSet);
 			unwrapTime = System.currentTimeMillis();
 			fireJobProgress(0.5);
@@ -174,6 +173,11 @@ public class Unwrap extends AbstractJob {
 			} else {
 				unwrapper = new EuclideanUnwrapper();
 			}
+			if (useSelectionCuts) unwrapper.setCutGraph(selectedEdges);
+			if (!selectedVertices.isEmpty()) {
+				CoVertex cutRoot = selectedVertices.iterator().next();
+				unwrapper.setCutRoot(cutRoot);
+			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
 			unwrapper.unwrap(surface, genus, aSet);
@@ -204,21 +208,15 @@ public class Unwrap extends AbstractJob {
 		default:
 			System.out.println("unwrapping surface of genus " + genus + "...");
 			if (usePetsc) {
-				HyperbolicUnwrapperPETSc uw = new HyperbolicUnwrapperPETSc();
-				if (!selectedVertices.isEmpty()) {
-					CoVertex cutRoot = selectedVertices.iterator().next();
-					uw.setCutRoot(cutRoot);
-				}
-				unwrapper = uw;
+				unwrapper = new HyperbolicUnwrapperPETSc();
 			} else {
-				HyperbolicUnwrapper uw = new HyperbolicUnwrapper();
-				if (!selectedVertices.isEmpty()) {
-					CoVertex cutRoot = selectedVertices.iterator().next();
-					uw.setCutRoot(cutRoot);
-				}
-				unwrapper = uw;
+				unwrapper = new HyperbolicUnwrapper();
 			}
 			if (useSelectionCuts) unwrapper.setCutGraph(selectedEdges);
+			if (!selectedVertices.isEmpty()) {
+				CoVertex cutRoot = selectedVertices.iterator().next();
+				unwrapper.setCutRoot(cutRoot);
+			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
 			unwrapper.unwrap(surface, genus, aSet);

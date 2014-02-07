@@ -34,7 +34,8 @@ public class SurfaceCurveUtility {
 		int maxElements,
 		double maxDrawDistance,
 		boolean includePoygon,
-		boolean includeAxes
+		boolean includeAxes,
+		int signature
 	) {
 		List<double[][]> axesSegments = new ArrayList<double[][]>();
 		List<double[][]> polySegments = new ArrayList<double[][]>();
@@ -43,13 +44,13 @@ public class SurfaceCurveUtility {
 		List<double[][][]> allCurves = new ArrayList<double[][][]>();
 		if (includeAxes) {
 			for (double[][] ds : axesSegments) {
-				List<double[][][]> I = intersectTriangulation(surface, ds);
+				List<double[][][]> I = intersectTriangulation(surface, ds, signature);
 				allCurves.addAll(I);
 			}
 		}
 		if (includePoygon) {
 			for (double[][] ds : polySegments) {
-				List<double[][][]> I = intersectTriangulation(surface, ds);
+				List<double[][][]> I = intersectTriangulation(surface, ds, signature);
 				allCurves.addAll(I);
 			}
 		}
@@ -83,7 +84,8 @@ public class SurfaceCurveUtility {
 		CoHDS surface, 
 		CoHDS domain, 
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo, AdapterSet aSet,
-		double snapTolerance
+		double snapTolerance,
+		int signature
 	) {
 		Set<CoVertex> result = new TreeSet<CoVertex>(new NodeIndexComparator<CoVertex>());
 		List<double[][]> axesSegments = new ArrayList<double[][]>();
@@ -102,7 +104,7 @@ public class SurfaceCurveUtility {
 				double[] newDomainPoint = P2.pointFromLines(null, polygonLine, domainEdgeLine);
 				// split only if edge is really intersected
 				if (isOnSegment(newDomainPoint, domainSegment) && isOnSegment(newDomainPoint, segment)) {
-					double[] newPoint = getPointOnCorrespondingSegment(newDomainPoint, domainSegment, surfaceSegment);
+					double[] newPoint = getPointOnCorrespondingSegment(newDomainPoint, domainSegment, surfaceSegment, signature);
 					List<CoEdge> surfaceEdges = findCorrespondingSurfaceEdges(domainEdge, cutInfo, surface);
 					if (surfaceEdges.isEmpty()) continue;
 					CoEdge splitEdge = null;
@@ -166,7 +168,7 @@ public class SurfaceCurveUtility {
 	
 	
 
-	private static List<double[][][]> intersectTriangulation(CoHDS T, double[][] segment) {
+	private static List<double[][][]> intersectTriangulation(CoHDS T, double[][] segment, int signature) {
 		List<double[][][]> result = new LinkedList<double[][][]>();
 		for (CoFace f : T.getFaces()) {
 			CoEdge be = f.getBoundaryEdge();
@@ -207,18 +209,18 @@ public class SurfaceCurveUtility {
 					double[] sp0 = v0.P;
 					double[] sp1 = v1.P;
 					if (isOnSegment(c0, ts0)) {
-						sp0 = getPointOnCorrespondingSegment(c0, ts0, ps0);
+						sp0 = getPointOnCorrespondingSegment(c0, ts0, ps0, signature);
 					} else if (isOnSegment(c0, ts1)) {
-						sp0 = getPointOnCorrespondingSegment(c0, ts1, ps1);
+						sp0 = getPointOnCorrespondingSegment(c0, ts1, ps1, signature);
 					} else if (isOnSegment(c0, ts2)) {
-						sp0 = getPointOnCorrespondingSegment(c0, ts2, ps2);
+						sp0 = getPointOnCorrespondingSegment(c0, ts2, ps2, signature);
 					}
 					if (isOnSegment(c1, ts0)) {
-						sp1 = getPointOnCorrespondingSegment(c1, ts0, ps0);
+						sp1 = getPointOnCorrespondingSegment(c1, ts0, ps0, signature);
 					} else if (isOnSegment(c1, ts1)) {
-						sp1 = getPointOnCorrespondingSegment(c1, ts1, ps1);
+						sp1 = getPointOnCorrespondingSegment(c1, ts1, ps1, signature);
 					} else if (isOnSegment(c1, ts2)) {
-						sp1 = getPointOnCorrespondingSegment(c1, ts2, ps2);
+						sp1 = getPointOnCorrespondingSegment(c1, ts2, ps2, signature);
 					}
 					double[][][] curveSegment = {{c0, c1}, {sp0, sp1}};
 					result.add(curveSegment);
@@ -254,10 +256,10 @@ public class SurfaceCurveUtility {
 //	}
 	
 	
-	static double[] getPointOnCorrespondingSegment(double[] p, double[][] source, double[][] target) {
-		double l = Pn.distanceBetween(source[0], source[1], Pn.HYPERBOLIC);
-		double l1 = Pn.distanceBetween(source[0], p, Pn.HYPERBOLIC) / l;
-		double l2 = Pn.distanceBetween(source[1], p, Pn.HYPERBOLIC) / l;
+	static double[] getPointOnCorrespondingSegment(double[] p, double[][] source, double[][] target, int signature) {
+		double l = Pn.distanceBetween(source[0], source[1], signature);
+		double l1 = Pn.distanceBetween(source[0], p, signature) / l;
+		double l2 = Pn.distanceBetween(source[1], p, signature) / l;
 		if (Double.isNaN(l1)) {
 			return target[0];
 		}

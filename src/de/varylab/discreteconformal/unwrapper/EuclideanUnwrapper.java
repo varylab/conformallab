@@ -3,11 +3,11 @@ package de.varylab.discreteconformal.unwrapper;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.varylab.discreteconformal.adapter.EuclideanLengthWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -15,7 +15,7 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
-import de.varylab.discreteconformal.util.Search.DefaultWeightAdapter;
+import de.varylab.discreteconformal.util.Search.WeightAdapter;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
@@ -24,8 +24,6 @@ import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
 public class EuclideanUnwrapper implements Unwrapper {
 
-	private Logger
-		log = Logger.getLogger(getClass().getName());
 	private QuantizationMode
 		conesMode = QuantizationMode.AllAngles,
 		boundaryQuantMode = QuantizationMode.AllAngles;
@@ -37,11 +35,15 @@ public class EuclideanUnwrapper implements Unwrapper {
 	private double
 		gradTolerance = 1E-8;
 	
-	public CoVertex
+	private CoVertex
 		layoutRoot = null;
-	public CuttingInfo<CoVertex, CoEdge, CoFace> 
+	private CoVertex
+		cutRoot = null;
+	private Set<CoEdge>
+		cutGraph = null;
+	private CuttingInfo<CoVertex, CoEdge, CoFace> 
 		cutInfo = null;
-	public Map<CoEdge, Double>
+	private Map<CoEdge, Double>
 		lengthMap = null;
 	
 	@Override
@@ -90,9 +92,15 @@ public class EuclideanUnwrapper implements Unwrapper {
 			cutInfo = ConesUtility.cutMesh(surface);
 			break;
 		case 1:
-			CoVertex cutRoot = surface.getVertex(0);
-			DefaultWeightAdapter<CoEdge> constantWeight = new DefaultWeightAdapter<CoEdge>();
-			cutInfo = CuttingUtility.cutTorusToDisk(surface, cutRoot, constantWeight);
+			if (cutGraph != null) {
+				cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+				CuttingUtility.cutAtEdges(cutInfo, cutGraph);
+			} else {
+				CoVertex root = surface.getVertex(0);
+				if (cutRoot != null) root = cutRoot;
+				WeightAdapter<CoEdge> weights = new EuclideanLengthWeightAdapter(u);
+				cutInfo = CuttingUtility.cutTorusToDisk(surface, root, weights);
+			}
 			break;
 		default:
 			throw new RuntimeException("Cannot work on higher genus");
@@ -123,6 +131,7 @@ public class EuclideanUnwrapper implements Unwrapper {
 	}
 	@Override
 	public void setCutRoot(CoVertex root) {
+		this.cutRoot = root;
 	}
 
 	@Override
@@ -139,7 +148,7 @@ public class EuclideanUnwrapper implements Unwrapper {
 	}
 	@Override
 	public void setCutGraph(Set<CoEdge> cutEdges) {
-		log.warning("cut graph not used in " + getClass().getName());
+		this.cutGraph = cutEdges;
 	}
 	
 }

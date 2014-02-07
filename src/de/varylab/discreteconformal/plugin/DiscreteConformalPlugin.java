@@ -1,8 +1,6 @@
 package de.varylab.discreteconformal.plugin;
 
 import static de.jreality.math.MatrixBuilder.euclidean;
-import static de.jreality.math.Pn.EUCLIDEAN;
-import static de.jreality.math.Pn.HYPERBOLIC;
 import static de.jreality.scene.Appearance.DEFAULT;
 import static de.jreality.shader.CommonAttributes.DIFFUSE_COLOR;
 import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
@@ -696,7 +694,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		this.surfaceUnwrapped = surfaceUnwrapped;
 		this.cutInfo = cutInfo;
 		if (genus > 0) {
-			int signature = genus == 1 ? EUCLIDEAN : HYPERBOLIC;
+			int signature = getActiveSignature();
 			try {
 				System.out.println("Constructing fundamental cut polygon...");
 				cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo, signature);
@@ -706,14 +704,19 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				minimalPolygon = FundamentalPolygonUtility.minimize(cuttedPolygon, root);
 				System.out.println(minimalPolygon);
 				minimalPolygon.checkRelation();
-				System.out.println("Constructing opposites sides polygon...");
-				oppositePolygon = CanonicalFormUtility.canonicalizeOpposite(minimalPolygon);
-				System.out.println(oppositePolygon);
-				oppositePolygon.checkRelation();	
-				System.out.println("Constructing fast canonical polygon...");
-				canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon, useDistanceToCanonicalize.isSelected());
-				System.out.println(canonicalPolygon);
-				canonicalPolygon.checkRelation();
+				if (genus > 1) {
+					System.out.println("Constructing opposites sides polygon...");
+					oppositePolygon = CanonicalFormUtility.canonicalizeOpposite(minimalPolygon);
+					System.out.println(oppositePolygon);
+					oppositePolygon.checkRelation();	
+					System.out.println("Constructing fast canonical polygon...");
+					canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon, useDistanceToCanonicalize.isSelected());
+					System.out.println(canonicalPolygon);
+					canonicalPolygon.checkRelation();
+				} else {
+					oppositePolygon = minimalPolygon;
+					canonicalPolygon = minimalPolygon;
+				}
 				metricErrorAdapter.setSignature(signature);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -1006,14 +1009,15 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			createCopies();
 		}
 		if (extractCutPrepatedButton == s) {
+			int signature = getActiveSignature();
 			AdapterSet a = hif.getAdapters();
 			CoHDS intersected = copySurface(surface);
 			double snapTolerance = Math.pow(10, snapToleranceExpModel.getNumber().intValue());
-			Set<CoVertex> newVertices = createIntersectingVertices(getActiveFundamentalPoygon(), intersected, surfaceUnwrapped, cutInfo, a, snapTolerance);
-			List<CoEdge> newEdges = Triangulator.triangulateByCuttingCorners(intersected, a);
+			Set<CoVertex> intersectingVertices = createIntersectingVertices(getActiveFundamentalPoygon(), intersected, surfaceUnwrapped, cutInfo, a, snapTolerance, signature);
+			Triangulator.triangulateByCuttingCorners(intersected, a);
 			HalfedgeSelection pathSelection = new HalfedgeSelection();
-			for (CoEdge edge : newEdges) {
-				if (newVertices.contains(edge.getTargetVertex()) && newVertices.contains(edge.getStartVertex())) {
+			for (CoEdge edge : intersected.getEdges()) {
+				if (intersectingVertices.contains(edge.getTargetVertex()) && intersectingVertices.contains(edge.getStartVertex())) {
 					pathSelection.add(edge);
 				}
 			}
@@ -1091,6 +1095,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		domainVisualisationPlugin.updateVisualization();
 		HalfedgeInterface domInterface = domainVisualisationPlugin.getDomainInterface();
 		domInterface.removeTemporaryGeometry(domainRoot);
+		int signature = getActiveSignature();
 		if (genus > 1) {
 			// texture
 			domInterface.addTemporaryGeometry(domainRoot);
@@ -1119,7 +1124,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			ConverterHeds2JR converter = new ConverterHeds2JR();
 			if (drawPolygon) {
 				FundamentalPolygon p = getActiveFundamentalPoygon();
-				CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(p, surfaceUnwrapped, aSet, depth, maxDrawDistance, true, false);
+				CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(p, surfaceUnwrapped, aSet, depth, maxDrawDistance, true, false, signature);
 				IndexedFaceSet curvesGeom = converter.heds2ifs(curves, aSet);
 				polygonCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, polygonColor);
 				polygonCurvesRoot.setGeometry(curvesGeom);
@@ -1127,7 +1132,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			}
 			if (drawAxes) {
 				FundamentalPolygon p = getActiveFundamentalPoygon();
-				CoHDS axesCurves = SurfaceCurveUtility.createSurfaceCurves(p, surfaceUnwrapped, aSet, depth, maxDrawDistance, false, true);
+				CoHDS axesCurves = SurfaceCurveUtility.createSurfaceCurves(p, surfaceUnwrapped, aSet, depth, maxDrawDistance, false, true, signature);
 				IndexedFaceSet axesGeom = converter.heds2ifs(axesCurves, aSet);
 				axesCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, axesColor);
 				axesCurvesRoot.setGeometry(axesGeom);
