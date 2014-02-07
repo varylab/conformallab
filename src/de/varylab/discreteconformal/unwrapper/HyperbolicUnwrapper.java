@@ -4,7 +4,6 @@ import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk
 
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
@@ -16,9 +15,10 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicOptimizable;
+import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
-import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 import de.varylab.discreteconformal.util.UnwrapUtility;
+import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
@@ -26,8 +26,6 @@ import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
 public class HyperbolicUnwrapper implements Unwrapper {
 
-	private Logger
-		log = Logger.getLogger(getClass().getName());	
 	private double
 		gradTolerance = 1E-8;
 	private int
@@ -70,7 +68,13 @@ public class HyperbolicUnwrapper implements Unwrapper {
 		if (cutRoot == null) {
 			cutRoot = surface.getVertex(getMinUIndex(u));
 		}
-		cutInfo = cutManifoldToDisk(surface, cutRoot, hypWa);
+		if (cutGraph != null) {
+			cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+			cutInfo.cutRoot = cutRoot;
+			CuttingUtility.cutAtEdges(cutInfo, cutGraph);
+		} else {
+			cutInfo = cutManifoldToDisk(surface, cutRoot, hypWa);
+		}
 		lengthMap = HyperbolicLayout.getLengthMap(surface, opt.getFunctional(), u);
 		layoutRoot = HyperbolicLayout.doLayout(surface, null, opt.getFunctional(), u);
 	}

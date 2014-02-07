@@ -294,7 +294,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		drawTriangulationChecker = new JCheckBox("Draw Triangulation"),
 		drawAxesChecker = new JCheckBox("Draw Axes"),
 		drawPolygonChecker = new JCheckBox("Draw Polygon", true),
-		drawCurvesOnSurface = new JCheckBox("Draw Curves On Surface");
+		drawCurvesOnSurface = new JCheckBox("Draw Curves On Surface"),
+		useSelectionCutChecker = new JCheckBox("Use Selection Cut Graph");
 	private JComboBox
 		numericsCombo = new JComboBox(new String[] {"Petsc/Tao Numerics", "Java/MTJ Numerics"}),
 		conesQuantizationModeCombo = new JComboBox(QuantizationMode.values()),
@@ -454,6 +455,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			shrinkPanel.add(new JLabel("Max Iterations"), c1);
 			shrinkPanel.add(maxIterationsSpinner, c2);
 			shrinkPanel.add(rescaleChecker, c2);
+			shrinkPanel.add(useSelectionCutChecker, c2);
 		}
 		shrinkPanel.add(unwrapBtn, c2);
 		if (expert) {
@@ -771,6 +773,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			uw.setUsePetsc(numericsCombo.getSelectedIndex() == 0);
 			uw.setSelectedVertices(selection.getVertices(unwrapped));
 			uw.setSelectedEdges(selection.getEdges(unwrapped));
+			uw.setUseSelectionCuts(useSelectionCutChecker.isSelected());
 			uw.addJobListener(this);
 			jobQueue.queueJob(uw);
 		}
