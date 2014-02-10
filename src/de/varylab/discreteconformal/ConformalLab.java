@@ -1,17 +1,14 @@
 package de.varylab.discreteconformal;
 
-import java.awt.EventQueue;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.swing.Icon;
 import javax.swing.JPopupMenu;
 import javax.swing.UIManager;
 
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
 import de.jreality.plugin.basic.ConsolePlugin;
-import de.jreality.ui.JRealitySplashScreen;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedgetools.JRHalfedgeViewer;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -21,6 +18,8 @@ import de.jtem.halfedgetools.plugin.algorithm.vectorfield.CurvatureVectorFields;
 import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
 import de.jtem.jrworkspace.plugin.Plugin;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.SystemLookAndFeel;
+import de.jtem.jrworkspace.plugin.simplecontroller.StartupChain;
+import de.jtem.jrworkspace.plugin.simplecontroller.widget.SplashScreen;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.ConformalVisualizationPlugin;
@@ -36,12 +35,12 @@ import de.varylab.discreteconformal.plugin.SphereEqualizerPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutToDiskPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.FindPathPlugin;
-import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
 import de.varylab.discreteconformal.plugin.visualizer.FlippedTriangles;
 import de.varylab.discreteconformal.plugin.visualizer.IndexMedialGraph;
 import de.varylab.discreteconformal.plugin.visualizer.IsothermicityMeasure;
 import de.varylab.discreteconformal.plugin.visualizer.ThetaVisualizer;
+import de.varylab.discreteconformal.startup.ConformalLabSplashScreen;
 
 
 public class ConformalLab implements Runnable {
@@ -86,38 +85,56 @@ public class ConformalLab implements Runnable {
 	
 	@Override
 	public void run() {
-		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
-		JRHalfedgeViewer.initHalfedgeFronted();
-		JRViewer v = new JRViewer();
-		installLookAndFeel();
-		Icon splashImage = ImageHook.getIcon("splash02.png");
-		JRealitySplashScreen splash = new JRealitySplashScreen(splashImage);
+		final JRViewer v = new JRViewer();
+		final SplashScreen splash = new ConformalLabSplashScreen();
 		splash.setVisible(true);
 		v.setSplashScreen(splash);
-		v.addBasicUI();
-		v.addContentUI();
-		v.addPythonSupport();
-		v.setShowToolBar(true);
-		v.setShowPanelSlots(true, true, true, true);
-		v.addContentSupport(ContentType.Raw);
-		v.setPropertiesFile("ConformalLab.jrw");
-		v.setPropertiesResource(ConformalLab.class, "ConformalLab.jrw");
-		v.getController().setManageLookAndFeel(false);
-//		v.registerPlugin(new WebContentLoader());
+
+		Runnable jobStaticInit = new Runnable() {
+			@Override
+			public void run() {
+				JRViewer.setApplicationTitle("Discrete Conformal Lab");
+				JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+				JRHalfedgeViewer.initHalfedgeFronted();
+				installLookAndFeel();
+			}
+		};		
 		
-//		v.registerPlugin(new LookAndFeelSwitch());
-//		v.registerPlugin(new CrossPlatformLnF());
-//		v.registerPlugin(new NimbusLnF());
-		v.registerPlugin(new SystemLookAndFeel());
-		v.registerPlugin(new VertexEditorPlugin());
-		v.registerPlugin(CurvatureVectorFields.class);
-		v.registerPlugin(FlippedTriangles.class);
+		Runnable jobInitViewer = new Runnable() {
+			@Override
+			public void run() {
+				v.setSplashScreen(splash);
+				v.addBasicUI();
+				v.addContentUI();
+				v.addPythonSupport();
+				v.setShowToolBar(true);
+				v.setShowPanelSlots(true, true, true, true);
+				v.addContentSupport(ContentType.Raw);
+				v.setPropertiesFile("ConformalLab.jrw");
+				v.setPropertiesResource(ConformalLab.class, "ConformalLab.jrw");
+				v.getController().setManageLookAndFeel(false);
+		//		v.registerPlugin(new WebContentLoader());
+		//		v.registerPlugin(new LookAndFeelSwitch());
+		//		v.registerPlugin(new CrossPlatformLnF());
+		//		v.registerPlugin(new NimbusLnF());
+				v.registerPlugin(new SystemLookAndFeel());
+				v.registerPlugin(new VertexEditorPlugin());
+				v.registerPlugin(CurvatureVectorFields.class);
+				v.registerPlugin(FlippedTriangles.class);
+		//		v.registerPlugin(new HalfedgeDebuggerPlugin());
+				v.registerPlugins(createConformalPlugins());
+				v.registerPlugins(HalfedgePluginFactory.createPlugins());
+				v.registerPlugin(new HyperellipticCurvePlugin());
+			}
+		};
 		
-//		v.registerPlugin(new HalfedgeDebuggerPlugin());
-		v.registerPlugins(createConformalPlugins());
-		v.registerPlugins(HalfedgePluginFactory.createPlugins());
-		v.registerPlugin(new HyperellipticCurvePlugin());
+		StartupChain initChain = new StartupChain();
+		initChain.appendJob(jobStaticInit);
+		initChain.appendJob(jobInitViewer);
+		initChain.startQueuedAndWait();
+		
 		v.startup();
+		
 		splash.setVisible(false);
 		v.getPlugin(HalfedgeInterface.class).set(new CoHDS());
 		v.getPlugin(HalfedgeInterface.class).setTemplateHDS(new CoHDS());
@@ -128,9 +145,8 @@ public class ConformalLab implements Runnable {
 	
 	
 	public static void main(final String[] args) throws Exception {
-		JRViewer.setApplicationTitle("Discrete Conformal Lab");
 		if (args.length == 0) { // gui mode
-			EventQueue.invokeLater(new ConformalLab());
+			new ConformalLab().run();
 		} else { // batch mode
 			ConformalLabBatch cl = new ConformalLabBatch();
 			cl.process(args);

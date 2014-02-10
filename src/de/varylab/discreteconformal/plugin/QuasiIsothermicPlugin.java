@@ -98,8 +98,8 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 		tolExpSpinner = new JSpinner(tolExpModel);
 	private JCheckBox
 		excludeBoundaryChecker = new JCheckBox("Exclude Boundary", false);
-	private JComboBox
-		methodCombo = new JComboBox(methods);
+	private JComboBox<Method>
+		methodCombo = new JComboBox<Method>(methods);
 	private JButton
 		goCirclePatternButton = new JButton("Calculate Circle Pattern"),
 		goDBFButton = new JButton("Calculate DBF Variational"),

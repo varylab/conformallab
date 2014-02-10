@@ -110,6 +110,7 @@ import de.jreality.ui.viewerapp.FileFilter;
 import de.jreality.util.NativePathUtility;
 import de.jtem.discretegroup.core.DiscreteGroup;
 import de.jtem.halfedge.Edge;
+import de.jtem.halfedge.Node;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -251,8 +252,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		triangulationColorButton = new ColorChooseJButton(Color.GRAY, true),
 		polygonColorButton = new ColorChooseJButton(Color.RED, true),
 		axesColorButton = new ColorChooseJButton(Color.BLUE, true);
-	private JComboBox
-		domainCombo = new JComboBox(Domain.values());
+	private JComboBox<Domain>
+		domainCombo = new JComboBox<Domain>(Domain.values());
 	private ShrinkPanel
 		customNodePanel = new ShrinkPanel("Custom Nodes"),
 		boundaryPanel = new ShrinkPanel("Boundary"),
@@ -294,15 +295,18 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		drawPolygonChecker = new JCheckBox("Draw Polygon", true),
 		drawCurvesOnSurface = new JCheckBox("Draw Curves On Surface"),
 		useSelectionCutChecker = new JCheckBox("Use Selection Cut Graph");
-	private JComboBox
-		numericsCombo = new JComboBox(new String[] {"Petsc/Tao Numerics", "Java/MTJ Numerics"}),
-		conesQuantizationModeCombo = new JComboBox(QuantizationMode.values()),
-		boundaryModeCombo = new JComboBox(BoundaryMode.values()),
-		boundaryQuantizationCombo = new JComboBox(QuantizationMode.values()),
-		customModeCombo = new JComboBox(BoundaryMode.values()),
-		customQuantizationCombo = new JComboBox(QuantizationMode.values());
-	private JList
-		customNodesList = new JList();
+	private JComboBox<String>
+		numericsCombo = new JComboBox<String>(new String[] {"Petsc/Tao Numerics", "Java/MTJ Numerics"});
+	private JComboBox<QuantizationMode>
+		conesQuantizationModeCombo = new JComboBox<QuantizationMode>(QuantizationMode.values()),
+		boundaryQuantizationCombo = new JComboBox<QuantizationMode>(QuantizationMode.values()),
+		customQuantizationCombo = new JComboBox<QuantizationMode>(QuantizationMode.values());
+	private JComboBox<BoundaryMode>
+		boundaryModeCombo = new JComboBox<BoundaryMode>(BoundaryMode.values()),
+		customModeCombo = new JComboBox<BoundaryMode>(BoundaryMode.values());
+		
+	private JList<Node<?, ?, ?>>
+		customNodesList = new JList<Node<?, ?, ?>>();
 	private JScrollPane
 		selectionScroller = new JScrollPane(customNodesList);
 	private JFileChooser
@@ -590,7 +594,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				customEdges.add(coe);
 			}
 		}
-		DefaultListModel model = new DefaultListModel();
+		DefaultListModel<Node<?, ?, ?>> model = new DefaultListModel<Node<?, ?, ?>>();
 		for (CoVertex v : customVertices) {
 			model.addElement(v);
 		}
@@ -632,7 +636,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	public void stateChanged(ChangeEvent e) {
 		if (customThetaSpinner == e.getSource()) {
 			if (customNodesList.getSelectedValue() == null) return;
-			for (Object s : customNodesList.getSelectedValues()) {
+			for (Node<?,?,?> s : customNodesList.getSelectedValuesList()) {
 				if (!(s instanceof CoVertex)) continue;
 				CoVertex v = (CoVertex)s;
 				double thetaDeg = customThetaModel.getNumber().doubleValue();
@@ -641,7 +645,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 		if (customPhiSpinner == e.getSource()) {
 			if (customNodesList.getSelectedValue() == null) return;
-			for (Object s : customNodesList.getSelectedValues()) {
+			for (Node<?,?,?> s : customNodesList.getSelectedValuesList()) {
 				if (!(s instanceof CoEdge)) continue;
 				CoEdge edge = (CoEdge)s;
 				double phiDeg = customPhiModel.getNumber().doubleValue();
@@ -781,28 +785,28 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			jobQueue.queueJob(uw);
 		}
 		if (customModeCombo == s) {
-			for (Object sel : customNodesList.getSelectedValues()) {
+			for (Node<?,?,?> sel : customNodesList.getSelectedValuesList()) {
 				if (!(sel instanceof CoVertex)) continue;
 				CoVertex v = (CoVertex)sel;
 				v.info.boundaryMode = (BoundaryMode)customModeCombo.getSelectedItem();
 			}
 		}
 		if (customQuantizationCombo == s) {
-			for (Object sel : customNodesList.getSelectedValues()) {
+			for (Node<?,?,?> sel : customNodesList.getSelectedValuesList()) {
 				if (!(sel instanceof CoVertex)) continue;
 				CoVertex v = (CoVertex)sel;
 				v.info.quantizationMode = (QuantizationMode)customQuantizationCombo.getSelectedItem();
 			}
 		}
 		if (useCustomThetaChecker == s) {
-			for (Object sel : customNodesList.getSelectedValues()) {
+			for (Node<?,?,?> sel : customNodesList.getSelectedValuesList()) {
 				if (!(sel instanceof CoVertex)) continue;
 				CoVertex v = (CoVertex)sel;
 				v.info.useCustomTheta = useCustomThetaChecker.isSelected(); 
 			}
 		}
 		if (circularEdgeChecker == s) {
-			for (Object sel : customNodesList.getSelectedValues()) {
+			for (Node<?,?,?> sel : customNodesList.getSelectedValuesList()) {
 				if (!(sel instanceof CoEdge)) continue;
 				CoEdge edge = (CoEdge)sel;
 				edge.info.circularHoleEdge = circularEdgeChecker.isSelected();
