@@ -755,10 +755,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			ti.setTextureShear(0.0);
 		}
 		if (unwrapBtn == s || spherizeButton == s) {
-			surface = getLoaderGeometry();
-			if (surface == null) return;
-			CoHDS unwrapped = copySurface(surface);
-			HalfedgeSelection selection = copySelection(hif.getSelection(), surface, unwrapped);
+			CoHDS unwrapped = getLoaderGeometry();
+			if (unwrapped == null) return;
+			surface = copySurface(unwrapped);
+			HalfedgeSelection selection = hif.getSelection();
 			if (isRescaleGeometry()) {
 				unwrapped.normalizeCoordinates();
 			}
@@ -1043,7 +1043,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		int signature = getActiveSignature();
 		FundamentalPolygon p = getActiveFundamentalPoygon();
 		if (selctedOnly) {
-			HalfedgeSelection s = copySelection(hif.getSelection(), hif.get(new CoHDS()), surfaceUnwrapped);
+			HalfedgeSelection s = hif.getSelection();
 			Set<CoFace> selectedFaces = s.getFaces(surfaceUnwrapped);
 			System.out.println("moving " + selectedFaces.size() + " faces...");
 			for (CoFace f : selectedFaces) {
@@ -1179,19 +1179,19 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 	
 	
-	private HalfedgeSelection copySelection(HalfedgeSelection s, CoHDS surface, CoHDS copy) {
-		HalfedgeSelection sCopy = new HalfedgeSelection();
-		for (CoVertex v : s.getVertices(surface)) {
-			sCopy.add(copy.getVertex(v.getIndex()));
-		}
-		for (CoEdge e : s.getEdges(surface)) {
-			sCopy.add(copy.getEdge(e.getIndex()));
-		}
-		for (CoFace f : s.getFaces(surface)) {
-			sCopy.add(copy.getFace(f.getIndex()));
-		}
-		return sCopy;
-	}
+//	private HalfedgeSelection copySelection(HalfedgeSelection s, CoHDS surface, CoHDS copy) {
+//		HalfedgeSelection sCopy = new HalfedgeSelection();
+//		for (CoVertex v : s.getVertices(surface)) {
+//			sCopy.add(copy.getVertex(v.getIndex()));
+//		}
+//		for (CoEdge e : s.getEdges(surface)) {
+//			sCopy.add(copy.getEdge(e.getIndex()));
+//		}
+//		for (CoFace f : s.getFaces(surface)) {
+//			sCopy.add(copy.getFace(f.getIndex()));
+//		}
+//		return sCopy;
+//	}
 	
 	
 	public void updateGeometry() {
@@ -1215,25 +1215,24 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 
 	public void drawDomainImage(Graphics2D g2d, int res) {
 		HyperbolicModel model = vis.getSelectedHyperbolicModel();
-		VisualizationUtility.drawDomainBackground(g2d, res, model);
-		if (drawTriangulationChecker.isSelected()) {
-			if (surfaceUnwrapped == null) {
-				throw new RuntimeException("No surface available");
-			}
-			Color triangulationColor = triangulationColorButton.getColor();
-			drawTriangulation(surfaceUnwrapped, model, g2d, res, triangulationColor);
-		}
 		Color polygonColor = polygonColorButton.getColor();
 		Color axesColor = axesColorButton.getColor();
+		Color triangulationColor = triangulationColorButton.getColor();
 		boolean drawPolygon = drawPolygonChecker.isSelected();
 		boolean drawAxes = drawAxesChecker.isSelected();
+		boolean drawTriangulation = drawTriangulationChecker.isSelected();
 		Domain domain = (Domain)domainCombo.getSelectedItem();
 		int maxDrawDepth = coverElementsModel.getNumber().intValue();
 		double maxDrawDisctance = coverMaxDisctanceModel.getNumber().doubleValue();
+		
+		VisualizationUtility.drawDomainBackground(g2d, res, model);
 		switch (domain) {
 			case Cut:
 				if (cuttedPolygon == null) {
 					throw new RuntimeException("No fundamental polygon available");
+				}
+				if (drawTriangulation) {
+					drawTriangulation(surfaceUnwrapped, model, cuttedPolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor);
 				}
 				drawUniversalCoverImage(cuttedPolygon, drawPolygon, drawAxes, maxDrawDepth, maxDrawDisctance, model, g2d, res, polygonColor, axesColor);
 				break;
@@ -1241,17 +1240,26 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				if (minimalPolygon == null) {
 					throw new RuntimeException("No fundamental polygon available");
 				}
+				if (drawTriangulation) {
+					drawTriangulation(surfaceUnwrapped, model, minimalPolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor);
+				}
 				drawUniversalCoverImage(minimalPolygon, drawPolygon, drawAxes, maxDrawDepth, maxDrawDisctance, model, g2d, res, polygonColor, axesColor);
 				break;
 			case Canonical:
 				if (canonicalPolygon == null) {
 					throw new RuntimeException("No fundamental polygon available");
-				}	
+				}
+				if (drawTriangulation) {
+					drawTriangulation(surfaceUnwrapped, model, canonicalPolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor);
+				}
 				drawUniversalCoverImage(canonicalPolygon, drawPolygon, drawAxes, maxDrawDepth, maxDrawDisctance, model, g2d, res, polygonColor, axesColor);
 				break;
 			case Opposite:
 				if (oppositePolygon == null) {
 					throw new RuntimeException("No fundamental polygon available");
+				}
+				if (drawTriangulation) {
+					drawTriangulation(surfaceUnwrapped, model, oppositePolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor);
 				}
 				drawUniversalCoverImage(oppositePolygon, drawPolygon, drawAxes, maxDrawDepth, maxDrawDisctance, model, g2d, res, polygonColor, axesColor);
 				break;

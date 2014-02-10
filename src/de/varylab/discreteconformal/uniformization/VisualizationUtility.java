@@ -22,6 +22,7 @@ import java.awt.geom.Line2D;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -59,47 +60,55 @@ public class VisualizationUtility {
 		eps = 1E-15;
 	
 	
-	public static void drawTriangulation(
+	public static void drawTriangulation (
 		CoHDS surface,
 		HyperbolicModel model,
+		FundamentalPolygon polygon,
+		int maxDrawElements,
+		double maxDrawDistance,
 		Graphics2D g,
 		int res,
 		Color color
 	) {
+		List<DiscreteGroupElement> G = createGoupElements(polygon, maxDrawElements, maxDrawDistance); 
 		float ls = res / 500f; // line scale
 		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
 		g.scale(0.5, -0.5);
 		g.translate(res, -res);
 		g.setStroke(new BasicStroke(1 * ls));
 		g.setColor(color);
-		
-		for (CoEdge e : surface.getPositiveEdges()) {
-			double[] s = e.getStartVertex().T;
-			double[] t = e.getTargetVertex().T;
-			double[] m = Rn.linearCombination(null, 0.5, s, 0.5, t);
-			Pn.normalize(m, m, Pn.HYPERBOLIC);
-			double[] p1, p2, p3;
-			switch (model) {
-				case Klein:
-					p1 = new double[] {s[0] / s[3], s[1] / s[3], 1};
-					p2 = new double[] {t[0] / t[3], t[1] / t[3], 1};
-					p3 = new double[] {m[0] / m[3], m[1] / m[3], 1};		
-					break;
-				default:
-				case Poincaré:
-					p1 = new double[] {s[0] / (s[3] + 1), s[1] / (s[3] + 1), 1};
-					p2 = new double[] {t[0] / (t[3] + 1), t[1] / (t[3] + 1), 1};
-					p3 = new double[] {m[0] / (m[3] + 1), m[1] / (m[3] + 1), 1};
-					break;
-				case Halfplane:
-					p1 = new double[] {s[1] / (s[3] - s[0]), 1 / (s[3] - s[0]), 1};
-					p2 = new double[] {t[1] / (t[3] - t[0]), 1 / (t[3] - t[0]), 1};
-					p3 = new double[] {m[1] / (m[3] - m[0]), 1 / (m[3] - m[0]), 1};
-					break;
+		for (DiscreteGroupElement element : G) {
+			Matrix T = element.getMatrix();
+			for (CoEdge e : surface.getPositiveEdges()) {
+				double[] s = e.getStartVertex().T.clone();
+				double[] t = e.getTargetVertex().T.clone();
+				double[] m = Rn.linearCombination(null, 0.5, s, 0.5, t);
+				T.transformVector(s);
+				T.transformVector(t);
+				T.transformVector(m);
+				Pn.normalize(m, m, Pn.HYPERBOLIC);
+				double[] p1, p2, p3;
+				switch (model) {
+					case Klein:
+						p1 = new double[] {s[0] / s[3], s[1] / s[3], 1};
+						p2 = new double[] {t[0] / t[3], t[1] / t[3], 1};
+						p3 = new double[] {m[0] / m[3], m[1] / m[3], 1};		
+						break;
+					default:
+					case Poincaré:
+						p1 = new double[] {s[0] / (s[3] + 1), s[1] / (s[3] + 1), 1};
+						p2 = new double[] {t[0] / (t[3] + 1), t[1] / (t[3] + 1), 1};
+						p3 = new double[] {m[0] / (m[3] + 1), m[1] / (m[3] + 1), 1};
+						break;
+					case Halfplane:
+						p1 = new double[] {s[1] / (s[3] - s[0]), 1 / (s[3] - s[0]), 1};
+						p2 = new double[] {t[1] / (t[3] - t[0]), 1 / (t[3] - t[0]), 1};
+						p3 = new double[] {m[1] / (m[3] - m[0]), 1 / (m[3] - m[0]), 1};
+						break;
+				}
+				drawArc(p1, p2, p3, g, model, res);
 			}
-			drawArc(p1, p2, p3, g, model, res);
 		}
-		
 		g.translate(-res, res);
 		g.scale(2, -2);
 	}
@@ -330,8 +339,21 @@ public class VisualizationUtility {
 		List<double[][]> axesSegments,
 		List<double[][]> polygonSegments
 	) {
-		BigDecimal[] id = new BigDecimal[16];
-		RnBig.setIdentityMatrix(id);
+		List<DiscreteGroupElement> elementList = createGoupElements(poly, maxDrawElements, maxDrawDistance);
+		boolean isFirst = true;
+		for (DiscreteGroupElement s : elementList) {
+			BigDecimal[] sBig = RnBig.toBig(null, s.getArray());
+			drawUniversalCoverR(poly, sBig, 0, 0, drawPolygon, isFirst & drawAxes, g, model, resolution, polygonColor, axesColor, axesSegments, polygonSegments);
+			isFirst = false;
+		}
+	}
+
+
+	public static List<DiscreteGroupElement> createGoupElements(
+		FundamentalPolygon poly,
+		final int maxDrawElements,
+		final double maxDrawDistance
+	) {
 		DiscreteGroupConstraint constraint = new DiscreteGroupConstraint() {
 			double[] zero = {0,0,0,1};
 			@Override
@@ -354,12 +376,9 @@ public class VisualizationUtility {
 		DiscreteGroup G = poly.getDiscreteGroup();
 		G.setConstraint(constraint);
 		G.generateElements();
-		boolean isFirst = true;
-		for (DiscreteGroupElement s : G.getElementList()) {
-			BigDecimal[] sBig = RnBig.toBig(null, s.getArray());
-			drawUniversalCoverR(poly, sBig, 0, 0, drawPolygon, isFirst & drawAxes, g, model, resolution, polygonColor, axesColor, axesSegments, polygonSegments);
-			isFirst = false;
-		}
+		DiscreteGroupElement[] elements = G.getElementList();
+		List<DiscreteGroupElement> elementList = Arrays.asList(elements);
+		return elementList;
 	}
 		
 		
