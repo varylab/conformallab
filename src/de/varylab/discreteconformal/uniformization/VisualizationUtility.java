@@ -57,7 +57,7 @@ public class VisualizationUtility {
 	private static BigDecimal 
 		HALF = new BigDecimal(0.5);
 	private static double 
-		eps = 1E-15;
+		eps = 1E-18;
 	
 	
 	public static void drawTriangulation (

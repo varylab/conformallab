@@ -356,8 +356,11 @@ public class SchottkyUtility {
 		}
 	}
 
-	protected static void calculateLengthsFromCrossRatios(CoHDS hds,
-			Map<CoEdge, Double> crMap, Map<CoEdge, Double> lMap) {
+	protected static void calculateLengthsFromCrossRatios(
+		CoHDS hds,
+		Map<CoEdge, Double> crMap, 
+		Map<CoEdge, Double> lMap
+	) {
 		Map<CoEdge, Double> aMap = new HashMap<CoEdge, Double>();
 		for (CoVertex v : hds.getVertices()) {
 			double ai = 100.0;
