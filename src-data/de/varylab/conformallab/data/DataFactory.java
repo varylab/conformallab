@@ -19,6 +19,7 @@ import javax.xml.validation.SchemaFactory;
 
 import de.varylab.conformallab.data.types.ConformalDataList;
 import de.varylab.conformallab.data.types.DiscreteEmbedding;
+import de.varylab.conformallab.data.types.DiscreteMap;
 import de.varylab.conformallab.data.types.DiscreteMetric;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.conformallab.data.types.ObjectFactory;
@@ -94,6 +95,17 @@ public class DataFactory {
 	public static void writeDiscreteEmbedding(DiscreteEmbedding data, OutputStream out) throws JAXBException {
 		ObjectFactory of = new ObjectFactory();
 		JAXBElement<DiscreteEmbedding> e = of.createDiscreteEmbedding(data);
+		typesMarshaller.marshal(e, out);
+	}
+	
+	public static DiscreteMap readDiscreteMap(InputStream in) throws JAXBException {
+		StreamSource inSource = new StreamSource(in);
+		JAXBElement<DiscreteMap> e = typesUnmarshaller.unmarshal(inSource, DiscreteMap.class);
+		return e.getValue();
+	}
+	public static void writeDiscreteMap(DiscreteMap data, OutputStream out) throws JAXBException {
+		ObjectFactory of = new ObjectFactory();
+		JAXBElement<DiscreteMap> e = of.createDiscreteMap(data);
 		typesMarshaller.marshal(e, out);
 	}
 	

@@ -670,8 +670,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		cutInfo = unwrapper.cutInfo;
 		metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
 		metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
-		conformalDataPlugin.addDiscreteTextureEmbedding(surfaceUnwrapped, cutInfo);
-		conformalDataPlugin.addDiscretePositionEmbedding(surfaceUnwrapped, cutInfo);
+		conformalDataPlugin.addDiscreteMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
 		createUniformization(surfaceUnwrapped, genus, cutInfo);
 		updateGeometry();
 		updateDomainImage();
@@ -1181,21 +1180,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 		return copy;
 	}
-	
-	
-//	private HalfedgeSelection copySelection(HalfedgeSelection s, CoHDS surface, CoHDS copy) {
-//		HalfedgeSelection sCopy = new HalfedgeSelection();
-//		for (CoVertex v : s.getVertices(surface)) {
-//			sCopy.add(copy.getVertex(v.getIndex()));
-//		}
-//		for (CoEdge e : s.getEdges(surface)) {
-//			sCopy.add(copy.getEdge(e.getIndex()));
-//		}
-//		for (CoFace f : s.getFaces(surface)) {
-//			sCopy.add(copy.getFace(f.getIndex()));
-//		}
-//		return sCopy;
-//	}
 	
 	
 	public void updateGeometry() {

@@ -58,6 +58,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.adapter.CoDirectTextureAdapter;
 import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
@@ -206,11 +207,13 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 					e.printStackTrace();
 					return;
 				}
+				AdapterSet kleinTextureAdapters = new AdapterSet(new CoDirectTextureAdapter());
 				if (genus == 1) {
-					conformalDataPlugin.addDiscreteEmbedding("Output Euclidean Embedding", hds, aSet, TexturePosition4d.class, cutInfo);
+					conformalDataPlugin.addDiscreteEmbedding("Output Euclidean Embedding", hds, kleinTextureAdapters, TexturePosition4d.class, cutInfo);
 				} else {
-					conformalDataPlugin.addDiscreteEmbedding("Output Klein Model Fuchsian Embedding", hds, aSet, TexturePosition4d.class, cutInfo);
+					conformalDataPlugin.addDiscreteEmbedding("Output Klein Model Fuchsian Embedding", hds, kleinTextureAdapters, TexturePosition4d.class, cutInfo);
 				}
+				conformalDataPlugin.addDiscreteMap("Uniformizing Map", hds, cutInfo);
 				dcp.createUniformization(hds, genus, cutInfo);
 				dcp.updateGeometry();
 				dcp.updateDomainImage();

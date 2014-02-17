@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2013.12.13 um 12:01:16 PM CET 
+// Generiert: 2014.02.17 um 02:16:19 PM CET 
 //
 
 
@@ -34,6 +34,7 @@ public class ObjectFactory {
     private final static QName _DiscreteMetric_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteMetric");
     private final static QName _SchottkyData_QNAME = new QName("http://www.varylab.com/conformallab/types", "SchottkyData");
     private final static QName _FuchianData_QNAME = new QName("http://www.varylab.com/conformallab/types", "FuchianData");
+    private final static QName _DiscreteMap_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteMap");
     private final static QName _ConformalDataList_QNAME = new QName("http://www.varylab.com/conformallab/types", "ConformalDataList");
     private final static QName _DiscreteEmbedding_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteEmbedding");
     private final static QName _HyperEllipticAlgebraicCurve_QNAME = new QName("http://www.varylab.com/conformallab/types", "HyperEllipticAlgebraicCurve");
@@ -59,6 +60,14 @@ public class ObjectFactory {
      */
     public DiscreteMetric createDiscreteMetric() {
         return new DiscreteMetric();
+    }
+
+    /**
+     * Create an instance of {@link DiscreteMap }
+     * 
+     */
+    public DiscreteMap createDiscreteMap() {
+        return new DiscreteMap();
     }
 
     /**
@@ -230,6 +239,15 @@ public class ObjectFactory {
     @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "FuchianData")
     public JAXBElement<FuchsianData> createFuchianData(FuchsianData value) {
         return new JAXBElement<FuchsianData>(_FuchianData_QNAME, FuchsianData.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link DiscreteMap }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "DiscreteMap")
+    public JAXBElement<DiscreteMap> createDiscreteMap(DiscreteMap value) {
+        return new JAXBElement<DiscreteMap>(_DiscreteMap_QNAME, DiscreteMap.class, null, value);
     }
 
     /**

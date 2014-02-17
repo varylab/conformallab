@@ -33,14 +33,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
 import de.jreality.plugin.basic.View;
-import de.jtem.halfedge.Edge;
-import de.jtem.halfedge.Face;
-import de.jtem.halfedge.Node;
-import de.jtem.halfedge.Vertex;
-import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.type.Position;
-import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -53,13 +46,18 @@ import de.varylab.conformallab.data.DataUtility;
 import de.varylab.conformallab.data.types.ConformalData;
 import de.varylab.conformallab.data.types.ConformalDataList;
 import de.varylab.conformallab.data.types.DiscreteEmbedding;
+import de.varylab.conformallab.data.types.DiscreteMap;
 import de.varylab.conformallab.data.types.DiscreteMetric;
+import de.varylab.conformallab.data.types.EmbeddedVertex;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.conformallab.data.types.SchottkyData;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.adapter.CoDirectDataAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoDirectPositionAdapter;
+import de.varylab.discreteconformal.heds.adapter.CoDirectTextureAdapter;
 import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
@@ -365,6 +363,22 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			discreteConformalPlugin.updateGeometry();
 			discreteConformalPlugin.updateDomainImage();
 		}
+		if (data instanceof DiscreteMap) {
+			DiscreteMap map = (DiscreteMap)data;
+			DiscreteEmbedding image = map.getImage();
+			DiscreteEmbedding domain = map.getDomain();
+			int genus = DataUtility.calculateGenus(domain);
+			System.out.println("loading discreet map of a genus " + genus + " surface");
+			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+			CoHDS hds = DataUtility.toHDS(image, cutInfo);
+			for (CoVertex v : hds.getVertices()) {
+				EmbeddedVertex dv = domain.getVertices().get(v.getIndex());
+				v.T = new double[]{dv.getX(), dv.getY(), dv.getZ(), dv.getW()};
+			}
+			discreteConformalPlugin.createUniformization(hds, genus, cutInfo);
+			discreteConformalPlugin.updateGeometry();
+			discreteConformalPlugin.updateDomainImage();
+		}
 		if (data instanceof DiscreteMetric) {
 			DiscreteMetric dm = (DiscreteMetric)data;
 			MappedEdgeLengthAdapter lMap = new MappedEdgeLengthAdapter(1000.0);
@@ -387,51 +401,25 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		addData(dm);
 	}
 
-	@Position
-	@Position4d
-	@TexturePosition
-	@TexturePosition4d
-	private static class DirectDataAdapter extends AbstractAdapter<double[]> {
-		private boolean
-			useTextureData = false;
-		public DirectDataAdapter(boolean useTextureData) {
-			super(double[].class, true, false);
-			this.useTextureData = useTextureData;
-		}
-		@Override
-		public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
-			return CoVertex.class.isAssignableFrom(nodeClass);
-		}
-		@Override
-		public double getPriority() {
-			return Double.MAX_VALUE;
-		}
-		@Override
-		public <
-			V extends Vertex<V, E, F>, 
-			E extends Edge<V, E, F>, 
-			F extends Face<V, E, F>
-		> double[] getV(V v, AdapterSet a) {
-			CoVertex cv = (CoVertex)v;
-			if (useTextureData) {
-				return cv.T;
-			} else {
-				return cv.P;
-			}
-		}
-	}
 	public void addDiscreteTextureEmbedding(CoHDS surface, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
-		AdapterSet aSet = new AdapterSet(new DirectDataAdapter(true));
+		AdapterSet aSet = new AdapterSet(new CoDirectDataAdapter(true));
 		addDiscreteEmbedding("Texture Embedding", surface, aSet, TexturePosition4d.class, cutInfo);
 	}
 	public void addDiscretePositionEmbedding(CoHDS surface, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
-		AdapterSet aSet = new AdapterSet(new DirectDataAdapter(false));
+		AdapterSet aSet = new AdapterSet(new CoDirectDataAdapter(false));
 		addDiscreteEmbedding("Position Embedding", surface, aSet, Position4d.class, cutInfo);
+	}
+	public void addDiscreteMap(String name, CoHDS surface, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		AdapterSet a = new AdapterSet(new CoDirectTextureAdapter(), new CoDirectPositionAdapter());
+		DiscreteMap map = DataUtility.toDiscreteMap(name, surface, a, TexturePosition4d.class, Position4d.class, cutInfo);
+		addData(map);
 	}
 	public void addDiscreteEmbedding(String name, CoHDS surface, AdapterSet a, Class<? extends Annotation> type, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		DiscreteEmbedding de = DataUtility.toDiscreteEmbedding(name, surface, a, type, cutInfo);
 		addData(de);
 	}
+	
+	
 	public void addData(ConformalData data) {
 		this.data.add(data);
 		updateUI();

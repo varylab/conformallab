@@ -22,6 +22,7 @@ import de.jtem.riemann.surface.BranchPoint;
 import de.varylab.conformallab.data.types.Circle;
 import de.varylab.conformallab.data.types.Complex;
 import de.varylab.conformallab.data.types.DiscreteEmbedding;
+import de.varylab.conformallab.data.types.DiscreteMap;
 import de.varylab.conformallab.data.types.DiscreteMetric;
 import de.varylab.conformallab.data.types.EmbeddedTriangle;
 import de.varylab.conformallab.data.types.EmbeddedVertex;
@@ -245,6 +246,25 @@ public class DataUtility {
 			dm.getTriangles().add(mt);
 		}
 		return dm;
+	}
+	
+	public static DiscreteMap toDiscreteMap(
+		String name, 
+		CoHDS surface, 
+		AdapterSet a, 
+		Class<? extends Annotation> domainType, 
+		Class<? extends Annotation> imageType, 
+		CuttingInfo<CoVertex, CoEdge, CoFace> identifications
+	) {
+		String domainName = name + "_domain";
+		String imageName = name + "_image";
+		DiscreteEmbedding domain = toDiscreteEmbedding(domainName, surface, a, domainType, identifications);
+		DiscreteEmbedding image = toDiscreteEmbedding(imageName, surface, a, imageType, identifications);
+		DiscreteMap map = new DiscreteMap();
+		map.setDomain(domain);
+		map.setImage(image);
+		map.setName(name);
+		return map;
 	}
 
 	public static DiscreteEmbedding toDiscreteEmbedding(

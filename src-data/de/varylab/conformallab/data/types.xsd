@@ -14,6 +14,7 @@
 	<xs:element name="SchottkyData" type="types:SchottkyData"/>
 	<xs:element name="DiscreteMetric" type="types:DiscreteMetric"/>
 	<xs:element name="DiscreteEmbedding" type="types:DiscreteEmbedding"/>
+	<xs:element name="DiscreteMap" type="types:DiscreteMap"/>
 
 	<xs:complexType name="ConformalData">
 		<xs:attribute name="name" type="xs:string" use="optional"/>
@@ -35,6 +36,17 @@
 			<xs:extension base="types:ConformalData">
 				<xs:sequence>
 					<xs:element name="BranchPoint" type="types:Complex" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="DiscreteMap">
+		<xs:complexContent>
+			<xs:extension base="types:ConformalData">
+				<xs:sequence>
+					<xs:element name="Domain" type="types:DiscreteEmbedding"/>
+					<xs:element name="Image" type="types:DiscreteEmbedding"/>
 				</xs:sequence>
 			</xs:extension>
 		</xs:complexContent>
