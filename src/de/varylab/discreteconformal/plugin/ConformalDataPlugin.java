@@ -162,6 +162,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 					list.getData().add(d);
 				}
 				DataFactory.writeConformalDataList(list, fout);
+				fout.close();
 			} catch (Exception e1) {
 				log.log(Level.SEVERE, "Could not export conformal data", e1);
 			}
@@ -180,6 +181,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 				for (ConformalData data : cdl.getData()) {
 					addData(data);
 				}
+				fin.close();
 			} catch (Exception e1) {
 				log.log(Level.SEVERE, "Could not import conformal data", e1);
 			}	

@@ -251,6 +251,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	private ColorChooseJButton
 		triangulationColorButton = new ColorChooseJButton(Color.GRAY, true),
 		polygonColorButton = new ColorChooseJButton(Color.RED, true),
+		boundaryColorButton = new ColorChooseJButton(Color.RED, true),
 		axesColorButton = new ColorChooseJButton(Color.BLUE, true);
 	private JComboBox<Domain>
 		domainCombo = new JComboBox<Domain>(Domain.values());
@@ -292,6 +293,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
 		drawTriangulationChecker = new JCheckBox("Draw Triangulation"),
 		drawAxesChecker = new JCheckBox("Draw Axes"),
+		drawBoundaryChecker = new JCheckBox("Draw Boundary"),
 		drawPolygonChecker = new JCheckBox("Draw Polygon", true),
 		drawCurvesOnSurface = new JCheckBox("Draw Curves On Surface"),
 		useSelectionCutChecker = new JCheckBox("Use Selection Cut Graph");
@@ -409,8 +411,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		coverMaxDistanceSpinner.addChangeListener(this);
 		drawPolygonChecker.addActionListener(this);
 		drawAxesChecker.addActionListener(this);
+		drawBoundaryChecker.addActionListener(this);
 		drawCurvesOnSurface.addActionListener(this);
 		polygonColorButton.addColorChangedListener(this);
+		boundaryColorButton.addColorChangedListener(this);
 		axesColorButton.addColorChangedListener(this);
 		triangulationColorButton.addColorChangedListener(this);
 		spherizeButton.addActionListener(this);
@@ -519,6 +523,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			visualizationPanel.add(coverMaxDistanceSpinner, c2);
 			visualizationPanel.add(drawTriangulationChecker, c1);
 			visualizationPanel.add(triangulationColorButton, c2);
+			visualizationPanel.add(drawBoundaryChecker, c1);
+			visualizationPanel.add(boundaryColorButton, c2);			
 			visualizationPanel.add(drawPolygonChecker, c1);
 			visualizationPanel.add(polygonColorButton, c2);
 			visualizationPanel.add(drawAxesChecker, c1);
@@ -994,6 +1000,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		if (drawTriangulationChecker == s ||
 			drawAxesChecker == s ||
 			drawPolygonChecker == s ||
+			drawBoundaryChecker == s ||
 			drawCurvesOnSurface == s
 		) {
 			updateGeometry();
@@ -1205,8 +1212,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		HyperbolicModel model = vis.getSelectedHyperbolicModel();
 		Color polygonColor = polygonColorButton.getColor();
 		Color axesColor = axesColorButton.getColor();
+		Color boundaryColor = boundaryColorButton.getColor();
 		Color triangulationColor = triangulationColorButton.getColor();
 		boolean drawPolygon = drawPolygonChecker.isSelected();
+		boolean drawBoundary = drawBoundaryChecker.isSelected();
 		boolean drawAxes = drawAxesChecker.isSelected();
 		boolean drawTriangulation = drawTriangulationChecker.isSelected();
 		Domain domain = (Domain)domainCombo.getSelectedItem();
@@ -1220,7 +1229,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 					throw new RuntimeException("No fundamental polygon available");
 				}
 				if (drawTriangulation) {
-					drawTriangulation(surfaceUnwrapped, model, cuttedPolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor);
+					drawTriangulation(surfaceUnwrapped, model, cuttedPolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor, drawBoundary, boundaryColor);
 				}
 				drawUniversalCoverImage(cuttedPolygon, drawPolygon, drawAxes, maxDrawDepth, maxDrawDisctance, model, g2d, res, polygonColor, axesColor);
 				break;
@@ -1229,7 +1238,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 					throw new RuntimeException("No fundamental polygon available");
 				}
 				if (drawTriangulation) {
-					drawTriangulation(surfaceUnwrapped, model, minimalPolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor);
+					drawTriangulation(surfaceUnwrapped, model, minimalPolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor, drawBoundary, boundaryColor);
 				}
 				drawUniversalCoverImage(minimalPolygon, drawPolygon, drawAxes, maxDrawDepth, maxDrawDisctance, model, g2d, res, polygonColor, axesColor);
 				break;
@@ -1238,7 +1247,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 					throw new RuntimeException("No fundamental polygon available");
 				}
 				if (drawTriangulation) {
-					drawTriangulation(surfaceUnwrapped, model, canonicalPolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor);
+					drawTriangulation(surfaceUnwrapped, model, canonicalPolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor, drawBoundary, boundaryColor);
 				}
 				drawUniversalCoverImage(canonicalPolygon, drawPolygon, drawAxes, maxDrawDepth, maxDrawDisctance, model, g2d, res, polygonColor, axesColor);
 				break;
@@ -1247,7 +1256,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 					throw new RuntimeException("No fundamental polygon available");
 				}
 				if (drawTriangulation) {
-					drawTriangulation(surfaceUnwrapped, model, oppositePolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor);
+					drawTriangulation(surfaceUnwrapped, model, oppositePolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor, drawBoundary, boundaryColor);
 				}
 				drawUniversalCoverImage(oppositePolygon, drawPolygon, drawAxes, maxDrawDepth, maxDrawDisctance, model, g2d, res, polygonColor, axesColor);
 				break;

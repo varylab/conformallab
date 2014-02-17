@@ -68,7 +68,9 @@ public class VisualizationUtility {
 		double maxDrawDistance,
 		Graphics2D g,
 		int res,
-		Color color
+		Color color,
+		boolean drawBoundary,
+		Color boundaryColor
 	) {
 		List<DiscreteGroupElement> G = createGoupElements(polygon, maxDrawElements, maxDrawDistance); 
 		float ls = res / 500f; // line scale
@@ -80,6 +82,15 @@ public class VisualizationUtility {
 		for (DiscreteGroupElement element : G) {
 			Matrix T = element.getMatrix();
 			for (CoEdge e : surface.getPositiveEdges()) {
+				if (drawBoundary) {
+					if (HalfEdgeUtils.isBoundaryEdge(e)) {
+						g.setColor(boundaryColor);
+						g.setStroke(new BasicStroke(2 * ls));
+					} else {
+						g.setColor(color);
+						g.setStroke(new BasicStroke(1 * ls));
+					}
+				}
 				double[] s = e.getStartVertex().T.clone();
 				double[] t = e.getTargetVertex().T.clone();
 				double[] m = Rn.linearCombination(null, 0.5, s, 0.5, t);

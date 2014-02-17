@@ -26,6 +26,7 @@
 				<xs:element name="SchottkyData" type="types:SchottkyData"/>
 				<xs:element name="DiscreteMetric" type="types:DiscreteMetric"/>
 				<xs:element name="DiscreteEmbedding" type="types:DiscreteEmbedding"/>
+				<xs:element name="DiscreteMap" type="types:DiscreteMap"/>
 			</xs:choice>
 		</xs:sequence>
 	</xs:complexType>

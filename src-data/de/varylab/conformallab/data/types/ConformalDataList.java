@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.02.17 um 02:16:19 PM CET 
+// Generiert: 2014.02.17 um 03:17:36 PM CET 
 //
 
 
@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlType;
  *           &lt;element name="SchottkyData" type="{http://www.varylab.com/conformallab/types}SchottkyData"/>
  *           &lt;element name="DiscreteMetric" type="{http://www.varylab.com/conformallab/types}DiscreteMetric"/>
  *           &lt;element name="DiscreteEmbedding" type="{http://www.varylab.com/conformallab/types}DiscreteEmbedding"/>
+ *           &lt;element name="DiscreteMap" type="{http://www.varylab.com/conformallab/types}DiscreteMap"/>
  *         &lt;/choice>
  *       &lt;/sequence>
  *     &lt;/restriction>
@@ -51,7 +52,8 @@ public class ConformalDataList {
         @XmlElement(name = "HyperEllipticAlgebraicCurve", type = HyperEllipticAlgebraicCurve.class),
         @XmlElement(name = "SchottkyData", type = SchottkyData.class),
         @XmlElement(name = "DiscreteMetric", type = DiscreteMetric.class),
-        @XmlElement(name = "DiscreteEmbedding", type = DiscreteEmbedding.class)
+        @XmlElement(name = "DiscreteEmbedding", type = DiscreteEmbedding.class),
+        @XmlElement(name = "DiscreteMap", type = DiscreteMap.class)
     })
     protected List<ConformalData> data;
 
@@ -77,6 +79,7 @@ public class ConformalDataList {
      * {@link SchottkyData }
      * {@link DiscreteMetric }
      * {@link DiscreteEmbedding }
+     * {@link DiscreteMap }
      * 
      * 
      */
