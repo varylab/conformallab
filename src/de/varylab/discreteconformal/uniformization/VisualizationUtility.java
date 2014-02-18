@@ -20,7 +20,6 @@ import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,9 +54,7 @@ import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 public class VisualizationUtility {
 	
 	private static BigDecimal 
-		HALF = new BigDecimal(0.5);
-	private static double 
-		eps = 1E-18;
+		BIG_HALF = new BigDecimal(0.5);
 	
 	
 	public static void drawTriangulation (
@@ -175,39 +172,18 @@ public class VisualizationUtility {
 		g.scale(2, -2);
 	}
 	
-	private static boolean drawPolygon(
+	private static void drawPolygon(
 		FundamentalPolygon poly, 
 		HyperbolicModel model, 
 		Graphics2D g,
 		int resolution,
 		List<double[][]> segmentsOUT
 	) {
-		boolean proceed = true;
 		for (FundamentalEdge e : poly.getEdges()) {
 			BigDecimal[] p1a = e.startPosition; 
 			BigDecimal[] p2a = e.nextEdge.startPosition;
-			BigDecimal[] p3a = RnBig.linearCombination(null, HALF, p1a, HALF, p2a, FundamentalPolygonUtility.context);
+			BigDecimal[] p3a = RnBig.linearCombination(null, BIG_HALF, p1a, BIG_HALF, p2a, FundamentalPolygonUtility.context);
 			PnBig.normalize(p3a, p3a, HYPERBOLIC, context);
-			boolean drawArc = true;
-			switch (model) {
-			case Klein:
-			case Poincaré:
-				if (getDistToUnitCircle(p1a, FundamentalPolygonUtility.context) < eps && 
-					getDistToUnitCircle(p2a, FundamentalPolygonUtility.context) < eps &&
-					getDistToUnitCircle(p3a, FundamentalPolygonUtility.context) < eps) {
-					proceed = drawArc = false;
-				}
-				break;
-			case Halfplane:
-				if (1 / (p1a[3].subtract(p1a[0], FundamentalPolygonUtility.context).doubleValue()) < eps ||
-					1 / (p2a[3].subtract(p2a[0], FundamentalPolygonUtility.context).doubleValue()) < eps ||
-					1 / (p3a[3].subtract(p3a[0], FundamentalPolygonUtility.context).doubleValue()) < eps) {
-					proceed = drawArc = false;
-				}
-			}
-			if (!drawArc) {
-				continue;
-			}
 			double[] p1ad = RnBig.toDouble(null, p1a);
 			double[] p2ad = RnBig.toDouble(null, p2a);
 			double[] p3ad = RnBig.toDouble(null, p3a);
@@ -237,7 +213,6 @@ public class VisualizationUtility {
 				drawArc(p1, p2, p3, g, model, resolution);
 			}
 		}
-		return proceed;
 	}
 	
 	
@@ -354,19 +329,18 @@ public class VisualizationUtility {
 		boolean isFirst = true;
 		for (DiscreteGroupElement s : elementList) {
 			BigDecimal[] sBig = RnBig.toBig(null, s.getArray());
-			drawUniversalCoverR(poly, sBig, 0, 0, drawPolygon, isFirst & drawAxes, g, model, resolution, polygonColor, axesColor, axesSegments, polygonSegments);
+			drawUniversalCoverArcs(poly, sBig, drawPolygon, isFirst & drawAxes, g, model, resolution, polygonColor, axesColor, axesSegments, polygonSegments);
 			isFirst = false;
 		}
 	}
 
 
 	public static List<DiscreteGroupElement> createGoupElements(
-		FundamentalPolygon poly,
+		final FundamentalPolygon poly,
 		final int maxDrawElements,
 		final double maxDrawDistance
 	) {
 		DiscreteGroupConstraint constraint = new DiscreteGroupConstraint() {
-			double[] zero = {0,0,0,1};
 			@Override
 			public void update() {
 			}
@@ -379,9 +353,16 @@ public class VisualizationUtility {
 			}
 			@Override
 			public boolean acceptElement(DiscreteGroupElement s) {
-				double[] sZero = s.getMatrix().multiplyVector(zero);
-				double dist = Pn.distanceBetween(zero, sZero, Pn.HYPERBOLIC);
-				return dist <= maxDrawDistance;
+				double mean = 0.0;
+				for (FundamentalEdge e : poly.getEdges()) {
+					BigDecimal[] p = e.startPosition;
+					BigDecimal[] T = RnBig.toBig(null, s.getMatrix());
+					p = RnBig.matrixTimesVector(null, T, p, context);
+					double[] pd = RnBig.toDouble(null, p);
+					mean += Math.sqrt(Pn.norm(pd, Pn.HYPERBOLIC));
+				}
+				mean /= poly.getLength();
+				return mean < maxDrawDistance;
 			}
 		};
 		DiscreteGroup G = poly.getDiscreteGroup();
@@ -393,11 +374,9 @@ public class VisualizationUtility {
 	}
 		
 		
-	private static void drawUniversalCoverR(
+	private static void drawUniversalCoverArcs(
 		FundamentalPolygon poly,
 		BigDecimal[] domain,
-		int depth,
-		int maxDepth,
 		boolean drawPolygon,
 		boolean drawAxes,
 		Graphics2D g,
@@ -416,7 +395,7 @@ public class VisualizationUtility {
 			RnBig.matrixTimesVector(ce.startPosition, domain, ce.startPosition, context);
 			PnBig.normalize(ce.startPosition, ce.startPosition, HYPERBOLIC, context);
 		}
-		if (drawAxes && depth == 0) {
+		if (drawAxes) {
 			if (g != null) {
 				float ls = resolution / 500f;
 				Stroke storedStroke = g.getStroke();
@@ -430,19 +409,11 @@ public class VisualizationUtility {
 				drawPolygonAxes(rP, model, null, resolution, axesSegments);
 			}
 		}
-		boolean proceed = true;
 		if (drawPolygon) {
 			if (g != null) {
 				g.setColor(polygonColor);
 			}
-			proceed = drawPolygon(rP, model, g, resolution, polygonSegments);
-		}
-		if (!proceed || depth + 1 > maxDepth) {
-			return;
-		}
-		for (FundamentalEdge e : poly.getEdges()) {
-			BigDecimal[] newDomain = RnBig.times(null, domain, e.motionBig, context);
-			drawUniversalCoverR(poly, newDomain, depth + 1, maxDepth, drawPolygon, drawAxes, g, model, resolution, polygonColor, axesColor, axesSegments, polygonSegments);
+			drawPolygon(rP, model, g, resolution, polygonSegments);
 		}
 	}
 	
@@ -486,12 +457,6 @@ public class VisualizationUtility {
 		}
 	}
 	
-	
-	private static double getDistToUnitCircle(BigDecimal[] p, MathContext c) {
-		double x = p[0].divide(p[3].add(BigDecimal.ONE, FundamentalPolygonUtility.context), c).doubleValue();
-		double y = p[1].divide(p[3].add(BigDecimal.ONE, FundamentalPolygonUtility.context), c).doubleValue();
-		return 1 - Math.sqrt(x*x + y*y);
-	}
 	
 	/**
 	 * Calculate the circum-center of a triangle in affine coordinates
