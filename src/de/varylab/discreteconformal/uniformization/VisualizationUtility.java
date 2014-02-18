@@ -74,7 +74,7 @@ public class VisualizationUtility {
 		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
 		g.scale(0.5, -0.5);
 		g.translate(res, -res);
-		g.setStroke(new BasicStroke(1 * ls));
+		g.setStroke(new BasicStroke(0.5f * ls));
 		g.setColor(color);
 		for (DiscreteGroupElement element : G) {
 			Matrix T = element.getMatrix();
@@ -82,10 +82,10 @@ public class VisualizationUtility {
 				if (drawBoundary) {
 					if (HalfEdgeUtils.isBoundaryEdge(e)) {
 						g.setColor(boundaryColor);
-						g.setStroke(new BasicStroke(2 * ls));
+						g.setStroke(new BasicStroke(1 * ls));
 					} else {
 						g.setColor(color);
-						g.setStroke(new BasicStroke(1 * ls));
+						g.setStroke(new BasicStroke(0.5f * ls));
 					}
 				}
 				double[] s = e.getStartVertex().T.clone();
@@ -139,14 +139,14 @@ public class VisualizationUtility {
 		g.scale(0.5, -0.5);
 		g.translate(res, -res);
 
-		g.setStroke(new BasicStroke(4 * ls));
+		g.setStroke(new BasicStroke(2 * ls));
 		g.setColor(polygonColor);
 		drawUniversalCover(poly, maxDrawDepth, maxDrawDistance, drawPolygon, drawAxes, g, model, res, polygonColor, axesColor, null, null);
 		
 		if (model == HyperbolicModel.Klein || model == HyperbolicModel.Poincaré) {
 			Ellipse2D boundary = new Ellipse2D.Double(-res + ls, -res + ls, 2*res - 2*ls, 2*res - 2*ls);
 			g.setColor(Color.BLACK);
-			g.setStroke(new BasicStroke(4 * ls));
+			g.setStroke(new BasicStroke(2 * ls));
 			g.draw(boundary);
 		}
 		
@@ -400,7 +400,7 @@ public class VisualizationUtility {
 				float ls = resolution / 500f;
 				Stroke storedStroke = g.getStroke();
 				Color storedColor = g.getColor();
-				g.setStroke(new BasicStroke(3 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
+				g.setStroke(new BasicStroke(2 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
 				g.setColor(axesColor);
 				drawPolygonAxes(rP, model, g, resolution, axesSegments);
 				g.setColor(storedColor);

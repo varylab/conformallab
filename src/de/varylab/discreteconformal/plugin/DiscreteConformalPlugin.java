@@ -249,7 +249,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		createCopiesButton = new JButton("Create Copies"),
 		extractCutPrepatedButton = new JButton("Extract Cut-Prepared");
 	private ColorChooseJButton
-		triangulationColorButton = new ColorChooseJButton(Color.GRAY, true),
+		triangulationColorButton = new ColorChooseJButton(Color.BLACK, true),
 		polygonColorButton = new ColorChooseJButton(Color.RED, true),
 		boundaryColorButton = new ColorChooseJButton(Color.RED, true),
 		axesColorButton = new ColorChooseJButton(Color.BLUE, true);
