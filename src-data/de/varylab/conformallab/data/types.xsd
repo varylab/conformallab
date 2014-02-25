@@ -7,10 +7,11 @@
 	xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
     jxb:version="2.0"	
 >
-
-	<xs:element name="FuchianData" type="types:FuchsianData"/>
-	<xs:element name="HyperEllipticAlgebraicCurve" type="types:HyperEllipticAlgebraicCurve"/>
+	
 	<xs:element name="ConformalDataList" type="types:ConformalDataList"/>
+
+	<xs:element name="UniformizationData" type="types:UniformizationData"/>
+	<xs:element name="HyperEllipticAlgebraicCurve" type="types:HyperEllipticAlgebraicCurve"/>
 	<xs:element name="SchottkyData" type="types:SchottkyData"/>
 	<xs:element name="DiscreteMetric" type="types:DiscreteMetric"/>
 	<xs:element name="DiscreteEmbedding" type="types:DiscreteEmbedding"/>
@@ -22,6 +23,7 @@
 	<xs:complexType name="ConformalDataList">
 		<xs:sequence>
 			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="UniformizationData" type="types:UniformizationData"/>
 				<xs:element name="HyperEllipticAlgebraicCurve" type="types:HyperEllipticAlgebraicCurve"/>
 				<xs:element name="SchottkyData" type="types:SchottkyData"/>
 				<xs:element name="DiscreteMetric" type="types:DiscreteMetric"/>
@@ -87,11 +89,11 @@
 		</xs:complexContent>
 	</xs:complexType>
 	
-	<xs:complexType name="FuchsianData">
+	<xs:complexType name="UniformizationData">
 		<xs:complexContent>
 			<xs:extension base="types:ConformalData">
 				<xs:sequence>
-					<xs:element name="FuchsianGroup" type="types:FuchsianGroup"/>
+					<xs:element name="UniformizingGroup" type="types:UniformizingGroup"/>
 					<xs:element name="FundamentalPolygon" type="types:FundamentalPolygon"/>
 				</xs:sequence>
 			</xs:extension>
@@ -106,7 +108,7 @@
 	
 	<xs:complexType name="FundamentalPolygon">
 		<xs:sequence>
-			<xs:element name="FundamentalEdge" type="types:FundamentalEdge" minOccurs="8" maxOccurs="unbounded"/>
+			<xs:element name="FundamentalEdge" type="types:FundamentalEdge" minOccurs="4" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
 	
@@ -114,35 +116,36 @@
 		<xs:sequence>
 			<xs:element name="StartPosition" type="types:Complex"/>
 		</xs:sequence>
+		<xs:attribute name="index" type="xs:int" use="required"/>
 		<xs:attribute name="identifiedEdge" type="xs:int" use="required"/>
 	</xs:complexType>
 	
-	<xs:complexType name="FuchsianGroup">
+	<xs:complexType name="UniformizingGroup">
 		<xs:sequence>
-			<xs:element name="HyperbolicMotion" minOccurs="4" maxOccurs="unbounded"/>
+			<xs:element name="IsometryPSL3R" type="types:IsometryPSL3R" minOccurs="2" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
 	
-	<xs:complexType name="HyperbolicMotion">
-		<xs:attribute name="m11" type="xs:double" use="required"/>
-		<xs:attribute name="m12" type="xs:double" use="required"/>
-		<xs:attribute name="m13" type="xs:double" use="required"/>
-		<xs:attribute name="m14" type="xs:double" use="required"/>
+	<xs:complexType name="IsometryPSL3R">
+		<xs:attribute name="m11" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m12" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m13" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m14" type="xs:double" use="optional" default="0.0"/>
 		
-		<xs:attribute name="m21" type="xs:double" use="required"/>
-		<xs:attribute name="m22" type="xs:double" use="required"/>
-		<xs:attribute name="m23" type="xs:double" use="required"/>
-		<xs:attribute name="m24" type="xs:double" use="required"/>
+		<xs:attribute name="m21" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m22" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m23" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m24" type="xs:double" use="optional" default="0.0"/>
 				
-		<xs:attribute name="m31" type="xs:double" use="required"/>
-		<xs:attribute name="m32" type="xs:double" use="required"/>
-		<xs:attribute name="m33" type="xs:double" use="required"/>
-		<xs:attribute name="m34" type="xs:double" use="required"/>
+		<xs:attribute name="m31" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m32" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m33" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m34" type="xs:double" use="optional" default="0.0"/>
 			
-		<xs:attribute name="m41" type="xs:double" use="required"/>
-		<xs:attribute name="m42" type="xs:double" use="required"/>
-		<xs:attribute name="m43" type="xs:double" use="required"/>
-		<xs:attribute name="m44" type="xs:double" use="required"/>
+		<xs:attribute name="m41" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m42" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m43" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m44" type="xs:double" use="optional" default="0.0"/>
 	</xs:complexType>
 	
 	<xs:complexType name="SchottkyGenerator">

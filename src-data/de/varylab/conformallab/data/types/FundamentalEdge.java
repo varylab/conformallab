@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.02.17 um 03:17:36 PM CET 
+// Generiert: 2014.02.25 um 03:26:38 PM CET 
 //
 
 
@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;sequence>
  *         &lt;element name="StartPosition" type="{http://www.varylab.com/conformallab/types}Complex"/>
  *       &lt;/sequence>
+ *       &lt;attribute name="index" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
  *       &lt;attribute name="identifiedEdge" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -43,6 +44,8 @@ public class FundamentalEdge {
 
     @XmlElement(name = "StartPosition", required = true)
     protected Complex startPosition;
+    @XmlAttribute(name = "index", required = true)
+    protected int index;
     @XmlAttribute(name = "identifiedEdge", required = true)
     protected int identifiedEdge;
 
@@ -68,6 +71,22 @@ public class FundamentalEdge {
      */
     public void setStartPosition(Complex value) {
         this.startPosition = value;
+    }
+
+    /**
+     * Ruft den Wert der index-Eigenschaft ab.
+     * 
+     */
+    public int getIndex() {
+        return index;
+    }
+
+    /**
+     * Legt den Wert der index-Eigenschaft fest.
+     * 
+     */
+    public void setIndex(int value) {
+        this.index = value;
     }
 
     /**

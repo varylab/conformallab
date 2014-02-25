@@ -61,7 +61,7 @@ public class SurfaceCurveUtilityTest {
 		CoHDS lawson = loadSurface();
 		FundamentalPolygon minimalPolygon = calculateFundamentalPoygon(lawson);
 		CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, lawson, a, 0, 0.0, true, true, Pn.HYPERBOLIC);
-		Assert.assertEquals("Surface Curve Edge Number", 612, curves.numEdges() / 2);
+		Assert.assertEquals("Surface Curve Edge Number", 607, curves.numEdges() / 2);
 	}
 	
 	

@@ -74,7 +74,7 @@ public class EuclideanCircularHolesConvergenceTest  {
 		Matrix H = new CompRowMatrix(n,n, functional.getNonZeroPattern(hds));
 		NewtonOptimizer optimizer = new NewtonOptimizer(H);
 		optimizer.setStepController(new ArmijoStepController());
-		optimizer.setSolver(Solver.GMRES);
+		optimizer.setSolver(Solver.BiCGstab);
 		optimizer.setError(1E-13);
 		optimizer.setMaxIterations(5);
 		try {

@@ -707,20 +707,24 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			try {
 				System.out.println("Constructing fundamental cut polygon...");
 				cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo, signature);
+				conformalDataPlugin.addUniformizationData("Direct Uniformization", cuttedPolygon);
 				System.out.println(cuttedPolygon);
 				FundamentalVertex root = cuttedPolygon.getMaxValenceVertex();
 				System.out.println("Constructing minimal polygon...");
 				minimalPolygon = FundamentalPolygonUtility.minimize(cuttedPolygon, root);
+				conformalDataPlugin.addUniformizationData("Minimal Uniformization", minimalPolygon);
 				System.out.println(minimalPolygon);
 				minimalPolygon.checkRelation();
 				if (genus > 1) {
 					System.out.println("Constructing opposites sides polygon...");
 					oppositePolygon = CanonicalFormUtility.canonicalizeOpposite(minimalPolygon);
 					System.out.println(oppositePolygon);
+					conformalDataPlugin.addUniformizationData("Opposite Edges Uniformization", oppositePolygon);
 					oppositePolygon.checkRelation();	
 					System.out.println("Constructing fast canonical polygon...");
 					canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon, useDistanceToCanonicalize.isSelected());
 					System.out.println(canonicalPolygon);
+					conformalDataPlugin.addUniformizationData("Canonical Uniformization", canonicalPolygon);
 					canonicalPolygon.checkRelation();
 				} else {
 					oppositePolygon = minimalPolygon;

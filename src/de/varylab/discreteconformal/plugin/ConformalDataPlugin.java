@@ -41,7 +41,7 @@ import de.jtem.halfedgetools.plugin.image.ImageHook;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
-import de.varylab.conformallab.data.DataFactory;
+import de.varylab.conformallab.data.DataIO;
 import de.varylab.conformallab.data.DataUtility;
 import de.varylab.conformallab.data.types.ConformalData;
 import de.varylab.conformallab.data.types.ConformalDataList;
@@ -51,6 +51,7 @@ import de.varylab.conformallab.data.types.DiscreteMetric;
 import de.varylab.conformallab.data.types.EmbeddedVertex;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.conformallab.data.types.SchottkyData;
+import de.varylab.conformallab.data.types.UniformizationData;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -60,6 +61,7 @@ import de.varylab.discreteconformal.heds.adapter.CoDirectPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoDirectTextureAdapter;
 import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
+import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionListener {
@@ -161,7 +163,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 				for (ConformalData d : data) {
 					list.getData().add(d);
 				}
-				DataFactory.writeConformalDataList(list, fout);
+				DataIO.writeConformalDataList(list, fout);
 				fout.close();
 			} catch (Exception e1) {
 				log.log(Level.SEVERE, "Could not export conformal data", e1);
@@ -176,7 +178,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			File file = fileChooser.getSelectedFile();
 			try {
 				FileInputStream fin = new FileInputStream(file);
-				ConformalDataList cdl = DataFactory.readConformalDataList(fin);
+				ConformalDataList cdl = DataIO.readConformalDataList(fin);
 				clearData();
 				for (ConformalData data : cdl.getData()) {
 					addData(data);
@@ -420,7 +422,10 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		DiscreteEmbedding de = DataUtility.toDiscreteEmbedding(name, surface, a, type, cutInfo);
 		addData(de);
 	}
-	
+	public void addUniformizationData(String name, FundamentalPolygon P) {
+		UniformizationData ud = DataUtility.toUniformizationData(name, P);
+		addData(ud);
+	}
 	
 	public void addData(ConformalData data) {
 		this.data.add(data);

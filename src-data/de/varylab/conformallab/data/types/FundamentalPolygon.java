@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.02.17 um 03:17:36 PM CET 
+// Generiert: 2014.02.25 um 03:26:38 PM CET 
 //
 
 
@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="FundamentalEdge" type="{http://www.varylab.com/conformallab/types}FundamentalEdge" maxOccurs="unbounded" minOccurs="8"/>
+ *         &lt;element name="FundamentalEdge" type="{http://www.varylab.com/conformallab/types}FundamentalEdge" maxOccurs="unbounded" minOccurs="4"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>

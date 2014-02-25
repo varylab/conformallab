@@ -15,6 +15,9 @@ import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.mfc.field.Complex;
+import de.varylab.conformallab.data.DataIO;
+import de.varylab.conformallab.data.DataUtility;
+import de.varylab.conformallab.data.types.SchottkyData;
 import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -30,7 +33,8 @@ public class SchottkyUtilityTest {
 	@Test
 	public void testGenerateSurface() throws Exception {
 		InputStream dataIn = getClass().getResourceAsStream("genus2.xml");
-		List<SchottkyGenerator> data = SchottkyIO.readSchottkyData(dataIn);
+		SchottkyData sd = DataIO.readConformalData(SchottkyData.class, dataIn);
+		List<SchottkyGenerator> data = DataUtility.toSchottkyGeneratorsList(sd);
 		CoHDS hds = new CoHDS();
 		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
 		List<Set<CoEdge>> cycles = new LinkedList<Set<CoEdge>>();
@@ -44,7 +48,8 @@ public class SchottkyUtilityTest {
 	@Test
 	public void testUnwrapSchottkySurface() throws Exception {
 		InputStream dataIn = getClass().getResourceAsStream("genus2.xml");
-		List<SchottkyGenerator> data = SchottkyIO.readSchottkyData(dataIn);
+		SchottkyData sd = DataIO.readConformalData(SchottkyData.class, dataIn);
+		List<SchottkyGenerator> data = DataUtility.toSchottkyGeneratorsList(sd);
 		CoHDS hds = new CoHDS();
 		Map<CoEdge, Double> lMap = new HashMap<CoEdge, Double>();
 		List<Set<CoEdge>> cycles = new LinkedList<Set<CoEdge>>();

@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.02.17 um 03:17:36 PM CET 
+// Generiert: 2014.02.25 um 03:26:38 PM CET 
 //
 
 
@@ -33,8 +33,8 @@ public class ObjectFactory {
 
     private final static QName _DiscreteMetric_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteMetric");
     private final static QName _SchottkyData_QNAME = new QName("http://www.varylab.com/conformallab/types", "SchottkyData");
-    private final static QName _FuchianData_QNAME = new QName("http://www.varylab.com/conformallab/types", "FuchianData");
     private final static QName _DiscreteMap_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteMap");
+    private final static QName _UniformizationData_QNAME = new QName("http://www.varylab.com/conformallab/types", "UniformizationData");
     private final static QName _ConformalDataList_QNAME = new QName("http://www.varylab.com/conformallab/types", "ConformalDataList");
     private final static QName _DiscreteEmbedding_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteEmbedding");
     private final static QName _HyperEllipticAlgebraicCurve_QNAME = new QName("http://www.varylab.com/conformallab/types", "HyperEllipticAlgebraicCurve");
@@ -63,19 +63,19 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link UniformizationData }
+     * 
+     */
+    public UniformizationData createUniformizationData() {
+        return new UniformizationData();
+    }
+
+    /**
      * Create an instance of {@link DiscreteMap }
      * 
      */
     public DiscreteMap createDiscreteMap() {
         return new DiscreteMap();
-    }
-
-    /**
-     * Create an instance of {@link FuchsianData }
-     * 
-     */
-    public FuchsianData createFuchsianData() {
-        return new FuchsianData();
     }
 
     /**
@@ -111,11 +111,11 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link HyperbolicMotion }
+     * Create an instance of {@link IsometryPSL3R }
      * 
      */
-    public HyperbolicMotion createHyperbolicMotion() {
-        return new HyperbolicMotion();
+    public IsometryPSL3R createIsometryPSL3R() {
+        return new IsometryPSL3R();
     }
 
     /**
@@ -175,14 +175,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link FuchsianGroup }
-     * 
-     */
-    public FuchsianGroup createFuchsianGroup() {
-        return new FuchsianGroup();
-    }
-
-    /**
      * Create an instance of {@link ConformalData }
      * 
      */
@@ -215,6 +207,14 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link UniformizingGroup }
+     * 
+     */
+    public UniformizingGroup createUniformizingGroup() {
+        return new UniformizingGroup();
+    }
+
+    /**
      * Create an instance of {@link JAXBElement }{@code <}{@link DiscreteMetric }{@code >}}
      * 
      */
@@ -233,21 +233,21 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link FuchsianData }{@code >}}
-     * 
-     */
-    @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "FuchianData")
-    public JAXBElement<FuchsianData> createFuchianData(FuchsianData value) {
-        return new JAXBElement<FuchsianData>(_FuchianData_QNAME, FuchsianData.class, null, value);
-    }
-
-    /**
      * Create an instance of {@link JAXBElement }{@code <}{@link DiscreteMap }{@code >}}
      * 
      */
     @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "DiscreteMap")
     public JAXBElement<DiscreteMap> createDiscreteMap(DiscreteMap value) {
         return new JAXBElement<DiscreteMap>(_DiscreteMap_QNAME, DiscreteMap.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link UniformizationData }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "UniformizationData")
+    public JAXBElement<UniformizationData> createUniformizationData(UniformizationData value) {
+        return new JAXBElement<UniformizationData>(_UniformizationData_QNAME, UniformizationData.class, null, value);
     }
 
     /**

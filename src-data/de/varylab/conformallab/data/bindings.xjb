@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE jxb:bindings>
 <jxb:bindings 
 	xmlns:jxb="http://java.sun.com/xml/ns/jaxb" 
 	version="2.0" 
@@ -12,7 +13,7 @@
     		<jxb:property name="data"/>
     	</jxb:bindings>       
     
-    	<jxb:bindings node="//xs:complexType[@name='FuchsianGroup']//xs:element[@name='HyperbolicMotion']">
+    	<jxb:bindings node="//xs:complexType[@name='UniformizingGroup']//xs:element[@name='IsometryPSL3R']">
     		<jxb:property name="generators"/>
     	</jxb:bindings>    
     	<jxb:bindings node="//xs:complexType[@name='FundamentalPolygon']//xs:element[@name='FundamentalEdge']">

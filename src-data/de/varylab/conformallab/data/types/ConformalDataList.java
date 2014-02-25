@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.02.17 um 03:17:36 PM CET 
+// Generiert: 2014.02.25 um 03:26:38 PM CET 
 //
 
 
@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
  *         &lt;choice maxOccurs="unbounded" minOccurs="0">
+ *           &lt;element name="UniformizationData" type="{http://www.varylab.com/conformallab/types}UniformizationData"/>
  *           &lt;element name="HyperEllipticAlgebraicCurve" type="{http://www.varylab.com/conformallab/types}HyperEllipticAlgebraicCurve"/>
  *           &lt;element name="SchottkyData" type="{http://www.varylab.com/conformallab/types}SchottkyData"/>
  *           &lt;element name="DiscreteMetric" type="{http://www.varylab.com/conformallab/types}DiscreteMetric"/>
@@ -49,6 +50,7 @@ import javax.xml.bind.annotation.XmlType;
 public class ConformalDataList {
 
     @XmlElements({
+        @XmlElement(name = "UniformizationData", type = UniformizationData.class),
         @XmlElement(name = "HyperEllipticAlgebraicCurve", type = HyperEllipticAlgebraicCurve.class),
         @XmlElement(name = "SchottkyData", type = SchottkyData.class),
         @XmlElement(name = "DiscreteMetric", type = DiscreteMetric.class),
@@ -75,6 +77,7 @@ public class ConformalDataList {
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
+     * {@link UniformizationData }
      * {@link HyperEllipticAlgebraicCurve }
      * {@link SchottkyData }
      * {@link DiscreteMetric }

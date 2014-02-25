@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.02.17 um 03:17:36 PM CET 
+// Generiert: 2014.02.25 um 03:26:38 PM CET 
 //
 
 
@@ -17,16 +17,16 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse für FuchsianGroup complex type.
+ * <p>Java-Klasse für UniformizingGroup complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
  * <pre>
- * &lt;complexType name="FuchsianGroup">
+ * &lt;complexType name="UniformizingGroup">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="HyperbolicMotion" type="{http://www.w3.org/2001/XMLSchema}anyType" maxOccurs="unbounded" minOccurs="4"/>
+ *         &lt;element name="IsometryPSL3R" type="{http://www.varylab.com/conformallab/types}IsometryPSL3R" maxOccurs="unbounded" minOccurs="2"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -36,13 +36,13 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "FuchsianGroup", propOrder = {
+@XmlType(name = "UniformizingGroup", propOrder = {
     "generators"
 })
-public class FuchsianGroup {
+public class UniformizingGroup {
 
-    @XmlElement(name = "HyperbolicMotion", required = true)
-    protected List<Object> generators;
+    @XmlElement(name = "IsometryPSL3R", required = true)
+    protected List<IsometryPSL3R> generators;
 
     /**
      * Gets the value of the generators property.
@@ -62,13 +62,13 @@ public class FuchsianGroup {
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link Object }
+     * {@link IsometryPSL3R }
      * 
      * 
      */
-    public List<Object> getGenerators() {
+    public List<IsometryPSL3R> getGenerators() {
         if (generators == null) {
-            generators = new ArrayList<Object>();
+            generators = new ArrayList<IsometryPSL3R>();
         }
         return this.generators;
     }

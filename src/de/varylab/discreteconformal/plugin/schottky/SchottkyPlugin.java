@@ -52,6 +52,7 @@ import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.mfc.field.Complex;
+import de.varylab.conformallab.data.DataIO;
 import de.varylab.conformallab.data.DataUtility;
 import de.varylab.conformallab.data.types.SchottkyData;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -336,7 +337,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			List<SchottkyGenerator> data = schottkyModeller.getGenerators();
 			try {
 				OutputStream out = new FileOutputStream(file);
-				SchottkyIO.writeSchottkyData(data, out);
+				SchottkyData schottkyData = DataUtility.toSchottkyData("Schottky Data", data);
+				DataIO.writeConformalData(schottkyData, out);
 			} catch (Exception e) {
 				JOptionPane.showMessageDialog(parent, e.toString(), "Error", ERROR_MESSAGE);
 				e.printStackTrace();
@@ -365,8 +367,9 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			File file = fileChooser.getSelectedFile();
 			try {
 				InputStream in = new FileInputStream(file);
-				List<SchottkyGenerator> data = SchottkyIO.readSchottkyData(in);
-				schottkyModeller.setGenerators(data);
+				SchottkyData data = DataIO.readConformalData(SchottkyData.class, in);
+				List<SchottkyGenerator> generators = DataUtility.toSchottkyGeneratorsList(data);
+				schottkyModeller.setGenerators(generators);
 			} catch (Exception e) {
 				JOptionPane.showMessageDialog(parent, e.toString(), "Error", ERROR_MESSAGE);
 				e.printStackTrace();
@@ -377,7 +380,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 	
 	
 	public void setSchottkyData(SchottkyData data) {
-		List<SchottkyGenerator> gList = DataUtility.toGeneratorsList(data);
+		List<SchottkyGenerator> gList = DataUtility.toSchottkyGeneratorsList(data);
 		schottkyModeller.setGenerators(gList);
 	}
 	

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
+<!DOCTYPE project>
 <project name="VaryLab Dependencies Update" default="default">
     <description>
             This is the VaryLab dependency update ant build file.

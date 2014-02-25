@@ -1,6 +1,7 @@
 package de.varylab.conformallab.data;
 
 import java.lang.annotation.Annotation;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -26,15 +27,15 @@ import de.varylab.conformallab.data.types.DiscreteMap;
 import de.varylab.conformallab.data.types.DiscreteMetric;
 import de.varylab.conformallab.data.types.EmbeddedTriangle;
 import de.varylab.conformallab.data.types.EmbeddedVertex;
-import de.varylab.conformallab.data.types.FuchsianData;
-import de.varylab.conformallab.data.types.FuchsianGroup;
 import de.varylab.conformallab.data.types.FundamentalEdge;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
-import de.varylab.conformallab.data.types.HyperbolicMotion;
+import de.varylab.conformallab.data.types.IsometryPSL3R;
 import de.varylab.conformallab.data.types.MetricEdge;
 import de.varylab.conformallab.data.types.MetricTriangle;
 import de.varylab.conformallab.data.types.ObjectFactory;
 import de.varylab.conformallab.data.types.SchottkyData;
+import de.varylab.conformallab.data.types.UniformizationData;
+import de.varylab.conformallab.data.types.UniformizingGroup;
 import de.varylab.conformallab.data.types.VertexIdentification;
 import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -42,48 +43,59 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
+import de.varylab.discreteconformal.math.PnBig;
 import de.varylab.discreteconformal.plugin.hyperelliptic.Curve;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyGenerator;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
+import de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class DataUtility {
 
-	public static FuchsianData toFuchsianData(FundamentalPolygon p) {
-		FuchsianGroup fg = new FuchsianGroup();
+	public static UniformizationData toUniformizationData(String name, FundamentalPolygon p) {
+		ObjectFactory of = new ObjectFactory();
+		UniformizingGroup fg = of.createUniformizingGroup();
 		DiscreteGroup G = p.getDiscreteGroup();
 		for (DiscreteGroupElement s : G.getGenerators()) {
-			HyperbolicMotion m = new HyperbolicMotion();
+			IsometryPSL3R m = new IsometryPSL3R();
 			Matrix M = s.getMatrix();
-			m.setM11(M.getEntry(1, 1));
-			m.setM12(M.getEntry(1, 2));
-			m.setM13(M.getEntry(1, 3));
-			m.setM14(M.getEntry(1, 4));
+			m.setM11(M.getEntry(0, 0));
+			m.setM12(M.getEntry(0, 1));
+			m.setM13(M.getEntry(0, 2));
+			m.setM14(M.getEntry(0, 3));
 			
-			m.setM21(M.getEntry(2, 1));
-			m.setM22(M.getEntry(2, 2));
-			m.setM23(M.getEntry(2, 3));
-			m.setM24(M.getEntry(2, 4));
+			m.setM21(M.getEntry(1, 0));
+			m.setM22(M.getEntry(1, 1));
+			m.setM23(M.getEntry(1, 2));
+			m.setM24(M.getEntry(1, 3));
 			
-			m.setM31(M.getEntry(3, 1));
-			m.setM32(M.getEntry(3, 2));
-			m.setM33(M.getEntry(3, 3));
-			m.setM34(M.getEntry(3, 4));
+			m.setM31(M.getEntry(2, 0));
+			m.setM32(M.getEntry(2, 1));
+			m.setM33(M.getEntry(2, 2));
+			m.setM34(M.getEntry(2, 3));
 			
-			m.setM41(M.getEntry(4, 1));
-			m.setM42(M.getEntry(4, 2));
-			m.setM43(M.getEntry(4, 3));
-			m.setM44(M.getEntry(4, 4));
+			m.setM41(M.getEntry(3, 0));
+			m.setM42(M.getEntry(3, 1));
+			m.setM43(M.getEntry(3, 2));
+			m.setM44(M.getEntry(3, 3));
 			fg.getGenerators().add(m);
 		}
-		
+		de.varylab.conformallab.data.types.FundamentalPolygon P = of.createFundamentalPolygon();
 		for (de.varylab.discreteconformal.uniformization.FundamentalEdge e : p.getEdges()) {
 			FundamentalEdge fe = new FundamentalEdge();
+			fe.setIndex(e.index);
 			fe.setIdentifiedEdge(e.partner.index);
-			
+			Complex sp = of.createComplex();
+			BigDecimal[] spBig = PnBig.dehomogenize(null, e.startPosition, FundamentalPolygonUtility.context); 
+			sp.setRe(spBig[0].doubleValue());
+			sp.setIm(spBig[1].doubleValue());
+			fe.setStartPosition(sp);
+			P.getEdges().add(fe);
 		}
-		FuchsianData result = new FuchsianData();
-		result.setFuchsianGroup(fg);
+		UniformizationData result = of.createUniformizationData();
+		result.setName(name);
+		result.setUniformizingGroup(fg);
+		result.setFundamentalPolygon(P);
 		return result;
 	}
 	
@@ -415,7 +427,7 @@ public class DataUtility {
 		return schottkyData;
 	}
 
-	public static List<SchottkyGenerator> toGeneratorsList(SchottkyData data) {
+	public static List<SchottkyGenerator> toSchottkyGeneratorsList(SchottkyData data) {
 		List<SchottkyGenerator> result = new LinkedList<SchottkyGenerator>();
 		for (de.varylab.conformallab.data.types.SchottkyGenerator s : data.getGenerators()) {
 			SchottkyGenerator g = new SchottkyGenerator();
@@ -432,5 +444,5 @@ public class DataUtility {
 		}
 		return result;
 	}
-
+	
 }

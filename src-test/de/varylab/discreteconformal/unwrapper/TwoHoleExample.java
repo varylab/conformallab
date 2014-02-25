@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.jreality.math.Rn;
@@ -29,7 +30,7 @@ public class TwoHoleExample {
 	static double  rt = Math.PI/2,
 			triangleArea = .005;
 	static boolean letter = true, doholes = true, originalAngles = false;
-	@Test
+	@Test@Ignore
 	public void testLetterB() {
 
 		SceneGraphComponent triangulation = null;
