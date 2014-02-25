@@ -106,13 +106,14 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		dataScroller.setPreferredSize(new Dimension(10, 150));
 		dataTable.setRowHeight(24);
 		dataTable.setDefaultRenderer(ConformalData.class, new DataCellRenderer());
-		dataTable.getColumnModel().getColumn(0).setCellEditor(new DataNameEditor());
-		dataTable.getColumnModel().getColumn(1).setMaxWidth(30);
-		dataTable.getColumnModel().getColumn(1).setCellRenderer(new LoadButtonEditor());
-		dataTable.getColumnModel().getColumn(1).setCellEditor(new LoadButtonEditor());
+		dataTable.getColumnModel().getColumn(0).setMaxWidth(30);
+		dataTable.getColumnModel().getColumn(1).setCellEditor(new DataNameEditor());
 		dataTable.getColumnModel().getColumn(2).setMaxWidth(30);
-		dataTable.getColumnModel().getColumn(2).setCellRenderer(new DeleteButtonEditor());
-		dataTable.getColumnModel().getColumn(2).setCellEditor(new DeleteButtonEditor());
+		dataTable.getColumnModel().getColumn(2).setCellRenderer(new LoadButtonEditor());
+		dataTable.getColumnModel().getColumn(2).setCellEditor(new LoadButtonEditor());
+		dataTable.getColumnModel().getColumn(3).setMaxWidth(30);
+		dataTable.getColumnModel().getColumn(3).setCellRenderer(new DeleteButtonEditor());
+		dataTable.getColumnModel().getColumn(3).setCellEditor(new DeleteButtonEditor());
 		dataTable.getTableHeader().setPreferredSize(new Dimension(0, 0));
 		c.weighty = 0.0;
 		c.gridwidth = GridBagConstraints.RELATIVE;
@@ -203,19 +204,34 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		}
 		@Override
 		public int getColumnCount() {
-			return 3;
+			return 4;
 		}
 		@Override
 		public Class<?> getColumnClass(int columnIndex) {
-			return ConformalData.class;
+			switch (columnIndex) {
+			case 0:
+				return Integer.class;
+			default:
+				return ConformalData.class;
+			}
 		}
 		@Override
 		public Object getValueAt(int row, int column) {
-			return data.get(row);
+			switch (column) {
+			case 0:
+				return row;
+			default:
+				return data.get(row);
+			}
 		}
 		@Override
 		public boolean isCellEditable(int rol, int column) {
-			return true;
+			switch (column) {
+			case 0:
+				return false;
+			default:
+				return true;
+			}
 		}
 		@Override
 		public void setValueAt(Object arg0, int arg1, int arg2) {

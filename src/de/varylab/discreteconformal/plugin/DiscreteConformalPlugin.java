@@ -933,6 +933,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			createUniformization(surfaceUnwrapped, genus, cutInfo);
 			updateGeometry();
 			updateDomainImage();
+			conformalDataPlugin.addDiscreteMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
 		}
 		if (saveTextureButton == s) {
 			Window w = SwingUtilities.getWindowAncestor(this.shrinkPanel);
