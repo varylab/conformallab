@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.custommonkey.xmlunit.XMLAssert;
+import org.junit.Assert;
 import org.junit.Test;
 
 import de.jreality.math.Matrix;
@@ -82,21 +83,28 @@ public class DataUtilityTest {
 			"        <IsometryPSL3R m11='1.0' m12='0.0' m13='0.0' m14='0.0' m21='0.0' m22='1.0' m23='0.0' m24='0.0' m31='0.0' m32='0.0' m33='1.0' m34='0.0' m41='0.0' m42='0.0' m43='0.0' m44='1.0'/>\n" + 
 			"    </UniformizingGroup>\n" + 
 			"    <FundamentalPolygon>\n" + 
-			"        <FundamentalEdge identifiedEdge='2'>\n" + 
+			"        <FundamentalVertex index='0'/>\n" + 
+			"        <FundamentalEdge nextEdge='1' previousEdge='3' identifiedEdge='2' index='0' startVertex='0'>\n" + 
 			"            <StartPosition re='1.0' im='0.0'/>\n" + 
 			"        </FundamentalEdge>\n" + 
-			"        <FundamentalEdge identifiedEdge='3'>\n" + 
+			"        <FundamentalEdge nextEdge='2' previousEdge='0' identifiedEdge='3' index='1' startVertex='0'>\n" + 
 			"            <StartPosition re='0.0' im='2.0'/>\n" + 
 			"        </FundamentalEdge>\n" + 
-			"        <FundamentalEdge identifiedEdge='0'>\n" + 
+			"        <FundamentalEdge nextEdge='3' previousEdge='1' identifiedEdge='0' index='2' startVertex='0'>\n" + 
 			"            <StartPosition re='0.0' im='0.0'/>\n" + 
 			"        </FundamentalEdge>\n" + 
-			"        <FundamentalEdge identifiedEdge='1'>\n" + 
+			"        <FundamentalEdge nextEdge='0' previousEdge='2' identifiedEdge='1' index='3' startVertex='0'>\n" + 
 			"            <StartPosition re='0.25' im='0.0'/>\n" + 
 			"        </FundamentalEdge>\n" + 
 			"    </FundamentalPolygon>\n" + 
 			"</UniformizationData>" , xml
 		);
+	}
+	
+	
+	@Test
+	public void testToFundamentalPolygon() throws Exception {
+		Assert.fail("Implement me!");
 	}
 
 }

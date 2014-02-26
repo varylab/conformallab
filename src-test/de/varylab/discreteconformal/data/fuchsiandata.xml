@@ -27,28 +27,29 @@
 		/>
 	</UniformizingGroup>
 	<FundamentalPolygon>
-		<FundamentalEdge identifiedEdge="2">
+		<FundamentalVertex index="0"/>
+		<FundamentalEdge identifiedEdge="2" index="0" startVertex="0" nextEdge="1" previousEdge="7">
 			<StartPosition re="0.5" im="1.0"/>
 		</FundamentalEdge>
-		<FundamentalEdge identifiedEdge="3">
+		<FundamentalEdge identifiedEdge="3" index="1" startVertex="0" nextEdge="2" previousEdge="0">
 			<StartPosition re="0.5" im="2.0"/>
 		</FundamentalEdge>
-		<FundamentalEdge identifiedEdge="0">
+		<FundamentalEdge identifiedEdge="0" index="2" startVertex="0" nextEdge="3" previousEdge="1">
 			<StartPosition re="0.5" im="3.0"/>
 		</FundamentalEdge>
-		<FundamentalEdge identifiedEdge="1">
+		<FundamentalEdge identifiedEdge="1" index="3" startVertex="0" nextEdge="4" previousEdge="2">
 			<StartPosition re="0.5" im="4.0"/>
 		</FundamentalEdge>
-		<FundamentalEdge identifiedEdge="6">
+		<FundamentalEdge identifiedEdge="6" index="4" startVertex="0" nextEdge="5" previousEdge="3">
 			<StartPosition re="0.5" im="5.0"/>
 		</FundamentalEdge>
-		<FundamentalEdge identifiedEdge="7">
+		<FundamentalEdge identifiedEdge="7" index="5" startVertex="0" nextEdge="6" previousEdge="4">
 			<StartPosition re="0.5" im="6.0"/>
 		</FundamentalEdge>
-		<FundamentalEdge identifiedEdge="4">
+		<FundamentalEdge identifiedEdge="4" index="6" startVertex="0" nextEdge="7" previousEdge="5">
 			<StartPosition re="0.5" im="7.0"/>
 		</FundamentalEdge>
-		<FundamentalEdge identifiedEdge="5">
+		<FundamentalEdge identifiedEdge="5" index="7" startVertex="0" nextEdge="0" previousEdge="6">
 			<StartPosition re="0.5" im="8.0"/>
 		</FundamentalEdge>
 	</FundamentalPolygon>

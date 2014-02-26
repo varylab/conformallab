@@ -11,20 +11,19 @@ package de.varylab.conformallab.data.types;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse für ConformalData complex type.
+ * <p>Java-Klasse für FundamentalVertex complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
  * <pre>
- * &lt;complexType name="ConformalData">
+ * &lt;complexType name="FundamentalVertex">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;attribute name="name" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="index" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -33,42 +32,26 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "ConformalData")
-@XmlSeeAlso({
-    SchottkyData.class,
-    DiscreteMetric.class,
-    UniformizationData.class,
-    DiscreteMap.class,
-    DiscreteEmbedding.class,
-    HyperEllipticAlgebraicCurve.class
-})
-public class ConformalData {
+@XmlType(name = "FundamentalVertex")
+public class FundamentalVertex {
 
-    @XmlAttribute(name = "name")
-    protected String name;
+    @XmlAttribute(name = "index", required = true)
+    protected int index;
 
     /**
-     * Ruft den Wert der name-Eigenschaft ab.
+     * Ruft den Wert der index-Eigenschaft ab.
      * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
      */
-    public String getName() {
-        return name;
+    public int getIndex() {
+        return index;
     }
 
     /**
-     * Legt den Wert der name-Eigenschaft fest.
+     * Legt den Wert der index-Eigenschaft fest.
      * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
      */
-    public void setName(String value) {
-        this.name = value;
+    public void setIndex(int value) {
+        this.index = value;
     }
 
 }

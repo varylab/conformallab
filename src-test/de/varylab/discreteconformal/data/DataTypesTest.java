@@ -15,6 +15,7 @@ import de.varylab.conformallab.data.types.EmbeddedTriangle;
 import de.varylab.conformallab.data.types.EmbeddedVertex;
 import de.varylab.conformallab.data.types.FundamentalEdge;
 import de.varylab.conformallab.data.types.FundamentalPolygon;
+import de.varylab.conformallab.data.types.FundamentalVertex;
 import de.varylab.conformallab.data.types.IsometryPSL3R;
 import de.varylab.conformallab.data.types.MetricEdge;
 import de.varylab.conformallab.data.types.MetricTriangle;
@@ -62,6 +63,9 @@ public class DataTypesTest {
 		Assert.assertEquals(6.0, e5.getStartPosition().getIm(), 0.0);
 		Assert.assertEquals(7.0, e6.getStartPosition().getIm(), 0.0);
 		Assert.assertEquals(8.0, e7.getStartPosition().getIm(), 0.0);
+		Assert.assertEquals(0, e0.getStartVertex());
+		FundamentalVertex v = data.getFundamentalPolygon().getVertices().get(0);
+		Assert.assertEquals(0, v.getIndex());
 	}
 	
 	@Test
@@ -84,13 +88,20 @@ public class DataTypesTest {
 		FundamentalPolygon P = of.createFundamentalPolygon();
 		for (int i = 0; i < 8; i++) {
 			FundamentalEdge e = of.createFundamentalEdge();
+			e.setIndex(i);
 			e.setIdentifiedEdge(0);
+			e.setNextEdge((i + 1) % 8);
+			e.setPreviousEdge((i + 7) % 8);
 			Complex s = new Complex();
 			s.setRe(1.0);
 			s.setIm(2.0);
 			e.setStartPosition(s);
+			e.setStartVertex(0);
 			P.getEdges().add(e);
 		}
+		FundamentalVertex v = of.createFundamentalVertex();
+		v.setIndex(0);
+		P.getVertices().add(v);
 		fd.setUniformizingGroup(G);
 		fd.setFundamentalPolygon(P);
 		fd.setName("Test Name");
@@ -107,28 +118,29 @@ public class DataTypesTest {
 			"        <IsometryPSL3R/>\n" + 
 			"    </UniformizingGroup>\n" + 
 			"    <FundamentalPolygon>\n" + 
-			"        <FundamentalEdge identifiedEdge='0'>\n" + 
+			"        <FundamentalVertex index='0'/>\n" + 
+			"        <FundamentalEdge identifiedEdge='0' startVertex='0' index='0' nextEdge='1' previousEdge='7'>\n" + 
 			"            <StartPosition re='1.0' im='2.0'/>\n" + 
 			"        </FundamentalEdge>\n" + 
-			"        <FundamentalEdge identifiedEdge='0'>\n" + 
+			"        <FundamentalEdge identifiedEdge='0' startVertex='0' index='1' nextEdge='2' previousEdge='0'>\n" + 
 			"            <StartPosition re='1.0' im='2.0'/>\n" + 
 			"        </FundamentalEdge>\n" + 
-			"        <FundamentalEdge identifiedEdge='0'>\n" + 
+			"        <FundamentalEdge identifiedEdge='0' startVertex='0' index='2' nextEdge='3' previousEdge='1'>\n" + 
 			"            <StartPosition re='1.0' im='2.0'/>\n" + 
 			"        </FundamentalEdge>\n" + 
-			"        <FundamentalEdge identifiedEdge='0'>\n" + 
+			"        <FundamentalEdge identifiedEdge='0' startVertex='0' index='3' nextEdge='4' previousEdge='2'>\n" + 
 			"            <StartPosition re='1.0' im='2.0'/>\n" + 
 			"        </FundamentalEdge>\n" + 
-			"        <FundamentalEdge identifiedEdge='0'>\n" + 
+			"        <FundamentalEdge identifiedEdge='0' startVertex='0' index='4' nextEdge='5' previousEdge='3'>\n" + 
 			"            <StartPosition re='1.0' im='2.0'/>\n" + 
 			"        </FundamentalEdge>\n" + 
-			"        <FundamentalEdge identifiedEdge='0'>\n" + 
+			"        <FundamentalEdge identifiedEdge='0' startVertex='0' index='5' nextEdge='6' previousEdge='4'>\n" + 
 			"            <StartPosition re='1.0' im='2.0'/>\n" + 
 			"        </FundamentalEdge>\n" + 
-			"        <FundamentalEdge identifiedEdge='0'>\n" + 
+			"        <FundamentalEdge identifiedEdge='0' startVertex='0' index='6' nextEdge='7' previousEdge='5'>\n" + 
 			"            <StartPosition re='1.0' im='2.0'/>\n" + 
 			"        </FundamentalEdge>\n" + 
-			"        <FundamentalEdge identifiedEdge='0'>\n" + 
+			"        <FundamentalEdge identifiedEdge='0' startVertex='0' index='7' nextEdge='0' previousEdge='6'>\n" + 
 			"            <StartPosition re='1.0' im='2.0'/>\n" + 
 			"        </FundamentalEdge>\n" + 
 			"    </FundamentalPolygon>\n" + 

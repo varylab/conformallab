@@ -19,6 +19,9 @@
     	<jxb:bindings node="//xs:complexType[@name='FundamentalPolygon']//xs:element[@name='FundamentalEdge']">
     		<jxb:property name="edges"/>
     	</jxb:bindings>    
+  		<jxb:bindings node="//xs:complexType[@name='FundamentalPolygon']//xs:element[@name='FundamentalVertex']">
+    		<jxb:property name="vertices"/>
+    	</jxb:bindings>        	
     	<jxb:bindings node="//xs:complexType[@name='HyperEllipticAlgebraicCurve']//xs:element[@name='BranchPoint']">
     		<jxb:property name="branchPoints"/>
     	</jxb:bindings>

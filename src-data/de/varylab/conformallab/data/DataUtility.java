@@ -2,6 +2,7 @@ package de.varylab.conformallab.data;
 
 import java.lang.annotation.Annotation;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -12,6 +13,7 @@ import java.util.Set;
 
 import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.math.Matrix;
+import de.jreality.math.Pn;
 import de.jreality.scene.IndexedFaceSet;
 import de.jtem.discretegroup.core.DiscreteGroup;
 import de.jtem.discretegroup.core.DiscreteGroupElement;
@@ -28,6 +30,7 @@ import de.varylab.conformallab.data.types.DiscreteMetric;
 import de.varylab.conformallab.data.types.EmbeddedTriangle;
 import de.varylab.conformallab.data.types.EmbeddedVertex;
 import de.varylab.conformallab.data.types.FundamentalEdge;
+import de.varylab.conformallab.data.types.FundamentalVertex;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.conformallab.data.types.IsometryPSL3R;
 import de.varylab.conformallab.data.types.MetricEdge;
@@ -43,7 +46,9 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
+import de.varylab.discreteconformal.math.P2Big;
 import de.varylab.discreteconformal.math.PnBig;
+import de.varylab.discreteconformal.math.RnBig;
 import de.varylab.discreteconformal.plugin.hyperelliptic.Curve;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyGenerator;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
@@ -84,7 +89,10 @@ public class DataUtility {
 		for (de.varylab.discreteconformal.uniformization.FundamentalEdge e : p.getEdges()) {
 			FundamentalEdge fe = new FundamentalEdge();
 			fe.setIndex(e.index);
+			fe.setNextEdge(e.nextEdge.index);
+			fe.setPreviousEdge(e.prevEdge.index);
 			fe.setIdentifiedEdge(e.partner.index);
+			fe.setStartVertex(e.start.index);
 			Complex sp = of.createComplex();
 			BigDecimal[] spBig = PnBig.dehomogenize(null, e.startPosition, FundamentalPolygonUtility.context); 
 			sp.setRe(spBig[0].doubleValue());
@@ -92,11 +100,65 @@ public class DataUtility {
 			fe.setStartPosition(sp);
 			P.getEdges().add(fe);
 		}
+		for (de.varylab.discreteconformal.uniformization.FundamentalVertex v : p.getVertices()) {
+			FundamentalVertex fv = new FundamentalVertex();
+			fv.setIndex(v.index);
+			P.getVertices().add(fv);
+		}
 		UniformizationData result = of.createUniformizationData();
 		result.setName(name);
 		result.setUniformizingGroup(fg);
 		result.setFundamentalPolygon(P);
 		return result;
+	}
+	
+	
+	public static FundamentalPolygon toFundamentalPolygon(UniformizationData data) {
+		int numVertices = data.getFundamentalPolygon().getVertices().size();
+		int numEdges = data.getFundamentalPolygon().getEdges().size();
+		de.varylab.discreteconformal.uniformization.FundamentalVertex[] vertices = new de.varylab.discreteconformal.uniformization.FundamentalVertex[numVertices];
+		de.varylab.discreteconformal.uniformization.FundamentalEdge[] edges = new de.varylab.discreteconformal.uniformization.FundamentalEdge[numEdges];
+		for (FundamentalVertex v : data.getFundamentalPolygon().getVertices()) {
+			vertices[v.getIndex()] = new de.varylab.discreteconformal.uniformization.FundamentalVertex(v.getIndex());
+		}
+		for (FundamentalEdge e : data.getFundamentalPolygon().getEdges()) {
+			edges[e.getIndex()] = new de.varylab.discreteconformal.uniformization.FundamentalEdge(e.getIndex());
+		}
+		// create combinatorial information and polygon
+		for (FundamentalEdge e : data.getFundamentalPolygon().getEdges()) {
+			de.varylab.discreteconformal.uniformization.FundamentalEdge fe = edges[e.getIndex()];
+			fe.partner = edges[e.getIdentifiedEdge()];
+			fe.nextEdge = edges[e.getNextEdge()];
+			fe.prevEdge = edges[e.getPreviousEdge()];
+			fe.sourceEdgeCount = 1;
+			double[] sp = {e.getStartPosition().getRe(), e.getStartPosition().getIm(), 0.0, 1.0};
+			fe.startPosition = RnBig.toBig(null, sp);
+			fe.start = vertices[e.getStartVertex()];
+		}
+		FundamentalPolygon P = new FundamentalPolygon(Arrays.asList(edges));
+		int genus = P.getGenus();
+		int signature = 0;
+		if (genus == 0) signature = Pn.ELLIPTIC;
+		if (genus == 1) signature = Pn.EUCLIDEAN;
+		if (genus > 1) signature = Pn.HYPERBOLIC;
+		// create isometries
+		for (de.varylab.discreteconformal.uniformization.FundamentalEdge e : edges) {
+			e.end = e.nextEdge.start;
+			BigDecimal[] s1 = e.startPosition;
+			BigDecimal[] t1 = e.nextEdge.startPosition;
+			BigDecimal[] s2 = e.partner.nextEdge.startPosition;
+			BigDecimal[] t2 = e.partner.startPosition;
+			e.motionBig = P2Big.makeDirectIsometryFromFrames(null, 
+				P2Big.projectP3ToP2(null, s1), 
+				P2Big.projectP3ToP2(null, t1), 
+				P2Big.projectP3ToP2(null, s2), 
+				P2Big.projectP3ToP2(null, t2), 
+				signature,
+				FundamentalPolygonUtility.context
+			);
+			e.motion = new Matrix(RnBig.toDouble(null, e.motionBig));
+		}
+		return P;
 	}
 	
 	
