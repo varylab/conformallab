@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.02.26 um 05:27:05 PM CET 
+// Generiert: 2014.02.27 um 10:36:32 AM CET 
 //
 
 
@@ -111,14 +111,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link IsometryPSL3R }
-     * 
-     */
-    public IsometryPSL3R createIsometryPSL3R() {
-        return new IsometryPSL3R();
-    }
-
-    /**
      * Create an instance of {@link EmbeddedTriangle }
      * 
      */
@@ -140,6 +132,14 @@ public class ObjectFactory {
      */
     public Complex createComplex() {
         return new Complex();
+    }
+
+    /**
+     * Create an instance of {@link IsometryPSL2R }
+     * 
+     */
+    public IsometryPSL2R createIsometryPSL2R() {
+        return new IsometryPSL2R();
     }
 
     /**

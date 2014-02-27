@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<UniformizationData xmlns="http://www.varylab.com/conformallab/types"
+	name="Opposite Edges Uniformization">
+	<UniformizingGroup>
+		<IsometryPSL2R 
+			m11="17.132157741957258" m12="12.595535996841463" m13="-21.2404885994423" 
+			m21="12.595535996864037" m22="10.834240997742775" m23="-16.583977359049555" 
+			m31="-21.24048859945566" m32="-16.58397735903253" m33="26.966398739700367" 
+		/>
+		<IsometryPSL2R 
+			m11="4.626842076826723" m12="8.985223150354543" m13="-10.056933064585976" 
+			m21="8.985223150370032" m22="23.260201396042277" m23="-24.915280533166708" 
+			m31="-10.056933064599761" m32="-24.915280533161194" m33="26.887043472869294"
+		/>
+		<IsometryPSL2R 
+			m11="1.4886429784751591" m12="-3.5265406638394268" m13="3.6949353135171386" 
+			m21="-3.5265406638409758" m22="26.45107491885301" m23="-26.666380583357636" 
+			m31="3.6949353135181155" m32="-26.666380583357494" m33="26.93971789732629"
+		/>
+		<IsometryPSL2R 
+			m11="10.62380065307206" m12="-12.352076716663063" m13="16.261578629719274" 
+			m21="-12.352076716682404" m22="16.85379879682786" m23="-20.8716154884751" 
+			m31="16.261578629733606" m32="-20.871615488463718" m33="26.47759944989869"
+		/>
+		<IsometryPSL2R 
+			m11="23.190318795093418" m12="-8.91425010675366" m13="24.824478660866873" 
+			m21="-8.914250106740099" m22="4.5810145721378746" m23="-9.972439494710613" 
+			m31="24.824478660862184" m32="-9.972439494722316" m33="26.771333367233012"
+		/>
+		<IsometryPSL2R
+			m11="26.588538623774355" m12="3.6339804845428603" m13="26.81708784170945" 
+			m21="3.6339804845385544" m22="1.5160831713057927" m23="3.8084540622572085" 
+			m31="26.81708784170894" m32="3.8084540622610064" m33="27.10462179507894" 
+		/>
+		<IsometryPSL2R 
+			m11="17.13215774199304" m12="12.59553599685097"	m13="21.24048859947655" 
+			m21="12.59553599682949" m22="10.834240997702096" m23="16.58397735899669" 
+			m31="21.240488599463916" m32="16.58397735901292" m33="26.96639873969457"
+		/>
+		<IsometryPSL2R 
+			m11="4.6268420768163345" m12="8.985223150361207" m13="10.056933064587227" 
+			m21="8.985223150343083" m22="23.260201396055237" m23="24.915280533169124" 
+			m31="10.056933064570902" m32="24.91528053317569" m33="26.887043472872023"
+		/>
+		<IsometryPSL2R 
+			m11="1.4886429784645063" m12="-3.526540663810934" m13="-3.6949353134857112" 
+			m21="-3.526540663802507" m22="26.45107491887481" m23="26.66638058337466" 
+			m31="-3.6949353134776572" m32="26.66638058337577" m33="26.939717897339335" 
+		/>
+		<IsometryPSL2R 
+			m11="10.623800653108084" m12="-12.35207671669722" m13="-16.261578629768906" 
+			m21="-12.352076716679903" m22="16.853798796805435" m23="20.8716154884562" 
+			m31="-16.261578629756002" m32="20.871615488466134" m33="26.477599449915004" 
+		/>
+		<IsometryPSL2R 
+			m11="23.190318795085318" m12="-8.914250106716192" m13="-24.824478660845188" 
+			m21="-8.914250106727295" m22="4.581014572121401" m23="9.972439494690562" 
+			m31="-24.824478660848882" m32="9.972439494681218" m33="26.771333367204335"
+		/>
+		<IsometryPSL2R 
+			m11="26.588538623787628" m12="3.6339804845153196" m13="-26.81708784171923" 
+			m21="3.633980484524457" m22="1.5160831712990586" m23="-3.808454062241104" 
+			m31="-26.81708784172045" m32="-3.808454062232343" m33="27.104621795086615"
+		/>
+	</UniformizingGroup>
+	<FundamentalPolygon>
+		<FundamentalVertex index="0" />
+		<FundamentalEdge index="0" nextEdge="1" previousEdge="11"
+			identifiedEdge="6" startVertex="0">
+			<StartPosition re="-0.9180913956389477" im="-0.38973833386345147" />
+		</FundamentalEdge>
+		<FundamentalEdge index="1" nextEdge="2" previousEdge="0"
+			identifiedEdge="7" startVertex="0">
+			<StartPosition re="-0.601269555668407" im="-0.7957929120581702" />
+		</FundamentalEdge>
+		<FundamentalEdge index="2" nextEdge="3" previousEdge="1"
+			identifiedEdge="8" startVertex="0">
+			<StartPosition re="-0.12301312756919092" im="-0.9898528426078191" />
+		</FundamentalEdge>
+		<FundamentalEdge index="3" nextEdge="4" previousEdge="2"
+			identifiedEdge="9" startVertex="0">
+			<StartPosition re="0.3879025708460535" im="-0.9189432864258464" />
+		</FundamentalEdge>
+		<FundamentalEdge index="4" nextEdge="5" previousEdge="3"
+			identifiedEdge="10" startVertex="0">
+			<StartPosition re="0.7978105813940355" im="-0.5985974805766822" />
+		</FundamentalEdge>
+		<FundamentalEdge index="5" nextEdge="6" previousEdge="4"
+			identifiedEdge="11" startVertex="0">
+			<StartPosition re="0.9902920582728617" im="-0.11877357828221402" />
+		</FundamentalEdge>
+		<FundamentalEdge index="6" nextEdge="7" previousEdge="5"
+			identifiedEdge="0" startVertex="0">
+			<StartPosition re="0.9180913956397471" im="0.38973833386167755" />
+		</FundamentalEdge>
+		<FundamentalEdge index="7" nextEdge="8" previousEdge="6"
+			identifiedEdge="1" startVertex="0">
+			<StartPosition re="0.6012695556683693" im="0.7957929120581724" />
+		</FundamentalEdge>
+		<FundamentalEdge index="8" nextEdge="9" previousEdge="7"
+			identifiedEdge="2" startVertex="0">
+			<StartPosition re="0.12301312757023497" im="0.9898528426077081" />
+		</FundamentalEdge>
+		<FundamentalEdge index="9" nextEdge="10" previousEdge="8"
+			identifiedEdge="3" startVertex="0">
+			<StartPosition re="-0.38790257084745267" im="0.9189432864252407" />
+		</FundamentalEdge>
+		<FundamentalEdge index="10" nextEdge="11"
+			previousEdge="9" identifiedEdge="4" startVertex="0">
+			<StartPosition re="-0.7978105813941294" im="0.5985974805765435" />
+		</FundamentalEdge>
+		<FundamentalEdge index="11" nextEdge="0" previousEdge="10"
+			identifiedEdge="5" startVertex="0">
+			<StartPosition re="-0.9902920582726893" im="0.1187735782837277" />
+		</FundamentalEdge>
+	</FundamentalPolygon>
+</UniformizationData>

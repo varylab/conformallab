@@ -13,7 +13,7 @@
     		<jxb:property name="data"/>
     	</jxb:bindings>       
     
-    	<jxb:bindings node="//xs:complexType[@name='UniformizingGroup']//xs:element[@name='IsometryPSL3R']">
+    	<jxb:bindings node="//xs:complexType[@name='UniformizingGroup']//xs:element[@name='IsometryPSL2R']">
     		<jxb:property name="generators"/>
     	</jxb:bindings>    
     	<jxb:bindings node="//xs:complexType[@name='FundamentalPolygon']//xs:element[@name='FundamentalEdge']">

@@ -323,4 +323,16 @@ public class RnBig {
 		return dst;
 	}
 	
+	public static BigDecimal[] subtract(BigDecimal[] dst, BigDecimal[] src1, BigDecimal[] src2, MathContext context) {
+		int n = Math.min(src1.length, src2.length);
+		if (dst == null)
+			dst = new BigDecimal[n];
+		if (dst.length > n) {
+			throw new IllegalArgumentException("Invalid dimension for target");
+		}
+		for (int i = 0; i < dst.length; ++i)
+			dst[i] = src1[i].subtract(src2[i]);
+		return dst;
+	}
+	
 }

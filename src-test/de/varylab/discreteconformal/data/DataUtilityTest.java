@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.data;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -77,10 +78,10 @@ public class DataUtilityTest {
 		XMLAssert.assertXMLEqual(
 			"<UniformizationData xmlns='http://www.varylab.com/conformallab/types' name='Fuchsian Group'>\n" + 
 			"    <UniformizingGroup>\n" + 
-			"        <IsometryPSL3R m11='1.0' m12='0.0' m13='0.0' m14='0.0' m21='0.0' m22='1.0' m23='0.0' m24='0.0' m31='0.0' m32='0.0' m33='1.0' m34='0.0' m41='0.0' m42='0.0' m43='0.0' m44='1.0'/>\n" + 
-			"        <IsometryPSL3R m11='1.0' m12='0.0' m13='0.0' m14='0.0' m21='0.0' m22='1.0' m23='0.0' m24='0.0' m31='0.0' m32='0.0' m33='1.0' m34='0.0' m41='0.0' m42='0.0' m43='0.0' m44='1.0'/>\n" + 
-			"        <IsometryPSL3R m11='1.0' m12='0.0' m13='0.0' m14='0.0' m21='0.0' m22='1.0' m23='0.0' m24='0.0' m31='0.0' m32='0.0' m33='1.0' m34='0.0' m41='0.0' m42='0.0' m43='0.0' m44='1.0'/>\n" + 
-			"        <IsometryPSL3R m11='1.0' m12='0.0' m13='0.0' m14='0.0' m21='0.0' m22='1.0' m23='0.0' m24='0.0' m31='0.0' m32='0.0' m33='1.0' m34='0.0' m41='0.0' m42='0.0' m43='0.0' m44='1.0'/>\n" + 
+			"        <IsometryPSL2R m11='1.0' m12='0.0' m13='0.0' m21='0.0' m22='1.0' m23='0.0' m31='0.0' m32='0.0' m33='1.0'/>\n" + 
+			"        <IsometryPSL2R m11='1.0' m12='0.0' m13='0.0' m21='0.0' m22='1.0' m23='0.0' m31='0.0' m32='0.0' m33='1.0'/>\n" + 
+			"        <IsometryPSL2R m11='1.0' m12='0.0' m13='0.0' m21='0.0' m22='1.0' m23='0.0' m31='0.0' m32='0.0' m33='1.0'/>\n" + 
+			"        <IsometryPSL2R m11='1.0' m12='0.0' m13='0.0' m21='0.0' m22='1.0' m23='0.0' m31='0.0' m32='0.0' m33='1.0'/>\n" + 
 			"    </UniformizingGroup>\n" + 
 			"    <FundamentalPolygon>\n" + 
 			"        <FundamentalVertex index='0'/>\n" + 
@@ -103,8 +104,19 @@ public class DataUtilityTest {
 	
 	
 	@Test
-	public void testToFundamentalPolygon() throws Exception {
-		Assert.fail("Implement me!");
+	public void testToFundamentalPolygonHyperbolic() throws Exception {
+		InputStream in = getClass().getResourceAsStream("regular_uniformization.xml");
+		UniformizationData u = DataIO.readConformalData(UniformizationData.class, in);
+		FundamentalPolygon P = DataUtility.toFundamentalPolygon(u);
+		Assert.assertTrue(P.checkRelation());
+	}
+	
+	@Test
+	public void testToFundamentalPolygonEuclidean() throws Exception {
+		InputStream in = getClass().getResourceAsStream("wente_uniformization.xml");
+		UniformizationData u = DataIO.readConformalData(UniformizationData.class, in);
+		FundamentalPolygon P = DataUtility.toFundamentalPolygon(u);
+		Assert.assertTrue(P.checkRelation());
 	}
 
 }

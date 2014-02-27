@@ -32,7 +32,7 @@ import de.varylab.conformallab.data.types.EmbeddedVertex;
 import de.varylab.conformallab.data.types.FundamentalEdge;
 import de.varylab.conformallab.data.types.FundamentalVertex;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
-import de.varylab.conformallab.data.types.IsometryPSL3R;
+import de.varylab.conformallab.data.types.IsometryPSL2R;
 import de.varylab.conformallab.data.types.MetricEdge;
 import de.varylab.conformallab.data.types.MetricTriangle;
 import de.varylab.conformallab.data.types.ObjectFactory;
@@ -62,27 +62,7 @@ public class DataUtility {
 		UniformizingGroup fg = of.createUniformizingGroup();
 		DiscreteGroup G = p.getDiscreteGroup();
 		for (DiscreteGroupElement s : G.getGenerators()) {
-			IsometryPSL3R m = new IsometryPSL3R();
-			Matrix M = s.getMatrix();
-			m.setM11(M.getEntry(0, 0));
-			m.setM12(M.getEntry(0, 1));
-			m.setM13(M.getEntry(0, 2));
-			m.setM14(M.getEntry(0, 3));
-			
-			m.setM21(M.getEntry(1, 0));
-			m.setM22(M.getEntry(1, 1));
-			m.setM23(M.getEntry(1, 2));
-			m.setM24(M.getEntry(1, 3));
-			
-			m.setM31(M.getEntry(2, 0));
-			m.setM32(M.getEntry(2, 1));
-			m.setM33(M.getEntry(2, 2));
-			m.setM34(M.getEntry(2, 3));
-			
-			m.setM41(M.getEntry(3, 0));
-			m.setM42(M.getEntry(3, 1));
-			m.setM43(M.getEntry(3, 2));
-			m.setM44(M.getEntry(3, 3));
+			IsometryPSL2R m = toIsometryPSL3R(s);
 			fg.getGenerators().add(m);
 		}
 		de.varylab.conformallab.data.types.FundamentalPolygon P = of.createFundamentalPolygon();
@@ -111,6 +91,24 @@ public class DataUtility {
 		result.setFundamentalPolygon(P);
 		return result;
 	}
+
+
+	public static IsometryPSL2R toIsometryPSL3R(DiscreteGroupElement s) {
+		IsometryPSL2R m = new IsometryPSL2R();
+		Matrix M = s.getMatrix();
+		m.setM11(M.getEntry(0, 0));
+		m.setM12(M.getEntry(0, 1));
+		m.setM13(M.getEntry(0, 3));
+		
+		m.setM21(M.getEntry(1, 0));
+		m.setM22(M.getEntry(1, 1));
+		m.setM23(M.getEntry(1, 3));
+		
+		m.setM31(M.getEntry(3, 0));
+		m.setM32(M.getEntry(3, 1));
+		m.setM33(M.getEntry(3, 3));
+		return m;
+	}
 	
 	
 	public static FundamentalPolygon toFundamentalPolygon(UniformizationData data) {
@@ -134,6 +132,7 @@ public class DataUtility {
 			double[] sp = {e.getStartPosition().getRe(), e.getStartPosition().getIm(), 0.0, 1.0};
 			fe.startPosition = RnBig.toBig(null, sp);
 			fe.start = vertices[e.getStartVertex()];
+			fe.prevEdge.end = fe.start;
 		}
 		FundamentalPolygon P = new FundamentalPolygon(Arrays.asList(edges));
 		int genus = P.getGenus();
@@ -142,21 +141,21 @@ public class DataUtility {
 		if (genus == 1) signature = Pn.EUCLIDEAN;
 		if (genus > 1) signature = Pn.HYPERBOLIC;
 		// create isometries
-		for (de.varylab.discreteconformal.uniformization.FundamentalEdge e : edges) {
-			e.end = e.nextEdge.start;
+		for (de.varylab.discreteconformal.uniformization.FundamentalEdge e : P.getEdges()) {
 			BigDecimal[] s1 = e.startPosition;
 			BigDecimal[] t1 = e.nextEdge.startPosition;
-			BigDecimal[] s2 = e.partner.nextEdge.startPosition;
-			BigDecimal[] t2 = e.partner.startPosition;
-			e.motionBig = P2Big.makeDirectIsometryFromFrames(null, 
+			BigDecimal[] s2 = e.partner.startPosition;
+			BigDecimal[] t2 = e.partner.nextEdge.startPosition;
+			e.motionBig = P2Big.imbedMatrixP2InP3(null, P2Big.makeDirectIsometryFromFrames(null, 
 				P2Big.projectP3ToP2(null, s1), 
 				P2Big.projectP3ToP2(null, t1), 
-				P2Big.projectP3ToP2(null, s2), 
 				P2Big.projectP3ToP2(null, t2), 
+				P2Big.projectP3ToP2(null, s2), 
 				signature,
 				FundamentalPolygonUtility.context
-			);
+			));
 			e.motion = new Matrix(RnBig.toDouble(null, e.motionBig));
+			System.out.println(e.motion);
 		}
 		return P;
 	}

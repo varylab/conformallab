@@ -130,30 +130,22 @@
 	
 	<xs:complexType name="UniformizingGroup">
 		<xs:sequence>
-			<xs:element name="IsometryPSL3R" type="types:IsometryPSL3R" minOccurs="2" maxOccurs="unbounded"/>
+			<xs:element name="IsometryPSL2R" type="types:IsometryPSL2R" minOccurs="2" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
 	
-	<xs:complexType name="IsometryPSL3R">
+	<xs:complexType name="IsometryPSL2R">
 		<xs:attribute name="m11" type="xs:double" use="optional" default="0.0"/>
 		<xs:attribute name="m12" type="xs:double" use="optional" default="0.0"/>
 		<xs:attribute name="m13" type="xs:double" use="optional" default="0.0"/>
-		<xs:attribute name="m14" type="xs:double" use="optional" default="0.0"/>
 		
 		<xs:attribute name="m21" type="xs:double" use="optional" default="0.0"/>
 		<xs:attribute name="m22" type="xs:double" use="optional" default="0.0"/>
 		<xs:attribute name="m23" type="xs:double" use="optional" default="0.0"/>
-		<xs:attribute name="m24" type="xs:double" use="optional" default="0.0"/>
 				
 		<xs:attribute name="m31" type="xs:double" use="optional" default="0.0"/>
 		<xs:attribute name="m32" type="xs:double" use="optional" default="0.0"/>
 		<xs:attribute name="m33" type="xs:double" use="optional" default="0.0"/>
-		<xs:attribute name="m34" type="xs:double" use="optional" default="0.0"/>
-			
-		<xs:attribute name="m41" type="xs:double" use="optional" default="0.0"/>
-		<xs:attribute name="m42" type="xs:double" use="optional" default="0.0"/>
-		<xs:attribute name="m43" type="xs:double" use="optional" default="0.0"/>
-		<xs:attribute name="m44" type="xs:double" use="optional" default="0.0"/>
 	</xs:complexType>
 	
 	<xs:complexType name="SchottkyGenerator">

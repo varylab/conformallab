@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.02.26 um 05:27:05 PM CET 
+// Generiert: 2014.02.27 um 10:36:32 AM CET 
 //
 
 
@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="IsometryPSL3R" type="{http://www.varylab.com/conformallab/types}IsometryPSL3R" maxOccurs="unbounded" minOccurs="2"/>
+ *         &lt;element name="IsometryPSL2R" type="{http://www.varylab.com/conformallab/types}IsometryPSL2R" maxOccurs="unbounded" minOccurs="2"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -41,8 +41,8 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class UniformizingGroup {
 
-    @XmlElement(name = "IsometryPSL3R", required = true)
-    protected List<IsometryPSL3R> generators;
+    @XmlElement(name = "IsometryPSL2R", required = true)
+    protected List<IsometryPSL2R> generators;
 
     /**
      * Gets the value of the generators property.
@@ -62,13 +62,13 @@ public class UniformizingGroup {
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link IsometryPSL3R }
+     * {@link IsometryPSL2R }
      * 
      * 
      */
-    public List<IsometryPSL3R> getGenerators() {
+    public List<IsometryPSL2R> getGenerators() {
         if (generators == null) {
-            generators = new ArrayList<IsometryPSL3R>();
+            generators = new ArrayList<IsometryPSL2R>();
         }
         return this.generators;
     }

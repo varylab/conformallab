@@ -109,11 +109,14 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		dataTable.getColumnModel().getColumn(0).setMaxWidth(30);
 		dataTable.getColumnModel().getColumn(1).setCellEditor(new DataNameEditor());
 		dataTable.getColumnModel().getColumn(2).setMaxWidth(30);
-		dataTable.getColumnModel().getColumn(2).setCellRenderer(new LoadButtonEditor());
-		dataTable.getColumnModel().getColumn(2).setCellEditor(new LoadButtonEditor());
+		dataTable.getColumnModel().getColumn(2).setCellRenderer(new ExportButtonEditor());
+		dataTable.getColumnModel().getColumn(2).setCellEditor(new ExportButtonEditor());
 		dataTable.getColumnModel().getColumn(3).setMaxWidth(30);
-		dataTable.getColumnModel().getColumn(3).setCellRenderer(new DeleteButtonEditor());
-		dataTable.getColumnModel().getColumn(3).setCellEditor(new DeleteButtonEditor());
+		dataTable.getColumnModel().getColumn(3).setCellRenderer(new LoadButtonEditor());
+		dataTable.getColumnModel().getColumn(3).setCellEditor(new LoadButtonEditor());
+		dataTable.getColumnModel().getColumn(4).setMaxWidth(30);
+		dataTable.getColumnModel().getColumn(4).setCellRenderer(new DeleteButtonEditor());
+		dataTable.getColumnModel().getColumn(4).setCellEditor(new DeleteButtonEditor());
 		dataTable.getTableHeader().setPreferredSize(new Dimension(0, 0));
 		c.weighty = 0.0;
 		c.gridwidth = GridBagConstraints.RELATIVE;
@@ -143,21 +146,8 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (exportButton == e.getSource()) {
-			Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
-			int result = fileChooser.showSaveDialog(w);
-			if (result != JFileChooser.APPROVE_OPTION) {
-				return;
-			}
-			File file = fileChooser.getSelectedFile();
-			if (!file.getName().toLowerCase().endsWith(".xml")) {
-				file = new File(file.getAbsolutePath() + ".xml");
-			}
-			if (file.exists()) {
-				result = JOptionPane.showConfirmDialog(w, "The file " + file.getName() + " exists. \nDo you want to overwrite this file?", "Overwrite?", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-				if (result != JOptionPane.OK_OPTION) {
-					return;
-				}
-			}
+			File file = showXMLSaveDialog();
+			if (file == null) return;
 			try {
 				FileOutputStream fout = new FileOutputStream(file);
 				ConformalDataList list = new ConformalDataList();
@@ -204,7 +194,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		}
 		@Override
 		public int getColumnCount() {
-			return 4;
+			return 5;
 		}
 		@Override
 		public Class<?> getColumnClass(int columnIndex) {
@@ -316,6 +306,63 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 				}
 			});
 			return deleteButton;
+		}
+		
+		@Override
+		public Object getCellEditorValue() {
+			return value;
+		}
+		
+	}
+	
+	private class ExportButtonEditor extends AbstractCellEditor implements TableCellRenderer, TableCellEditor {
+
+		private static final long 
+			serialVersionUID = 1L;
+		private JButton
+			button = new JButton(ImageHook.getIcon("disk.png"));
+		private ConformalData 
+			value = null;
+		
+		public ExportButtonEditor() {
+			button.setToolTipText("Export Data");
+		}
+		
+		private void checkButtonStatus(JButton button, Object value) {
+			if (value instanceof UniformizationData) {
+				button.setEnabled(false);
+			} else {
+				button.setEnabled(true);
+			}
+		}
+		
+		@Override
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+			checkButtonStatus(button, value);
+			return button;
+		}
+
+		@Override
+		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+			this.value = (ConformalData)value;
+			JButton saveButton = new JButton(ImageHook.getIcon("disk.png"));
+			checkButtonStatus(saveButton, value);
+			saveButton.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					fireEditingStopped();
+					File file = showXMLSaveDialog();
+					if (file == null) return;
+					try {
+						FileOutputStream fout = new FileOutputStream(file);
+						DataIO.writeConformalData(ExportButtonEditor.this.value, fout);
+						fout.close();
+					} catch (Exception e1) {
+						log.log(Level.SEVERE, "Could not export conformal data", e1);
+					}
+				}
+			});
+			return saveButton;
 		}
 		
 		@Override
@@ -483,6 +530,25 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 	@Override
 	public Class<? extends SideContainerPerspective> getPerspectivePluginClass() {
 		return View.class;
+	}
+
+	public File showXMLSaveDialog() {
+		Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
+		int result = fileChooser.showSaveDialog(w);
+		if (result != JFileChooser.APPROVE_OPTION) {
+			return null;
+		}
+		File file = fileChooser.getSelectedFile();
+		if (!file.getName().toLowerCase().endsWith(".xml")) {
+			file = new File(file.getAbsolutePath() + ".xml");
+		}
+		if (file.exists()) {
+			result = JOptionPane.showConfirmDialog(w, "The file " + file.getName() + " exists. \nDo you want to overwrite this file?", "Overwrite?", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+			if (result != JOptionPane.OK_OPTION) {
+				return null;
+			}
+		}
+		return file;
 	}
 
 }

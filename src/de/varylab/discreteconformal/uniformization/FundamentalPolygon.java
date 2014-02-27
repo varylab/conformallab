@@ -78,7 +78,14 @@ public class FundamentalPolygon {
 			active = active.partner.nextEdge;
 		} while (active != start);
 		System.out.println("\nRelation: \n" + RnBig.matrixToString(Tbig));
-		return Tbig[1].compareTo(BigDecimal.valueOf(1E-5)) < 0;
+		BigDecimal[] I = new BigDecimal[16];
+		RnBig.setIdentityMatrix(I);
+		for (int j = 0; j < I.length; j++) {
+			if (Math.abs(Tbig[j].doubleValue() - I[j].doubleValue()) > 1E-8) {
+				return false;
+			}
+		}
+		return true;
 	}
 	
 

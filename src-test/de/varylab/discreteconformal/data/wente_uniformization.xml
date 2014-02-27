@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<UniformizationData xmlns="http://www.varylab.com/conformallab/types" name="Direct Uniformization">
+    <UniformizingGroup>
+        <IsometryPSL2R 
+        	m11="1.0" m12="0.0" m13="1.414213562373094" 
+        	m21="0.0" m22="1.0" m23="2.449489742783179" 
+        	m31="0.0" m32="0.0" m33="1.0" 
+        />
+        <IsometryPSL2R 
+        	m11="1.0" m12="0.0" m13="2.8284271247461903" 
+        	m21="0.0" m22="1.0" m23="0.0" 
+        	m31="0.0" m32="0.0" m33="1.0" 
+        />
+        <IsometryPSL2R 
+        	m11="1.0" m12="0.0" m13="-1.4142135623730943" 
+        	m21="0.0" m22="1.0" m23="-2.4494897427831788" 
+        	m31="0.0" m32="0.0" m33="1.0" 
+        />
+        <IsometryPSL2R 
+        	m11="1.0" m12="0.0" m13="-2.82842712474619" 
+        	m21="0.0" m22="1.0" m23="0.0" 
+        	m31="0.0" m32="0.0" m33="1.0" 
+        />
+    </UniformizingGroup>
+    <FundamentalPolygon>
+        <FundamentalVertex index="0"/>
+        <FundamentalEdge index="0" nextEdge="1" previousEdge="3" identifiedEdge="2" startVertex="0">
+            <StartPosition re="0.0" im="2.4494897427831788"/>
+        </FundamentalEdge>
+        <FundamentalEdge index="1" nextEdge="2" previousEdge="0" identifiedEdge="3" startVertex="0">
+            <StartPosition re="2.8284271247461885" im="2.4494897427831797"/>
+        </FundamentalEdge>
+        <FundamentalEdge index="2" nextEdge="3" previousEdge="1" identifiedEdge="0" startVertex="0">
+            <StartPosition re="1.4142135623730951" im="0.0"/>
+        </FundamentalEdge>
+        <FundamentalEdge index="3" nextEdge="0" previousEdge="2" identifiedEdge="1" startVertex="0">
+            <StartPosition re="-1.4142135623730951" im="0.0"/>
+        </FundamentalEdge>
+    </FundamentalPolygon>
+</UniformizationData>

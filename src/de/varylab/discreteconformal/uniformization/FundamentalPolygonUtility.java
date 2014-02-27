@@ -5,7 +5,6 @@ import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -637,11 +636,9 @@ public class FundamentalPolygonUtility {
 				);
 				Matrix A = new Matrix(P2.imbedMatrixP2InP3(null, T));
 				
-				System.out.println("lastStart " + Arrays.toString(lastStartPoint));
-				System.out.println("T * lastStart " + Arrays.toString(lastStartPoint));
-	
 				// arbitrary precision isometry
-				BigDecimal[] TBig = P2Big.makeDirectIsometryFromFrames(null, 
+				// TODO: this does not use precisely the start and end of an edge sequence, fails for small exampels
+				BigDecimal[] TBig = P2Big.makeDirectIsometryFromFrames(null,
 					P2Big.projectP3ToP2(s1b, RnBig.toBig(null, lastStartPoint)), 
 					P2Big.projectP3ToP2(s2b, RnBig.toBig(null, actStartPoint)), 
 					P2Big.projectP3ToP2(t1b, RnBig.toBig(null, lastTargetPoint)), 

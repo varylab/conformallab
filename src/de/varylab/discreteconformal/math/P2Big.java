@@ -6,6 +6,8 @@ import static java.math.BigDecimal.ZERO;
 import java.math.BigDecimal;
 import java.math.MathContext;
 
+import de.jreality.math.Pn;
+
 public class P2Big {
 
 	
@@ -34,11 +36,20 @@ public class P2Big {
 	) {
 		if (dst == null) dst = new BigDecimal[9];
 		PnBig.normalize(p0, p0, signature, context);
-		BigDecimal[] polarP = PnBig.polarize(null, p0, signature);
-		BigDecimal[] lineP = lineFromPoints(null, p0, p1, context);
-		BigDecimal[] p1n = PnBig.normalize(null, pointFromLines(null, polarP, lineP, context), signature, context);
-		BigDecimal[] p2 = PnBig.polarize(null, lineP, signature);
-		PnBig.normalize(p2, p2, signature, context);
+		BigDecimal[] p1n, p2;
+		if (signature == Pn.EUCLIDEAN) {
+			p1n = p1.clone();
+			PnBig.dehomogenize(p1n, p1n, context);
+			RnBig.subtract(p1n, p1n, p0, context);
+			PnBig.normalize(p1n, p1n, Pn.EUCLIDEAN, context);
+			p2 = new BigDecimal[]{p1n[1].negate(), p1n[0], ZERO};
+		} else {
+			BigDecimal[] polarP = PnBig.polarize(null, p0, signature);
+			BigDecimal[] lineP = lineFromPoints(null, p0, p1, context);
+			p1n = PnBig.normalize(null, pointFromLines(null, polarP, lineP, context), signature, context);
+			p2 = PnBig.polarize(null, lineP, signature);
+			PnBig.normalize(p2, p2, signature, context);
+		}
 		makeMatrixFromColumns(dst, p0, p1n, p2);
 		return dst;
 	}
