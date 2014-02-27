@@ -328,17 +328,8 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			button.setToolTipText("Export Data");
 		}
 		
-		private void checkButtonStatus(JButton button, Object value) {
-			if (value instanceof UniformizationData) {
-				button.setEnabled(false);
-			} else {
-				button.setEnabled(true);
-			}
-		}
-		
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-			checkButtonStatus(button, value);
 			return button;
 		}
 
@@ -346,7 +337,6 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 			this.value = (ConformalData)value;
 			JButton saveButton = new JButton(ImageHook.getIcon("disk.png"));
-			checkButtonStatus(saveButton, value);
 			saveButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
@@ -386,23 +376,33 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			button.setToolTipText("Load into UI");
 		}
 		
+		private void checkButtonStatus(JButton button, Object value) {
+			if (value instanceof UniformizationData) {
+				button.setEnabled(false);
+			} else {
+				button.setEnabled(true);
+			}
+		}
+		
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+			checkButtonStatus(button, value);
 			return button;
 		}
 
 		@Override
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 			this.value = (ConformalData)value;
-			JButton deleteButton = new JButton(ImageHook.getIcon("cog_go.png"));
-			deleteButton.addActionListener(new ActionListener() {
+			JButton loadButton = new JButton(ImageHook.getIcon("cog_go.png"));
+			checkButtonStatus(loadButton, value);
+			loadButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 					fireEditingStopped();
 					loadDataIntoUI(LoadButtonEditor.this.value);
 				}
 			});
-			return deleteButton;
+			return loadButton;
 		}
 		
 		@Override
