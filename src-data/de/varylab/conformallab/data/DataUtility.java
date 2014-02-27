@@ -217,9 +217,9 @@ public class DataUtility {
 		CoHDS hds = new CoHDS();
 		ConformalAdapterSet aSet = new ConformalAdapterSet();
 		c.ifs2heds(ifs, hds, aSet);
-		createCuttingInfo(hds, de, cutInfoOUT);
-		
-		
+		if (de.getIdentifications().size() != 0) {
+			createCuttingInfo(hds, de, cutInfoOUT);
+		}
 		return hds;
 	}
 	

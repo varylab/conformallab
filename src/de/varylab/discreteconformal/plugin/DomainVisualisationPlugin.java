@@ -128,7 +128,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		copyTransformMap.clear();
 		updateAdapters();
 		visHif.set(mainHif.get());
-		addCopyTool(visHif.getActiveLayer());
+		//addCopyTool(visHif.getActiveLayer());
 		JRViewerUtility.encompassEuclidean(domainScene);
 	}
 
