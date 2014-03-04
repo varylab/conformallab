@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<UniformizationData xmlns="http://www.varylab.com/conformallab/types" name="Canonical Uniformization">
+    <UniformizingGroup>
+        <IsometryPSL2R m11="-2.190969457402481" m12="1.15793170669639" m13="-2.2674110788834128" m21="-10.173581106182674" m22="0.611242811943697" m23="-10.142749641947667" m31="10.35867267980543" m32="-0.8452358324903315" m33="10.441097801470534"/>
+        <IsometryPSL2R m11="5.741336914851761" m12="5.97235552582479" m13="8.22386649312168" m21="-6.622141617414707" m22="-4.86380665403842" m23="-8.155327998858446" m31="8.707221667727058" m32="7.637122867593444" m33="11.625031392028774"/>
+        <IsometryPSL2R m11="0.6343054276458879" m12="-10.70148698260968" m13="10.67352645635481" m21="1.0207093375266778" m22="-0.3096562001239942" m23="0.3711260082364376" m31="0.6664765016528271" m32="-10.659160876975275" m33="10.72669108012795"/>
+        <IsometryPSL2R m11="4.205663731691372" m12="-4.595381955913476" m13="6.148588679103472" m21="7.820147335634916" m22="-5.806054435482738" m23="9.688393698587326" m31="8.822829012006416" m32="-7.336743380310092" m33="11.518251395226017"/>
+        <IsometryPSL2R m11="0.634305427646102" m12="1.0207093375267715" m13="-0.6664765016530767" m21="-10.701486982608916" m22="-0.3096562001251222" m23="10.659160876974575" m31="-10.67352645635404" m32="-0.3711260082376491" m33="10.726691080127253"/>
+        <IsometryPSL2R m11="4.205663731691484" m12="7.8201473356317095" m13="-8.822829012003615" m21="-4.5953819559149895" m22="-5.80605443548221" m23="7.336743380310594" m31="-6.148588679104678" m32="-9.688393698584406" m33="11.518251395224176"/>
+        <IsometryPSL2R m11="-2.1909694574054894" m12="-10.173581106183661" m13="-10.358672679807047" m21="1.1579317066970989" m22="0.6112428119460143" m23="0.8452358324930138" m31="2.2674110788867043" m32="10.142749641948821" m33="10.441097801472372"/>
+        <IsometryPSL2R m11="5.741336914852283" m12="-6.622141617414496" m13="-8.707221667727246" m21="5.9723555258254635" m22="-4.863806654038499" m23="-7.637122867593998" m31="-8.223866493122564" m32="8.155327998858313" m33="11.6250313920293"/>
+    </UniformizingGroup>
+    <FundamentalPolygon>
+        <FundamentalVertex index="0"/>
+        <FundamentalEdge index="0" nextEdge="1" previousEdge="7" identifiedEdge="6" startVertex="0">
+            <StartPosition re="-0.5673760319772099" im="-0.8146072506311413"/>
+        </FundamentalEdge>
+        <FundamentalEdge index="1" nextEdge="2" previousEdge="0" identifiedEdge="7" startVertex="0">
+            <StartPosition re="0.21843349517310434" im="-0.9406363639065897"/>
+        </FundamentalEdge>
+        <FundamentalEdge index="2" nextEdge="3" previousEdge="1" identifiedEdge="4" startVertex="0">
+            <StartPosition re="0.9207528770953392" im="-0.35972227377099025"/>
+        </FundamentalEdge>
+        <FundamentalEdge index="3" nextEdge="4" previousEdge="2" identifiedEdge="5" startVertex="0">
+            <StartPosition re="0.8030570727157736" im="0.5425232430997999"/>
+        </FundamentalEdge>
+        <FundamentalEdge index="4" nextEdge="5" previousEdge="3" identifiedEdge="2" startVertex="0">
+            <StartPosition re="0.20301262846307025" im="0.9710141629551065"/>
+        </FundamentalEdge>
+        <FundamentalEdge index="5" nextEdge="6" previousEdge="4" identifiedEdge="3" startVertex="0">
+            <StartPosition re="-0.43545191231190516" im="0.8882464653014431"/>
+        </FundamentalEdge>
+        <FundamentalEdge index="6" nextEdge="7" previousEdge="5" identifiedEdge="0" startVertex="0">
+            <StartPosition re="-0.9082035429079407" im="0.37486261153591066"/>
+        </FundamentalEdge>
+        <FundamentalEdge index="7" nextEdge="0" previousEdge="6" identifiedEdge="1" startVertex="0">
+            <StartPosition re="-0.9280825072257778" im="-0.34705995166260484"/>
+        </FundamentalEdge>
+    </FundamentalPolygon>
+</UniformizationData>
