@@ -62,7 +62,7 @@ public class DataUtility {
 		UniformizingGroup fg = of.createUniformizingGroup();
 		DiscreteGroup G = p.getDiscreteGroup();
 		for (DiscreteGroupElement s : G.getGenerators()) {
-			IsometryPSL2R m = toIsometryPSL3R(s);
+			IsometryPSL2R m = toIsometryPSL2R(s);
 			fg.getGenerators().add(m);
 		}
 		de.varylab.conformallab.data.types.FundamentalPolygon P = of.createFundamentalPolygon();
@@ -93,7 +93,7 @@ public class DataUtility {
 	}
 
 
-	public static IsometryPSL2R toIsometryPSL3R(DiscreteGroupElement s) {
+	public static IsometryPSL2R toIsometryPSL2R(DiscreteGroupElement s) {
 		IsometryPSL2R m = new IsometryPSL2R();
 		Matrix M = s.getMatrix();
 		m.setM11(M.getEntry(0, 0));
