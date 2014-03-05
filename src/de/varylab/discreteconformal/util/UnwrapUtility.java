@@ -5,8 +5,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.signum;
 
 import java.util.Collection;
+import java.util.logging.Logger;
 
-import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.Adapter;
@@ -29,6 +29,7 @@ import de.varylab.discreteconformal.unwrapper.numerics.SimpleEnergy;
 
 public class UnwrapUtility {
 
+	private static Logger logger = Logger.getLogger(UnwrapUtility.class.getName());
 	
 	public static class ZeroInitialEnergy implements InitialEnergy<CoFace> {
 		@Override
@@ -80,28 +81,7 @@ public class UnwrapUtility {
 			e.setLambda(lambda);
 			e.getOppositeEdge().setLambda(e.getLambda());
 		}
-		Collection<CoVertex> vertexBoundary = HalfEdgeUtils.boundaryVertices(hds);
-		Collection<CoEdge> edgeBoundary = HalfEdgeUtils.boundaryEdges(hds);
-		
-		// find reference normal
-		double[] refNormal = new double[3];
-		double[] middle = new double[4];
-		for (CoVertex v : vertexBoundary) {
-			Pn.dehomogenize(v.P, v.P);
-			Rn.add(middle, v.P, middle);
-		}
-		Rn.times(middle, 1.0 / vertexBoundary.size(), middle);
-		middle[3] = 1.0;
-		for (CoEdge e : edgeBoundary) {
-			double[] p = e.getStartVertex().P;
-			Pn.dehomogenize(p, p);
-			double[] bv = da.get(EdgeVector.class, e);
-			double[] mv = {middle[0] - p[0], middle[1] - p[1], middle[2] - p[1]};
-			double[] n = Rn.crossProduct(null, mv, bv);
-			Rn.add(refNormal, n, refNormal);
-		}
-		Rn.normalize(refNormal, refNormal);
-		
+
 		// set thetas and solver indices
 		int bSize = 0;
 		int dim = 0;
@@ -143,15 +123,9 @@ public class UnwrapUtility {
 				}
 				for (CoEdge edge : HalfEdgeUtils.incomingEdges(v)) {
 					if (edge.getLeftFace() == null) {
-						double[] v1 = da.get(EdgeVector.class, edge.getOppositeEdge());
-						double[] v2 = da.get(EdgeVector.class, edge.getNextEdge());
-						double[] cr = Rn.crossProduct(null, v1, v2); 
-						double x = Rn.innerProduct(v1, v2);
-						double y = Rn.euclideanNorm(cr);
-						theta = Math.atan2(y, x);
-						double check = Rn.innerProduct(cr, refNormal);
-						if (check < 0) {
-							theta = 2*PI - theta;
+						for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+							if (e.getLeftFace() == null) continue;
+							theta += (getAngle(e, aSet) % PI);
 						}
 						QuantizationMode qMode = qm;
 						if (v.info != null) {
@@ -166,6 +140,9 @@ public class UnwrapUtility {
 							} else {
 								theta -= q;
 							}
+							if((theta % (PI/2)) != 0) {
+								logger.info(v + ": theta quantized to " + theta);
+							}
 							break;
 						case QuadsStrict:
 							q = theta % (PI/2);
@@ -173,6 +150,9 @@ public class UnwrapUtility {
 								theta += (PI/2 - q);
 							} else {
 								theta -= q;
+							}
+							if((theta % PI) != 0) {
+								logger.info(v + ": theta quantized to " + theta);
 							}
 							break;							
 						case Hexagons:
@@ -252,9 +232,9 @@ public class UnwrapUtility {
 				e = e.getNextEdge();
 			} while (true);
 		}
-		if (bm == BoundaryMode.ConformalCurvature) {
-			System.out.println("Gauss-Bonnet sum: " + (bSum / PI));
-		}
+//		if (bm == BoundaryMode.ConformalCurvature) {
+		logger.info("Gauss-Bonnet sum: " + (bSum / PI) + " \u03C0");
+//		}
 
 		// circular quad edges
 		for (CoEdge e : hds.getPositiveEdges()) {

@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import de.jreality.plugin.job.AbstractJob;
 import de.jtem.blas.ComplexMatrix;
@@ -33,6 +34,8 @@ import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 
 public class Unwrap extends AbstractJob {
 
+	private static Logger logger = Logger.getLogger(Unwrap.class.getName());
+	
 	private CoHDS
 		surface = null;
 	private AdapterSet
@@ -98,7 +101,7 @@ public class Unwrap extends AbstractJob {
 			boolean isSphere = bList.size() == 0;
 			Unwrapper unwrapper = null;
 			if (isSphere) {
-				System.out.println("unwrapping a sphere...");
+				logger.info("unwrapping a sphere...");
 				if (usePetsc) {
 //					unwrapper = new SphericalUnwrapperPETSc();
 					unwrapper = new StereographicUnwrapper();
@@ -167,7 +170,7 @@ public class Unwrap extends AbstractJob {
 			break;
 		// torus ----------------------------
 		case 1:
-			System.out.println("unwrapping a torus...");
+			logger.info("unwrapping a torus...");
 			if (usePetsc) {
 				unwrapper = new EuclideanUnwrapperPETSc();
 			} else {
@@ -193,12 +196,12 @@ public class Unwrap extends AbstractJob {
 				Complex piNormalizedTau = new Complex(0, 2 * PI);
 				piNormalizedTau = piNormalizedTau.times(tau);
 				final ComplexMatrix PeriodMatrix = new ComplexMatrix(new Complex[][] {{piNormalizedTau}});
-				System.out.println("Tau Re " + tau.re);
-				System.out.println("Tau Im " + tau.im);
-				System.out.println("Tau Abs " + tau.abs());
-				System.out.println("Tau Arg " + tau.arg());
+				logger.info("Tau Re " + tau.re);
+				logger.info("Tau Im " + tau.im);
+				logger.info("Tau Abs " + tau.abs());
+				logger.info("Tau Arg " + tau.arg());
 				SiegelReduction siegel = new SiegelReduction(PeriodMatrix);
-				System.out.println("After Siegel: " +  siegel.getReducedPeriodMatrix());
+				logger.info("After Siegel: " +  siegel.getReducedPeriodMatrix());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -206,7 +209,7 @@ public class Unwrap extends AbstractJob {
 			break;
 		// genus > 1 -------------------------
 		default:
-			System.out.println("unwrapping surface of genus " + genus + "...");
+			logger.info("unwrapping surface of genus " + genus + "...");
 			if (usePetsc) {
 				unwrapper = new HyperbolicUnwrapperPETSc();
 			} else {
@@ -230,8 +233,8 @@ public class Unwrap extends AbstractJob {
 			break;
 		}
 		NumberFormat nf = new DecimalFormat("0.00");
-		System.out.println("minimization took " + nf.format((unwrapTime - startTime) / 1000.0) + "sec.");
-		System.out.println("layout took " + nf.format((layoutTime - unwrapTime) / 1000.0) + "sec.");
+		logger.info("minimization took " + nf.format((unwrapTime - startTime) / 1000.0) + "sec.");
+		logger.info("layout took " + nf.format((layoutTime - unwrapTime) / 1000.0) + "sec.");
 //		int brokenCount = 0;
 //		int curveVertices = 0;
 //		for (CoEdge e : surface.getEdges()) {
