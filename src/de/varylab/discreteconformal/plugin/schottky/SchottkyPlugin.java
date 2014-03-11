@@ -62,8 +62,10 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoDirectTextureAdapter;
 import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
+import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin.TargetGeometry;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener {
 
@@ -215,9 +217,10 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 					conformalDataPlugin.addDiscreteEmbedding("Output Klein Model Fuchsian Embedding", hds, kleinTextureAdapters, TexturePosition4d.class, cutInfo);
 				}
 				conformalDataPlugin.addDiscreteMap("Uniformizing Map", hds, cutInfo);
-				dcp.createUniformization(hds, genus, cutInfo);
-				dcp.updateGeometry();
-				dcp.updateDomainImage();
+				TargetGeometry targetGeometry = UnwrapUtility.calculateTargetGeometry(genus, 0);
+				dcp.createUniformization(hds, genus, targetGeometry, cutInfo);
+				dcp.updateGeometry(targetGeometry);
+				dcp.updateDomainImage(targetGeometry);
 			}
 		}
 	}

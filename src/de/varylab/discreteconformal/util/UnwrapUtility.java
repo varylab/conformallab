@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.signum;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 import de.jreality.math.Rn;
@@ -23,6 +24,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin.TargetGeometry;
 import de.varylab.discreteconformal.unwrapper.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.numerics.SimpleEnergy;
@@ -232,9 +234,7 @@ public class UnwrapUtility {
 				e = e.getNextEdge();
 			} while (true);
 		}
-//		if (bm == BoundaryMode.ConformalCurvature) {
 		logger.info("Gauss-Bonnet sum: " + (bSum / PI) + " \u03C0");
-//		}
 
 		// circular quad edges
 		for (CoEdge e : hds.getPositiveEdges()) {
@@ -363,8 +363,29 @@ public class UnwrapUtility {
 		}
 		return dim;
 	}
-	
-	
-	
+
+
+
+	public static TargetGeometry calculateTargetGeometry(CoHDS hds) {
+		int g = HalfEdgeUtils.getGenus(hds);
+		List<List<CoEdge>> bc = HalfEdgeUtils.boundaryComponents(hds);
+		return calculateTargetGeometry(g, bc.size());
+	}
+
+
+	public static TargetGeometry calculateTargetGeometry(int g, int numBoundaryComponents) {
+		switch (g) {
+		case 0:
+			if (numBoundaryComponents > 0) {
+				return TargetGeometry.Euclidean;
+			} else {
+				return TargetGeometry.Spherical;
+			}
+		case 1:
+			return TargetGeometry.Euclidean;
+		default:
+			return TargetGeometry.Hyperbolic;
+		}
+	}
 	
 }

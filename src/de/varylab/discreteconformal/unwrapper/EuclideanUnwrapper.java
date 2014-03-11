@@ -1,5 +1,7 @@
 package de.varylab.discreteconformal.unwrapper;
 
+import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -86,7 +88,12 @@ public class EuclideanUnwrapper implements Unwrapper {
 				}
 			}
 		}
-		
+
+		WeightAdapter<CoEdge> weights = new EuclideanLengthWeightAdapter(u);
+		CoVertex root = surface.getVertex(0);
+		if (cutRoot != null) {
+			root = cutRoot;
+		}
 		switch (genus) {
 		case 0:
 			cutInfo = ConesUtility.cutMesh(surface);
@@ -96,14 +103,17 @@ public class EuclideanUnwrapper implements Unwrapper {
 				cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
 				CuttingUtility.cutAtEdges(cutInfo, cutGraph);
 			} else {
-				CoVertex root = surface.getVertex(0);
-				if (cutRoot != null) root = cutRoot;
-				WeightAdapter<CoEdge> weights = new EuclideanLengthWeightAdapter(u);
 				cutInfo = CuttingUtility.cutTorusToDisk(surface, root, weights);
 			}
 			break;
 		default:
-			throw new RuntimeException("Cannot work on higher genus");
+			if (cutGraph != null) {
+				cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+				cutInfo.cutRoot = root;
+				CuttingUtility.cutAtEdges(cutInfo, cutGraph);
+			} else {
+				cutInfo = cutManifoldToDisk(surface, root, weights);
+			}
 		}
 		lengthMap = EuclideanLayout.getLengthMap(surface, opt.getFunctional(), u);
 		layoutRoot = EuclideanLayout.doLayout(surface, opt.getFunctional(), u);

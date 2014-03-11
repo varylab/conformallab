@@ -358,7 +358,6 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance); 
 		optimizer.setTolerances(0, 0, 0, 0);
 		optimizer.setMaximumIterates(maxIterations);
-		System.out.println("Using grad tolerance " + gradTolerance);
 		optimizer.solve();
 		if (optimizer.getSolutionStatus().reason != ConvergenceFlags.CONVERGED_ATOL) {
 			throw new RuntimeException("Optimizer did not converge: \n" + optimizer.getSolutionStatus());

@@ -7,6 +7,7 @@ import static de.jreality.shader.CommonAttributes.EDGE_DRAW;
 import static de.jreality.shader.CommonAttributes.FACE_DRAW;
 import static de.jreality.shader.CommonAttributes.LIGHTING_ENABLED;
 import static de.jreality.shader.CommonAttributes.LINE_SHADER;
+import static de.jreality.shader.CommonAttributes.POINT_RADIUS;
 import static de.jreality.shader.CommonAttributes.POINT_SHADER;
 import static de.jreality.shader.CommonAttributes.POLYGON_SHADER;
 import static de.jreality.shader.CommonAttributes.SPHERES_DRAW;
@@ -52,6 +53,7 @@ import java.io.FileWriter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 import javax.swing.DefaultListModel;
@@ -164,14 +166,24 @@ import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin 
 	implements ListSelectionListener, ChangeListener, ActionListener, SelectionListener, ColorChangedListener, JobListener {
 
+	private Logger
+		log = Logger.getLogger(getClass().getName());
+	
 	private static int
 		coverResolution = 1024;
 	
-	private enum Domain {
+	public static enum Domain {
 		Cut,
 		Minimal,
 		Opposite,
 		Canonical
+	}
+	
+	public static enum TargetGeometry {
+		Automatic,
+		Euclidean,
+		Spherical,
+		Hyperbolic
 	}
 	
 	// plug-in section ------------------ 
@@ -192,6 +204,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	private CoHDS
 		surface = null,
 		surfaceUnwrapped = null;
+	private TargetGeometry
+		activeGeometry = TargetGeometry.Euclidean;
 	private List<CoVertex>
 		customVertices = new LinkedList<CoVertex>();
 	private List<CoEdge>
@@ -242,7 +256,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		coverToTextureButton = new JButton("Create Texture"),
 		checkGaussBonnetBtn = new JButton("Check Gauß-Bonnet"),
 		unwrapBtn = new JButton("Unwrap"),
-		spherizeButton = new JButton("Spherize"),
 		quantizeToQuads = new JButton("Quads"),
 		reorderFacesButton = new JButton("Move Faces"),
 		reorderSelectedFacesButton = new JButton("Move Selected Faces"),
@@ -254,7 +267,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		boundaryColorButton = new ColorChooseJButton(Color.RED, true),
 		axesColorButton = new ColorChooseJButton(Color.BLUE, true);
 	private JComboBox<Domain>
-		domainCombo = new JComboBox<Domain>(Domain.values());
+		domainCombo = new JComboBox<>(Domain.values());
+	private JComboBox<TargetGeometry>
+		targetGeometryCombo = new JComboBox<>(TargetGeometry.values());
 	private ShrinkPanel
 		customNodePanel = new ShrinkPanel("Custom Nodes"),
 		boundaryPanel = new ShrinkPanel("Boundary"),
@@ -355,6 +370,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		yellowPointsAppearance.setAttribute(VERTEX_DRAW, true);
 		yellowPointsAppearance.setAttribute(POINT_SHADER + "." + DIFFUSE_COLOR, YELLOW);
 		yellowPointsAppearance.setAttribute(POINT_SHADER + "." + SPHERES_DRAW, true);
+		yellowPointsAppearance.setAttribute(POINT_SHADER + "." + POINT_RADIUS, 0.1);
 		selectedCustomNodesRoot.setAppearance(yellowPointsAppearance);
 		
 		pngChooser = new JFileChooser();
@@ -417,7 +433,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		boundaryColorButton.addColorChangedListener(this);
 		axesColorButton.addColorChangedListener(this);
 		triangulationColorButton.addColorChangedListener(this);
-		spherizeButton.addActionListener(this);
 		reorderFacesButton.addActionListener(this);
 		reorderSelectedFacesButton.addActionListener(this);
 		createCopiesButton.addActionListener(this);
@@ -438,13 +453,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		shrinkPanel.removeAll();
 		shrinkPanel.setLayout(new GridBagLayout());
 		GridBagConstraints c1 = new GridBagConstraints();
-		c1.insets = new Insets(1,1,1,1);
+		c1.insets = new Insets(1,3,1,1);
 		c1.fill = GridBagConstraints.BOTH;
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 1.0;
 		c1.gridwidth = 1;
 		GridBagConstraints c2 = new GridBagConstraints();
-		c2.insets = new Insets(1,1,1,1);
+		c2.insets = new Insets(1,1,1,3);
 		c2.fill = GridBagConstraints.BOTH;
 		c2.anchor = GridBagConstraints.WEST;
 		c2.weightx = 1.0;
@@ -462,10 +477,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			shrinkPanel.add(maxIterationsSpinner, c2);
 			shrinkPanel.add(rescaleChecker, c2);
 			shrinkPanel.add(useSelectionCutChecker, c2);
+			shrinkPanel.add(new JLabel("Target Geometry"), c1);
+			shrinkPanel.add(targetGeometryCombo, c2);
 		}
 		shrinkPanel.add(unwrapBtn, c2);
 		if (expert) {
-			shrinkPanel.add(spherizeButton, c2);
 			shrinkPanel.add(checkGaussBonnetBtn, c2);
 		}
 		
@@ -574,7 +590,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	
 	@Override
 	public void colorChanged(ColorChangedEvent cce) {
-		updateDomainImage();
+		updateDomainImage(activeGeometry);
 	}
 	
 	@Override
@@ -660,10 +676,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			}
 		}
 		if (coverElementsSpinner == e.getSource()) {
-			updateDomainImage();
+			updateDomainImage(activeGeometry);
 		}
 		if (coverMaxDistanceSpinner == e.getSource()) {
-			updateDomainImage();
+			updateDomainImage(activeGeometry);
 		}
 	}
 	
@@ -674,12 +690,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		surfaceUnwrapped.revertNormalization();
 		genus = unwrapper.genus;
 		cutInfo = unwrapper.cutInfo;
+		activeGeometry = unwrapper.getTargetGeometry();
 		metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
 		metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
 		conformalDataPlugin.addDiscreteMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
-		createUniformization(surfaceUnwrapped, genus, cutInfo);
-		updateGeometry();
-		updateDomainImage();
+		createUniformization(surfaceUnwrapped, genus, activeGeometry, cutInfo);
+		updateGeometry(activeGeometry);
+		updateDomainImage(activeGeometry);
 	}
 	@Override
 	public void jobFailed(Job job, Exception e) {
@@ -698,11 +715,14 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	public void jobStarted(Job job) {
 	}
 	
-	public void createUniformization(CoHDS surfaceUnwrapped, int genus, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+	public void createUniformization(CoHDS surfaceUnwrapped, int genus, TargetGeometry targetGeometry, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		this.genus = genus;
 		this.surfaceUnwrapped = surfaceUnwrapped;
 		this.cutInfo = cutInfo;
-		if (genus > 0) {
+		if (targetGeometry == TargetGeometry.Euclidean || targetGeometry == TargetGeometry.Hyperbolic) {
+			if (cutInfo.edgeCutMap.size() == 0) {
+				return;
+			}
 			int signature = getActiveSignature();
 			try {
 				System.out.println("Constructing fundamental cut polygon...");
@@ -715,7 +735,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				conformalDataPlugin.addUniformizationData("Minimal Uniformization", minimalPolygon);
 				System.out.println(minimalPolygon);
 				minimalPolygon.checkRelation();
-				if (genus > 1) {
+				if (targetGeometry == TargetGeometry.Hyperbolic) {
 					System.out.println("Constructing opposites sides polygon...");
 					oppositePolygon = CanonicalFormUtility.canonicalizeOpposite(minimalPolygon);
 					System.out.println(oppositePolygon);
@@ -734,8 +754,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		}
-		if (genus == 0) {
+		} else {
 			cutInfo = null;
 			cuttedPolygon = null;
 		}
@@ -746,8 +765,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	public void actionPerformed(ActionEvent e) {
 		Object s = e.getSource();
 		if (domainCombo == s) {
-			updateGeometry();
-			updateDomainImage();
+			updateGeometry(activeGeometry);
+			updateDomainImage(activeGeometry);
 			return;
 		}
 		if (coverToTextureButton == s) {
@@ -767,7 +786,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			ti.setTextureRotation(0.0);
 			ti.setTextureShear(0.0);
 		}
-		if (unwrapBtn == s || spherizeButton == s) {
+		if (unwrapBtn == s) {
 			CoHDS unwrapped = getLoaderGeometry();
 			if (unwrapped == null) return;
 			surface = copySurface(unwrapped);
@@ -779,7 +798,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			conformalDataPlugin.addDiscreteMetric("Input Discrete Metric", unwrapped, aSet);
 			conformalDataPlugin.addDiscreteEmbedding("Input Discrete Position Embedding", unwrapped, aSet, Position4d.class, null);
 			Unwrap uw = new Unwrap(unwrapped, aSet);
-			uw.setSpherize(spherizeButton == s);
+			uw.setTargetGeometry((TargetGeometry)targetGeometryCombo.getSelectedItem());
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());
 			uw.setMaxIterations(maxIterationsModel.getNumber().intValue());
 			uw.setNumCones(numConesModel.getNumber().intValue());
@@ -930,9 +949,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				T.transformVector(vv.T);
 			}
 			hif.update();
-			createUniformization(surfaceUnwrapped, genus, cutInfo);
-			updateGeometry();
-			updateDomainImage();
+			createUniformization(surfaceUnwrapped, genus, activeGeometry, cutInfo);
+			updateGeometry(activeGeometry);
+			updateDomainImage(activeGeometry);
 			conformalDataPlugin.addDiscreteMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
 		}
 		if (saveTextureButton == s) {
@@ -1008,8 +1027,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			drawBoundaryChecker == s ||
 			drawCurvesOnSurface == s
 		) {
-			updateGeometry();
-			updateDomainImage();				
+			updateGeometry(activeGeometry);
+			updateDomainImage(activeGeometry);				
 		}
 		if (reorderFacesButton == s) {
 			reorderFaces(false);
@@ -1068,8 +1087,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			int numFaces = reorderFacesCountModel.getNumber().intValue();	
 			VisualizationUtility.reglueOutsideFaces(surfaceUnwrapped, numFaces, p, cutInfo, signature);
 		}
-		updateGeometry();
-		updateDomainImage();
+		updateGeometry(activeGeometry);
+		updateDomainImage(activeGeometry);
 	}
 	
 	private FundamentalPolygon getActiveFundamentalPoygon() {
@@ -1095,23 +1114,23 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 	
 
-	public void updateDomainImage() {
+	public void updateDomainImage(final TargetGeometry target) {
 		Runnable r = new Runnable() {
 			@Override
 			public void run() {
-				updateDomainImageDirect();
+				updateDomainImageDirect(target);
 			}
 		};
 		EventQueue.invokeLater(r);
 	}
 	
-	public void updateDomainImageDirect() {
+	public void updateDomainImageDirect(TargetGeometry target) {
 		if (domainVisualisationPlugin == null) return;
 		domainVisualisationPlugin.updateVisualization();
 		HalfedgeInterface domInterface = domainVisualisationPlugin.getDomainInterface();
 		domInterface.removeTemporaryGeometry(domainRoot);
 		int signature = getActiveSignature();
-		if (genus > 1) {
+		if (target == TargetGeometry.Hyperbolic) {
 			// texture
 			domInterface.addTemporaryGeometry(domainRoot);
 			boolean showCircle = false;
@@ -1128,7 +1147,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		boolean drawCurves = drawCurvesOnSurface.isSelected();
 		hif.removeTemporaryGeometry(polygonCurvesRoot);
 		hif.removeTemporaryGeometry(axesCurvesRoot);
-		if (genus > 1 && drawCurves) {
+		if (target == TargetGeometry.Hyperbolic && drawCurves) {
 			AdapterSet aSet = hif.getActiveAdapters();
 			int depth = coverElementsModel.getNumber().intValue();
 			double maxDrawDistance = coverMaxDisctanceModel.getNumber().doubleValue();
@@ -1194,9 +1213,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 	
 	
-	public void updateGeometry() {
+	public void updateGeometry(TargetGeometry target) {
 		if (surfaceUnwrapped == null) return;
-		HyperbolicModel model = genus <= 1 ? Klein : Poincaré;
+		HyperbolicModel model = Klein;
+		if (target == TargetGeometry.Hyperbolic) {
+			model = Poincaré;
+		}
 		vis.setHyperbolicModel(model, false);
 		hif.addLayerAdapter(metricErrorAdapter, false);
 		vis.setInterpolation(Incircle, false);
@@ -1231,7 +1253,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		switch (domain) {
 			case Cut:
 				if (cuttedPolygon == null) {
-					throw new RuntimeException("No fundamental polygon available");
+					log.warning("No fundamental polygon available");
+					return;
 				}
 				if (drawTriangulation) {
 					drawTriangulation(surfaceUnwrapped, model, cuttedPolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor, drawBoundary, boundaryColor);
@@ -1240,7 +1263,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				break;
 			case Minimal:
 				if (minimalPolygon == null) {
-					throw new RuntimeException("No fundamental polygon available");
+					log.warning("No minimal fundamental polygon available");
+					return;
 				}
 				if (drawTriangulation) {
 					drawTriangulation(surfaceUnwrapped, model, minimalPolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor, drawBoundary, boundaryColor);
@@ -1249,7 +1273,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				break;
 			case Canonical:
 				if (canonicalPolygon == null) {
-					throw new RuntimeException("No fundamental polygon available");
+					log.warning("No canonical fundamental polygon available");
+					return;
 				}
 				if (drawTriangulation) {
 					drawTriangulation(surfaceUnwrapped, model, canonicalPolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor, drawBoundary, boundaryColor);
@@ -1258,7 +1283,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				break;
 			case Opposite:
 				if (oppositePolygon == null) {
-					throw new RuntimeException("No fundamental polygon available");
+					log.warning("No opposite fundamental polygon available");
+					return;
 				}
 				if (drawTriangulation) {
 					drawTriangulation(surfaceUnwrapped, model, oppositePolygon, maxDrawDepth, maxDrawDisctance, g2d, res, triangulationColor, drawBoundary, boundaryColor);

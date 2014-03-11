@@ -2,9 +2,6 @@ package de.varylab.discreteconformal.plugin.tasks;
 
 import static java.lang.Math.PI;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +17,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin.TargetGeometry;
 import de.varylab.discreteconformal.unwrapper.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.CircleDomainUnwrapper;
 import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapper;
@@ -31,6 +29,7 @@ import de.varylab.discreteconformal.unwrapper.StereographicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
+import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class Unwrap extends AbstractJob {
 
@@ -44,9 +43,10 @@ public class Unwrap extends AbstractJob {
 		selectedVertices = new HashSet<CoVertex>();
 	private Set<CoEdge>
 		selectedEdges = new HashSet<CoEdge>();
+	private TargetGeometry
+		targetGeometry = TargetGeometry.Automatic;
 	private boolean
 		usePetsc = false,
-		spherize = false,
 		useSelectionCuts = false;
 	private QuantizationMode
 		coneMode = QuantizationMode.AllAngles,
@@ -84,53 +84,30 @@ public class Unwrap extends AbstractJob {
 	
 	@Override
 	public void executeJob() throws Exception {
-		long startTime = System.currentTimeMillis();
-		long unwrapTime = -1;
-		long layoutTime = -1;
+//		long startTime = System.currentTimeMillis();
+//		long unwrapTime = -1;
+//		long layoutTime = -1;
 		fireJobProgress(0.0);
 		if (!HalfEdgeUtils.isValidSurface(surface, true)) {
 			throw new RuntimeException("Surface is not valid");
 		}
 		genus = HalfEdgeUtils.getGenus(surface);
-		if (spherize) genus = 0;
 		double gradTolerance = Math.pow(10, toleranceExp);
-		switch (genus) {
-		// disk or sphere---------------------
-		case 0: 
-			Collection<CoEdge> bList = HalfEdgeUtils.boundaryEdges(surface);
-			boolean isSphere = bList.size() == 0;
+		
+		if (targetGeometry == TargetGeometry.Automatic) {
+			targetGeometry = UnwrapUtility.calculateTargetGeometry(surface);
+		}
+		
+		switch (targetGeometry) {
+		case Spherical: 
+			logger.info("Spherical unwrap...");
 			Unwrapper unwrapper = null;
-			if (isSphere) {
-				logger.info("unwrapping a sphere...");
-				if (usePetsc) {
-//					unwrapper = new SphericalUnwrapperPETSc();
-					unwrapper = new StereographicUnwrapper();
-				} else {
-//					unwrapper = new SphericalUnwrapper();
-					unwrapper = new StereographicUnwrapper();
-				}
+			if (usePetsc) {
+//				unwrapper = new SphericalUnwrapperPETSc();
+				unwrapper = new StereographicUnwrapper();
 			} else {
-				if (boundaryMode == BoundaryMode.Circle) {
-					CircleDomainUnwrapper.flipAtEars(surface, aSet);
-					CircleDomainUnwrapper cdu = new CircleDomainUnwrapper();
-					unwrapper = cdu;
-				} else {
-					if (usePetsc) {
-						EuclideanUnwrapperPETSc uw = new EuclideanUnwrapperPETSc();
-						uw.setNumCones(numCones);
-						uw.setConeMode(coneMode);
-						uw.setBoundaryMode(boundaryMode);
-						uw.setBoundaryQuantMode(boundaryQuantMode);
-						unwrapper = uw;
-					} else {
-						EuclideanUnwrapper uw = new EuclideanUnwrapper();
-						uw.setNumCones(numCones);
-						uw.setConeMode(coneMode);
-						uw.setBoundaryMode(boundaryMode);
-						uw.setBoundaryQuantMode(boundaryQuantMode);
-						unwrapper = uw;
-					}
-				}
+//				unwrapper = new SphericalUnwrapper();
+				unwrapper = new StereographicUnwrapper();
 			}
 			if (!selectedVertices.isEmpty()) {
 				CoVertex cutRoot = selectedVertices.iterator().next();
@@ -139,7 +116,7 @@ public class Unwrap extends AbstractJob {
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
 			unwrapper.unwrap(surface, genus, aSet);
-			unwrapTime = System.currentTimeMillis();
+//			unwrapTime = System.currentTimeMillis();
 			fireJobProgress(0.5);
 			
 			// check sphere conditions
@@ -165,16 +142,31 @@ public class Unwrap extends AbstractJob {
 			cutInfo = unwrapper.getCutInfo();
 			lengthMap = unwrapper.getlengthMap();
 			layoutRoot = unwrapper.getLayoutRoot();
-			layoutTime = System.currentTimeMillis();
+//			layoutTime = System.currentTimeMillis();
 			fireJobProgress(1.0);
 			break;
-		// torus ----------------------------
-		case 1:
-			logger.info("unwrapping a torus...");
-			if (usePetsc) {
-				unwrapper = new EuclideanUnwrapperPETSc();
+		case Euclidean:
+			logger.info("Euclidean unwrap...");
+			if (boundaryMode == BoundaryMode.Circle) {
+				CircleDomainUnwrapper.flipAtEars(surface, aSet);
+				CircleDomainUnwrapper cdu = new CircleDomainUnwrapper();
+				unwrapper = cdu;
 			} else {
-				unwrapper = new EuclideanUnwrapper();
+				if (usePetsc) {
+					EuclideanUnwrapperPETSc uw = new EuclideanUnwrapperPETSc();
+					uw.setNumCones(numCones);
+					uw.setConeMode(coneMode);
+					uw.setBoundaryMode(boundaryMode);
+					uw.setBoundaryQuantMode(boundaryQuantMode);
+					unwrapper = uw;
+				} else {
+					EuclideanUnwrapper uw = new EuclideanUnwrapper();
+					uw.setNumCones(numCones);
+					uw.setConeMode(coneMode);
+					uw.setBoundaryMode(boundaryMode);
+					uw.setBoundaryQuantMode(boundaryQuantMode);
+					unwrapper = uw;
+				}
 			}
 			if (useSelectionCuts) unwrapper.setCutGraph(selectedEdges);
 			if (!selectedVertices.isEmpty()) {
@@ -184,32 +176,33 @@ public class Unwrap extends AbstractJob {
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
 			unwrapper.unwrap(surface, genus, aSet);
-			unwrapTime = System.currentTimeMillis();
+//			unwrapTime = System.currentTimeMillis();
 			fireJobProgress(0.5);
 			
 			cutInfo = unwrapper.getCutInfo();
 			lengthMap = unwrapper.getlengthMap();
 			layoutRoot = unwrapper.getLayoutRoot();
-			layoutTime = System.currentTimeMillis();
-			try {
-				Complex tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(cutInfo);
-				Complex piNormalizedTau = new Complex(0, 2 * PI);
-				piNormalizedTau = piNormalizedTau.times(tau);
-				final ComplexMatrix PeriodMatrix = new ComplexMatrix(new Complex[][] {{piNormalizedTau}});
-				logger.info("Tau Re " + tau.re);
-				logger.info("Tau Im " + tau.im);
-				logger.info("Tau Abs " + tau.abs());
-				logger.info("Tau Arg " + tau.arg());
-				SiegelReduction siegel = new SiegelReduction(PeriodMatrix);
-				logger.info("After Siegel: " +  siegel.getReducedPeriodMatrix());
-			} catch (Exception e) {
-				e.printStackTrace();
+//			layoutTime = System.currentTimeMillis();
+			if (genus == 1) {
+				try {
+					Complex tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(cutInfo);
+					Complex piNormalizedTau = new Complex(0, 2 * PI);
+					piNormalizedTau = piNormalizedTau.times(tau);
+					final ComplexMatrix PeriodMatrix = new ComplexMatrix(new Complex[][] {{piNormalizedTau}});
+					logger.info("Tau Re " + tau.re);
+					logger.info("Tau Im " + tau.im);
+					logger.info("Tau Abs " + tau.abs());
+					logger.info("Tau Arg " + tau.arg());
+					SiegelReduction siegel = new SiegelReduction(PeriodMatrix);
+					logger.info("After Siegel: " +  siegel.getReducedPeriodMatrix());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 			fireJobProgress(1.0);
 			break;
-		// genus > 1 -------------------------
 		default:
-			logger.info("unwrapping surface of genus " + genus + "...");
+			logger.info("Hyperbolic unwrap...");
 			if (usePetsc) {
 				unwrapper = new HyperbolicUnwrapperPETSc();
 			} else {
@@ -223,18 +216,18 @@ public class Unwrap extends AbstractJob {
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
 			unwrapper.unwrap(surface, genus, aSet);
-			unwrapTime = System.currentTimeMillis();
+//			unwrapTime = System.currentTimeMillis();
 			fireJobProgress(0.5);
 			cutInfo = unwrapper.getCutInfo();
 			lengthMap = unwrapper.getlengthMap();
 			layoutRoot = unwrapper.getLayoutRoot();
-			layoutTime = System.currentTimeMillis();
+//			layoutTime = System.currentTimeMillis();
 			fireJobProgress(1.0);
 			break;
 		}
-		NumberFormat nf = new DecimalFormat("0.00");
-		logger.info("minimization took " + nf.format((unwrapTime - startTime) / 1000.0) + "sec.");
-		logger.info("layout took " + nf.format((layoutTime - unwrapTime) / 1000.0) + "sec.");
+//		NumberFormat nf = new DecimalFormat("0.00");
+//		System.out.println("minimization took " + nf.format((unwrapTime - startTime) / 1000.0) + "sec.");
+//		System.out.println("layout took " + nf.format((layoutTime - unwrapTime) / 1000.0) + "sec.");
 //		int brokenCount = 0;
 //		int curveVertices = 0;
 //		for (CoEdge e : surface.getEdges()) {
@@ -315,18 +308,18 @@ public class Unwrap extends AbstractJob {
 		this.selectedEdges = selectedEdges;
 	}
 
-	public void setSpherize(boolean spherize) {
-		this.spherize = spherize;
-	}
-	public boolean isSpherize() {
-		return spherize;
-	}
-	
 	public void setUseSelectionCuts(boolean useSelectionCuts) {
 		this.useSelectionCuts = useSelectionCuts;
 	}
 	public boolean isUseSelectionCuts() {
 		return useSelectionCuts;
+	}
+	
+	public void setTargetGeometry(TargetGeometry targetGeometry) {
+		this.targetGeometry = targetGeometry;
+	}
+	public TargetGeometry getTargetGeometry() {
+		return targetGeometry;
 	}
 	
 }

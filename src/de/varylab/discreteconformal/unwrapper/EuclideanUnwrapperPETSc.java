@@ -1,5 +1,7 @@
 package de.varylab.discreteconformal.unwrapper;
 
+import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -99,8 +101,13 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		app = new CEuclideanApplication(surface);
 		double[] uValues = calculateConformalFactors(surface, aSet, app);
 		uVec = new DenseVector(uValues);
-
+		WeightAdapter<CoEdge> weights = new EuclideanLengthWeightAdapter(uVec);
+		
 		if (cutAndLayout) {
+			CoVertex root = surface.getVertex(0);
+			if (cutRoot != null) {
+				root = cutRoot;
+			}
 			switch (genus) {
 			case 0:
 				cutInfo = ConesUtility.cutMesh(surface);
@@ -108,16 +115,21 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 			case 1:
 				if (cutGraph != null) {
 					cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+					cutInfo.cutRoot = root;
 					CuttingUtility.cutAtEdges(cutInfo, cutGraph);
 				} else {
-					CoVertex root = surface.getVertex(0);
-					if (cutRoot != null) root = cutRoot;
-					WeightAdapter<CoEdge> weights = new EuclideanLengthWeightAdapter(uVec);
+					
 					cutInfo = CuttingUtility.cutTorusToDisk(surface, root, weights);
 				}
 				break;
 			default:
-				throw new RuntimeException("Cannot work on higher genus");
+				if (cutGraph != null) {
+					cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+					cutInfo.cutRoot = root;
+					CuttingUtility.cutAtEdges(cutInfo, cutGraph);
+				} else {
+					cutInfo = cutManifoldToDisk(surface, root, weights);
+				}
 			}
 			lengthMap = EuclideanLayout.getLengthMap(surface, app.getFunctional(), uVec);
 			layoutRoot = EuclideanLayout.doLayout(surface, app.getFunctional(), uVec);
@@ -170,6 +182,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		if (status.reason.cvalue() < 0) {
 			throw new UnwrapException("Optimization did not succeed: " + status);
 		}
+		System.out.println(status);
 
 		if (!cones.isEmpty()) {
 			if (conesMode != QuantizationMode.AllAngles) {
