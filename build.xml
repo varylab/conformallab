@@ -16,6 +16,8 @@
 		<format property="date" pattern="yyyy-MM-dd" />
 	</tstamp>
 	<property name="vendor" value="Stefan Sechelmann"/>
+	<property name="target" value="1.7"/>
+	<property name="source" value="1.7"/>
 	<property name="src" value="src"/>
 	<property name="src-data" value="src-data"/>
 	<property name="build" value="build"/>
@@ -48,7 +50,7 @@
 	</target>
 			
 	<target name="compile" depends="create build folders">
-		<javac destdir="${build}" excludesfile="build.exclude" source="1.6" target="1.6" includeantruntime="false" encoding="UTF-8">
+		<javac destdir="${build}" excludesfile="build.exclude" source="${source}" target="${target}" includeantruntime="false" encoding="UTF-8">
 			<compilerarg value="-Xlint:deprecation"/>
 			<compilerarg value="-Xlint:unchecked"/>
 			<src path="${src}"/>

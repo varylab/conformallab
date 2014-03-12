@@ -18,7 +18,7 @@ import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Klein;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Poincaré;
 import static de.varylab.discreteconformal.plugin.InterpolationMethod.Incircle;
-import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.createIntersectingVertices;
+import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.createIntersectionVertices;
 import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawTriangulation;
 import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawUniversalCoverImage;
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
@@ -50,12 +50,14 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -65,6 +67,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
@@ -118,6 +121,7 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
+import de.jtem.halfedgetools.adapter.type.generic.TexturePosition2d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
@@ -260,7 +264,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		reorderFacesButton = new JButton("Move Faces"),
 		reorderSelectedFacesButton = new JButton("Move Selected Faces"),
 		createCopiesButton = new JButton("Create Copies"),
-		extractCutPrepatedButton = new JButton("Extract Cut-Prepared");
+		extractCutPreparedButton = new JButton("Extract Cut-Prepared"),
+		extractCutPreparedDirectionButton = new JButton("Extract Direction Cut-Prepared");
 	private ColorChooseJButton
 		triangulationColorButton = new ColorChooseJButton(Color.BLACK, true),
 		polygonColorButton = new ColorChooseJButton(Color.RED, true),
@@ -300,6 +305,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		createCopiesSpinner = new JSpinner(createCopiesModel),
 		snapToleranceExpSpinner = new JSpinner(snapToleranceExpModel);
 	private JCheckBox
+		uniformizationChecker = new JCheckBox("Create Uniformization"), 
 		expertChecker = new JCheckBox("Expert Mode"),
 		rescaleChecker = new JCheckBox("Rescale Geometry", true),
 		circularEdgeChecker = new JCheckBox("Circular Edge"), 
@@ -312,6 +318,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		drawPolygonChecker = new JCheckBox("Draw Polygon", true),
 		drawCurvesOnSurface = new JCheckBox("Draw Curves On Surface"),
 		useSelectionCutChecker = new JCheckBox("Use Selection Cut Graph");
+	private JRadioButton
+		cutXDirectionRadio = new JRadioButton("X"),
+		cutYDirectionRadio = new JRadioButton("Y", true);
 	private JComboBox<String>
 		numericsCombo = new JComboBox<String>(new String[] {"Petsc/Tao Numerics", "Java/MTJ Numerics"});
 	private JComboBox<QuantizationMode>
@@ -436,7 +445,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		reorderFacesButton.addActionListener(this);
 		reorderSelectedFacesButton.addActionListener(this);
 		createCopiesButton.addActionListener(this);
-		extractCutPrepatedButton.addActionListener(this);
+		extractCutPreparedButton.addActionListener(this);
+		extractCutPreparedDirectionButton.addActionListener(this);
 		
 		unwrapBtn.addActionListener(this);
 		checkGaussBonnetBtn.addActionListener(this);
@@ -482,6 +492,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 		shrinkPanel.add(unwrapBtn, c2);
 		if (expert) {
+			shrinkPanel.add(uniformizationChecker, c2);
 			shrinkPanel.add(checkGaussBonnetBtn, c2);
 		}
 		
@@ -550,9 +561,16 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			visualizationPanel.add(coverToTextureButton, c2);
 			visualizationPanel.add(new JLabel("Snap Tolerance Exp"), c1);
 			visualizationPanel.add(snapToleranceExpSpinner, c2);
-			visualizationPanel.add(extractCutPrepatedButton, c2);
+			visualizationPanel.add(extractCutPreparedButton, c2);
+			visualizationPanel.add(cutXDirectionRadio, c1);
+			visualizationPanel.add(cutYDirectionRadio, c2);
+			visualizationPanel.add(extractCutPreparedDirectionButton, c2);
 			visualizationPanel.add(visButtonsPanel, c2);
 			shrinkPanel.add(visualizationPanel, c2);
+			
+			ButtonGroup directionGroup = new ButtonGroup();
+			directionGroup.add(cutXDirectionRadio);
+			directionGroup.add(cutYDirectionRadio);
 		}
 		if (expert) {
 			visButtonsPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
@@ -719,10 +737,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		this.genus = genus;
 		this.surfaceUnwrapped = surfaceUnwrapped;
 		this.cutInfo = cutInfo;
+		boolean doUniformization = uniformizationChecker.isSelected();
+		if (!doUniformization) {
+			return;
+		}
 		if (targetGeometry == TargetGeometry.Euclidean || targetGeometry == TargetGeometry.Hyperbolic) {
-			if (cutInfo.edgeCutMap.size() == 0) {
-				return;
-			}
 			int signature = getActiveSignature();
 			try {
 				System.out.println("Constructing fundamental cut polygon...");
@@ -1042,12 +1061,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		if (createCopiesButton == s) {
 			createCopies();
 		}
-		if (extractCutPrepatedButton == s) {
+		if (extractCutPreparedButton == s) {
 			int signature = getActiveSignature();
 			AdapterSet a = hif.getAdapters();
 			CoHDS intersected = copySurface(surface);
 			double snapTolerance = Math.pow(10, snapToleranceExpModel.getNumber().intValue());
-			Set<CoVertex> intersectingVertices = createIntersectingVertices(getActiveFundamentalPoygon(), intersected, surfaceUnwrapped, cutInfo, a, snapTolerance, signature);
+			Set<CoVertex> intersectingVertices = createIntersectionVertices(getActiveFundamentalPoygon(), intersected, surfaceUnwrapped, cutInfo, a, snapTolerance, signature);
 			Triangulator.triangulateByCuttingCorners(intersected, a);
 			HalfedgeSelection pathSelection = new HalfedgeSelection();
 			for (CoEdge edge : intersected.getEdges()) {
@@ -1060,6 +1079,47 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			l.set(intersected);
 			l.setSelection(pathSelection);
 		}
+		if (extractCutPreparedDirectionButton == s) {
+			AdapterSet a = hif.getAdapters();
+			Set<CoVertex> vSet = hif.getSelection().getVertices(surfaceUnwrapped);
+			if (vSet.isEmpty()) {
+				Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
+				JOptionPane.showMessageDialog(w, "Please select one vertex to define cut location.");
+				return;
+			}
+			CoVertex refVertex = vSet.iterator().next();
+			double[] pos = a.getD(TexturePosition2d.class, refVertex); 
+			double[][] segment = new double[2][];
+			if (cutXDirectionRadio.isSelected()) {
+				segment[0] = new double[]{-1000, pos[1], 1};
+				segment[1] = new double[]{1000, pos[1], 1};
+			} else {
+				segment[0] = new double[]{pos[0], -1000, 1};
+				segment[1] = new double[]{pos[0], 1000, 1};
+			}
+			
+			int signature = getActiveSignature();
+			CoHDS intersected = copySurface(surface);
+			double snapTolerance = Math.pow(10, snapToleranceExpModel.getNumber().intValue());
+			Set<CoVertex> newVertices = new HashSet<>();
+			try {
+				SurfaceCurveUtility.createIntersectionVertices(segment, intersected, surfaceUnwrapped, cutInfo, snapTolerance, signature, newVertices);
+			} catch (Exception ex) {
+				ex.printStackTrace(System.out);
+				return;
+			}
+			Triangulator.triangulateByCuttingCorners(intersected, a);
+			HalfedgeSelection pathSelection = new HalfedgeSelection();
+			for (CoEdge edge : intersected.getEdges()) {
+				if (newVertices.contains(edge.getTargetVertex()) && newVertices.contains(edge.getStartVertex())) {
+					pathSelection.add(edge);
+				}
+			}
+			HalfedgeLayer l = new HalfedgeLayer(hif);
+			hif.addLayer(l);
+			l.set(intersected);
+			l.setSelection(pathSelection);
+		}		
 	}
 	
 	
@@ -1366,6 +1426,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		c.storeProperty(getClass(), "coneTexQuantPanelShrinked", texQuantizationPanel.isShrinked());
 		c.storeProperty(getClass(), "customVertexPanelShrinked", customNodePanel.isShrinked());
 		c.storeProperty(getClass(), "domainModeIndex", domainCombo.getSelectedIndex());
+		c.storeProperty(getClass(), "doUniformization", uniformizationChecker.isSelected());
 	} 
 	
  
@@ -1389,6 +1450,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		texQuantizationPanel.setShrinked(c.getProperty(getClass(), "coneTexQuantPanelShrinked", true));
 		customNodePanel.setShrinked(c.getProperty(getClass(), "customVertexPanelShrinked", customNodePanel.isShrinked()));
 		domainCombo.setSelectedIndex(c.getProperty(getClass(), "domainModeIndex", domainCombo.getSelectedIndex()));
+		uniformizationChecker.setSelected(c.getProperty(getClass(), "doUniformization", false));
 	}
 	
 	

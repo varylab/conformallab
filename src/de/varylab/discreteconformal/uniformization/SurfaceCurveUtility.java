@@ -79,7 +79,7 @@ public class SurfaceCurveUtility {
 	}
 
 	
-	public static Set<CoVertex> createIntersectingVertices(
+	public static Set<CoVertex> createIntersectionVertices(
 		FundamentalPolygon poly, 
 		CoHDS surface, 
 		CoHDS domain, 
@@ -92,56 +92,69 @@ public class SurfaceCurveUtility {
 		List<double[][]> polySegments = new ArrayList<double[][]>();
 		VisualizationUtility.getUniversalCoverSegments(poly, 200, 10, true, false, Color.BLACK, Color.BLACK, axesSegments, polySegments);
 		for (double[][] segment : polySegments) {
-			double[] polygonLine = P2.lineFromPoints(null, segment[0], segment[1]);
-			for (CoEdge domainEdge : domain.getPositiveEdges()) {
-				CoVertex s = domainEdge.getStartVertex();
-				CoVertex t = domainEdge.getTargetVertex();
-				double[] st = {s.T[0] / s.T[3], s.T[1] / s.T[3], 1};
-				double[] tt = {t.T[0] / t.T[3], t.T[1] / t.T[3], 1};
-				double[][] domainSegment = {st, tt};
-				double[][] surfaceSegment = {s.P, t.P};
-				double[] domainEdgeLine = P2.lineFromPoints(null, st, tt);
-				double[] newDomainPoint = P2.pointFromLines(null, polygonLine, domainEdgeLine);
-				// split only if edge is really intersected
-				if (isOnSegment(newDomainPoint, domainSegment) && isOnSegment(newDomainPoint, segment)) {
-					double[] newPoint = getPointOnCorrespondingSegment(newDomainPoint, domainSegment, surfaceSegment, signature);
-					List<CoEdge> surfaceEdges = findCorrespondingSurfaceEdges(domainEdge, cutInfo, surface);
-					if (surfaceEdges.isEmpty()) continue;
-					CoEdge splitEdge = null;
-					// select intersected part
-					boolean snap = false;
-					for (CoEdge se : surfaceEdges) {
-						CoVertex vs = se.getStartVertex();
-						CoVertex vt = se.getTargetVertex();
-						double[][] pSegment = {vs.P, vt.P};
-						if (isOnSegment(newPoint, pSegment)) {
-							splitEdge = se;
-							double d1 = getDistanceBetween(newPoint, vs.P, Pn.EUCLIDEAN);
-							double d2 = getDistanceBetween(newPoint, vt.P, Pn.EUCLIDEAN);
-							if (d1 < snapTolerance) {
-								result.add(vs);
-								snap = true;
-							}
-							if (d2 < snapTolerance) {
-								result.add(vt);
-								snap = true;
-							}
-							break;
-						}
-					}
-					if (snap) continue;
-					if (splitEdge == null) {
-						log.warning("no corresponding intersected edge found on surface");
-						continue;
-					}
-					CoVertex newVertex = TopologyAlgorithms.splitEdge(splitEdge);
-					result.add(newVertex);
-					newVertex.P = newPoint;
-					newVertex.T = P2.imbedP2InP3(null, newDomainPoint);
-				}
-			}
+			createIntersectionVertices(segment, surface, domain, cutInfo, snapTolerance, signature, result);
 		}
 		return result;
+	}
+
+
+	public static void createIntersectionVertices(
+		double[][] segment,
+		CoHDS surface, 
+		CoHDS domain,
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo,
+		double snapTolerance, 
+		int signature, 
+		Set<CoVertex> result
+	) {
+		double[] polygonLine = P2.lineFromPoints(null, segment[0], segment[1]);
+		for (CoEdge domainEdge : domain.getPositiveEdges()) {
+			CoVertex s = domainEdge.getStartVertex();
+			CoVertex t = domainEdge.getTargetVertex();
+			double[] st = {s.T[0] / s.T[3], s.T[1] / s.T[3], 1};
+			double[] tt = {t.T[0] / t.T[3], t.T[1] / t.T[3], 1};
+			double[][] domainSegment = {st, tt};
+			double[][] surfaceSegment = {s.P, t.P};
+			double[] domainEdgeLine = P2.lineFromPoints(null, st, tt);
+			double[] newDomainPoint = P2.pointFromLines(null, polygonLine, domainEdgeLine);
+			// split only if edge is really intersected
+			if (isOnSegment(newDomainPoint, domainSegment) && isOnSegment(newDomainPoint, segment)) {
+				double[] newPoint = getPointOnCorrespondingSegment(newDomainPoint, domainSegment, surfaceSegment, signature);
+				List<CoEdge> surfaceEdges = findCorrespondingSurfaceEdges(domainEdge, cutInfo, surface);
+				if (surfaceEdges.isEmpty()) continue;
+				CoEdge splitEdge = null;
+				// select intersected part
+				boolean snap = false;
+				for (CoEdge se : surfaceEdges) {
+					CoVertex vs = se.getStartVertex();
+					CoVertex vt = se.getTargetVertex();
+					double[][] pSegment = {vs.P, vt.P};
+					if (isOnSegment(newPoint, pSegment)) {
+						splitEdge = se;
+						double d1 = getDistanceBetween(newPoint, vs.P, Pn.EUCLIDEAN);
+						double d2 = getDistanceBetween(newPoint, vt.P, Pn.EUCLIDEAN);
+						if (d1 < snapTolerance) {
+							result.add(vs);
+							snap = true;
+						}
+						if (d2 < snapTolerance) {
+							result.add(vt);
+							snap = true;
+						}
+						break;
+					}
+				}
+				if (snap) continue;
+				if (splitEdge == null) {
+					log.warning("no corresponding intersected edge found on surface");
+					continue;
+				}
+				CoVertex newVertex = TopologyAlgorithms.splitEdge(splitEdge);
+				result.add(newVertex);
+				newVertex.P = newPoint;
+				newVertex.T = P2.imbedP2InP3(null, newDomainPoint);
+			}
+		}
 	}
 	
 	
@@ -153,15 +166,30 @@ public class SurfaceCurveUtility {
 		CoFace flSource = sourceEdge.getLeftFace();
 		CoFace frSource = sourceEdge.getRightFace();
 		if (flSource == null) {
-			flSource = sourceCutInfo.edgeCutMap.get(sourceEdge).getRightFace();
+			CoEdge idEdge = sourceCutInfo.edgeCutMap.get(sourceEdge);
+			if (idEdge != null) {
+				flSource = idEdge.getRightFace();
+			}
 		}
 		if (frSource == null) {
-			frSource = sourceCutInfo.edgeCutMap.get(sourceEdge).getLeftFace();
+			CoEdge idEdge = sourceCutInfo.edgeCutMap.get(sourceEdge);
+			if (idEdge != null) {
+				frSource = idEdge.getLeftFace();
+			}
 		}
-		assert flSource != null;
-		assert frSource != null;
-		CoFace flTarget = target.getFace(flSource.getIndex());
-		CoFace frTarget = target.getFace(frSource.getIndex());
+		assert flSource != null || frSource != null;
+		CoFace flTarget = null;
+		CoFace frTarget = null;
+		if (flSource != null) {
+			flTarget = target.getFace(flSource.getIndex());
+		}
+		if (frSource != null) {
+			frTarget = target.getFace(frSource.getIndex());
+		}
+		if (flTarget == null) {
+			flTarget = frTarget;
+			frTarget = null;
+		}
 		List<CoEdge> result = HalfEdgeUtils.findEdgesBetweenFaces(flTarget, frTarget);
 		return result;
 	}

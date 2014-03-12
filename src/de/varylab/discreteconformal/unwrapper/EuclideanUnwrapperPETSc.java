@@ -1,6 +1,8 @@
 package de.varylab.discreteconformal.unwrapper;
 
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
+import static de.varylab.discreteconformal.util.CuttingUtility.cutToSimplyConnected;
+import static de.varylab.discreteconformal.util.CuttingUtility.cutTorusToDisk;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -108,26 +110,20 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 			if (cutRoot != null) {
 				root = cutRoot;
 			}
-			switch (genus) {
-			case 0:
-				cutInfo = ConesUtility.cutMesh(surface);
-				break;
-			case 1:
-				if (cutGraph != null) {
-					cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
-					cutInfo.cutRoot = root;
-					CuttingUtility.cutAtEdges(cutInfo, cutGraph);
-				} else {
-					
-					cutInfo = CuttingUtility.cutTorusToDisk(surface, root, weights);
-				}
-				break;
-			default:
-				if (cutGraph != null) {
-					cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
-					cutInfo.cutRoot = root;
-					CuttingUtility.cutAtEdges(cutInfo, cutGraph);
-				} else {
+			if (cutGraph != null) {
+				cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+				cutInfo.cutRoot = root;
+				CuttingUtility.cutAtEdges(cutInfo, cutGraph);
+			} else {
+				switch (genus) {
+				case 0:
+					cutInfo = ConesUtility.cutMesh(surface);
+					cutToSimplyConnected(surface, root, cutInfo);
+					break;
+				case 1:
+					cutInfo = cutTorusToDisk(surface, root, weights);
+					break;
+				default:
 					cutInfo = cutManifoldToDisk(surface, root, weights);
 				}
 			}

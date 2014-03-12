@@ -19,6 +19,10 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class CuttingUtility {
@@ -461,6 +465,47 @@ public class CuttingUtility {
 			be4.linkNextEdge(be2);
 		}
 		return result;
+	}
+
+	public static void cutToSimplyConnected(CoHDS hds, CoVertex cutRoot, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		List<List<CoEdge>> bc = HalfEdgeUtils.boundaryComponents(hds);
+		if (cutRoot != null) {
+			for (List<CoEdge> path : bc) {
+				Set<CoVertex> cycle = PathUtility.getVerticesOnPath(path);
+				List<CoEdge> cutPath = Search.getShortestPath(cutRoot, cycle, null);
+				cutAlongPath(cutPath, cutInfo);
+			}
+			cutInfo.cutRoot = cutRoot;
+		} else {
+			cutInfo.cutRoot = bc.get(0).get(0).getStartVertex();
+			while (bc.size() > 1) {
+				Set<CoVertex> cycle1 = PathUtility.getVerticesOnPath(bc.get(0));
+				List<CoEdge> allOtherCycles = new LinkedList<CoEdge>();
+				for (int i = 1; i < bc.size(); i++) {
+					allOtherCycles.addAll(bc.get(i));
+				}
+				Set<CoVertex> otherVertices = PathUtility.getVerticesOnPath(allOtherCycles);
+				
+				Set<CoVertex> inter = new TreeSet<CoVertex>(new NodeIndexComparator<CoVertex>());
+				inter.addAll(cycle1);
+				inter.retainAll(otherVertices);
+				if (!inter.isEmpty()) {
+					throw new RuntimeException("paths cannot intersect!");
+				}
+				List<CoEdge> cutPath = new LinkedList<CoEdge>();
+				for (CoVertex s : cycle1) {
+					List<CoEdge> checkPath = Search.getShortestPath(s, otherVertices, null);
+					if (checkPath.size() < cutPath.size() || cutPath.isEmpty()) {
+						cutPath = checkPath;
+					}
+				}
+				if (cutPath.isEmpty()) {
+					throw new RuntimeException("no path between cycles found!");
+				}
+				cutAlongPath(cutPath, cutInfo);
+				bc = HalfEdgeUtils.boundaryComponents(hds);
+			}
+		}
 	}
 
 	
