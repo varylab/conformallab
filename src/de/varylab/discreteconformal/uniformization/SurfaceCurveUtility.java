@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.uniformization;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -79,7 +80,7 @@ public class SurfaceCurveUtility {
 	}
 
 	
-	public static Set<CoVertex> createIntersectionVertices(
+	public static Set<Set<CoVertex>> createIntersectionVertices(
 		FundamentalPolygon poly, 
 		CoHDS surface, 
 		CoHDS domain, 
@@ -87,12 +88,14 @@ public class SurfaceCurveUtility {
 		double snapTolerance,
 		int signature
 	) {
-		Set<CoVertex> result = new TreeSet<CoVertex>(new NodeIndexComparator<CoVertex>());
+		Set<Set<CoVertex>> result = new HashSet<Set<CoVertex>>();
 		List<double[][]> axesSegments = new ArrayList<double[][]>();
 		List<double[][]> polySegments = new ArrayList<double[][]>();
 		VisualizationUtility.getUniversalCoverSegments(poly, 200, 10, true, false, Color.BLACK, Color.BLACK, axesSegments, polySegments);
 		for (double[][] segment : polySegments) {
-			createIntersectionVertices(segment, surface, domain, cutInfo, snapTolerance, signature, result);
+			Set<CoVertex> segmentVertices = new TreeSet<>(new NodeIndexComparator<CoVertex>());
+			createIntersectionVertices(segment, surface, domain, cutInfo, snapTolerance, signature, segmentVertices);
+			result.add(segmentVertices);
 		}
 		return result;
 	}

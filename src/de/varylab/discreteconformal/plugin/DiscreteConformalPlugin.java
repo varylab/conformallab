@@ -123,6 +123,7 @@ import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition2d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
+import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -130,6 +131,7 @@ import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.halfedgetools.plugin.SelectionListener;
 import de.jtem.halfedgetools.plugin.image.ImageHook;
+import de.jtem.halfedgetools.util.HalfEdgeUtilsExtra;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
@@ -1066,14 +1068,26 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			AdapterSet a = hif.getAdapters();
 			CoHDS intersected = copySurface(surface);
 			double snapTolerance = Math.pow(10, snapToleranceExpModel.getNumber().intValue());
-			Set<CoVertex> intersectingVertices = createIntersectionVertices(getActiveFundamentalPoygon(), intersected, surfaceUnwrapped, cutInfo, a, snapTolerance, signature);
-			Triangulator.triangulateByCuttingCorners(intersected, a);
+			Set<Set<CoVertex>> intersectingVertices = createIntersectionVertices(getActiveFundamentalPoygon(), intersected, surfaceUnwrapped, cutInfo, a, snapTolerance, signature);
 			HalfedgeSelection pathSelection = new HalfedgeSelection();
-			for (CoEdge edge : intersected.getEdges()) {
-				if (intersectingVertices.contains(edge.getTargetVertex()) && intersectingVertices.contains(edge.getStartVertex())) {
-					pathSelection.add(edge);
+			for (Set<CoVertex> segmentSet : intersectingVertices) {
+				for (CoVertex v : segmentSet) {
+					for (CoFace f : HalfEdgeUtilsExtra.getFaceStar(v)) {
+						for (CoVertex nextOnSegment : HalfEdgeUtils.boundaryVertices(f)) {
+							List<CoVertex> vStar = HalfEdgeUtilsExtra.getVertexStar(nextOnSegment);
+							if (nextOnSegment == v || vStar.contains(v)) {
+								continue;
+							}
+							if (segmentSet.contains(nextOnSegment)) {
+								CoEdge segmentEdge = TopologyAlgorithms.splitFaceAt(f, v, nextOnSegment);
+								pathSelection.add(segmentEdge);
+								pathSelection.add(segmentEdge.getOppositeEdge());
+							}
+						}
+					}
 				}
 			}
+			Triangulator.triangulateByCuttingCorners(intersected, a);
 			HalfedgeLayer l = new HalfedgeLayer(hif);
 			hif.addLayer(l);
 			l.set(intersected);
