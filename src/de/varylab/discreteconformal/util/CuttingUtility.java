@@ -4,6 +4,7 @@ import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isInteriorEdge;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isManifoldVertex;
+import static java.lang.Math.abs;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -14,11 +15,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import de.jreality.math.Rn;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.generic.TexturePosition2d;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -508,5 +512,48 @@ public class CuttingUtility {
 		}
 	}
 
+	
+	/**
+	 * Checks if the given p is inside the texture face of f.
+	 * The texture points of f are assumed to build a convex polygon.
+	 * @param <V>
+	 * @param <E>
+	 * @param <F>
+	 * @param <HDS>
+	 * @param p
+	 * @param f
+	 * @param a
+	 * @return
+	 */
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> boolean isInConvexTextureFace(double[] p, F f, AdapterSet a) {
+		List<E> bList = HalfEdgeUtils.boundaryEdges(f);
+		boolean sideFlag = false;
+		boolean firstEdge = true;
+		for (E e : bList) {
+			double[] sp = a.getD(TexturePosition2d.class, e.getStartVertex());
+			double[] tp = a.getD(TexturePosition2d.class, e.getTargetVertex());
+			double[] v1 = Rn.subtract(null, tp, sp);
+			double[] v2 = Rn.subtract(null, p, sp);
+			double[] v2r = {-v2[1], v2[0], 0};
+			double dot = Rn.innerProduct(v1, v2r);
+			if(abs(dot) <= 1E-4) {
+				continue;
+			}
+			if (firstEdge) {
+				sideFlag = dot > 0;
+				firstEdge = false;
+			} else {
+				if (dot > 0 != sideFlag) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}	
 	
 }

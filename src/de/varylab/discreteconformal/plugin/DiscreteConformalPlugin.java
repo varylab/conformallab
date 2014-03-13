@@ -102,6 +102,7 @@ import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.PointSet;
 import de.jreality.scene.SceneGraphComponent;
+import de.jreality.scene.pick.Hit;
 import de.jreality.shader.CommonAttributes;
 import de.jreality.shader.ImageData;
 import de.jreality.shader.Texture2D;
@@ -120,8 +121,10 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
+import de.jtem.halfedgetools.adapter.type.generic.Position3d;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition2d;
+import de.jtem.halfedgetools.adapter.type.generic.TexturePosition3d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
@@ -167,6 +170,7 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
+import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class DiscreteConformalPlugin extends ShrinkPanelPlugin 
@@ -267,7 +271,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		reorderSelectedFacesButton = new JButton("Move Selected Faces"),
 		createCopiesButton = new JButton("Create Copies"),
 		extractCutPreparedButton = new JButton("Extract Cut-Prepared"),
-		extractCutPreparedDirectionButton = new JButton("Extract Direction Cut-Prepared");
+		extractCutPreparedDirectionButton = new JButton("Extract Direction Cut-Prepared"),
+		insertHolomorphicImagePoints = new JButton("Insert Holomorphoc Image Points");
 	private ColorChooseJButton
 		triangulationColorButton = new ColorChooseJButton(Color.BLACK, true),
 		polygonColorButton = new ColorChooseJButton(Color.RED, true),
@@ -449,6 +454,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		createCopiesButton.addActionListener(this);
 		extractCutPreparedButton.addActionListener(this);
 		extractCutPreparedDirectionButton.addActionListener(this);
+		insertHolomorphicImagePoints.addActionListener(this);
 		
 		unwrapBtn.addActionListener(this);
 		checkGaussBonnetBtn.addActionListener(this);
@@ -567,6 +573,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			visualizationPanel.add(cutXDirectionRadio, c1);
 			visualizationPanel.add(cutYDirectionRadio, c2);
 			visualizationPanel.add(extractCutPreparedDirectionButton, c2);
+			visualizationPanel.add(insertHolomorphicImagePoints, c2);
 			visualizationPanel.add(visButtonsPanel, c2);
 			shrinkPanel.add(visualizationPanel, c2);
 			
@@ -1134,6 +1141,43 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			l.set(intersected);
 			l.setSelection(pathSelection);
 		}		
+		if (insertHolomorphicImagePoints == s) {
+			AdapterSet a = hif.getAdapters();
+			Set<CoVertex> vSet = hif.getSelection().getVertices(surfaceUnwrapped);
+			if (vSet.isEmpty()) {
+				Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
+				JOptionPane.showMessageDialog(w, "Please select al least one vertex to map.");
+				return;
+			}
+			CoHDS intersected = copySurface(surface);
+			for (CoVertex v : vSet){
+				double[] tp = a.getD(TexturePosition3d.class, v);
+				double[] tpp = Rn.negate(null, tp);
+				for (CoFace f : surfaceUnwrapped.getFaces()) {
+					CoFace ff = intersected.getFace(f.getIndex());
+					List<CoVertex> fv = HalfEdgeUtils.boundaryVertices(f);
+					List<CoVertex> ffv = HalfEdgeUtils.boundaryVertices(f);
+					if (CuttingUtility.isInConvexTextureFace(tpp, f, a)) {
+						double[] bary = new double[3];
+						double[] fp1 = a.getD(TexturePosition3d.class, fv.get(0));
+						double[] fp2 = a.getD(TexturePosition3d.class, fv.get(1));
+						double[] fp3 = a.getD(TexturePosition3d.class, fv.get(2));
+						double[] fpp1 = a.getD(Position3d.class, ffv.get(0));
+						double[] fpp2 = a.getD(Position3d.class, ffv.get(1));
+						double[] fpp3 = a.getD(Position3d.class, ffv.get(2));
+						Hit.convertToBary(bary, fp1, fp2, fp3, tpp);
+						double[][] corners = {fpp1, fpp2, fpp3};
+						double[] p = Rn.barycentricTriangleInterp(null, corners, bary);
+						CoVertex newVertex = TopologyAlgorithms.splitFace(ff);
+						newVertex.T = Pn.homogenize(null, tpp);
+						newVertex.P = Pn.homogenize(null, p);
+					}
+				}
+			}
+			HalfedgeLayer l = new HalfedgeLayer(hif);
+			hif.addLayer(l);
+			l.set(intersected);
+		}
 	}
 	
 	
