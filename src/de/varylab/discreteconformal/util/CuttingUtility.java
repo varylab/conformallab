@@ -540,6 +540,8 @@ public class CuttingUtility {
 			double[] v1 = Rn.subtract(null, tp, sp);
 			double[] v2 = Rn.subtract(null, p, sp);
 			double[] v2r = {-v2[1], v2[0], 0};
+			Rn.normalize(v1, v1);
+			Rn.normalize(v2r, v2r);
 			double dot = Rn.innerProduct(v1, v2r);
 			if(abs(dot) <= 1E-4) {
 				continue;

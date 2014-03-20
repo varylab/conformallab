@@ -429,7 +429,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 				System.arraycopy(v.P, 0, v.T, 0, 4);
 			}
 			TargetGeometry target = UnwrapUtility.calculateTargetGeometry(genus, 0);
-			discreteConformalPlugin.createUniformization(hds, genus, target, cutInfo);
+			discreteConformalPlugin.createUniformization(hds, target, cutInfo);
 			discreteConformalPlugin.updateGeometry(target);
 			discreteConformalPlugin.updateDomainImage(target);
 		}
@@ -446,7 +446,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 				v.T = new double[]{dv.getX(), dv.getY(), dv.getZ(), dv.getW()};
 			}
 			TargetGeometry target = UnwrapUtility.calculateTargetGeometry(genus, 0);
-			discreteConformalPlugin.createUniformization(hds, genus, target, cutInfo);
+			discreteConformalPlugin.createUniformization(hds, target, cutInfo);
 			discreteConformalPlugin.updateGeometry(target);
 			discreteConformalPlugin.updateDomainImage(target);
 		}

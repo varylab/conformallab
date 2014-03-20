@@ -218,7 +218,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				}
 				conformalDataPlugin.addDiscreteMap("Uniformizing Map", hds, cutInfo);
 				TargetGeometry targetGeometry = UnwrapUtility.calculateTargetGeometry(genus, 0);
-				dcp.createUniformization(hds, genus, targetGeometry, cutInfo);
+				dcp.createUniformization(hds, targetGeometry, cutInfo);
 				dcp.updateGeometry(targetGeometry);
 				dcp.updateDomainImage(targetGeometry);
 			}

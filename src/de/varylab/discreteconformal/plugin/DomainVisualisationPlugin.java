@@ -1,8 +1,5 @@
 package de.varylab.discreteconformal.plugin;
 
-import static de.jreality.math.Pn.EUCLIDEAN;
-import static de.jreality.math.Pn.HYPERBOLIC;
-
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -394,8 +391,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 			T = new Matrix();
 		}
 		
-		int genus = conformalPlugin.getCurrentGenus();
-		int signature = genus > 1 ? HYPERBOLIC : EUCLIDEAN;
+		int signature = conformalPlugin.getActiveSignature();
 		double[] s1 = Pn.normalize(null, edge.getStartVertex().T, signature); 
 		double[] t1 = Pn.normalize(null, edge.getTargetVertex().T, signature); 
 		double[] s2 = Pn.normalize(null, coEdge.getStartVertex().T, signature); 

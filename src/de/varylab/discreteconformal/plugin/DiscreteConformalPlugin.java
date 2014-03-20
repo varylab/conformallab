@@ -215,7 +215,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		surface = null,
 		surfaceUnwrapped = null;
 	private TargetGeometry
-		activeGeometry = TargetGeometry.Euclidean;
+		activeGeometry = TargetGeometry.Automatic;
 	private List<CoVertex>
 		customVertices = new LinkedList<CoVertex>();
 	private List<CoEdge>
@@ -227,8 +227,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		canonicalPolygon = null;
 	private Matrix 
 		polygonTextureMatrix = euclidean().translate(-0.5, -0.5, 0).scale(0.5).scale(1, -1, 1).getMatrix();
-	private int
-		genus = -1;
 	private CuttingInfo<CoVertex, CoEdge, CoFace> 
 		cutInfo = null;
 
@@ -236,7 +234,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		metricErrorAdapter = new MetricErrorAdapter();
 	public CoPositionAdapter
 		positionAdapter = new CoPositionAdapter();
-	public CoTexturePositionAdapter
+	protected CoTexturePositionAdapter
 		texturePositionAdapter = new CoTexturePositionAdapter();
 	
 	private Appearance
@@ -715,13 +713,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		Unwrap unwrapper = (Unwrap)job;
 		surfaceUnwrapped = unwrapper.getSurface();
 		surfaceUnwrapped.revertNormalization();
-		genus = unwrapper.genus;
 		cutInfo = unwrapper.cutInfo;
 		activeGeometry = unwrapper.getTargetGeometry();
 		metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
 		metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
 		conformalDataPlugin.addDiscreteMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
-		createUniformization(surfaceUnwrapped, genus, activeGeometry, cutInfo);
+		createUniformization(surfaceUnwrapped, activeGeometry, cutInfo);
 		updateGeometry(activeGeometry);
 		updateDomainImage(activeGeometry);
 	}
@@ -742,9 +739,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	public void jobStarted(Job job) {
 	}
 	
-	public void createUniformization(CoHDS surfaceUnwrapped, int genus, TargetGeometry targetGeometry, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
-		this.genus = genus;
+	public void createUniformization(CoHDS surfaceUnwrapped, TargetGeometry targetGeometry, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		this.surfaceUnwrapped = surfaceUnwrapped;
+		this.activeGeometry = targetGeometry;
 		this.cutInfo = cutInfo;
 		boolean doUniformization = uniformizationChecker.isSelected();
 		if (!doUniformization) {
@@ -977,7 +974,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				T.transformVector(vv.T);
 			}
 			hif.update();
-			createUniformization(surfaceUnwrapped, genus, activeGeometry, cutInfo);
+			createUniformization(surfaceUnwrapped, activeGeometry, cutInfo);
 			updateGeometry(activeGeometry);
 			updateDomainImage(activeGeometry);
 			conformalDataPlugin.addDiscreteMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
@@ -1156,7 +1153,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				for (CoFace f : surfaceUnwrapped.getFaces()) {
 					CoFace ff = intersected.getFace(f.getIndex());
 					List<CoVertex> fv = HalfEdgeUtils.boundaryVertices(f);
-					List<CoVertex> ffv = HalfEdgeUtils.boundaryVertices(f);
+					List<CoVertex> ffv = HalfEdgeUtils.boundaryVertices(ff);
 					if (CuttingUtility.isInConvexTextureFace(tpp, f, a)) {
 						double[] bary = new double[3];
 						double[] fp1 = a.getD(TexturePosition3d.class, fv.get(0));
@@ -1224,11 +1221,21 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 	}
 	
-	private int getActiveSignature() {
-		if (genus > 1) return Pn.HYPERBOLIC;
-		if (genus == 1) return Pn.EUCLIDEAN;
-		if (genus == 0) return Pn.ELLIPTIC;
-		return Pn.PROJECTIVE;
+	public int getActiveSignature() {
+		switch (activeGeometry) {
+		case Automatic: default:
+			int genus = HalfEdgeUtils.getGenus(surface);
+			if (genus > 1) return Pn.HYPERBOLIC;
+			if (genus == 1) return Pn.EUCLIDEAN;
+			if (genus == 0) return Pn.ELLIPTIC;
+			return Pn.PROJECTIVE;
+		case Euclidean:
+			return Pn.EUCLIDEAN;
+		case Hyperbolic:
+			return Pn.HYPERBOLIC;
+		case Spherical:
+			return Pn.ELLIPTIC;
+		}
 	}
 	
 
@@ -1532,8 +1539,5 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	public CuttingInfo<CoVertex, CoEdge, CoFace> getCurrentCutInfo() {
 		return cutInfo;
 	}
-	public int getCurrentGenus() {
-		return genus;
-	}
-	
+
 }
