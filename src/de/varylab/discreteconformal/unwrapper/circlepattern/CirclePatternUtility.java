@@ -1,7 +1,5 @@
 package de.varylab.discreteconformal.unwrapper.circlepattern;
 
-import static java.lang.Math.PI;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,12 +23,6 @@ public class CirclePatternUtility {
 		F extends Face<V, E, F>,
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> Map<F, Double> calculateCirclePatternRhos(HDS hds, Map<E, Double> thetaMap, Map<F, Double> phiMap) {
-		double thetaStarSum = 0.0;
-		for (E e : hds.getPositiveEdges()) {
-			double thStar = PI-thetaMap.get(e);
-			thetaStarSum += 2*thStar;
-		}
-		System.out.println("theta star sum: " + thetaStarSum/(2*PI));
 		for (E e : hds.getPositiveEdges()) {
 			double theta = thetaMap.get(e);
 			if (theta < 0) {
