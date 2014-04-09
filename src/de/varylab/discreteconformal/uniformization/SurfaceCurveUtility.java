@@ -103,6 +103,7 @@ public class SurfaceCurveUtility {
 
 	public static void createIntersectionVertices(
 		double[][] segment,
+		boolean segmentOnly,
 		CoHDS surface, 
 		CoHDS domain,
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo,
@@ -121,7 +122,7 @@ public class SurfaceCurveUtility {
 			double[] domainEdgeLine = P2.lineFromPoints(null, st, tt);
 			double[] newDomainPoint = P2.pointFromLines(null, polygonLine, domainEdgeLine);
 			// split only if edge is really intersected
-			if (isOnSegment(newDomainPoint, domainSegment) && isOnSegment(newDomainPoint, segment)) {
+			if (isOnSegment(newDomainPoint, domainSegment) && (!segmentOnly || isOnSegment(newDomainPoint, segment))) {
 				double[] newPoint = getPointOnCorrespondingSegment(newDomainPoint, domainSegment, surfaceSegment, signature);
 				List<CoEdge> surfaceEdges = findCorrespondingSurfaceEdges(domainEdge, cutInfo, surface);
 				if (surfaceEdges.isEmpty()) continue;
@@ -160,6 +161,17 @@ public class SurfaceCurveUtility {
 		}
 	}
 	
+	public static void createIntersectionVertices(
+			double[][] segment,
+			CoHDS surface, 
+			CoHDS domain,
+			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo,
+			double snapTolerance, 
+			int signature, 
+			Set<CoVertex> result
+		) {
+		createIntersectionVertices(segment, true, surface, domain, cutInfo, snapTolerance, signature, result);
+	}
 	
 	private static List<CoEdge> findCorrespondingSurfaceEdges(
 		CoEdge sourceEdge, 

@@ -176,7 +176,11 @@ public class CuttingUtility {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>
 	>  void cutAlongPath(Collection<E> path, CuttingInfo<V, E, F> context) {
-		for (E e : path) { 
+		
+		for (E e : path) {
+			if(context.cutRoot == null) {
+				context.cutRoot = e.getStartVertex();
+			}
 			if (isInteriorEdge(e)) {
 				E eop = e.getOppositeEdge();
 				context.edgeCutMap.put(e, eop);

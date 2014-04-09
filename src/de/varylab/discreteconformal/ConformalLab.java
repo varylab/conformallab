@@ -25,6 +25,7 @@ import de.jtem.jrworkspace.plugin.Plugin;
 import de.jtem.jrworkspace.plugin.lnfswitch.plugin.SystemLookAndFeel;
 import de.jtem.jrworkspace.plugin.simplecontroller.StartupChain;
 import de.jtem.jrworkspace.plugin.simplecontroller.widget.SplashScreen;
+import de.varylab.discreteconformal.datasource.CylinderEdgesDataSource;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.ConformalVisualizationPlugin;
@@ -75,6 +76,7 @@ public class ConformalLab implements Runnable {
 		s.add(new DomainVisualisationPlugin());
 		s.add(new IndexMedialGraph());
 		s.add(new ConformalDataPlugin());
+		s.add(new CylinderEdgesDataSource());
 		return s;
 	}
 	
