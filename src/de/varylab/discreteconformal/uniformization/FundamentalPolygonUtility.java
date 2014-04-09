@@ -565,11 +565,15 @@ public class FundamentalPolygonUtility {
 		Set<CoVertex> branchSet = cutInfo.getBranchSet();
 		int maxBranch = 0; 
 		CoVertex root = branchSet.iterator().next();
-		for (CoVertex branch : branchSet) {
-			int branchNumber = cutInfo.getCopies(branch).size();
-			if (branchNumber > maxBranch) {
-				maxBranch = branchNumber;
-				root = branch;
+		if (branchSet.contains(cutInfo.cutRoot)) {
+			root = cutInfo.cutRoot;
+		} else {
+			for (CoVertex branch : branchSet) {
+				int branchNumber = cutInfo.getCopies(branch).size();
+				if (branchNumber > maxBranch) {
+					maxBranch = branchNumber;
+					root = branch;
+				}
 			}
 		}
 		
@@ -637,7 +641,6 @@ public class FundamentalPolygonUtility {
 				Matrix A = new Matrix(P2.imbedMatrixP2InP3(null, T));
 				
 				// arbitrary precision isometry
-				// TODO: this does not use precisely the start and end of an edge sequence, fails for small exampels
 				BigDecimal[] TBig = P2Big.makeDirectIsometryFromFrames(null,
 					P2Big.projectP3ToP2(s1b, RnBig.toBig(null, lastStartPoint)), 
 					P2Big.projectP3ToP2(s2b, RnBig.toBig(null, actStartPoint)), 

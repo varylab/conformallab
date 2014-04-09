@@ -754,7 +754,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo, signature);
 				conformalDataPlugin.addUniformizationData("Direct Uniformization", cuttedPolygon);
 				System.out.println(cuttedPolygon);
-				FundamentalVertex root = cuttedPolygon.getMaxValenceVertex();
+				FundamentalVertex root = cuttedPolygon.getEdges().get(0).start;
 				System.out.println("Constructing minimal polygon...");
 				minimalPolygon = FundamentalPolygonUtility.minimize(cuttedPolygon, root);
 				conformalDataPlugin.addUniformizationData("Minimal Uniformization", minimalPolygon);
