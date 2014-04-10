@@ -2,8 +2,6 @@ package de.varylab.discreteconformal.uniformization;
 
 import static de.jreality.math.Pn.HYPERBOLIC;
 
-import java.util.Arrays;
-
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -86,7 +84,9 @@ public class SurfaceCurveUtilityTest {
 			{-0.2666822290964323, 0.019034256494171405, 0.10525293907970201, 0.44373020886051084}
 		}; 
 		double[] result = SurfaceCurveUtility.getPointOnCorrespondingSegment(edgePoint, edgeSegment, targetSegment, Pn.HYPERBOLIC);
-		Assert.assertTrue(Arrays.equals(result, targetSegment[1]));
+		for (int i = 0; i < result.length; i++) {
+			Assert.assertEquals(targetSegment[1][i], result[i], 1E-10);
+		}
 	}
 	
 	@Test@Ignore

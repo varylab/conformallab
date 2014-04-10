@@ -1,5 +1,10 @@
 package de.varylab.discreteconformal.plugin.algorithm;
 
+import static de.varylab.discreteconformal.plugin.algorithm.MercatorTextureProjection.normalize;
+
+import java.util.Iterator;
+import java.util.List;
+
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -33,6 +38,12 @@ public class StereographicTextureProjection extends AlgorithmPlugin {
 		F extends Face<V, E, F>, 
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> void execute(HDS hds, AdapterSet a, HalfedgeInterface hi) {
+		// north and south pole normalization
+		List<V> poles = hi.getSelection().getVertices(hds);
+		if (poles.size() == 3) {
+			Iterator<V> it = poles.iterator();
+			normalize(hds, it.next(), it.next(), it.next(), a);
+		}
 		for (V v : hds.getVertices()) {
 			double[] pos = a.getD(TexturePosition3d.class, v);
 			Complex c = ComplexUtility.stereographic(pos);

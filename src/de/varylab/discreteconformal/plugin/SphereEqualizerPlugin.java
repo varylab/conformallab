@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.plugin;
 
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.swing.JOptionPane;
 
@@ -45,7 +46,7 @@ public class SphereEqualizerPlugin extends AlgorithmPlugin {
 		int iterations = Integer.parseInt(iterString);
 		CoHDS chds = hi.get(new CoHDS());
 		HalfedgeSelection sel = hi.getSelection();
-		Set<CoVertex> fivedVertices = sel.getVertices(chds);
+		Set<CoVertex> fivedVertices = new TreeSet<CoVertex>(sel.getVertices(chds));
 		SphereUtility.equalizeSphereVertices(chds, fivedVertices, iterations, 1E-6);
 		for (CoEdge e : new LinkedList<CoEdge>(chds.getEdges())) {
 			chds.removeEdge(e);

@@ -5,7 +5,6 @@ import static de.varylab.discreteconformal.unwrapper.QuantizationMode.AllAngles;
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -27,11 +26,13 @@ import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoHDSUtility;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanApplication;
 import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
+import de.varylab.discreteconformal.util.UnwrapUtility;
 
 
 public class StereographicUnwrapper implements Unwrapper{
@@ -51,11 +52,18 @@ public class StereographicUnwrapper implements Unwrapper{
 	}
 	
 	@Override
-	public void unwrap(CoHDS surface, int genus, AdapterSet aSet) throws Exception {
-		CoVertex v0 = unwrapRoot;
+	public void unwrap(CoHDS hds, int genus, AdapterSet aSet) throws Exception {
+		log.info("starting stereographic unwrap.");
+		CoHDS surface = new CoHDS();
+		Map<CoVertex, CoVertex> vertexMap = new HashMap<CoVertex, CoVertex>();
+		CoHDSUtility.createSurfaceCopy(hds, surface, vertexMap);
+		
+		CoVertex v0 = vertexMap.get(unwrapRoot);
 		if (v0 == null) {
 			v0 = surface.getVertex(surface.numVertices() - 1);
 		}
+		log.info("using vertex " + v0 + " as vertex at infinity.");
+		
 		// change edge lengths conformally such that the edges incident with vertex 0 are of equal length
 		double meanLength = 0.0;
 		int numIncident = 0;
@@ -82,7 +90,6 @@ public class StereographicUnwrapper implements Unwrapper{
 				double nl = l * us * ut;
 				lMap.put(ee, nl);
 				lMap.put(ee.getOppositeEdge(), nl);
-				System.out.println(ee + ": " + l + " -> " + nl);
 			}
 		}
 		MappedEdgeLengthAdapter eAdapter = new MappedEdgeLengthAdapter(lMap, 100);
@@ -92,20 +99,6 @@ public class StereographicUnwrapper implements Unwrapper{
 		TopologyAlgorithms.removeVertex(v0);
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
 		prepareInvariantDataEuclidean(opt.getFunctional(), surface, Isometric, AllAngles, aSet);
-		
-		// optimization
-//		DenseVector u = new DenseVector(n);
-//		Matrix H = opt.getHessianTemplate();
-//		NewtonOptimizer optimizer = new NewtonOptimizer(H);
-//		optimizer.setStepController(new ArmijoStepController());
-//		optimizer.setSolver(Solver.BiCGstab);
-//		optimizer.setError(gradTolerance);
-//		optimizer.setMaxIterations(maxIterations);
-//		try {
-//			optimizer.minimize(u, opt);
-//		} catch (NotConvergentException e) {
-//			throw new UnwrapException("Optimization did not succeed: " + e.getMessage());
-//		}
 		
 		CEuclideanApplication app = new CEuclideanApplication(surface);
 		int n = app.getDomainDimension();
@@ -125,18 +118,17 @@ public class StereographicUnwrapper implements Unwrapper{
 		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance); 
 		optimizer.setTolerances(0, 0, 0, 0);
 		optimizer.setMaximumIterates(maxIterations);
-		System.out.println("Using grad tolerance " + gradTolerance);
+		log.info("Using gradient tolerance " + gradTolerance);
 		optimizer.solve();
 		if (optimizer.getSolutionStatus().reason != ConvergenceFlags.CONVERGED_ATOL) {
 			throw new RuntimeException("Optinizer did not converge: \n" + optimizer.getSolutionStatus());
 		}
-		System.out.println(optimizer.getSolutionStatus());
+		UnwrapUtility.logSolutionStatus(optimizer, log);
 		double[] uValues = u.getArray();
 		DenseVector uVec = new DenseVector(uValues);
 		
 		// layout Euclidean
 		layoutRoot = EuclideanLayout.doLayout(surface, opt.getFunctional(), uVec);
-//		if (true) return;
 		// spherical mapping
 		for (CoVertex v : surface.getVertices()) {
 			Pn.dehomogenize(v.T, v.T);
@@ -144,49 +136,32 @@ public class StereographicUnwrapper implements Unwrapper{
 		normalizeBeforeProjection(surface, 1);
 		inverseStereographicProjection(surface, 1.0);
 		
-		// re-insert vertex 0
+		// re-insert vertex 0, linking not needed since we work on a copy
 		CoVertex oldV0 = v0;
 		v0 = surface.addNewVertex();
 		v0.P = oldV0.P;
 		v0.T = new double[] {0,1,0,1};
-		CoEdge lastNext = null;
-		CoEdge firstPrev = null;
-		Set<CoEdge> boundary = new HashSet<CoEdge>(HalfEdgeUtils.boundaryEdges(surface));
-		CoEdge be = HalfEdgeUtils.boundaryEdges(surface).iterator().next();
-		while (!boundary.isEmpty()) {
-			CoEdge next = be.getNextEdge();
-			boundary.remove(be); 
-			CoEdge eNext = surface.addNewEdge();
-			CoEdge ePrev = surface.addNewEdge();
-			CoFace f = surface.addNewFace();
-			be.linkNextEdge(eNext);
-			be.linkPreviousEdge(ePrev);
-			eNext.linkNextEdge(ePrev);
-			eNext.setTargetVertex(v0);
-			ePrev.setTargetVertex(be.getStartVertex());
-			be.setLeftFace(f);
-			eNext.setLeftFace(f);
-			ePrev.setLeftFace(f);
-			if (lastNext != null) {
-				ePrev.linkOppositeEdge(lastNext);
-			}
-			if (firstPrev == null) {
-				firstPrev = ePrev;
-			}
-			lastNext = eNext;
-			be = next;
-		}
-		assert firstPrev != null;
-		firstPrev.linkOppositeEdge(lastNext);
 		
 		try {
 			SphericalNormalizerPETSc.normalize(surface, aSet, TexturePosition4d.class, TexturePosition.class);
 		} catch (Exception e) {
-			log.info("Sphere normalization did not succeed: " + e.getMessage());
+			log.warning("Sphere normalization did not succeed: " + e.getMessage());
 		}
+		
+		log.info("writing texture coordinates to original geometry.");
+		// write back texture coordinates
+		for (int i = 0; i < hds.numVertices(); i++) {
+			CoVertex v = hds.getVertex(i);
+			CoVertex vv = vertexMap.get(v);
+			if (vv == oldV0) {
+				vv = v0;
+			}
+			v.T = vv.T;
+		}
+		log.info("stereographic unwap done.");
 	}
 
-	
+
 	/**
 	 * Project stereographically onto the sphere
 	 * @param graph

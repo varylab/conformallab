@@ -5,6 +5,7 @@ import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
@@ -29,6 +30,8 @@ import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 
 public class HyperbolicUnwrapperPETSc implements Unwrapper {
 
+	private Logger
+		log = Logger.getLogger(getClass().getName());
 	private double
 		gradTolerance = 1E-8;
 	private int
@@ -131,7 +134,7 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper {
 		if (optimizer.getSolutionStatus().reason != ConvergenceFlags.CONVERGED_ATOL) {
 			throw new RuntimeException("Optinizer did not converge: \n" + optimizer.getSolutionStatus());
 		}
-		System.out.println(optimizer.getSolutionStatus());
+		UnwrapUtility.logSolutionStatus(optimizer, log);
 		double[] uVec = u.getArray();
 		u.restoreArray();
 		return uVec;

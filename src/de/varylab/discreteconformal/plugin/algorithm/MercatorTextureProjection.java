@@ -1,7 +1,7 @@
 package de.varylab.discreteconformal.plugin.algorithm;
 
 import java.util.Iterator;
-import java.util.Set;
+import java.util.List;
 
 import de.jreality.math.Rn;
 import de.jtem.halfedge.Edge;
@@ -41,7 +41,7 @@ public class MercatorTextureProjection extends AlgorithmPlugin {
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> void execute(HDS hds, AdapterSet a, HalfedgeInterface hi) {
 		// north and south pole normalization
-		Set<V> poles = hi.getSelection().getVertices(hds);
+		List<V> poles = hi.getSelection().getVertices(hds);
 		if (poles.size() == 3) {
 			Iterator<V> it = poles.iterator();
 			normalize(hds, it.next(), it.next(), it.next(), a);
@@ -63,19 +63,19 @@ public class MercatorTextureProjection extends AlgorithmPlugin {
 		masterInterface.update();
 	}
 	
-	public <
+	public static <
 		V extends Vertex<V, E, F>, 
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>, 
 		HDS extends HalfEdgeDataStructure<V, E, F>
-	> void normalize(HDS hds, V n, V s, V mid, AdapterSet a) {
-		double[] pn = a.getD(TexturePosition3d.class, n);
+	> void normalize(HDS hds, V s, V mid, V n, AdapterSet a) {
 		double[] ps = a.getD(TexturePosition3d.class, s);
 		double[] pmid = a.getD(TexturePosition3d.class, mid);
-		Complex cn = ComplexUtility.stereographic(pn);
+		double[] pn = a.getD(TexturePosition3d.class, n);
 		Complex cs = ComplexUtility.stereographic(ps);
 		Complex cmid = ComplexUtility.stereographic(pmid);
-		Complex[] Tcp = CP1.standardProjectivity(null, cn, cmid, cs);
+		Complex cn = ComplexUtility.stereographic(pn);
+		Complex[] Tcp = CP1.standardProjectivity(null, cs, cmid, cn);
 		double[] Tp = CP1.convertPSL2CToSO31(null, Tcp);
 		for (V v : hds.getVertices()) {
 			double[] tp = a.getD(TexturePosition4d.class, v);

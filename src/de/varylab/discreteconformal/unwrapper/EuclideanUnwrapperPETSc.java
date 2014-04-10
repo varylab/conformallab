@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
@@ -52,6 +53,8 @@ import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class EuclideanUnwrapperPETSc implements Unwrapper {
 
+	private Logger
+		log = Logger.getLogger(getClass().getName());
 	private QuantizationMode
 		conesMode = QuantizationMode.AllAngles,
 		boundaryQuantMode = QuantizationMode.AllAngles;
@@ -178,7 +181,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 		if (status.reason.cvalue() < 0) {
 			throw new UnwrapException("Optimization did not succeed: " + status);
 		}
-		System.out.println(status);
+		UnwrapUtility.logSolutionStatus(optimizer, log);
 
 		if (!cones.isEmpty()) {
 			if (conesMode != QuantizationMode.AllAngles) {

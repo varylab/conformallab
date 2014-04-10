@@ -57,6 +57,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
@@ -159,7 +160,6 @@ import de.varylab.discreteconformal.heds.CustomVertexInfo;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.MetricErrorAdapter;
-import de.varylab.discreteconformal.plugin.tasks.Unwrap;
 import de.varylab.discreteconformal.uniformization.CanonicalFormUtility;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility;
@@ -716,7 +716,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	
 	@Override
 	public void jobFinished(Job job) {
-		Unwrap unwrapper = (Unwrap)job;
+		UnwrapJob unwrapper = (UnwrapJob)job;
 		surfaceUnwrapped = unwrapper.getSurface();
 		surfaceUnwrapped.revertNormalization();
 		cutInfo = unwrapper.cutInfo;
@@ -829,7 +829,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			AdapterSet aSet = hif.getAdapters();
 			conformalDataPlugin.addDiscreteMetric("Input Discrete Metric", unwrapped, aSet);
 			conformalDataPlugin.addDiscreteEmbedding("Input Discrete Position Embedding", unwrapped, aSet, Position4d.class, null);
-			Unwrap uw = new Unwrap(unwrapped, aSet);
+			UnwrapJob uw = new UnwrapJob(unwrapped, aSet);
 			uw.setTargetGeometry((TargetGeometry)targetGeometryCombo.getSelectedItem());
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());
 			uw.setMaxIterations(maxIterationsModel.getNumber().intValue());
@@ -838,8 +838,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			uw.setBoundaryQuantMode((QuantizationMode)boundaryQuantizationCombo.getSelectedItem());
 			uw.setBoundaryMode((BoundaryMode)boundaryModeCombo.getSelectedItem());
 			uw.setUsePetsc(numericsCombo.getSelectedIndex() == 0);
-			uw.setSelectedVertices(selection.getVertices(unwrapped));
-			uw.setSelectedEdges(selection.getEdges(unwrapped));
+			uw.setSelectedVertices(new TreeSet<CoVertex>(selection.getVertices(unwrapped)));
+			uw.setSelectedEdges(new TreeSet<CoEdge>(selection.getEdges(unwrapped)));
 			uw.setUseSelectionCuts(useSelectionCutChecker.isSelected());
 			uw.addJobListener(this);
 			jobQueue.queueJob(uw);
@@ -970,7 +970,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 		if (moveToCenterButton == s) {
 			if (surfaceUnwrapped == null) return;
-			Set<CoVertex> sel = hif.getSelection().getVertices(surfaceUnwrapped);
+			List<CoVertex> sel = hif.getSelection().getVertices(surfaceUnwrapped);
 			if (sel.isEmpty()) return;
 			CoVertex v = sel.iterator().next();
 			double[] pos = v.T;
@@ -1132,7 +1132,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 		if (insertHolomorphicImagePoints == s) {
 			AdapterSet a = hif.getAdapters();
-			Set<CoVertex> vSet = hif.getSelection().getVertices(surfaceUnwrapped);
+			List<CoVertex> vSet = hif.getSelection().getVertices(surfaceUnwrapped);
 			if (vSet.isEmpty()) {
 				Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
 				JOptionPane.showMessageDialog(w, "Please select al least one vertex to map.");
@@ -1172,8 +1172,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 
 	private void cutOrthogonalToPeriod() {
 		AdapterSet a = hif.getAdapters();
-
-		Set<CoVertex> vSet = hif.getSelection().getVertices(surfaceUnwrapped);
+		List<CoVertex> vSet = hif.getSelection().getVertices(surfaceUnwrapped);
 		if (vSet.isEmpty()) {
 			Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
 			JOptionPane.showMessageDialog(w, "Please select vertices:\n - one vertex to define direction cut\n - two to define cut along line");
@@ -1294,7 +1293,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		FundamentalPolygon p = getActiveFundamentalPoygon();
 		if (selctedOnly) {
 			HalfedgeSelection s = hif.getSelection();
-			Set<CoFace> selectedFaces = s.getFaces(surfaceUnwrapped);
+			List<CoFace> selectedFaces = s.getFaces(surfaceUnwrapped);
 			System.out.println("moving " + selectedFaces.size() + " faces...");
 			for (CoFace f : selectedFaces) {
 				VisualizationUtility.reglueSingleFace(f, cutInfo, signature);

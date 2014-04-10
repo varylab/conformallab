@@ -51,7 +51,7 @@ public class SphericalUnwrapperPETSc implements Unwrapper {
 
 		double[] u = calculateConformalFactors(hds, a, opt); 
 		Vector uVec = new DenseVector(u);
-		System.out.println("u: " + Arrays.toString(u));
+		log.info("u: " + Arrays.toString(u));
 		
 		layoutRoot = hds.getVertex(0);
 		SphericalLayout.doLayout(hds, layoutRoot, opt.getFunctional(), uVec);
@@ -89,12 +89,12 @@ public class SphericalUnwrapperPETSc implements Unwrapper {
 //		lowerBounds.setToConstant(Double.NEGATIVE_INFINITY);
 //		upperBounds.setToConstant(0.0);
 //		optimizer.setVariableBounds(lowerBounds, upperBounds);
-		System.out.println("Using grad tolerance " + gradTolerance);
+		log.info("Using grad tolerance " + gradTolerance);
 		optimizer.solve();
 		if (optimizer.getSolutionStatus().reason.name().contains("DIVERGED")) {
-			System.out.println("Warning: Optimizer did not converge: \n" + optimizer.getSolutionStatus());
+			log.warning("Warning: Optimizer did not converge: \n" + optimizer.getSolutionStatus());
 		} else {
-			System.out.println(optimizer.getSolutionStatus());
+			UnwrapUtility.logSolutionStatus(optimizer, log);
 		}
 		u = app.getScaledSolutionVec();
 		double[] uVec = u.getArray();

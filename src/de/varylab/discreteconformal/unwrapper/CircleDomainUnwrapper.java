@@ -42,6 +42,7 @@ import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoHDSUtility;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.CustomVertexInfo;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
@@ -259,7 +260,7 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		// create a copy to work with
 		CoHDS surface = new CoHDS();
 		Map<CoVertex, CoVertex> vertexMap = new HashMap<CoVertex, CoVertex>();
-		createSurfaceCopy(hds, surface, vertexMap);
+		CoHDSUtility.createSurfaceCopy(hds, surface, vertexMap);
 		
 		CoVertex v0 = getVertexAtInfinity(surface);
 		
@@ -452,22 +453,6 @@ public class CircleDomainUnwrapper implements Unwrapper {
 			}
 		}
 		return v0;
-	}
-
-	public void createSurfaceCopy(CoHDS source, CoHDS target, Map<CoVertex, CoVertex> vertexMap) {
-		HalfEdgeUtils.copy(source, target);
-		for (int i = 0; i < source.numVertices(); i++) {
-			CoVertex v = source.getVertex(i);
-			CoVertex vv = target.getVertex(i);
-			vv.P = v.P;
-			vv.info = v.info;
-			vertexMap.put(v, vv);
-		}
-		for (int i = 0; i < source.numEdges(); i++) {
-			CoEdge e = source.getEdge(i);
-			CoEdge ee = target.getEdge(i);
-			ee.info = e.info; 
-		}
 	}
 
 	public void moveToUpperHalfSpace(CoHDS surface, CoVertex v1, CoVertex v2, CoVertex v3) {

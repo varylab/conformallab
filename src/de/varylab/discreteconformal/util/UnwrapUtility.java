@@ -18,6 +18,7 @@ import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.Normal;
 import de.jtem.halfedgetools.adapter.type.generic.EdgeVector;
 import de.jtem.halfedgetools.functional.DomainValue;
+import de.jtem.jtao.Tao;
 import de.varylab.discreteconformal.functional.ConformalFunctional;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -386,6 +387,15 @@ public class UnwrapUtility {
 		default:
 			return TargetGeometry.Hyperbolic;
 		}
+	}
+
+
+	public static void logSolutionStatus(Tao optimizer, Logger log) {
+		log.info("TAO: " + optimizer.getSolutionStatus().reason);
+		log.info("TAO iterate: " + optimizer.getSolutionStatus().iterate);
+		log.info("TAO f: " + optimizer.getSolutionStatus().f);
+		log.info("TAO gnorm: " + optimizer.getSolutionStatus().gnorm);
+		log.info("TAO xdiff: " + optimizer.getSolutionStatus().xdiff);
 	}
 	
 }
