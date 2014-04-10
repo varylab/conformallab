@@ -58,6 +58,8 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoTextureDomainPositionAdapter;
+import de.varylab.discreteconformal.plugin.algorithm.MercatorTextureProjection;
+import de.varylab.discreteconformal.plugin.algorithm.StereographicTextureProjection;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
@@ -157,6 +159,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 	@Override
 	public void install(Controller c) throws Exception {
 		super.install(c);
+		mainHif = c.getPlugin(HalfedgeInterface.class);
 		conformalPlugin = c.getPlugin(DiscreteConformalPlugin.class);
 		conformalVisualizationPlugin = c.getPlugin(ConformalVisualizationPlugin.class);
 		viewerPanel.setLayout(new GridLayout());
@@ -176,6 +179,8 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		domainViewer.registerPlugin(ContentAppearance.class);
 		domainViewer.registerPlugin(MarqueeSelectionPlugin.class);
 		domainViewer.registerPlugin(VertexEditorPlugin.class);
+		domainViewer.registerPlugin(new StereographicTextureProjection(mainHif));
+		domainViewer.registerPlugin(new MercatorTextureProjection(mainHif));
 		domainViewer.setShowPanelSlots(false, false, false, false);
 		domainViewer.setShowToolBar(true);
 		domainViewer.setShowMenuBar(true);
@@ -184,7 +189,6 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		JRootPane viewerRoot = domainViewer.startupLocal();
 		viewerRoot.setPreferredSize(new Dimension(200, 400));
 		viewerPanel.add(viewerRoot);
-		mainHif = c.getPlugin(HalfedgeInterface.class);
 		mainAppearance = c.getPlugin(ContentAppearance.class);
 		mainAppearance.getAppearanceInspector().getAppearance().addAppearanceListener(new AppearanceListener() {
 			@Override

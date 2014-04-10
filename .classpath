@@ -36,7 +36,7 @@
 	<classpathentry kind="lib" path="lib/jtem/java2dx.jar" sourcepath="/java2dx"/>
 	<classpathentry kind="lib" path="lib/jtem/jrworkspace.jar"/>
 	<classpathentry kind="lib" path="lib/jtem/jterm.jar"/>
-	<classpathentry kind="lib" path="lib/jtem/mfc.jar"/>
+	<classpathentry kind="lib" path="lib/jtem/mfc.jar" sourcepath="/mfc"/>
 	<classpathentry kind="lib" path="lib/jtem/modelling.jar" sourcepath="/modelling"/>
 	<classpathentry kind="lib" path="lib/jtem/numericalMethods.jar"/>
 	<classpathentry kind="lib" path="lib/jtem/projgeom.jar"/>
