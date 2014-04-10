@@ -15,6 +15,7 @@ import de.jreality.scene.SceneGraphComponent;
 import de.jreality.shader.CommonAttributes;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
+import de.jtem.halfedge.Node;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -36,7 +37,7 @@ public class CylinderMapAdapter extends AbstractAdapter<double[]> {
 	}
 	
 	@Override
-	public boolean canAccept(Class nodeClass) {
+	public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
 		return Vertex.class.isAssignableFrom(nodeClass);
 	}
 

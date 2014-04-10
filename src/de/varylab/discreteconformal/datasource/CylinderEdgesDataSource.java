@@ -74,6 +74,7 @@ public class CylinderEdgesDataSource extends Plugin implements DataSourceProvide
 	}
 	
 	
+	@SuppressWarnings("unused")
 	private class CylindricalPatchAdapter extends AbstractAdapter<SceneGraphNode> {
 
 		public CylindricalPatchAdapter() {
