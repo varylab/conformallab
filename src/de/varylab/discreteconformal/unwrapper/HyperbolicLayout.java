@@ -16,6 +16,7 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.Vector;
 import de.jreality.math.Pn;
@@ -34,6 +35,8 @@ import de.varylab.discreteconformal.util.Search;
 
 public class HyperbolicLayout {
 
+	private static Logger
+		log = Logger.getLogger(HyperbolicLayout.class.getName());
 	
 	/**
 	 * Implements a heuristic for finding a root vertex for the
@@ -131,7 +134,7 @@ public class HyperbolicLayout {
 		} else {
 			v1 = guessRootVertex(hds, lMap, 200);
 		}
-		System.out.println("Leyout root is " + v1.getIndex());
+		log.info("layout root is " + v1.getIndex());
 		
 		// get a deterministic first edge
 		CoEdge e1 = v1.getIncomingEdge();
@@ -195,7 +198,7 @@ public class HyperbolicLayout {
 		}
 		
 		if (visited.size() != hds.numVertices()) {
-			throw new RuntimeException("Skipped vertices during layout.");
+			log.warning("only " + visited.size() + " of " + hds.numVertices() + " vertices habe been processed");
 		}
 		return v1;
 	}

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.Vector;
 import de.jreality.math.Pn;
@@ -29,6 +30,8 @@ import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
 
 public class EuclideanLayout {
 
+	private static Logger
+		log = Logger.getLogger(EuclideanLayout.class.getName());
 	
 	/**
 	 * Do flat layout for a HDS and a metric vector u
@@ -125,7 +128,9 @@ public class EuclideanLayout {
 			Rn.times(t, e, t);
 		}
 		
-		assert (visited.size() == hds.numVertices());
+		if (visited.size() != hds.numVertices()) {
+			log.warning("only " + visited.size() + " of " + hds.numVertices() + " vertices habe been processed");
+		}
 		return v1;
 	}
 	

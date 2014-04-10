@@ -16,6 +16,7 @@ public class StdoutConsoleHandler extends ConsoleHandler {
 			out = System.err;
 		}
 		out.println(getFormatter().format(record));
+		out.flush();
 	}
 	
 	@Override
