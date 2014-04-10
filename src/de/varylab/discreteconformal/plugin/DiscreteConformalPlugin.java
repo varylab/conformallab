@@ -57,7 +57,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
@@ -838,8 +837,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			uw.setBoundaryQuantMode((QuantizationMode)boundaryQuantizationCombo.getSelectedItem());
 			uw.setBoundaryMode((BoundaryMode)boundaryModeCombo.getSelectedItem());
 			uw.setUsePetsc(numericsCombo.getSelectedIndex() == 0);
-			uw.setSelectedVertices(new TreeSet<CoVertex>(selection.getVertices(unwrapped)));
-			uw.setSelectedEdges(new TreeSet<CoEdge>(selection.getEdges(unwrapped)));
+			uw.setSelectedVertices(selection.getVertices(unwrapped));
+			uw.setSelectedEdges(selection.getEdges(unwrapped));
 			uw.setUseSelectionCuts(useSelectionCutChecker.isSelected());
 			uw.addJobListener(this);
 			jobQueue.queueJob(uw);

@@ -4,9 +4,11 @@ import static java.lang.Math.PI;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import de.jreality.plugin.job.AbstractJob;
@@ -43,10 +45,10 @@ public class UnwrapJob extends AbstractJob {
 		surface = null;
 	private AdapterSet
 		aSet = new AdapterSet();
-	private Set<CoVertex>
-		selectedVertices = new HashSet<CoVertex>();
-	private Set<CoEdge>
-		selectedEdges = new HashSet<CoEdge>();
+	private List<CoVertex>
+		selectedVertices = new ArrayList<CoVertex>();
+	private List<CoEdge>
+		selectedEdges = new ArrayList<CoEdge>();
 	private TargetGeometry
 		targetGeometry = TargetGeometry.Automatic;
 	private boolean
@@ -162,7 +164,10 @@ public class UnwrapJob extends AbstractJob {
 					unwrapper = uw;
 				}
 			}
-			if (useSelectionCuts) unwrapper.setCutGraph(selectedEdges);
+			if (useSelectionCuts) {
+				Set<CoEdge> edgeSet = new TreeSet<>(selectedEdges);
+				unwrapper.setCutGraph(edgeSet);
+			}
 			if (!selectedVertices.isEmpty()) {
 				CoVertex cutRoot = selectedVertices.iterator().next();
 				unwrapper.setCutRoot(cutRoot);
@@ -202,7 +207,10 @@ public class UnwrapJob extends AbstractJob {
 			} else {
 				unwrapper = new HyperbolicUnwrapper();
 			}
-			if (useSelectionCuts) unwrapper.setCutGraph(selectedEdges);
+			if (useSelectionCuts) {
+				Set<CoEdge> edgeSet = new TreeSet<>(selectedEdges);
+				unwrapper.setCutGraph(edgeSet);
+			}
 			if (!selectedVertices.isEmpty()) {
 				CoVertex cutRoot = selectedVertices.iterator().next();
 				unwrapper.setCutRoot(cutRoot);
@@ -294,11 +302,11 @@ public class UnwrapJob extends AbstractJob {
 		this.boundaryQuantMode = boundaryQuantMode;
 	}
 	
-	public void setSelectedVertices(Set<CoVertex> selectedVertices) {
+	public void setSelectedVertices(List<CoVertex> selectedVertices) {
 		this.selectedVertices = selectedVertices;
 	}
 	
-	public void setSelectedEdges(Set<CoEdge> selectedEdges) {
+	public void setSelectedEdges(List<CoEdge> selectedEdges) {
 		this.selectedEdges = selectedEdges;
 	}
 
