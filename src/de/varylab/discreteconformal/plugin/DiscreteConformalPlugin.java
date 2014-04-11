@@ -572,9 +572,12 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			visualizationPanel.add(new JLabel("Snap Tolerance Exp"), c1);
 			visualizationPanel.add(snapToleranceExpSpinner, c2);
 			visualizationPanel.add(extractCutPreparedButton, c2);
-			visualizationPanel.add(cutXDirectionRadio, c1);
-			visualizationPanel.add(cutYDirectionRadio, c1);
-			visualizationPanel.add(extractCutPreparedDirectionButton, c2);
+			JPanel cutPanel = new JPanel();
+			cutPanel.setLayout(new FlowLayout());
+			cutPanel.add(cutXDirectionRadio);
+			cutPanel.add(cutYDirectionRadio);
+			cutPanel.add(extractCutPreparedDirectionButton);
+			visualizationPanel.add(cutPanel, c2);
 			visualizationPanel.add(mapToCylinderButton,c2);
 			visualizationPanel.add(insertHolomorphicImagePoints, c2);
 			visualizationPanel.add(visButtonsPanel, c2);
