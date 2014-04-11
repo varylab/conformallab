@@ -58,7 +58,7 @@
 			<classpath refid="classpath"/>
 		</javac>
 		<copy todir="${build}">
-			<fileset dir="${src}" includes="**/*.png **/*.jpg"/>
+			<fileset dir="${src}" includes="**/*.png **/*.jpg **/*.properties"/>
 		</copy>
 	</target>
 	
