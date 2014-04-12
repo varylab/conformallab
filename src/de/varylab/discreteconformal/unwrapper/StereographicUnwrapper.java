@@ -57,6 +57,16 @@ public class StereographicUnwrapper implements Unwrapper{
 		CoHDS surface = new CoHDS();
 		Map<CoVertex, CoVertex> vertexMap = new HashMap<CoVertex, CoVertex>();
 		CoHDSUtility.createSurfaceCopy(hds, surface, vertexMap);
+		Map<CoFace, CoFace> faceMap = new HashMap<>();
+		for (CoFace f : hds.getFaces()) {
+			CoFace ff = surface.getFace(f.getIndex());
+			faceMap.put(f, ff);
+		}
+		Map<CoEdge, CoEdge> edgeMap = new HashMap<>();
+		for (CoEdge e : hds.getEdges()) {
+			CoEdge ee = surface.getEdge(e.getIndex());
+			edgeMap.put(e, ee);
+		}
 		
 		CoVertex v0 = vertexMap.get(unwrapRoot);
 		if (v0 == null) {
@@ -157,6 +167,13 @@ public class StereographicUnwrapper implements Unwrapper{
 				vv = v0;
 			}
 			v.T = vv.T;
+		}
+		// write Euclidean angles
+		for (CoEdge e : hds.getEdges()) {
+			CoEdge ee = edgeMap.get(e);
+			if (ee != null && ee.isValid()) {
+				e.setAlpha(ee.getAlpha());
+			}
 		}
 		log.info("stereographic unwap done.");
 	}

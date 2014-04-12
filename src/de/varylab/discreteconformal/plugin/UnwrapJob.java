@@ -15,6 +15,7 @@ import de.jreality.plugin.job.AbstractJob;
 import de.jtem.blas.ComplexMatrix;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Selection;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.theta.SiegelReduction;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -235,6 +236,7 @@ public class UnwrapJob extends AbstractJob {
 		for (CoEdge e : surface.getEdges()) {
 			if (e.getAlpha() >= Math.PI) {
 				brokenCount++;
+				aSet.set(Selection.class, e.getLeftFace(), true);
 			}
 		}
 		for (CoVertex v : surface.getVertices()) {
