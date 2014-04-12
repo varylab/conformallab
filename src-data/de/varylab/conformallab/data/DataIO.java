@@ -61,6 +61,17 @@ public class DataIO {
 		JAXBElement<T> e = typesUnmarshaller.unmarshal(inSource, dataClass);
 		return e.getValue();
 	}
+	@SuppressWarnings("unchecked")
+	public static ConformalData readConformalData(InputStream in) throws JAXBException {
+		StreamSource inSource = new StreamSource(in);
+		JAXBElement<? extends ConformalData> e = (JAXBElement<? extends ConformalData>)typesUnmarshaller.unmarshal(inSource);
+		return e.getValue();
+	}
+	public static Object read(InputStream in) throws JAXBException {
+		StreamSource inSource = new StreamSource(in);
+		JAXBElement<?> e = (JAXBElement<?>)typesUnmarshaller.unmarshal(inSource);
+		return e.getValue();
+	}	
 	public static <T extends ConformalData> void writeConformalData(T data, OutputStream out) throws JAXBException {
 		ObjectFactory of = new ObjectFactory();
 		JAXBElement<?> e = null;

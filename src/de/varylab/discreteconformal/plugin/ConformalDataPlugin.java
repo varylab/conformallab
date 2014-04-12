@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -169,17 +170,28 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 				return;
 			}
 			File file = fileChooser.getSelectedFile();
+			FileInputStream fin = null;
 			try {
-				FileInputStream fin = new FileInputStream(file);
-				ConformalDataList cdl = DataIO.readConformalDataList(fin);
-				clearData();
-				for (ConformalData data : cdl.getData()) {
-					addData(data);
+				fin = new FileInputStream(file);
+				Object data = DataIO.read(fin);
+				if (data instanceof ConformalData) {
+					addData((ConformalData)data);
+				} else if (data instanceof ConformalDataList) {
+					ConformalDataList dataList = (ConformalDataList)data;
+					for (ConformalData d : dataList.getData()) {
+						addData(d);
+					}
 				}
 				fin.close();
 			} catch (Exception e1) {
-				log.log(Level.SEVERE, "Could not import conformal data", e1);
-			}	
+				log.warning("Could not import conformal data" + e1);
+			} finally {
+				try {
+					fin.close();
+				} catch (IOException e1) {
+					log.warning("could not close input stream: " + e1);
+				}
+			}
 		}
 		if (clearButton == e.getSource()) {
 			clearData();
