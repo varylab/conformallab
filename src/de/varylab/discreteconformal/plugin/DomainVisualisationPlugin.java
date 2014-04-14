@@ -46,10 +46,10 @@ import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeListener;
-import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.halfedgetools.plugin.MarqueeSelectionPlugin;
-import de.jtem.halfedgetools.plugin.SelectionListener;
 import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
+import de.jtem.halfedgetools.selection.Selection;
+import de.jtem.halfedgetools.selection.SelectionListener;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
@@ -214,7 +214,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		transferAppearance(mi, vi);
 		mainSelectionListener = new SelectionListener() {
 			@Override
-			public void selectionChanged(HalfedgeSelection s, HalfedgeInterface sif) {
+			public void selectionChanged(Selection s, HalfedgeInterface sif) {
 				visHif.removeSelectionListener(visSelectionListener);
 				try {
 					updateAdapters();
@@ -226,7 +226,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		};
 		visSelectionListener = new SelectionListener() {
 			@Override
-			public void selectionChanged(HalfedgeSelection s, HalfedgeInterface sif) {
+			public void selectionChanged(Selection s, HalfedgeInterface sif) {
 				mainHif.removeSelectionListener(mainSelectionListener);
 				try {
 					mainHif.setSelection(visHif.getSelection());
@@ -320,7 +320,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			for (HalfedgeLayer l : visHif.getAllLayers()) {
-				HalfedgeSelection s = new HalfedgeSelection();
+				Selection s = new Selection();
 				List<CoEdge> bEdges = HalfEdgeUtils.boundaryEdges(l.get(new CoHDS()));
 				s.addAll(bEdges);
 				l.setSelection(s);

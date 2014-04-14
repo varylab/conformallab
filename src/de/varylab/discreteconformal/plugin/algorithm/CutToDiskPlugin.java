@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.plugin.algorithm;
 
-import java.util.List;
+import java.util.Set;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -34,7 +34,7 @@ public class CutToDiskPlugin extends AlgorithmPlugin {
 	> void execute(HDS hds, AdapterSet a, HalfedgeInterface hcp) {
 		V rootVertex = hds.getVertex(0);
 		if (!hcp.getSelection().getVertices().isEmpty()) {
-			List<V> vertices = hcp.getSelection().getVertices(hds);
+			Set<V> vertices = hcp.getSelection().getVertices(hds);
 			rootVertex = vertices.iterator().next();
 		}
 		CuttingUtility.cutManifoldToDisk(hds, rootVertex, new Search.DefaultWeightAdapter<E>());

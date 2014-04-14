@@ -9,9 +9,9 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
-import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmCategory;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmPlugin;
+import de.jtem.halfedgetools.selection.Selection;
 import de.varylab.discreteconformal.util.Search;
 
 public class FindPathPlugin extends AlgorithmPlugin {
@@ -40,10 +40,10 @@ public class FindPathPlugin extends AlgorithmPlugin {
 		V v1 = vit.next();
 		V v2 = vit.next();
 	    List<E> path = Search.bFS(v1, v2, true);
-	    HalfedgeSelection sel = new HalfedgeSelection();
+	    Selection sel = new Selection();
 		for (E e : path) {
-			sel.setSelected(e, true);
-			sel.setSelected(e.getOppositeEdge(), true);
+			sel.add(e);
+			sel.add(e.getOppositeEdge());
 		}
 		hcp.setSelection(sel);
 	}

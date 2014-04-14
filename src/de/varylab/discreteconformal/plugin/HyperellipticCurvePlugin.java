@@ -36,7 +36,7 @@ import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
-import de.jtem.halfedgetools.plugin.HalfedgeSelection;
+import de.jtem.halfedgetools.selection.Selection;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
@@ -214,7 +214,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 //			Adapter<Double> modifiedLengths = introduceNonHyperellipicity(hds, 3.0, 3.0);
 			hif.set(hds);
 //			hif.addAdapter(modifiedLengths, false);
-			HalfedgeSelection branchSelection = new HalfedgeSelection(branchVertices);
+			Selection branchSelection = new Selection(branchVertices);
 			hif.setSelection(branchSelection);
 		}
 	}

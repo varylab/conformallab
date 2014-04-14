@@ -134,9 +134,11 @@ import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
-import de.jtem.halfedgetools.plugin.HalfedgeSelection;
-import de.jtem.halfedgetools.plugin.SelectionListener;
+import de.jtem.halfedgetools.plugin.SelectionInterface;
 import de.jtem.halfedgetools.plugin.image.ImageHook;
+import de.jtem.halfedgetools.selection.Selection;
+import de.jtem.halfedgetools.selection.SelectionListener;
+import de.jtem.halfedgetools.selection.TypedSelection;
 import de.jtem.halfedgetools.util.HalfEdgeUtilsExtra;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
@@ -183,6 +185,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	
 	private static int
 		coverResolution = 1024;
+	
+	public static final Integer
+		CHANNEL_BROKEN_TRIANGLES = 23435634;
 	
 	public static enum Domain {
 		Cut,
@@ -627,7 +632,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 	
 	@Override
-	public void selectionChanged(HalfedgeSelection s, HalfedgeInterface hif) {
+	public void selectionChanged(Selection s, HalfedgeInterface hif) {
 		customVertices.clear();
 		customEdges.clear();
 		for (Vertex<?,?,?> v : s.getVertices()) {
@@ -824,7 +829,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			CoHDS unwrapped = getLoaderGeometry();
 			if (unwrapped == null) return;
 			surface = copySurface(unwrapped);
-			HalfedgeSelection selection = hif.getSelection();
+			Selection selection = hif.getSelection();
 			if (isRescaleGeometry()) {
 				unwrapped.normalizeCoordinates();
 			}
@@ -893,7 +898,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 		if (quantizeToQuads == s) {
 			AdapterSet a = hif.getAdapters();
-			HalfedgeSelection sel = hif.getSelection();
+			Selection sel = hif.getSelection();
 			List<CoVertex> cones = new LinkedList<CoVertex>();
 			CoHDS hds = hif.get(new CoHDS());
 			for (CoVertex v : hds.getVertices()) {
@@ -911,7 +916,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				double[] quantPos = texpos.clone();
 				T.transformVector(quantPos);
 				Pn.dehomogenize(quantPos, quantPos);
-				double offset = sel.isSelected(cv) ? 0.25 : 0;
+				double offset = sel.contains(cv) ? 0.25 : 0;
 				double difX = (quantPos[0] + offset) % 0.5;
 				double difY = (quantPos[1] + offset) % 0.5;
 				double[] difVec = {difX, difY, 0, 0};
@@ -937,11 +942,11 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				Pn.dehomogenize(quantPos2, quantPos2);
 				double dist = Rn.euclideanDistance(quantPos1, quantPos2);
 				double sDist = dist;
-				double distOffset = (!sel.isSelected(cv2) && sel.isSelected(cv1)) || (sel.isSelected(cv2) && !sel.isSelected(cv1)) ? 0.25 : 0;
+				double distOffset = (!sel.contains(cv2) && sel.contains(cv1)) || (sel.contains(cv2) && !sel.contains(cv1)) ? 0.25 : 0;
 				dist -= (dist + distOffset) % 0.5;
 				dist = Math.max(dist, 0.5);
 				double angle = atan2(quantPos1[1] - quantPos2[1], quantPos1[0] - quantPos2[0]) % PI/2;
-				double offset = sel.isSelected(cv1) ? 0.25 : 0;
+				double offset = sel.contains(cv1) ? 0.25 : 0;
 				double difX1 = (quantPos1[0] + offset) % 0.5;
 				double difY1 = (quantPos1[1] + offset) % 0.5;
 				
@@ -972,7 +977,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 		if (moveToCenterButton == s) {
 			if (surfaceUnwrapped == null) return;
-			List<CoVertex> sel = hif.getSelection().getVertices(surfaceUnwrapped);
+			TypedSelection<CoVertex> sel = hif.getSelection().getVertices(surfaceUnwrapped);
 			if (sel.isEmpty()) return;
 			CoVertex v = sel.iterator().next();
 			double[] pos = v.T;
@@ -1082,7 +1087,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			CoHDS intersected = copySurface(surface);
 			double snapTolerance = Math.pow(10, snapToleranceExpModel.getNumber().intValue());
 			Set<Set<CoVertex>> intersectingVertices = createIntersectionVertices(getActiveFundamentalPoygon(), intersected, surfaceUnwrapped, cutInfo, a, snapTolerance, signature);
-			HalfedgeSelection pathSelection = new HalfedgeSelection();
+			Selection pathSelection = new Selection();
 			for (Set<CoVertex> segmentSet : intersectingVertices) {
 				for (CoVertex v : segmentSet) {
 					for (CoFace f : HalfEdgeUtilsExtra.getFaceStar(v)) {
@@ -1134,7 +1139,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 		if (insertHolomorphicImagePoints == s) {
 			AdapterSet a = hif.getAdapters();
-			List<CoVertex> vSet = hif.getSelection().getVertices(surfaceUnwrapped);
+			TypedSelection<CoVertex> vSet = hif.getSelection().getVertices(surfaceUnwrapped);
 			if (vSet.isEmpty()) {
 				Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
 				JOptionPane.showMessageDialog(w, "Please select al least one vertex to map.");
@@ -1174,7 +1179,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 
 	private void cutOrthogonalToPeriod() {
 		AdapterSet a = hif.getAdapters();
-		List<CoVertex> vSet = hif.getSelection().getVertices(surfaceUnwrapped);
+		TypedSelection<CoVertex> vSet = hif.getSelection().getVertices(surfaceUnwrapped);
 		if (vSet.isEmpty()) {
 			Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
 			JOptionPane.showMessageDialog(w, "Please select vertices:\n - one vertex to define direction cut\n - two to define cut along line");
@@ -1213,7 +1218,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 		Triangulator.triangulateByCuttingCorners(intersected, a);
 		
-		HalfedgeSelection pathSelection = new HalfedgeSelection();
+		Selection pathSelection = new Selection();
 		pathSelection.addAll(newVertices);
 		
 		LinkedList<CoEdge> newCut = selectCutPath(intersected, newVertices,	pathSelection);
@@ -1259,7 +1264,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		l.setSelection(pathSelection);
 	}
 
-	private LinkedList<CoEdge> selectCutPath(CoHDS intersected,	Set<CoVertex> newVertices, HalfedgeSelection pathSelection) {
+	private LinkedList<CoEdge> selectCutPath(CoHDS intersected,	Set<CoVertex> newVertices, Selection pathSelection) {
 		LinkedList<CoEdge> newCut = new LinkedList<CoEdge>();
 		for (CoEdge edge : intersected.getEdges()) {
 			if (newVertices.contains(edge.getTargetVertex()) && newVertices.contains(edge.getStartVertex())) {
@@ -1294,8 +1299,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		int signature = getActiveSignature();
 		FundamentalPolygon p = getActiveFundamentalPoygon();
 		if (selctedOnly) {
-			HalfedgeSelection s = hif.getSelection();
-			List<CoFace> selectedFaces = s.getFaces(surfaceUnwrapped);
+			Selection s = hif.getSelection();
+			TypedSelection<CoFace> selectedFaces = s.getFaces(surfaceUnwrapped);
 			System.out.println("moving " + selectedFaces.size() + " faces...");
 			for (CoFace f : selectedFaces) {
 				VisualizationUtility.reglueSingleFace(f, cutInfo, signature);
@@ -1568,6 +1573,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		domainVisualisationPlugin = c.getPlugin(DomainVisualisationPlugin.class);
 		jobQueue = c.getPlugin(JobQueuePlugin.class);
 		conformalDataPlugin = c.getPlugin(ConformalDataPlugin.class);
+		SelectionInterface sif = c.getPlugin(SelectionInterface.class);
+		sif.registerChannelName(CHANNEL_BROKEN_TRIANGLES, "Broken Triangles");
 		createLayout();
 		connectGUIListeners();
 	}

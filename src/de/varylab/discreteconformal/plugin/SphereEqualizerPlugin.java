@@ -13,9 +13,9 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
-import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmCategory;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmPlugin;
+import de.jtem.halfedgetools.selection.Selection;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -45,7 +45,7 @@ public class SphereEqualizerPlugin extends AlgorithmPlugin {
 		if (iterString == null) return;
 		int iterations = Integer.parseInt(iterString);
 		CoHDS chds = hi.get(new CoHDS());
-		HalfedgeSelection sel = hi.getSelection();
+		Selection sel = hi.getSelection();
 		Set<CoVertex> fivedVertices = new TreeSet<CoVertex>(sel.getVertices(chds));
 		SphereUtility.equalizeSphereVertices(chds, fivedVertices, iterations, 1E-6);
 		for (CoEdge e : new LinkedList<CoEdge>(chds.getEdges())) {

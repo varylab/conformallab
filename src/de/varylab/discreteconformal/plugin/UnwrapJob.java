@@ -1,11 +1,10 @@
 package de.varylab.discreteconformal.plugin;
 
+import static de.varylab.discreteconformal.plugin.DiscreteConformalPlugin.CHANNEL_BROKEN_TRIANGLES;
 import static java.lang.Math.PI;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -16,6 +15,7 @@ import de.jtem.blas.ComplexMatrix;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Selection;
+import de.jtem.halfedgetools.selection.TypedSelection;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.theta.SiegelReduction;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -46,10 +46,10 @@ public class UnwrapJob extends AbstractJob {
 		surface = null;
 	private AdapterSet
 		aSet = new AdapterSet();
-	private List<CoVertex>
-		selectedVertices = new ArrayList<CoVertex>();
-	private List<CoEdge>
-		selectedEdges = new ArrayList<CoEdge>();
+	private TypedSelection<CoVertex>
+		selectedVertices = new TypedSelection<CoVertex>();
+	private TypedSelection<CoEdge>
+		selectedEdges = new TypedSelection<CoEdge>();
 	private TargetGeometry
 		targetGeometry = TargetGeometry.Automatic;
 	private boolean
@@ -236,7 +236,7 @@ public class UnwrapJob extends AbstractJob {
 		for (CoEdge e : surface.getEdges()) {
 			if (e.getAlpha() >= Math.PI) {
 				brokenCount++;
-				aSet.set(Selection.class, e.getLeftFace(), true);
+				aSet.set(Selection.class, e.getLeftFace(), CHANNEL_BROKEN_TRIANGLES);
 			}
 		}
 		for (CoVertex v : surface.getVertices()) {
@@ -304,11 +304,11 @@ public class UnwrapJob extends AbstractJob {
 		this.boundaryQuantMode = boundaryQuantMode;
 	}
 	
-	public void setSelectedVertices(List<CoVertex> selectedVertices) {
+	public void setSelectedVertices(TypedSelection<CoVertex> selectedVertices) {
 		this.selectedVertices = selectedVertices;
 	}
 	
-	public void setSelectedEdges(List<CoEdge> selectedEdges) {
+	public void setSelectedEdges(TypedSelection<CoEdge> selectedEdges) {
 		this.selectedEdges = selectedEdges;
 	}
 

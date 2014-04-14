@@ -17,9 +17,9 @@ import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Color;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
-import de.jtem.halfedgetools.plugin.HalfedgeSelection;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmCategory;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmPlugin;
+import de.jtem.halfedgetools.selection.Selection;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.util.HyperellipticUtility;
@@ -48,7 +48,7 @@ public class EllipticImageGenerator extends AlgorithmPlugin {
 		String numString = JOptionPane.showInputDialog(w, "Number of extra points", 0);
 		if (numString == null) return;
 		int extraPoints = Integer.parseInt(numString);
-		HalfedgeSelection sel = hif.getSelection();
+		Selection sel = hif.getSelection();
 		int[] branchIndices = new int[sel.getVertices().size()];
 		int i = 0;
 		for (V v : sel.getVertices(h)) {

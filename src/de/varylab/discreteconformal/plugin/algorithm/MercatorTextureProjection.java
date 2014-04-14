@@ -1,7 +1,7 @@
 package de.varylab.discreteconformal.plugin.algorithm;
 
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
 import de.jreality.math.Rn;
 import de.jtem.halfedge.Edge;
@@ -41,7 +41,7 @@ public class MercatorTextureProjection extends AlgorithmPlugin {
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> void execute(HDS hds, AdapterSet a, HalfedgeInterface hi) {
 		// north and south pole normalization
-		List<V> poles = hi.getSelection().getVertices(hds);
+		Set<V> poles = hi.getSelection().getVertices(hds);
 		if (poles.size() == 3) {
 			Iterator<V> it = poles.iterator();
 			normalize(hds, it.next(), it.next(), it.next(), a);
