@@ -1170,8 +1170,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 					}
 				}
 			}
-			HalfedgeLayer l = new HalfedgeLayer(hif);
-			hif.addLayer(l);
+			HalfedgeLayer l = hif.createLayer("Weierstrass Points");
+			hif.activateLayer(l);
 			l.set(intersected);
 		}
 	}
@@ -1223,8 +1223,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		
 		LinkedList<CoEdge> newCut = selectCutPath(intersected, newVertices,	pathSelection);
 		
-		HalfedgeLayer l = new HalfedgeLayer(hif);
-		hif.addLayer(l);
+		HalfedgeLayer l = hif.createLayer("Cut And Glued");
+		hif.activateLayer(l);
 		CuttingInfo<CoVertex, CoEdge, CoFace> newCutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
 		CuttingUtility.cutAlongPath(newCut, newCutInfo);
 		LinkedList<CoEdge> cutEdges = new LinkedList<CoEdge>(newCutInfo.edgeCutMap.values());
