@@ -1203,7 +1203,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 		double[] cutline = P2.lineFromPoints(null, segment[0], segment[1]);
 		int signature = getActiveSignature();
-		CoHDS intersected = copySurface(surface);
+		CoHDS intersected = copySurface(surfaceUnwrapped);
 		for(CoVertex v : intersected.getVertices()) {
 			System.arraycopy(surfaceUnwrapped.getVertex(v.getIndex()).T, 0, v.T, 0, 4);
 		}

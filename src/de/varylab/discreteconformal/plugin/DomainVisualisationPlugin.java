@@ -51,6 +51,7 @@ import de.jtem.halfedgetools.plugin.misc.VertexEditorPlugin;
 import de.jtem.halfedgetools.selection.Selection;
 import de.jtem.halfedgetools.selection.SelectionListener;
 import de.jtem.jrworkspace.plugin.Controller;
+import de.jtem.jrworkspace.plugin.Plugin;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -93,6 +94,16 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 	private HalfedgeListener
 		mainHalfedgeListener = null;
 
+	private JRViewer 
+		domainViewer = null;
+	
+	private Plugin[] 
+			instances = null;
+	
+	public JRViewer getDomainViewer() {
+		return domainViewer;
+	}
+
 	public DomainVisualisationPlugin() {
 		shrinkPanel.setTitle("Parameterization Domain");
 		setInitialPosition(SHRINKER_TOP);
@@ -101,6 +112,12 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		shrinkPanel.setShrinked(true);
 	}
 
+	public DomainVisualisationPlugin(Plugin... P) {
+		this();
+		this.instances = new Plugin[P.length];
+		System.arraycopy(P, 0, instances, 0, instances.length);
+	}
+	
 	private class UpdateAction extends AbstractAction {
 		
 		private static final long serialVersionUID = 1L;
@@ -166,7 +183,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		// setup viewer, inject viewer system property
 		String oldViewerProperty = System.getProperty(SystemProperties.VIEWER); 
 		System.setProperty(SystemProperties.VIEWER, SystemProperties.VIEWER_DEFAULT_JOGL);
-		JRViewer domainViewer = new JRViewer();
+		domainViewer = new JRViewer();
 		if (oldViewerProperty != null) {
 			System.setProperty(SystemProperties.VIEWER, oldViewerProperty);
 		}
@@ -175,6 +192,11 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		domainViewer.addContentSupport(ContentType.Raw);
 		domainViewer.addContentUI();
 		domainViewer.getController().setPropertyEngineEnabled(false);
+		if(instances != null) {
+			for(Plugin p : instances) {
+				domainViewer.registerPlugin(p);
+			}
+		}
 		domainViewer.registerPlugin(HalfedgeInterface.class);
 		domainViewer.registerPlugin(ContentAppearance.class);
 		domainViewer.registerPlugin(MarqueeSelectionPlugin.class);
@@ -267,6 +289,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 	}
 	
 	boolean transferInProgress = false;
+	
 	public void transferAppearance(AppearanceInspector src, AppearanceInspector dst) {
 		if (transferInProgress) return;
 		try {
