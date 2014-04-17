@@ -737,6 +737,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 	@Override
 	public void jobFailed(Job job, Exception e) {
+		UnwrapJob unwrapper = (UnwrapJob)job;
+		unwrapper.getSurface().revertNormalization();
 		surfaceUnwrapped = null;
 		Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
 		JOptionPane.showMessageDialog(w, e, "Optimization Error", JOptionPane.WARNING_MESSAGE);
