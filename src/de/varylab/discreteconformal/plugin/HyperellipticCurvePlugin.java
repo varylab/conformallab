@@ -138,11 +138,12 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		if (editor != null) {
 			curve.setCurveChangeListeners(getCurve().getCurveChangeListeners());
 			editor.setCurve(curve);
+			update();
 		} else {
 			this.editor = new CurveEditor(curve);
+			update();
 			getCurve().addCurveChangeListener(this);
 		}
-		update();
 
 		CurveChangeEvent e = new CurveChangeEvent(getCurve(), this,
 				EventType.NEW_CURVE_SET);

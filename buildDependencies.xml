@@ -18,6 +18,7 @@
 	</target>
 	
 	<target name="halfedgetools">
+		<ant antfile="build.xml" dir="../halfedgetools" target="clean"/>
 		<ant antfile="build.xml" dir="../halfedgetools" target="release"/>
 		<copy todir="lib/jtem">
 			<fileset dir="../halfedgetools/release" includes="halfedgetools.jar"/>
@@ -25,6 +26,7 @@
 	</target>
 	
 	<target name="halfedge">
+		<ant antfile="build.xml" dir="../halfedge" target="clean"/>
 		<ant antfile="build.xml" dir="../halfedge" target="release"/>
 		<copy todir="lib/jtem">
 			<fileset dir="../halfedge/release" includes="halfedge.jar"/>
@@ -32,6 +34,7 @@
 	</target>	
 	
 	<target name="jrworkspace">
+		<ant antfile="build.xml" dir="../jrworkspace" target="clean"/>
 		<ant antfile="build.xml" dir="../jrworkspace" target="jrworkspace"/>
 		<copy todir="lib/jtem">
 			<fileset dir="../jrworkspace/jar" includes="jrworkspace.jar"/>
@@ -39,6 +42,7 @@
 	</target>
 	
 	<target name="jreality">
+		<ant antfile="build.xml" dir="../jreality" target="clean"/>
 		<ant antfile="build.xml" dir="../jreality" target="release-jar"/>
 		<copy todir="lib/jreality">
 			<fileset dir="../jreality/release" includes="jReality.jar"/>
