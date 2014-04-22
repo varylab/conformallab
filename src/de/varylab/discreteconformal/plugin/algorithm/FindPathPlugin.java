@@ -9,13 +9,18 @@ import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.plugin.SelectionInterface;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmCategory;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmPlugin;
 import de.jtem.halfedgetools.selection.Selection;
+import de.jtem.jrworkspace.plugin.Controller;
 import de.varylab.discreteconformal.util.Search;
 
 public class FindPathPlugin extends AlgorithmPlugin {
 
+	private final Integer
+		PATH_CHANNEL = 293842934;
+	
 	@Override
 	public AlgorithmCategory getAlgorithmCategory() {
 		return AlgorithmCategory.Selection;
@@ -42,10 +47,16 @@ public class FindPathPlugin extends AlgorithmPlugin {
 	    List<E> path = Search.bFS(v1, v2, true);
 	    Selection sel = new Selection();
 		for (E e : path) {
-			sel.add(e);
-			sel.add(e.getOppositeEdge());
+			sel.add(e, PATH_CHANNEL);
+			sel.add(e.getOppositeEdge(), PATH_CHANNEL);
 		}
-		hcp.setSelection(sel);
+		hcp.addSelection(sel);
+	}
+	
+	@Override
+	public void install(Controller c) throws Exception {
+		super.install(c);
+		c.getPlugin(SelectionInterface.class).registerChannelName(PATH_CHANNEL, "Path Edges");
 	}
 
 }
