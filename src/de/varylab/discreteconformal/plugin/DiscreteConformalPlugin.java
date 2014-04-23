@@ -15,12 +15,15 @@ import static de.jreality.shader.CommonAttributes.TEXTURE_2D;
 import static de.jreality.shader.CommonAttributes.TRANSPARENCY;
 import static de.jreality.shader.CommonAttributes.TRANSPARENCY_ENABLED;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
+import static de.jtem.halfedge.util.HalfEdgeUtils.boundaryVertices;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Klein;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Poincaré;
 import static de.varylab.discreteconformal.plugin.InterpolationMethod.Incircle;
 import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.createIntersectionVertices;
 import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawTriangulation;
 import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawUniversalCoverImage;
+import static de.varylab.discreteconformal.unwrapper.BoundaryMode.ReadIsometricAngles;
+import static de.varylab.discreteconformal.unwrapper.EuclideanLayout.calculateAngleSum;
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.WHITE;
@@ -187,7 +190,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		coverResolution = 1024;
 	
 	public static final Integer
-		CHANNEL_BROKEN_TRIANGLES = 23435634;
+		CHANNEL_BROKEN_TRIANGLES = 23435634,
+		CHANNEL_BOUNDARY_CONDITION = 1236644;
 	
 	public static enum Domain {
 		Cut,
@@ -734,7 +738,23 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		createUniformization(surfaceUnwrapped, activeGeometry, cutInfo);
 		updateGeometry(activeGeometry);
 		updateDomainImage(activeGeometry);
+		if (unwrapper.getBoundaryMode() == ReadIsometricAngles) {
+			extractBoundaryAngles();
+		}
 	}
+
+	protected void extractBoundaryAngles() {
+		Selection boudaryVertices = new Selection();
+		for (CoVertex v : boundaryVertices(surfaceUnwrapped)) {
+			double angle = calculateAngleSum(v);
+			v.info = new CustomVertexInfo();
+			v.info.theta = angle;
+			v.info.useCustomTheta = true;
+			boudaryVertices.add(v, CHANNEL_BOUNDARY_CONDITION);
+		}
+		hif.addSelection(boudaryVertices);
+	}
+	
 	@Override
 	public void jobFailed(Job job, Exception e) {
 		UnwrapJob unwrapper = (UnwrapJob)job;
@@ -844,7 +864,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			uw.setMaxIterations(maxIterationsModel.getNumber().intValue());
 			uw.setNumCones(numConesModel.getNumber().intValue());
 			uw.setQuantizationMode((QuantizationMode)conesQuantizationModeCombo.getSelectedItem());
-			uw.setBoundaryQuantMode((QuantizationMode)boundaryQuantizationCombo.getSelectedItem());
+			uw.setBoundaryQuantizationMode((QuantizationMode)boundaryQuantizationCombo.getSelectedItem());
 			uw.setBoundaryMode((BoundaryMode)boundaryModeCombo.getSelectedItem());
 			uw.setUsePetsc(numericsCombo.getSelectedIndex() == 0);
 			uw.setSelectedVertices(selection.getVertices(unwrapped));
@@ -1577,6 +1597,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		conformalDataPlugin = c.getPlugin(ConformalDataPlugin.class);
 		SelectionInterface sif = c.getPlugin(SelectionInterface.class);
 		sif.registerChannelName(CHANNEL_BROKEN_TRIANGLES, "Broken Triangles");
+		sif.registerChannelName(CHANNEL_BOUNDARY_CONDITION, "Boundary Conditions");
 		createLayout();
 		connectGUIListeners();
 	}

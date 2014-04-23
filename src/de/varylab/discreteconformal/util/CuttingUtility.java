@@ -477,7 +477,7 @@ public class CuttingUtility {
 
 	public static void cutToSimplyConnected(CoHDS hds, CoVertex cutRoot, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		List<List<CoEdge>> bc = HalfEdgeUtils.boundaryComponents(hds);
-		if (cutRoot != null) {
+		if (cutRoot != null && bc.size() > 1) {
 			for (List<CoEdge> path : bc) {
 				Set<CoVertex> cycle = PathUtility.getVerticesOnPath(path);
 				List<CoEdge> cutPath = Search.getShortestPath(cutRoot, cycle, null);

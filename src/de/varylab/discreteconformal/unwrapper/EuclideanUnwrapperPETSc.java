@@ -413,7 +413,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 	private static double[][] unwrap(int layoutRoot, CoHDS hds, AdapterSet a) {
 		EuclideanUnwrapperPETSc unwrap = new EuclideanUnwrapperPETSc();
 		unwrap.setBoundaryQuantMode(QuantizationMode.Straight);
-		unwrap.setBoundaryMode(BoundaryMode.Conformal);
+		unwrap.setBoundaryMode(BoundaryMode.QuantizedAngles);
 		unwrap.setGradientTolerance(1E-12);
 		unwrap.setMaxIterations(50);
 		try {

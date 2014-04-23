@@ -19,8 +19,6 @@ import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
-import de.jreality.plugin.JRViewerUtility;
-import de.jreality.plugin.basic.Scene;
 import de.jreality.plugin.basic.View;
 import de.jreality.plugin.basic.ViewToolBar;
 import de.jreality.plugin.content.ContentAppearance;
@@ -68,8 +66,6 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 	private HalfedgeInterface
 		mainHif = null,
 		visHif = null;
-	private Scene
-		domainScene = null;
 	private ContentAppearance
 		mainAppearance = null,
 		visAppearance = null;
@@ -144,8 +140,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		copyTransformMap.clear();
 		updateAdapters();
 		visHif.set(mainHif.get());
-		//addCopyTool(visHif.getActiveLayer());
-		JRViewerUtility.encompassEuclidean(domainScene);
+		visHif.encompassContent();
 	}
 
 	public void updateAdapters() {
@@ -278,7 +273,6 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 			}
 		};
 		mainHif.addHalfedgeListener(mainHalfedgeListener);
-		domainScene = domainViewer.getPlugin(Scene.class);
 		domainViewer.getPlugin(BackgroundColor.class).setColor("UI Background");
 		domainViewer.getPlugin(CameraMenu.class).setZoomEnabled(true);
 		ViewToolBar toolBar = domainViewer.getPlugin(ViewToolBar.class);

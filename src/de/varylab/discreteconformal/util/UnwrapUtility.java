@@ -1,8 +1,11 @@
 package de.varylab.discreteconformal.util;
 
+import static de.varylab.discreteconformal.unwrapper.BoundaryMode.QuantizeAnglePeriods;
+import static de.varylab.discreteconformal.unwrapper.BoundaryMode.QuantizedAngles;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.signum;
+import static java.lang.Math.toDegrees;
 
 import java.util.Collection;
 import java.util.List;
@@ -101,19 +104,20 @@ public class UnwrapUtility {
 				continue;
 			}
 			BoundaryMode mode = bm;
-			if (v.info != null) {
+			if (v.info != null && bm != QuantizeAnglePeriods) {
 				if (v.info.useCustomTheta) {
-					mode = BoundaryMode.Conformal;
+					mode = QuantizedAngles;
 				} else {
 					mode = v.info.boundaryMode;
 				}
 			}
 			switch (mode) {
 			case Isometric:
+			case ReadIsometricAngles:
 				v.setTheta(0.0);
 				v.setSolverIndex(-1);
 				break;
-			case Conformal:
+			case QuantizedAngles:
 				double theta = 0;
 				if (v.info != null) {
 					if (v.info.useCustomTheta) {
@@ -134,42 +138,7 @@ public class UnwrapUtility {
 						if (v.info != null) {
 							qMode = v.info.quantizationMode;
 						}
-						switch (qMode) {
-						case AllAngles: break;
-						case Quads:
-							double q = theta % (PI/4);
-							if (q > PI/8) {
-								theta += (PI/4 - q);
-							} else {
-								theta -= q;
-							}
-							if((theta % (PI/2)) != 0) {
-								logger.info(v + ": theta quantized to " + theta);
-							}
-							break;
-						case QuadsStrict:
-							q = theta % (PI/2);
-							if (q > PI/4) {
-								theta += (PI/2 - q);
-							} else {
-								theta -= q;
-							}
-							if((theta % PI) != 0) {
-								logger.info(v + ": theta quantized to " + theta);
-							}
-							break;							
-						case Hexagons:
-							q = theta % (PI/6);
-							if (q > PI/12) {
-								theta += (PI/6 - q);
-							} else {
-								theta -= q;
-							}
-							break;
-						case Straight:
-							theta = PI;
-							break;
-						}
+						theta = quantizeAngle(v, theta, qMode);
 					}
 				}
 				bSize++;
@@ -182,6 +151,34 @@ public class UnwrapUtility {
 				break;
 			default:
 				break;
+			}
+		}
+		
+		if (bm == BoundaryMode.QuantizeAnglePeriods) {
+			for (List<CoEdge> b : HalfEdgeUtils.boundaryComponents(hds)) {
+				double period = 0.0;
+				for (CoEdge be : b) {
+					CoVertex bv = be.getTargetVertex();
+					if (bv.info == null || !bv.info.useCustomTheta) {
+						logger.warning("only custom theta boundary vertices allowed for QuantizeAnglePeriods");
+						break;
+					}
+					period += Math.PI - bv.info.theta;
+				}
+				double quantizedPeriod = quantizeAngle(null, period, qm);
+				double diff = period - quantizedPeriod;
+				for (CoEdge be : b) {
+					CoVertex bv = be.getTargetVertex();
+					if (bv.info == null || !bv.info.useCustomTheta) break;
+					bv.setTheta(bv.info.theta + diff / b.size());
+					bv.setSolverIndex(dim++);
+				}
+				double newPeriod = 0.0;
+				for (CoEdge be : b) {
+					CoVertex bv = be.getTargetVertex();
+					period += Math.PI - bv.getTheta();
+				}
+				logger.info("quantized period " + toDegrees(period) + " to " + toDegrees(newPeriod));
 			}
 		}
 		
@@ -261,6 +258,50 @@ public class UnwrapUtility {
 			f.setInitialEnergy(E.get());
 		}
 		return dim;
+	}
+
+
+
+	protected static double quantizeAngle(CoVertex v, double theta, QuantizationMode qMode) {
+		double sign = Math.signum(theta);
+		theta = Math.abs(theta);
+		switch (qMode) {
+		case AllAngles: break;
+		case Quads:
+			double q = theta % (PI/4);
+			if (q > PI/8) {
+				theta += (PI/4 - q);
+			} else {
+				theta -= q;
+			}
+			if((theta % (PI/2)) != 0) {
+				logger.info(v + ": theta quantized to " + theta);
+			}
+			break;
+		case QuadsStrict:
+			q = theta % (PI/2);
+			if (q > PI/4) {
+				theta += (PI/2 - q);
+			} else {
+				theta -= q;
+			}
+			if((theta % PI) != 0) {
+				logger.info(v + ": theta quantized to " + theta);
+			}
+			break;							
+		case Hexagons:
+			q = theta % (PI/6);
+			if (q > PI/12) {
+				theta += (PI/6 - q);
+			} else {
+				theta -= q;
+			}
+			break;
+		case Straight:
+			theta = PI;
+			break;
+		}
+		return sign * theta;
 	}
 	
 	/**

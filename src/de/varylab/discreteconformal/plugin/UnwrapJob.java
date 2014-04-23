@@ -57,7 +57,7 @@ public class UnwrapJob extends AbstractJob {
 		useSelectionCuts = false;
 	private QuantizationMode
 		coneMode = QuantizationMode.AllAngles,
-		boundaryQuantMode = QuantizationMode.AllAngles;
+		boundaryQuantizationMode = QuantizationMode.AllAngles;
 	private BoundaryMode
 		boundaryMode = BoundaryMode.Isometric;
 	private int
@@ -154,14 +154,14 @@ public class UnwrapJob extends AbstractJob {
 					uw.setNumCones(numCones);
 					uw.setConeMode(coneMode);
 					uw.setBoundaryMode(boundaryMode);
-					uw.setBoundaryQuantMode(boundaryQuantMode);
+					uw.setBoundaryQuantMode(boundaryQuantizationMode);
 					unwrapper = uw;
 				} else {
 					EuclideanUnwrapper uw = new EuclideanUnwrapper();
 					uw.setNumCones(numCones);
 					uw.setConeMode(coneMode);
 					uw.setBoundaryMode(boundaryMode);
-					uw.setBoundaryQuantMode(boundaryQuantMode);
+					uw.setBoundaryQuantMode(boundaryQuantizationMode);
 					unwrapper = uw;
 				}
 			}
@@ -296,12 +296,15 @@ public class UnwrapJob extends AbstractJob {
 		this.maxIterations = maxIterations;
 	}
 	
+	public BoundaryMode getBoundaryMode() {
+		return boundaryMode;
+	}
 	public void setBoundaryMode(BoundaryMode boundaryMode) {
 		this.boundaryMode = boundaryMode;
 	}
 	
-	public void setBoundaryQuantMode(QuantizationMode boundaryQuantMode) {
-		this.boundaryQuantMode = boundaryQuantMode;
+	public void setBoundaryQuantizationMode(QuantizationMode boundaryQuantMode) {
+		this.boundaryQuantizationMode = boundaryQuantMode;
 	}
 	
 	public void setSelectedVertices(TypedSelection<CoVertex> selectedVertices) {

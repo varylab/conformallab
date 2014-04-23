@@ -341,7 +341,7 @@ public class CircleDomainUnwrapper implements Unwrapper {
 
 	public void unwrapToHalfSpace(AdapterSet aSet, CoHDS surface) {
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
-		int n = prepareInvariantDataEuclidean(opt.getFunctional(), surface, BoundaryMode.Conformal, QuantizationMode.Straight, aSet);
+		int n = prepareInvariantDataEuclidean(opt.getFunctional(), surface, BoundaryMode.QuantizedAngles, QuantizationMode.Straight, aSet);
 		CEuclideanApplication app = new CEuclideanApplication(surface);
 		Vec u = new Vec(n);
 		u.assemble();
