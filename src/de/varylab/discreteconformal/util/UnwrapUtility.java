@@ -176,7 +176,7 @@ public class UnwrapUtility {
 				double newPeriod = 0.0;
 				for (CoEdge be : b) {
 					CoVertex bv = be.getTargetVertex();
-					period += Math.PI - bv.getTheta();
+					newPeriod += Math.PI - bv.getTheta();
 				}
 				logger.info("quantized period " + toDegrees(period) + " to " + toDegrees(newPeriod));
 			}
@@ -290,9 +290,9 @@ public class UnwrapUtility {
 			}
 			break;							
 		case Hexagons:
-			q = theta % (PI/6);
-			if (q > PI/12) {
-				theta += (PI/6 - q);
+			q = theta % (PI/3);
+			if (q > PI/6) {
+				theta += (PI/3 - q);
 			} else {
 				theta -= q;
 			}
