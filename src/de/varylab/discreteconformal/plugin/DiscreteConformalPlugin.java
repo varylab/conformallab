@@ -55,12 +55,10 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -129,11 +127,9 @@ import de.jtem.halfedge.Node;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.type.LengthTex;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.Position3d;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
-import de.jtem.halfedgetools.adapter.type.generic.TexturePosition2d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition3d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
@@ -175,7 +171,6 @@ import de.varylab.discreteconformal.uniformization.FundamentalVertex;
 import de.varylab.discreteconformal.uniformization.SurfaceCurveUtility;
 import de.varylab.discreteconformal.uniformization.VisualizationUtility;
 import de.varylab.discreteconformal.unwrapper.BoundaryMode;
-import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
 import de.varylab.discreteconformal.unwrapper.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
@@ -286,7 +281,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		createCopiesButton = new JButton("Create Copies"),
 		extractCutPreparedButton = new JButton("Extract Cut-Prepared"),
 		extractCutPreparedDirectionButton = new JButton("Cut along line"),
-		cutOrthogonalToBoundary = new JButton("Cut orthogonal to boundary"),
 		mapToCylinderButton = new JButton("To Cylinder"),
 		insertHolomorphicImagePoints = new JButton("Insert Holomorphoc Image Points");
 	private ColorChooseJButton
@@ -468,7 +462,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		reorderFacesButton.addActionListener(this);
 		reorderSelectedFacesButton.addActionListener(this);
 		createCopiesButton.addActionListener(this);
-		cutOrthogonalToBoundary.addActionListener(this);
 		extractCutPreparedButton.addActionListener(this);
 		extractCutPreparedDirectionButton.addActionListener(this);
 		mapToCylinderButton.addActionListener(this);
@@ -588,7 +581,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			visualizationPanel.add(new JLabel("Snap Tolerance Exp"), c1);
 			visualizationPanel.add(snapToleranceExpSpinner, c2);
 			visualizationPanel.add(extractCutPreparedButton, c2);
-			visualizationPanel.add(cutOrthogonalToBoundary, c2);
 			JPanel cutPanel = new JPanel();
 			cutPanel.setLayout(new FlowLayout());
 			cutPanel.add(cutXDirectionRadio);
@@ -1204,79 +1196,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			hif.activateLayer(l);
 			l.set(intersected);
 		}
-		if (cutOrthogonalToBoundary == s) {
-			Window w = getWindowAncestor(shrinkPanel);
-			TypedSelection<CoVertex> sel = hif.getSelection().getVertices(surfaceUnwrapped);
-			if (sel.isEmpty()) {
-				showMessageDialog(w, "Please select a boundary vertex to define the cut location and direction");
-				return;
-			}
-			CoVertex v = sel.iterator().next();
-			if (!HalfEdgeUtils.isBoundaryVertex(v)) {
-				showMessageDialog(w, "Please select a boundary vertex to define the cut location and direction");
-				return;
-			}
-			CoEdge be = HalfEdgeUtils.incomingBoundaryEdge(v);
-			CoVertex v1 = be.getStartVertex(); 
-			CoVertex v2 = be.getOppositeEdge().getPreviousEdge().getStartVertex();
-			AdapterSet a = hif.getAdapters();
-			double[] pv = a.getD(TexturePosition2d.class, v);
-			double[] pv1 = a.getD(TexturePosition2d.class, v1);
-			double[] pv2 = a.getD(TexturePosition2d.class, v2);
-			double[] vec1 = Rn.subtract(null, pv1, pv);
-			double[] vec2 = Rn.subtract(null, pv2, pv);
-			Rn.normalize(vec1, vec1);
-			Rn.normalize(vec2, vec2);
-			double[] difVec = Rn.subtract(null, Rn.add(null, pv, vec1), Rn.add(null, pv, vec2));
-			double[][] segment = {{pv[0], pv[1], 1}, {difVec[1] + pv[0], difVec[0] + pv[1], 1}};
-			
-			double snapTolerance = Math.pow(10, snapToleranceExpModel.getNumber().intValue());
-			int signature = getActiveSignature();
-			Set<CoVertex> newVertices = new HashSet<>();
-			try {
-				SurfaceCurveUtility.createIntersectionVertices(segment, false, surfaceUnwrapped, surfaceUnwrapped, cutInfo, snapTolerance, signature, newVertices);
-			} catch (Exception ex) {
-				ex.printStackTrace(System.out);
-				return;
-			}
-			Triangulator.triangulateByCuttingCorners(surfaceUnwrapped, a);
-			
-			Map<CoEdge, Double> lMap = new HashMap<>();
-			for (CoEdge edge : surfaceUnwrapped.getPositiveEdges()) {
-				Double l = a.get(LengthTex.class, edge, Double.class);
-				lMap.put(edge, l);
-				lMap.put(edge.getOppositeEdge(), l);
-			}
-			Map<CoEdge, Double> alphaMap = new HashMap<>();
-			for (CoEdge edge : surfaceUnwrapped.getEdges()) {
-				if (edge.getLeftFace() == null) {
-					alphaMap.put(edge, 0.0);
-					continue;
-				}
-				double[] p = a.getD(TexturePosition2d.class, edge.getNextEdge().getTargetVertex());
-				double[] p1 = a.getD(TexturePosition2d.class, edge.getTargetVertex());
-				double[] p2 = a.getD(TexturePosition2d.class, edge.getStartVertex());
-				double alpha = Rn.euclideanAngle(Rn.subtract(null, p1, p), Rn.subtract(null, p2, p));
-				alphaMap.put(edge, alpha);
-			}
-			CuttingUtility.glueAll(surfaceUnwrapped, cutInfo);
-
-			Selection pathSelection = new Selection();
-			pathSelection.addAll(newVertices);
-			LinkedList<CoEdge> newCut = selectCutPath(surfaceUnwrapped, newVertices, pathSelection);
-			CuttingInfo<CoVertex, CoEdge, CoFace> newCutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
-			CuttingUtility.cutAlongPath(newCut, newCutInfo);
-			for (CoEdge cutEdge : newCutInfo.edgeCutMap.keySet()) {
-				if (!lMap.containsKey(cutEdge)) continue;
-				double l = lMap.get(cutEdge);
-				lMap.put(cutEdge.getOppositeEdge(), l);
-			}
-			cutInfo = newCutInfo;
-			
-			EuclideanLayout.doLayout(surfaceUnwrapped, lMap, alphaMap);
-			
-			hif.update();
-		}
 	}
 
 
@@ -1367,7 +1286,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		l.setSelection(pathSelection);
 	}
 
-	private LinkedList<CoEdge> selectCutPath(CoHDS intersected,	Set<CoVertex> newVertices, Selection pathSelection) {
+	public static LinkedList<CoEdge> selectCutPath(CoHDS intersected,	Set<CoVertex> newVertices, Selection pathSelection) {
 		LinkedList<CoEdge> newCut = new LinkedList<CoEdge>();
 		for (CoEdge edge : intersected.getEdges()) {
 			if (newVertices.contains(edge.getTargetVertex()) && newVertices.contains(edge.getStartVertex())) {
@@ -1751,6 +1670,9 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 	public CuttingInfo<CoVertex, CoEdge, CoFace> getCurrentCutInfo() {
 		return cutInfo;
+	}
+	public void setCutCurrentInfo(CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		this.cutInfo = cutInfo;
 	}
 
 	private class CutDirectionComparator implements Comparator<CoEdge> {
