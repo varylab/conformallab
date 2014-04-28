@@ -58,7 +58,7 @@ public class ConformalLabSplashScreen extends SplashScreen {
 		this.lowResImage = lowResImage;
 		this.hiResImage = hiResImage;
 		setBackground(new Color(1, 1, 1, 0));
-		setAlwaysOnTop(true);
+		setAlwaysOnTop(false);
 		GraphicsConfiguration gc = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
 		int[] dpi = getDPI(gc);
 		useHighRes = dpi[0] > 110;

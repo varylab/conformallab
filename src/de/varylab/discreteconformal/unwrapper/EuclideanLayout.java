@@ -7,7 +7,6 @@ import static java.lang.Math.exp;
 import static java.lang.Math.sin;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -33,24 +32,7 @@ public class EuclideanLayout {
 	private static Logger
 		log = Logger.getLogger(EuclideanLayout.class.getName());
 	
-	/**
-	 * Do flat layout for a HDS and a metric vector u
-	 * @param hds mesh
-	 * @param u new metric
-	 * @param angleMapParam may be null
-	 */
-	public static CoVertex doLayout(CoHDS hds, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector u) {
-		Set<CoVertex> emptySet = Collections.emptySet();
-		return doLayout(hds, fun, u, emptySet);
-	}
-	
-	/**
-	 * Do flat layout for a HDS and a metric vector u. 
-	 * @param hds mesh
-	 * @param u new metric
-	 * @param angleMapParam may be null
-	 */
-	public static CoVertex doLayout(CoHDS hds, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector u, Set<CoVertex> ignoreSet) {
+	public static CoVertex doLayout(CoHDS hds, Map<CoEdge, Double> edgeLengths, Map<CoEdge, Double> triangleAngles) {
 		Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
 		Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		Queue<CoEdge> Qe = new LinkedList<CoEdge>();
@@ -75,7 +57,7 @@ public class EuclideanLayout {
 		Qa.offer(0.0);
 
 		// vertices
-		Double l = getNewLength(e0, fun, u);
+		Double l = edgeLengths.get(e0);
 		v1.T = new double[] {0,0,0,1};
 		v2.T = new double[] {l,0,0,1};
 		visited.add(v1);
@@ -94,9 +76,9 @@ public class EuclideanLayout {
 				CoVertex nearVertex = e.getTargetVertex();
 				
 				CoEdge next = e.getNextEdge();
-				Double alpha = next.getAlpha();
+				Double alpha = triangleAngles.get(next);
 				if (e.getLeftFace() == null) { // a boundary edge
-					alpha = 2*PI - calculateAngleSum(v);
+					alpha = 2*PI - calculateAngleSum(v, triangleAngles);
 				}
 				
 				globalAngle -= alpha;
@@ -107,7 +89,7 @@ public class EuclideanLayout {
 					Qe.offer(e);
 					Qa.offer(globalAngle);
 
-					l = getNewLength(e, fun, u);
+					l = edgeLengths.get(e);
 					double[] dif = {cos(globalAngle), sin(globalAngle), 0.0, 1.0};
 					Rn.times(dif, l, dif);
 					double[] t = Rn.add(null, tp, dif);
@@ -117,7 +99,21 @@ public class EuclideanLayout {
 				e = e.getOppositeEdge().getNextEdge();
 			}
 		}
-		
+		if (visited.size() != hds.numVertices()) {
+			log.warning("only " + visited.size() + " of " + hds.numVertices() + " vertices habe been processed");
+		}
+		return v1;		
+	}
+
+	
+	
+	public static CoVertex doLayout(CoHDS hds, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector u) {
+		Map<CoEdge, Double> lMap = getLengthMap(hds, fun, u);
+		Map<CoEdge, Double> alphaMap = new HashMap<>();
+		for (CoEdge e : hds.getEdges()) {
+			alphaMap.put(e, e.getAlpha());
+		}
+		CoVertex root = doLayout(hds, lMap, alphaMap);
 		// projective texture coordinates
 		for (CoVertex v : hds.getVertices()) {
 			double uv = v.getSolverIndex() < 0 ? 0.0 : u.get(v.getSolverIndex());
@@ -127,11 +123,7 @@ public class EuclideanLayout {
 			Pn.dehomogenize(t, t);
 			Rn.times(t, e, t);
 		}
-		
-		if (visited.size() != hds.numVertices()) {
-			log.warning("only " + visited.size() + " of " + hds.numVertices() + " vertices habe been processed");
-		}
-		return v1;
+		return root;
 	}
 	
 	
@@ -148,6 +140,17 @@ public class EuclideanLayout {
 		for (CoEdge e : star) {
 			if (e.getLeftFace() != null) {
 				r += e.getPreviousEdge().getAlpha();
+			}
+		}
+		return r;
+	}
+	
+	public static Double calculateAngleSum(CoVertex v, Map<CoEdge, Double> angleMap) {
+		Double r = 0.0;
+		List<CoEdge> star = incomingEdges(v);
+		for (CoEdge e : star) {
+			if (e.getLeftFace() != null) {
+				r += angleMap.get(e.getPreviousEdge());
 			}
 		}
 		return r;

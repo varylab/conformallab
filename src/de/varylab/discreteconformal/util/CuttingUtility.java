@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.util;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
+import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryEdge;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isInteriorEdge;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isManifoldVertex;
@@ -95,7 +96,9 @@ public class CuttingUtility {
 	> void glueAll(HDS hds, CuttingInfo<V, E, F> cut) {
 		for (E e1 : cut.edgeCutMap.keySet()) {
 			E e2 = cut.edgeCutMap.get(e1);
-			glue(e1, e2);
+			if (e1.isValid() && e2.isValid() && isBoundaryEdge(e1) && isBoundaryEdge(e2)) {
+				glue(e1, e2);
+			}
 		}
 	}
 	
@@ -105,13 +108,22 @@ public class CuttingUtility {
 		F extends Face<V, E, F>,
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> void glue(E e1, E e2) {
-		assert e1.getLeftFace() == null;
-		assert e2.getLeftFace() == null;
-//		E e = e1.getOppositeEdge();
-//		E eopp = e2.getOppositeEdge();
-		
+		if (!isBoundaryEdge(e1) || !isBoundaryEdge(e2)) {
+			throw new RuntimeException("Can only glue boundary edges");
+		}
+		if (e1.getLeftFace() == null) {
+			e1 = e1.getOppositeEdge();
+		}
+		if (e2.getLeftFace() == null) {
+			e2 = e2.getOppositeEdge();
+		}
+		if (e1.getStartVertex() != e2.getTargetVertex()) {
+			StitchingUtility.stitch(e1.getStartVertex(), e2.getTargetVertex());
+		}
+		if (e1.getTargetVertex() != e2.getStartVertex()) {
+			StitchingUtility.stitch(e1.getTargetVertex(), e2.getStartVertex());
+		}
 	}
-	
 	
 	
 	public static <
