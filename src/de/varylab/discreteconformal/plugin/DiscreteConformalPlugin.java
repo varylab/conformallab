@@ -94,9 +94,11 @@ import com.itextpdf.text.pdf.PdfWriter;
 
 import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.Primitives;
+import de.jreality.math.FactoredMatrix;
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
 import de.jreality.math.P2;
+import de.jreality.math.P3;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
@@ -148,6 +150,8 @@ import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.jtem.jrworkspace.plugin.sidecontainer.widget.ShrinkPanel;
+import de.varylab.discreteconformal.adapter.ConeMapAdapter;
+import de.varylab.discreteconformal.adapter.CylinderMapAdapter;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.functional.EuclideanFunctional;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
@@ -281,8 +285,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		createCopiesButton = new JButton("Create Copies"),
 		extractCutPreparedButton = new JButton("Extract Cut-Prepared"),
 		extractCutPreparedDirectionButton = new JButton("Cut along line"),
-		mapToCylinderButton = new JButton("To Cylinder"),
-		insertHolomorphicImagePoints = new JButton("Insert Holomorphoc Image Points");
+		mapToConeButton = new JButton("Create cone adapter"),
+		insertHolomorphicImagePoints = new JButton("Insert Holomorphic Image Points");
 	private ColorChooseJButton
 		triangulationColorButton = new ColorChooseJButton(Color.BLACK, true),
 		polygonColorButton = new ColorChooseJButton(Color.RED, true),
@@ -464,7 +468,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		createCopiesButton.addActionListener(this);
 		extractCutPreparedButton.addActionListener(this);
 		extractCutPreparedDirectionButton.addActionListener(this);
-		mapToCylinderButton.addActionListener(this);
+		mapToConeButton.addActionListener(this);
 		insertHolomorphicImagePoints.addActionListener(this);
 		
 		unwrapBtn.addActionListener(this);
@@ -587,7 +591,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			cutPanel.add(cutYDirectionRadio);
 			cutPanel.add(extractCutPreparedDirectionButton);
 			visualizationPanel.add(cutPanel, c2);
-			visualizationPanel.add(mapToCylinderButton,c2);
+			visualizationPanel.add(mapToConeButton,c2);
 			visualizationPanel.add(insertHolomorphicImagePoints, c2);
 			visualizationPanel.add(visButtonsPanel, c2);
 			shrinkPanel.add(visualizationPanel, c2);
@@ -1136,28 +1140,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		if (extractCutPreparedDirectionButton == s) {
 			cutOrthogonalToPeriod();
 		}
-		if (mapToCylinderButton == s) {
-			Set<CoVertex> roots = cutInfo.getCopies(cutInfo.cutRoot);
-			Iterator<CoVertex> it = roots.iterator();
-			CoVertex v1 = it.next(), v2 = it.next();
-			int direction = 0;
-			double[] t1 = Pn.dehomogenize(null, v1.T), t2 = Pn.dehomogenize(null, v2.T);
-			if(Math.abs(t1[0] - t2[0]) < 1E-8) {
-				direction = 1;
-			} else if(Math.abs(t1[1] - t2[1]) < 1E-8) {
-				direction = 0;
-			} else {
-				Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
-				JOptionPane.showMessageDialog(w, "Texture does not seem to be periodic in horizontal or vertical direction.");
-				return;
-			}
-			double dist = Math.abs(t1[direction] - t2[direction]);
-			CylinderMapAdapter cma = hif.getAdapters().query(CylinderMapAdapter.class);
-			if(cma == null) {
-				cma = new CylinderMapAdapter(v1, direction, dist);
-				hif.addAdapter(cma, false);
-			} 
-			cma.initialize(v1,direction,dist); 
+		if (mapToConeButton == s) {
+			CoEdge ce = cutInfo.edgeCutMap.keySet().iterator().next();
+			CoEdge opce = cutInfo.edgeCutMap.get(ce);
+			mapToCone(ce, opce); 
 		}
 		if (insertHolomorphicImagePoints == s) {
 			AdapterSet a = hif.getAdapters();
@@ -1196,6 +1182,80 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			hif.activateLayer(l);
 			l.set(intersected);
 		}
+	}
+
+
+	private void mapToCone(CoEdge ce, CoEdge opce) {
+		AdapterSet a = hif.getAdapters();
+		CoVertex 
+			v1 = ce.getStartVertex(), 
+			v2 = ce.getTargetVertex(),
+			w1 = opce.getTargetVertex(),
+			w2 = opce.getStartVertex();
+		System.out.println(v1 + "->" + w1);
+		System.out.println(v2 + "->" + w2);
+		double[]
+				p1 = P2.projectP3ToP2(null, a.getD(TexturePosition4d.class, v1)),
+				p2 = P2.projectP3ToP2(null, a.getD(TexturePosition4d.class, v2)),
+				q1 = P2.projectP3ToP2(null, a.getD(TexturePosition4d.class, w1)),
+				q2 = P2.projectP3ToP2(null, a.getD(TexturePosition4d.class, w2));
+		
+		FactoredMatrix M = new FactoredMatrix(P3.makeDirectIsometryFromFrames(null, v1.T, Rn.subtract(null, v2.T, v1.T), new double[]{0,0,1,0}, w1.T, Rn.subtract(null, w2.T, w1.T), new double[]{0,0,1,0}, Pn.EUCLIDEAN));
+		if(M.getRotationAngle() == 0) {
+			int direction = 0;
+			double[] t = M.getTranslation();
+			if(Math.abs(t[0]) < 1E-8) {
+				direction = 1;
+			} else if(Math.abs(t[1]) < 1E-8) {
+				direction = 0;
+			} else {
+				Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
+				JOptionPane.showMessageDialog(w, "Texture does not seem to be periodic in horizontal or vertical direction.");
+				return;
+			}
+			double dist = Math.abs(t[direction]);
+			CylinderMapAdapter cma = hif.getAdapters().query(CylinderMapAdapter.class);
+			if(cma == null) {
+				cma = new CylinderMapAdapter(v1, direction, dist);
+				hif.addAdapter(cma, false);
+			} else {
+				cma.initialize(v1,direction,dist);
+			}
+		} else {
+			double[] origin = Pn.dehomogenize(null, P2.pointFromLines(null, 
+					perpendicularBisector(p1, q1),
+					perpendicularBisector(p2, q2)
+					));
+			double period = getRotationAngle(p1,q1,origin);
+			ConeMapAdapter coneAdapter = hif.getAdapters().query(ConeMapAdapter.class);	
+			if(coneAdapter == null) {
+				coneAdapter = new ConeMapAdapter(origin, period);
+				hif.addAdapter(coneAdapter, false);
+			} else {
+				coneAdapter.initialize(origin, period);
+			}
+		}
+	}
+
+
+	private double getRotationAngle(double[] p, double[] q, double[] o) {
+		p = Pn.dehomogenize(null, p);
+		q = Pn.dehomogenize(null, q);
+		o = Pn.dehomogenize(null, o);
+		double[] v1 = Rn.subtract(null, p, o);
+		double[] v2 = Rn.subtract(null, q, o);
+		double alphaP = Math.atan2(v1[1], v1[0]);
+		double alphaQ = Math.atan2(v2[1], v2[0]);
+		return alphaQ - alphaP;
+	}
+
+
+	private double[] perpendicularBisector(double[] p,	double[] q) {
+		p = Pn.dehomogenize(null, p);
+		q = Pn.dehomogenize(null, q);
+		double[] midpoint = Rn.linearCombination(null, 0.5, p, 0.5, q);
+		double[] v = Rn.subtract(null, p, q);
+		return P2.lineFromPoints(null, midpoint, new double[]{-v[1],v[0],0});
 	}
 
 

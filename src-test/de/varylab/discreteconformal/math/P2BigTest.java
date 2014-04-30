@@ -37,6 +37,21 @@ public class P2BigTest {
 		}
 	}
 	
+	@Test
+	public void testPerpendicularBisector() {
+		double[] p1 = {0.5,0,1};
+		double[] q1 = {0,0.5,1};
+		Assert.assertArrayEquals(new double[]{0.5,-0.5,0}, P2.perpendicularBisector(null, p1, q1, Pn.EUCLIDEAN), 1E-10);
+	}
 	
-	
+	@Test
+	public void testPerpendicularBisectorIntersection() {
+		double[] p1 = {0.5,0,1};
+		double[] q1 = {0,1,1};
+		double[] p2 = {1,0,1};
+		double[] q2 = {0,1.5,1};
+		double[] o = P2.pointFromLines(null, P2.perpendicularBisector(null, p1, q1, Pn.EUCLIDEAN), P2.perpendicularBisector(null, p2, q2, Pn.EUCLIDEAN));
+		Assert.assertEquals(Pn.distanceBetween(p1, o, Pn.EUCLIDEAN), Pn.distanceBetween(q1, o, Pn.EUCLIDEAN), 1E-10);
+		Assert.assertEquals(Pn.distanceBetween(p2, o, Pn.EUCLIDEAN), Pn.distanceBetween(q2, o, Pn.EUCLIDEAN), 1E-10);
+	}
 }
