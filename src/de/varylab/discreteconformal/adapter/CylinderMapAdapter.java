@@ -19,9 +19,10 @@ import de.jtem.halfedge.Node;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition2d;
-import de.varylab.discreteconformal.heds.CoVertex;
 
+@Position
 public class CylinderMapAdapter extends AbstractAdapter<double[]> {
 
 	private Vertex<?,?,?> root = null;
@@ -58,7 +59,7 @@ public class CylinderMapAdapter extends AbstractAdapter<double[]> {
 		return new double[]{radius*Math.cos(phi/radius), radius*Math.sin(phi/radius), h};
 	}
 
-	public void initialize(CoVertex v1, int direction, double dist) {
+	public void initialize(Vertex<?,?,?> v1, int direction, double dist) {
 		root = v1;
 		dir = direction;
 		period = dist;
@@ -121,6 +122,11 @@ public class CylinderMapAdapter extends AbstractAdapter<double[]> {
 			curve[i++] = cylinder(radius,dir,iterator.next());
 		}
 		return curve;
+	}
+	
+	@Override
+	public double getPriority() {
+		return 100.0;
 	}
 	
 	public static void main(String[] args) {

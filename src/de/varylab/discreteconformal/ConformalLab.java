@@ -39,10 +39,12 @@ import de.varylab.discreteconformal.plugin.KoebePolyhedronPlugin;
 import de.varylab.discreteconformal.plugin.ProjectiveTexturePlugin;
 import de.varylab.discreteconformal.plugin.QuasiIsothermicPlugin;
 import de.varylab.discreteconformal.plugin.SphereEqualizerPlugin;
+import de.varylab.discreteconformal.plugin.algorithm.AddConeOfRevolutionCommand;
 import de.varylab.discreteconformal.plugin.algorithm.CutAndGlueConformalDomain;
 import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutToDiskPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.FindPathPlugin;
+import de.varylab.discreteconformal.plugin.algorithm.MapToConeCommand;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
 import de.varylab.discreteconformal.plugin.visualizer.FlippedTriangles;
 import de.varylab.discreteconformal.plugin.visualizer.IndexMedialGraph;
@@ -81,6 +83,8 @@ public class ConformalLab implements Runnable {
 		s.add(new CylinderEdgesDataSource());
 		s.add(new ConicalEdgesDataSource());
 		s.add(new CutAndGlueConformalDomain());
+		s.add(new MapToConeCommand());
+		s.add(new AddConeOfRevolutionCommand());
 		return s;
 	}
 	

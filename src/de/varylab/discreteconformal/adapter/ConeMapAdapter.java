@@ -22,8 +22,10 @@ import de.jtem.halfedge.Node;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition2d;
 
+@Position
 public class ConeMapAdapter extends AbstractAdapter<double[]> {
 
 	private double[] origin = null;
@@ -94,6 +96,11 @@ public class ConeMapAdapter extends AbstractAdapter<double[]> {
 		return curve;
 	}
 	
+	@Override
+	public double getPriority() {
+		return 100.0;
+	}
+	
 	public static void main(String[] args) {
 		SceneGraphComponent root = new SceneGraphComponent();
 		Appearance app = new Appearance();
@@ -109,7 +116,6 @@ public class ConeMapAdapter extends AbstractAdapter<double[]> {
 				P2.lineFromPoints(null, P2.projectP3ToP2(null, arc[0]), P2.projectP3ToP2(null, arc[1])),
 				P2.lineFromPoints(null, P2.projectP3ToP2(null, arc[3]), P2.projectP3ToP2(null, arc[2]))
 				));
-		double[] t = M.getTranslation();
 		double period = M.getRotationAngle();
 		int n = 36;
 		SceneGraphComponent e1 = new SceneGraphComponent();
@@ -125,7 +131,6 @@ public class ConeMapAdapter extends AbstractAdapter<double[]> {
 		root.addChild(e2);
 		root.addChild(e3);
 		root.addChild(e4);
-		
 		JRViewer.display(root);
 	}
 	
