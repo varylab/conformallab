@@ -112,6 +112,7 @@ public class SurfaceCurveUtility {
 		Set<CoVertex> result
 	) {
 		double[] polygonLine = P2.lineFromPoints(null, segment[0], segment[1]);
+		Rn.normalize(polygonLine, polygonLine);
 		for (CoEdge domainEdge : domain.getPositiveEdges()) {
 			CoVertex s = domainEdge.getStartVertex();
 			CoVertex t = domainEdge.getTargetVertex();
@@ -120,6 +121,16 @@ public class SurfaceCurveUtility {
 			double[][] domainSegment = {st, tt};
 			double[][] surfaceSegment = {s.P, t.P};
 			double[] domainEdgeLine = P2.lineFromPoints(null, st, tt);
+			Rn.normalize(domainEdgeLine, domainEdgeLine);
+		 	double edgeOnLine = Rn.euclideanNormSquared(Rn.crossProduct(null, polygonLine, domainEdgeLine));
+		 	if (edgeOnLine < 1E-12) {
+		 		List<CoEdge> surfaceEdges = findCorrespondingSurfaceEdges(domainEdge, cutInfo, surface);
+		 		for (CoEdge e : surfaceEdges) {
+		 			result.add(e.getStartVertex());
+		 			result.add(e.getTargetVertex());
+		 		}
+		 		continue;
+		 	}
 			double[] newDomainPoint = P2.pointFromLines(null, polygonLine, domainEdgeLine);
 			// split only if edge is really intersected
 			if (isOnSegment(newDomainPoint, domainSegment) && (!segmentOnly || isOnSegment(newDomainPoint, segment))) {

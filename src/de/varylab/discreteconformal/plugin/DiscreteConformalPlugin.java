@@ -35,7 +35,6 @@ import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
 import static javax.swing.JOptionPane.WARNING_MESSAGE;
 import static javax.swing.JOptionPane.showMessageDialog;
-import static javax.swing.SwingUtilities.getWindowAncestor;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -828,6 +827,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		Window w = SwingUtilities.getWindowAncestor(this.shrinkPanel);
 		Object s = e.getSource();
 		if (domainCombo == s) {
 			updateGeometry(activeGeometry);
@@ -836,7 +836,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 		if (coverToTextureButton == s) {
 			if (activeDomainImage == null) {
-				Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
 				JOptionPane.showMessageDialog(w, "No current domain image", "Cannot create texture", WARNING_MESSAGE);
 				return;
 			}
@@ -918,7 +917,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				EuclideanFunctional<CoVertex, CoEdge, CoFace> fun = new EuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, initE);
 				prepareInvariantDataEuclidean(fun, hds, boundaryMode, boundaryQuantMode, hif.getAdapters());
 			} catch (Exception e1) {
-				Window w = getWindowAncestor(shrinkPanel);
 				showMessageDialog(w, e1.getMessage(), "Error", ERROR_MESSAGE);
 			}
 		}
@@ -1020,7 +1018,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			conformalDataPlugin.addDiscreteMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
 		}
 		if (saveTextureButton == s) {
-			Window w = SwingUtilities.getWindowAncestor(this.shrinkPanel);
 			int result = pngChooser.showSaveDialog(w);
 			if (result != JFileChooser.APPROVE_OPTION) {
 				return;
@@ -1043,7 +1040,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			}
 		}
 		if (exportHyperbolicButton == s) {
-			Window w = SwingUtilities.getWindowAncestor(this.shrinkPanel);
 			int result = pdfChooser.showSaveDialog(w);
 			if (result != JFileChooser.APPROVE_OPTION) {
 				return;
@@ -1065,7 +1061,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			}
 		}
 		if (exportHyperbolicSVGButton == s) {
-			Window w = SwingUtilities.getWindowAncestor(this.shrinkPanel);
 			int result = svgChooser.showSaveDialog(w);
 			if (result != JFileChooser.APPROVE_OPTION) {
 				return;
@@ -1108,6 +1103,10 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			createCopies();
 		}
 		if (extractCutPreparedButton == s) {
+			if (getActiveFundamentalPoygon() == null) {
+				showMessageDialog(w, "No uniformization has been calculated.");
+				return;
+			}
 			int signature = getActiveSignature();
 			AdapterSet a = hif.getAdapters();
 			CoHDS intersected = copySurface(surface);
@@ -1120,6 +1119,13 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 						for (CoVertex nextOnSegment : HalfEdgeUtils.boundaryVertices(f)) {
 							List<CoVertex> vStar = HalfEdgeUtilsExtra.getVertexStar(nextOnSegment);
 							if (nextOnSegment == v || vStar.contains(v)) {
+								if (vStar.contains(v) && segmentSet.contains(nextOnSegment)) {
+									CoEdge pathedge = HalfEdgeUtils.findEdgeBetweenVertices(v, nextOnSegment);
+									if (pathedge != null) {
+										pathSelection.add(pathedge);
+										pathSelection.add(pathedge.getOppositeEdge());
+									}
+								}
 								continue;
 							}
 							if (segmentSet.contains(nextOnSegment)) {
@@ -1149,7 +1155,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			AdapterSet a = hif.getAdapters();
 			TypedSelection<CoVertex> vSet = hif.getSelection().getVertices(surfaceUnwrapped);
 			if (vSet.isEmpty()) {
-				Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
 				JOptionPane.showMessageDialog(w, "Please select al least one vertex to map.");
 				return;
 			}

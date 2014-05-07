@@ -59,6 +59,7 @@
 		</javac>
 		<copy todir="${build}">
 			<fileset dir="${src}" includes="**/*.png **/*.jpg **/*.properties"/>
+			<fileset dir="${src-data}" includes="**/*.xsd"/>
 		</copy>
 	</target>
 	
