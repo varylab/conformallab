@@ -123,7 +123,7 @@ public class SurfaceCurveUtility {
 			double[] domainEdgeLine = P2.lineFromPoints(null, st, tt);
 			Rn.normalize(domainEdgeLine, domainEdgeLine);
 		 	double edgeOnLine = Rn.euclideanNormSquared(Rn.crossProduct(null, polygonLine, domainEdgeLine));
-		 	if (edgeOnLine < 1E-12) {
+		 	if (edgeOnLine < 1E-8) {
 		 		List<CoEdge> surfaceEdges = findCorrespondingSurfaceEdges(domainEdge, cutInfo, surface);
 		 		for (CoEdge e : surfaceEdges) {
 		 			result.add(e.getStartVertex());
@@ -143,6 +143,11 @@ public class SurfaceCurveUtility {
 				for (CoEdge se : surfaceEdges) {
 					CoVertex vs = se.getStartVertex();
 					CoVertex vt = se.getTargetVertex();
+					if (result.contains(vs) || result.contains(vt)) {
+						log.info("snapped to cycle vertex");
+						snap = true;
+						break;
+					}
 					double[][] pSegment = {vs.P, vt.P};
 					if (isOnSegment(newPoint, pSegment)) {
 						splitEdge = se;

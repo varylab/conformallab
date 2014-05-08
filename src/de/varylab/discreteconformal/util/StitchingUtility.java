@@ -73,24 +73,8 @@ public class StitchingUtility {
 		
 		E splitE = insertEdge(v1,ie1,v2,ie2);
 		V newV = TopologyAlgorithms.collapseEdge(splitE);
-		removeDigons(newV);
+		TopologyAlgorithms.removeDigonsAt(newV);
 		return true;		
-	}
-	
-	private static <
-		V extends Vertex<V, E, F>, 
-		E extends Edge<V, E, F>, 
-		F extends Face<V, E, F>, 
-		HDS extends HalfEdgeDataStructure<V, E, F>
-	> void removeDigons(V v) {
-		for(E e : HalfEdgeUtils.incomingEdges(v)) {
-			if(e.getNextEdge() == e.getPreviousEdge()) {
-				E eo = e.getOppositeEdge();
-				eo.linkOppositeEdge(e.getNextEdge().getOppositeEdge());
-				eo.getHalfEdgeDataStructure().removeEdge(e.getNextEdge());
-				eo.getHalfEdgeDataStructure().removeEdge(e);
-			}
-		}
 	}
 	
 	// Returns a list of incoming edges of v1 resp. v2, such that the left faces

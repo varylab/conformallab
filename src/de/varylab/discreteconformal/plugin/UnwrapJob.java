@@ -234,6 +234,7 @@ public class UnwrapJob extends AbstractJob {
 		int brokenCount = 0;
 		int curveVertices = 0;
 		for (CoEdge e : surface.getEdges()) {
+			if (e.getLeftFace() == null) continue;
 			if (e.getAlpha() >= Math.PI) {
 				brokenCount++;
 				aSet.set(Selection.class, e.getLeftFace(), CHANNEL_BROKEN_TRIANGLES);

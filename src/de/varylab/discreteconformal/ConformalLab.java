@@ -40,6 +40,7 @@ import de.varylab.discreteconformal.plugin.ProjectiveTexturePlugin;
 import de.varylab.discreteconformal.plugin.QuasiIsothermicPlugin;
 import de.varylab.discreteconformal.plugin.SphereEqualizerPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.AddConeOfRevolutionCommand;
+import de.varylab.discreteconformal.plugin.algorithm.ContractShortEdges;
 import de.varylab.discreteconformal.plugin.algorithm.CutAndGlueConformalDomain;
 import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutToDiskPlugin;
@@ -85,6 +86,7 @@ public class ConformalLab implements Runnable {
 		s.add(new CutAndGlueConformalDomain());
 		s.add(new MapToConeCommand());
 		s.add(new AddConeOfRevolutionCommand());
+		s.add(new ContractShortEdges());
 		return s;
 	}
 	
