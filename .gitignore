@@ -1,5 +1,3 @@
 /bin
-/ConformalLab.0.jrw
-/ConformalLab.jrw
-/Schottky.0.jrw
-/Schottky.jrw
+/Conformal*.jrw
+/Schottky*.jrw
