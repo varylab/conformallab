@@ -1,39 +1,17 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
-import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.functional.Gradient;
+import no.uib.cipr.matrix.Vector;
 
-public class MTJGradient implements Gradient {
+public class MTJGradient extends MTJDomain implements Gradient {
 
-	private Vector
-		G = null;
-	
-	public MTJGradient(Vector G) {
-		this.G = G;
-	}
-	
-	@Override
-	public void add(int i, double value) {
-		G.add(i, value);
+	public MTJGradient(Vector u) {
+		super(u);
 	}
 
 	@Override
-	public void set(int i, double value) {
-		G.set(i, value);
+	public void add(double coeff, Gradient g) {
+		super.add(coeff, (MTJGradient)g);
 	}
-	
-	@Override
-	public void setZero() {
-		G.zero();
-	}
-	
-	@Override
-	public double get(int i) {
-		return G.get(i);
-	}
-	
-	public Vector getG() {
-		return G;
-	}
-	
+
 }

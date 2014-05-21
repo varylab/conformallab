@@ -49,6 +49,9 @@ public class UnwrapUtility {
 		public void add(int i, double value) {
 		}
 		@Override
+		public void add(double coeff, DomainValue x) {
+		}
+		@Override
 		public void set(int i, double value) {
 		}
 		@Override

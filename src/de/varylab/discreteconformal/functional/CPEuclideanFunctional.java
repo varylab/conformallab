@@ -246,10 +246,15 @@ public class CPEuclideanFunctional <
         return  2.0 * Math.atan(Math.tan(0.5 * thStar) * tanhDiffRhoHalf);
     }
     
+
+	@Override
+	public boolean hasGradient() {
+		return true;
+	}
+    
     @Override
     public boolean hasHessian() {
     	return true;
     }
-    
 	
 }
