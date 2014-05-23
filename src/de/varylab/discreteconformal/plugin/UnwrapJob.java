@@ -22,7 +22,6 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin.TargetGeometry;
 import de.varylab.discreteconformal.unwrapper.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.CircleDomainUnwrapper;
 import de.varylab.discreteconformal.unwrapper.EuclideanLayout;

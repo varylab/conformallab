@@ -196,20 +196,6 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		CHANNEL_BROKEN_TRIANGLES = 23435634,
 		CHANNEL_BOUNDARY_CONDITION = 1236644;
 	
-	public static enum Domain {
-		Cut,
-		Minimal,
-		Opposite,
-		Canonical
-	}
-	
-	public static enum TargetGeometry {
-		Automatic,
-		Euclidean,
-		Spherical,
-		Hyperbolic
-	}
-	
 	// plug-in section ------------------ 
 	private HalfedgeInterface
 		hif = null;
@@ -291,8 +277,8 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		polygonColorButton = new ColorChooseJButton(Color.RED, true),
 		boundaryColorButton = new ColorChooseJButton(Color.RED, true),
 		axesColorButton = new ColorChooseJButton(Color.BLUE, true);
-	private JComboBox<Domain>
-		domainCombo = new JComboBox<>(Domain.values());
+	private JComboBox<DomainPolygon>
+		domainCombo = new JComboBox<>(DomainPolygon.values());
 	private JComboBox<TargetGeometry>
 		targetGeometryCombo = new JComboBox<>(TargetGeometry.values());
 	private ShrinkPanel
@@ -1401,7 +1387,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 	
 	private FundamentalPolygon getActiveFundamentalPoygon() {
-		Domain domain = (Domain)domainCombo.getSelectedItem();
+		DomainPolygon domain = (DomainPolygon)domainCombo.getSelectedItem();
 		switch (domain) {
 			default:
 			case Cut:
@@ -1564,7 +1550,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		boolean drawBoundary = drawBoundaryChecker.isSelected();
 		boolean drawAxes = drawAxesChecker.isSelected();
 		boolean drawTriangulation = drawTriangulationChecker.isSelected();
-		Domain domain = (Domain)domainCombo.getSelectedItem();
+		DomainPolygon domain = (DomainPolygon)domainCombo.getSelectedItem();
 		int maxDrawDepth = coverElementsModel.getNumber().intValue();
 		double maxDrawDisctance = coverMaxDisctanceModel.getNumber().doubleValue();
 		

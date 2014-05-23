@@ -61,7 +61,6 @@ import de.varylab.discreteconformal.heds.adapter.CoDirectDataAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoDirectPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoDirectTextureAdapter;
 import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
-import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin.TargetGeometry;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;

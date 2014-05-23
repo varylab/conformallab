@@ -62,7 +62,7 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoDirectTextureAdapter;
 import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
-import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin.TargetGeometry;
+import de.varylab.discreteconformal.plugin.TargetGeometry;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.UnwrapUtility;

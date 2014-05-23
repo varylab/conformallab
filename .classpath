@@ -8,7 +8,6 @@
 			<attribute name="javadoc_location" value="http://matrix-toolkits-java.googlecode.com/svn/branches/0.9.13/javadoc"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/jopt-simple-3.2.jar"/>
 	<classpathentry kind="lib" path="lib/JLink.jar"/>
 	<classpathentry kind="lib" path="lib/jplasma.jar"/>
 	<classpathentry kind="lib" path="lib/jtransforms.jar"/>
@@ -54,6 +53,11 @@
 	<classpathentry kind="lib" path="lib/xmlunit-1.5/lib/xmlunit-1.5.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://xmlunit.sourceforge.net/api/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/jopt-simple-4.6.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="http://pholser.github.io/jopt-simple/apidocs/"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
