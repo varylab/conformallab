@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.02.27 um 10:36:32 AM CET 
+// Generiert: 2014.05.30 um 12:40:20 PM CEST 
 //
 
 
@@ -37,6 +37,7 @@ public class ObjectFactory {
     private final static QName _UniformizationData_QNAME = new QName("http://www.varylab.com/conformallab/types", "UniformizationData");
     private final static QName _ConformalDataList_QNAME = new QName("http://www.varylab.com/conformallab/types", "ConformalDataList");
     private final static QName _DiscreteEmbedding_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteEmbedding");
+    private final static QName _EmbeddingSelection_QNAME = new QName("http://www.varylab.com/conformallab/types", "EmbeddingSelection");
     private final static QName _HyperEllipticAlgebraicCurve_QNAME = new QName("http://www.varylab.com/conformallab/types", "HyperEllipticAlgebraicCurve");
 
     /**
@@ -44,6 +45,38 @@ public class ObjectFactory {
      * 
      */
     public ObjectFactory() {
+    }
+
+    /**
+     * Create an instance of {@link EmbeddingSelection }
+     * 
+     */
+    public EmbeddingSelection createEmbeddingSelection() {
+        return new EmbeddingSelection();
+    }
+
+    /**
+     * Create an instance of {@link EmbeddingSelection.FaceSelection }
+     * 
+     */
+    public EmbeddingSelection.FaceSelection createEmbeddingSelectionFaceSelection() {
+        return new EmbeddingSelection.FaceSelection();
+    }
+
+    /**
+     * Create an instance of {@link EmbeddingSelection.EdgeSelection }
+     * 
+     */
+    public EmbeddingSelection.EdgeSelection createEmbeddingSelectionEdgeSelection() {
+        return new EmbeddingSelection.EdgeSelection();
+    }
+
+    /**
+     * Create an instance of {@link EmbeddingSelection.VertexSelection }
+     * 
+     */
+    public EmbeddingSelection.VertexSelection createEmbeddingSelectionVertexSelection() {
+        return new EmbeddingSelection.VertexSelection();
     }
 
     /**
@@ -199,14 +232,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link FundamentalPolygon }
-     * 
-     */
-    public FundamentalPolygon createFundamentalPolygon() {
-        return new FundamentalPolygon();
-    }
-
-    /**
      * Create an instance of {@link FundamentalVertex }
      * 
      */
@@ -215,11 +240,43 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link FundamentalPolygon }
+     * 
+     */
+    public FundamentalPolygon createFundamentalPolygon() {
+        return new FundamentalPolygon();
+    }
+
+    /**
      * Create an instance of {@link UniformizingGroup }
      * 
      */
     public UniformizingGroup createUniformizingGroup() {
         return new UniformizingGroup();
+    }
+
+    /**
+     * Create an instance of {@link EmbeddingSelection.FaceSelection.Face }
+     * 
+     */
+    public EmbeddingSelection.FaceSelection.Face createEmbeddingSelectionFaceSelectionFace() {
+        return new EmbeddingSelection.FaceSelection.Face();
+    }
+
+    /**
+     * Create an instance of {@link EmbeddingSelection.EdgeSelection.Edge }
+     * 
+     */
+    public EmbeddingSelection.EdgeSelection.Edge createEmbeddingSelectionEdgeSelectionEdge() {
+        return new EmbeddingSelection.EdgeSelection.Edge();
+    }
+
+    /**
+     * Create an instance of {@link EmbeddingSelection.VertexSelection.Vertex }
+     * 
+     */
+    public EmbeddingSelection.VertexSelection.Vertex createEmbeddingSelectionVertexSelectionVertex() {
+        return new EmbeddingSelection.VertexSelection.Vertex();
     }
 
     /**
@@ -274,6 +331,15 @@ public class ObjectFactory {
     @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "DiscreteEmbedding")
     public JAXBElement<DiscreteEmbedding> createDiscreteEmbedding(DiscreteEmbedding value) {
         return new JAXBElement<DiscreteEmbedding>(_DiscreteEmbedding_QNAME, DiscreteEmbedding.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link EmbeddingSelection }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "EmbeddingSelection")
+    public JAXBElement<EmbeddingSelection> createEmbeddingSelection(EmbeddingSelection value) {
+        return new JAXBElement<EmbeddingSelection>(_EmbeddingSelection_QNAME, EmbeddingSelection.class, null, value);
     }
 
     /**

@@ -28,6 +28,15 @@
         <jxb:bindings node="//xs:complexType[@name='SchottkyData']//xs:element[@name='SchottkyGenerator']">
     		<jxb:property name="generators"/>
     	</jxb:bindings>
+        <jxb:bindings node="//xs:complexType[@name='EmbeddingSelection']//xs:element[@name='Vertex']">
+    		<jxb:property name="vertices"/>
+    	</jxb:bindings> 
+    	<jxb:bindings node="//xs:complexType[@name='EmbeddingSelection']//xs:element[@name='Edge']">
+    		<jxb:property name="edges"/>
+    	</jxb:bindings>
+    	<jxb:bindings node="//xs:complexType[@name='EmbeddingSelection']//xs:element[@name='Face']">
+    		<jxb:property name="faces"/>
+    	</jxb:bindings>
         <jxb:bindings node="//xs:complexType[@name='DiscreteEmbedding']//xs:element[@name='EmbeddedVertex']">
     		<jxb:property name="vertices"/>
     	</jxb:bindings>    

@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.02.27 um 10:36:32 AM CET 
+// Generiert: 2014.05.30 um 12:40:20 PM CEST 
 //
 
 
@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="EmbeddedVertex" type="{http://www.varylab.com/conformallab/types}EmbeddedVertex" maxOccurs="unbounded" minOccurs="0"/>
  *         &lt;element name="Identification" type="{http://www.varylab.com/conformallab/types}VertexIdentification" maxOccurs="unbounded" minOccurs="0"/>
  *         &lt;element name="EmbeddedTriangle" type="{http://www.varylab.com/conformallab/types}EmbeddedTriangle" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="Selection" type="{http://www.varylab.com/conformallab/types}EmbeddingSelection" minOccurs="0"/>
  *       &lt;/sequence>
  *     &lt;/extension>
  *   &lt;/complexContent>
@@ -41,7 +42,8 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "DiscreteEmbedding", propOrder = {
     "vertices",
     "identifications",
-    "triangles"
+    "triangles",
+    "selection"
 })
 public class DiscreteEmbedding
     extends ConformalData
@@ -53,6 +55,8 @@ public class DiscreteEmbedding
     protected List<VertexIdentification> identifications;
     @XmlElement(name = "EmbeddedTriangle")
     protected List<EmbeddedTriangle> triangles;
+    @XmlElement(name = "Selection")
+    protected EmbeddingSelection selection;
 
     /**
      * Gets the value of the vertices property.
@@ -139,6 +143,30 @@ public class DiscreteEmbedding
             triangles = new ArrayList<EmbeddedTriangle>();
         }
         return this.triangles;
+    }
+
+    /**
+     * Ruft den Wert der selection-Eigenschaft ab.
+     * 
+     * @return
+     *     possible object is
+     *     {@link EmbeddingSelection }
+     *     
+     */
+    public EmbeddingSelection getSelection() {
+        return selection;
+    }
+
+    /**
+     * Legt den Wert der selection-Eigenschaft fest.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link EmbeddingSelection }
+     *     
+     */
+    public void setSelection(EmbeddingSelection value) {
+        this.selection = value;
     }
 
 }

@@ -846,7 +846,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 			}
 			AdapterSet aSet = hif.getAdapters();
 			conformalDataPlugin.addDiscreteMetric("Input Discrete Metric", unwrapped, aSet);
-			conformalDataPlugin.addDiscreteEmbedding("Input Discrete Position Embedding", unwrapped, aSet, Position4d.class, null);
+			conformalDataPlugin.addDiscreteEmbedding("Input Discrete Position Embedding", unwrapped, selection, aSet, Position4d.class, null);
 			UnwrapJob uw = new UnwrapJob(unwrapped, aSet);
 			uw.setTargetGeometry((TargetGeometry)targetGeometryCombo.getSelectedItem());
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());

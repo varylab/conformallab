@@ -39,6 +39,7 @@ import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.image.ImageHook;
+import de.jtem.halfedgetools.selection.Selection;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
@@ -443,6 +444,10 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			discreteConformalPlugin.createUniformization(hds, target, cutInfo);
 			discreteConformalPlugin.updateGeometry(target);
 			discreteConformalPlugin.updateDomainImage(target);
+			if (de.getSelection() != null) {
+				Selection s = DataUtility.toSelection(de.getSelection(), hds);
+				hif.setSelection(s);
+			}
 		}
 		if (data instanceof DiscreteMap) {
 			DiscreteMap map = (DiscreteMap)data;
@@ -483,21 +488,24 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		addData(dm);
 	}
 
-	public void addDiscreteTextureEmbedding(CoHDS surface, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+	public void addDiscreteTextureEmbedding(CoHDS surface, Selection s, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		AdapterSet aSet = new AdapterSet(new CoDirectDataAdapter(true));
-		addDiscreteEmbedding("Texture Embedding", surface, aSet, TexturePosition4d.class, cutInfo);
+		addDiscreteEmbedding("Texture Embedding", surface, s, aSet, TexturePosition4d.class, cutInfo);
 	}
-	public void addDiscretePositionEmbedding(CoHDS surface, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+	public void addDiscretePositionEmbedding(CoHDS surface, Selection s, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		AdapterSet aSet = new AdapterSet(new CoDirectDataAdapter(false));
-		addDiscreteEmbedding("Position Embedding", surface, aSet, Position4d.class, cutInfo);
+		addDiscreteEmbedding("Position Embedding", surface, s, aSet, Position4d.class, cutInfo);
 	}
 	public void addDiscreteMap(String name, CoHDS surface, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		AdapterSet a = new AdapterSet(new CoDirectTextureAdapter(), new CoDirectPositionAdapter());
 		DiscreteMap map = DataUtility.toDiscreteMap(name, surface, a, TexturePosition4d.class, Position4d.class, cutInfo);
 		addData(map);
 	}
-	public void addDiscreteEmbedding(String name, CoHDS surface, AdapterSet a, Class<? extends Annotation> type, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+	public void addDiscreteEmbedding(String name, CoHDS surface, Selection selection, AdapterSet a, Class<? extends Annotation> type, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		DiscreteEmbedding de = DataUtility.toDiscreteEmbedding(name, surface, a, type, cutInfo);
+		if (selection != null) {
+			de.setSelection(DataUtility.toEmbeddingSelection(selection));
+		}
 		addData(de);
 	}
 	public void addUniformizationData(String name, FundamentalPolygon P) {
