@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.functional;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.log;
+import de.jtem.mfc.field.Complex;
 
 
 /**
@@ -19,6 +20,20 @@ public class Clausen {
 	private static final double BORDERLINE = 2.0944;
 	
 	private Clausen() {}
+	
+	/**
+	 * Imaginary part of the dilogarithm function ImLi2
+	 * @return
+	 */
+	public static double ImLi2(Complex z) {
+		Complex a = z.conjugate().neg().plus(1).log();
+		Complex b = z.neg().plus(1).log();
+		double x = log(z.abs());
+		double y = a.minus(b).times(0.5).im;
+		double phi = z.arg();
+		return y*x + 0.5 * (clausen2(2*y) - clausen2(2*(y + phi)) + clausen2(2*phi));
+	}
+	
 	
 	/**
 	 * Milnor's Lobachevsky function Л
