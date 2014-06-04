@@ -62,7 +62,7 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoDirectTextureAdapter;
 import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
-import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin.TargetGeometry;
+import de.varylab.discreteconformal.plugin.TargetGeometry;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.UnwrapUtility;
@@ -212,9 +212,9 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				}
 				AdapterSet kleinTextureAdapters = new AdapterSet(new CoDirectTextureAdapter());
 				if (genus == 1) {
-					conformalDataPlugin.addDiscreteEmbedding("Output Euclidean Embedding", hds, kleinTextureAdapters, TexturePosition4d.class, cutInfo);
+					conformalDataPlugin.addDiscreteEmbedding("Output Euclidean Embedding", hds, null, kleinTextureAdapters, TexturePosition4d.class, cutInfo);
 				} else {
-					conformalDataPlugin.addDiscreteEmbedding("Output Klein Model Fuchsian Embedding", hds, kleinTextureAdapters, TexturePosition4d.class, cutInfo);
+					conformalDataPlugin.addDiscreteEmbedding("Output Klein Model Fuchsian Embedding", hds, null, kleinTextureAdapters, TexturePosition4d.class, cutInfo);
 				}
 				conformalDataPlugin.addDiscreteMap("Uniformizing Map", hds, cutInfo);
 				TargetGeometry targetGeometry = UnwrapUtility.calculateTargetGeometry(genus, 0);

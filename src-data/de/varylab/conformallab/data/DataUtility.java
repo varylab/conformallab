@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.math.Matrix;
@@ -17,10 +18,14 @@ import de.jreality.math.Pn;
 import de.jreality.scene.IndexedFaceSet;
 import de.jtem.discretegroup.core.DiscreteGroup;
 import de.jtem.discretegroup.core.DiscreteGroupElement;
+import de.jtem.halfedge.Edge;
+import de.jtem.halfedge.Face;
+import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
+import de.jtem.halfedgetools.selection.Selection;
 import de.jtem.riemann.surface.BranchPoint;
 import de.varylab.conformallab.data.types.Circle;
 import de.varylab.conformallab.data.types.Complex;
@@ -29,6 +34,10 @@ import de.varylab.conformallab.data.types.DiscreteMap;
 import de.varylab.conformallab.data.types.DiscreteMetric;
 import de.varylab.conformallab.data.types.EmbeddedTriangle;
 import de.varylab.conformallab.data.types.EmbeddedVertex;
+import de.varylab.conformallab.data.types.EmbeddingSelection;
+import de.varylab.conformallab.data.types.EmbeddingSelection.EdgeSelection;
+import de.varylab.conformallab.data.types.EmbeddingSelection.FaceSelection;
+import de.varylab.conformallab.data.types.EmbeddingSelection.VertexSelection;
 import de.varylab.conformallab.data.types.FundamentalEdge;
 import de.varylab.conformallab.data.types.FundamentalVertex;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
@@ -57,6 +66,83 @@ import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class DataUtility {
 
+	private static Logger
+		log = Logger.getLogger(DataUtility.class.getName());
+	
+	public static EmbeddingSelection toEmbeddingSelection(Selection s) {
+		ObjectFactory of = new ObjectFactory();
+		EmbeddingSelection ems = of.createEmbeddingSelection();
+		VertexSelection vs = new VertexSelection();
+		EdgeSelection es = new EdgeSelection();
+		FaceSelection fs = new FaceSelection();
+		ems.setVertexSelection(vs);
+		ems.setEdgeSelection(es);
+		ems.setFaceSelection(fs);
+		for (Vertex<?, ?, ?> v : s.getVertices()) {
+			de.varylab.conformallab.data.types.EmbeddingSelection.VertexSelection.Vertex vv = new de.varylab.conformallab.data.types.EmbeddingSelection.VertexSelection.Vertex();
+			vv.setIndex(v.getIndex());
+			vv.setChannel(s.getChannel(v));
+			vs.getVertices().add(vv);
+		}
+		for (Edge<?, ?, ?> e : s.getEdges()) {
+			de.varylab.conformallab.data.types.EmbeddingSelection.EdgeSelection.Edge ee = new de.varylab.conformallab.data.types.EmbeddingSelection.EdgeSelection.Edge();
+			if (e.getLeftFace() != null) {
+				ee.setFace(e.getLeftFace().getIndex());
+			} else {
+				ee.setFace(-1);
+			}
+			ee.setVertex1(e.getStartVertex().getIndex());
+			ee.setVertex2(e.getTargetVertex().getIndex());
+			ee.setChannel(s.getChannel(e));
+			es.getEdges().add(ee);
+		}
+		for (Face<?, ?, ?> f : s.getFaces()) {
+			de.varylab.conformallab.data.types.EmbeddingSelection.FaceSelection.Face ff = new de.varylab.conformallab.data.types.EmbeddingSelection.FaceSelection.Face();
+			ff.setIndex(f.getIndex());
+			ff.setChannel(s.getChannel(f));
+			fs.getFaces().add(ff);
+		}
+		return ems;
+	}
+	
+	
+	public static Selection toSelection(EmbeddingSelection es, CoHDS hds) {
+		Selection s = new Selection();
+		for (de.varylab.conformallab.data.types.EmbeddingSelection.VertexSelection.Vertex v : es.getVertexSelection().getVertices()) {
+			CoVertex vv = hds.getVertex(v.getIndex());
+			s.add(vv, v.getChannel());
+		}
+		for (de.varylab.conformallab.data.types.EmbeddingSelection.EdgeSelection.Edge e : es.getEdgeSelection().getEdges()) {
+			List<CoEdge> candidates = null;
+			if (e.getFace() >= 0) {
+				CoFace f = hds.getFace(e.getFace());
+				candidates = HalfEdgeUtils.boundaryEdges(f);
+			} else {
+				candidates = HalfEdgeUtils.boundaryEdges(hds);
+			}
+			boolean found = false;
+			for (CoEdge be : candidates) {
+				if (
+					be.getTargetVertex().getIndex() == e.getVertex1() && be.getStartVertex().getIndex() == e.getVertex2() ||
+					be.getTargetVertex().getIndex() == e.getVertex2() && be.getStartVertex().getIndex() == e.getVertex1() 
+				) {
+					s.add(be, e.getChannel());
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				log.warning("edge selection not found: " + e);
+			}
+		}
+		for (de.varylab.conformallab.data.types.EmbeddingSelection.FaceSelection.Face f : es.getFaceSelection().getFaces()) {
+			CoFace ff = hds.getFace(f.getIndex());
+			s.add(ff, f.getChannel());
+		}
+		return s;
+	}
+	
+	
 	public static UniformizationData toUniformizationData(String name, FundamentalPolygon p) {
 		ObjectFactory of = new ObjectFactory();
 		UniformizingGroup fg = of.createUniformizingGroup();
