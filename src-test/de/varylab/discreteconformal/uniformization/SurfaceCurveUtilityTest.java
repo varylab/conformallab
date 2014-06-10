@@ -9,7 +9,9 @@ import org.junit.Test;
 import de.jreality.math.Pn;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
+import de.jreality.scene.IndexedLineSet;
 import de.jreality.scene.SceneGraphComponent;
+import de.jreality.scene.data.Attribute;
 import de.jreality.util.Input;
 import de.jreality.util.NativePathUtility;
 import de.jreality.util.SceneGraphUtility;
@@ -58,8 +60,8 @@ public class SurfaceCurveUtilityTest {
 		AdapterSet a = new ConformalAdapterSet();
 		CoHDS lawson = loadSurface();
 		FundamentalPolygon minimalPolygon = calculateFundamentalPoygon(lawson);
-		CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, lawson, a, 0, 0.0, true, true, Pn.HYPERBOLIC);
-		Assert.assertEquals("Surface Curve Edge Number", 607, curves.numEdges() / 2);
+		IndexedLineSet curves = SurfaceCurveUtility.createSurfaceCurves(minimalPolygon, lawson, a, 0, 0.0, true, true, Pn.HYPERBOLIC);
+		Assert.assertEquals("Surface Curve Edge Number", 607, curves.getEdgeAttributes(Attribute.INDICES).toIntArrayArray().size());
 	}
 	
 	

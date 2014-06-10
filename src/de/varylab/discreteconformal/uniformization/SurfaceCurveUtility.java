@@ -10,9 +10,11 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
+import de.jreality.geometry.IndexedLineSetFactory;
 import de.jreality.math.P2;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
+import de.jreality.scene.IndexedLineSet;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
@@ -28,7 +30,7 @@ public class SurfaceCurveUtility {
 	private static Logger
 		log = Logger.getLogger(SurfaceCurveUtility.class.getName());
 	
-	public static CoHDS createSurfaceCurves(
+	public static IndexedLineSet createSurfaceCurves(
 		FundamentalPolygon poly, 
 		CoHDS surface,
 		AdapterSet aSet,
@@ -56,27 +58,47 @@ public class SurfaceCurveUtility {
 			}
 		}
 		
-		CoHDS result = new CoHDS();
+//		CoHDS result = new CoHDS();
+		double[][] vData = new double[allCurves.size() * 2][];
+		double[][] tData = new double[allCurves.size() * 2][2];
+		int[][] eData = new int[allCurves.size()][2];
+		int index = 0;
 		for (double[][][] s : allCurves) {
-			CoEdge e = result.addNewEdge();
-			CoEdge eOpp = result.addNewEdge();
-			e.linkOppositeEdge(eOpp);
-			e.linkNextEdge(eOpp);
-			eOpp.linkNextEdge(e);
-			CoVertex v0 = result.addNewVertex();
-			CoVertex v1 = result.addNewVertex();
-			e.setTargetVertex(v0);
-			eOpp.setTargetVertex(v1);
-			v0.T[0] = s[0][0][0];
-			v0.T[1] = s[0][0][1];
-			v1.T[0] = s[0][1][0];
-			v1.T[1] = s[0][1][1];
-			v0.P = s[1][0];
-			v1.P = s[1][1];
-			Pn.normalize(v0.T, v0.T, Pn.HYPERBOLIC);
-			Pn.normalize(v1.T, v1.T, Pn.HYPERBOLIC);
+//			CoEdge e = result.addNewEdge();
+//			CoEdge eOpp = result.addNewEdge();
+//			e.linkOppositeEdge(eOpp);
+//			e.linkNextEdge(eOpp);
+//			eOpp.linkNextEdge(e);
+//			CoVertex v0 = result.addNewVertex();
+//			CoVertex v1 = result.addNewVertex();
+//			e.setTargetVertex(v0);
+//			eOpp.setTargetVertex(v1);
+//			v0.T[0] = s[0][0][0];
+//			v0.T[1] = s[0][0][1];
+//			v1.T[0] = s[0][1][0];
+//			v1.T[1] = s[0][1][1];
+//			v0.P = s[1][0];
+//			v1.P = s[1][1];
+//			Pn.normalize(v0.T, v0.T, Pn.HYPERBOLIC);
+//			Pn.normalize(v1.T, v1.T, Pn.HYPERBOLIC);
+			vData[index + 0] = s[1][0];
+			vData[index + 1] = s[1][1];
+			tData[index + 0][0] = s[0][0][0];
+			tData[index + 0][1] = s[0][0][1];
+			tData[index + 1][0] = s[0][1][0];
+			tData[index + 1][1] = s[0][1][1];
+			eData[index/2][0] = index;
+			eData[index/2][1] = index + 1;
+			index += 2;
 		}
-		return result;
+		IndexedLineSetFactory ilsf = new IndexedLineSetFactory();
+		ilsf.setVertexCount(vData.length);
+		ilsf.setEdgeCount(eData.length);
+		ilsf.setVertexCoordinates(vData);
+		ilsf.setVertexTextureCoordinates(tData);
+		ilsf.setEdgeIndices(eData);
+		ilsf.update();
+		return ilsf.getIndexedLineSet();
 	}
 
 	

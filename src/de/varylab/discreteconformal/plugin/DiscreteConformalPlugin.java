@@ -20,6 +20,7 @@ import static de.varylab.discreteconformal.adapter.HyperbolicModel.Klein;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Poincaré;
 import static de.varylab.discreteconformal.plugin.InterpolationMethod.Incircle;
 import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.createIntersectionVertices;
+import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.createSurfaceCurves;
 import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawTriangulation;
 import static de.varylab.discreteconformal.uniformization.VisualizationUtility.drawUniversalCoverImage;
 import static de.varylab.discreteconformal.unwrapper.BoundaryMode.ReadIsometricAngles;
@@ -107,7 +108,7 @@ import de.jreality.plugin.job.Job;
 import de.jreality.plugin.job.JobListener;
 import de.jreality.plugin.job.JobQueuePlugin;
 import de.jreality.scene.Appearance;
-import de.jreality.scene.IndexedFaceSet;
+import de.jreality.scene.IndexedLineSet;
 import de.jreality.scene.PointSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.pick.Hit;
@@ -135,7 +136,6 @@ import de.jtem.halfedgetools.adapter.type.generic.TexturePosition3d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
-import de.jtem.halfedgetools.jreality.ConverterHeds2JR;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.SelectionInterface;
@@ -1454,27 +1454,24 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		hif.removeTemporaryGeometry(axesCurvesRoot);
 		if (target == TargetGeometry.Hyperbolic && drawCurves) {
 			AdapterSet aSet = hif.getActiveAdapters();
-			int depth = coverElementsModel.getNumber().intValue();
+			int maxGroupElements = coverElementsModel.getNumber().intValue();
 			double maxDrawDistance = coverMaxDisctanceModel.getNumber().doubleValue();
 			boolean drawPolygon = drawPolygonChecker.isSelected();
 			boolean drawAxes = drawAxesChecker.isSelected();
 			Color polygonColor = polygonColorButton.getColor();
 			Color axesColor = axesColorButton.getColor();
-			ConverterHeds2JR converter = new ConverterHeds2JR();
 			if (drawPolygon) {
 				FundamentalPolygon p = getActiveFundamentalPoygon();
-				CoHDS curves = SurfaceCurveUtility.createSurfaceCurves(p, surfaceUnwrapped, aSet, depth, maxDrawDistance, true, false, signature);
-				IndexedFaceSet curvesGeom = converter.heds2ifs(curves, aSet);
+				IndexedLineSet curves = createSurfaceCurves(p, surfaceUnwrapped, aSet, maxGroupElements, maxDrawDistance, true, false, signature);
 				polygonCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, polygonColor);
-				polygonCurvesRoot.setGeometry(curvesGeom);
+				polygonCurvesRoot.setGeometry(curves);
 				hif.addTemporaryGeometry(polygonCurvesRoot);
 			}
 			if (drawAxes) {
 				FundamentalPolygon p = getActiveFundamentalPoygon();
-				CoHDS axesCurves = SurfaceCurveUtility.createSurfaceCurves(p, surfaceUnwrapped, aSet, depth, maxDrawDistance, false, true, signature);
-				IndexedFaceSet axesGeom = converter.heds2ifs(axesCurves, aSet);
+				IndexedLineSet axes = createSurfaceCurves(p, surfaceUnwrapped, aSet, maxGroupElements, maxDrawDistance, false, true, signature);
 				axesCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, axesColor);
-				axesCurvesRoot.setGeometry(axesGeom);
+				axesCurvesRoot.setGeometry(axes);
 				hif.addTemporaryGeometry(axesCurvesRoot);
 			}
 		}
