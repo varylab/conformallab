@@ -5,5 +5,6 @@ public enum QuantizationMode {
 	Quads,
 	QuadsStrict,
 	Hexagons,
+	Triangles,
 	Straight
 }

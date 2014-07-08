@@ -270,8 +270,22 @@ public class UnwrapUtility {
 		theta = Math.abs(theta);
 		switch (qMode) {
 		case AllAngles: break;
+		case Straight:
+			theta = PI;
+			break;		
+		case QuadsStrict:
+			double q = theta % (PI/2);
+			if (q > PI/4) {
+				theta += (PI/2 - q);
+			} else {
+				theta -= q;
+			}
+			if((theta % PI) != 0) {
+				logger.info(v + ": theta quantized to " + theta);
+			}
+			break;	
 		case Quads:
-			double q = theta % (PI/4);
+			q = theta % (PI/4);
 			if (q > PI/8) {
 				theta += (PI/4 - q);
 			} else {
@@ -281,17 +295,14 @@ public class UnwrapUtility {
 				logger.info(v + ": theta quantized to " + theta);
 			}
 			break;
-		case QuadsStrict:
-			q = theta % (PI/2);
-			if (q > PI/4) {
-				theta += (PI/2 - q);
+		case Triangles:
+			q = theta % (PI/6);
+			if (q > PI/12) {
+				theta += (PI/6 - q);
 			} else {
 				theta -= q;
 			}
-			if((theta % PI) != 0) {
-				logger.info(v + ": theta quantized to " + theta);
-			}
-			break;							
+			break;
 		case Hexagons:
 			q = theta % (PI/3);
 			if (q > PI/6) {
@@ -300,9 +311,7 @@ public class UnwrapUtility {
 				theta -= q;
 			}
 			break;
-		case Straight:
-			theta = PI;
-			break;
+
 		}
 		return sign * theta;
 	}
