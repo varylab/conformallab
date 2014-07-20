@@ -87,6 +87,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.batik.svggen.SVGGraphics2D;
 
+import com.itextpdf.awt.PdfGraphics2D;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfContentByte;
@@ -1041,7 +1042,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				}
 			}
 			try {
-				exportHyperbolicImageToPDF(file, coverResolution);
+				exportDomainImageToPDF(file, coverResolution);
 			} catch (Exception e2) {
 				JOptionPane.showMessageDialog(w, e2.getMessage(), "Error", ERROR_MESSAGE);
 			}
@@ -1062,7 +1063,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 				}
 			}
 			try {
-				exportHyperbolicImageToSVG(file, coverResolution);
+				exportDomainImageToSVG(file, coverResolution);
 			} catch (Exception e2) {
 				JOptionPane.showMessageDialog(w, e2.getMessage(), "Error", ERROR_MESSAGE);
 			}
@@ -1597,14 +1598,16 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 	}
 	
 	
-	public void exportHyperbolicImageToPDF(File file, int res) throws Exception {
+	
+	
+	public void exportDomainImageToPDF(File file, int res) throws Exception {
 		FileOutputStream out = new FileOutputStream(file);
 		Rectangle pageSize = new Rectangle(-10, -10, res + 20, res + 20);
 		Document doc = new Document(pageSize);
 		PdfWriter writer = PdfWriter.getInstance(doc, out);
 		doc.open();
 		PdfContentByte cb = writer.getDirectContent();
-		Graphics2D g2 = cb.createGraphics(res, res);
+		Graphics2D g2 = new PdfGraphics2D(cb, res, res);
 		try {
 			drawDomainImage(g2, res);
 		} finally {
@@ -1614,7 +1617,7 @@ public class DiscreteConformalPlugin extends ShrinkPanelPlugin
 		}
 	}
 	
-	public void exportHyperbolicImageToSVG(File file, int res) throws Exception {
+	public void exportDomainImageToSVG(File file, int res) throws Exception {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = factory.newDocumentBuilder();
 		org.w3c.dom.Document doc = builder.newDocument();

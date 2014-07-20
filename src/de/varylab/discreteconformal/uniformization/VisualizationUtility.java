@@ -143,7 +143,7 @@ public class VisualizationUtility {
 		g.setColor(polygonColor);
 		drawUniversalCover(poly, maxDrawDepth, maxDrawDistance, drawPolygon, drawAxes, g, model, res, polygonColor, axesColor, null, null);
 		
-		if (model == HyperbolicModel.Klein || model == HyperbolicModel.Poincaré) {
+		if ((model == HyperbolicModel.Klein || model == HyperbolicModel.Poincaré) && poly.getGenus() > 1) {
 			Ellipse2D boundary = new Ellipse2D.Double(-res + ls, -res + ls, 2*res - 2*ls, 2*res - 2*ls);
 			g.setColor(Color.BLACK);
 			g.setStroke(new BasicStroke(2 * ls));

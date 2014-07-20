@@ -187,8 +187,14 @@ public class FundamentalPolygon {
 			gArr[e.index] = g;
 		}
 		G.setGenerators(gArr);
+		if (getGenus() == 0) {
+			G.setMetric(Pn.ELLIPTIC);
+		} else if (getGenus() == 1) {
+			G.setMetric(Pn.EUCLIDEAN);
+		} else {
+			G.setMetric(Pn.HYPERBOLIC);
+		}
 		G.calculateGenerators();
-		G.setMetric(Pn.HYPERBOLIC);
 		assert !G.isFree() : "a fuchsian uniformization group has at least one relation";
 		assert !G.isFinite() : "these groups should tesselate hyperbolic space and hence are not finite";
 		return G;
