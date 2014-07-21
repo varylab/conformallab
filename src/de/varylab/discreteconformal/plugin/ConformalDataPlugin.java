@@ -65,7 +65,6 @@ import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
-import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionListener {
 
@@ -440,10 +439,10 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			for (CoVertex v : hds.getVertices()) {
 				System.arraycopy(v.P, 0, v.T, 0, 4);
 			}
-			TargetGeometry target = UnwrapUtility.calculateTargetGeometry(genus, 0);
+			TargetGeometry target = TargetGeometry.calculateTargetGeometry(genus, 0);
 			discreteConformalPlugin.createUniformization(hds, target, cutInfo);
 			discreteConformalPlugin.updateGeometry(target);
-			discreteConformalPlugin.updateDomainImage(target);
+			discreteConformalPlugin.updateUniformization(target);
 			if (de.getSelection() != null) {
 				Selection s = DataUtility.toSelection(de.getSelection(), hds);
 				hif.setSelection(s);
@@ -461,10 +460,10 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 				EmbeddedVertex dv = domain.getVertices().get(v.getIndex());
 				v.T = new double[]{dv.getX(), dv.getY(), dv.getZ(), dv.getW()};
 			}
-			TargetGeometry target = UnwrapUtility.calculateTargetGeometry(genus, 0);
+			TargetGeometry target = TargetGeometry.calculateTargetGeometry(genus, 0);
 			discreteConformalPlugin.createUniformization(hds, target, cutInfo);
 			discreteConformalPlugin.updateGeometry(target);
-			discreteConformalPlugin.updateDomainImage(target);
+			discreteConformalPlugin.updateUniformization(target);
 		}
 		if (data instanceof DiscreteMetric) {
 			DiscreteMetric dm = (DiscreteMetric)data;

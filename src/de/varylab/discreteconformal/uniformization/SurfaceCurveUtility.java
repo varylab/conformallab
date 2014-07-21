@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.uniformization;
 
-import java.awt.Color;
+import static de.varylab.discreteconformal.adapter.HyperbolicModel.Klein;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -42,7 +43,14 @@ public class SurfaceCurveUtility {
 	) {
 		List<double[][]> axesSegments = new ArrayList<double[][]>();
 		List<double[][]> polySegments = new ArrayList<double[][]>();
-		VisualizationUtility.getUniversalCoverSegments(poly, maxElements, maxDrawDistance, includePoygon, includeAxes, Color.BLACK, Color.BLACK, axesSegments, polySegments);
+		VisualizationUtility.createUniversalCover(
+			poly, 
+			maxElements, maxDrawDistance, 
+			includePoygon, includeAxes, 
+			Klein, 
+			axesSegments, polySegments, 
+			null, null
+		);
 		
 		List<double[][][]> allCurves = new ArrayList<double[][][]>();
 		if (includeAxes) {
@@ -113,7 +121,14 @@ public class SurfaceCurveUtility {
 		Set<Set<CoVertex>> result = new HashSet<Set<CoVertex>>();
 		List<double[][]> axesSegments = new ArrayList<double[][]>();
 		List<double[][]> polySegments = new ArrayList<double[][]>();
-		VisualizationUtility.getUniversalCoverSegments(poly, 200, 10, true, false, Color.BLACK, Color.BLACK, axesSegments, polySegments);
+		VisualizationUtility.createUniversalCover(
+			poly, 
+			200, 10, 
+			true, false, 
+			Klein, 
+			axesSegments, polySegments, 
+			null, null
+		);
 		for (double[][] segment : polySegments) {
 			Set<CoVertex> segmentVertices = new TreeSet<>(new NodeIndexComparator<CoVertex>());
 			createIntersectionVertices(segment, surface, domain, cutInfo, snapTolerance, signature, segmentVertices);

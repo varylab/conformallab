@@ -1,7 +1,10 @@
 package de.varylab.discreteconformal.uniformization;
 
+import static de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility.context;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -10,6 +13,7 @@ import java.util.Set;
 
 import de.jreality.math.Pn;
 import de.jtem.discretegroup.core.DiscreteGroup;
+import de.jtem.discretegroup.core.DiscreteGroupConstraint;
 import de.jtem.discretegroup.core.DiscreteGroupElement;
 import de.varylab.discreteconformal.math.RnBig;
 
@@ -198,6 +202,41 @@ public class FundamentalPolygon {
 		assert !G.isFree() : "a fuchsian uniformization group has at least one relation";
 		assert !G.isFinite() : "these groups should tesselate hyperbolic space and hence are not finite";
 		return G;
+	}
+
+	
+	public List<DiscreteGroupElement> createGoupElements(final int maxDrawElements, final double maxDrawDistance) {
+		DiscreteGroupConstraint constraint = new DiscreteGroupConstraint() {
+			@Override
+			public void update() {
+			}
+			@Override
+			public void setMaxNumberElements(int arg0) {
+			}
+			@Override
+			public int getMaxNumberElements() {
+				return maxDrawElements;
+			}
+			@Override
+			public boolean acceptElement(DiscreteGroupElement s) {
+				double mean = 0.0;
+				for (FundamentalEdge e : getEdges()) {
+					BigDecimal[] p = e.startPosition;
+					BigDecimal[] T = RnBig.toBig(null, s.getMatrix());
+					p = RnBig.matrixTimesVector(null, T, p, context);
+					double[] pd = RnBig.toDouble(null, p);
+					mean += Math.sqrt(Pn.norm(pd, Pn.HYPERBOLIC));
+				}
+				mean /= getLength();
+				return mean < maxDrawDistance;
+			}
+		};
+		DiscreteGroup G = getDiscreteGroup();
+		G.setConstraint(constraint);
+		G.generateElements();
+		DiscreteGroupElement[] elements = G.getElementList();
+		List<DiscreteGroupElement> elementList = Arrays.asList(elements);
+		return elementList;
 	}
 		
 }

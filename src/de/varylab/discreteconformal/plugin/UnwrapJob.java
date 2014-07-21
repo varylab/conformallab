@@ -34,7 +34,6 @@ import de.varylab.discreteconformal.unwrapper.StereographicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
-import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class UnwrapJob extends AbstractJob {
 
@@ -101,7 +100,7 @@ public class UnwrapJob extends AbstractJob {
 		double gradTolerance = Math.pow(10, toleranceExp);
 		
 		if (targetGeometry == TargetGeometry.Automatic) {
-			targetGeometry = UnwrapUtility.calculateTargetGeometry(surface);
+			targetGeometry = TargetGeometry.calculateTargetGeometry(surface);
 		}
 		
 		switch (targetGeometry) {
