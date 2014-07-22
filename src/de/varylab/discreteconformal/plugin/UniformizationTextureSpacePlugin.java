@@ -7,7 +7,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Ellipse2D;
@@ -19,8 +18,12 @@ import de.jreality.ui.ColorChooseJButton;
 import de.jreality.ui.ColorChooseJButton.ColorChangedEvent;
 import de.jreality.ui.ColorChooseJButton.ColorChangedListener;
 import de.jreality.ui.LayoutFactory;
+import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.plugin.HalfedgeLayer;
+import de.jtem.halfedgetools.plugin.HalfedgeListener;
 import de.jtem.halfedgetools.plugin.texturespace.TextureSpacePlugin;
 import de.jtem.java2d.SceneComponent;
+import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.Plugin;
 import de.jtem.jrworkspace.plugin.sidecontainer.widget.ShrinkPanel;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
@@ -28,7 +31,7 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.uniformization.VisualizationUtility;
 
-public class UniformizationTextureSpacePlugin extends Plugin implements TextureSpacePlugin, ColorChangedListener, ActionListener {
+public class UniformizationTextureSpacePlugin extends Plugin implements TextureSpacePlugin, ColorChangedListener, ActionListener, HalfedgeListener {
 
 	private ShrinkPanel
 		options = new ShrinkPanel("Uniformization");
@@ -103,23 +106,25 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 	}
 	
 	public void createUniformization(CoHDS surface, FundamentalPolygon P, int maxElements, double maxDistance, HyperbolicModel model, TargetGeometry geometry) {
-		Path2D axesPath = new Path2D.Double();
-		Path2D polyPath = new Path2D.Double();
+		Path2D axesPath = new Path2D.Float();
+		Path2D polyPath = new Path2D.Float();
+		Path2D triangulationPath = new Path2D.Float();
 		VisualizationUtility.createUniversalCover(
 			P, 
+			model, 
 			maxElements, maxDistance, 
 			true, true, 
-			model, 
 			null, null,
 			axesPath, polyPath
 		);
-		Shape triangulationShape = VisualizationUtility.createTriangulation(
-			surface, 
-			model, 
+		VisualizationUtility.createTriangulation(
+			surface,
 			P, 
-			maxElements, maxDistance
+			model, 
+			maxElements, maxDistance,
+			triangulationPath
 		);
-		triangulationComponent.setShape(triangulationShape);
+		triangulationComponent.setShape(triangulationPath);
 		axesComponent.setShape(axesPath);
 		polygonComponent.setShape(polyPath);
 		boundaryComponent.setVisible(geometry == TargetGeometry.Hyperbolic);
@@ -139,6 +144,14 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		scene.fireAppearanceChange();
 	}
 	
+	public void reset() {
+		boundaryComponent.setVisible(false);
+		triangulationComponent.setShape(null);
+		axesComponent.setShape(null);
+		polygonComponent.setShape(null);
+		scene.fireAppearanceChange();
+	}
+	
 	@Override
 	public SceneComponent getSceneComponent() {
 		return scene;
@@ -152,6 +165,30 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 	@Override
 	public boolean getRenderOnTop() {
 		return true;
+	}
+
+	@Override
+	public void dataChanged(HalfedgeLayer layer) {
+		reset();
+	}
+	@Override
+	public void adaptersChanged(HalfedgeLayer layer) {
+	}
+	@Override
+	public void activeLayerChanged(HalfedgeLayer old, HalfedgeLayer active) {
+	}
+	@Override
+	public void layerCreated(HalfedgeLayer layer) {
+	}
+	@Override
+	public void layerRemoved(HalfedgeLayer layer) {
+	}
+	
+	@Override
+	public void install(Controller c) throws Exception {
+		super.install(c);
+		HalfedgeInterface hif = c.getPlugin(HalfedgeInterface.class);
+		hif.addHalfedgeListener(this);
 	}
 
 }

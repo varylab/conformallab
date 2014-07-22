@@ -45,9 +45,9 @@ public class SurfaceCurveUtility {
 		List<double[][]> polySegments = new ArrayList<double[][]>();
 		VisualizationUtility.createUniversalCover(
 			poly, 
+			Klein,
 			maxElements, maxDrawDistance, 
 			includePoygon, includeAxes, 
-			Klein, 
 			axesSegments, polySegments, 
 			null, null
 		);
@@ -123,9 +123,9 @@ public class SurfaceCurveUtility {
 		List<double[][]> polySegments = new ArrayList<double[][]>();
 		VisualizationUtility.createUniversalCover(
 			poly, 
+			Klein, 
 			200, 10, 
 			true, false, 
-			Klein, 
 			axesSegments, polySegments, 
 			null, null
 		);

@@ -60,7 +60,6 @@ public class CurveEditor extends Editor implements CurveChangeListener {
 				if (arg0.getButton() == MouseEvent.BUTTON1
 						&& arg0.getClickCount() == 2) {
 					double dx = arg0.getX(), dy = arg0.getY();
-					updateUI();
 					Rectangle2D.Double r = getViewport();
 					double h = arg0.getComponent().getHeight();
 					double w = arg0.getComponent().getWidth();

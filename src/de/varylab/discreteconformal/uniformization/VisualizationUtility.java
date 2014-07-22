@@ -37,11 +37,11 @@ public class VisualizationUtility {
 	
 	public static void createUniversalCover(
 		FundamentalPolygon P,
+		HyperbolicModel model,
 		int maxDrawElements,
 		double maxDrawDistance,
 		boolean drawPolygon,
 		boolean drawAxes,
-		HyperbolicModel model,
 		List<double[][]> axesSegments,
 		List<double[][]> polygonSegments,
 		Path2D axesPath,
@@ -63,14 +63,14 @@ public class VisualizationUtility {
 		}
 	}
 	
-	public static Shape createTriangulation (
+	public static void createTriangulation (
 		CoHDS surface,
-		HyperbolicModel model,
 		FundamentalPolygon P,
+		HyperbolicModel model,
 		int maxDrawElements,
-		double maxDrawDistance
+		double maxDrawDistance,
+		Path2D triangulationPath
 	) {
-		Path2D path = new Path2D.Double();
 		List<DiscreteGroupElement> G = P.createGoupElements(maxDrawElements, maxDrawDistance);
 		for (DiscreteGroupElement g : G) {
 			Matrix T = g.getMatrix();
@@ -86,10 +86,9 @@ public class VisualizationUtility {
 				double[] p2 = dehomogenize(t, model);
 				double[] p3 = dehomogenize(m, model);
 				Shape arc = createArc(p1, p2, p3, model);
-				path.append(arc, false);
+				triangulationPath.append(arc, false);
 			}
 		}
-		return path;
 	}
 	
 		
@@ -132,7 +131,7 @@ public class VisualizationUtility {
 		HyperbolicModel model, 
 		List<double[][]> segmentsOUT
 	) {
-		Path2D axesPath = new Path2D.Double();
+		Path2D axesPath = new Path2D.Float();
 		Set<FundamentalEdge> axisDrawn = new HashSet<FundamentalEdge>();
 		for (FundamentalEdge e : poly.getEdges()) {
 			if (axisDrawn.contains(e) || axisDrawn.contains(e.partner)) {
@@ -161,7 +160,7 @@ public class VisualizationUtility {
 			evd.factor(T);
 		} catch (NotConvergedException e1) {
 			e1.printStackTrace();
-			return new Line2D.Double();
+			return new Line2D.Float();
 		}
 		DenseMatrix ev = evd.getRightEigenvectors();
 		double[] evl = evd.getRealEigenvalues();
@@ -185,7 +184,7 @@ public class VisualizationUtility {
 		HyperbolicModel model, 
 		List<double[][]> segmentsOUT
 	) {
-		Path2D polyPath = new Path2D.Double();
+		Path2D polyPath = new Path2D.Float();
 		for (FundamentalEdge e : poly.getEdges()) {
 			BigDecimal[] p1a = e.startPosition; 
 			BigDecimal[] p2a = e.nextEdge.startPosition;
@@ -215,7 +214,7 @@ public class VisualizationUtility {
 		Shape shape = null;
 		try {
 			if (model == HyperbolicModel.Klein) {
-				shape = new Line2D.Double(p1[0], p1[1], p2[0], p2[1]);
+				shape = new Line2D.Float((float)p1[0], (float)p1[1], (float)p2[0], (float)p2[1]);
 			} else {
 				double[] center = getCircumCenter(p1, p2, p3);
 				double[] vec1 = Rn.subtract(null, p1, center);
@@ -233,13 +232,13 @@ public class VisualizationUtility {
 					double cornerx = center[0] - radius;
 					double cornery = center[1] - radius;
 					double size = radius * 2;
-					shape = new Arc2D.Double(cornerx, cornery, size, size, degStartAngle, degAngle, OPEN);
+					shape = new Arc2D.Float((float)cornerx, (float)cornery, (float)size, (float)size, (float)degStartAngle, (float)degAngle, OPEN);
 				} else {
-					shape = new Line2D.Double(p1[0], p1[1], p2[0], p2[1]);
+					shape = new Line2D.Float((float)p1[0], (float)p1[1], (float)p2[0], (float)p2[1]);
 				}
 			}
 		} catch (Exception e) {
-			shape = new Line2D.Double(p1[0], p1[1], p2[0], p2[1]);
+			shape = new Line2D.Float((float)p1[0], (float)p1[1], (float)p2[0], (float)p2[1]);
 		}
 		return shape;
 	}

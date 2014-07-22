@@ -158,7 +158,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		vis = null;
 	private ContentAppearance
 		contentAppearance = null;
-	private DomainVisualisationPlugin
+	private TextureSpaceViewer3D
 		domainVisualisationPlugin = null;
 	private JobQueuePlugin
 		jobQueue = null;
@@ -1342,7 +1342,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		hif.addSelectionListener(this);
 		vis = c.getPlugin(ConformalVisualizationPlugin.class);
 		contentAppearance = c.getPlugin(ContentAppearance.class);
-		domainVisualisationPlugin = c.getPlugin(DomainVisualisationPlugin.class);
+		domainVisualisationPlugin = c.getPlugin(TextureSpaceViewer3D.class);
 		jobQueue = c.getPlugin(JobQueuePlugin.class);
 		conformalDataPlugin = c.getPlugin(ConformalDataPlugin.class);
 		textureSpacePlugin = c.getPlugin(UniformizationTextureSpacePlugin.class);

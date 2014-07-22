@@ -28,7 +28,7 @@ import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.ConformalVisualizationPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
-import de.varylab.discreteconformal.plugin.DomainVisualisationPlugin;
+import de.varylab.discreteconformal.plugin.TextureSpaceViewer3D;
 import de.varylab.discreteconformal.plugin.EllipticImageGenerator;
 import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
 import de.varylab.discreteconformal.plugin.KoebePolyhedronPlugin;
@@ -75,7 +75,7 @@ public class ConformalLab implements Runnable {
 		s.add(new PrimitivesGenerator());
 		s.add(new ProjectiveTexturePlugin());
 		s.add(new ConformalVisualizationPlugin());
-		s.add(new DomainVisualisationPlugin());
+		s.add(new TextureSpaceViewer3D());
 		s.add(new IndexMedialGraph());
 		s.add(new ConformalDataPlugin());
 		s.add(new CylinderEdgesDataSource());

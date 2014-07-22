@@ -8,12 +8,12 @@ import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 
 public class HyperbolicCopyTool extends AbstractTool {
 
-	private DomainVisualisationPlugin
+	private TextureSpaceViewer3D
 		domainPlugin = null;
 	private HalfedgeLayer
 		layer = null;
 	
-	public HyperbolicCopyTool(DomainVisualisationPlugin dcp, HalfedgeLayer layer) {
+	public HyperbolicCopyTool(TextureSpaceViewer3D dcp, HalfedgeLayer layer) {
 		super(InputSlot.getDevice("PrimaryAction"));
 		this.domainPlugin = dcp;
 		this.layer = layer;
