@@ -28,13 +28,14 @@ import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.ConformalVisualizationPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
-import de.varylab.discreteconformal.plugin.DomainVisualisationPlugin;
+import de.varylab.discreteconformal.plugin.TextureSpaceViewer3D;
 import de.varylab.discreteconformal.plugin.EllipticImageGenerator;
 import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
 import de.varylab.discreteconformal.plugin.KoebePolyhedronPlugin;
 import de.varylab.discreteconformal.plugin.ProjectiveTexturePlugin;
 import de.varylab.discreteconformal.plugin.QuasiIsothermicPlugin;
 import de.varylab.discreteconformal.plugin.SphereEqualizerPlugin;
+import de.varylab.discreteconformal.plugin.UniformizationTextureSpacePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.AddConeOfRevolutionCommand;
 import de.varylab.discreteconformal.plugin.algorithm.ContractShortEdges;
 import de.varylab.discreteconformal.plugin.algorithm.CutAndGlueConformalDomain;
@@ -74,7 +75,7 @@ public class ConformalLab implements Runnable {
 		s.add(new PrimitivesGenerator());
 		s.add(new ProjectiveTexturePlugin());
 		s.add(new ConformalVisualizationPlugin());
-		s.add(new DomainVisualisationPlugin());
+		s.add(new TextureSpaceViewer3D());
 		s.add(new IndexMedialGraph());
 		s.add(new ConformalDataPlugin());
 		s.add(new CylinderEdgesDataSource());
@@ -83,6 +84,7 @@ public class ConformalLab implements Runnable {
 		s.add(new MapToConeCommand());
 		s.add(new AddConeOfRevolutionCommand());
 		s.add(new ContractShortEdges());
+		s.add(new UniformizationTextureSpacePlugin());
 		return s;
 	}
 	

@@ -204,6 +204,7 @@ public class ConesUtility {
 					}
 				}
 				break;
+			case Triangles:
 			case Hexagons:
 				if (theta < PI / 12) {
 					theta = 2 * PI;

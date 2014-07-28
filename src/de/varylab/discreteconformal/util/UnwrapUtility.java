@@ -28,7 +28,6 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.plugin.TargetGeometry;
 import de.varylab.discreteconformal.unwrapper.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.numerics.SimpleEnergy;
@@ -270,8 +269,22 @@ public class UnwrapUtility {
 		theta = Math.abs(theta);
 		switch (qMode) {
 		case AllAngles: break;
+		case Straight:
+			theta = PI;
+			break;		
+		case QuadsStrict:
+			double q = theta % (PI/2);
+			if (q > PI/4) {
+				theta += (PI/2 - q);
+			} else {
+				theta -= q;
+			}
+			if((theta % PI) != 0) {
+				logger.info(v + ": theta quantized to " + theta);
+			}
+			break;	
 		case Quads:
-			double q = theta % (PI/4);
+			q = theta % (PI/4);
 			if (q > PI/8) {
 				theta += (PI/4 - q);
 			} else {
@@ -281,17 +294,14 @@ public class UnwrapUtility {
 				logger.info(v + ": theta quantized to " + theta);
 			}
 			break;
-		case QuadsStrict:
-			q = theta % (PI/2);
-			if (q > PI/4) {
-				theta += (PI/2 - q);
+		case Triangles:
+			q = theta % (PI/6);
+			if (q > PI/12) {
+				theta += (PI/6 - q);
 			} else {
 				theta -= q;
 			}
-			if((theta % PI) != 0) {
-				logger.info(v + ": theta quantized to " + theta);
-			}
-			break;							
+			break;
 		case Hexagons:
 			q = theta % (PI/3);
 			if (q > PI/6) {
@@ -300,9 +310,7 @@ public class UnwrapUtility {
 				theta -= q;
 			}
 			break;
-		case Straight:
-			theta = PI;
-			break;
+
 		}
 		return sign * theta;
 	}
@@ -407,30 +415,6 @@ public class UnwrapUtility {
 			f.setInitialEnergy(E.get());
 		}
 		return dim;
-	}
-
-
-
-	public static TargetGeometry calculateTargetGeometry(CoHDS hds) {
-		int g = HalfEdgeUtils.getGenus(hds);
-		List<List<CoEdge>> bc = HalfEdgeUtils.boundaryComponents(hds);
-		return calculateTargetGeometry(g, bc.size());
-	}
-
-
-	public static TargetGeometry calculateTargetGeometry(int g, int numBoundaryComponents) {
-		switch (g) {
-		case 0:
-			if (numBoundaryComponents > 0) {
-				return TargetGeometry.Euclidean;
-			} else {
-				return TargetGeometry.Spherical;
-			}
-		case 1:
-			return TargetGeometry.Euclidean;
-		default:
-			return TargetGeometry.Hyperbolic;
-		}
 	}
 
 

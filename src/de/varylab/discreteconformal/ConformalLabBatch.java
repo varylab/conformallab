@@ -13,7 +13,6 @@ import de.varylab.conformallab.data.DataUtility;
 import de.varylab.conformallab.data.types.DiscreteEmbedding;
 import de.varylab.conformallab.data.types.DiscreteMap;
 import de.varylab.discreteconformal.plugin.TargetGeometry;
-import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class ConformalLabBatch {
 
@@ -68,7 +67,7 @@ public class ConformalLabBatch {
 //		CoHDS hds = DataUtility.toHDS(image, cutInfo);
 		
 		if (tg == TargetGeometry.Automatic) {
-			tg = UnwrapUtility.calculateTargetGeometry(genus, 0);
+			tg = TargetGeometry.calculateTargetGeometry(genus, 0);
 			log.info("automatic target geometry: " + tg);
 		}
 		dataIn.close();
