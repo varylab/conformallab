@@ -25,6 +25,10 @@ public class ClausenTest {
 		z = new Complex(-2.264, -1.05);
 		r = Clausen.ImLi2(z);
 		Assert.assertEquals(-0.540683148040955780529547, r, 1E-15);
+		
+		z = new Complex(-4, 2);
+		r = Clausen.ImLi2(z);
+		Assert.assertEquals(0.7855694340809751306351005, r, 1E-15);
 	}
 	
 }

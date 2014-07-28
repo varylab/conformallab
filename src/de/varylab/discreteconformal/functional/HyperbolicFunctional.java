@@ -279,12 +279,12 @@ public class HyperbolicFunctional <
 		final double
 			βi = 0.5 * (PI + αi - αj - αk),
 			βj = 0.5 * (PI - αi + αj - αk),
-			βk = 0.5 * (PI - αi - αj + αk);
+			βk = 0.5 * (PI - αi - αj + αk),
+			βijk = 0.5 * (PI - αi - αj - αk);
 		if (E != null) {
 			E.add(- αi*ui - αj*uj - αk*uk);
 			E.add(βi*lambda.getLambda(ejk) + βj*lambda.getLambda(eki) + βk*lambda.getLambda(eij));
-			E.add(+ Л(αi) + Л(αj) + Л(αk) + Л(βi) + Л(βj) + Л(βk));
-			E.add(+ Л(0.5 * (PI - αi - αj - αk)));
+			E.add(Л(αi) + Л(αj) + Л(αk) + Л(βi) + Л(βj) + Л(βk) + Л(βijk));
 			E.add(-initialEnergy.getInitialEnergy(f));
 		}
 		if (alpha != null) {

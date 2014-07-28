@@ -46,21 +46,21 @@ public class HyperIdealVolumeUtility {
 		Complex abcdef = abc.times(def);
 		Complex z = ad.times(be).times(cf)
 			.times(abf).times(ace).times(bcd).times(def)
-			.times(abcdef)
-			.invert();
+			.times(abcdef);
 		Matrix G = new Matrix(
 			1.0,	-cA,	-cB,	-cF,
 			-cA,	1.0,	-cC,	-cE,
 			-cB,	-cC,	1.0,	-cD,
 			-cF,	-cE,	-cD,	1.0
 		);
+		System.out.println(G.getDeterminant());
 		Complex sqrtG = new Complex(G.getDeterminant()).sqrt();
 		
 		Complex f = new Complex(sA*sD + sB*sE + sC*sF);
 		Complex f1 = f.minus(sqrtG);
 		Complex f2 = f.plus(sqrtG);
-		Complex z1 = z.times(f1).times(-2);
-		Complex z2 = z.times(f2).times(-2);
+		Complex z1 = f1.times(-2).divide(z);
+		Complex z2 = f2.times(-2).divide(z);
 		
 		double U1 = 0.5 * (
 			+ ImLi2(z1) 
