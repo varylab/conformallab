@@ -11,7 +11,7 @@ import de.jtem.mfc.field.Complex;
  * <p>
  * Copyright 2005 <a href="http://www.math.tu-berlin.de/~springb/">Boris Springborn</a>
  * <a href="http://www.math.tu-berlin.de/geometrie">TU-Berlin</a> 
- * @author Boris Springborn
+ * @author Boris Springborn, Stefan Sechelmann
  */
 public class Clausen {
 
