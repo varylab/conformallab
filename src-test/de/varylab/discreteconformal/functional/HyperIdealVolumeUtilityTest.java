@@ -20,7 +20,17 @@ public class HyperIdealVolumeUtilityTest {
 	}
 	
 	@Test
-	public void testIdeal() throws Exception {
+	public void testRegularIdeal1() throws Exception {
+		double βi = PI / 3;
+		double βj = PI / 3;
+		double βk = PI / 3;
+		double Ve = Л(βi) + Л(βj) + Л(βk);
+		double V = calculateVolume(βi, βj, βk, βi, βj, βk);
+		assertEquals(Ve, V, 1E-12);
+	}
+	
+	@Test
+	public void testRegularIdeal2() throws Exception {
 		double βi = PI / 2;
 		double βj = PI / 4;
 		double βk = PI / 4;

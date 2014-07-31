@@ -17,18 +17,8 @@ public class HyperIdealVolumeUtility {
 	 * @return the volume of the tetrahedron
 	 */
 	public static double calculateVolume(double A, double B, double C, double D, double E, double F) {
-		double sA = sin(A);
-		double sB = sin(B);
-		double sC = sin(C);
-		double sD = sin(D);
-		double sE = sin(E);
-		double sF = sin(F);
-		double cA = cos(A);
-		double cB = cos(B);
-		double cC = cos(C);
-		double cD = cos(D);
-		double cE = cos(E);
-		double cF = cos(F);	
+		double sA = sin(A), sB = sin(B), sC = sin(C), sD = sin(D), sE = sin(E), sF = sin(F);
+		double cA = cos(A), cB = cos(B), cC = cos(C), cD = cos(D), cE = cos(E), cF = cos(F);	
 		Complex ad = fromPolar(1, A + D);
 		Complex be = fromPolar(1, B + E);
 		Complex cf = fromPolar(1, C + F);
