@@ -3,8 +3,15 @@ package de.varylab.discreteconformal;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.JFrame;
 import javax.swing.JPopupMenu;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
+
+import org.pushingpixels.substance.api.SubstanceLookAndFeel;
+import org.pushingpixels.substance.api.fonts.FontPolicy;
+import org.pushingpixels.substance.api.fonts.FontSet;
+import org.pushingpixels.substance.api.skin.GraphiteSkin;
 
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
@@ -28,13 +35,13 @@ import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.ConformalVisualizationPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
-import de.varylab.discreteconformal.plugin.TextureSpaceViewer3D;
 import de.varylab.discreteconformal.plugin.EllipticImageGenerator;
 import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
 import de.varylab.discreteconformal.plugin.KoebePolyhedronPlugin;
 import de.varylab.discreteconformal.plugin.ProjectiveTexturePlugin;
 import de.varylab.discreteconformal.plugin.QuasiIsothermicPlugin;
 import de.varylab.discreteconformal.plugin.SphereEqualizerPlugin;
+import de.varylab.discreteconformal.plugin.TextureSpaceViewer3D;
 import de.varylab.discreteconformal.plugin.UniformizationTextureSpacePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.AddConeOfRevolutionCommand;
 import de.varylab.discreteconformal.plugin.algorithm.ContractShortEdges;
@@ -49,6 +56,7 @@ import de.varylab.discreteconformal.plugin.visualizer.IndexMedialGraph;
 import de.varylab.discreteconformal.plugin.visualizer.IsothermicityMeasure;
 import de.varylab.discreteconformal.plugin.visualizer.ThetaVisualizer;
 import de.varylab.discreteconformal.startup.ConformalLabSplashScreen;
+import de.varylab.discreteconformal.startup.TrebuchetFontSet;
 
 
 public class ConformalLab implements Runnable {
@@ -90,8 +98,18 @@ public class ConformalLab implements Runnable {
 	
 	public static void installLookAndFeel() {
 		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-//			SubstanceLookAndFeel.setSkin(new GraphiteAquaSkin());
+//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			SubstanceLookAndFeel.setSkin(new GraphiteSkin());
+			SubstanceLookAndFeel.setToUseConstantThemesOnDialogs(true);
+			JFrame.setDefaultLookAndFeelDecorated(true);
+			UIManager.put(SubstanceLookAndFeel.SHOW_EXTRA_WIDGETS, Boolean.TRUE);
+			FontPolicy newFontPolicy = new FontPolicy() {
+				@Override
+				public FontSet getFontSet(String lafName, UIDefaults table) {
+					return new TrebuchetFontSet(12);
+				}
+			};
+			SubstanceLookAndFeel.setFontPolicy(newFontPolicy);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -106,9 +106,8 @@ public class QuasiisothermicDelaunay {
 		if (leftFace == rightFace) {
 			return;
 		}
-
 		// calculate new angles
-		System.out.println("flipped edge " + e);
+//		System.out.println("flipped edge " + e);
 		setMetricFlipAngles(e, a);
 //		setPtolemyFlipAngles(e, a); // does not terminate
 		
