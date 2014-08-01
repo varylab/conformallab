@@ -441,8 +441,6 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			}
 			TargetGeometry target = TargetGeometry.calculateTargetGeometry(genus, 0);
 			discreteConformalPlugin.createUniformization(hds, target, cutInfo);
-			discreteConformalPlugin.updateGeometry(target);
-			discreteConformalPlugin.updateUniformization(target);
 			if (de.getSelection() != null) {
 				Selection s = DataUtility.toSelection(de.getSelection(), hds);
 				hif.setSelection(s);
@@ -462,8 +460,6 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			}
 			TargetGeometry target = TargetGeometry.calculateTargetGeometry(genus, 0);
 			discreteConformalPlugin.createUniformization(hds, target, cutInfo);
-			discreteConformalPlugin.updateGeometry(target);
-			discreteConformalPlugin.updateUniformization(target);
 		}
 		if (data instanceof DiscreteMetric) {
 			DiscreteMetric dm = (DiscreteMetric)data;

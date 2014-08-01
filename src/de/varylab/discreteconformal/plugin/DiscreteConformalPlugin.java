@@ -598,6 +598,18 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		}
 	}
 	
+	protected void updateGeometry(TargetGeometry target) {
+		if (surfaceUnwrapped == null) return;
+		HyperbolicModel model = Klein;
+		if (target == TargetGeometry.Hyperbolic) {
+			model = Poincaré;
+		}
+		vis.setHyperbolicModel(model, false);
+		hif.addLayerAdapter(metricErrorAdapter, false);
+		vis.setInterpolation(Incircle, false);
+		hif.set(surfaceUnwrapped);
+	}
+	
 	@Override
 	public void jobFinished(Job job) {
 		UnwrapJob unwrapper = (UnwrapJob)job;
@@ -609,8 +621,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
 		conformalDataPlugin.addDiscreteMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
 		createUniformization(surfaceUnwrapped, activeGeometry, cutInfo);
-		updateGeometry(activeGeometry);
-		updateUniformization(activeGeometry);
 		if (unwrapper.getBoundaryMode() == ReadIsometricAngles) {
 			extractBoundaryAngles();
 		}
@@ -655,8 +665,10 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		if (!doUniformization) {
 			return;
 		}
-		if ( targetGeometry == TargetGeometry.Euclidean || 
-			 targetGeometry == TargetGeometry.Hyperbolic) {
+		if (
+			(targetGeometry == TargetGeometry.Euclidean || targetGeometry == TargetGeometry.Hyperbolic) &&
+			 !cutInfo.getBranchSet().isEmpty()
+		) {
 			int signature = getActiveSignature();
 			try {
 				System.out.println("Constructing fundamental cut polygon...");
@@ -691,6 +703,55 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		} else {
 			cutInfo = null;
 			cuttedPolygon = null;
+			minimalPolygon = null;
+			oppositePolygon = null;
+			canonicalPolygon = null;
+		}
+		updateGeometry(targetGeometry);
+		updateUniformization(targetGeometry);
+	}
+
+	protected void updateUniformization(final TargetGeometry target) {
+		Runnable r = new Runnable() {
+			@Override
+			public void run() {
+				updateUniformizationDirect(target);
+			}
+		};
+		EventQueue.invokeLater(r);
+	}
+	
+	protected void updateUniformizationDirect(TargetGeometry target) {
+		int signature = getActiveSignature();
+		AdapterSet aSet = hif.getActiveAdapters();
+		int maxGroupElements = coverElementsModel.getNumber().intValue();
+		double maxDrawDistance = coverMaxDisctanceModel.getNumber().doubleValue();
+		boolean drawPolygon = drawPolygonChecker.isSelected();
+		boolean drawAxes = drawAxesChecker.isSelected();
+		boolean drawCurves = drawCurvesOnSurface.isSelected();
+		Color polygonColor = polygonColorButton.getColor();
+		Color axesColor = axesColorButton.getColor();
+		hif.removeTemporaryGeometry(polygonCurvesRoot);
+		hif.removeTemporaryGeometry(axesCurvesRoot);
+		FundamentalPolygon P = getActiveFundamentalPoygon();
+		if (P == null) return;
+		if (target == TargetGeometry.Hyperbolic && drawCurves) {
+			if (drawPolygon) {
+				IndexedLineSet curves = createSurfaceCurves(P, surfaceUnwrapped, aSet, maxGroupElements, maxDrawDistance, true, false, signature);
+				polygonCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, polygonColor);
+				polygonCurvesRoot.setGeometry(curves);
+				hif.addTemporaryGeometry(polygonCurvesRoot);
+			}
+			if (drawAxes) {
+				IndexedLineSet axes = createSurfaceCurves(P, surfaceUnwrapped, aSet, maxGroupElements, maxDrawDistance, false, true, signature);
+				axesCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, axesColor);
+				axesCurvesRoot.setGeometry(axes);
+				hif.addTemporaryGeometry(axesCurvesRoot);
+			}
+		}
+		if (textureSpacePlugin != null) {
+			HyperbolicModel model = vis.getSelectedHyperbolicModel();
+			textureSpacePlugin.createUniformization(surfaceUnwrapped, P, maxGroupElements, maxDrawDistance, model, target);
 		}
 	}
 	
@@ -883,8 +944,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			}
 			hif.update();
 			createUniformization(surfaceUnwrapped, activeGeometry, cutInfo);
-			updateGeometry(activeGeometry);
-			updateUniformization(activeGeometry);
 			conformalDataPlugin.addDiscreteMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
 		}
 		if (drawTriangulationChecker == s ||
@@ -1238,53 +1297,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		}
 	}
 	
-
-	public void updateUniformization(final TargetGeometry target) {
-		Runnable r = new Runnable() {
-			@Override
-			public void run() {
-				updateUniformizationDirect(target);
-			}
-		};
-		EventQueue.invokeLater(r);
-	}
-	
-	protected void updateUniformizationDirect(TargetGeometry target) {
-		int signature = getActiveSignature();
-		AdapterSet aSet = hif.getActiveAdapters();
-		int maxGroupElements = coverElementsModel.getNumber().intValue();
-		double maxDrawDistance = coverMaxDisctanceModel.getNumber().doubleValue();
-		boolean drawPolygon = drawPolygonChecker.isSelected();
-		boolean drawAxes = drawAxesChecker.isSelected();
-		boolean drawCurves = drawCurvesOnSurface.isSelected();
-		Color polygonColor = polygonColorButton.getColor();
-		Color axesColor = axesColorButton.getColor();
-		hif.removeTemporaryGeometry(polygonCurvesRoot);
-		hif.removeTemporaryGeometry(axesCurvesRoot);
-		if (target == TargetGeometry.Hyperbolic && drawCurves) {
-			if (drawPolygon) {
-				FundamentalPolygon p = getActiveFundamentalPoygon();
-				IndexedLineSet curves = createSurfaceCurves(p, surfaceUnwrapped, aSet, maxGroupElements, maxDrawDistance, true, false, signature);
-				polygonCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, polygonColor);
-				polygonCurvesRoot.setGeometry(curves);
-				hif.addTemporaryGeometry(polygonCurvesRoot);
-			}
-			if (drawAxes) {
-				FundamentalPolygon p = getActiveFundamentalPoygon();
-				IndexedLineSet axes = createSurfaceCurves(p, surfaceUnwrapped, aSet, maxGroupElements, maxDrawDistance, false, true, signature);
-				axesCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, axesColor);
-				axesCurvesRoot.setGeometry(axes);
-				hif.addTemporaryGeometry(axesCurvesRoot);
-			}
-		}
-		if (textureSpacePlugin != null) {
-			FundamentalPolygon P = getActiveFundamentalPoygon();
-			HyperbolicModel model = vis.getSelectedHyperbolicModel();
-			textureSpacePlugin.createUniformization(surfaceUnwrapped, P, maxGroupElements, maxDrawDistance, model, target);
-		}
-	}
-	
-	
 	protected CoHDS getLoaderGeometry() {
 		CoHDS surface = new CoHDS();
 		surface.setTexCoordinatesValid(false);
@@ -1319,18 +1331,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			cf.copyData(f);
 		}
 		return copy;
-	}
-	
-	public void updateGeometry(TargetGeometry target) {
-		if (surfaceUnwrapped == null) return;
-		HyperbolicModel model = Klein;
-		if (target == TargetGeometry.Hyperbolic) {
-			model = Poincaré;
-		}
-		vis.setHyperbolicModel(model, false);
-		hif.addLayerAdapter(metricErrorAdapter, false);
-		vis.setInterpolation(Incircle, false);
-		hif.set(surfaceUnwrapped);
 	}
 	
 	@Override
