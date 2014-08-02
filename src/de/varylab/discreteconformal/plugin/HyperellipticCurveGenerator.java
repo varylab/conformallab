@@ -25,7 +25,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.util.HyperellipticUtility;
 
-public class EllipticImageGenerator extends AlgorithmPlugin {
+public class HyperellipticCurveGenerator extends AlgorithmPlugin {
 	
 	private int
 		numExtraPoints = 0;
@@ -37,7 +37,7 @@ public class EllipticImageGenerator extends AlgorithmPlugin {
 
 	@Override
 	public String getAlgorithmName() {
-		return "Elliptic Image";
+		return "Hyperelliptic Curve";
 	}
 	
 	
@@ -80,6 +80,10 @@ public class EllipticImageGenerator extends AlgorithmPlugin {
 		// show the result
 		hif.addLayerAdapter(pathVisualizer, true);
 		hif.set(hds);
+		hif.getSelectionInterface().registerChannelName(8723784, "Sheet Paths");
+		Selection s = new Selection();
+		s.addAll(glueSet, 8723784);
+		hif.addSelection(s);
 	}
 	
 	

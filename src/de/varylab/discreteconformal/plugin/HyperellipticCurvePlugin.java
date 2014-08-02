@@ -50,7 +50,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.plugin.EllipticImageGenerator.PathVisualizer;
+import de.varylab.discreteconformal.plugin.HyperellipticCurveGenerator.PathVisualizer;
 import de.varylab.discreteconformal.plugin.hyperelliptic.Curve;
 import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeEvent;
 import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeEvent.EventType;

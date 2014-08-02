@@ -35,7 +35,7 @@ import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.ConformalVisualizationPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
-import de.varylab.discreteconformal.plugin.EllipticImageGenerator;
+import de.varylab.discreteconformal.plugin.HyperellipticCurveGenerator;
 import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
 import de.varylab.discreteconformal.plugin.KoebePolyhedronPlugin;
 import de.varylab.discreteconformal.plugin.ProjectiveTexturePlugin;
@@ -71,7 +71,7 @@ public class ConformalLab implements Runnable {
 		s.add(new DiscreteRiemannPlugin());
 		s.add(new SchottkyPlugin());
 		s.add(new ThetaVisualizer());
-		s.add(new EllipticImageGenerator());
+		s.add(new HyperellipticCurveGenerator());
 		s.add(new ConsolePlugin());
 		s.add(new CutToDiskPlugin());
 		s.add(new CutAtEdgePlugin());
