@@ -219,16 +219,21 @@ public class FundamentalPolygon {
 			}
 			@Override
 			public boolean acceptElement(DiscreteGroupElement s) {
-				double mean = 0.0;
+				double min = Double.MAX_VALUE;
 				for (FundamentalEdge e : getEdges()) {
-					BigDecimal[] p = e.startPosition;
+					BigDecimal[] ps = e.startPosition;
+					BigDecimal[] pt = e.nextEdge.startPosition;
+					BigDecimal[] mean = RnBig.linearCombination(null, new BigDecimal(0.5), ps, new BigDecimal(0.5), pt, context);
 					BigDecimal[] T = RnBig.toBig(null, s.getMatrix());
-					p = RnBig.matrixTimesVector(null, T, p, context);
-					double[] pd = RnBig.toDouble(null, p);
-					mean += Math.sqrt(Pn.norm(pd, Pn.HYPERBOLIC));
+					mean = RnBig.matrixTimesVector(null, T, mean, context);
+					double[] pd = RnBig.toDouble(null, mean);
+					double[] pp = {pd[0] / (pd[3] + 1), pd[1] / (pd[3] + 1)};
+					double distSq = pp[0]*pp[0] + pp[1]*pp[1];
+					if (distSq < min) {
+						min = distSq;
+					}
 				}
-				mean /= getLength();
-				return mean < maxDrawDistance;
+				return min < maxDrawDistance;
 			}
 		};
 		DiscreteGroup G = getDiscreteGroup();

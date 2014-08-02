@@ -241,7 +241,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		visualizationPanel = new ShrinkPanel("Visualization"),
 		texQuantizationPanel = new ShrinkPanel("Cone Texture Quantization");
 	private SpinnerNumberModel
-		coverMaxDisctanceModel = new SpinnerNumberModel(6.0, 0.0, 100.0, 10.0),
+		coverMaxDistanceModel = new SpinnerNumberModel(0.9, 0.0, 1.0, 0.01),
 		coverElementsModel = new SpinnerNumberModel(10000, 0, 100000, 1),
 		customThetaModel = new SpinnerNumberModel(360.0, 0.0, 10000.0, 1.0),
 		customPhiModel = new SpinnerNumberModel(180.0, 0.0, 360.0, 1.0),
@@ -252,7 +252,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		createCopiesModel = new SpinnerNumberModel(10, 1, 1000, 1),
 		snapToleranceExpModel = new SpinnerNumberModel(-5, -20, 1, 1);
 	private JSpinner
-		coverMaxDistanceSpinner = new JSpinner(coverMaxDisctanceModel),
+		coverMaxDistanceSpinner = new JSpinner(coverMaxDistanceModel),
 		coverElementsSpinner = new JSpinner(coverElementsModel),
 		customThetaSpinner = new JSpinner(customThetaModel),
 		customPhiSpinner = new JSpinner(customPhiModel),
@@ -725,7 +725,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		int signature = getActiveSignature();
 		AdapterSet aSet = hif.getActiveAdapters();
 		int maxGroupElements = coverElementsModel.getNumber().intValue();
-		double maxDrawDistance = coverMaxDisctanceModel.getNumber().doubleValue();
+		double maxDrawDistance = coverMaxDistanceModel.getNumber().doubleValue();
 		boolean drawPolygon = drawPolygonChecker.isSelected();
 		boolean drawAxes = drawAxesChecker.isSelected();
 		boolean drawCurves = drawCurvesOnSurface.isSelected();

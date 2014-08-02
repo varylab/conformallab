@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.plugin;
 
 
+import java.awt.EventQueue;
 import java.awt.Window;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,6 +27,9 @@ import de.varylab.discreteconformal.util.HyperellipticUtility;
 
 public class EllipticImageGenerator extends AlgorithmPlugin {
 	
+	private int
+		numExtraPoints = 0;
+	
 	@Override
 	public AlgorithmCategory getAlgorithmCategory() {
 		return AlgorithmCategory.Generator;
@@ -43,11 +47,22 @@ public class EllipticImageGenerator extends AlgorithmPlugin {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,
 		HDS extends HalfEdgeDataStructure<V, E, F>
-	> void execute(HDS h, AdapterSet a, HalfedgeInterface hif) {
-		Window w = SwingUtilities.getWindowAncestor(hif.getShrinkPanel());
-		String numString = JOptionPane.showInputDialog(w, "Number of extra points", 0);
-		if (numString == null) return;
-		int extraPoints = Integer.parseInt(numString);
+	> void execute(HDS h, AdapterSet a, final HalfedgeInterface hif) {
+		Runnable r = new Runnable() {
+			@Override
+			public void run() {
+				Window w = SwingUtilities.getWindowAncestor(hif.getShrinkPanel());
+				String numString = JOptionPane.showInputDialog(w, "Number of extra points", numExtraPoints);
+				if (numString == null) return;
+				numExtraPoints = Integer.parseInt(numString);
+			}
+		};
+		try {
+			EventQueue.invokeAndWait(r);
+		} catch (Exception e1) {
+			throw new RuntimeException(e1);
+		}
+		
 		Selection sel = hif.getSelection();
 		int[] branchIndices = new int[sel.getVertices().size()];
 		int i = 0;
@@ -56,8 +71,7 @@ public class EllipticImageGenerator extends AlgorithmPlugin {
 		}
 		CoHDS hds = hif.get(new CoHDS());
 		Set<CoEdge> glueSet = new HashSet<CoEdge>();
-//		DiscreteEllipticUtility.generateEllipticImage(hds, extraPoints, glueSet, branchIndices);
-		HyperellipticUtility.generateHyperellipticImage(hds, extraPoints, glueSet, branchIndices);
+		HyperellipticUtility.generateHyperellipticImage(hds, numExtraPoints, glueSet, branchIndices);
 		PathVisualizer pathVisualizer = new PathVisualizer();
 		for (CoEdge e : glueSet) {
 			pathVisualizer.add(e);
