@@ -38,21 +38,27 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 	private JCheckBox
 		triangulationChecker = new JCheckBox("Triangulation", true),
 		polygonChecker = new JCheckBox("Polygon", true),
-		axesChecker = new JCheckBox("Axes", true);
+		axesChecker = new JCheckBox("Axes", true),
+		boundaryChecker = new JCheckBox("Boundary", false);
 	private ColorChooseJButton
 		triangulationColorButton = new ColorChooseJButton(new Color(102, 102, 102), true),
 		polygonColorButton = new ColorChooseJButton(new Color(204, 102, 0), true),
+		boundaryColorButton = new ColorChooseJButton(new Color(204, 102, 0), true),
 		axesColorButton = new ColorChooseJButton(new Color(0, 153, 204), true);
 	private SceneComponent
 		scene = new SceneComponent(),
 		boundaryComponent = new SceneComponent(),
 		axesComponent = new SceneComponent(),
 		polygonComponent = new SceneComponent(),
+		boundaryEdgesComponent = new SceneComponent(),
 		triangulationComponent = new SceneComponent();
 	
 	public UniformizationTextureSpacePlugin() {
 		scene.addChild(triangulationComponent);
 		triangulationComponent.setFilled(false);
+		scene.addChild(boundaryEdgesComponent);
+		boundaryEdgesComponent.setFilled(false);
+		boundaryEdgesComponent.setStroke(new BasicStroke(2));
 		scene.addChild(axesComponent);
 		axesComponent.setFilled(false);
 		axesComponent.setStroke(new BasicStroke(2, CAP_SQUARE, JOIN_ROUND, 1, new float[] {5, 7}, 1));
@@ -74,6 +80,8 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		options.add(polygonColorButton, rc);
 		options.add(axesChecker, lc);
 		options.add(axesColorButton, rc);
+		options.add(boundaryChecker, lc);
+		options.add(boundaryColorButton, rc);		
 		
 		triangulationChecker.addActionListener(this);
 		triangulationColorButton.addColorChangedListener(this);
@@ -81,6 +89,8 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		polygonColorButton.addColorChangedListener(this);
 		axesChecker.addActionListener(this);
 		axesColorButton.addColorChangedListener(this);
+		boundaryChecker.addActionListener(this);
+		boundaryColorButton.addColorChangedListener(this);
 		
 		updateStates();
 	}
@@ -92,6 +102,8 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		polygonComponent.setOutlinePaint(polygonColorButton.getColor());
 		axesComponent.setVisible(axesChecker.isSelected());
 		axesComponent.setOutlinePaint(axesColorButton.getColor());
+		boundaryEdgesComponent.setVisible(boundaryChecker.isSelected());
+		boundaryEdgesComponent.setOutlinePaint(boundaryColorButton.getColor());
 		scene.fireAppearanceChange();
 	}
 	
@@ -109,6 +121,7 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		Path2D axesPath = new Path2D.Float();
 		Path2D polyPath = new Path2D.Float();
 		Path2D triangulationPath = new Path2D.Float();
+		Path2D boundaryPath = new Path2D.Float();
 		VisualizationUtility.createUniversalCover(
 			P, 
 			model, 
@@ -122,9 +135,11 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 			P, 
 			model, 
 			maxElements, maxDistance,
-			triangulationPath
+			triangulationPath,
+			boundaryPath
 		);
 		triangulationComponent.setShape(triangulationPath);
+		boundaryEdgesComponent.setShape(boundaryPath);
 		axesComponent.setShape(axesPath);
 		polygonComponent.setShape(polyPath);
 		boundaryComponent.setVisible(geometry == TargetGeometry.Hyperbolic);

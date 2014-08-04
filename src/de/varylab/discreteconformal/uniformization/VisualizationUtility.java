@@ -23,6 +23,7 @@ import de.jreality.math.Matrix;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.discretegroup.core.DiscreteGroupElement;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -69,7 +70,8 @@ public class VisualizationUtility {
 		HyperbolicModel model,
 		int maxDrawElements,
 		double maxDrawDistance,
-		Path2D triangulationPath
+		Path2D triangulationPath,
+		Path2D boundaryPath
 	) {
 		List<DiscreteGroupElement> G = P.createGoupElements(maxDrawElements, maxDrawDistance);
 		for (DiscreteGroupElement g : G) {
@@ -87,6 +89,9 @@ public class VisualizationUtility {
 				double[] p3 = dehomogenize(m, model);
 				Shape arc = createArc(p1, p2, p3, model);
 				triangulationPath.append(arc, false);
+				if (HalfEdgeUtils.isBoundaryEdge(e)) {
+					boundaryPath.append(arc, false);
+				}
 			}
 		}
 	}
