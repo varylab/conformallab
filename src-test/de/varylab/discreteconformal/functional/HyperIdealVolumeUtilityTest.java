@@ -40,6 +40,13 @@ public class HyperIdealVolumeUtilityTest {
 	}
 	
 	@Test
+	public void testOctahedron() throws Exception {
+		double Ve = 8*Л(PI/4);
+		double V = calculateVolume(0, 0, 0, 0, 0, 0);
+		assertEquals(Ve, V, 1E-12);
+	}
+	
+	@Test
 	public void testHyperidealSingleVertex() throws Exception {
 		double βi = PI / 2;
 		double βj = PI / 4;

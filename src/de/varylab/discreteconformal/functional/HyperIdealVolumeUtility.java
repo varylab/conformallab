@@ -34,16 +34,13 @@ public class HyperIdealVolumeUtility {
 		Complex acdf = ad.times(cf);
 		Complex bcef = be.times(cf);
 		Complex abcdef = abc.times(def);
-		Complex z = ad.times(be).times(cf)
-			.times(abf).times(ace).times(bcd).times(def)
-			.times(abcdef);
+		Complex z = ad.plus(be).plus(cf).plus(abf).plus(ace).plus(bcd).plus(def).plus(abcdef);
 		Matrix G = new Matrix(
 			1.0,	-cA,	-cB,	-cF,
 			-cA,	1.0,	-cC,	-cE,
 			-cB,	-cC,	1.0,	-cD,
 			-cF,	-cE,	-cD,	1.0
 		);
-		System.out.println(G.getDeterminant());
 		Complex sqrtG = new Complex(G.getDeterminant()).sqrt();
 		
 		Complex f = new Complex(sA*sD + sB*sE + sC*sF);
