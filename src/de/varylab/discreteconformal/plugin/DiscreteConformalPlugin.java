@@ -786,12 +786,10 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			if (unwrapped == null) return;
 			surface = copySurface(unwrapped);
 			Selection selection = hif.getSelection();
-			if (isRescaleGeometry()) {
-				unwrapped.normalizeCoordinates();
-			}
 			AdapterSet aSet = hif.getAdapters();
 			conformalDataPlugin.addDiscreteMetric("Input Discrete Metric", unwrapped, aSet);
 			conformalDataPlugin.addDiscreteEmbedding("Input Discrete Position Embedding", unwrapped, selection, aSet, Position4d.class, null);
+			if (isRescaleGeometry()) unwrapped.normalizeCoordinates();
 			UnwrapJob uw = new UnwrapJob(unwrapped, aSet);
 			uw.setTargetGeometry((TargetGeometry)targetGeometryCombo.getSelectedItem());
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());
