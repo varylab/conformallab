@@ -26,8 +26,9 @@ public interface FunctionalAdapters {
 		public void setLambda(E e, double lambda);
 	}
 	
-	public static interface Theta <V extends Vertex<V, ?, ?>> {
+	public static interface Theta <V extends Vertex<V, E, ?>, E extends Edge<V, E, ?>> {
 		public double getTheta(V v);
+		public double getTheta(E e);
 	}
 	
 	public static interface Phi <E extends Edge<?, E, ?>> {

@@ -11,6 +11,7 @@ public class ConformalEdge <
     protected double
     	lambda = 1.0,
     	alpha = 0.0,
+    	theta = 0.0,
     	phi = Math.PI;
 	protected Integer
 		solverIndex = -1;
@@ -43,10 +44,18 @@ public class ConformalEdge <
 		this.phi = phi;
 	}
 	
+	public double getTheta() {
+		return theta;
+	}
+	public void setTheta(double theta) {
+		this.theta = theta;
+	}
+	
 	@Override
 	public void copyData(E e) {
 		lambda = e.lambda;
 		alpha = e.alpha;
+		theta = e.theta;
 		solverIndex = e.solverIndex;
 	};
 	

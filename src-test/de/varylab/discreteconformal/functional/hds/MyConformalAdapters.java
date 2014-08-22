@@ -54,10 +54,14 @@ public abstract class MyConformalAdapters {
 		}
 	}
 	
-	public static class CTheta implements Theta<MyConformalVertex> {
+	public static class CTheta implements Theta<MyConformalVertex, MyConformalEdge> {
 		@Override
 		public double getTheta(MyConformalVertex v) {
 			return v.getTheta();
+		}
+		@Override
+		public double getTheta(MyConformalEdge e) {
+			return e.getTheta();
 		}
 	}
 	

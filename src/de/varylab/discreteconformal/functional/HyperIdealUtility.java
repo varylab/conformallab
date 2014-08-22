@@ -2,21 +2,78 @@ package de.varylab.discreteconformal.functional;
 
 import static de.jtem.mfc.field.Complex.fromPolar;
 import static de.varylab.discreteconformal.functional.Clausen.ImLi2;
+import static de.varylab.discreteconformal.math.MathUtility.arcosh;
+import static de.varylab.discreteconformal.math.MathUtility.arsinh;
+import static java.lang.Math.acos;
 import static java.lang.Math.cos;
+import static java.lang.Math.cosh;
+import static java.lang.Math.exp;
 import static java.lang.Math.sin;
+import static java.lang.Math.sinh;
 import de.jreality.math.Matrix;
 import de.jtem.mfc.field.Complex;
 
-public class HyperIdealVolumeUtility {
+public class HyperIdealUtility {
 
+	/**
+	 * Calculates a third length in a right angled hyperbolic hexagon
+	 * with given lengths x, y, and z
+	 * @return the length of the edge opposite to z
+	 */
+	public static double ζ_13(double x, double y, double z) {
+		double cx = cosh(x);
+		double cy = cosh(y);
+		double cz = cosh(z);
+		double sx = sinh(x);
+		double sy = sinh(y);
+		double n = cx*cy + cz;
+		double d = sx*sy;
+		return arcosh(n/d);
+	}
 	
 	/**
-	 * Calculate the hyperbolic volume of the generalized 
+	 * Calculates an edge length in a hyperbolic pentagon with one
+	 * vertex at infinity
+	 */
+	public static double ζ_14(double x, double y) {
+		double cy = cosh(y);
+		double sy = sinh(y);
+		double n = exp(x) + cy;
+		return arcosh(n/sy);
+	}
+	
+	/**
+	 * Calculates a length in a hyperbolic quadrilateral with two
+	 * vertices at infinity
+	 */
+	public static double ζ_15(double x) {
+		return 2 * arsinh(exp(x/2));
+	}
+	
+	/**
+	 * Calculates an angle in a hyperbolic triangle with edge
+	 * length x, y, and z. 
+	 * @return the angle opposite of edge z.
+	 */
+	public static double ζ(double x, double y, double z) {
+		double cx = cosh(x);
+		double cy = cosh(y);
+		double cz = cosh(z);
+		double sx = sinh(x);
+		double sy = sinh(y);
+		double n = cx*cy - cz;
+		double d = sx*sy;
+		return acos(n/d);
+	}
+	
+	
+	/**
+	 * Calculates the hyperbolic volume of the generalized 
 	 * hyperbolic tetrahedron with dihedral angles α and β.
-	 * Taken from 
+	 * Formula taken from </a href="http://dx.doi.org/10.1007/0-387-29555-0_13">here</a>.
 	 * @return the volume of the tetrahedron
 	 */
-	public static double calculateVolume(double A, double B, double C, double D, double E, double F) {
+	public static double calculateTetrahedronVolume(double A, double B, double C, double D, double E, double F) {
 		double sA = sin(A), sB = sin(B), sC = sin(C), sD = sin(D), sE = sin(E), sF = sin(F);
 		double cA = cos(A), cB = cos(B), cC = cos(C), cD = cos(D), cE = cos(E), cF = cos(F);	
 		Complex ad = fromPolar(1, A + D);

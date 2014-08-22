@@ -28,6 +28,7 @@ import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Lambda;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Theta;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
+import de.varylab.discreteconformal.math.MathUtility;
 
 public class HyperbolicCircularHolesFunctional <
 	V extends Vertex<V, E, F>,
@@ -37,7 +38,7 @@ public class HyperbolicCircularHolesFunctional <
 
 	private Variable<V, E> 
 		var = null;
-	private Theta<V> 
+	private Theta<V, E> 
 		theta = null;
 	private Lambda<E> 
 		lambda = null;
@@ -49,7 +50,7 @@ public class HyperbolicCircularHolesFunctional <
 	
 	public HyperbolicCircularHolesFunctional(
 		Variable<V, E> var,
-		Theta<V> theta,
+		Theta<V, E> theta,
 		Lambda<E> lambda,
 		Alpha<E> alpha,
 		InitialEnergy<F> energy
@@ -260,7 +261,7 @@ public class HyperbolicCircularHolesFunctional <
 			final double 
 				λij = lambda.getLambda(e) + ui + uj;
 			final double
-				lij = 2*arsinh(exp(λij / 2));
+				lij = 2*MathUtility.arsinh(exp(λij / 2));
 			double 
 				tan2 = tanh(lij / 2);
 			tan2 *= tan2;
@@ -311,9 +312,9 @@ public class HyperbolicCircularHolesFunctional <
 			λjk = λi + (var.isVariable(ejk) ? 0 : uj + uk),
 			λki = λj + (var.isVariable(eki) ? 0 : uk + ui);
 		final double
-			lij = 2 * arsinh(exp(λij / 2)),
-			ljk = 2 * arsinh(exp(λjk / 2)),
-			lki = 2 * arsinh(exp(λki / 2));
+			lij = 2 * MathUtility.arsinh(exp(λij / 2)),
+			ljk = 2 * MathUtility.arsinh(exp(λjk / 2)),
+			lki = 2 * MathUtility.arsinh(exp(λki / 2));
 		final double
 			Δij = - lij + ljk + lki,
 			Δjk = + lij - ljk + lki,
@@ -359,14 +360,6 @@ public class HyperbolicCircularHolesFunctional <
 		}
 		return valid;
 	}
-	
-	
-	
-	private double arsinh(double x) {
-		double r = x + sqrt(x*x + 1);
-		return log(r);
-	}
-	
 	
 	@Override
 	public <
@@ -426,7 +419,7 @@ public class HyperbolicCircularHolesFunctional <
 		Double u1 = var.isVariable(v1) ? u.get(i1) : 0.0; 
 		Double u2 = var.isVariable(v2) ? u.get(i2) : 0.0;
 		double l2 = var.isVariable(e) ? u.get(ei) : lambda.getLambda(e) + u1 + u2;
-		return 2 * arsinh( exp(l2 / 2) );
+		return 2 * MathUtility.arsinh( exp(l2 / 2) );
 	}
 	@Override
 	public double getVertexU(V v, DomainValue u) {

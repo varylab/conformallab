@@ -838,7 +838,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			BoundaryMode boundaryMode = (BoundaryMode)boundaryModeCombo.getSelectedItem();
 			QuantizationMode boundaryQuantMode = (QuantizationMode)boundaryQuantizationCombo.getSelectedItem();
 			try {
-				Theta<CoVertex> theta = new CTheta();
+				Theta<CoVertex, CoEdge> theta = new CTheta();
 				Variable<CoVertex, CoEdge> variable = new CVariable();
 				Lambda<CoEdge> lambda = new CLambda();
 				Alpha<CoEdge> alpha = new CAlpha();

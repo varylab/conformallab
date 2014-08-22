@@ -56,10 +56,14 @@ public abstract class Adapters {
 		}
 	}
 	
-	public static class CTheta implements Theta<CoVertex> {
+	public static class CTheta implements Theta<CoVertex, CoEdge> {
 		@Override
 		public double getTheta(CoVertex v) {
 			return v.getTheta();
+		}
+		@Override
+		public double getTheta(CoEdge e) {
+			return e.getTheta();
 		}
 	}
 	
