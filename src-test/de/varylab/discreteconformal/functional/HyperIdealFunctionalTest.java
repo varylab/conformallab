@@ -1,10 +1,14 @@
 package de.varylab.discreteconformal.functional;
 
+import static java.lang.Math.PI;
+
+import java.util.List;
 import java.util.Random;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -111,14 +115,23 @@ public class HyperIdealFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 		HalfEdgeUtils.fillAllHoles(hds);
 		HalfEdgeUtils.isValidSurface(hds, true);
 		System.out.println("genus: " + HalfEdgeUtils.getGenus(hds));
+		List<CoEdge> auxEdges = Triangulator.triangulateSingleSource(hds);
 		
 		int index = 0;
 		for (CoVertex v : hds.getVertices()) {
 			v.setSolverIndex(index++);
+			v.setTheta(2 * PI);
 		}
 		for (CoEdge e : hds.getPositiveEdges()) {
 			e.setSolverIndex(index);
 			e.getOppositeEdge().setSolverIndex(index++);
+			if (auxEdges.contains(e)) {
+				e.setTheta(PI);
+				e.getOppositeEdge().setTheta(PI);
+			} else {
+				e.setTheta(PI/2);
+				e.getOppositeEdge().setTheta(PI/2);
+			}
 		}
 		
 //		AdapterSet aSet = new ConformalAdapterSet();
