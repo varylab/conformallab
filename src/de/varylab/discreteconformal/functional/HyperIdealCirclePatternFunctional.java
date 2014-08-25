@@ -1,6 +1,10 @@
 package de.varylab.discreteconformal.functional;
 
 import static de.varylab.discreteconformal.functional.HyperIdealUtility.calculateTetrahedronVolume;
+import static de.varylab.discreteconformal.functional.HyperIdealUtility.ζ;
+import static de.varylab.discreteconformal.functional.HyperIdealUtility.ζ_13;
+import static de.varylab.discreteconformal.functional.HyperIdealUtility.ζ_14;
+import static de.varylab.discreteconformal.functional.HyperIdealUtility.ζ_15;
 import static java.lang.Math.PI;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -62,55 +66,55 @@ public class HyperIdealCirclePatternFunctional <
 	}
 	
 	private double U(F f, DomainValue x) {
-		E e1 = f.getBoundaryEdge();
-		E e2 = e1.getNextEdge();
-		E e3 = e2.getNextEdge();
-		V v1 = e1.getStartVertex();
-		V v2 = e2.getStartVertex();
-		V v3 = e3.getStartVertex();
-		boolean e1b = var.isVariable(e1);
-		boolean e2b = var.isVariable(e2);
-		boolean e3b = var.isVariable(e3);
+		E e12 = f.getBoundaryEdge();
+		E e23 = e12.getNextEdge();
+		E e31 = e23.getNextEdge();
+		V v1 = e12.getStartVertex();
+		V v2 = e23.getStartVertex();
+		V v3 = e31.getStartVertex();
+		boolean e12b = var.isVariable(e12);
+		boolean e23b = var.isVariable(e23);
+		boolean e31b = var.isVariable(e31);
 		boolean v1b = var.isVariable(v1);
 		boolean v2b = var.isVariable(v2);
 		boolean v3b = var.isVariable(v3);
-		double a1 = e1b ? 0.0 : x.get(var.getVarIndex(e1));
-		double a2 = e2b ? 0.0 : x.get(var.getVarIndex(e2));
-		double a3 = e3b ? 0.0 : x.get(var.getVarIndex(e3));
+		double a12 = e12b ? 0.0 : x.get(var.getVarIndex(e12));
+		double a23 = e23b ? 0.0 : x.get(var.getVarIndex(e23));
+		double a31 = e31b ? 0.0 : x.get(var.getVarIndex(e31));
 		double b1 = v1b ? 0.0 : x.get(var.getVarIndex(v1));
 		double b2 = v2b ? 0.0 : x.get(var.getVarIndex(v2));
 		double b3 = v3b ? 0.0 : x.get(var.getVarIndex(v3));
-		double αβ[] = αβ(a1, a2, a3, b1, b2, b3, v1b, v2b, v3b);
-		double aa = a1*αβ[0] + a2*αβ[1] + a3*αβ[2];
+		double αβ[] = αβ(a12, a23, a31, b1, b2, b3, v1b, v2b, v3b);
+		double aa = a12*αβ[0] + a23*αβ[1] + a31*αβ[2];
 		double bb = b1*αβ[3] + b2*αβ[4] + b3*αβ[5];
 		double V = calculateTetrahedronVolume(αβ[3], αβ[4], αβ[5], αβ[0], αβ[1], αβ[2]);
 		return aa + bb + V;
 	}
 	
 	private double[] αβ(
-		double a1, double a2, double a3,
+		double a12, double a23, double a31,
 		double b1, double b2, double b3,
-		boolean v1, boolean v2, boolean v3 
+		boolean v1b, boolean v2b, boolean v3b 
 	) {
-		int index = 1;
-		index += v1 ? 0 : 1;
-		index += v2 ? 0 : 1;
-		index += v3 ? 0 : 1;
-		switch (index) {
-		case 1:
-			
-			break;
-		case 2:
-			
-			break;
-		case 3:
-			
-			break;
-		case 4:
-			
-			break;
+		double l12 = lij(b1, b2, a12, v1b, v2b);
+		double l23 = lij(b2, b3, a23, v2b, v3b);
+		double l31 = lij(b3, b1, a31, v3b, v1b);
+		double β1 = ζ(l23, l12, l31);
+		double β2 = ζ(l31, l12, l23);
+		double β3 = ζ(l12, l23, l31);
+		return new double[] {0.0, 0.0, 0.0, β1, β2, β3};
+	}
+
+	private double lij(double bi, double bj, double aij, boolean vib, boolean vjb) {
+		if (vib && vjb) {
+			return ζ_13(bi, bj, aij);
+		} else if (vib) {
+			return ζ_14(aij, bi);
+		} else if (vjb) {
+			return ζ_14(aij, bj);
+		} else {
+			return ζ_15(aij);
 		}
-		return new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 	}
 	
 	@Override
