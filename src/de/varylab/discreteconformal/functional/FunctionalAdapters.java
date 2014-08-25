@@ -21,6 +21,11 @@ public interface FunctionalAdapters {
 		public void setAlpha(E e, double alpha);
 	}
 	
+	public static interface Beta <E extends Edge<?, E, ?>> {
+		public double getBeta(E e);
+		public void setBeta(E e, double beta);
+	}	
+	
 	public static interface Lambda <E extends Edge<?, E, ?>> {
 		public double getLambda(E e);
 		public void setLambda(E e, double lambda);
