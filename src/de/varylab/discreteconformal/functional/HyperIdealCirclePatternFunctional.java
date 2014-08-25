@@ -48,7 +48,7 @@ public class HyperIdealCirclePatternFunctional <
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> void evaluate(
 		HDS hds, 
-		DomainValue x, 
+		DomainValue x,
 		Energy E, 
 		Gradient G, 
 		Hessian H
@@ -67,7 +67,7 @@ public class HyperIdealCirclePatternFunctional <
 				int ie = var.getVarIndex(e);
 				double a = var.isVariable(e) ? 0.0 : x.get(ie);
 				double θ = theta.getTheta(e);
-				E.add(-θ*a);
+				E.add(-θ * a);
 			}
 			for (V v : hds.getVertices()) {
 				int iv = var.getVarIndex(v);
@@ -118,12 +118,38 @@ public class HyperIdealCirclePatternFunctional <
 		double l12 = lij(b1, b2, a12, v1b, v2b);
 		double l23 = lij(b2, b3, a23, v2b, v3b);
 		double l31 = lij(b3, b1, a31, v3b, v1b);
-		double β1 = ζ(l23, l12, l31);
-		double β2 = ζ(l31, l12, l23);
-		double β3 = ζ(l12, l23, l31);
-		double α12 = αij(a12, a23, a31, b1, b2, b3, β1, β2, β3, v1b, v2b, v3b);
-		double α23 = αij(a23, a31, a12, b2, b3, b1, β2, β3, β1, v2b, v3b, v1b);
-		double α31 = αij(a31, a12, a23, b3, b1, b2, β3, β1, β2, v3b, v1b, v2b);
+		double β1, β2, β3;
+		double α12, α23, α31;
+		// check triangle inequalities and extend
+		if (l12 > l23 + l31) {
+			β1 = 0;
+			β2 = 0;
+			β3 = PI;
+			α12 = PI;
+			α23 = 0;
+			α31 = 0;
+		} else if (l23 > l12 + l31) {
+			β1 = PI;
+			β2 = 0;
+			β3 = 0;
+			α12 = 0;
+			α23 = PI;
+			α31 = 0;
+		} else if (l31 > l12 + l23) {
+			β1 = 0;
+			β2 = PI;
+			β3 = 0;
+			α12 = 0;
+			α23 = 0;
+			α31 = PI;
+		} else {
+			β1 = ζ(l23, l12, l31);
+			β2 = ζ(l31, l12, l23);
+			β3 = ζ(l12, l23, l31);
+			α12 = αij(a12, a23, a31, b1, b2, b3, β1, β2, β3, v1b, v2b, v3b);
+			α23 = αij(a23, a31, a12, b2, b3, b1, β2, β3, β1, v2b, v3b, v1b);
+			α31 = αij(a31, a12, a23, b3, b1, b2, β3, β1, β2, v3b, v1b, v2b);
+		}
 		alpha.setAlpha(e12, α12);
 		alpha.setAlpha(e23, α23);
 		alpha.setAlpha(e31, α31);
