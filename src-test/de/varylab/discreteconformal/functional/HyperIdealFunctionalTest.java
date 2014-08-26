@@ -38,13 +38,33 @@ public class HyperIdealFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 		alpha = new CAlpha();
 	private CBeta
 		beta = new CBeta();
-	private HyperIdealCirclePatternFunctional<CoVertex, CoEdge, CoFace>
-		functional = new HyperIdealCirclePatternFunctional<>(variable, theta, alpha, beta);
+	private HyperIdealFunctional<CoVertex, CoEdge, CoFace>
+		functional = new HyperIdealFunctional<>(variable, theta, alpha, beta);
 	
 	
 	@Override
 	public void init() {
 		LoggingUtility.initLogging();
+		CoHDS hds = createLawsonsSurface();
+		
+		int n = functional.getDimension(hds);
+		Random rnd = new Random(); 
+		rnd.setSeed(1);
+		Vector x = new DenseVector(n);
+		for (Integer i = 0; i < x.size(); i++) {
+			x.set(i, 0.5 + abs(rnd.nextDouble()));
+		}
+		MyDomainValue u = new MyDomainValue(x);
+		
+		setFunctional(functional);
+		setHDS(hds);
+		setXGradient(u);
+		setEps(eps);
+		setError(error);
+	}
+
+
+	static CoHDS createLawsonsSurface() {
 		CoHDS hds = new CoHDS(); 
 		CoVertex A = hds.addNewVertex();
 		CoVertex B = hds.addNewVertex();
@@ -141,21 +161,7 @@ public class HyperIdealFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 				e.getOppositeEdge().setTheta(PI/2);
 			}
 		}
-		
-		int n = functional.getDimension(hds);
-		Random rnd = new Random(); 
-		rnd.setSeed(1);
-		Vector x = new DenseVector(n);
-		for (Integer i = 0; i < x.size(); i++) {
-			x.set(i, 0.5 + abs(rnd.nextDouble()));
-		}
-		MyDomainValue u = new MyDomainValue(x);
-		
-		setFunctional(functional);
-		setHDS(hds);
-		setXGradient(u);
-		setEps(eps);
-		setError(error);
+		return hds;
 	}
 	
 	

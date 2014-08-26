@@ -24,14 +24,14 @@ import de.varylab.discreteconformal.functional.FunctionalAdapters.Beta;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Theta;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
 
-public class HyperIdealCirclePatternFunctional <
+public class HyperIdealFunctional <
 	V extends Vertex<V, E, F>,
 	E extends Edge<V, E, F>,
 	F extends Face<V, E, F>
 > implements Functional<V, E, F> {
 	
 	private Logger
-		log = Logger.getLogger(HyperIdealCirclePatternFunctional.class.getName());
+		log = Logger.getLogger(HyperIdealFunctional.class.getName());
 	private Variable<V, E> 
 		var = null;
 	private Theta<V, E>
@@ -41,7 +41,7 @@ public class HyperIdealCirclePatternFunctional <
 	private Beta<E>
 		beta = null;
 
-	public HyperIdealCirclePatternFunctional(Variable<V, E> var, Theta<V, E> theta, Alpha<E> alpha, Beta<E> beta) {
+	public HyperIdealFunctional(Variable<V, E> var, Theta<V, E> theta, Alpha<E> alpha, Beta<E> beta) {
 		this.var = var;
 		this.theta = theta;
 		this.alpha = alpha;
@@ -120,6 +120,9 @@ public class HyperIdealCirclePatternFunctional <
 		double b1 = v1b ? x.get(var.getVarIndex(v1)) : 0.0;
 		double b2 = v2b ? x.get(var.getVarIndex(v2)) : 0.0;
 		double b3 = v3b ? x.get(var.getVarIndex(v3)) : 0.0;
+		if (a12 < 0 || a23 < 0 || a31 < 0 || b1 < 0 || b2 < 0 || b3 < 0) {
+			log.warning("arguments (a,b) must not be negative");
+		}
 		double l12 = lij(b1, b2, a12, v1b, v2b);
 		double l23 = lij(b2, b3, a23, v2b, v3b);
 		double l31 = lij(b3, b1, a31, v3b, v1b);
@@ -133,7 +136,7 @@ public class HyperIdealCirclePatternFunctional <
 			α12 = PI;
 			α23 = 0;
 			α31 = 0;
-			log.info("triangle inequality violated, extending linearly");
+			log.info("triangle inequality violated at face " + f);
 		} else if (l23 > l12 + l31) {
 			β1 = PI;
 			β2 = 0;
@@ -141,7 +144,7 @@ public class HyperIdealCirclePatternFunctional <
 			α12 = 0;
 			α23 = PI;
 			α31 = 0;
-			log.info("triangle inequality violated, extending linearly");
+			log.info("triangle inequality violated at face " + f);
 		} else if (l31 > l12 + l23) {
 			β1 = 0;
 			β2 = PI;
@@ -149,7 +152,7 @@ public class HyperIdealCirclePatternFunctional <
 			α12 = 0;
 			α23 = 0;
 			α31 = PI;
-			log.info("triangle inequality violated, extending linearly");
+			log.info("triangle inequality violated at face " + f);
 		} else {
 			β1 = ζ(l12, l31, l23);
 			β2 = ζ(l23, l12, l31);
