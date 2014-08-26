@@ -1,12 +1,16 @@
 package de.varylab.discreteconformal.functional;
 
 import static java.lang.Math.PI;
+import static java.lang.Math.abs;
 
 import java.util.List;
 import java.util.Random;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
+
+import org.junit.Assert;
+
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.functional.FunctionalTest;
@@ -15,6 +19,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.logging.LoggingUtility;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CBeta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
@@ -39,6 +44,7 @@ public class HyperIdealFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 	
 	@Override
 	public void init() {
+		LoggingUtility.initLogging();
 		CoHDS hds = new CoHDS(); 
 		CoVertex A = hds.addNewVertex();
 		CoVertex B = hds.addNewVertex();
@@ -113,9 +119,11 @@ public class HyperIdealFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 		hds.getEdge(23).linkNextEdge(hds.getEdge(20));
 		
 		HalfEdgeUtils.fillAllHoles(hds);
-		HalfEdgeUtils.isValidSurface(hds, true);
-		System.out.println("genus: " + HalfEdgeUtils.getGenus(hds));
 		List<CoEdge> auxEdges = Triangulator.triangulateSingleSource(hds);
+		
+		Assert.assertTrue(HalfEdgeUtils.isValidSurface(hds, true));
+		Assert.assertEquals(2, HalfEdgeUtils.getGenus(hds));
+		
 		
 		int index = 0;
 		for (CoVertex v : hds.getVertices()) {
@@ -134,17 +142,12 @@ public class HyperIdealFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 			}
 		}
 		
-//		AdapterSet aSet = new ConformalAdapterSet();
-//		
-//		ZeroU zeroU = new ZeroU();
-		
 		int n = functional.getDimension(hds);
 		Random rnd = new Random(); 
 		rnd.setSeed(1);
-		
 		Vector x = new DenseVector(n);
 		for (Integer i = 0; i < x.size(); i++) {
-			x.set(i, Math.abs(rnd.nextDouble()));
+			x.set(i, 0.5 + abs(rnd.nextDouble()));
 		}
 		MyDomainValue u = new MyDomainValue(x);
 		

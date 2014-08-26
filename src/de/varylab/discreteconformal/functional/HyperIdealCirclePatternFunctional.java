@@ -6,6 +6,9 @@ import static de.varylab.discreteconformal.functional.HyperIdealUtility.ζ_13;
 import static de.varylab.discreteconformal.functional.HyperIdealUtility.ζ_14;
 import static de.varylab.discreteconformal.functional.HyperIdealUtility.ζ_15;
 import static java.lang.Math.PI;
+
+import java.util.logging.Logger;
+
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -27,6 +30,8 @@ public class HyperIdealCirclePatternFunctional <
 	F extends Face<V, E, F>
 > implements Functional<V, E, F> {
 	
+	private Logger
+		log = Logger.getLogger(HyperIdealCirclePatternFunctional.class.getName());
 	private Variable<V, E> 
 		var = null;
 	private Theta<V, E>
@@ -65,13 +70,13 @@ public class HyperIdealCirclePatternFunctional <
 			}
 			for (E e : hds.getPositiveEdges()) {
 				int ie = var.getVarIndex(e);
-				double a = var.isVariable(e) ? 0.0 : x.get(ie);
+				double a = var.isVariable(e) ? x.get(ie) : 0.0;
 				double θ = theta.getTheta(e);
 				E.add(-θ * a);
 			}
 			for (V v : hds.getVertices()) {
 				int iv = var.getVarIndex(v);
-				double b = var.isVariable(v) ? 0.0 : x.get(iv);
+				double b = var.isVariable(v) ? x.get(iv) : 0.0;
 				double Θ = theta.getTheta(v);
 				E.add(-Θ * b);
 			}
@@ -82,7 +87,7 @@ public class HyperIdealCirclePatternFunctional <
 				if (!var.isVariable(v)) continue;
 				int index = var.getVarIndex(v);
 				for (E e : HalfEdgeUtils.incomingEdges(v)) {
-					G.add(index, beta.getBeta(e.getNextEdge()));
+					G.add(index, beta.getBeta(e.getPreviousEdge()));
 				}
 				G.add(index, -theta.getTheta(v));
 			}
@@ -109,12 +114,12 @@ public class HyperIdealCirclePatternFunctional <
 		boolean v1b = var.isVariable(v1);
 		boolean v2b = var.isVariable(v2);
 		boolean v3b = var.isVariable(v3);
-		double a12 = e12b ? 0.0 : x.get(var.getVarIndex(e12));
-		double a23 = e23b ? 0.0 : x.get(var.getVarIndex(e23));
-		double a31 = e31b ? 0.0 : x.get(var.getVarIndex(e31));
-		double b1 = v1b ? 0.0 : x.get(var.getVarIndex(v1));
-		double b2 = v2b ? 0.0 : x.get(var.getVarIndex(v2));
-		double b3 = v3b ? 0.0 : x.get(var.getVarIndex(v3));
+		double a12 = e12b ? x.get(var.getVarIndex(e12)) : 0.0;
+		double a23 = e23b ? x.get(var.getVarIndex(e23)) : 0.0;
+		double a31 = e31b ? x.get(var.getVarIndex(e31)) : 0.0;
+		double b1 = v1b ? x.get(var.getVarIndex(v1)) : 0.0;
+		double b2 = v2b ? x.get(var.getVarIndex(v2)) : 0.0;
+		double b3 = v3b ? x.get(var.getVarIndex(v3)) : 0.0;
 		double l12 = lij(b1, b2, a12, v1b, v2b);
 		double l23 = lij(b2, b3, a23, v2b, v3b);
 		double l31 = lij(b3, b1, a31, v3b, v1b);
@@ -128,6 +133,7 @@ public class HyperIdealCirclePatternFunctional <
 			α12 = PI;
 			α23 = 0;
 			α31 = 0;
+			log.info("triangle inequality violated, extending linearly");
 		} else if (l23 > l12 + l31) {
 			β1 = PI;
 			β2 = 0;
@@ -135,6 +141,7 @@ public class HyperIdealCirclePatternFunctional <
 			α12 = 0;
 			α23 = PI;
 			α31 = 0;
+			log.info("triangle inequality violated, extending linearly");
 		} else if (l31 > l12 + l23) {
 			β1 = 0;
 			β2 = PI;
@@ -142,10 +149,11 @@ public class HyperIdealCirclePatternFunctional <
 			α12 = 0;
 			α23 = 0;
 			α31 = PI;
+			log.info("triangle inequality violated, extending linearly");
 		} else {
-			β1 = ζ(l23, l12, l31);
-			β2 = ζ(l31, l12, l23);
-			β3 = ζ(l12, l23, l31);
+			β1 = ζ(l12, l31, l23);
+			β2 = ζ(l23, l12, l31);
+			β3 = ζ(l31, l23, l12);
 			α12 = αij(a12, a23, a31, b1, b2, b3, β1, β2, β3, v1b, v2b, v3b);
 			α23 = αij(a23, a31, a12, b2, b3, b1, β2, β3, β1, v2b, v3b, v1b);
 			α31 = αij(a31, a12, a23, b3, b1, b2, β3, β1, β2, v3b, v1b, v2b);
@@ -165,12 +173,12 @@ public class HyperIdealCirclePatternFunctional <
 		V v1 = e12.getStartVertex();
 		V v2 = e23.getStartVertex();
 		V v3 = e31.getStartVertex();
-		double a12 = var.isVariable(e12) ? 0.0 : x.get(var.getVarIndex(e12));
-		double a23 = var.isVariable(e23) ? 0.0 : x.get(var.getVarIndex(e23));
-		double a31 = var.isVariable(e31) ? 0.0 : x.get(var.getVarIndex(e31));
-		double b1 = var.isVariable(v1) ? 0.0 : x.get(var.getVarIndex(v1));
-		double b2 = var.isVariable(v2) ? 0.0 : x.get(var.getVarIndex(v2));
-		double b3 = var.isVariable(v3) ? 0.0 : x.get(var.getVarIndex(v3));
+		double a12 = var.isVariable(e12) ? x.get(var.getVarIndex(e12)) : 0.0;
+		double a23 = var.isVariable(e23) ? x.get(var.getVarIndex(e23)) : 0.0;
+		double a31 = var.isVariable(e31) ? x.get(var.getVarIndex(e31)) : 0.0;
+		double b1 = var.isVariable(v1) ? x.get(var.getVarIndex(v1)) : 0.0;
+		double b2 = var.isVariable(v2) ? x.get(var.getVarIndex(v2)) : 0.0;
+		double b3 = var.isVariable(v3) ? x.get(var.getVarIndex(v3)) : 0.0;
 		double β1 = beta.getBeta(e23);
 		double β2 = beta.getBeta(e31);
 		double β3 = beta.getBeta(e12);
@@ -179,26 +187,26 @@ public class HyperIdealCirclePatternFunctional <
 		double α31 = alpha.getAlpha(e31);
 		double aa = a12*α12 + a23*α23 + a31*α31;
 		double bb = b1*β1 + b2*β2 + b3*β3;
-		double V = calculateTetrahedronVolume(β1, β2, β3, α12, α23, α31);
-		return aa + bb + V;
+		double V = calculateTetrahedronVolume(β1, β2, β3, α23, α31, α12);
+		return aa + bb + 2*V;
 	}
 	
-	public double αij(
+	private double αij(
 		double aij, double ajk, double aki, 
 		double bi, double bj, double bk, 
 		double βi, double βj, double βk, 
 		boolean vib, boolean vjb, boolean vkb
 	) {
 		if (vib) { // case 1
-			double σi = σi(aij, ajk, aki, vib, vjb);
-			double σij = σij(bi, bj, aij, vjb);
-			double σik = σij(bi, bk, aki, vkb);
+			double σi = σi(aij, aki, ajk, vjb, vkb);
+			double σij = σij(aij, bi, bj, vjb);
+			double σik = σij(aki, bi, bk, vkb);
 			return ζ(σi, σij, σik);
 		} else if (vjb) {
-			double σj = σi(ajk, aki, aij, vjb, vkb);
-			double σjk = σij(bj, bk, ajk, vkb);
-			double σji = σij(bj, bi, aij, vib);
-			return ζ(σj, σjk, σji);
+			double σj = σi(ajk, aij, aki, vkb, vib);
+			double σjk = σij(ajk, bj, bk, vkb);
+			double σji = σij(aij, bj, bi, vib);
+			return ζ(σj, σji, σjk);
 		} else if (vkb) {
 			double αjk = αij(ajk, aki, aij, bj, bk, bi, βj, βk, βi, vjb, vkb, vib);
 			return PI - αjk - βj;
@@ -208,7 +216,7 @@ public class HyperIdealCirclePatternFunctional <
 	}
 	
 	private double σi(
-		double aij, double ajk, double aki, 
+		double aij, double aki, double ajk, 
 		boolean vjb, boolean vkb
 	) {
 		if (vjb && vkb) {
@@ -222,7 +230,7 @@ public class HyperIdealCirclePatternFunctional <
 		}
 	}
 	
-	private double σij(double bi, double bj, double aij, boolean vjb) {
+	private double σij(double aij, double bi, double bj, boolean vjb) {
 		if (vjb) {
 			return ζ_13(aij, bi, bj);
 		} else {
