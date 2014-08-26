@@ -31,13 +31,12 @@ public class HyperIdealConvergenceTest {
 	public static void initPetsc() {
 		NativePathUtility.set("native");
 		Tao.Initialize();
+		LoggingUtility.initLogging();
 	}
 	
 	@Test
 	public void testHyperIdealConvergence() {
-		LoggingUtility.initLogging();
 		CoHDS hds = createLawsonsSurface();
-		
 		CHyperIdealApplication app = new CHyperIdealApplication(hds);
 		int n = app.getDomainDimension();
 		Random rnd = new Random(); 
@@ -68,6 +67,5 @@ public class HyperIdealConvergenceTest {
 		u.restoreArray();
 		log.info("solution: " + u.toString());
 	}
-	
 	
 }

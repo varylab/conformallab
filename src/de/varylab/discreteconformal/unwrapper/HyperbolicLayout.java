@@ -111,19 +111,12 @@ public class HyperbolicLayout {
 		return root;
 	}
 	
-	/** 
-	 * Do flat layout for a HDS and a metric vector u
-	 * @param hds mesh
-	 * @param u new metric
-	 * @param angleMapParam may be null
-	 */
 	public static CoVertex doLayout(CoHDS hds, CoVertex root, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector u) {
-//		System.out.println("Layout --------------------");
-//		for (CoVertex v : hds.getVertices()) {
-//			System.out.println("sum " + v.getIndex() + ": " + getAngleSum(v));
-//		}
-		final Map<CoEdge, Double> lMap = getLengthMap(hds, fun, u);
-		
+		Map<CoEdge, Double> lMap = getLengthMap(hds, fun, u);
+		return doLayout(hds, root, lMap);
+	}
+	
+	public static CoVertex doLayout(CoHDS hds, CoVertex root, Map<CoEdge, Double> lMap) {
 		final Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
 		final Queue<CoVertex> Qv = new LinkedList<CoVertex>();
 		final Queue<CoEdge> Qe = new LinkedList<CoEdge>();
@@ -191,6 +184,8 @@ public class HyperbolicLayout {
 						visited.add(cVertex);
 						Qv.offer(cVertex);
 						Qe.offer(e);
+					} else {
+						log.warning("skipped layout of vertex " + cVertex);
 					}
 				}
 				e = e.getOppositeEdge().getNextEdge();
@@ -198,7 +193,7 @@ public class HyperbolicLayout {
 		}
 		
 		if (visited.size() != hds.numVertices()) {
-			log.warning("only " + visited.size() + " of " + hds.numVertices() + " vertices habe been processed");
+			log.warning("only " + visited.size() + " of " + hds.numVertices() + " vertices have been layed out");
 		}
 		return v1;
 	}

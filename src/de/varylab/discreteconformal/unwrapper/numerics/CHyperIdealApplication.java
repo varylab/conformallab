@@ -41,14 +41,19 @@ public class CHyperIdealApplication extends TaoApplication implements TaoAppAddC
 		log.info("eval@" + x);
 		TaoDomain u = new TaoDomain(x);
 		SimpleEnergy E = new SimpleEnergy();
-		TaoGradient G = new TaoGradient(g);
+		TaoGradient G = g != null ? new TaoGradient(g) : null;
 		functional.evaluate(hds, u, E, G, null);
-		g.assemble();
+		if (g != null) g.assemble();
 		return E.get();
 	}
 	
 	public int getDomainDimension() {
 		return functional.getDimension(hds);
+	}
+	
+	public double getEdgeLength(CoEdge e, Vec x) {
+		TaoDomain u = new TaoDomain(x);
+		return functional.getEdgeLength(e, u);
 	}
 
 }

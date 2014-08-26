@@ -10,6 +10,7 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
@@ -41,12 +42,14 @@ public class HyperIdealFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 	private HyperIdealFunctional<CoVertex, CoEdge, CoFace>
 		functional = new HyperIdealFunctional<>(variable, theta, alpha, beta);
 	
+	@BeforeClass
+	public static void beforeClass() {
+		LoggingUtility.initLogging();
+	}
 	
 	@Override
 	public void init() {
-		LoggingUtility.initLogging();
 		CoHDS hds = createLawsonsSurface();
-		
 		int n = functional.getDimension(hds);
 		Random rnd = new Random(); 
 		rnd.setSeed(1);
@@ -55,7 +58,6 @@ public class HyperIdealFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 			x.set(i, 0.5 + abs(rnd.nextDouble()));
 		}
 		MyDomainValue u = new MyDomainValue(x);
-		
 		setFunctional(functional);
 		setHDS(hds);
 		setXGradient(u);

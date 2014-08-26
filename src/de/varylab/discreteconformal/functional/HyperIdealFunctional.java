@@ -284,4 +284,16 @@ public class HyperIdealFunctional <
 		return null;
 	}
 
+	public double getEdgeLength(E e, DomainValue x) {
+		V vs = e.getStartVertex();
+		V vt = e.getTargetVertex();
+		boolean eb = var.isVariable(e);
+		boolean vsb = var.isVariable(vs);
+		boolean vtb = var.isVariable(vt);
+		double ast = eb ? x.get(var.getVarIndex(e)) : 0.0;
+		double bs = vsb ? x.get(var.getVarIndex(vs)) : 0.0;
+		double bt = vtb ? x.get(var.getVarIndex(vt)) : 0.0;
+		return lij(bs, bt, ast, vsb, vtb);
+	}
+
 }
