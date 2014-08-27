@@ -200,7 +200,7 @@ public class HyperbolicLayout {
 	
 	
 	
-	private static double[] layoutTriangle(double[] A, double[] B, double alpha, double d, double dP) {
+	static double[] layoutTriangle(double[] A, double[] B, double alpha, double d, double dP) {
 		// calculation is in RP2
 		// project to RP2 
 		double[] A3 = {A[0], A[1], A[3]};
@@ -215,7 +215,7 @@ public class HyperbolicLayout {
 		double[] AtPerp = Rn.crossProduct(null, AHat, BHat);
 		normalize(AtPerp);
 		double[] Ct = Rn.linearCombination(null, cos(alpha), At, sin(alpha), AtPerp);
-//		normalize(Ct);
+		normalize(Ct);
 		double[] C1 = Rn.linearCombination(null, cosh(d), B3, sinh(d), Ct);
 		normalize(C1);
 		double[] C2 = Rn.linearCombination(null, cosh(d), B3, -sinh(d), Ct);

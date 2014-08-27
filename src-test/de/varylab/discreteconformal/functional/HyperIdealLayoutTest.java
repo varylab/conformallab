@@ -78,7 +78,7 @@ public class HyperIdealLayoutTest {
 		cutEdges.add(hds.getEdge(23));
 		
 		
-		CoVertex root = hds.getVertex(1);
+		CoVertex root = hds.getVertex(3);
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
 		CuttingUtility.cutAtEdges(cutInfo, cutEdges);
 		cutInfo.cutRoot = root;
