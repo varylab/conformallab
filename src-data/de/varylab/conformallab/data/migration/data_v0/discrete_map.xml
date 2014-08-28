@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<DiscreteMap xmlns="http://www.varylab.com/conformallab/types" name="Lawson Hyper-Ideal Uniformization">
+    <Domain name="Lawson Hyper-Ideal Uniformization_domain">
+        <EmbeddedVertex x="4.242640781681847" y="2.4494897793612096" z="0.0" w="5.000000098158497" index="0"/>
+        <EmbeddedVertex x="2.828427182047673" y="0.0" z="0.0" w="3.000000054024356" index="1"/>
+        <EmbeddedVertex x="1.4142136066276134" y="2.449489783398876" z="0.0" w="3.0000000540243583" index="2"/>
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="3"/>
+        <EmbeddedVertex x="4.242640802662141" y="-2.4494897833988625" z="0.0" w="5.000000117938905" index="4"/>
+        <EmbeddedVertex x="1.4142136136210506" y="-2.449489779361212" z="0.0" w="3.0000000540243574" index="5"/>
+        <EmbeddedVertex x="-1.4142135528228452" y="-2.4494898144630666" z="0.0" w="3.000000054024353" index="6"/>
+        <EmbeddedVertex x="6.079820824567129E-8" y="-4.898979585748945" z="0.0" w="5.00000009815849" index="7"/>
+        <EmbeddedVertex x="2.828427364442248" y="-14.696938811299724" z="0.0" w="15.00000039263379" index="8"/>
+        <EmbeddedVertex x="4.242640924258685" y="-12.24744903317616" z="0.0" w="13.00000037817085" index="9"/>
+        <EmbeddedVertex x="1.4142139714168973" y="-26.94438807407736" z="0.0" w="27.00000092302652" index="10"/>
+        <EmbeddedVertex x="4.242641268067098" y="-36.74234723094517" z="0.0" w="37.00000114822769" index="11"/>
+        <EmbeddedVertex x="14.142137282214447" y="-97.9795930661273" z="0.0" w="99.00000355713578" index="12"/>
+        <EmbeddedVertex x="12.727923406582995" y="-75.93418483235561" z="0.0" w="77.00000298959857" index="13"/>
+        <Identification>
+            <Vertex>0</Vertex>
+            <Vertex>4</Vertex>
+            <Vertex>7</Vertex>
+            <Vertex>13</Vertex>
+        </Identification>
+        <Identification>
+            <Vertex>2</Vertex>
+            <Vertex>5</Vertex>
+            <Vertex>10</Vertex>
+            <Vertex>12</Vertex>
+        </Identification>
+        <Identification>
+            <Vertex>1</Vertex>
+            <Vertex>6</Vertex>
+            <Vertex>8</Vertex>
+        </Identification>
+        <Identification>
+            <Vertex>3</Vertex>
+            <Vertex>9</Vertex>
+            <Vertex>11</Vertex>
+        </Identification>
+        <EmbeddedTriangle vertex1="3" vertex2="0" vertex3="1"/>
+        <EmbeddedTriangle vertex1="5" vertex2="1" vertex3="4"/>
+        <EmbeddedTriangle vertex1="7" vertex2="3" vertex3="5"/>
+        <EmbeddedTriangle vertex1="8" vertex2="5" vertex3="9"/>
+        <EmbeddedTriangle vertex1="11" vertex2="7" vertex3="8"/>
+        <EmbeddedTriangle vertex1="12" vertex2="8" vertex3="13"/>
+        <EmbeddedTriangle vertex1="0" vertex2="3" vertex3="2"/>
+        <EmbeddedTriangle vertex1="1" vertex2="5" vertex3="3"/>
+        <EmbeddedTriangle vertex1="3" vertex2="7" vertex3="6"/>
+        <EmbeddedTriangle vertex1="5" vertex2="8" vertex3="7"/>
+        <EmbeddedTriangle vertex1="7" vertex2="11" vertex3="10"/>
+        <EmbeddedTriangle vertex1="8" vertex2="12" vertex3="11"/>
+    </Domain>
+    <Image name="Lawson Hyper-Ideal Uniformization_image">
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="0"/>
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="1"/>
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="2"/>
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="3"/>
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="4"/>
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="5"/>
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="6"/>
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="7"/>
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="8"/>
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="9"/>
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="10"/>
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="11"/>
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="12"/>
+        <EmbeddedVertex x="0.0" y="0.0" z="0.0" w="1.0" index="13"/>
+        <Identification>
+            <Vertex>0</Vertex>
+            <Vertex>4</Vertex>
+            <Vertex>7</Vertex>
+            <Vertex>13</Vertex>
+        </Identification>
+        <Identification>
+            <Vertex>2</Vertex>
+            <Vertex>5</Vertex>
+            <Vertex>10</Vertex>
+            <Vertex>12</Vertex>
+        </Identification>
+        <Identification>
+            <Vertex>1</Vertex>
+            <Vertex>6</Vertex>
+            <Vertex>8</Vertex>
+        </Identification>
+        <Identification>
+            <Vertex>3</Vertex>
+            <Vertex>9</Vertex>
+            <Vertex>11</Vertex>
+        </Identification>
+        <EmbeddedTriangle vertex1="3" vertex2="0" vertex3="1"/>
+        <EmbeddedTriangle vertex1="5" vertex2="1" vertex3="4"/>
+        <EmbeddedTriangle vertex1="7" vertex2="3" vertex3="5"/>
+        <EmbeddedTriangle vertex1="8" vertex2="5" vertex3="9"/>
+        <EmbeddedTriangle vertex1="11" vertex2="7" vertex3="8"/>
+        <EmbeddedTriangle vertex1="12" vertex2="8" vertex3="13"/>
+        <EmbeddedTriangle vertex1="0" vertex2="3" vertex3="2"/>
+        <EmbeddedTriangle vertex1="1" vertex2="5" vertex3="3"/>
+        <EmbeddedTriangle vertex1="3" vertex2="7" vertex3="6"/>
+        <EmbeddedTriangle vertex1="5" vertex2="8" vertex3="7"/>
+        <EmbeddedTriangle vertex1="7" vertex2="11" vertex3="10"/>
+        <EmbeddedTriangle vertex1="8" vertex2="12" vertex3="11"/>
+    </Image>
+</DiscreteMap>

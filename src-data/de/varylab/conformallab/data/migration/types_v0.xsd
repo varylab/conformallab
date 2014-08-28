@@ -20,7 +20,7 @@
 
 	<xs:complexType name="ConformalData">
 		<xs:attribute name="name" type="xs:string" use="optional"/>
-		<xs:attribute name="version" type="xs:int" use="required"/>
+		<xs:attribute name="version" type="xs:int" use="prohibited"/>
 	</xs:complexType>
 	<xs:complexType name="ConformalDataList">
 		<xs:sequence>
@@ -33,7 +33,7 @@
 				<xs:element name="DiscreteMap" type="types:DiscreteMap"/>
 			</xs:choice>
 		</xs:sequence>
-		<xs:attribute name="version" type="xs:int" use="required"/>
+		<xs:attribute name="version" type="xs:int" use="prohibited"/>
 	</xs:complexType>
 	
 	

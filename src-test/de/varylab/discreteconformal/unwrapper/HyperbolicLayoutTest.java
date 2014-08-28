@@ -1,11 +1,7 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import static java.lang.Math.cosh;
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
