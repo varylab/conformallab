@@ -66,7 +66,7 @@ public class HyperIdealFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 	}
 
 
-	static CoHDS createLawsonsSurface() {
+	public static CoHDS createLawsonsSurface() {
 		CoHDS hds = new CoHDS(); 
 		CoVertex A = hds.addNewVertex();
 		CoVertex B = hds.addNewVertex();

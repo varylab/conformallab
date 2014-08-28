@@ -722,7 +722,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 	}
 	
 	protected void updateUniformizationDirect(TargetGeometry target) {
-		if (surface == null) return;
 		int signature = getActiveSignature();
 		AdapterSet aSet = hif.getActiveAdapters();
 		int maxGroupElements = coverElementsModel.getNumber().intValue();

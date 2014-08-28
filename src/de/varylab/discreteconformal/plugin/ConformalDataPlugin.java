@@ -451,7 +451,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			DiscreteEmbedding image = map.getImage();
 			DiscreteEmbedding domain = map.getDomain();
 			int genus = DataUtility.calculateGenus(domain);
-			System.out.println("loading discreet map of a genus " + genus + " surface");
+			System.out.println("loading discrete map of a genus " + genus + " surface");
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
 			CoHDS hds = DataUtility.toHDS(image, cutInfo);
 			for (CoVertex v : hds.getVertices()) {

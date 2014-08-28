@@ -35,6 +35,7 @@ import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.ConformalVisualizationPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
+import de.varylab.discreteconformal.plugin.HyperIdealPlugin;
 import de.varylab.discreteconformal.plugin.HyperellipticCurveGenerator;
 import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
 import de.varylab.discreteconformal.plugin.KoebePolyhedronPlugin;
@@ -158,6 +159,7 @@ public class ConformalLab implements Runnable {
 				v.registerPlugins(createConformalPlugins());
 				v.registerPlugins(HalfedgePluginFactory.createPlugins());
 				v.registerPlugin(new HyperellipticCurvePlugin());
+				v.registerPlugin(HyperIdealPlugin.class);
 			}
 		};
 		
