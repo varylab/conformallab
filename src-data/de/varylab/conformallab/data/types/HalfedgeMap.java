@@ -15,17 +15,17 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse für DiscreteMap complex type.
+ * <p>Java-Klasse für HalfedgeMap complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
  * <pre>
- * &lt;complexType name="DiscreteMap">
+ * &lt;complexType name="HalfedgeMap">
  *   &lt;complexContent>
  *     &lt;extension base="{http://www.varylab.com/conformallab/types}ConformalData">
  *       &lt;sequence>
- *         &lt;element name="Domain" type="{http://www.varylab.com/conformallab/types}DiscreteEmbedding"/>
- *         &lt;element name="Image" type="{http://www.varylab.com/conformallab/types}DiscreteEmbedding"/>
+ *         &lt;element name="Domain" type="{http://www.varylab.com/conformallab/types}HalfedgeEmbedding"/>
+ *         &lt;element name="Image" type="{http://www.varylab.com/conformallab/types}HalfedgeEmbedding"/>
  *       &lt;/sequence>
  *     &lt;/extension>
  *   &lt;/complexContent>
@@ -35,28 +35,28 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "DiscreteMap", propOrder = {
+@XmlType(name = "HalfedgeMap", propOrder = {
     "domain",
     "image"
 })
-public class DiscreteMap
+public class HalfedgeMap
     extends ConformalData
 {
 
     @XmlElement(name = "Domain", required = true)
-    protected DiscreteEmbedding domain;
+    protected HalfedgeEmbedding domain;
     @XmlElement(name = "Image", required = true)
-    protected DiscreteEmbedding image;
+    protected HalfedgeEmbedding image;
 
     /**
      * Ruft den Wert der domain-Eigenschaft ab.
      * 
      * @return
      *     possible object is
-     *     {@link DiscreteEmbedding }
+     *     {@link HalfedgeEmbedding }
      *     
      */
-    public DiscreteEmbedding getDomain() {
+    public HalfedgeEmbedding getDomain() {
         return domain;
     }
 
@@ -65,10 +65,10 @@ public class DiscreteMap
      * 
      * @param value
      *     allowed object is
-     *     {@link DiscreteEmbedding }
+     *     {@link HalfedgeEmbedding }
      *     
      */
-    public void setDomain(DiscreteEmbedding value) {
+    public void setDomain(HalfedgeEmbedding value) {
         this.domain = value;
     }
 
@@ -77,10 +77,10 @@ public class DiscreteMap
      * 
      * @return
      *     possible object is
-     *     {@link DiscreteEmbedding }
+     *     {@link HalfedgeEmbedding }
      *     
      */
-    public DiscreteEmbedding getImage() {
+    public HalfedgeEmbedding getImage() {
         return image;
     }
 
@@ -89,10 +89,10 @@ public class DiscreteMap
      * 
      * @param value
      *     allowed object is
-     *     {@link DiscreteEmbedding }
+     *     {@link HalfedgeEmbedding }
      *     
      */
-    public void setImage(DiscreteEmbedding value) {
+    public void setImage(HalfedgeEmbedding value) {
         this.image = value;
     }
 

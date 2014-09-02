@@ -15,12 +15,12 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse für EmbeddedVertex complex type.
+ * <p>Java-Klasse für HalfedgeVertex complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
  * <pre>
- * &lt;complexType name="EmbeddedVertex">
+ * &lt;complexType name="HalfedgeVertex">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;attribute name="x" use="required" type="{http://www.w3.org/2001/XMLSchema}double" />
@@ -36,8 +36,8 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "EmbeddedVertex")
-public class EmbeddedVertex {
+@XmlType(name = "HalfedgeVertex")
+public class HalfedgeVertex {
 
     @XmlAttribute(name = "x", required = true)
     protected double x;

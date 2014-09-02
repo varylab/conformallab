@@ -11,10 +11,12 @@ import org.junit.Test;
 
 import de.jreality.math.Matrix;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.adapter.type.Position;
 import de.varylab.conformallab.data.DataIO;
 import de.varylab.conformallab.data.DataUtility;
 import de.varylab.conformallab.data.types.DiscreteEmbedding;
 import de.varylab.conformallab.data.types.UniformizationData;
+import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -35,7 +37,8 @@ public class DataUtilityTest {
 		int genus = DataUtility.calculateGenus(de);
 		System.out.println("loading embedding of genus " + genus);
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
-		CoHDS hds = DataUtility.toHDS(de, cutInfo);
+		CoHDS hds = new CoHDS();
+		DataUtility.toHalfedge(de, new ConformalAdapterSet(), Position.class, hds, cutInfo);
 		Assert.assertEquals(2, genus);
 		Assert.assertEquals(2, HalfEdgeUtils.getGenus(hds));
 	}

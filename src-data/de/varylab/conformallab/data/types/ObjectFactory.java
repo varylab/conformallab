@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.05.30 um 12:40:20 PM CEST 
+// Generiert: 2014.09.02 um 04:53:14 PM CEST 
 //
 
 
@@ -32,10 +32,13 @@ import javax.xml.namespace.QName;
 public class ObjectFactory {
 
     private final static QName _DiscreteMetric_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteMetric");
+    private final static QName _HalfedgeSelection_QNAME = new QName("http://www.varylab.com/conformallab/types", "HalfedgeSelection");
     private final static QName _SchottkyData_QNAME = new QName("http://www.varylab.com/conformallab/types", "SchottkyData");
+    private final static QName _HalfedgeEmbedding_QNAME = new QName("http://www.varylab.com/conformallab/types", "HalfedgeEmbedding");
     private final static QName _DiscreteMap_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteMap");
     private final static QName _UniformizationData_QNAME = new QName("http://www.varylab.com/conformallab/types", "UniformizationData");
     private final static QName _ConformalDataList_QNAME = new QName("http://www.varylab.com/conformallab/types", "ConformalDataList");
+    private final static QName _HalfedgeMap_QNAME = new QName("http://www.varylab.com/conformallab/types", "HalfedgeMap");
     private final static QName _DiscreteEmbedding_QNAME = new QName("http://www.varylab.com/conformallab/types", "DiscreteEmbedding");
     private final static QName _EmbeddingSelection_QNAME = new QName("http://www.varylab.com/conformallab/types", "EmbeddingSelection");
     private final static QName _HyperEllipticAlgebraicCurve_QNAME = new QName("http://www.varylab.com/conformallab/types", "HyperEllipticAlgebraicCurve");
@@ -80,6 +83,46 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link HalfedgeSelection }
+     * 
+     */
+    public HalfedgeSelection createHalfedgeSelection() {
+        return new HalfedgeSelection();
+    }
+
+    /**
+     * Create an instance of {@link HalfedgeSelection.FaceSelection }
+     * 
+     */
+    public HalfedgeSelection.FaceSelection createHalfedgeSelectionFaceSelection() {
+        return new HalfedgeSelection.FaceSelection();
+    }
+
+    /**
+     * Create an instance of {@link HalfedgeSelection.EdgeSelection }
+     * 
+     */
+    public HalfedgeSelection.EdgeSelection createHalfedgeSelectionEdgeSelection() {
+        return new HalfedgeSelection.EdgeSelection();
+    }
+
+    /**
+     * Create an instance of {@link HalfedgeSelection.VertexSelection }
+     * 
+     */
+    public HalfedgeSelection.VertexSelection createHalfedgeSelectionVertexSelection() {
+        return new HalfedgeSelection.VertexSelection();
+    }
+
+    /**
+     * Create an instance of {@link HalfedgeEmbedding }
+     * 
+     */
+    public HalfedgeEmbedding createHalfedgeEmbedding() {
+        return new HalfedgeEmbedding();
+    }
+
+    /**
      * Create an instance of {@link SchottkyData }
      * 
      */
@@ -120,6 +163,14 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link HalfedgeMap }
+     * 
+     */
+    public HalfedgeMap createHalfedgeMap() {
+        return new HalfedgeMap();
+    }
+
+    /**
      * Create an instance of {@link ConformalDataList }
      * 
      */
@@ -133,14 +184,6 @@ public class ObjectFactory {
      */
     public HyperEllipticAlgebraicCurve createHyperEllipticAlgebraicCurve() {
         return new HyperEllipticAlgebraicCurve();
-    }
-
-    /**
-     * Create an instance of {@link VertexIdentification }
-     * 
-     */
-    public VertexIdentification createVertexIdentification() {
-        return new VertexIdentification();
     }
 
     /**
@@ -168,27 +211,11 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link IsometryPSL2R }
-     * 
-     */
-    public IsometryPSL2R createIsometryPSL2R() {
-        return new IsometryPSL2R();
-    }
-
-    /**
      * Create an instance of {@link EmbeddedVertex }
      * 
      */
     public EmbeddedVertex createEmbeddedVertex() {
         return new EmbeddedVertex();
-    }
-
-    /**
-     * Create an instance of {@link FundamentalEdge }
-     * 
-     */
-    public FundamentalEdge createFundamentalEdge() {
-        return new FundamentalEdge();
     }
 
     /**
@@ -208,14 +235,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link ConformalData }
-     * 
-     */
-    public ConformalData createConformalData() {
-        return new ConformalData();
-    }
-
-    /**
      * Create an instance of {@link MetricTriangle }
      * 
      */
@@ -232,11 +251,11 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link FundamentalVertex }
+     * Create an instance of {@link EdgeIdentification }
      * 
      */
-    public FundamentalVertex createFundamentalVertex() {
-        return new FundamentalVertex();
+    public EdgeIdentification createEdgeIdentification() {
+        return new EdgeIdentification();
     }
 
     /**
@@ -245,6 +264,70 @@ public class ObjectFactory {
      */
     public FundamentalPolygon createFundamentalPolygon() {
         return new FundamentalPolygon();
+    }
+
+    /**
+     * Create an instance of {@link VertexIdentification }
+     * 
+     */
+    public VertexIdentification createVertexIdentification() {
+        return new VertexIdentification();
+    }
+
+    /**
+     * Create an instance of {@link HalfedgeFace }
+     * 
+     */
+    public HalfedgeFace createHalfedgeFace() {
+        return new HalfedgeFace();
+    }
+
+    /**
+     * Create an instance of {@link HalfedgeVertex }
+     * 
+     */
+    public HalfedgeVertex createHalfedgeVertex() {
+        return new HalfedgeVertex();
+    }
+
+    /**
+     * Create an instance of {@link HalfedgeEdge }
+     * 
+     */
+    public HalfedgeEdge createHalfedgeEdge() {
+        return new HalfedgeEdge();
+    }
+
+    /**
+     * Create an instance of {@link IsometryPSL2R }
+     * 
+     */
+    public IsometryPSL2R createIsometryPSL2R() {
+        return new IsometryPSL2R();
+    }
+
+    /**
+     * Create an instance of {@link FundamentalEdge }
+     * 
+     */
+    public FundamentalEdge createFundamentalEdge() {
+        return new FundamentalEdge();
+    }
+
+    /**
+     * Create an instance of {@link ConformalData }
+     * 
+     */
+    public ConformalData createConformalData() {
+        return new ConformalData();
+    }
+
+    /**
+     * Create an instance of {@link FundamentalVertex }
+     * 
+     */
+    public FundamentalVertex createFundamentalVertex() {
+        return new FundamentalVertex();
     }
 
     /**
@@ -280,6 +363,30 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link HalfedgeSelection.FaceSelection.Face }
+     * 
+     */
+    public HalfedgeSelection.FaceSelection.Face createHalfedgeSelectionFaceSelectionFace() {
+        return new HalfedgeSelection.FaceSelection.Face();
+    }
+
+    /**
+     * Create an instance of {@link HalfedgeSelection.EdgeSelection.Edge }
+     * 
+     */
+    public HalfedgeSelection.EdgeSelection.Edge createHalfedgeSelectionEdgeSelectionEdge() {
+        return new HalfedgeSelection.EdgeSelection.Edge();
+    }
+
+    /**
+     * Create an instance of {@link HalfedgeSelection.VertexSelection.Vertex }
+     * 
+     */
+    public HalfedgeSelection.VertexSelection.Vertex createHalfedgeSelectionVertexSelectionVertex() {
+        return new HalfedgeSelection.VertexSelection.Vertex();
+    }
+
+    /**
      * Create an instance of {@link JAXBElement }{@code <}{@link DiscreteMetric }{@code >}}
      * 
      */
@@ -289,12 +396,30 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link HalfedgeSelection }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "HalfedgeSelection")
+    public JAXBElement<HalfedgeSelection> createHalfedgeSelection(HalfedgeSelection value) {
+        return new JAXBElement<HalfedgeSelection>(_HalfedgeSelection_QNAME, HalfedgeSelection.class, null, value);
+    }
+
+    /**
      * Create an instance of {@link JAXBElement }{@code <}{@link SchottkyData }{@code >}}
      * 
      */
     @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "SchottkyData")
     public JAXBElement<SchottkyData> createSchottkyData(SchottkyData value) {
         return new JAXBElement<SchottkyData>(_SchottkyData_QNAME, SchottkyData.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link HalfedgeEmbedding }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "HalfedgeEmbedding")
+    public JAXBElement<HalfedgeEmbedding> createHalfedgeEmbedding(HalfedgeEmbedding value) {
+        return new JAXBElement<HalfedgeEmbedding>(_HalfedgeEmbedding_QNAME, HalfedgeEmbedding.class, null, value);
     }
 
     /**
@@ -322,6 +447,15 @@ public class ObjectFactory {
     @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "ConformalDataList")
     public JAXBElement<ConformalDataList> createConformalDataList(ConformalDataList value) {
         return new JAXBElement<ConformalDataList>(_ConformalDataList_QNAME, ConformalDataList.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link HalfedgeMap }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://www.varylab.com/conformallab/types", name = "HalfedgeMap")
+    public JAXBElement<HalfedgeMap> createHalfedgeMap(HalfedgeMap value) {
+        return new JAXBElement<HalfedgeMap>(_HalfedgeMap_QNAME, HalfedgeMap.class, null, value);
     }
 
     /**

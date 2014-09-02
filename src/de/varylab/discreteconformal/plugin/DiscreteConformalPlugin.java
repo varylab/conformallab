@@ -619,7 +619,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		activeGeometry = unwrapper.getTargetGeometry();
 		metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
 		metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
-		conformalDataPlugin.addDiscreteMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
+		conformalDataPlugin.addHalfedgeMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
 		createUniformization(surfaceUnwrapped, activeGeometry, cutInfo);
 		if (unwrapper.getBoundaryMode() == ReadIsometricAngles) {
 			extractBoundaryAngles();
@@ -788,7 +788,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			Selection selection = hif.getSelection();
 			AdapterSet aSet = hif.getAdapters();
 			conformalDataPlugin.addDiscreteMetric("Input Discrete Metric", unwrapped, aSet);
-			conformalDataPlugin.addDiscreteEmbedding("Input Discrete Position Embedding", unwrapped, selection, aSet, Position4d.class, null);
+			conformalDataPlugin.addHalfedgeEmbedding("Input Discrete Position Embedding", unwrapped, selection, aSet, Position4d.class, null);
 			if (isRescaleGeometry()) unwrapped.normalizeCoordinates();
 			UnwrapJob uw = new UnwrapJob(unwrapped, aSet);
 			uw.setTargetGeometry((TargetGeometry)targetGeometryCombo.getSelectedItem());
@@ -942,7 +942,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			}
 			hif.update();
 			createUniformization(surfaceUnwrapped, activeGeometry, cutInfo);
-			conformalDataPlugin.addDiscreteMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
+			conformalDataPlugin.addHalfedgeMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
 		}
 		if (drawTriangulationChecker == s ||
 			drawAxesChecker == s ||

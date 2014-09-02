@@ -20,10 +20,12 @@ import de.jtem.discretegroup.core.DiscreteGroup;
 import de.jtem.discretegroup.core.DiscreteGroupElement;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
+import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
+import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.jtem.halfedgetools.selection.Selection;
 import de.jtem.riemann.surface.BranchPoint;
@@ -32,6 +34,7 @@ import de.varylab.conformallab.data.types.Complex;
 import de.varylab.conformallab.data.types.DiscreteEmbedding;
 import de.varylab.conformallab.data.types.DiscreteMap;
 import de.varylab.conformallab.data.types.DiscreteMetric;
+import de.varylab.conformallab.data.types.EdgeIdentification;
 import de.varylab.conformallab.data.types.EmbeddedTriangle;
 import de.varylab.conformallab.data.types.EmbeddedVertex;
 import de.varylab.conformallab.data.types.EmbeddingSelection;
@@ -40,6 +43,12 @@ import de.varylab.conformallab.data.types.EmbeddingSelection.FaceSelection;
 import de.varylab.conformallab.data.types.EmbeddingSelection.VertexSelection;
 import de.varylab.conformallab.data.types.FundamentalEdge;
 import de.varylab.conformallab.data.types.FundamentalVertex;
+import de.varylab.conformallab.data.types.HalfedgeEdge;
+import de.varylab.conformallab.data.types.HalfedgeEmbedding;
+import de.varylab.conformallab.data.types.HalfedgeFace;
+import de.varylab.conformallab.data.types.HalfedgeMap;
+import de.varylab.conformallab.data.types.HalfedgeSelection;
+import de.varylab.conformallab.data.types.HalfedgeVertex;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.conformallab.data.types.IsometryPSL2R;
 import de.varylab.conformallab.data.types.MetricEdge;
@@ -49,7 +58,6 @@ import de.varylab.conformallab.data.types.SchottkyData;
 import de.varylab.conformallab.data.types.UniformizationData;
 import de.varylab.conformallab.data.types.UniformizingGroup;
 import de.varylab.conformallab.data.types.VertexIdentification;
-import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -68,6 +76,140 @@ public class DataUtility {
 
 	private static Logger
 		log = Logger.getLogger(DataUtility.class.getName());
+	
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> HalfedgeEmbedding toHalfedgeEmbedding(
+		String name, 
+		HDS hds, 
+		AdapterSet a, 
+		Class<? extends Annotation> type, 
+		CuttingInfo<V, E, F> identifications
+	) {
+		ObjectFactory of = new ObjectFactory();
+		HalfedgeEmbedding he = of.createHalfedgeEmbedding();
+		he.setName(name);
+		for (V v : hds.getVertices()) {
+			HalfedgeVertex hv = of.createHalfedgeVertex();
+			double[] p = a.getD(type, v); 
+			hv.setX(p[0]);
+			hv.setY(p[1]);
+			hv.setZ(p[2]);
+			hv.setW(p[3]);
+			hv.setIndex(v.getIndex());
+			he.getVertices().add(hv);
+		}
+		for (E e : hds.getEdges()) {
+			HalfedgeEdge hed = of.createHalfedgeEdge();
+			hed.setIndex(e.getIndex());
+			hed.setLeft(e.getLeftFace() == null ? -1 : e.getLeftFace().getIndex());
+			hed.setOpposite(e.getOppositeEdge().getIndex());
+			hed.setNext(e.getNextEdge().getIndex());
+			hed.setTarget(e.getTargetVertex().getIndex());
+			he.getEdges().add(hed);
+		}
+		for (F f : hds.getFaces()) {
+			HalfedgeFace hf = of.createHalfedgeFace();
+			hf.setIndex(f.getIndex());
+			he.getFaces().add(hf);
+		}
+		if (identifications != null && !identifications.vertexCopyMap.isEmpty()) {
+			Set<V> ready = new HashSet<V>();
+			for (V v : HalfEdgeUtils.boundaryVertices(hds)) {
+				if (ready.contains(v)) continue;
+				Set<V> idSet = identifications.getCopies(v);
+				VertexIdentification vi = new VertexIdentification();
+				for (V iv : idSet) {
+					vi.getVertices().add(iv.getIndex());
+					ready.add(iv);
+				}
+				he.getIdentifications().add(vi);
+			}
+			Set<E> readyEdges = new HashSet<>();
+			for (E e : HalfEdgeUtils.boundaryEdges(hds)) {
+				if (readyEdges.contains(e)) continue;
+				E eCopy = null;
+				if (identifications.edgeCutMap.containsKey(e)) {
+					eCopy = identifications.edgeCutMap.get(e);
+				} else {
+					e = e.getOppositeEdge();
+					eCopy = identifications.edgeCutMap.get(e);
+				}
+				if (eCopy == null) {
+					log.warning("illegal edge copy map, could not find copy of edge " + e);
+					continue;
+				}
+				EdgeIdentification ei = of.createEdgeIdentification();
+				ei.setEdge1(e.getIndex());
+				ei.setEdge2(eCopy.getIndex());
+				ei.setEdge3(e.getOppositeEdge().getIndex());
+				ei.setEdge4(eCopy.getOppositeEdge().getIndex());
+				he.getEdgeIdentifications().add(ei);
+				readyEdges.add(e);
+				readyEdges.add(eCopy);
+				readyEdges.add(e.getOppositeEdge());
+				readyEdges.add(eCopy.getOppositeEdge());
+			}
+		}
+		return he;
+	}
+	
+	
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void toHalfedge(
+		HalfedgeEmbedding he, 
+		AdapterSet a,
+		Class<? extends Annotation> type,
+		HDS hdsOUT,
+		CuttingInfo<V, E, F> cutInfoOUT
+	) {
+		Map<Integer, HalfedgeVertex> vMap = new HashMap<>();
+		Map<Integer, HalfedgeEdge> eMap = new HashMap<>();
+		Map<Integer, HalfedgeFace> fMap = new HashMap<>();
+		for (HalfedgeVertex v : he.getVertices()) {
+			vMap.put(v.getIndex(), v);
+		}
+		for (HalfedgeEdge e : he.getEdges()) {
+			eMap.put(e.getIndex(), e);
+		}
+		for (HalfedgeFace f : he.getFaces()) {
+			fMap.put(f.getIndex(), f);
+		}
+		hdsOUT.clear();
+		hdsOUT.addNewVertices(he.getVertices().size());
+		hdsOUT.addNewEdges(he.getEdges().size());
+		hdsOUT.addNewFaces(he.getFaces().size());
+		for (Integer i : vMap.keySet()) {
+			HalfedgeVertex v = vMap.get(i);
+			V vv = hdsOUT.getVertex(i);
+			double[] p = {v.getX(), v.getY(), v.getZ(), v.getW()};
+			a.set(Position.class, vv, p);
+		}
+		for (Integer i : eMap.keySet()) {
+			HalfedgeEdge e = eMap.get(i);
+			E ee = hdsOUT.getEdge(i);
+			V target = hdsOUT.getVertex(e.getTarget());
+			E opposite = hdsOUT.getEdge(e.getOpposite());
+			E next = hdsOUT.getEdge(e.getNext());
+			F left = e.getLeft() < 0 ? null : hdsOUT.getFace(e.getLeft());
+			ee.setTargetVertex(target);
+			ee.linkOppositeEdge(opposite);
+			ee.linkNextEdge(next);
+			ee.setLeftFace(left);
+		}
+		if (he.getIdentifications().size() != 0) {
+			createCuttingInfo(hdsOUT, he, cutInfoOUT);
+		}
+	}
+	
 	
 	public static EmbeddingSelection toEmbeddingSelection(Selection s) {
 		ObjectFactory of = new ObjectFactory();
@@ -98,6 +240,36 @@ public class DataUtility {
 		}
 		for (Face<?, ?, ?> f : s.getFaces()) {
 			de.varylab.conformallab.data.types.EmbeddingSelection.FaceSelection.Face ff = new de.varylab.conformallab.data.types.EmbeddingSelection.FaceSelection.Face();
+			ff.setIndex(f.getIndex());
+			ff.setChannel(s.getChannel(f));
+			fs.getFaces().add(ff);
+		}
+		return ems;
+	}
+	
+	public static HalfedgeSelection toHalfedgeSelection(Selection s) {
+		ObjectFactory of = new ObjectFactory();
+		HalfedgeSelection ems = of.createHalfedgeSelection();
+		de.varylab.conformallab.data.types.HalfedgeSelection.VertexSelection vs = new de.varylab.conformallab.data.types.HalfedgeSelection.VertexSelection();
+		de.varylab.conformallab.data.types.HalfedgeSelection.EdgeSelection es = new de.varylab.conformallab.data.types.HalfedgeSelection.EdgeSelection();
+		de.varylab.conformallab.data.types.HalfedgeSelection.FaceSelection fs = new de.varylab.conformallab.data.types.HalfedgeSelection.FaceSelection();
+		ems.setVertexSelection(vs);
+		ems.setEdgeSelection(es);
+		ems.setFaceSelection(fs);
+		for (Vertex<?, ?, ?> v : s.getVertices()) {
+			de.varylab.conformallab.data.types.HalfedgeSelection.VertexSelection.Vertex vv = new de.varylab.conformallab.data.types.HalfedgeSelection.VertexSelection.Vertex();
+			vv.setIndex(v.getIndex());
+			vv.setChannel(s.getChannel(v));
+			vs.getVertices().add(vv);
+		}
+		for (Edge<?, ?, ?> e : s.getEdges()) {
+			de.varylab.conformallab.data.types.HalfedgeSelection.EdgeSelection.Edge ee = new de.varylab.conformallab.data.types.HalfedgeSelection.EdgeSelection.Edge();
+			ee.setIndex(e.getIndex());
+			ee.setChannel(s.getChannel(e));
+			es.getEdges().add(ee);
+		}
+		for (Face<?, ?, ?> f : s.getFaces()) {
+			de.varylab.conformallab.data.types.HalfedgeSelection.FaceSelection.Face ff = new de.varylab.conformallab.data.types.HalfedgeSelection.FaceSelection.Face();
 			ff.setIndex(f.getIndex());
 			ff.setChannel(s.getChannel(f));
 			fs.getFaces().add(ff);
@@ -136,6 +308,23 @@ public class DataUtility {
 			}
 		}
 		for (de.varylab.conformallab.data.types.EmbeddingSelection.FaceSelection.Face f : es.getFaceSelection().getFaces()) {
+			CoFace ff = hds.getFace(f.getIndex());
+			s.add(ff, f.getChannel());
+		}
+		return s;
+	}
+	
+	public static Selection toSelection(HalfedgeSelection es, CoHDS hds) {
+		Selection s = new Selection();
+		for (de.varylab.conformallab.data.types.HalfedgeSelection.VertexSelection.Vertex v : es.getVertexSelection().getVertices()) {
+			CoVertex vv = hds.getVertex(v.getIndex());
+			s.add(vv, v.getChannel());
+		}
+		for (de.varylab.conformallab.data.types.HalfedgeSelection.EdgeSelection.Edge e : es.getEdgeSelection().getEdges()) {
+			CoEdge ee = hds.getEdge(e.getIndex());
+			s.add(ee, e.getChannel());
+		}
+		for (de.varylab.conformallab.data.types.HalfedgeSelection.FaceSelection.Face f : es.getFaceSelection().getFaces()) {
 			CoFace ff = hds.getFace(f.getIndex());
 			s.add(ff, f.getChannel());
 		}
@@ -297,16 +486,30 @@ public class DataUtility {
 	}
 	
 	
-	public static CoHDS toHDS(DiscreteEmbedding de, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfoOUT) {
+	public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void toHalfedge(
+		DiscreteEmbedding de, 
+		AdapterSet a, 
+		Class<? extends Annotation> type,
+		HDS hdsOUT,
+		CuttingInfo<V, E, F> cutInfoOUT
+	) {
+		hdsOUT.clear();
 		IndexedFaceSet ifs = toIndexedFaceSet(de);
 		ConverterJR2Heds c = new ConverterJR2Heds();
-		CoHDS hds = new CoHDS();
-		ConformalAdapterSet aSet = new ConformalAdapterSet();
-		c.ifs2heds(ifs, hds, aSet);
-		if (de.getIdentifications().size() != 0) {
-			createCuttingInfo(hds, de, cutInfoOUT);
+		c.ifs2heds(ifs, hdsOUT, a);
+		for (V v : hdsOUT.getVertices()) {
+			EmbeddedVertex vv = de.getVertices().get(v.getIndex());
+			double[] p = {vv.getX(), vv.getY(), vv.getZ(), vv.getW()};
+			a.set(type, v, p);
 		}
-		return hds;
+		if (de.getIdentifications().size() != 0) {
+			createCuttingInfo(hdsOUT, de, cutInfoOUT);
+		}
 	}
 	
 	
@@ -322,43 +525,60 @@ public class DataUtility {
 		return (2 - X) / 2;
 	}
 	
+	public static int calculateGenus(HalfedgeEmbedding de) {
+		int v = de.getVertices().size();
+		int f = de.getFaces().size();
+		int e = de.getEdges().size() / 2;
+		// compensate for vertex identifications
+		for (VertexIdentification vi : de.getIdentifications()) {
+			v -= vi.getVertices().size() - 1;
+		}
+		e -= de.getEdgeIdentifications().size();
+		int X = v - e + f;
+		return (2 - X) / 2;
+	}
 	
 	
-	private static void createCuttingInfo(CoHDS hds, DiscreteEmbedding de, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfoOUT) {
-		List<CoEdge> boundary = HalfEdgeUtils.boundaryEdges(hds);
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void createCuttingInfo(HDS hds, DiscreteEmbedding de, CuttingInfo<V, E, F> cutInfoOUT) {
+		List<E> boundary = HalfEdgeUtils.boundaryEdges(hds);
 		if (boundary.size() == 0) return;
 		cutInfoOUT.vertexCopyMap.clear();
 		for (VertexIdentification vi : de.getIdentifications()) {
-			CoVertex copyRoot = hds.getVertex(vi.getVertices().get(0));
+			V copyRoot = hds.getVertex(vi.getVertices().get(0));
 			for (int i : vi.getVertices()) {
-				CoVertex copy = hds.getVertex(i);
+				V copy = hds.getVertex(i);
 				if (copy == copyRoot) continue;
 				cutInfoOUT.vertexCopyMap.put(copyRoot, copy);
 				copyRoot = copy;
 			}
 		}
 		cutInfoOUT.edgeCutMap.clear();
-		Set<CoEdge> readyEdges = new HashSet<CoEdge>();
-		Map<CoVertex, VertexIdentification> idMap = new HashMap<CoVertex, VertexIdentification>();
+		Set<E> readyEdges = new HashSet<>();
+		Map<V, VertexIdentification> idMap = new HashMap<V, VertexIdentification>();
 		for (VertexIdentification vi : de.getIdentifications()) {
 			for (int iv : vi.getVertices()) {
-				CoVertex v = hds.getVertex(iv);
+				V v = hds.getVertex(iv);
 				idMap.put(v, vi);
 			}
 		}
-		for (CoEdge e : HalfEdgeUtils.boundaryEdges(hds)) {
+		for (E e : HalfEdgeUtils.boundaryEdges(hds)) {
 			if (readyEdges.contains(e)) continue;
-			CoVertex vs = e.getStartVertex();
-			CoVertex vt = e.getTargetVertex();
+			V vs = e.getStartVertex();
+			V vt = e.getTargetVertex();
 			VertexIdentification si = idMap.get(vs);
 			VertexIdentification ti = idMap.get(vt);
 			Set<Integer> sIdSet = new HashSet<Integer>(si.getVertices());
 			Set<Integer> tIdSet = new HashSet<Integer>(ti.getVertices());
-			CoEdge copyEdge = null;
+			E copyEdge = null;
 			for (int i : sIdSet) {
 				if (vs.getIndex() == i) continue;
-				CoVertex sCopy = hds.getVertex(i);
-				for (CoEdge ee : HalfEdgeUtils.incomingEdges(sCopy)) {
+				V sCopy = hds.getVertex(i);
+				for (E ee : HalfEdgeUtils.incomingEdges(sCopy)) {
 					if (tIdSet.contains(ee.getStartVertex().getIndex())) {
 						copyEdge = ee;
 						break;
@@ -377,6 +597,76 @@ public class DataUtility {
 		cutInfoOUT.cutRoot = HalfEdgeUtils.boundaryVertices(hds).iterator().next();
 	}
 	
+	
+	private static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void createCuttingInfo(HDS hds, HalfedgeEmbedding he, CuttingInfo<V, E, F> cutInfoOUT) {
+		List<E> boundary = HalfEdgeUtils.boundaryEdges(hds);
+		if (boundary.size() == 0) return;
+		cutInfoOUT.vertexCopyMap.clear();
+		for (VertexIdentification vi : he.getIdentifications()) {
+			V copyRoot = hds.getVertex(vi.getVertices().get(0));
+			for (int i : vi.getVertices()) {
+				V copy = hds.getVertex(i);
+				if (copy == copyRoot) continue;
+				cutInfoOUT.vertexCopyMap.put(copyRoot, copy);
+				copyRoot = copy;
+			}
+		}
+		cutInfoOUT.edgeCutMap.clear();
+		Set<E> readyEdges = new HashSet<>();
+		Map<V, VertexIdentification> idMap = new HashMap<>();
+		for (VertexIdentification vi : he.getIdentifications()) {
+			for (int iv : vi.getVertices()) {
+				V v = hds.getVertex(iv);
+				idMap.put(v, vi);
+			}
+		}
+		Map<E, EdgeIdentification> edgeIdMap = new HashMap<>();
+		for (EdgeIdentification ei : he.getEdgeIdentifications()) {
+			E e1 = hds.getEdge(ei.getEdge1());
+			E e2 = hds.getEdge(ei.getEdge2());
+			E e3 = hds.getEdge(ei.getEdge3());
+			E e4 = hds.getEdge(ei.getEdge4());
+			EdgeIdentification old1 = edgeIdMap.put(e1, ei);
+			EdgeIdentification old2 = edgeIdMap.put(e2, ei);
+			EdgeIdentification old3 = edgeIdMap.put(e3, ei);
+			EdgeIdentification old4 = edgeIdMap.put(e4, ei);
+			if (old1 != null || old2 != null || old3 != null || old4 != null) {
+				log.warning("edge index occurring in more than one edge identification");
+			}
+		}
+		for (E e : HalfEdgeUtils.boundaryEdges(hds)) {
+			if (readyEdges.contains(e)) continue;
+			EdgeIdentification ei = edgeIdMap.get(e);
+			if (ei == null) continue;
+			E e1 = hds.getEdge(ei.getEdge1());
+			E e2 = hds.getEdge(ei.getEdge2());
+			E e3 = hds.getEdge(ei.getEdge3());
+			E e4 = hds.getEdge(ei.getEdge4());
+			E be2 = null;
+			be2 = e1.getLeftFace() == null && e1 != e ? e1 : be2;
+			be2 = e2.getLeftFace() == null && e2 != e ? e2 : be2;
+			be2 = e3.getLeftFace() == null && e3 != e ? e3 : be2;
+			be2 = e4.getLeftFace() == null && e4 != e ? e4 : be2;
+			if (be2 == null) {
+				log.warning("could not find identified boundary edge");
+				continue;
+			}
+			cutInfoOUT.edgeCutMap.put(e, be2);
+			cutInfoOUT.edgeCutMap.put(be2, e);
+			cutInfoOUT.edgeCutMap.put(e.getOppositeEdge(), be2.getOppositeEdge());
+			cutInfoOUT.edgeCutMap.put(be2.getOppositeEdge(), e.getOppositeEdge());
+			readyEdges.add(e1);
+			readyEdges.add(e2);
+			readyEdges.add(e3);
+			readyEdges.add(e4);
+		}
+		cutInfoOUT.cutRoot = HalfEdgeUtils.boundaryVertices(hds).iterator().next();
+	}
 
 	public static DiscreteMetric toDiscreteMetric(String name, CoHDS surface, AdapterSet a) {
 		DiscreteMetric dm = new DiscreteMetric();
@@ -405,6 +695,25 @@ public class DataUtility {
 			dm.getTriangles().add(mt);
 		}
 		return dm;
+	}
+	
+	public static HalfedgeMap toHalfedgeMap(
+		String name, 
+		CoHDS surface, 
+		AdapterSet a, 
+		Class<? extends Annotation> domainType, 
+		Class<? extends Annotation> imageType, 
+		CuttingInfo<CoVertex, CoEdge, CoFace> identifications
+	) {
+		String domainName = name + "_domain";
+		String imageName = name + "_image";
+		HalfedgeEmbedding domain = toHalfedgeEmbedding(domainName, surface, a, domainType, identifications);
+		HalfedgeEmbedding image = toHalfedgeEmbedding(imageName, surface, a, imageType, identifications);
+		HalfedgeMap map = new HalfedgeMap();
+		map.setDomain(domain);
+		map.setImage(image);
+		map.setName(name);
+		return map;
 	}
 	
 	public static DiscreteMap toDiscreteMap(

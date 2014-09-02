@@ -37,6 +37,33 @@
     	<jxb:bindings node="//xs:complexType[@name='EmbeddingSelection']//xs:element[@name='Face']">
     		<jxb:property name="faces"/>
     	</jxb:bindings>
+    	
+        <jxb:bindings node="//xs:complexType[@name='HalfedgeSelection']//xs:element[@name='Vertex']">
+    		<jxb:property name="vertices"/>
+    	</jxb:bindings> 
+    	<jxb:bindings node="//xs:complexType[@name='HalfedgeSelection']//xs:element[@name='Edge']">
+    		<jxb:property name="edges"/>
+    	</jxb:bindings>
+    	<jxb:bindings node="//xs:complexType[@name='HalfedgeSelection']//xs:element[@name='Face']">
+    		<jxb:property name="faces"/>
+    	</jxb:bindings>    	
+    	
+        <jxb:bindings node="//xs:complexType[@name='HalfedgeEmbedding']//xs:element[@name='Vertex']">
+    		<jxb:property name="vertices"/>
+    	</jxb:bindings>
+        <jxb:bindings node="//xs:complexType[@name='HalfedgeEmbedding']//xs:element[@name='Identification']">
+    		<jxb:property name="identifications"/>
+    	</jxb:bindings>    	
+    	<jxb:bindings node="//xs:complexType[@name='HalfedgeEmbedding']//xs:element[@name='Halfedge']">
+    		<jxb:property name="edges"/>
+    	</jxb:bindings>  
+		<jxb:bindings node="//xs:complexType[@name='HalfedgeEmbedding']//xs:element[@name='EdgeIdentification']">
+    		<jxb:property name="edgeIdentifications"/>
+    	</jxb:bindings>
+    	<jxb:bindings node="//xs:complexType[@name='HalfedgeEmbedding']//xs:element[@name='Face']">
+    		<jxb:property name="faces"/>
+    	</jxb:bindings>     	
+    	
         <jxb:bindings node="//xs:complexType[@name='DiscreteEmbedding']//xs:element[@name='EmbeddedVertex']">
     		<jxb:property name="vertices"/>
     	</jxb:bindings>    

@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.05.30 um 12:40:20 PM CEST 
+// Generiert: 2014.09.02 um 04:53:14 PM CEST 
 //
 
 
@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
@@ -36,6 +37,7 @@ import javax.xml.bind.annotation.XmlType;
  *           &lt;element name="DiscreteMap" type="{http://www.varylab.com/conformallab/types}DiscreteMap"/>
  *         &lt;/choice>
  *       &lt;/sequence>
+ *       &lt;attribute name="version" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -58,6 +60,8 @@ public class ConformalDataList {
         @XmlElement(name = "DiscreteMap", type = DiscreteMap.class)
     })
     protected List<ConformalData> data;
+    @XmlAttribute(name = "version", required = true)
+    protected int version;
 
     /**
      * Gets the value of the data property.
@@ -91,6 +95,22 @@ public class ConformalDataList {
             data = new ArrayList<ConformalData>();
         }
         return this.data;
+    }
+
+    /**
+     * Ruft den Wert der version-Eigenschaft ab.
+     * 
+     */
+    public int getVersion() {
+        return version;
+    }
+
+    /**
+     * Legt den Wert der version-Eigenschaft fest.
+     * 
+     */
+    public void setVersion(int value) {
+        this.version = value;
     }
 
 }

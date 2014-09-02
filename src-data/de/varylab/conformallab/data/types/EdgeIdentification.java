@@ -15,17 +15,18 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse für MetricTriangle complex type.
+ * <p>Java-Klasse für EdgeIdentification complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
  * <pre>
- * &lt;complexType name="MetricTriangle">
+ * &lt;complexType name="EdgeIdentification">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;attribute name="edge1" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
  *       &lt;attribute name="edge2" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
  *       &lt;attribute name="edge3" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
+ *       &lt;attribute name="edge4" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -34,8 +35,8 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "MetricTriangle")
-public class MetricTriangle {
+@XmlType(name = "EdgeIdentification")
+public class EdgeIdentification {
 
     @XmlAttribute(name = "edge1", required = true)
     protected int edge1;
@@ -43,6 +44,8 @@ public class MetricTriangle {
     protected int edge2;
     @XmlAttribute(name = "edge3", required = true)
     protected int edge3;
+    @XmlAttribute(name = "edge4", required = true)
+    protected int edge4;
 
     /**
      * Ruft den Wert der edge1-Eigenschaft ab.
@@ -90,6 +93,22 @@ public class MetricTriangle {
      */
     public void setEdge3(int value) {
         this.edge3 = value;
+    }
+
+    /**
+     * Ruft den Wert der edge4-Eigenschaft ab.
+     * 
+     */
+    public int getEdge4() {
+        return edge4;
+    }
+
+    /**
+     * Legt den Wert der edge4-Eigenschaft fest.
+     * 
+     */
+    public void setEdge4(int value) {
+        this.edge4 = value;
     }
 
 }

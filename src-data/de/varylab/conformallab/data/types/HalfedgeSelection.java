@@ -18,12 +18,12 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse für EmbeddingSelection complex type.
+ * <p>Java-Klasse für HalfedgeSelection complex type.
  * 
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * 
  * <pre>
- * &lt;complexType name="EmbeddingSelection">
+ * &lt;complexType name="HalfedgeSelection">
  *   &lt;complexContent>
  *     &lt;extension base="{http://www.varylab.com/conformallab/types}ConformalData">
  *       &lt;sequence>
@@ -56,9 +56,7 @@ import javax.xml.bind.annotation.XmlType;
  *                     &lt;complexType>
  *                       &lt;complexContent>
  *                         &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *                           &lt;attribute name="face" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
- *                           &lt;attribute name="vertex1" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
- *                           &lt;attribute name="vertex2" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
+ *                           &lt;attribute name="index" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
  *                           &lt;attribute name="channel" type="{http://www.w3.org/2001/XMLSchema}int" default="0" />
  *                         &lt;/restriction>
  *                       &lt;/complexContent>
@@ -98,31 +96,31 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "EmbeddingSelection", propOrder = {
+@XmlType(name = "HalfedgeSelection", propOrder = {
     "vertexSelection",
     "edgeSelection",
     "faceSelection"
 })
-public class EmbeddingSelection
+public class HalfedgeSelection
     extends ConformalData
 {
 
     @XmlElement(name = "VertexSelection", required = true)
-    protected EmbeddingSelection.VertexSelection vertexSelection;
+    protected HalfedgeSelection.VertexSelection vertexSelection;
     @XmlElement(name = "EdgeSelection", required = true)
-    protected EmbeddingSelection.EdgeSelection edgeSelection;
+    protected HalfedgeSelection.EdgeSelection edgeSelection;
     @XmlElement(name = "FaceSelection", required = true)
-    protected EmbeddingSelection.FaceSelection faceSelection;
+    protected HalfedgeSelection.FaceSelection faceSelection;
 
     /**
      * Ruft den Wert der vertexSelection-Eigenschaft ab.
      * 
      * @return
      *     possible object is
-     *     {@link EmbeddingSelection.VertexSelection }
+     *     {@link HalfedgeSelection.VertexSelection }
      *     
      */
-    public EmbeddingSelection.VertexSelection getVertexSelection() {
+    public HalfedgeSelection.VertexSelection getVertexSelection() {
         return vertexSelection;
     }
 
@@ -131,10 +129,10 @@ public class EmbeddingSelection
      * 
      * @param value
      *     allowed object is
-     *     {@link EmbeddingSelection.VertexSelection }
+     *     {@link HalfedgeSelection.VertexSelection }
      *     
      */
-    public void setVertexSelection(EmbeddingSelection.VertexSelection value) {
+    public void setVertexSelection(HalfedgeSelection.VertexSelection value) {
         this.vertexSelection = value;
     }
 
@@ -143,10 +141,10 @@ public class EmbeddingSelection
      * 
      * @return
      *     possible object is
-     *     {@link EmbeddingSelection.EdgeSelection }
+     *     {@link HalfedgeSelection.EdgeSelection }
      *     
      */
-    public EmbeddingSelection.EdgeSelection getEdgeSelection() {
+    public HalfedgeSelection.EdgeSelection getEdgeSelection() {
         return edgeSelection;
     }
 
@@ -155,10 +153,10 @@ public class EmbeddingSelection
      * 
      * @param value
      *     allowed object is
-     *     {@link EmbeddingSelection.EdgeSelection }
+     *     {@link HalfedgeSelection.EdgeSelection }
      *     
      */
-    public void setEdgeSelection(EmbeddingSelection.EdgeSelection value) {
+    public void setEdgeSelection(HalfedgeSelection.EdgeSelection value) {
         this.edgeSelection = value;
     }
 
@@ -167,10 +165,10 @@ public class EmbeddingSelection
      * 
      * @return
      *     possible object is
-     *     {@link EmbeddingSelection.FaceSelection }
+     *     {@link HalfedgeSelection.FaceSelection }
      *     
      */
-    public EmbeddingSelection.FaceSelection getFaceSelection() {
+    public HalfedgeSelection.FaceSelection getFaceSelection() {
         return faceSelection;
     }
 
@@ -179,10 +177,10 @@ public class EmbeddingSelection
      * 
      * @param value
      *     allowed object is
-     *     {@link EmbeddingSelection.FaceSelection }
+     *     {@link HalfedgeSelection.FaceSelection }
      *     
      */
-    public void setFaceSelection(EmbeddingSelection.FaceSelection value) {
+    public void setFaceSelection(HalfedgeSelection.FaceSelection value) {
         this.faceSelection = value;
     }
 
@@ -201,9 +199,7 @@ public class EmbeddingSelection
      *           &lt;complexType>
      *             &lt;complexContent>
      *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-     *                 &lt;attribute name="face" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
-     *                 &lt;attribute name="vertex1" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
-     *                 &lt;attribute name="vertex2" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
+     *                 &lt;attribute name="index" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
      *                 &lt;attribute name="channel" type="{http://www.w3.org/2001/XMLSchema}int" default="0" />
      *               &lt;/restriction>
      *             &lt;/complexContent>
@@ -224,7 +220,7 @@ public class EmbeddingSelection
     public static class EdgeSelection {
 
         @XmlElement(name = "Edge")
-        protected List<EmbeddingSelection.EdgeSelection.Edge> edges;
+        protected List<HalfedgeSelection.EdgeSelection.Edge> edges;
 
         /**
          * Gets the value of the edges property.
@@ -244,13 +240,13 @@ public class EmbeddingSelection
          * 
          * <p>
          * Objects of the following type(s) are allowed in the list
-         * {@link EmbeddingSelection.EdgeSelection.Edge }
+         * {@link HalfedgeSelection.EdgeSelection.Edge }
          * 
          * 
          */
-        public List<EmbeddingSelection.EdgeSelection.Edge> getEdges() {
+        public List<HalfedgeSelection.EdgeSelection.Edge> getEdges() {
             if (edges == null) {
-                edges = new ArrayList<EmbeddingSelection.EdgeSelection.Edge>();
+                edges = new ArrayList<HalfedgeSelection.EdgeSelection.Edge>();
             }
             return this.edges;
         }
@@ -265,9 +261,7 @@ public class EmbeddingSelection
          * &lt;complexType>
          *   &lt;complexContent>
          *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-         *       &lt;attribute name="face" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
-         *       &lt;attribute name="vertex1" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
-         *       &lt;attribute name="vertex2" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
+         *       &lt;attribute name="index" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
          *       &lt;attribute name="channel" type="{http://www.w3.org/2001/XMLSchema}int" default="0" />
          *     &lt;/restriction>
          *   &lt;/complexContent>
@@ -280,61 +274,25 @@ public class EmbeddingSelection
         @XmlType(name = "")
         public static class Edge {
 
-            @XmlAttribute(name = "face", required = true)
-            protected int face;
-            @XmlAttribute(name = "vertex1", required = true)
-            protected int vertex1;
-            @XmlAttribute(name = "vertex2", required = true)
-            protected int vertex2;
+            @XmlAttribute(name = "index", required = true)
+            protected int index;
             @XmlAttribute(name = "channel")
             protected Integer channel;
 
             /**
-             * Ruft den Wert der face-Eigenschaft ab.
+             * Ruft den Wert der index-Eigenschaft ab.
              * 
              */
-            public int getFace() {
-                return face;
+            public int getIndex() {
+                return index;
             }
 
             /**
-             * Legt den Wert der face-Eigenschaft fest.
+             * Legt den Wert der index-Eigenschaft fest.
              * 
              */
-            public void setFace(int value) {
-                this.face = value;
-            }
-
-            /**
-             * Ruft den Wert der vertex1-Eigenschaft ab.
-             * 
-             */
-            public int getVertex1() {
-                return vertex1;
-            }
-
-            /**
-             * Legt den Wert der vertex1-Eigenschaft fest.
-             * 
-             */
-            public void setVertex1(int value) {
-                this.vertex1 = value;
-            }
-
-            /**
-             * Ruft den Wert der vertex2-Eigenschaft ab.
-             * 
-             */
-            public int getVertex2() {
-                return vertex2;
-            }
-
-            /**
-             * Legt den Wert der vertex2-Eigenschaft fest.
-             * 
-             */
-            public void setVertex2(int value) {
-                this.vertex2 = value;
+            public void setIndex(int value) {
+                this.index = value;
             }
 
             /**
@@ -405,7 +363,7 @@ public class EmbeddingSelection
     public static class FaceSelection {
 
         @XmlElement(name = "Face")
-        protected List<EmbeddingSelection.FaceSelection.Face> faces;
+        protected List<HalfedgeSelection.FaceSelection.Face> faces;
 
         /**
          * Gets the value of the faces property.
@@ -425,13 +383,13 @@ public class EmbeddingSelection
          * 
          * <p>
          * Objects of the following type(s) are allowed in the list
-         * {@link EmbeddingSelection.FaceSelection.Face }
+         * {@link HalfedgeSelection.FaceSelection.Face }
          * 
          * 
          */
-        public List<EmbeddingSelection.FaceSelection.Face> getFaces() {
+        public List<HalfedgeSelection.FaceSelection.Face> getFaces() {
             if (faces == null) {
-                faces = new ArrayList<EmbeddingSelection.FaceSelection.Face>();
+                faces = new ArrayList<HalfedgeSelection.FaceSelection.Face>();
             }
             return this.faces;
         }
@@ -548,7 +506,7 @@ public class EmbeddingSelection
     public static class VertexSelection {
 
         @XmlElement(name = "Vertex")
-        protected List<EmbeddingSelection.VertexSelection.Vertex> vertices;
+        protected List<HalfedgeSelection.VertexSelection.Vertex> vertices;
 
         /**
          * Gets the value of the vertices property.
@@ -568,13 +526,13 @@ public class EmbeddingSelection
          * 
          * <p>
          * Objects of the following type(s) are allowed in the list
-         * {@link EmbeddingSelection.VertexSelection.Vertex }
+         * {@link HalfedgeSelection.VertexSelection.Vertex }
          * 
          * 
          */
-        public List<EmbeddingSelection.VertexSelection.Vertex> getVertices() {
+        public List<HalfedgeSelection.VertexSelection.Vertex> getVertices() {
             if (vertices == null) {
-                vertices = new ArrayList<EmbeddingSelection.VertexSelection.Vertex>();
+                vertices = new ArrayList<HalfedgeSelection.VertexSelection.Vertex>();
             }
             return this.vertices;
         }

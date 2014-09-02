@@ -16,6 +16,7 @@ import de.jreality.util.NativePathUtility;
 import de.jtem.discretegroup.core.DiscreteGroup;
 import de.jtem.discretegroup.core.DiscreteGroupElement;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.selection.Selection;
 import de.varylab.conformallab.data.DataIO;
 import de.varylab.conformallab.data.DataUtility;
@@ -49,7 +50,8 @@ public class HolomorphicEuclideanUniformization {
 		ConformalDataList list = DataIO.readConformalDataList(in);
 		DiscreteMap map = (DiscreteMap) list.getData().get(1);
 		CuttingInfo<CoVertex, CoEdge, CoFace> cuts = new CuttingInfo<>();
-		CoHDS hds = DataUtility.toHDS(map.getDomain(), cuts);
+		CoHDS hds = new CoHDS();
+		DataUtility.toHalfedge(map.getDomain(), new ConformalAdapterSet(), Position.class, hds, cuts);
 		for (CoVertex v : hds.getVertices()) {
 			v.T = v.P.clone();
 		}
@@ -69,7 +71,8 @@ public class HolomorphicEuclideanUniformization {
 		InputStream in = getClass().getResourceAsStream("HolomorphicEuclideanUniformization_model.xml");
 		DiscreteEmbedding de = (DiscreteEmbedding)DataIO.readConformalData(in);
 		CuttingInfo<CoVertex, CoEdge, CoFace> cuts = new CuttingInfo<>();
-		CoHDS hds = DataUtility.toHDS(de, cuts);
+		CoHDS hds = new CoHDS();
+		DataUtility.toHalfedge(de, new ConformalAdapterSet(), Position.class, hds, cuts);
 		Selection s = DataUtility.toSelection(de.getSelection(), hds);
 		log.info("HDS: " + hds);
 		log.info("Selected Vertices: " + s.getVertices());

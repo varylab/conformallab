@@ -22,6 +22,8 @@ import de.varylab.conformallab.data.types.ConformalDataList;
 import de.varylab.conformallab.data.types.DiscreteEmbedding;
 import de.varylab.conformallab.data.types.DiscreteMap;
 import de.varylab.conformallab.data.types.DiscreteMetric;
+import de.varylab.conformallab.data.types.HalfedgeEmbedding;
+import de.varylab.conformallab.data.types.HalfedgeMap;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.conformallab.data.types.ObjectFactory;
 import de.varylab.conformallab.data.types.SchottkyData;
@@ -92,6 +94,12 @@ public class DataIO {
 		} else
 		if (data instanceof DiscreteMap) {
 			e = of.createDiscreteMap((DiscreteMap)data);
+		} else
+		if (data instanceof HalfedgeEmbedding) {
+			e = of.createHalfedgeEmbedding((HalfedgeEmbedding)data);
+		} else
+		if (data instanceof HalfedgeMap) {
+			e = of.createHalfedgeMap((HalfedgeMap)data);
 		}
 		typesMarshaller.marshal(e, out);
 	}

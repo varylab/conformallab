@@ -211,11 +211,11 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				}
 				AdapterSet kleinTextureAdapters = new AdapterSet(new CoDirectTextureAdapter());
 				if (genus == 1) {
-					conformalDataPlugin.addDiscreteEmbedding("Output Euclidean Embedding", hds, null, kleinTextureAdapters, TexturePosition4d.class, cutInfo);
+					conformalDataPlugin.addHalfedgeEmbedding("Output Euclidean Embedding", hds, null, kleinTextureAdapters, TexturePosition4d.class, cutInfo);
 				} else {
-					conformalDataPlugin.addDiscreteEmbedding("Output Klein Model Fuchsian Embedding", hds, null, kleinTextureAdapters, TexturePosition4d.class, cutInfo);
+					conformalDataPlugin.addHalfedgeEmbedding("Output Klein Model Fuchsian Embedding", hds, null, kleinTextureAdapters, TexturePosition4d.class, cutInfo);
 				}
-				conformalDataPlugin.addDiscreteMap("Uniformizing Map", hds, cutInfo);
+				conformalDataPlugin.addHalfedgeMap("Uniformizing Map", hds, cutInfo);
 				TargetGeometry targetGeometry = TargetGeometry.calculateTargetGeometry(genus, 0);
 				dcp.createUniformization(hds, targetGeometry, cutInfo);
 			}

@@ -138,7 +138,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 			Assert.assertEquals(lExpected, l, 1E-5);
 		}
 		
-		conformalDataPlugin.addDiscreteMap("Uniformizing Map", hds, cutInfo);
+		conformalDataPlugin.addHalfedgeMap("Uniformizing Map", hds, cutInfo);
 		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
 	}
 	

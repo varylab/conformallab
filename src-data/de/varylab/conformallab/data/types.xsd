@@ -9,18 +9,20 @@
 >
 	
 	<xs:element name="ConformalDataList" type="types:ConformalDataList"/>
-
 	<xs:element name="UniformizationData" type="types:UniformizationData"/>
 	<xs:element name="HyperEllipticAlgebraicCurve" type="types:HyperEllipticAlgebraicCurve"/>
 	<xs:element name="SchottkyData" type="types:SchottkyData"/>
+	<xs:element name="HalfedgeEmbedding" type="types:HalfedgeEmbedding"/>
+	<xs:element name="HalfedgeMap" type="types:HalfedgeMap"/>
 	<xs:element name="DiscreteMetric" type="types:DiscreteMetric"/>
 	<xs:element name="DiscreteEmbedding" type="types:DiscreteEmbedding"/>
 	<xs:element name="DiscreteMap" type="types:DiscreteMap"/>
 	<xs:element name="EmbeddingSelection" type="types:EmbeddingSelection"/>
+	<xs:element name="HalfedgeSelection" type="types:HalfedgeSelection"/>
 
 	<xs:complexType name="ConformalData">
 		<xs:attribute name="name" type="xs:string" use="optional"/>
-		<xs:attribute name="version" type="xs:int" use="required"/>
+		<xs:attribute name="version" type="xs:int" use="optional" default="0"/>
 	</xs:complexType>
 	<xs:complexType name="ConformalDataList">
 		<xs:sequence>
@@ -53,6 +55,17 @@
 				<xs:sequence>
 					<xs:element name="Domain" type="types:DiscreteEmbedding"/>
 					<xs:element name="Image" type="types:DiscreteEmbedding"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="HalfedgeMap">
+		<xs:complexContent>
+			<xs:extension base="types:ConformalData">
+				<xs:sequence>
+					<xs:element name="Domain" type="types:HalfedgeEmbedding"/>
+					<xs:element name="Image" type="types:HalfedgeEmbedding"/>
 				</xs:sequence>
 			</xs:extension>
 		</xs:complexContent>
@@ -104,6 +117,87 @@
 			</xs:extension>
 		</xs:complexContent>			
 	</xs:complexType>
+	
+	<xs:complexType name="HalfedgeSelection">
+		<xs:complexContent>
+			<xs:extension base="types:ConformalData">
+				<xs:sequence>
+					<xs:element name="VertexSelection">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="Vertex" minOccurs="0" maxOccurs="unbounded">
+									<xs:complexType>
+										<xs:attribute name="index" type="xs:int" use="required"/>
+										<xs:attribute name="channel" type="xs:int" use="optional" default="0"/>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="EdgeSelection">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="Edge" minOccurs="0" maxOccurs="unbounded">
+									<xs:complexType>
+										<xs:attribute name="index" type="xs:int" use="required"/>
+										<xs:attribute name="channel" type="xs:int" use="optional" default="0"/>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="FaceSelection">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="Face" minOccurs="0" maxOccurs="unbounded">
+									<xs:complexType>
+										<xs:attribute name="index" type="xs:int" use="required"/>
+										<xs:attribute name="channel" type="xs:int" use="optional" default="0"/>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>			
+	</xs:complexType>
+	
+
+	<xs:complexType name="HalfedgeVertex">
+		<xs:attribute name="x" type="xs:double" use="required"/>
+		<xs:attribute name="y" type="xs:double" use="required"/>
+		<xs:attribute name="z" type="xs:double" use="required"/>
+		<xs:attribute name="w" type="xs:double" use="required"/>
+		<xs:attribute name="index" type="xs:int" use="required"/>
+	</xs:complexType>
+	
+	<xs:complexType name="HalfedgeEdge">
+		<xs:attribute name="left" type="xs:int" use="required"/>
+		<xs:attribute name="target" type="xs:int" use="required"/>
+		<xs:attribute name="next" type="xs:int" use="required"/>
+		<xs:attribute name="opposite" type="xs:int" use="required"/>
+		<xs:attribute name="index" type="xs:int" use="required"/>
+	</xs:complexType>
+	
+	<xs:complexType name="HalfedgeFace">
+		<xs:attribute name="index" type="xs:int" use="required"/>
+	</xs:complexType>
+
+	<xs:complexType name="HalfedgeEmbedding">
+		<xs:complexContent>
+			<xs:extension base="types:ConformalData">
+				<xs:sequence>
+					<xs:element name="Vertex" type="types:HalfedgeVertex" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="Identification" type="types:VertexIdentification" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="Halfedge" type="types:HalfedgeEdge" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="EdgeIdentification" type="types:EdgeIdentification" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="Face" type="types:HalfedgeFace" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="Selection" type="types:HalfedgeSelection" minOccurs="0" maxOccurs="1"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>	
+	</xs:complexType>
 
 	<xs:complexType name="DiscreteEmbedding">
 		<xs:complexContent>
@@ -154,6 +248,13 @@
 		<xs:sequence>
 			<xs:element name="Vertex" type="xs:int" minOccurs="1" maxOccurs="unbounded"/>			
 		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="EdgeIdentification">
+		<xs:attribute name="edge1" type="xs:int" use="required"/>
+		<xs:attribute name="edge2" type="xs:int" use="required"/>
+		<xs:attribute name="edge3" type="xs:int" use="required"/>
+		<xs:attribute name="edge4" type="xs:int" use="required"/>
 	</xs:complexType>
 	
 	<xs:complexType name="FundamentalPolygon">
