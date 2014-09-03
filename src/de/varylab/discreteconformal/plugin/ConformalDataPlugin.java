@@ -36,6 +36,7 @@ import javax.swing.table.TableCellRenderer;
 import de.jreality.plugin.basic.View;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Position;
+import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -470,14 +471,14 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			HalfedgeEmbedding he = (HalfedgeEmbedding)data;
 			int genus = DataUtility.calculateGenus(he);
 			log.info("loading half-edge embedding of genus " + genus);
-			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
 			CoHDS hds = new CoHDS();
-			DataUtility.toHalfedge(he, hif.getAdapters(), Position.class, hds, cutInfo);
+			CuttingInfo<CoVertex, CoEdge, CoFace> hdsCutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+			DataUtility.toHalfedge(he, hif.getAdapters(), TexturePosition.class, hds, hdsCutInfo);
 			for (CoVertex v : hds.getVertices()) {
-				System.arraycopy(v.P, 0, v.T, 0, 4);
+				System.arraycopy(v.T, 0, v.P, 0, 4);
 			}
 			TargetGeometry target = TargetGeometry.calculateTargetGeometry(genus, 0);
-			discreteConformalPlugin.createUniformization(hds, target, cutInfo);
+			discreteConformalPlugin.createUniformization(hds, target, hdsCutInfo);
 			if (he.getSelection() != null) {
 				Selection s = DataUtility.toSelection(he.getSelection(), hds);
 				hif.setSelection(s);
@@ -489,15 +490,15 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			HalfedgeEmbedding domain = map.getDomain();
 			int genus = DataUtility.calculateGenus(domain);
 			log.info("loading halfedge map of a genus " + genus + " surface");
-			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
-			CoHDS hds = new CoHDS();
-			DataUtility.toHalfedge(image, hif.getAdapters(), Position.class, hds, cutInfo);
-			for (CoVertex v : hds.getVertices()) {
-				HalfedgeVertex dv = domain.getVertices().get(v.getIndex());
-				v.T = new double[]{dv.getX(), dv.getY(), dv.getZ(), dv.getW()};
+			CoHDS domainHds = new CoHDS();
+			CuttingInfo<CoVertex, CoEdge, CoFace> domainInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+			DataUtility.toHalfedge(domain, hif.getAdapters(), TexturePosition.class, domainHds, domainInfo);
+			for (CoVertex v : domainHds.getVertices()) {
+				HalfedgeVertex iv = image.getVertices().get(v.getIndex());
+				v.P = new double[]{iv.getX(), iv.getY(), iv.getZ(), iv.getW()};
 			}
 			TargetGeometry target = TargetGeometry.calculateTargetGeometry(genus, 0);
-			discreteConformalPlugin.createUniformization(hds, target, cutInfo);
+			discreteConformalPlugin.createUniformization(domainHds, target, domainInfo);
 		}		
 		if (data instanceof DiscreteMetric) {
 			DiscreteMetric dm = (DiscreteMetric)data;

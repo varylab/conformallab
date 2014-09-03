@@ -96,7 +96,7 @@ public class DataUtility {
 		String name, 
 		HDS hds, 
 		AdapterSet a, 
-		Class<? extends Annotation> type, 
+		Class<? extends Annotation> type,
 		CuttingInfo<V, E, F> identifications
 	) {
 		ObjectFactory of = new ObjectFactory();
@@ -200,7 +200,7 @@ public class DataUtility {
 			HalfedgeVertex v = vMap.get(i);
 			V vv = hdsOUT.getVertex(i);
 			double[] p = {v.getX(), v.getY(), v.getZ(), v.getW()};
-			a.set(Position.class, vv, p);
+			a.set(type, vv, p);
 		}
 		for (Integer i : eMap.keySet()) {
 			HalfedgeEdge e = eMap.get(i);

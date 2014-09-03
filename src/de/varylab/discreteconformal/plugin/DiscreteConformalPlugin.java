@@ -223,7 +223,8 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		extractCutPreparedButton = new JButton("Extract Cut-Prepared"),
 		extractCutPreparedDirectionButton = new JButton("Cut along line"),
 		mapToConeButton = new JButton("Create cone adapter"),
-		insertHolomorphicImagePoints = new JButton("Insert Holomorphic Image Points");
+		insertHolomorphicImagePoints = new JButton("Insert Holomorphic Image Points"),
+		resetSurfaceButton = new JButton("Reset Surface");
 	private ColorChooseJButton
 		triangulationColorButton = new ColorChooseJButton(Color.BLACK, true),
 		polygonColorButton = new ColorChooseJButton(Color.RED, true),
@@ -339,6 +340,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		extractCutPreparedDirectionButton.addActionListener(this);
 		mapToConeButton.addActionListener(this);
 		insertHolomorphicImagePoints.addActionListener(this);
+		resetSurfaceButton.addActionListener(this);
 		
 		unwrapBtn.addActionListener(this);
 		checkGaussBonnetBtn.addActionListener(this);
@@ -384,6 +386,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		}
 		shrinkPanel.add(unwrapBtn, c2);
 		if (expert) {
+			shrinkPanel.add(resetSurfaceButton, c2);
 			shrinkPanel.add(uniformizationChecker, c2);
 			shrinkPanel.add(checkGaussBonnetBtn, c2);
 		}
@@ -1050,6 +1053,9 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			hif.activateLayer(l);
 			l.set(intersected);
 		}
+		if (resetSurfaceButton == s && surface != null) {
+			hif.set(surface);
+		}
 	}
 
 
@@ -1297,6 +1303,10 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		}
 		Triangulator.triangulateSingleSource(surface);
 		return surface;
+	}
+	
+	protected void setSurface(CoHDS hds) {
+		this.surface = hds;
 	}
 	
 	
