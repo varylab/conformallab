@@ -34,6 +34,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
 import de.jreality.plugin.basic.View;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
@@ -504,6 +505,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			DiscreteMetric dm = (DiscreteMetric)data;
 			MappedEdgeLengthAdapter lMap = new MappedEdgeLengthAdapter(1000.0);
 			CoHDS hds = DataUtility.toHalfedgeAndLengths(dm, lMap);
+			log.info("loading discrete metric of genus " + HalfEdgeUtils.getGenus(hds));
 			hif.set(hds);
 			hif.addAdapter(lMap, false);
 		}

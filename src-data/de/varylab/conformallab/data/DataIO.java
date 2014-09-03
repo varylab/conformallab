@@ -117,7 +117,23 @@ public class DataIO {
 	}
 	public static void writeConformalDataList(ConformalDataList data, OutputStream out) throws JAXBException {
 		ObjectFactory of = new ObjectFactory();
-		JAXBElement<ConformalDataList> e = of.createConformalDataList(data);
+		ConformalDataList writeData = of.createConformalDataList();
+		// convert to avoid writing DiscreteEmbedding or DiscreteMap
+		for (ConformalData d : data.getData()) {
+			if (d instanceof DiscreteEmbedding) {
+				DiscreteEmbedding de = (DiscreteEmbedding)d;
+				HalfedgeEmbedding he = DataUtility.toHalfedgeEmbedding(de);
+				writeData.getData().add(he);
+			} else
+			if (d instanceof DiscreteMap) {
+				DiscreteMap dm = (DiscreteMap)d;
+				HalfedgeMap hm = DataUtility.toHalfedgeMap(dm);
+				writeData.getData().add(hm);
+			} else {
+				writeData.getData().add(d);
+			}
+		}
+		JAXBElement<ConformalDataList> e = of.createConformalDataList(writeData);
 		typesMarshaller.marshal(e, out);
 	}
 	

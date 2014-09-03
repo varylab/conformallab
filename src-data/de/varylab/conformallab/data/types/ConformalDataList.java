@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.09.03 um 12:51:40 PM CEST 
+// Generiert: 2014.09.03 um 04:35:53 PM CEST 
 //
 
 
@@ -35,6 +35,10 @@ import javax.xml.bind.annotation.XmlType;
  *           &lt;element name="DiscreteMetric" type="{http://www.varylab.com/conformallab/types}DiscreteMetric"/>
  *           &lt;element name="DiscreteEmbedding" type="{http://www.varylab.com/conformallab/types}DiscreteEmbedding"/>
  *           &lt;element name="DiscreteMap" type="{http://www.varylab.com/conformallab/types}DiscreteMap"/>
+ *           &lt;element name="HalfedgeEmbedding" type="{http://www.varylab.com/conformallab/types}HalfedgeEmbedding"/>
+ *           &lt;element name="HalfedgeMap" type="{http://www.varylab.com/conformallab/types}HalfedgeMap"/>
+ *           &lt;element name="EmbeddingSelection" type="{http://www.varylab.com/conformallab/types}EmbeddingSelection"/>
+ *           &lt;element name="HalfedgeSelection" type="{http://www.varylab.com/conformallab/types}HalfedgeSelection"/>
  *         &lt;/choice>
  *       &lt;/sequence>
  *       &lt;attribute name="version" type="{http://www.w3.org/2001/XMLSchema}int" fixed="0" />
@@ -57,7 +61,11 @@ public class ConformalDataList {
         @XmlElement(name = "SchottkyData", type = SchottkyData.class),
         @XmlElement(name = "DiscreteMetric", type = DiscreteMetric.class),
         @XmlElement(name = "DiscreteEmbedding", type = DiscreteEmbedding.class),
-        @XmlElement(name = "DiscreteMap", type = DiscreteMap.class)
+        @XmlElement(name = "DiscreteMap", type = DiscreteMap.class),
+        @XmlElement(name = "HalfedgeEmbedding", type = HalfedgeEmbedding.class),
+        @XmlElement(name = "HalfedgeMap", type = HalfedgeMap.class),
+        @XmlElement(name = "EmbeddingSelection", type = EmbeddingSelection.class),
+        @XmlElement(name = "HalfedgeSelection", type = HalfedgeSelection.class)
     })
     protected List<ConformalData> data;
     @XmlAttribute(name = "version")
@@ -87,6 +95,10 @@ public class ConformalDataList {
      * {@link DiscreteMetric }
      * {@link DiscreteEmbedding }
      * {@link DiscreteMap }
+     * {@link HalfedgeEmbedding }
+     * {@link HalfedgeMap }
+     * {@link EmbeddingSelection }
+     * {@link HalfedgeSelection }
      * 
      * 
      */

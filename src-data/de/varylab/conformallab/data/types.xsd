@@ -33,6 +33,10 @@
 				<xs:element name="DiscreteMetric" type="types:DiscreteMetric"/>
 				<xs:element name="DiscreteEmbedding" type="types:DiscreteEmbedding"/>
 				<xs:element name="DiscreteMap" type="types:DiscreteMap"/>
+				<xs:element name="HalfedgeEmbedding" type="types:HalfedgeEmbedding"/>
+				<xs:element name="HalfedgeMap" type="types:HalfedgeMap"/>
+				<xs:element name="EmbeddingSelection" type="types:EmbeddingSelection"/>
+				<xs:element name="HalfedgeSelection" type="types:HalfedgeSelection"/>
 			</xs:choice>
 		</xs:sequence>
 		<xs:attribute name="version" type="xs:int" use="optional" fixed="0"/>
