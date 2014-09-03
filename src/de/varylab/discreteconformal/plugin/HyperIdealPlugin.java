@@ -63,6 +63,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		Assert.assertEquals(2, HalfEdgeUtils.getGenus(hds));
 		
 		Set<CoEdge> cutEdges = new LinkedHashSet<>();
+		// stair case of quads
 //		cutEdges.add(hds.getEdge(0));
 //		cutEdges.add(hds.getEdge(1));
 //		cutEdges.add(hds.getEdge(3));
@@ -78,6 +79,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 //		cutEdges.add(hds.getEdge(22));
 //		cutEdges.add(hds.getEdge(23));
 		
+		// six quads around a vertex
 		cutEdges.add(hds.getEdge(2));
 		cutEdges.add(hds.getEdge(1));
 		cutEdges.add(hds.getEdge(5));
@@ -87,7 +89,6 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		cutEdges.add(hds.getEdge(14));
 		cutEdges.add(hds.getEdge(18));
 		cutEdges.add(hds.getEdge(21));
-		
 		TopologyAlgorithms.flipEdge(hds.getEdge(27));
 		TopologyAlgorithms.flipEdge(hds.getEdge(31));
 		TopologyAlgorithms.flipEdge(hds.getEdge(35));
@@ -99,20 +100,36 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		cutInfo.cutRoot = root;
 		Assert.assertEquals(0, HalfEdgeUtils.getGenus(hds));
 		
-		hds.getVertex(0).P = new double[]{0,0,0,1};
-		hds.getVertex(1).P = new double[]{1,0,0,1};
-		hds.getVertex(2).P = new double[]{0,1,0,1};
-		hds.getVertex(3).P = new double[]{1,1,0,1};
-		hds.getVertex(4).P = new double[]{2,0,0,1};
-		hds.getVertex(5).P = new double[]{2,1,0,1};
-		hds.getVertex(6).P = new double[]{1,2,0,1};
-		hds.getVertex(7).P = new double[]{2,2,0,1};
-		hds.getVertex(8).P = new double[]{3,2,0,1};
-		hds.getVertex(9).P = new double[]{3,1,0,1};
-		hds.getVertex(10).P = new double[]{2,3,0,1};
-		hds.getVertex(11).P = new double[]{3,3,0,1};
-		hds.getVertex(12).P = new double[]{4,3,0,1};
+		// stair case of quads
+//		hds.getVertex(0).P = new double[]{0,0,0,1};
+//		hds.getVertex(1).P = new double[]{1,0,0,1};
+//		hds.getVertex(2).P = new double[]{0,1,0,1};
+//		hds.getVertex(3).P = new double[]{1,1,0,1};
+//		hds.getVertex(4).P = new double[]{2,0,0,1};
+//		hds.getVertex(5).P = new double[]{2,1,0,1};
+//		hds.getVertex(6).P = new double[]{1,2,0,1};
+//		hds.getVertex(7).P = new double[]{2,2,0,1};
+//		hds.getVertex(8).P = new double[]{3,2,0,1};
+//		hds.getVertex(9).P = new double[]{3,1,0,1};
+//		hds.getVertex(10).P = new double[]{2,3,0,1};
+//		hds.getVertex(11).P = new double[]{3,3,0,1};
+//		hds.getVertex(12).P = new double[]{4,3,0,1};
 //		hds.getVertex(13).P = new double[]{4,2,0,1};
+		
+		// six quads around a vertex
+		hds.getVertex(0).P = new double[]{1,0,0,1};
+		hds.getVertex(1).P = new double[]{0,0,0,1};
+		hds.getVertex(2).P = new double[]{1,1,0,1};
+		hds.getVertex(3).P = new double[]{2,1,0,1};
+		hds.getVertex(4).P = new double[]{2,0,0,1};
+		hds.getVertex(5).P = new double[]{2,2,0,1};
+		hds.getVertex(6).P = new double[]{1,0,0,1};
+		hds.getVertex(7).P = new double[]{2,0,0,1};
+		hds.getVertex(8).P = new double[]{2,1,0,1};
+		hds.getVertex(9).P = new double[]{1,2,0,1};
+		hds.getVertex(10).P = new double[]{2,2,0,1};
+		hds.getVertex(11).P = new double[]{0,0,0,1};
+		hds.getVertex(12).P = new double[]{0,1,0,1};
 		
 		Map<CoEdge, Double> lMap = new LinkedHashMap<>();
 		for (CoEdge e : hds.getPositiveEdges()) {
