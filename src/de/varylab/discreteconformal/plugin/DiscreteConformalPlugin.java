@@ -241,7 +241,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		visualizationPanel = new ShrinkPanel("Visualization"),
 		texQuantizationPanel = new ShrinkPanel("Cone Texture Quantization");
 	private SpinnerNumberModel
-		coverMaxDistanceModel = new SpinnerNumberModel(0.9, 0.0, 1.0, 0.01),
+		coverMaxDistanceModel = new SpinnerNumberModel(0.9, 0.0, 10000.0, 0.01),
 		coverElementsModel = new SpinnerNumberModel(10000, 0, 100000, 1),
 		customThetaModel = new SpinnerNumberModel(360.0, 0.0, 10000.0, 1.0),
 		customPhiModel = new SpinnerNumberModel(180.0, 0.0, 360.0, 1.0),
@@ -669,7 +669,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			(targetGeometry == TargetGeometry.Euclidean || targetGeometry == TargetGeometry.Hyperbolic) &&
 			 !cutInfo.getBranchSet().isEmpty()
 		) {
-			int signature = getActiveSignature();
+			int signature = targetGeometry.getSignature();
 			try {
 				System.out.println("Constructing fundamental cut polygon...");
 				cuttedPolygon = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo, signature);
@@ -722,7 +722,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 	}
 	
 	protected void updateUniformizationDirect(TargetGeometry target) {
-		int signature = getActiveSignature();
+		int signature = target.getSignature();
 		AdapterSet aSet = hif.getActiveAdapters();
 		int maxGroupElements = coverElementsModel.getNumber().intValue();
 		double maxDrawDistance = coverMaxDistanceModel.getNumber().doubleValue();
@@ -970,7 +970,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 				showMessageDialog(w, "No uniformization has been calculated.");
 				return;
 			}
-			int signature = getActiveSignature();
+			int signature = activeGeometry.getSignature();
 			AdapterSet a = hif.getAdapters();
 			CoHDS intersected = copySurface(surface);
 			double snapTolerance = Math.pow(10, snapToleranceExpModel.getNumber().intValue());
@@ -1152,7 +1152,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			segment[1] = new double[]{-direction[1], direction[0], 0.0};
 		}
 		double[] cutline = P2.lineFromPoints(null, segment[0], segment[1]);
-		int signature = getActiveSignature();
+		int signature = activeGeometry.getSignature();
 		CoHDS intersected = copySurface(surfaceUnwrapped);
 		for(CoVertex v : intersected.getVertices()) {
 			System.arraycopy(surfaceUnwrapped.getVertex(v.getIndex()).T, 0, v.T, 0, 4);
@@ -1246,7 +1246,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 	
 	private void reorderFaces(boolean selctedOnly) {
 		if (surfaceUnwrapped == null) return;
-		int signature = getActiveSignature();
+		int signature = activeGeometry.getSignature();
 		FundamentalPolygon p = getActiveFundamentalPoygon();
 		if (selctedOnly) {
 			Selection s = hif.getSelection();
@@ -1278,21 +1278,8 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		}
 	}
 	
-	public int getActiveSignature() {
-		switch (activeGeometry) {
-		case Automatic: default:
-			int genus = HalfEdgeUtils.getGenus(surface);
-			if (genus > 1) return Pn.HYPERBOLIC;
-			if (genus == 1) return Pn.EUCLIDEAN;
-			if (genus == 0) return Pn.ELLIPTIC;
-			return Pn.PROJECTIVE;
-		case Euclidean:
-			return Pn.EUCLIDEAN;
-		case Hyperbolic:
-			return Pn.HYPERBOLIC;
-		case Spherical:
-			return Pn.ELLIPTIC;
-		}
+	public TargetGeometry getActiveGeometry() {
+		return activeGeometry;
 	}
 	
 	protected CoHDS getLoaderGeometry() {

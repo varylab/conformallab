@@ -466,6 +466,23 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			TargetGeometry target = TargetGeometry.calculateTargetGeometry(genus, 0);
 			discreteConformalPlugin.createUniformization(hds, target, cutInfo);
 		}
+		if (data instanceof HalfedgeEmbedding) {
+			HalfedgeEmbedding he = (HalfedgeEmbedding)data;
+			int genus = DataUtility.calculateGenus(he);
+			log.info("loading half-edge embedding of genus " + genus);
+			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+			CoHDS hds = new CoHDS();
+			DataUtility.toHalfedge(he, hif.getAdapters(), Position.class, hds, cutInfo);
+			for (CoVertex v : hds.getVertices()) {
+				System.arraycopy(v.P, 0, v.T, 0, 4);
+			}
+			TargetGeometry target = TargetGeometry.calculateTargetGeometry(genus, 0);
+			discreteConformalPlugin.createUniformization(hds, target, cutInfo);
+			if (he.getSelection() != null) {
+				Selection s = DataUtility.toSelection(he.getSelection(), hds);
+				hif.setSelection(s);
+			}
+		}
 		if (data instanceof HalfedgeMap) {
 			HalfedgeMap map = (HalfedgeMap)data;
 			HalfedgeEmbedding image = map.getImage();

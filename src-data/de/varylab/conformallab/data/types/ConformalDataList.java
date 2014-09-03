@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.09.02 um 04:53:14 PM CEST 
+// Generiert: 2014.09.03 um 12:51:40 PM CEST 
 //
 
 
@@ -37,7 +37,7 @@ import javax.xml.bind.annotation.XmlType;
  *           &lt;element name="DiscreteMap" type="{http://www.varylab.com/conformallab/types}DiscreteMap"/>
  *         &lt;/choice>
  *       &lt;/sequence>
- *       &lt;attribute name="version" use="required" type="{http://www.w3.org/2001/XMLSchema}int" />
+ *       &lt;attribute name="version" type="{http://www.w3.org/2001/XMLSchema}int" fixed="0" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -60,8 +60,8 @@ public class ConformalDataList {
         @XmlElement(name = "DiscreteMap", type = DiscreteMap.class)
     })
     protected List<ConformalData> data;
-    @XmlAttribute(name = "version", required = true)
-    protected int version;
+    @XmlAttribute(name = "version")
+    protected Integer version;
 
     /**
      * Gets the value of the data property.
@@ -100,16 +100,28 @@ public class ConformalDataList {
     /**
      * Ruft den Wert der version-Eigenschaft ab.
      * 
+     * @return
+     *     possible object is
+     *     {@link Integer }
+     *     
      */
     public int getVersion() {
-        return version;
+        if (version == null) {
+            return  0;
+        } else {
+            return version;
+        }
     }
 
     /**
      * Legt den Wert der version-Eigenschaft fest.
      * 
+     * @param value
+     *     allowed object is
+     *     {@link Integer }
+     *     
      */
-    public void setVersion(int value) {
+    public void setVersion(Integer value) {
         this.version = value;
     }
 

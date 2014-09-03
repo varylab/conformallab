@@ -422,7 +422,7 @@ public class TextureSpaceViewer3D extends ShrinkPanelPlugin {
 			T = new Matrix();
 		}
 		
-		int signature = conformalPlugin.getActiveSignature();
+		int signature = conformalPlugin.getActiveGeometry().getSignature();
 		double[] s1 = Pn.normalize(null, edge.getStartVertex().T, signature); 
 		double[] t1 = Pn.normalize(null, edge.getTargetVertex().T, signature); 
 		double[] s2 = Pn.normalize(null, coEdge.getStartVertex().T, signature); 

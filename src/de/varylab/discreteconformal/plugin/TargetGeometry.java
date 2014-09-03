@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.plugin;
 
 import java.util.List;
 
+import de.jreality.math.Pn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -32,4 +33,16 @@ public enum TargetGeometry {
 			return Hyperbolic;
 		}
 	}
+	
+	public int getSignature() {
+		switch (this) {
+		case Hyperbolic:
+			return Pn.HYPERBOLIC;
+		case Spherical:
+			return Pn.ELLIPTIC;
+		default:
+			return Pn.EUCLIDEAN;
+		}
+	}
+	
 }

@@ -2,7 +2,7 @@
 // Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.6 generiert 
 // Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 // Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-// Generiert: 2014.09.02 um 04:53:14 PM CEST 
+// Generiert: 2014.09.03 um 12:51:40 PM CEST 
 //
 
 
@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;attribute name="name" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="version" type="{http://www.w3.org/2001/XMLSchema}int" default="0" />
+ *       &lt;attribute name="version" type="{http://www.w3.org/2001/XMLSchema}int" fixed="0" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>

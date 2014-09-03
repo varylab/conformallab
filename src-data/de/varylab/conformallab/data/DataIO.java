@@ -90,10 +90,16 @@ public class DataIO {
 			e = of.createDiscreteMetric((DiscreteMetric)data);
 		} else
 		if (data instanceof DiscreteEmbedding) {
-			e = of.createDiscreteEmbedding((DiscreteEmbedding)data);
+			// convert to HalfedgeEmbedding to avoid deprecated DiscreteMap
+			DiscreteEmbedding de = (DiscreteEmbedding)data;
+			HalfedgeEmbedding he = DataUtility.toHalfedgeEmbedding(de);
+			e = of.createHalfedgeEmbedding(he);
 		} else
 		if (data instanceof DiscreteMap) {
-			e = of.createDiscreteMap((DiscreteMap)data);
+			// convert to HalfedgeMap to avoid deprecated DiscreteMap
+			DiscreteMap dm = (DiscreteMap)data;
+			HalfedgeMap hm = DataUtility.toHalfedgeMap(dm);
+			e = of.createHalfedgeMap(hm);
 		} else
 		if (data instanceof HalfedgeEmbedding) {
 			e = of.createHalfedgeEmbedding((HalfedgeEmbedding)data);

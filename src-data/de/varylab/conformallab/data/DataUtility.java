@@ -26,6 +26,7 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.Position;
+import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.jreality.ConverterJR2Heds;
 import de.jtem.halfedgetools.selection.Selection;
 import de.jtem.riemann.surface.BranchPoint;
@@ -58,6 +59,7 @@ import de.varylab.conformallab.data.types.SchottkyData;
 import de.varylab.conformallab.data.types.UniformizationData;
 import de.varylab.conformallab.data.types.UniformizingGroup;
 import de.varylab.conformallab.data.types.VertexIdentification;
+import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -77,6 +79,13 @@ public class DataUtility {
 	private static Logger
 		log = Logger.getLogger(DataUtility.class.getName());
 	
+	public static HalfedgeEmbedding toHalfedgeEmbedding(DiscreteEmbedding de) {
+		CoHDS hds = new CoHDS();
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
+		AdapterSet a = new ConformalAdapterSet();
+		toHalfedge(de, a, Position.class, hds, cutInfo);
+		return toHalfedgeEmbedding(de.getName(), hds, a, Position4d.class, cutInfo);
+	}
 	
 	public static <
 		V extends Vertex<V, E, F>,
@@ -695,6 +704,18 @@ public class DataUtility {
 			dm.getTriangles().add(mt);
 		}
 		return dm;
+	}
+	
+	
+	public static HalfedgeMap toHalfedgeMap(DiscreteMap dm) {
+		HalfedgeEmbedding domain = toHalfedgeEmbedding(dm.getDomain());
+		HalfedgeEmbedding image = toHalfedgeEmbedding(dm.getImage());
+		ObjectFactory of = new ObjectFactory();
+		HalfedgeMap map = of.createHalfedgeMap();
+		map.setDomain(domain);
+		map.setImage(image);
+		map.setName(dm.getName());
+		return map;
 	}
 	
 	public static HalfedgeMap toHalfedgeMap(
