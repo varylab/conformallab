@@ -66,6 +66,7 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		polygonComponent.setFilled(false);
 		polygonComponent.setStroke(new BasicStroke(2));
 		scene.addChild(boundaryComponent);
+		boundaryComponent.setOutlinePaint(Color.BLACK);
 		boundaryComponent.setShape(new Ellipse2D.Double(-1,-1,2,2));
 		boundaryComponent.setFilled(false);
 		boundaryComponent.setStroke(new BasicStroke(2));
