@@ -1,7 +1,7 @@
 package de.varylab.discreteconformal.functional;
 
 import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
-import static de.varylab.discreteconformal.functional.HyperIdealFunctionalTest.createLawsonsSurface;
+import static de.varylab.discreteconformal.functional.HyperIdealUtility.createLawsonsSurface;
 
 import java.io.FileOutputStream;
 import java.util.LinkedHashMap;

@@ -21,7 +21,7 @@ import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jtao.Tao;
-import de.varylab.discreteconformal.functional.HyperIdealFunctionalTest;
+import de.varylab.discreteconformal.functional.HyperIdealUtility;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -51,7 +51,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 	@Override
 	public void actionPerformed(ActionEvent ev) {
 		Tao.Initialize();
-		CoHDS hds = HyperIdealFunctionalTest.createLawsonsSurface();
+		CoHDS hds = HyperIdealUtility.createLawsonsSurface();
 		CHyperIdealApplication app = new CHyperIdealApplication(hds);
 		Vec u = new Vec(app.getDomainDimension());
 		for (int i = 0; i < app.getDomainDimension(); i++) {
