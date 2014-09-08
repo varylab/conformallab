@@ -50,7 +50,6 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.plugin.EllipticImageGenerator.PathVisualizer;
 import de.varylab.discreteconformal.plugin.hyperelliptic.Curve;
 import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeEvent;
 import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeEvent.EventType;
@@ -84,7 +83,6 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		equalizationIterationsSpinner = new JSpinner(equalizationIterationsModel),
 		extraPointsSpinner = new JSpinner(extraPointsModel);
 	private JCheckBox
-		showcutPathsChecker = new JCheckBox("Show Cut Paths"),
 		normalizerBranchPointPositionsChecker = new JCheckBox("Normalize Branch Points", true);
 	private JButton
 		createButton = new JButton("Create Triangulated Surface");
@@ -119,7 +117,6 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		geometryPanel.add(extraPointsSpinner, c2);
 		geometryPanel.add(new JLabel("Point Equalizer Iterations"), c1);
 		geometryPanel.add(equalizationIterationsSpinner, c2);
-		geometryPanel.add(showcutPathsChecker, c2);
 		geometryPanel.add(normalizerBranchPointPositionsChecker, c2);
 		geometryPanel.add(createButton, c2);
 		shrinkPanel.add(geometryPanel, c2);
@@ -199,15 +196,6 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 				branchIndices[i++] = bv.getIndex();
 			}
 			HyperellipticUtility.generateHyperellipticImage(hds, 0, glueSet, branchIndices);
-			if (showcutPathsChecker.isSelected()) {
-				PathVisualizer pathVisualizer = new PathVisualizer();
-				for (CoEdge pe : glueSet) {
-					pathVisualizer.add(pe);
-					pathVisualizer.add(pe.getOppositeEdge());
-				}
-				// show the result
-				hif.addLayerAdapter(pathVisualizer, true);
-			}
 			
 			int genus = HalfEdgeUtils.getGenus(hds);
 			HyperEllipticAlgebraicCurve heac = DataUtility.toHyperEllipticAlgebraicCurve("Hyperelliptic Curve g" + genus, getCurve());

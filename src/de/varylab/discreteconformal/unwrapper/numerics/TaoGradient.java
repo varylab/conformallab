@@ -1,44 +1,17 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
 import de.jtem.halfedgetools.functional.Gradient;
-import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.Vec;
 
-public class TaoGradient implements Gradient {
+public class TaoGradient extends TaoDomain implements Gradient {
 
-	private Vec
-		G = null;
-	
-	public TaoGradient(Vec G) {
-		this.G = G;
-	}
-	
-	@Override
-	public void add(int i, double value) {
-		G.add(i, value);
+	public TaoGradient(Vec u) {
+		super(u);
 	}
 
 	@Override
-	public void set(int i, double value) {
-		G.setValue(i, value, InsertMode.INSERT_VALUES);
-	}
-	
-	@Override
-	public void setZero() {
-		G.zeroEntries();
-	}
-
-	@Override
-	public double get(int i) {
-		return G.getValue(i);
-	}
-	
-	public Vec getVec() {
-		return G;
-	}
-	
-	public Vec getG() {
-		return G;
+	public void add(double coeff, Gradient g) {
+		super.add(coeff, (TaoGradient)g);
 	}
 	
 }

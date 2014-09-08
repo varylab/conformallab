@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DiscreteEmbedding name="Input Discrete Position Embedding" xmlns="http://www.varylab.com/conformallab/types">
+    <EmbeddedVertex x="0.25" y="0.4330127018922193" z="-2.7755575615628914E-17" w="1.0" index="0"/>
+    <EmbeddedVertex x="-0.25" y="0.4330127018922193" z="-2.7755575615628914E-17" w="1.0" index="1"/>
+    <EmbeddedVertex x="-0.5" y="0.0" z="0.0" w="1.0" index="2"/>
+    <EmbeddedVertex x="0.0" y="0.0" z="0.5" w="1.0" index="3"/>
+    <EmbeddedVertex x="0.0" y="0.0" z="-0.5" w="1.0" index="4"/>
+    <EmbeddedVertex x="-0.25" y="-0.4330127018922193" z="-2.7755575615628914E-17" w="1.0" index="5"/>
+    <EmbeddedVertex x="0.25" y="-0.4330127018922193" z="-2.7755575615628914E-17" w="1.0" index="6"/>
+    <EmbeddedVertex x="0.5" y="0.0" z="0.0" w="1.0" index="7"/>
+    <EmbeddedVertex x="0.0" y="0.0" z="0.5" w="1.0" index="8"/>
+    <EmbeddedVertex x="0.0" y="0.0" z="-0.5" w="1.0" index="9"/>
+    <EmbeddedTriangle vertex1="4" vertex2="2" vertex3="5"/>
+    <EmbeddedTriangle vertex1="5" vertex2="6" vertex3="9"/>
+    <EmbeddedTriangle vertex1="8" vertex2="6" vertex3="5"/>
+    <EmbeddedTriangle vertex1="8" vertex2="5" vertex3="2"/>
+    <EmbeddedTriangle vertex1="1" vertex2="2" vertex3="9"/>
+    <EmbeddedTriangle vertex1="1" vertex2="9" vertex3="0"/>
+    <EmbeddedTriangle vertex1="1" vertex2="0" vertex3="3"/>
+    <EmbeddedTriangle vertex1="1" vertex2="8" vertex3="2"/>
+    <EmbeddedTriangle vertex1="7" vertex2="6" vertex3="3"/>
+    <EmbeddedTriangle vertex1="7" vertex2="3" vertex3="0"/>
+    <EmbeddedTriangle vertex1="7" vertex2="0" vertex3="4"/>
+    <EmbeddedTriangle vertex1="7" vertex2="9" vertex3="6"/>
+    <EmbeddedTriangle vertex1="5" vertex2="9" vertex3="2"/>
+    <EmbeddedTriangle vertex1="4" vertex2="5" vertex3="6"/>
+    <EmbeddedTriangle vertex1="5" vertex2="3" vertex3="6"/>
+    <EmbeddedTriangle vertex1="3" vertex2="5" vertex3="2"/>
+    <EmbeddedTriangle vertex1="1" vertex2="2" vertex3="4"/>
+    <EmbeddedTriangle vertex1="1" vertex2="4" vertex3="0"/>
+    <EmbeddedTriangle vertex1="0" vertex2="8" vertex3="1"/>
+    <EmbeddedTriangle vertex1="3" vertex2="2" vertex3="1"/>
+    <EmbeddedTriangle vertex1="6" vertex2="8" vertex3="7"/>
+    <EmbeddedTriangle vertex1="8" vertex2="0" vertex3="7"/>
+    <EmbeddedTriangle vertex1="7" vertex2="0" vertex3="9"/>
+    <EmbeddedTriangle vertex1="4" vertex2="6" vertex3="7"/>
+</DiscreteEmbedding>

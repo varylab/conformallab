@@ -1,7 +1,10 @@
 package de.varylab.discreteconformal.uniformization;
 
+import static de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility.context;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -10,6 +13,7 @@ import java.util.Set;
 
 import de.jreality.math.Pn;
 import de.jtem.discretegroup.core.DiscreteGroup;
+import de.jtem.discretegroup.core.DiscreteGroupConstraint;
 import de.jtem.discretegroup.core.DiscreteGroupElement;
 import de.varylab.discreteconformal.math.RnBig;
 
@@ -187,11 +191,57 @@ public class FundamentalPolygon {
 			gArr[e.index] = g;
 		}
 		G.setGenerators(gArr);
+		if (getGenus() == 0) {
+			G.setMetric(Pn.ELLIPTIC);
+		} else if (getGenus() == 1) {
+			G.setMetric(Pn.EUCLIDEAN);
+		} else {
+			G.setMetric(Pn.HYPERBOLIC);
+		}
 		G.calculateGenerators();
-		G.setMetric(Pn.HYPERBOLIC);
 		assert !G.isFree() : "a fuchsian uniformization group has at least one relation";
 		assert !G.isFinite() : "these groups should tesselate hyperbolic space and hence are not finite";
 		return G;
+	}
+
+	
+	public List<DiscreteGroupElement> createGoupElements(final int maxDrawElements, final double maxDrawDistance) {
+		DiscreteGroupConstraint constraint = new DiscreteGroupConstraint() {
+			@Override
+			public void update() {
+			}
+			@Override
+			public void setMaxNumberElements(int arg0) {
+			}
+			@Override
+			public int getMaxNumberElements() {
+				return maxDrawElements;
+			}
+			@Override
+			public boolean acceptElement(DiscreteGroupElement s) {
+				double min = Double.MAX_VALUE;
+				for (FundamentalEdge e : getEdges()) {
+					BigDecimal[] ps = e.startPosition;
+					BigDecimal[] pt = e.nextEdge.startPosition;
+					BigDecimal[] mean = RnBig.linearCombination(null, new BigDecimal(0.5), ps, new BigDecimal(0.5), pt, context);
+					BigDecimal[] T = RnBig.toBig(null, s.getMatrix());
+					mean = RnBig.matrixTimesVector(null, T, mean, context);
+					double[] pd = RnBig.toDouble(null, mean);
+					double[] pp = {pd[0] / (pd[3] + 1), pd[1] / (pd[3] + 1)};
+					double distSq = pp[0]*pp[0] + pp[1]*pp[1];
+					if (distSq < min) {
+						min = distSq;
+					}
+				}
+				return min < maxDrawDistance;
+			}
+		};
+		DiscreteGroup G = getDiscreteGroup();
+		G.setConstraint(constraint);
+		G.generateElements();
+		DiscreteGroupElement[] elements = G.getElementList();
+		List<DiscreteGroupElement> elementList = Arrays.asList(elements);
+		return elementList;
 	}
 		
 }

@@ -6,6 +6,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import cern.colt.Arrays;
 import de.jreality.plugin.JRViewer;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
@@ -44,6 +45,14 @@ public class HyperbolicLayoutTest {
 		}
 	}
 
+	@Test
+	public void testLayoutTriangle() throws Exception {
+		double[] A = {0,0,0,1};
+		double[] B = {0.1,0,0,1};
+		double[] C = HyperbolicLayout.layoutTriangle(A, B, Math.PI/5, 1, 1);
+		System.out.println(Arrays.toString(C));
+	}
+	
 	@Test@Ignore
 	public void testDoLayout() {
 		throw new RuntimeException("Not implemented correctly yet!");

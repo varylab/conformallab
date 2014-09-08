@@ -167,6 +167,11 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 			}
 		}
 	}
+	
+	@Override
+	public boolean hasGradient() {
+		return true;
+	}
 
 	@Override
 	public boolean hasHessian() {

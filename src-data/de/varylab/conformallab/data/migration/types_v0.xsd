@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema 
+	xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+	targetNamespace="http://www.varylab.com/conformallab/types"
+	xmlns:types="http://www.varylab.com/conformallab/types" 
+	elementFormDefault="qualified"
+	xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+    jxb:version="2.0"	
+>
+	
+	<xs:element name="ConformalDataList" type="types:ConformalDataList"/>
+
+	<xs:element name="UniformizationData" type="types:UniformizationData"/>
+	<xs:element name="HyperEllipticAlgebraicCurve" type="types:HyperEllipticAlgebraicCurve"/>
+	<xs:element name="SchottkyData" type="types:SchottkyData"/>
+	<xs:element name="DiscreteMetric" type="types:DiscreteMetric"/>
+	<xs:element name="DiscreteEmbedding" type="types:DiscreteEmbedding"/>
+	<xs:element name="DiscreteMap" type="types:DiscreteMap"/>
+	<xs:element name="EmbeddingSelection" type="types:EmbeddingSelection"/>
+
+	<xs:complexType name="ConformalData">
+		<xs:attribute name="name" type="xs:string" use="optional"/>
+		<xs:attribute name="version" type="xs:int" use="prohibited"/>
+	</xs:complexType>
+	<xs:complexType name="ConformalDataList">
+		<xs:sequence>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="UniformizationData" type="types:UniformizationData"/>
+				<xs:element name="HyperEllipticAlgebraicCurve" type="types:HyperEllipticAlgebraicCurve"/>
+				<xs:element name="SchottkyData" type="types:SchottkyData"/>
+				<xs:element name="DiscreteMetric" type="types:DiscreteMetric"/>
+				<xs:element name="DiscreteEmbedding" type="types:DiscreteEmbedding"/>
+				<xs:element name="DiscreteMap" type="types:DiscreteMap"/>
+			</xs:choice>
+		</xs:sequence>
+		<xs:attribute name="version" type="xs:int" use="prohibited"/>
+	</xs:complexType>
+	
+	
+	<xs:complexType name="HyperEllipticAlgebraicCurve">
+		<xs:complexContent>
+			<xs:extension base="types:ConformalData">
+				<xs:sequence>
+					<xs:element name="BranchPoint" type="types:Complex" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="DiscreteMap">
+		<xs:complexContent>
+			<xs:extension base="types:ConformalData">
+				<xs:sequence>
+					<xs:element name="Domain" type="types:DiscreteEmbedding"/>
+					<xs:element name="Image" type="types:DiscreteEmbedding"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="EmbeddingSelection">
+		<xs:complexContent>
+			<xs:extension base="types:ConformalData">
+				<xs:sequence>
+					<xs:element name="VertexSelection">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="Vertex" minOccurs="0" maxOccurs="unbounded">
+									<xs:complexType>
+										<xs:attribute name="index" type="xs:int" use="required"/>
+										<xs:attribute name="channel" type="xs:int" use="optional" default="0"/>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="EdgeSelection">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="Edge" minOccurs="0" maxOccurs="unbounded">
+									<xs:complexType>
+										<xs:attribute name="face" type="xs:int" use="required"/>
+										<xs:attribute name="vertex1" type="xs:int" use="required"/>
+										<xs:attribute name="vertex2" type="xs:int" use="required"/>
+										<xs:attribute name="channel" type="xs:int" use="optional" default="0"/>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="FaceSelection">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="Face" minOccurs="0" maxOccurs="unbounded">
+									<xs:complexType>
+										<xs:attribute name="index" type="xs:int" use="required"/>
+										<xs:attribute name="channel" type="xs:int" use="optional" default="0"/>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>			
+	</xs:complexType>
+
+	<xs:complexType name="DiscreteEmbedding">
+		<xs:complexContent>
+			<xs:extension base="types:ConformalData">
+				<xs:sequence>
+					<xs:element name="EmbeddedVertex" type="types:EmbeddedVertex" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="Identification" type="types:VertexIdentification" minOccurs="0" maxOccurs="unbounded"/>				
+					<xs:element name="EmbeddedTriangle" type="types:EmbeddedTriangle" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="Selection" type="types:EmbeddingSelection" minOccurs="0" maxOccurs="1"/>
+				</xs:sequence>	
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="DiscreteMetric">
+		<xs:complexContent>
+			<xs:extension base="types:ConformalData">
+				<xs:sequence>
+					<xs:element name="MetricEdge" type="types:MetricEdge" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="MetricTriangle" type="types:MetricTriangle" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="SchottkyData">
+		<xs:complexContent>
+			<xs:extension base="types:ConformalData">	
+				<xs:sequence>
+					<xs:element name="SchottkyGenerator" type="types:SchottkyGenerator" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="UniformizationData">
+		<xs:complexContent>
+			<xs:extension base="types:ConformalData">
+				<xs:sequence>
+					<xs:element name="UniformizingGroup" type="types:UniformizingGroup"/>
+					<xs:element name="FundamentalPolygon" type="types:FundamentalPolygon"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="VertexIdentification">
+		<xs:sequence>
+			<xs:element name="Vertex" type="xs:int" minOccurs="1" maxOccurs="unbounded"/>			
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="FundamentalPolygon">
+		<xs:sequence>
+			<xs:element name="FundamentalVertex" type="types:FundamentalVertex" minOccurs="1" maxOccurs="unbounded"/>
+			<xs:element name="FundamentalEdge" type="types:FundamentalEdge" minOccurs="4" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="FundamentalEdge">
+		<xs:sequence>
+			<xs:element name="StartPosition" type="types:Complex"/>
+		</xs:sequence>
+		<xs:attribute name="index" type="xs:int" use="required"/>
+		<xs:attribute name="nextEdge" type="xs:int" use="required"/>
+		<xs:attribute name="previousEdge" type="xs:int" use="required"/>
+		<xs:attribute name="identifiedEdge" type="xs:int" use="required"/>
+		<xs:attribute name="startVertex" type="xs:int" use="required"/>
+	</xs:complexType>
+	
+	<xs:complexType name="FundamentalVertex">
+		<xs:attribute name="index" type="xs:int" use="required"/>
+	</xs:complexType>
+	
+	<xs:complexType name="UniformizingGroup">
+		<xs:sequence>
+			<xs:element name="IsometryPSL2R" type="types:IsometryPSL2R" minOccurs="2" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="IsometryPSL2R">
+		<xs:attribute name="m11" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m12" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m13" type="xs:double" use="optional" default="0.0"/>
+		
+		<xs:attribute name="m21" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m22" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m23" type="xs:double" use="optional" default="0.0"/>
+				
+		<xs:attribute name="m31" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m32" type="xs:double" use="optional" default="0.0"/>
+		<xs:attribute name="m33" type="xs:double" use="optional" default="0.0"/>
+	</xs:complexType>
+	
+	<xs:complexType name="SchottkyGenerator">
+		<xs:sequence>
+			<xs:element name="A" type="types:Complex"/>
+			<xs:element name="B" type="types:Complex"/>
+			<xs:element name="Mu" type="types:Complex"/>
+			<xs:element name="Circle" type="types:Circle"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="EmbeddedVertex">
+		<xs:attribute name="x" type="xs:double" use="required"/>
+		<xs:attribute name="y" type="xs:double" use="required"/>
+		<xs:attribute name="z" type="xs:double" use="required"/>
+		<xs:attribute name="w" type="xs:double" use="required"/>
+		<xs:attribute name="index" type="xs:int" use="required"/>
+	</xs:complexType>
+	
+	<xs:complexType name="EmbeddedTriangle">
+		<xs:attribute name="vertex1" type="xs:int" use="required"/>
+		<xs:attribute name="vertex2" type="xs:int" use="required"/>
+		<xs:attribute name="vertex3" type="xs:int" use="required"/>
+	</xs:complexType>
+
+
+	<xs:complexType name="MetricEdge">
+		<xs:attribute name="length" type="xs:double" use="required"/>
+		<xs:attribute name="index" type="xs:int" use="required"/>
+	</xs:complexType>
+	
+	<xs:complexType name="MetricTriangle">
+		<xs:attribute name="edge1" type="xs:int" use="required"/>
+		<xs:attribute name="edge2" type="xs:int" use="required"/>
+		<xs:attribute name="edge3" type="xs:int" use="required"/>
+	</xs:complexType>
+
+	<xs:complexType name="Complex">
+		<xs:attribute name="re" type="xs:double" use="required"/>
+		<xs:attribute name="im" type="xs:double" use="required"/>
+	</xs:complexType>
+
+	<xs:complexType name="Circle">
+		<xs:sequence>
+			<xs:element name="Center" type="types:Complex"/>
+		</xs:sequence>
+		<xs:attribute name="radius" type="xs:double" use="required"/>
+	</xs:complexType>
+	
+	<xs:complexType name="Moebius">
+		<xs:attribute name="a" type="xs:double" use="required"/>
+		<xs:attribute name="b" type="xs:double" use="required"/>
+		<xs:attribute name="c" type="xs:double" use="required"/>
+		<xs:attribute name="d" type="xs:double" use="required"/>
+	</xs:complexType>
+
+</xs:schema>

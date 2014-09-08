@@ -22,7 +22,6 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin.TargetGeometry;
 import de.varylab.discreteconformal.unwrapper.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.CircleDomainUnwrapper;
 import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
@@ -35,7 +34,6 @@ import de.varylab.discreteconformal.unwrapper.StereographicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
-import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class UnwrapJob extends AbstractJob {
 
@@ -102,7 +100,7 @@ public class UnwrapJob extends AbstractJob {
 		double gradTolerance = Math.pow(10, toleranceExp);
 		
 		if (targetGeometry == TargetGeometry.Automatic) {
-			targetGeometry = UnwrapUtility.calculateTargetGeometry(surface);
+			targetGeometry = TargetGeometry.calculateTargetGeometry(surface);
 		}
 		
 		switch (targetGeometry) {

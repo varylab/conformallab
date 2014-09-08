@@ -22,6 +22,8 @@ import de.varylab.conformallab.data.types.ConformalDataList;
 import de.varylab.conformallab.data.types.DiscreteEmbedding;
 import de.varylab.conformallab.data.types.DiscreteMap;
 import de.varylab.conformallab.data.types.DiscreteMetric;
+import de.varylab.conformallab.data.types.HalfedgeEmbedding;
+import de.varylab.conformallab.data.types.HalfedgeMap;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.conformallab.data.types.ObjectFactory;
 import de.varylab.conformallab.data.types.SchottkyData;
@@ -88,10 +90,22 @@ public class DataIO {
 			e = of.createDiscreteMetric((DiscreteMetric)data);
 		} else
 		if (data instanceof DiscreteEmbedding) {
-			e = of.createDiscreteEmbedding((DiscreteEmbedding)data);
+			// convert to HalfedgeEmbedding to avoid deprecated DiscreteMap
+			DiscreteEmbedding de = (DiscreteEmbedding)data;
+			HalfedgeEmbedding he = DataUtility.toHalfedgeEmbedding(de);
+			e = of.createHalfedgeEmbedding(he);
 		} else
 		if (data instanceof DiscreteMap) {
-			e = of.createDiscreteMap((DiscreteMap)data);
+			// convert to HalfedgeMap to avoid deprecated DiscreteMap
+			DiscreteMap dm = (DiscreteMap)data;
+			HalfedgeMap hm = DataUtility.toHalfedgeMap(dm);
+			e = of.createHalfedgeMap(hm);
+		} else
+		if (data instanceof HalfedgeEmbedding) {
+			e = of.createHalfedgeEmbedding((HalfedgeEmbedding)data);
+		} else
+		if (data instanceof HalfedgeMap) {
+			e = of.createHalfedgeMap((HalfedgeMap)data);
 		}
 		typesMarshaller.marshal(e, out);
 	}
@@ -103,7 +117,23 @@ public class DataIO {
 	}
 	public static void writeConformalDataList(ConformalDataList data, OutputStream out) throws JAXBException {
 		ObjectFactory of = new ObjectFactory();
-		JAXBElement<ConformalDataList> e = of.createConformalDataList(data);
+		ConformalDataList writeData = of.createConformalDataList();
+		// convert to avoid writing DiscreteEmbedding or DiscreteMap
+		for (ConformalData d : data.getData()) {
+			if (d instanceof DiscreteEmbedding) {
+				DiscreteEmbedding de = (DiscreteEmbedding)d;
+				HalfedgeEmbedding he = DataUtility.toHalfedgeEmbedding(de);
+				writeData.getData().add(he);
+			} else
+			if (d instanceof DiscreteMap) {
+				DiscreteMap dm = (DiscreteMap)d;
+				HalfedgeMap hm = DataUtility.toHalfedgeMap(dm);
+				writeData.getData().add(hm);
+			} else {
+				writeData.getData().add(d);
+			}
+		}
+		JAXBElement<ConformalDataList> e = of.createConformalDataList(writeData);
 		typesMarshaller.marshal(e, out);
 	}
 	

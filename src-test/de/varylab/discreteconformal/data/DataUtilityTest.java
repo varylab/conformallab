@@ -10,17 +10,39 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import de.jreality.math.Matrix;
+import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.adapter.type.Position;
 import de.varylab.conformallab.data.DataIO;
 import de.varylab.conformallab.data.DataUtility;
+import de.varylab.conformallab.data.types.DiscreteEmbedding;
 import de.varylab.conformallab.data.types.UniformizationData;
+import de.varylab.discreteconformal.ConformalAdapterSet;
+import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.math.RnBig;
 import de.varylab.discreteconformal.uniformization.FundamentalEdge;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.uniformization.FundamentalVertex;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 
 public class DataUtilityTest {
 
+	@Test
+	public void testToDiscreteEmbedding() throws Exception {
+		InputStream in = DataUtilityTest.class.getResourceAsStream("conversion.xml");
+		DiscreteEmbedding de = DataIO.readConformalData(DiscreteEmbedding.class, in);
+		int genus = DataUtility.calculateGenus(de);
+		System.out.println("loading embedding of genus " + genus);
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+		CoHDS hds = new CoHDS();
+		DataUtility.toHalfedge(de, new ConformalAdapterSet(), Position.class, hds, cutInfo);
+		Assert.assertEquals(2, genus);
+		Assert.assertEquals(2, HalfEdgeUtils.getGenus(hds));
+	}
+	
 	@Test
 	public void testToFuchsianData() throws Exception {
 		List<FundamentalEdge> edges = new LinkedList<>();

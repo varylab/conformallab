@@ -21,13 +21,19 @@ public interface FunctionalAdapters {
 		public void setAlpha(E e, double alpha);
 	}
 	
+	public static interface Beta <E extends Edge<?, E, ?>> {
+		public double getBeta(E e);
+		public void setBeta(E e, double beta);
+	}	
+	
 	public static interface Lambda <E extends Edge<?, E, ?>> {
 		public double getLambda(E e);
 		public void setLambda(E e, double lambda);
 	}
 	
-	public static interface Theta <V extends Vertex<V, ?, ?>> {
+	public static interface Theta <V extends Vertex<V, E, ?>, E extends Edge<V, E, ?>> {
 		public double getTheta(V v);
+		public double getTheta(E e);
 	}
 	
 	public static interface Phi <E extends Edge<?, E, ?>> {

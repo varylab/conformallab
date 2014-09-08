@@ -23,7 +23,7 @@ import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.math.RnBig;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
-public class VisualizationUtilityTest {
+public class CutAndGlueUtilityTest {
 
 	
 	@Test
@@ -44,12 +44,12 @@ public class VisualizationUtilityTest {
 		CoHDS hds = new CoHDS();
 		CoVertex v1 = hds.addNewVertex();
 		v1.T = new double[]{0.25, 0.25, 0, 1};
-		boolean check1 = VisualizationUtility.isInsideFundamentalPolygon(v1, p, 0);
+		boolean check1 = CutAndGlueUtility.isInsideFundamentalPolygon(v1, p, 0);
 		Assert.assertTrue("v1 is inside", check1);
 		
 		CoVertex v2 = hds.addNewVertex();
 		v2.T = new double[]{-0.25, 0.25, 0, 1};
-		boolean check2 = VisualizationUtility.isInsideFundamentalPolygon(v2, p, 0);
+		boolean check2 = CutAndGlueUtility.isInsideFundamentalPolygon(v2, p, 0);
 		Assert.assertFalse("v2 is outside", check2);
 	}
 	
@@ -72,9 +72,9 @@ public class VisualizationUtilityTest {
 		
 		CoFace reglueFace = e1.getLeftFace();
 		Assert.assertTrue(HalfEdgeUtils.isValidSurface(hds, true));
-		VisualizationUtility.reglueFace(reglueFace, cutInfo, Pn.EUCLIDEAN);
+		CutAndGlueUtility.reglueFace(reglueFace, cutInfo, Pn.EUCLIDEAN);
 		Assert.assertTrue(HalfEdgeUtils.isValidSurface(hds, true));
-		VisualizationUtility.reglueFace(reglueFace, cutInfo, Pn.EUCLIDEAN);
+		CutAndGlueUtility.reglueFace(reglueFace, cutInfo, Pn.EUCLIDEAN);
 		Assert.assertTrue(HalfEdgeUtils.isValidSurface(hds, true));
 	}
 	
@@ -123,10 +123,10 @@ public class VisualizationUtilityTest {
 		reglued2.setName("Reglued 2");
 		CoFace reglueFace = e1.getLeftFace();
 		Assert.assertTrue(HalfEdgeUtils.isValidSurface(hds, true));
-		VisualizationUtility.reglueFace(reglueFace, cutInfo, Pn.EUCLIDEAN);
+		CutAndGlueUtility.reglueFace(reglueFace, cutInfo, Pn.EUCLIDEAN);
 		reglued1.set(hds);
 		Assert.assertTrue(HalfEdgeUtils.isValidSurface(hds, true));
-		VisualizationUtility.reglueFace(reglueFace, cutInfo, Pn.EUCLIDEAN);
+		CutAndGlueUtility.reglueFace(reglueFace, cutInfo, Pn.EUCLIDEAN);
 		reglued2.set(hds);
 		Assert.assertTrue(HalfEdgeUtils.isValidSurface(hds, true));
 	}

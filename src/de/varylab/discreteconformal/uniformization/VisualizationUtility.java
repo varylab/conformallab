@@ -1,55 +1,34 @@
 package de.varylab.discreteconformal.uniformization;
 
 import static de.jreality.math.Pn.HYPERBOLIC;
-import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryEdge;
 import static de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility.context;
-import static java.awt.BasicStroke.CAP_SQUARE;
-import static java.awt.BasicStroke.JOIN_ROUND;
-import static java.awt.RenderingHints.KEY_ANTIALIASING;
-import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
 import static java.awt.geom.Arc2D.OPEN;
 import static java.lang.Math.cos;
 import static java.lang.Math.signum;
 import static java.lang.Math.sin;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Stroke;
+import java.awt.Shape;
 import java.awt.geom.Arc2D;
-import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.PriorityQueue;
 import java.util.Set;
 
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.EVD;
 import no.uib.cipr.matrix.NotConvergedException;
 import de.jreality.math.Matrix;
-import de.jreality.math.P2;
 import de.jreality.math.Pn;
 import de.jreality.math.Rn;
-import de.jtem.discretegroup.core.DiscreteGroup;
-import de.jtem.discretegroup.core.DiscreteGroupConstraint;
 import de.jtem.discretegroup.core.DiscreteGroupElement;
-import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.heds.CoEdge;
-import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
-import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.CustomVertexInfo;
 import de.varylab.discreteconformal.math.PnBig;
 import de.varylab.discreteconformal.math.RnBig;
-import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class VisualizationUtility {
 	
@@ -57,37 +36,47 @@ public class VisualizationUtility {
 		BIG_HALF = new BigDecimal(0.5);
 	
 	
-	public static void drawTriangulation (
-		CoHDS surface,
+	public static void createUniversalCover(
+		FundamentalPolygon P,
 		HyperbolicModel model,
-		FundamentalPolygon polygon,
 		int maxDrawElements,
 		double maxDrawDistance,
-		Graphics2D g,
-		int res,
-		Color color,
-		boolean drawBoundary,
-		Color boundaryColor
+		boolean drawPolygon,
+		boolean drawAxes,
+		List<double[][]> axesSegments,
+		List<double[][]> polygonSegments,
+		Path2D axesPath,
+		Path2D polygonPath
 	) {
-		List<DiscreteGroupElement> G = createGoupElements(polygon, maxDrawElements, maxDrawDistance); 
-		float ls = res / 500f; // line scale
-		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
-		g.scale(0.5, -0.5);
-		g.translate(res, -res);
-		g.setStroke(new BasicStroke(0.5f * ls));
-		g.setColor(color);
-		for (DiscreteGroupElement element : G) {
-			Matrix T = element.getMatrix();
+		List<DiscreteGroupElement> G = P.createGoupElements(maxDrawElements, maxDrawDistance);
+		boolean isFirst = true;
+		for (DiscreteGroupElement s : G) {
+			BigDecimal[] sBig = RnBig.toBig(null, s.getArray());
+			createTransformedDomain(
+				P, 
+				sBig,
+				drawPolygon, isFirst & drawAxes, 
+				model, 
+				axesSegments, polygonSegments, 
+				axesPath, polygonPath
+			);
+			isFirst = false;
+		}
+	}
+	
+	public static void createTriangulation (
+		CoHDS surface,
+		FundamentalPolygon P,
+		HyperbolicModel model,
+		int maxDrawElements,
+		double maxDrawDistance,
+		Path2D triangulationPath,
+		Path2D boundaryPath
+	) {
+		List<DiscreteGroupElement> G = P.createGoupElements(maxDrawElements, maxDrawDistance);
+		for (DiscreteGroupElement g : G) {
+			Matrix T = g.getMatrix();
 			for (CoEdge e : surface.getPositiveEdges()) {
-				if (drawBoundary) {
-					if (HalfEdgeUtils.isBoundaryEdge(e)) {
-						g.setColor(boundaryColor);
-						g.setStroke(new BasicStroke(1 * ls));
-					} else {
-						g.setColor(color);
-						g.setStroke(new BasicStroke(0.5f * ls));
-					}
-				}
 				double[] s = e.getStartVertex().T.clone();
 				double[] t = e.getTargetVertex().T.clone();
 				double[] m = Rn.linearCombination(null, 0.5, s, 0.5, t);
@@ -95,157 +84,75 @@ public class VisualizationUtility {
 				T.transformVector(t);
 				T.transformVector(m);
 				Pn.normalize(m, m, Pn.HYPERBOLIC);
-				double[] p1, p2, p3;
-				switch (model) {
-					case Klein:
-						p1 = new double[] {s[0] / s[3], s[1] / s[3], 1};
-						p2 = new double[] {t[0] / t[3], t[1] / t[3], 1};
-						p3 = new double[] {m[0] / m[3], m[1] / m[3], 1};		
-						break;
-					default:
-					case Poincaré:
-						p1 = new double[] {s[0] / (s[3] + 1), s[1] / (s[3] + 1), 1};
-						p2 = new double[] {t[0] / (t[3] + 1), t[1] / (t[3] + 1), 1};
-						p3 = new double[] {m[0] / (m[3] + 1), m[1] / (m[3] + 1), 1};
-						break;
-					case Halfplane:
-						p1 = new double[] {s[1] / (s[3] - s[0]), 1 / (s[3] - s[0]), 1};
-						p2 = new double[] {t[1] / (t[3] - t[0]), 1 / (t[3] - t[0]), 1};
-						p3 = new double[] {m[1] / (m[3] - m[0]), 1 / (m[3] - m[0]), 1};
-						break;
+				double[] p1 = dehomogenize(s, model);
+				double[] p2 = dehomogenize(t, model);
+				double[] p3 = dehomogenize(m, model);
+				Shape arc = createArc(p1, p2, p3, model);
+				triangulationPath.append(arc, false);
+				if (HalfEdgeUtils.isBoundaryEdge(e)) {
+					boundaryPath.append(arc, false);
 				}
-				drawArc(p1, p2, p3, g, model, res);
 			}
 		}
-		g.translate(-res, res);
-		g.scale(2, -2);
 	}
 	
-	
-	public static void drawUniversalCoverImage(
+		
+	protected static void createTransformedDomain(
 		FundamentalPolygon poly,
+		BigDecimal[] T,
 		boolean drawPolygon,
 		boolean drawAxes,
-		int maxDrawDepth,
-		double maxDrawDistance,
 		HyperbolicModel model,
-		Graphics2D g,
-		int res,
-		Color polygonColor,
-		Color axesColor
+		List<double[][]> axesSegments,
+		List<double[][]> polygonSegments,
+		Path2D axesPath,
+		Path2D polygonPath
 	) {
-		float ls = res / 500f; // line scale
-		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
-		g.scale(0.5, -0.5);
-		g.translate(res, -res);
-
-		g.setStroke(new BasicStroke(2 * ls));
-		g.setColor(polygonColor);
-		drawUniversalCover(poly, maxDrawDepth, maxDrawDistance, drawPolygon, drawAxes, g, model, res, polygonColor, axesColor, null, null);
-		
-		if (model == HyperbolicModel.Klein || model == HyperbolicModel.Poincaré) {
-			Ellipse2D boundary = new Ellipse2D.Double(-res + ls, -res + ls, 2*res - 2*ls, 2*res - 2*ls);
-			g.setColor(Color.BLACK);
-			g.setStroke(new BasicStroke(2 * ls));
-			g.draw(boundary);
+		FundamentalPolygon rP = FundamentalPolygonUtility.copyPolygon(poly);
+		for (FundamentalEdge ce : rP.getEdges()) {
+			BigDecimal[] domainInv = RnBig.inverse(null, T, context);
+			RnBig.times(ce.motionBig, ce.motionBig, T, context);
+			RnBig.times(ce.motionBig, domainInv, ce.motionBig, context);
+			RnBig.matrixTimesVector(ce.startPosition, T, ce.startPosition, context);
+			PnBig.normalize(ce.startPosition, ce.startPosition, HYPERBOLIC, context);
 		}
-		
-		g.translate(-res, res);
-		g.scale(2, -2);
-	}
-	
-	
-	public static void drawDomainBackground(Graphics2D g, int res, HyperbolicModel model) {
-		float ls = res / 500f; // line scale
-		g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
-		g.setColor(new Color(255, 255, 255, 0));
-		g.fillRect(0, 0, res, res);
-		g.scale(0.5, -0.5);
-		g.translate(res, -res);
-		
-		if (model == HyperbolicModel.Klein || model == HyperbolicModel.Poincaré) {
-			Ellipse2D boundary = new Ellipse2D.Double(-res + ls, -res + ls, 2*res - 2*ls, 2*res - 2*ls);
-			g.setColor(Color.WHITE);
-			g.fill(boundary);
-		}
-		g.translate(-res, res);
-		g.scale(2, -2);
-	}
-	
-	private static void drawPolygon(
-		FundamentalPolygon poly, 
-		HyperbolicModel model, 
-		Graphics2D g,
-		int resolution,
-		List<double[][]> segmentsOUT
-	) {
-		for (FundamentalEdge e : poly.getEdges()) {
-			BigDecimal[] p1a = e.startPosition; 
-			BigDecimal[] p2a = e.nextEdge.startPosition;
-			BigDecimal[] p3a = RnBig.linearCombination(null, BIG_HALF, p1a, BIG_HALF, p2a, FundamentalPolygonUtility.context);
-			PnBig.normalize(p3a, p3a, HYPERBOLIC, context);
-			double[] p1ad = RnBig.toDouble(null, p1a);
-			double[] p2ad = RnBig.toDouble(null, p2a);
-			double[] p3ad = RnBig.toDouble(null, p3a);
-			double[] p1, p2, p3;
-			switch (model) {
-				case Klein:
-					p1 = new double[] {p1ad[0] / p1ad[3], p1ad[1] / p1ad[3], 1};
-					p2 = new double[] {p2ad[0] / p2ad[3], p2ad[1] / p2ad[3], 1};
-					p3 = new double[] {p3ad[0] / p3ad[3], p3ad[1] / p3ad[3], 1};
-					if (segmentsOUT != null) {
-						segmentsOUT.add(new double[][] {p1, p2});
-					}
-					break;
-				default:
-				case Poincaré:
-					p1 = new double[] {p1ad[0] / (p1ad[3] + 1), p1ad[1] / (p1ad[3] + 1), 1};
-					p2 = new double[] {p2ad[0] / (p2ad[3] + 1), p2ad[1] / (p2ad[3] + 1), 1};
-					p3 = new double[] {p3ad[0] / (p3ad[3] + 1), p3ad[1] / (p3ad[3] + 1), 1};
-					break;
-				case Halfplane:
-					p1 = new double[] {p1ad[1] / (p1ad[3] - p1ad[0]), 1 / (p1ad[3] - p1ad[0]), 1};
-					p2 = new double[] {p2ad[1] / (p2ad[3] - p2ad[0]), 1 / (p2ad[3] - p2ad[0]), 1};
-					p3 = new double[] {p3ad[1] / (p3ad[3] - p3ad[0]), 1 / (p3ad[3] - p3ad[0]), 1};
-					break;
+		if (drawAxes) {
+			Shape axes = createPolygonAxes(rP, model, axesSegments);
+			if (axesPath != null) {
+				axesPath.append(axes, false);
 			}
-			if (g != null) {
-				drawArc(p1, p2, p3, g, model, resolution);
+		}
+		if (drawPolygon) {
+			Shape polygon = createPolygon(rP, model, polygonSegments);
+			if (polygonPath != null) {
+				polygonPath.append(polygon, false);
 			}
 		}
 	}
 	
 	
-	protected static List<double[][]> getPolygonAxesSegments(FundamentalPolygon poly) {
-		List<double[][]> result = new ArrayList<double[][]>();
-		drawPolygonAxes(poly, HyperbolicModel.Klein, null, -1, result);
-		return result;
-	}
-	
-	
-	private static void drawPolygonAxes(
+	protected static Shape createPolygonAxes(
 		FundamentalPolygon poly, 
 		HyperbolicModel model, 
-		Graphics2D g,
-		int resolution,
 		List<double[][]> segmentsOUT
 	) {
+		Path2D axesPath = new Path2D.Float();
 		Set<FundamentalEdge> axisDrawn = new HashSet<FundamentalEdge>();
 		for (FundamentalEdge e : poly.getEdges()) {
 			if (axisDrawn.contains(e) || axisDrawn.contains(e.partner)) {
 				continue;
 			}
-			drawAxis(e.motionBig, model, g, resolution, segmentsOUT);
+			Shape axis = createAxis(e.motionBig, model, segmentsOUT);
 			axisDrawn.add(e);
+			axesPath.append(axis, false);
 		}
+		return axesPath;
 	}
 	
 	
-	private static void drawAxis(
+	protected static Shape createAxis(
 		BigDecimal[] Ta,		
 		HyperbolicModel model, 
-		Graphics2D g,
-		int resolution,
 		List<double[][]> segmentsOUT
 	) {
 		double[][] Tad = new double[4][4];
@@ -258,7 +165,7 @@ public class VisualizationUtility {
 			evd.factor(T);
 		} catch (NotConvergedException e1) {
 			e1.printStackTrace();
-			return;
+			return new Line2D.Float();
 		}
 		DenseMatrix ev = evd.getRightEigenvectors();
 		double[] evl = evd.getRealEigenvalues();
@@ -268,167 +175,51 @@ public class VisualizationUtility {
 		double[] f2 = {ev.get(0, i2) / ev.get(3, i2), ev.get(1, i2) / ev.get(3, i2), 0, 1.0};
 		double[] f3 = Rn.linearCombination(null, 0.5, f1, 0.5, f2);
 		Pn.normalize(f3, f3, HYPERBOLIC);
-		double[] p1, p2, p3;
-		switch (model) {
-			case Klein:
-				p1 = new double[] {f1[0] / f1[3], f1[1] / f1[3], 1};
-				p2 = new double[] {f2[0] / f2[3], f2[1] / f2[3], 1};
-				p3 = new double[] {f3[0] / f3[3], f3[1] / f3[3], 1};
-				if (segmentsOUT != null) {
-					segmentsOUT.add(new double[][] {p1, p2});
-				}
-				break;
-			default:
-			case Poincaré:
-				p1 = new double[] {f1[0] / f1[3], f1[1] / f1[3], 1};
-				p2 = new double[] {f2[0] / f2[3], f2[1] / f2[3], 1};
-				p3 = new double[] {f3[0] / (f3[3] + 1), f3[1] / (f3[3] + 1), 1};
-				break;
-			case Halfplane:
-				p1 = new double[] {f1[0] / f1[3], f1[1] / f1[3], 1};
-				p2 = new double[] {f2[0] / f2[3], f2[1] / f2[3], 1};
-				p3 = new double[] {f3[1] / (f3[3] - f3[0]), 1 / (f3[3] - f3[0]), 1};
-				break;
+		double[] p1 = dehomogenize(f1, HyperbolicModel.Klein);
+		double[] p2 = dehomogenize(f2, HyperbolicModel.Klein);
+		double[] p3 = dehomogenize(f3, model);
+		if (segmentsOUT != null) {
+			segmentsOUT.add(new double[][] {p1, p2});
 		}
-		if (g != null) {
-			drawArc(p1, p2, p3, g, model, resolution);
-		}
+		return createArc(p1, p2, p3, model);
 	}
 	
-	
-	protected static void getUniversalCoverSegments(
-		FundamentalPolygon poly,
-		int maxElements,
-		double maxDrawDistance,
-		boolean drawPolygon,
-		boolean drawAxes,
-		Color polygonColor,
-		Color axesColor,
-		List<double[][]> axesSegments,
-		List<double[][]> polygonSegments
+	protected static Shape createPolygon(
+		FundamentalPolygon poly, 
+		HyperbolicModel model, 
+		List<double[][]> segmentsOUT
 	) {
-		drawUniversalCover(poly, maxElements, maxDrawDistance, drawPolygon, drawAxes, null, HyperbolicModel.Klein, -1, polygonColor, axesColor, axesSegments, polygonSegments);
+		Path2D polyPath = new Path2D.Float();
+		for (FundamentalEdge e : poly.getEdges()) {
+			BigDecimal[] p1a = e.startPosition; 
+			BigDecimal[] p2a = e.nextEdge.startPosition;
+			BigDecimal[] p3a = RnBig.linearCombination(null, BIG_HALF, p1a, BIG_HALF, p2a, FundamentalPolygonUtility.context);
+			PnBig.normalize(p3a, p3a, HYPERBOLIC, context);
+			double[] p1ad = RnBig.toDouble(null, p1a);
+			double[] p2ad = RnBig.toDouble(null, p2a);
+			double[] p3ad = RnBig.toDouble(null, p3a);
+			double[] p1 = dehomogenize(p1ad, model);
+			double[] p2 = dehomogenize(p2ad, model);
+			double[] p3 = dehomogenize(p3ad, model);
+			if (segmentsOUT != null) {
+				segmentsOUT.add(new double[][] {p1, p2});
+			}
+			Shape arc = createArc(p1, p2, p3, model);
+			polyPath.append(arc, false);
+		}
+		return polyPath;
 	}
 	
-	
-	private static void drawUniversalCover(
-		FundamentalPolygon poly,
-		final int maxDrawElements,
-		final double maxDrawDistance,
-		boolean drawPolygon,
-		boolean drawAxes,
-		Graphics2D g,
-		HyperbolicModel model,
-		int resolution,
-		Color polygonColor,
-		Color axesColor,
-		List<double[][]> axesSegments,
-		List<double[][]> polygonSegments
-	) {
-		List<DiscreteGroupElement> elementList = createGoupElements(poly, maxDrawElements, maxDrawDistance);
-		boolean isFirst = true;
-		for (DiscreteGroupElement s : elementList) {
-			BigDecimal[] sBig = RnBig.toBig(null, s.getArray());
-			drawUniversalCoverArcs(poly, sBig, drawPolygon, isFirst & drawAxes, g, model, resolution, polygonColor, axesColor, axesSegments, polygonSegments);
-			isFirst = false;
-		}
-	}
-
-
-	public static List<DiscreteGroupElement> createGoupElements(
-		final FundamentalPolygon poly,
-		final int maxDrawElements,
-		final double maxDrawDistance
-	) {
-		DiscreteGroupConstraint constraint = new DiscreteGroupConstraint() {
-			@Override
-			public void update() {
-			}
-			@Override
-			public void setMaxNumberElements(int arg0) {
-			}
-			@Override
-			public int getMaxNumberElements() {
-				return maxDrawElements;
-			}
-			@Override
-			public boolean acceptElement(DiscreteGroupElement s) {
-				double mean = 0.0;
-				for (FundamentalEdge e : poly.getEdges()) {
-					BigDecimal[] p = e.startPosition;
-					BigDecimal[] T = RnBig.toBig(null, s.getMatrix());
-					p = RnBig.matrixTimesVector(null, T, p, context);
-					double[] pd = RnBig.toDouble(null, p);
-					mean += Math.sqrt(Pn.norm(pd, Pn.HYPERBOLIC));
-				}
-				mean /= poly.getLength();
-				return mean < maxDrawDistance;
-			}
-		};
-		DiscreteGroup G = poly.getDiscreteGroup();
-		G.setConstraint(constraint);
-		G.generateElements();
-		DiscreteGroupElement[] elements = G.getElementList();
-		List<DiscreteGroupElement> elementList = Arrays.asList(elements);
-		return elementList;
-	}
-		
-		
-	private static void drawUniversalCoverArcs(
-		FundamentalPolygon poly,
-		BigDecimal[] domain,
-		boolean drawPolygon,
-		boolean drawAxes,
-		Graphics2D g,
-		HyperbolicModel model,
-		int resolution,
-		Color polygonColor,
-		Color axesColor,
-		List<double[][]> axesSegments,
-		List<double[][]> polygonSegments
-	) {
-		FundamentalPolygon rP = FundamentalPolygonUtility.copyPolygon(poly);
-		for (FundamentalEdge ce : rP.getEdges()) {
-			BigDecimal[] domainInv = RnBig.inverse(null, domain, context);
-			RnBig.times(ce.motionBig, ce.motionBig, domain, context);
-			RnBig.times(ce.motionBig, domainInv, ce.motionBig, context);
-			RnBig.matrixTimesVector(ce.startPosition, domain, ce.startPosition, context);
-			PnBig.normalize(ce.startPosition, ce.startPosition, HYPERBOLIC, context);
-		}
-		if (drawAxes) {
-			if (g != null) {
-				float ls = resolution / 500f;
-				Stroke storedStroke = g.getStroke();
-				Color storedColor = g.getColor();
-				g.setStroke(new BasicStroke(2 * ls, CAP_SQUARE, JOIN_ROUND, 1.0f, new float[] {10 * ls, 10 * ls}, 1.0f));
-				g.setColor(axesColor);
-				drawPolygonAxes(rP, model, g, resolution, axesSegments);
-				g.setColor(storedColor);
-				g.setStroke(storedStroke);
-			} else {
-				drawPolygonAxes(rP, model, null, resolution, axesSegments);
-			}
-		}
-		if (drawPolygon) {
-			if (g != null) {
-				g.setColor(polygonColor);
-			}
-			drawPolygon(rP, model, g, resolution, polygonSegments);
-		}
-	}
-	
-	
-	private static void drawArc(
+	protected static Shape createArc(
 		double[] p1,
 		double[] p2,
 		double[] p3,
-		Graphics2D g,
-		HyperbolicModel model,
-		int resolution
+		HyperbolicModel model
 	) {
+		Shape shape = null;
 		try {
 			if (model == HyperbolicModel.Klein) {
-				g.draw(new Line2D.Double(resolution * p1[0], resolution * p1[1], resolution * p2[0], resolution * p2[1]));
+				shape = new Line2D.Float((float)p1[0], (float)p1[1], (float)p2[0], (float)p2[1]);
 			} else {
 				double[] center = getCircumCenter(p1, p2, p3);
 				double[] vec1 = Rn.subtract(null, p1, center);
@@ -443,29 +234,26 @@ public class VisualizationUtility {
 				double[] betaVec2 = Rn.subtract(null, p2, p3);
 				double beta = Rn.euclideanAngle(betaVec1, betaVec2);
 				if (beta < 3.1) {
-					double cornerx = resolution * (center[0] - radius);
-					double cornery = resolution * (center[1] - radius);
-					double size = resolution * radius * 2;
-					Arc2D arc = new Arc2D.Double(cornerx, cornery, size, size, degStartAngle, degAngle, OPEN);
-					g.draw(arc);
+					double cornerx = center[0] - radius;
+					double cornery = center[1] - radius;
+					double size = radius * 2;
+					shape = new Arc2D.Float((float)cornerx, (float)cornery, (float)size, (float)size, (float)degStartAngle, (float)degAngle, OPEN);
 				} else {
-					g.draw(new Line2D.Double(resolution * p1[0], resolution * p1[1], resolution * p2[0], resolution * p2[1]));
+					shape = new Line2D.Float((float)p1[0], (float)p1[1], (float)p2[0], (float)p2[1]);
 				}
 			}
 		} catch (Exception e) {
-			g.draw(new Line2D.Double(resolution * p1[0], resolution * p1[1], resolution * p2[0], resolution * p2[1]));
+			shape = new Line2D.Float((float)p1[0], (float)p1[1], (float)p2[0], (float)p2[1]);
 		}
+		return shape;
 	}
 	
 	
 	/**
 	 * Calculate the circum-center of a triangle in affine coordinates
-	 * @param Ap
-	 * @param Bp
-	 * @param Cp
 	 * @return
 	 */
-	private static double[] getCircumCenter(double[] A, double[] B, double[] C) {
+	protected static double[] getCircumCenter(double[] A, double[] B, double[] C) {
 		double a = Rn.euclideanDistance(B, C);
 		double b = Rn.euclideanDistance(C, A);
 		double c = Rn.euclideanDistance(A, B);
@@ -481,291 +269,21 @@ public class VisualizationUtility {
 	}
 	
 	
-	public static class ValenceComparator implements Comparator<CoVertex> {
-
-		@Override
-		public int compare(CoVertex o1, CoVertex o2) {
-			int v1 = HalfEdgeUtils.incomingEdges(o1).size();
-			int v2 = HalfEdgeUtils.incomingEdges(o2).size();
-			return v1 - v2;
+	protected static double[] dehomogenize(double[] p, HyperbolicModel model) {
+		double[] result = null;
+		switch (model) {
+		case Klein:
+			result = new double[] {p[0] / p[3], p[1] / p[3], 1};
+			break;
+		default:
+		case Poincaré:
+			result = new double[] {p[0] / (p[3] + 1), p[1] / (p[3] + 1), 1};
+			break;
+		case Halfplane:
+			result = new double[] {p[1] / (p[3] - p[0]), 1 / (p[3] - p[0]), 1};
+			break;
 		}
-		
-	}
-	
-	
-	public static Set<CoFace> reglueOutsideFaces(
-		CoHDS hds, 
-		int maxFaces, 
-		FundamentalPolygon p, 
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo,
-		int signature
-	) {
-		int counter = 0;
-		Set<CoFace> reglued = new HashSet<CoFace>(); 
-		Collection<CoVertex> bList = HalfEdgeUtils.boundaryVertices(hds);
-		PriorityQueue<CoVertex> lowValenceFirst = new PriorityQueue<CoVertex>(bList.size(), new ValenceComparator());
-		lowValenceFirst.addAll(bList);
-		for (CoVertex v : lowValenceFirst) {
-			if (!v.isValid()) continue;
-			List<CoFace> faces = HalfEdgeUtils.facesIncidentWithVertex(v);
-			for (CoFace f : faces) {
-				if (counter >= maxFaces) {
-					System.out.println(counter + " faces reglued");
-					return reglued;
-				}
-				if (reglued.contains(f)) continue;
-				if (HalfEdgeUtils.isInteriorFace(f)) continue;
-				if (!isFaceMovable(f)) continue;
-				if (!isOutsideFundamentalPolygon(f, p, 0)) continue;
-				if (!isFaceMovedToFundamentalDomainByReglue(f, cutInfo, p, 0)) continue;
-				try {
-					reglueFace(f, cutInfo, signature);
-				} catch (AssertionError e) {
-					System.err.println(e.getLocalizedMessage());
-				}
-				reglued.add(f);
-				System.out.println("face " + f + " reglued.");
-				counter++;
-	//			assert HalfEdgeUtils.isValidSurface(hds, true) : "surface should be valid after face reglue";
-			}
-		}
-		System.out.println(counter + " faces reglued");
-		return reglued;
-	}
-	
-	public static void reglueSingleFace(CoFace f, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo, int signature) {
-		reglueFace(f, cutInfo, signature);
-	}
-	
-	protected static boolean isFaceMovable(CoFace f) {
-		for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
-			if (HalfEdgeUtils.isBoundaryEdge(e)) continue;
-			CoVertex v = e.getNextEdge().getTargetVertex();
-			boolean ear = HalfEdgeUtils.incomingEdges(v).size() == 2;
-			boolean sb = HalfEdgeUtils.isBoundaryVertex(e.getStartVertex());
-			boolean tb = HalfEdgeUtils.isBoundaryVertex(e.getTargetVertex());
-			if (sb && tb && !ear) return false;
-		}
-		return true;
-	}
-	
-	
-	
-	protected static void reglueFace(
-		CoFace f,
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo,
-		int signature
-	) {
-		if (HalfEdgeUtils.isInteriorFace(f)) {
-			throw new IllegalArgumentException("can only reglue boundary faces");
-		}
-		HalfEdgeDataStructure<CoVertex, CoEdge, CoFace> hds = f.getHalfEdgeDataStructure();
-		CoEdge e1 = f.getBoundaryEdge();
-		CoEdge e2 = e1.getNextEdge();
-		CoEdge e3 = e2.getNextEdge();
-		int numBoundaryEdges = 0;
-		numBoundaryEdges += isBoundaryEdge(e1) ? 1 : 0;
-		numBoundaryEdges += isBoundaryEdge(e2) ? 1 : 0;
-		numBoundaryEdges += isBoundaryEdge(e3) ? 1 : 0;
-		assert numBoundaryEdges < 3 : "a face must have at most two boundary edges";
-		if (numBoundaryEdges == 1) {
-			CoEdge e = null;
-			for (CoEdge be : HalfEdgeUtils.boundaryEdges(f)) {
-				if (be.getRightFace() == null) {
-					e = be; break;
-				}
-			}
-			assert e != null : "we should have found the boundary edge of face f";
-			
-			// treat source location
-			CoEdge opp = e.getOppositeEdge();
-			CoEdge oppNext = opp.getNextEdge();
-			CoEdge oppPrev = opp.getPreviousEdge();
-			CoEdge eNext = e.getNextEdge();
-			CoEdge ePrev = e.getPreviousEdge();
-			CoVertex sourceVertex = eNext.getTargetVertex();
-			// vertex geometry
-			double[] sourcePosT = sourceVertex.T;
-			double[] sourcePosP = sourceVertex.P;
-			Matrix A = new Matrix(createIsometryFromEdge(e, cutInfo, signature));
-			double[] newPos = A.multiplyVector(sourcePosT);
-			CoVertex newVertex = hds.addNewVertex();
-			newVertex.T = newPos;
-			newVertex.P = sourcePosP.clone();
-			if (sourceVertex.info != null) {
-				newVertex.info = new CustomVertexInfo(sourceVertex.info);
-			}
-			// relink boundary
-			oppPrev.linkNextEdge(eNext);
-			ePrev.linkNextEdge(oppNext);
-			eNext.setLeftFace(null);
-			ePrev.setLeftFace(null);
-			// remove old boundary
-			hds.removeEdge(e);
-			hds.removeEdge(opp);
-			// fix incoming edges
-			oppPrev.setTargetVertex(eNext.getStartVertex());
-			ePrev.setTargetVertex(oppNext.getStartVertex());
-			
-			// target location
-			CoEdge pe = cutInfo.edgeCutMap.get(e);
-			CoEdge peOpp = pe.getOppositeEdge();
-			CoEdge peOppNext = peOpp.getNextEdge();
-			CoEdge peOppPrev = peOpp.getPreviousEdge();
-			CoEdge newEdge1 = hds.addNewEdge();
-			CoEdge newEdge1Opp = hds.addNewEdge();
-			CoEdge newEdge2 = hds.addNewEdge();			
-			CoEdge newEdge2Opp = hds.addNewEdge();			
-			// link boundary
-			peOppPrev.linkNextEdge(newEdge1Opp);
-			newEdge1Opp.linkNextEdge(newEdge2Opp);
-			newEdge2Opp.linkNextEdge(peOppNext);
-			peOpp.linkNextEdge(newEdge2);
-			newEdge2.linkNextEdge(newEdge1);
-			newEdge1.linkNextEdge(peOpp);
-			newEdge2.setTargetVertex(newVertex);
-			newEdge1Opp.setTargetVertex(newVertex);
-			newEdge1.setTargetVertex(pe.getTargetVertex());
-			newEdge2Opp.setTargetVertex(pe.getStartVertex());
-			newEdge1.setLeftFace(f);
-			newEdge2.setLeftFace(f);
-			peOpp.setLeftFace(f);
-			newEdge1.linkOppositeEdge(newEdge1Opp);
-			newEdge2.linkOppositeEdge(newEdge2Opp);
-			
-			// fix cut info
-			cutInfo.edgeCutMap.put(ePrev, newEdge1Opp);
-			cutInfo.edgeCutMap.put(newEdge1Opp, ePrev);
-			cutInfo.edgeCutMap.put(eNext, newEdge2Opp);
-			cutInfo.edgeCutMap.put(newEdge2Opp, eNext);
-			cutInfo.edgeCutMap.put(ePrev.getOppositeEdge(), newEdge1);
-			cutInfo.edgeCutMap.put(newEdge1, ePrev.getOppositeEdge());
-			cutInfo.edgeCutMap.put(eNext.getOppositeEdge(), newEdge2);
-			cutInfo.edgeCutMap.put(newEdge2, eNext.getOppositeEdge());
-			cutInfo.edgeCutMap.remove(e);
-			cutInfo.edgeCutMap.remove(opp);
-			cutInfo.edgeCutMap.remove(pe);
-			cutInfo.edgeCutMap.remove(peOpp);
-			cutInfo.vertexCopyMap.put(sourceVertex, newVertex);
-		} else {
-			CoEdge e = null;
-			for (CoEdge be : HalfEdgeUtils.boundaryEdges(f)) {
-				if (be.getRightFace() != null) {
-					e = be; break;
-				}
-			}
-			assert e != null : "we should have found the non-boundary edge of face f";
-			CoEdge b1 = e.getNextEdge();
-			CoEdge b2 = e.getPreviousEdge();
-			CoEdge pb1 = cutInfo.edgeCutMap.get(b1);
-			CoEdge pb2 = cutInfo.edgeCutMap.get(b2);
-			if (pb1.getOppositeEdge().getNextEdge() != pb2.getOppositeEdge()) {
-				System.out.println("no continuous edge identification at face " + f);
-				return;
-			}
-			CoEdge b1Opp = b1.getOppositeEdge();
-			CoEdge b2Opp = b2.getOppositeEdge();
-			CoEdge b1OppNext = b1Opp.getNextEdge();
-			CoEdge b2OppPrev = b2Opp.getPreviousEdge();
-			CoVertex v = b1.getTargetVertex();
-			CoVertex v1 = b1.getStartVertex();
-			CoVertex v2 = e.getStartVertex();
-			// relink source boundary
-			b2OppPrev.linkNextEdge(e);
-			e.linkNextEdge(b1OppNext);
-			e.setLeftFace(null);
-			// delete old boundary
-			hds.removeEdge(b1);
-			hds.removeEdge(b2);
-			hds.removeEdge(b1Opp);
-			hds.removeEdge(b2Opp);
-			hds.removeVertex(v);
-			// fix incoming edges
-			b2OppPrev.setTargetVertex(v2);
-			e.setTargetVertex(v1);
-			
-			// target location
-			CoEdge newEdge = hds.addNewEdge();
-			CoEdge newEdgeOpp = hds.addNewEdge();
-			CoEdge pb1Opp = pb1.getOppositeEdge();
-			CoEdge pb2Opp = pb2.getOppositeEdge();
-			CoEdge pb1OppPrev = pb1Opp.getPreviousEdge();
-			CoEdge pb2OppNext = pb2Opp.getNextEdge();
-			// link new boundary
-			pb1OppPrev.linkNextEdge(newEdgeOpp);
-			newEdgeOpp.linkNextEdge(pb2OppNext);
-			// relink face
-			newEdge.linkOppositeEdge(newEdgeOpp);
-			pb2Opp.linkNextEdge(newEdge);
-			newEdge.linkNextEdge(pb1Opp);
-			newEdge.setLeftFace(f);
-			pb1Opp.setLeftFace(f);
-			pb2Opp.setLeftFace(f);
-			newEdge.setTargetVertex(pb1.getTargetVertex());
-			newEdgeOpp.setTargetVertex(pb2.getStartVertex());
-			
-			// fix cut info
-			cutInfo.edgeCutMap.put(e, newEdgeOpp);
-			cutInfo.edgeCutMap.put(newEdgeOpp, e);
-			cutInfo.edgeCutMap.put(e.getOppositeEdge(), newEdge);
-			cutInfo.edgeCutMap.put(newEdge, e.getOppositeEdge());
-			cutInfo.edgeCutMap.remove(b1);
-			cutInfo.edgeCutMap.remove(b2);
-			cutInfo.edgeCutMap.remove(b1Opp);
-			cutInfo.edgeCutMap.remove(b1Opp);
-			cutInfo.vertexCopyMap.remove(v);
-		}
-	}
-	
-
-	protected static boolean isOutsideFundamentalPolygon(CoFace f, FundamentalPolygon p, double tol) {
-		for (CoVertex v : HalfEdgeUtils.boundaryVertices(f)) {
-			if (isInsideFundamentalPolygon(v, p, tol)) return false;
-		}
-		return true;
-	}
-	
-	protected static boolean isInsideFundamentalPolygon(CoVertex v, FundamentalPolygon p, double tol) {
-		double[] vt = P2.projectP3ToP2(null, v.T); 
-		for (FundamentalEdge e : p.getEdges()) {
-			double[] s = P2.projectP3ToP2(null, RnBig.toDouble(null, e.startPosition));
-			double[] t = P2.projectP3ToP2(null, RnBig.toDouble(null, e.nextEdge.startPosition));
-			double[] line = P2.lineFromPoints(null, s, t);
-			double dot = Rn.innerProduct(line, vt);
-			if (dot < tol) return false;
-		}
-		return true;
-	}
-	
-	protected static boolean isFaceMovedToFundamentalDomainByReglue(
-		CoFace f, 
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo, 
-		FundamentalPolygon p, 
-		double tol
-	) {
-		for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
-			CoEdge pe = cutInfo.edgeCutMap.get(e);
-			if (pe != null) {
-				if (!isInsideFundamentalPolygon(pe.getStartVertex(), p, tol)) return false;
-				if (!isInsideFundamentalPolygon(pe.getTargetVertex(), p, tol)) return false;
-			}
-		}
-		return true;
-	}
-	
-	
-	protected static double[] createIsometryFromEdge(CoEdge e, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo, int signature) {
-		if (!HalfEdgeUtils.isBoundaryEdge(e)) {
-			throw new IllegalArgumentException("No boundary edge");
-		}
-		CoEdge ePartner = cutInfo.edgeCutMap.get(e);
-		assert ePartner != null : "every boundary edge has to be in the cut info";
-		double[] s1 = P2.projectP3ToP2(null, e.getStartVertex().T);
-		double[] t1 = P2.projectP3ToP2(null, e.getTargetVertex().T);
-		double[] s2 = P2.projectP3ToP2(null, ePartner.getStartVertex().T);
-		double[] t2 = P2.projectP3ToP2(null, ePartner.getTargetVertex().T);
-		double[] a = P2.makeDirectIsometryFromFrames(null, s1, t1, t2, s2, signature);
-		return P2.imbedMatrixP2InP3(null, a);
+		return result;
 	}
 	
 }

@@ -63,7 +63,7 @@ public class ContractShortEdges extends AlgorithmPlugin {
 		}
 		List<E> contract = new LinkedList<>();
 		for (E e : hds.getPositiveEdges()) {
-			double l = a.get(Length.class, e, Double.class);
+			Double l = a.get(Length.class, e, Double.class);
 			if (l < maxLength) {
 				contract.add(e);
 			}

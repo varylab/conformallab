@@ -112,6 +112,10 @@ public class ElectrostaticSphereFunctional <
 		}
 	}	
 	
+	@Override
+	public boolean hasGradient() {
+		return true;
+	}
 	
 	@Override
 	public boolean hasHessian() {

@@ -50,6 +50,7 @@ import de.jtem.halfedgetools.selection.Selection;
 import de.jtem.halfedgetools.selection.SelectionListener;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.Plugin;
+import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -59,9 +60,10 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoTextureDomainPositionAdapter;
 import de.varylab.discreteconformal.plugin.algorithm.MercatorTextureProjection;
 import de.varylab.discreteconformal.plugin.algorithm.StereographicTextureProjection;
+import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
-public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
+public class TextureSpaceViewer3D extends ShrinkPanelPlugin {
 
 	private HalfedgeInterface
 		mainHif = null,
@@ -100,15 +102,15 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		return domainViewer;
 	}
 
-	public DomainVisualisationPlugin() {
-		shrinkPanel.setTitle("Parameterization Domain");
+	public TextureSpaceViewer3D() {
+		shrinkPanel.setTitle("Texture Space Viewer 3D");
 		setInitialPosition(SHRINKER_TOP);
 		shrinkPanel.setLayout(new GridLayout());
 		shrinkPanel.add(viewerPanel);
 		shrinkPanel.setShrinked(true);
 	}
 
-	public DomainVisualisationPlugin(Plugin... P) {
+	public TextureSpaceViewer3D(Plugin... P) {
 		this();
 		this.instances = new Plugin[P.length];
 		System.arraycopy(P, 0, instances, 0, instances.length);
@@ -276,11 +278,19 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 		domainViewer.getPlugin(BackgroundColor.class).setColor("UI Background");
 		domainViewer.getPlugin(CameraMenu.class).setZoomEnabled(true);
 		ViewToolBar toolBar = domainViewer.getPlugin(ViewToolBar.class);
-		toolBar.addSeparator(DomainVisualisationPlugin.class, 9999.0);
-		toolBar.addAction(DomainVisualisationPlugin.class, 10000.0, new UpdateAction());
-		toolBar.addAction(DomainVisualisationPlugin.class, 10000.0, new MarkBoundariesAction());
+		toolBar.addSeparator(TextureSpaceViewer3D.class, 9999.0);
+		toolBar.addAction(TextureSpaceViewer3D.class, 10000.0, new UpdateAction());
+		toolBar.addAction(TextureSpaceViewer3D.class, 10000.0, new MarkBoundariesAction());
 		updateVisualization();
 	}
+	
+	@Override
+	public PluginInfo getPluginInfo() {
+		PluginInfo info = super.getPluginInfo();
+		info.icon = ImageHook.getIcon("paintbrush.png");
+		return info;
+	}
+	
 	
 	boolean transferInProgress = false;
 	
@@ -412,7 +422,7 @@ public class DomainVisualisationPlugin extends ShrinkPanelPlugin {
 			T = new Matrix();
 		}
 		
-		int signature = conformalPlugin.getActiveSignature();
+		int signature = conformalPlugin.getActiveGeometry().getSignature();
 		double[] s1 = Pn.normalize(null, edge.getStartVertex().T, signature); 
 		double[] t1 = Pn.normalize(null, edge.getTargetVertex().T, signature); 
 		double[] s2 = Pn.normalize(null, coEdge.getStartVertex().T, signature); 

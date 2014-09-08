@@ -1,15 +1,17 @@
 package de.varylab.discreteconformal;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.LogManager;
 
+import javax.swing.JFrame;
 import javax.swing.JPopupMenu;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
+
+import org.pushingpixels.substance.api.SubstanceLookAndFeel;
+import org.pushingpixels.substance.api.fonts.FontPolicy;
+import org.pushingpixels.substance.api.fonts.FontSet;
+import org.pushingpixels.substance.api.skin.GraphiteSkin;
 
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
@@ -28,17 +30,20 @@ import de.jtem.jrworkspace.plugin.simplecontroller.widget.SplashScreen;
 import de.varylab.discreteconformal.datasource.ConicalEdgesDataSource;
 import de.varylab.discreteconformal.datasource.CylinderEdgesDataSource;
 import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.logging.LoggingUtility;
 import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.ConformalVisualizationPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
-import de.varylab.discreteconformal.plugin.DomainVisualisationPlugin;
-import de.varylab.discreteconformal.plugin.EllipticImageGenerator;
+import de.varylab.discreteconformal.plugin.HyperIdealPlugin;
+import de.varylab.discreteconformal.plugin.HyperellipticCurveGenerator;
 import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
 import de.varylab.discreteconformal.plugin.KoebePolyhedronPlugin;
 import de.varylab.discreteconformal.plugin.ProjectiveTexturePlugin;
 import de.varylab.discreteconformal.plugin.QuasiIsothermicPlugin;
 import de.varylab.discreteconformal.plugin.SphereEqualizerPlugin;
+import de.varylab.discreteconformal.plugin.TextureSpaceViewer3D;
+import de.varylab.discreteconformal.plugin.UniformizationTextureSpacePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.AddConeOfRevolutionCommand;
 import de.varylab.discreteconformal.plugin.algorithm.ContractShortEdges;
 import de.varylab.discreteconformal.plugin.algorithm.CutAndGlueConformalDomain;
@@ -52,6 +57,7 @@ import de.varylab.discreteconformal.plugin.visualizer.IndexMedialGraph;
 import de.varylab.discreteconformal.plugin.visualizer.IsothermicityMeasure;
 import de.varylab.discreteconformal.plugin.visualizer.ThetaVisualizer;
 import de.varylab.discreteconformal.startup.ConformalLabSplashScreen;
+import de.varylab.discreteconformal.startup.TrebuchetFontSet;
 
 
 public class ConformalLab implements Runnable {
@@ -66,7 +72,7 @@ public class ConformalLab implements Runnable {
 		s.add(new DiscreteRiemannPlugin());
 		s.add(new SchottkyPlugin());
 		s.add(new ThetaVisualizer());
-		s.add(new EllipticImageGenerator());
+		s.add(new HyperellipticCurveGenerator());
 		s.add(new ConsolePlugin());
 		s.add(new CutToDiskPlugin());
 		s.add(new CutAtEdgePlugin());
@@ -78,7 +84,7 @@ public class ConformalLab implements Runnable {
 		s.add(new PrimitivesGenerator());
 		s.add(new ProjectiveTexturePlugin());
 		s.add(new ConformalVisualizationPlugin());
-		s.add(new DomainVisualisationPlugin());
+		s.add(new TextureSpaceViewer3D());
 		s.add(new IndexMedialGraph());
 		s.add(new ConformalDataPlugin());
 		s.add(new CylinderEdgesDataSource());
@@ -87,13 +93,24 @@ public class ConformalLab implements Runnable {
 		s.add(new MapToConeCommand());
 		s.add(new AddConeOfRevolutionCommand());
 		s.add(new ContractShortEdges());
+		s.add(new UniformizationTextureSpacePlugin());
 		return s;
 	}
 	
 	public static void installLookAndFeel() {
 		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-//			SubstanceLookAndFeel.setSkin(new GraphiteAquaSkin());
+//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			SubstanceLookAndFeel.setSkin(new GraphiteSkin());
+			SubstanceLookAndFeel.setToUseConstantThemesOnDialogs(true);
+			JFrame.setDefaultLookAndFeelDecorated(true);
+			UIManager.put(SubstanceLookAndFeel.SHOW_EXTRA_WIDGETS, Boolean.TRUE);
+			FontPolicy newFontPolicy = new FontPolicy() {
+				@Override
+				public FontSet getFontSet(String lafName, UIDefaults table) {
+					return new TrebuchetFontSet(12);
+				}
+			};
+			SubstanceLookAndFeel.setFontPolicy(newFontPolicy);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -142,6 +159,7 @@ public class ConformalLab implements Runnable {
 				v.registerPlugins(createConformalPlugins());
 				v.registerPlugins(HalfedgePluginFactory.createPlugins());
 				v.registerPlugin(new HyperellipticCurvePlugin());
+				v.registerPlugin(HyperIdealPlugin.class);
 			}
 		};
 		
@@ -162,42 +180,12 @@ public class ConformalLab implements Runnable {
 	
 	
 	public static void main(final String[] args) throws Exception {
-		initLogging();
+		LoggingUtility.initLogging();
 		if (args.length == 0) { // gui mode
 			new ConformalLab().run();
 		} else { // batch mode
 			ConformalLabBatch cl = new ConformalLabBatch();
 			cl.process(args);
-		}
-	} 
-	
-	public static void initLogging() {
-		LogManager lm = LogManager.getLogManager();
-		File localConf = new File("logging.properties");
-		File localCustomConf = new File("logcustom.properties");
-		@SuppressWarnings("unused")
-		String fileName = null;
-		InputStream confIn = null;
-		if (localConf.exists() | localCustomConf.exists()) {
-			File confFile = null;
-			if (localCustomConf.exists()) {
-				confFile = localCustomConf;
-			} else {
-				confFile = localConf;
-			}
-			fileName = confFile.getAbsolutePath();
-			try {
-				confIn = new FileInputStream(confFile);
-			} catch (FileNotFoundException e) {}
-		} else {
-			fileName = ConformalLab.class.getResource("logging.properties").getFile();
-			confIn = ConformalLab.class.getResourceAsStream("logging.properties");
-		}
-		assert confIn != null;
-		try {
-			lm.readConfiguration(confIn);
-		} catch (Exception e) {
-			System.out.println(e);
 		}
 	}
 

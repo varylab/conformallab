@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Beta;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Lambda;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Phi;
@@ -45,6 +46,17 @@ public abstract class Adapters {
 		}
 	}
 	
+	public static class CBeta implements Beta<CoEdge> {
+		@Override
+		public double getBeta(CoEdge e) {
+			return e.getBeta();
+		}
+		@Override
+		public void setBeta(CoEdge e, double beta) {
+			e.setBeta(beta);
+		}
+	}
+	
 	public static class CLambda implements Lambda<CoEdge> {
 		@Override
 		public double getLambda(CoEdge e) {
@@ -56,10 +68,14 @@ public abstract class Adapters {
 		}
 	}
 	
-	public static class CTheta implements Theta<CoVertex> {
+	public static class CTheta implements Theta<CoVertex, CoEdge> {
 		@Override
 		public double getTheta(CoVertex v) {
 			return v.getTheta();
+		}
+		@Override
+		public double getTheta(CoEdge e) {
+			return e.getTheta();
 		}
 	}
 	

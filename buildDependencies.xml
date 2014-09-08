@@ -49,4 +49,11 @@
 		</copy>
 	</target>
 	
+	<target name="java2d">
+		<ant antfile="build.xml" dir="../java2d" target="release"/>
+		<copy todir="lib/jtem" overwrite="true">
+			<fileset dir="../java2d/release" includes="java2d.jar"/>
+		</copy>
+	</target>	
+	
 </project>

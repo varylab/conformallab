@@ -34,11 +34,15 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
 import de.jreality.plugin.basic.View;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Position;
+import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.image.ImageHook;
+import de.jtem.halfedgetools.selection.Selection;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
 import de.jtem.jrworkspace.plugin.sidecontainer.template.ShrinkPanelPlugin;
@@ -50,6 +54,9 @@ import de.varylab.conformallab.data.types.DiscreteEmbedding;
 import de.varylab.conformallab.data.types.DiscreteMap;
 import de.varylab.conformallab.data.types.DiscreteMetric;
 import de.varylab.conformallab.data.types.EmbeddedVertex;
+import de.varylab.conformallab.data.types.HalfedgeEmbedding;
+import de.varylab.conformallab.data.types.HalfedgeMap;
+import de.varylab.conformallab.data.types.HalfedgeVertex;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.conformallab.data.types.SchottkyData;
 import de.varylab.conformallab.data.types.UniformizationData;
@@ -57,15 +64,12 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.adapter.CoDirectDataAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoDirectPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoDirectTextureAdapter;
 import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
-import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin.TargetGeometry;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
-import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionListener {
 
@@ -142,7 +146,6 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 				return f.isDirectory() || f.getName().toLowerCase().endsWith(".xml");
 			}
 		});
-		fileChooser.setDialogTitle("Export Conformal Data");
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 	}
 	
@@ -165,6 +168,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		}
 		if (importButton == e.getSource()) {
 			Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
+			fileChooser.setDialogTitle("Import Conformal Data");
 			int result = fileChooser.showOpenDialog(w);
 			if (result != JFileChooser.APPROVE_OPTION) {
 				return;
@@ -174,6 +178,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			try {
 				fin = new FileInputStream(file);
 				Object data = DataIO.read(fin);
+				clearData();
 				if (data instanceof ConformalData) {
 					addData((ConformalData)data);
 				} else if (data instanceof ConformalDataList) {
@@ -434,38 +439,74 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		if (data instanceof DiscreteEmbedding) {
 			DiscreteEmbedding de = (DiscreteEmbedding)data;
 			int genus = DataUtility.calculateGenus(de);
-			System.out.println("loading embedding of genus " + genus);
+			log.info("loading embedding of genus " + genus);
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
-			CoHDS hds = DataUtility.toHDS(de, cutInfo);
+			CoHDS hds = new CoHDS();
+			DataUtility.toHalfedge(de, hif.getAdapters(), Position.class, hds, cutInfo);
 			for (CoVertex v : hds.getVertices()) {
 				System.arraycopy(v.P, 0, v.T, 0, 4);
 			}
-			TargetGeometry target = UnwrapUtility.calculateTargetGeometry(genus, 0);
+			TargetGeometry target = TargetGeometry.calculateTargetGeometry(genus, 0);
 			discreteConformalPlugin.createUniformization(hds, target, cutInfo);
-			discreteConformalPlugin.updateGeometry(target);
-			discreteConformalPlugin.updateDomainImage(target);
+			if (de.getSelection() != null) {
+				Selection s = DataUtility.toSelection(de.getSelection(), hds);
+				hif.setSelection(s);
+			}
 		}
 		if (data instanceof DiscreteMap) {
 			DiscreteMap map = (DiscreteMap)data;
 			DiscreteEmbedding image = map.getImage();
 			DiscreteEmbedding domain = map.getDomain();
 			int genus = DataUtility.calculateGenus(domain);
-			System.out.println("loading discreet map of a genus " + genus + " surface");
+			log.info("loading discrete map of a genus " + genus + " surface");
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
-			CoHDS hds = DataUtility.toHDS(image, cutInfo);
+			CoHDS hds = new CoHDS();
+			DataUtility.toHalfedge(image, hif.getAdapters(), Position.class, hds, cutInfo);
 			for (CoVertex v : hds.getVertices()) {
 				EmbeddedVertex dv = domain.getVertices().get(v.getIndex());
 				v.T = new double[]{dv.getX(), dv.getY(), dv.getZ(), dv.getW()};
 			}
-			TargetGeometry target = UnwrapUtility.calculateTargetGeometry(genus, 0);
+			TargetGeometry target = TargetGeometry.calculateTargetGeometry(genus, 0);
 			discreteConformalPlugin.createUniformization(hds, target, cutInfo);
-			discreteConformalPlugin.updateGeometry(target);
-			discreteConformalPlugin.updateDomainImage(target);
 		}
+		if (data instanceof HalfedgeEmbedding) {
+			HalfedgeEmbedding he = (HalfedgeEmbedding)data;
+			int genus = DataUtility.calculateGenus(he);
+			log.info("loading half-edge embedding of genus " + genus);
+			CoHDS hds = new CoHDS();
+			CuttingInfo<CoVertex, CoEdge, CoFace> hdsCutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+			DataUtility.toHalfedge(he, hif.getAdapters(), TexturePosition.class, hds, hdsCutInfo);
+			for (CoVertex v : hds.getVertices()) {
+				System.arraycopy(v.T, 0, v.P, 0, 4);
+			}
+			TargetGeometry target = TargetGeometry.calculateTargetGeometry(genus, 0);
+			discreteConformalPlugin.createUniformization(hds, target, hdsCutInfo);
+			if (he.getSelection() != null) {
+				Selection s = DataUtility.toSelection(he.getSelection(), hds);
+				hif.setSelection(s);
+			}
+		}
+		if (data instanceof HalfedgeMap) {
+			HalfedgeMap map = (HalfedgeMap)data;
+			HalfedgeEmbedding image = map.getImage();
+			HalfedgeEmbedding domain = map.getDomain();
+			int genus = DataUtility.calculateGenus(domain);
+			log.info("loading halfedge map of a genus " + genus + " surface");
+			CoHDS domainHds = new CoHDS();
+			CuttingInfo<CoVertex, CoEdge, CoFace> domainInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+			DataUtility.toHalfedge(domain, hif.getAdapters(), TexturePosition.class, domainHds, domainInfo);
+			for (CoVertex v : domainHds.getVertices()) {
+				HalfedgeVertex iv = image.getVertices().get(v.getIndex());
+				v.P = new double[]{iv.getX(), iv.getY(), iv.getZ(), iv.getW()};
+			}
+			TargetGeometry target = TargetGeometry.calculateTargetGeometry(genus, 0);
+			discreteConformalPlugin.createUniformization(domainHds, target, domainInfo);
+		}		
 		if (data instanceof DiscreteMetric) {
 			DiscreteMetric dm = (DiscreteMetric)data;
 			MappedEdgeLengthAdapter lMap = new MappedEdgeLengthAdapter(1000.0);
 			CoHDS hds = DataUtility.toHalfedgeAndLengths(dm, lMap);
+			log.info("loading discrete metric of genus " + HalfEdgeUtils.getGenus(hds));
 			hif.set(hds);
 			hif.addAdapter(lMap, false);
 		}
@@ -484,23 +525,30 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		addData(dm);
 	}
 
-	public void addDiscreteTextureEmbedding(CoHDS surface, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
-		AdapterSet aSet = new AdapterSet(new CoDirectDataAdapter(true));
-		addDiscreteEmbedding("Texture Embedding", surface, aSet, TexturePosition4d.class, cutInfo);
-	}
-	public void addDiscretePositionEmbedding(CoHDS surface, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
-		AdapterSet aSet = new AdapterSet(new CoDirectDataAdapter(false));
-		addDiscreteEmbedding("Position Embedding", surface, aSet, Position4d.class, cutInfo);
-	}
 	public void addDiscreteMap(String name, CoHDS surface, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		AdapterSet a = new AdapterSet(new CoDirectTextureAdapter(), new CoDirectPositionAdapter());
 		DiscreteMap map = DataUtility.toDiscreteMap(name, surface, a, TexturePosition4d.class, Position4d.class, cutInfo);
 		addData(map);
 	}
-	public void addDiscreteEmbedding(String name, CoHDS surface, AdapterSet a, Class<? extends Annotation> type, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+	public void addDiscreteEmbedding(String name, CoHDS surface, Selection selection, AdapterSet a, Class<? extends Annotation> type, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		DiscreteEmbedding de = DataUtility.toDiscreteEmbedding(name, surface, a, type, cutInfo);
+		if (selection != null) {
+			de.setSelection(DataUtility.toEmbeddingSelection(selection));
+		}
 		addData(de);
 	}
+	public void addHalfedgeMap(String name, CoHDS surface, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		AdapterSet a = new AdapterSet(new CoDirectTextureAdapter(), new CoDirectPositionAdapter());
+		HalfedgeMap map = DataUtility.toHalfedgeMap(name, surface, a, TexturePosition4d.class, Position4d.class, cutInfo);
+		addData(map);
+	}	
+	public void addHalfedgeEmbedding(String name, CoHDS surface, Selection selection, AdapterSet a, Class<? extends Annotation> type, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		HalfedgeEmbedding he = DataUtility.toHalfedgeEmbedding(name, surface, a, type, cutInfo);
+		if (selection != null) {
+			he.setSelection(DataUtility.toHalfedgeSelection(selection));
+		}
+		addData(he);
+	}	
 	public void addUniformizationData(String name, FundamentalPolygon P) {
 		UniformizationData ud = DataUtility.toUniformizationData(name, P);
 		addData(ud);
@@ -550,6 +598,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 
 	public File showXMLSaveDialog() {
 		Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
+		fileChooser.setDialogTitle("Export Conformal Data");
 		int result = fileChooser.showSaveDialog(w);
 		if (result != JFileChooser.APPROVE_OPTION) {
 			return null;

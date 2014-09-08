@@ -44,7 +44,7 @@ public class SphericalFunctional <
 
 	private Variable<V, E> 
 		var = null;
-	private Theta<V> 
+	private Theta<V, E> 
 		theta = null;
 	private Lambda<E> 
 		lambda = null;
@@ -59,7 +59,7 @@ public class SphericalFunctional <
 	
 	public SphericalFunctional(
 		Variable<V, E> var,
-		Theta<V> theta,
+		Theta<V, E> theta,
 		Lambda<E> lambda,
 		Alpha<E> alpha,
 		InitialEnergy<F> energy
@@ -489,6 +489,11 @@ public class SphericalFunctional <
 			}
 		}
 		return nz;
+	}
+	
+	@Override
+	public boolean hasGradient() {
+		return true;
 	}
 	
 	@Override

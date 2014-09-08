@@ -37,7 +37,7 @@ public class EuclideanNewFunctional <
 	
 	private Variable<V, E> 
 		var = null;
-	private Theta<V> 
+	private Theta<V, E> 
 		theta = null;
 	private Phi<E>
 		phi = null;
@@ -51,7 +51,7 @@ public class EuclideanNewFunctional <
 	
 	public EuclideanNewFunctional(
 		Variable<V, E> var,
-		Theta<V> theta,
+		Theta<V, E> theta,
 		Phi<E> phi,
 		Lambda<E> lambda,
 		Alpha<E> alpha,
@@ -503,6 +503,11 @@ public class EuclideanNewFunctional <
 		}
 		return nz;
 
+	}
+	
+	@Override
+	public boolean hasGradient() {
+		return true;
 	}
 	
 	@Override

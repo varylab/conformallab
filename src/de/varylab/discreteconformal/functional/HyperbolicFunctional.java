@@ -37,7 +37,7 @@ public class HyperbolicFunctional <
 
 	private Variable<V, E> 
 		var = null;
-	private Theta<V> 
+	private Theta<V, E> 
 		theta = null;
 	private Lambda<E> 
 		lambda = null;
@@ -49,7 +49,7 @@ public class HyperbolicFunctional <
 	
 	public HyperbolicFunctional(
 		Variable<V, E> var,
-		Theta<V> theta,
+		Theta<V, E> theta,
 		Lambda<E> lambda,
 		Alpha<E> alpha,
 		InitialEnergy<F> energy
@@ -279,12 +279,12 @@ public class HyperbolicFunctional <
 		final double
 			βi = 0.5 * (PI + αi - αj - αk),
 			βj = 0.5 * (PI - αi + αj - αk),
-			βk = 0.5 * (PI - αi - αj + αk);
+			βk = 0.5 * (PI - αi - αj + αk),
+			βijk = 0.5 * (PI - αi - αj - αk);
 		if (E != null) {
 			E.add(- αi*ui - αj*uj - αk*uk);
 			E.add(βi*lambda.getLambda(ejk) + βj*lambda.getLambda(eki) + βk*lambda.getLambda(eij));
-			E.add(+ Л(αi) + Л(αj) + Л(αk) + Л(βi) + Л(βj) + Л(βk));
-			E.add(+ Л(0.5 * (PI - αi - αj - αk)));
+			E.add(Л(αi) + Л(αj) + Л(αk) + Л(βi) + Л(βj) + Л(βk) + Л(βijk));
 			E.add(-initialEnergy.getInitialEnergy(f));
 		}
 		if (alpha != null) {
@@ -330,6 +330,11 @@ public class HyperbolicFunctional <
 			}
 		}
 		return nz;
+	}
+	
+	@Override
+	public boolean hasGradient() {
+		return true;
 	}
 	
 	@Override
