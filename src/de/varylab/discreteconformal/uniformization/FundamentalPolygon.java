@@ -1,7 +1,5 @@
 package de.varylab.discreteconformal.uniformization;
 
-import static de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility.context;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import de.jreality.math.Pn;
+import de.jreality.math.Rn;
 import de.jtem.discretegroup.core.DiscreteGroup;
 import de.jtem.discretegroup.core.DiscreteGroupConstraint;
 import de.jtem.discretegroup.core.DiscreteGroupElement;
@@ -221,12 +220,15 @@ public class FundamentalPolygon {
 			public boolean acceptElement(DiscreteGroupElement s) {
 				double min = Double.MAX_VALUE;
 				for (FundamentalEdge e : getEdges()) {
-					BigDecimal[] ps = e.startPosition;
-					BigDecimal[] pt = e.nextEdge.startPosition;
-					BigDecimal[] mean = RnBig.linearCombination(null, new BigDecimal(0.5), ps, new BigDecimal(0.5), pt, context);
-					BigDecimal[] T = RnBig.toBig(null, s.getMatrix());
-					mean = RnBig.matrixTimesVector(null, T, mean, context);
-					double[] pd = RnBig.toDouble(null, mean);
+					double[] ps = RnBig.toDouble(null, e.startPosition);
+					double[] pt = RnBig.toDouble(null, e.nextEdge.startPosition);
+					Pn.dehomogenize(ps, ps);
+					Pn.dehomogenize(pt, pt);
+					double[] mean = Rn.linearCombination(null, 0.5, ps, 0.5, pt);
+					double[] T = s.getMatrix().getArray();
+					Pn.normalize(mean, mean, Pn.HYPERBOLIC);
+					double[] pd = Rn.matrixTimesVector(null, T, mean);
+					Pn.normalize(pd, pd, Pn.HYPERBOLIC);
 					double[] pp = {pd[0] / (pd[3] + 1), pd[1] / (pd[3] + 1)};
 					double distSq = pp[0]*pp[0] + pp[1]*pp[1];
 					if (distSq < min) {
