@@ -57,14 +57,14 @@ public class DiscreteEllipticUtility {
 		
 		int maxIter = 100;
 		// move tau into its fundamental domain
-		while ((abs(tau.re) > 0.5 || tau.im < 0 || tau.abs() < 1) && --maxIter > 0) {
+		while ((abs(tau.re) > 0.5 || tau.im < 0 || tau.abs() > 1) && --maxIter > 0) {
 			if (abs(tau.re) > 0.5) {
 				tau.re -= signum(tau.re);
 			}
 			if (tau.im < 0) {
 				tau = tau.times(-1);
 			}
-			if (tau.abs() < 1) {
+			if (tau.abs() > 1) {
 				tau = tau.invert();
 			}
 		}

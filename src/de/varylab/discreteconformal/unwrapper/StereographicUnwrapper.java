@@ -105,7 +105,7 @@ public class StereographicUnwrapper implements Unwrapper{
 		MappedEdgeLengthAdapter eAdapter = new MappedEdgeLengthAdapter(lMap, 100);
 		aSet.add(eAdapter);
 		
-		// punch out the last vertex
+		// punch out the root vertex
 		TopologyAlgorithms.removeVertex(v0);
 		CEuclideanOptimizable opt = new CEuclideanOptimizable(surface);
 		prepareInvariantDataEuclidean(opt.getFunctional(), surface, Isometric, AllAngles, aSet);
@@ -175,7 +175,7 @@ public class StereographicUnwrapper implements Unwrapper{
 				e.setAlpha(ee.getAlpha());
 			}
 		}
-		log.info("stereographic unwap done.");
+		log.info("stereographic unwrap done.");
 	}
 
 

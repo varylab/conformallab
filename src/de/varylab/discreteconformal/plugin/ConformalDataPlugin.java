@@ -146,7 +146,6 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 				return f.isDirectory() || f.getName().toLowerCase().endsWith(".xml");
 			}
 		});
-		fileChooser.setDialogTitle("Export Conformal Data");
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 	}
 	
@@ -169,6 +168,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		}
 		if (importButton == e.getSource()) {
 			Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
+			fileChooser.setDialogTitle("Import Conformal Data");
 			int result = fileChooser.showOpenDialog(w);
 			if (result != JFileChooser.APPROVE_OPTION) {
 				return;
@@ -178,6 +178,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			try {
 				fin = new FileInputStream(file);
 				Object data = DataIO.read(fin);
+				clearData();
 				if (data instanceof ConformalData) {
 					addData((ConformalData)data);
 				} else if (data instanceof ConformalDataList) {
@@ -597,6 +598,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 
 	public File showXMLSaveDialog() {
 		Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
+		fileChooser.setDialogTitle("Export Conformal Data");
 		int result = fileChooser.showSaveDialog(w);
 		if (result != JFileChooser.APPROVE_OPTION) {
 			return null;
