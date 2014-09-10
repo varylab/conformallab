@@ -46,7 +46,8 @@ public class VisualizationUtility {
 		List<double[][]> axesSegments,
 		List<double[][]> polygonSegments,
 		Path2D axesPath,
-		Path2D polygonPath
+		Path2D polygonPath,
+		Path2D domainPath
 	) {
 		List<DiscreteGroupElement> G = P.createGoupElements(maxDrawElements, maxDrawDistance);
 		boolean isFirst = true;
@@ -58,7 +59,9 @@ public class VisualizationUtility {
 				drawPolygon, isFirst & drawAxes, 
 				model, 
 				axesSegments, polygonSegments, 
-				axesPath, polygonPath
+				axesPath, 
+				polygonPath,
+				isFirst ? domainPath : null
 			);
 			isFirst = false;
 		}
@@ -106,7 +109,8 @@ public class VisualizationUtility {
 		List<double[][]> axesSegments,
 		List<double[][]> polygonSegments,
 		Path2D axesPath,
-		Path2D polygonPath
+		Path2D polygonPath,
+		Path2D domainPath
 	) {
 		FundamentalPolygon rP = FundamentalPolygonUtility.copyPolygon(poly);
 		for (FundamentalEdge ce : rP.getEdges()) {
@@ -117,26 +121,20 @@ public class VisualizationUtility {
 			PnBig.normalize(ce.startPosition, ce.startPosition, HYPERBOLIC, context);
 		}
 		if (drawAxes) {
-			Shape axes = createPolygonAxes(rP, model, axesSegments);
-			if (axesPath != null) {
-				axesPath.append(axes, false);
-			}
+			createPolygonAxes(rP, model, axesSegments, axesPath);
 		}
 		if (drawPolygon) {
-			Shape polygon = createPolygon(rP, model, polygonSegments);
-			if (polygonPath != null) {
-				polygonPath.append(polygon, false);
-			}
+			createPolygon(rP, model, polygonSegments, polygonPath, domainPath);
 		}
 	}
 	
 	
-	protected static Shape createPolygonAxes(
+	protected static void createPolygonAxes(
 		FundamentalPolygon poly, 
 		HyperbolicModel model, 
-		List<double[][]> segmentsOUT
+		List<double[][]> segmentsOUT,
+		Path2D axesPath
 	) {
-		Path2D axesPath = new Path2D.Float();
 		Set<FundamentalEdge> axisDrawn = new HashSet<FundamentalEdge>();
 		for (FundamentalEdge e : poly.getEdges()) {
 			if (axisDrawn.contains(e) || axisDrawn.contains(e.partner)) {
@@ -144,9 +142,10 @@ public class VisualizationUtility {
 			}
 			Shape axis = createAxis(e.motionBig, model, segmentsOUT);
 			axisDrawn.add(e);
-			axesPath.append(axis, false);
+			if (axesPath != null) {
+				axesPath.append(axis, false);
+			}
 		}
-		return axesPath;
 	}
 	
 	
@@ -184,12 +183,13 @@ public class VisualizationUtility {
 		return createArc(p1, p2, p3, model);
 	}
 	
-	protected static Shape createPolygon(
+	protected static void createPolygon(
 		FundamentalPolygon poly, 
 		HyperbolicModel model, 
-		List<double[][]> segmentsOUT
+		List<double[][]> segmentsOUT,
+		Path2D polygonPath,
+		Path2D domainPath
 	) {
-		Path2D polyPath = new Path2D.Float();
 		for (FundamentalEdge e : poly.getEdges()) {
 			BigDecimal[] p1a = e.startPosition; 
 			BigDecimal[] p2a = e.nextEdge.startPosition;
@@ -205,9 +205,13 @@ public class VisualizationUtility {
 				segmentsOUT.add(new double[][] {p1, p2});
 			}
 			Shape arc = createArc(p1, p2, p3, model);
-			polyPath.append(arc, false);
+			if (polygonPath != null) {
+				polygonPath.append(arc, false);
+			}
+			if (domainPath != null) {
+				domainPath.append(arc, true);
+			}
 		}
-		return polyPath;
 	}
 	
 	protected static Shape createArc(

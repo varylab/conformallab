@@ -49,7 +49,7 @@ public class SurfaceCurveUtility {
 			maxElements, maxDrawDistance, 
 			includePoygon, includeAxes, 
 			axesSegments, polySegments, 
-			null, null
+			null, null, null
 		);
 		
 		List<double[][][]> allCurves = new ArrayList<double[][][]>();
@@ -127,7 +127,7 @@ public class SurfaceCurveUtility {
 			200, 10, 
 			true, false, 
 			axesSegments, polySegments, 
-			null, null
+			null, null, null
 		);
 		for (double[][] segment : polySegments) {
 			Set<CoVertex> segmentVertices = new TreeSet<>(new NodeIndexComparator<CoVertex>());

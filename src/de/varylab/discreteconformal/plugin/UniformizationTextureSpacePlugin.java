@@ -36,11 +36,13 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 	private ShrinkPanel
 		options = new ShrinkPanel("Uniformization");
 	private JCheckBox
+		fundamentalChecker = new JCheckBox("Fundamental Domain", true),
 		triangulationChecker = new JCheckBox("Triangulation", true),
 		polygonChecker = new JCheckBox("Polygon", true),
 		axesChecker = new JCheckBox("Axes", true),
 		boundaryChecker = new JCheckBox("Boundary", false);
 	private ColorChooseJButton
+		fundamentalColorButton = new ColorChooseJButton(new Color(0, 102, 204), true),
 		triangulationColorButton = new ColorChooseJButton(new Color(102, 102, 102), true),
 		polygonColorButton = new ColorChooseJButton(new Color(204, 102, 0), true),
 		boundaryColorButton = new ColorChooseJButton(new Color(204, 102, 0), true),
@@ -48,12 +50,14 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 	private SceneComponent
 		scene = new SceneComponent(),
 		boundaryComponent = new SceneComponent(),
+		fundamentalDomainComponent = new SceneComponent(),
 		axesComponent = new SceneComponent(),
 		polygonComponent = new SceneComponent(),
 		boundaryEdgesComponent = new SceneComponent(),
 		triangulationComponent = new SceneComponent();
 	
 	public UniformizationTextureSpacePlugin() {
+		scene.addChild(fundamentalDomainComponent);
 		scene.addChild(triangulationComponent);
 		triangulationComponent.setFilled(false);
 		scene.addChild(boundaryEdgesComponent);
@@ -71,12 +75,16 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		boundaryComponent.setFilled(false);
 		boundaryComponent.setStroke(new BasicStroke(2));
 		boundaryComponent.setVisible(false);
+		fundamentalDomainComponent.setFilled(true);
+		fundamentalDomainComponent.setOutlined(false);
 		
 		GridBagConstraints lc = LayoutFactory.createLeftConstraint();
 		GridBagConstraints rc = LayoutFactory.createRightConstraint();
 		options.setLayout(new GridBagLayout());
 		options.add(triangulationChecker, lc);
 		options.add(triangulationColorButton, rc);
+		options.add(fundamentalChecker, lc);
+		options.add(fundamentalColorButton, rc);
 		options.add(polygonChecker, lc);
 		options.add(polygonColorButton, rc);
 		options.add(axesChecker, lc);
@@ -92,6 +100,8 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		axesColorButton.addColorChangedListener(this);
 		boundaryChecker.addActionListener(this);
 		boundaryColorButton.addColorChangedListener(this);
+		fundamentalChecker.addActionListener(this);
+		fundamentalColorButton.addColorChangedListener(this);
 		
 		updateStates();
 	}
@@ -105,6 +115,10 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		axesComponent.setOutlinePaint(axesColorButton.getColor());
 		boundaryEdgesComponent.setVisible(boundaryChecker.isSelected());
 		boundaryEdgesComponent.setOutlinePaint(boundaryColorButton.getColor());
+		fundamentalDomainComponent.setVisible(fundamentalChecker.isSelected());
+		Color fc = fundamentalColorButton.getColor();
+		Color fcAlpha = new Color(fc.getRed(), fc.getGreen(), fc.getBlue(), 51);
+		fundamentalDomainComponent.setPaint(fcAlpha);
 		scene.fireAppearanceChange();
 	}
 	
@@ -123,13 +137,14 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		Path2D polyPath = new Path2D.Float();
 		Path2D triangulationPath = new Path2D.Float();
 		Path2D boundaryPath = new Path2D.Float();
+		Path2D fundamentalDomainPath = new Path2D.Float();
 		VisualizationUtility.createUniversalCover(
 			P, 
 			model, 
 			maxElements, maxDistance, 
 			true, true, 
 			null, null,
-			axesPath, polyPath
+			axesPath, polyPath, fundamentalDomainPath
 		);
 		VisualizationUtility.createTriangulation(
 			surface,
@@ -143,6 +158,7 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		boundaryEdgesComponent.setShape(boundaryPath);
 		axesComponent.setShape(axesPath);
 		polygonComponent.setShape(polyPath);
+		fundamentalDomainComponent.setShape(fundamentalDomainPath);
 		boundaryComponent.setVisible(geometry == TargetGeometry.Hyperbolic);
 		
 		if (geometry == TargetGeometry.Automatic) {

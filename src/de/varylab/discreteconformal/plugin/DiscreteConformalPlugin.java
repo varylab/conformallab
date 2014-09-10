@@ -81,7 +81,6 @@ import de.jreality.scene.PointSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.pick.Hit;
 import de.jreality.ui.AppearanceInspector;
-import de.jreality.ui.ColorChooseJButton;
 import de.jreality.ui.ColorChooseJButton.ColorChangedEvent;
 import de.jreality.ui.ColorChooseJButton.ColorChangedListener;
 import de.jreality.ui.TextureInspector;
@@ -225,11 +224,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		mapToConeButton = new JButton("Create cone adapter"),
 		insertHolomorphicImagePoints = new JButton("Insert Holomorphic Image Points"),
 		resetSurfaceButton = new JButton("Reset Surface");
-	private ColorChooseJButton
-		triangulationColorButton = new ColorChooseJButton(Color.BLACK, true),
-		polygonColorButton = new ColorChooseJButton(Color.RED, true),
-		boundaryColorButton = new ColorChooseJButton(Color.RED, true),
-		axesColorButton = new ColorChooseJButton(Color.BLUE, true);
 	private JComboBox<DomainPolygon>
 		domainCombo = new JComboBox<>(DomainPolygon.values());
 	private JComboBox<TargetGeometry>
@@ -271,10 +265,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		useDistanceToCanonicalize = new JCheckBox("Use Isometry Distances"),
 		useCustomThetaChecker = new JCheckBox("Custom Theta"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
-		drawTriangulationChecker = new JCheckBox("Draw Triangulation"),
-		drawAxesChecker = new JCheckBox("Draw Axes"),
-		drawBoundaryChecker = new JCheckBox("Draw Boundary"),
-		drawPolygonChecker = new JCheckBox("Draw Polygon", true),
 		drawCurvesOnSurface = new JCheckBox("Draw Curves On Surface"),
 		useSelectionCutChecker = new JCheckBox("Use Selection Cut Graph");
 	private JRadioButton
@@ -320,19 +310,11 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		circularEdgeChecker.addActionListener(this);
 		moveToCenterButton.addActionListener(this);
 		saveTextureButton.addActionListener(this);
-		drawTriangulationChecker.addActionListener(this);
 		exportHyperbolicButton.addActionListener(this);
 		exportHyperbolicSVGButton.addActionListener(this);
 		coverElementsSpinner.addChangeListener(this);
 		coverMaxDistanceSpinner.addChangeListener(this);
-		drawPolygonChecker.addActionListener(this);
-		drawAxesChecker.addActionListener(this);
-		drawBoundaryChecker.addActionListener(this);
 		drawCurvesOnSurface.addActionListener(this);
-		polygonColorButton.addColorChangedListener(this);
-		boundaryColorButton.addColorChangedListener(this);
-		axesColorButton.addColorChangedListener(this);
-		triangulationColorButton.addColorChangedListener(this);
 		reorderFacesButton.addActionListener(this);
 		reorderSelectedFacesButton.addActionListener(this);
 		createCopiesButton.addActionListener(this);
@@ -443,14 +425,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			visualizationPanel.add(coverElementsSpinner, c2);
 			visualizationPanel.add(new JLabel("Cover Distance"), c1);
 			visualizationPanel.add(coverMaxDistanceSpinner, c2);
-			visualizationPanel.add(drawTriangulationChecker, c1);
-			visualizationPanel.add(triangulationColorButton, c2);
-			visualizationPanel.add(drawBoundaryChecker, c1);
-			visualizationPanel.add(boundaryColorButton, c2);			
-			visualizationPanel.add(drawPolygonChecker, c1);
-			visualizationPanel.add(polygonColorButton, c2);
-			visualizationPanel.add(drawAxesChecker, c1);
-			visualizationPanel.add(axesColorButton, c2);
 			visualizationPanel.add(drawCurvesOnSurface, c2);
 			visualizationPanel.add(useDistanceToCanonicalize, c2);
 			visualizationPanel.add(coverToTextureButton, c2);
@@ -729,28 +703,20 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		AdapterSet aSet = hif.getActiveAdapters();
 		int maxGroupElements = coverElementsModel.getNumber().intValue();
 		double maxDrawDistance = coverMaxDistanceModel.getNumber().doubleValue();
-		boolean drawPolygon = drawPolygonChecker.isSelected();
-		boolean drawAxes = drawAxesChecker.isSelected();
 		boolean drawCurves = drawCurvesOnSurface.isSelected();
-		Color polygonColor = polygonColorButton.getColor();
-		Color axesColor = axesColorButton.getColor();
 		hif.removeTemporaryGeometry(polygonCurvesRoot);
 		hif.removeTemporaryGeometry(axesCurvesRoot);
 		FundamentalPolygon P = getActiveFundamentalPoygon();
 		if (P == null) return;
 		if (target == TargetGeometry.Hyperbolic && drawCurves) {
-			if (drawPolygon) {
-				IndexedLineSet curves = createSurfaceCurves(P, surfaceUnwrapped, aSet, maxGroupElements, maxDrawDistance, true, false, signature);
-				polygonCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, polygonColor);
-				polygonCurvesRoot.setGeometry(curves);
-				hif.addTemporaryGeometry(polygonCurvesRoot);
-			}
-			if (drawAxes) {
-				IndexedLineSet axes = createSurfaceCurves(P, surfaceUnwrapped, aSet, maxGroupElements, maxDrawDistance, false, true, signature);
-				axesCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, axesColor);
-				axesCurvesRoot.setGeometry(axes);
-				hif.addTemporaryGeometry(axesCurvesRoot);
-			}
+			IndexedLineSet curves = createSurfaceCurves(P, surfaceUnwrapped, aSet, maxGroupElements, maxDrawDistance, true, false, signature);
+			polygonCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, Color.RED);
+			polygonCurvesRoot.setGeometry(curves);
+			hif.addTemporaryGeometry(polygonCurvesRoot);
+			IndexedLineSet axes = createSurfaceCurves(P, surfaceUnwrapped, aSet, maxGroupElements, maxDrawDistance, false, true, signature);
+			axesCurvesAppearance.setAttribute(LINE_SHADER + "." + DIFFUSE_COLOR, Color.BLUE);
+			axesCurvesRoot.setGeometry(axes);
+			hif.addTemporaryGeometry(axesCurvesRoot);
 		}
 		if (textureSpacePlugin != null) {
 			HyperbolicModel model = vis.getSelectedHyperbolicModel();
@@ -947,12 +913,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			createUniformization(surfaceUnwrapped, activeGeometry, cutInfo);
 			conformalDataPlugin.addHalfedgeMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
 		}
-		if (drawTriangulationChecker == s ||
-			drawAxesChecker == s ||
-			drawPolygonChecker == s ||
-			drawBoundaryChecker == s ||
-			drawCurvesOnSurface == s
-		) {
+		if (drawCurvesOnSurface == s) {
 			updateGeometry(activeGeometry);
 			updateUniformization(activeGeometry);				
 		}
