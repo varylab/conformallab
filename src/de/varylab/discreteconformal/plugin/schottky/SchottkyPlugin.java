@@ -228,7 +228,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		generatorTable.setDefaultRenderer(JButton.class, new ButtonCellRenderer());
 		generatorTable.setDefaultEditor(JButton.class, new ButtonCellEditor());
 		generatorTable.getColumnModel().getColumn(0).setMaxWidth(60);
-		generatorTable.getColumnModel().getColumn(2).setMaxWidth(60);
+		generatorTable.getColumnModel().getColumn(3).setMaxWidth(60);
 		generatorTable.setRowHeight(22);
 	}
 	
@@ -258,7 +258,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 
 		@Override
 		public int getColumnCount() {
-			return 3;
+			return 4;
 		}
 
 		@Override
@@ -276,6 +276,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			switch (col) {
 			case 0: return "ID";
 			case 1: return "|μ|";
+			case 2: return "arg(μ)";
 			default: return "";
 			}
 		}
@@ -285,7 +286,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			switch (columnIndex) {
 			case 0: return Integer.class;
 			case 1: return Double.class;
-			case 2: return JButton.class;
+			case 2: return Double.class;
+			case 3: return JButton.class;
 			default: return String.class;
 			}
 		}
@@ -296,7 +298,8 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 			switch (col) {
 			case 0: return row;
 			case 1: return g.getMu().abs();
-			case 2: return new RemoveGeneratorButton(g);
+			case 2: return g.getMu().arg();
+			case 3: return new RemoveGeneratorButton(g);
 			default: return 0;
 			}
 		}
@@ -304,13 +307,19 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		@Override
 		public void setValueAt(Object value, int row, int col) {
 			SchottkyGenerator g = schottkyModeller.getGenerators().get(row);
+			double abs = g.getMu().abs();
+			double arg = g.getMu().arg();
 			switch (col) {
 			case 1: 
-				double abs = (Double)value;
-				double oldAbs = g.getMu().abs();
-				Complex newMu = g.getMu().times(abs / oldAbs);
-				g.setMu(newMu);
+				abs = (Double)value;
+				g.setMu(Complex.fromPolar(abs, arg));
 				schottkyModeller.getModeller().updateTools();
+				break;
+			case 2:
+				arg = (Double)value;
+				g.setMu(Complex.fromPolar(abs, arg));
+				schottkyModeller.getModeller().updateTools();
+				break;
 			}
 		}
 		
