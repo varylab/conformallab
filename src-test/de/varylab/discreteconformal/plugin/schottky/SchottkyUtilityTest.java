@@ -14,6 +14,7 @@ import org.junit.Test;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.selection.Selection;
 import de.jtem.mfc.field.Complex;
 import de.varylab.conformallab.data.DataIO;
 import de.varylab.conformallab.data.DataUtility;
@@ -60,7 +61,7 @@ public class SchottkyUtilityTest {
 		AdapterSet aSet = new ConformalAdapterSet();
 		aSet.add(schottkyMetric);
 		
-		SchottkyUtility.unwrapSchottkySurface(hds, cycles, mapCycleMap, root, aSet, false, false);
+		SchottkyUtility.unwrapSchottkySurface(hds, cycles, mapCycleMap, root, aSet, false, false, new Selection());
 		
 		TreeSet<CoVertex> boundary = new TreeSet<CoVertex>(new NodeIndexComparator<CoVertex>());
 		boundary.addAll(HalfEdgeUtils.boundaryVertices(hds));

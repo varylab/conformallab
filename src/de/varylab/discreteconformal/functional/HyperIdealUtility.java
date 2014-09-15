@@ -141,6 +141,14 @@ public class HyperIdealUtility {
 		return (U1 - U2) / 2;
 	}
 	
+	
+	public static CoHDS createLawsonsSurfaceWithBranchPoints() {
+		CoHDS hds = createLawsonsSurface();
+//		StellarLinear sl = new StellarLinear();
+		
+		return hds;
+	}
+	
 
 	public static CoHDS createLawsonsSurface() {
 		CoHDS hds = new CoHDS(); 

@@ -27,6 +27,7 @@ import de.jtem.halfedgetools.adapter.type.generic.Position2d;
 import de.jtem.halfedgetools.adapter.type.generic.Position3d;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
+import de.jtem.halfedgetools.selection.Selection;
 import de.jtem.mfc.field.Complex;
 import de.jtem.mfc.group.Moebius;
 import de.varylab.discreteconformal.functional.ConformalFunctional;
@@ -406,7 +407,8 @@ public class SchottkyUtility {
 		CoVertex rootVertex,
 		AdapterSet aSet,
 		boolean onSphere,
-		boolean cutFromRoot
+		boolean cutFromRoot,
+		Selection selection
 	) throws Exception {
 		int genus = HalfEdgeUtils.getGenus(hds);
 		Unwrapper unwrapper = null;
@@ -421,14 +423,21 @@ public class SchottkyUtility {
 	
 		// cut along schottky circles
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+		int channel = 100;
 		for (Set<CoEdge> cycle : cycles) {
 			CuttingUtility.cutAlongPath(cycle, cutInfo);
 			for (CoEdge ce : cycle) {
 				CoVertex bv = ce.getStartVertex();
 				CoVertex cv = cutInfo.vertexCopyMap.get(bv);
+				CoEdge cc = cutInfo.edgeCutMap.get(ce);
 				double[] pos = mapCycleMap.get(bv);
 				aSet.set(Position.class, cv, pos);
+				selection.add(ce, channel);
+				selection.add(ce.getOppositeEdge(), channel);
+				selection.add(cc, channel);
+				selection.add(cc.getOppositeEdge(), channel);
 			}
+			channel++;
 		}
 		
 		if (!onSphere) {
@@ -445,6 +454,14 @@ public class SchottkyUtility {
 			CuttingUtility.cutToSimplyConnected(hds, rootVertex, cutInfo);
 		} else {
 			CuttingUtility.cutToSimplyConnected(hds, null, cutInfo);
+		}
+		for (CoEdge e : cutInfo.edgeCutMap.keySet()) {
+			if (selection.contains(e)) continue;
+			CoEdge cc = cutInfo.edgeCutMap.get(e);
+			selection.add(e, channel);
+			selection.add(e.getOppositeEdge(), channel);
+			selection.add(cc, channel);
+			selection.add(cc.getOppositeEdge(), channel);
 		}
 		
 		if (rootVertex == null) {

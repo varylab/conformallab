@@ -47,6 +47,7 @@ import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.selection.Selection;
 import de.jtem.java2d.Viewer2D;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
@@ -200,10 +201,11 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				int genus = HalfEdgeUtils.getGenus(hds);
 				System.out.println("unwrapping surface of genus " + genus + "...");
 				CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = null;
+				Selection sel = new Selection();
 				try {
 					boolean onSphere = spherialChecker.isSelected();
 					boolean cuFromRoot = cutFromRootChecker.isSelected();
-					cutInfo = SchottkyUtility.unwrapSchottkySurface(hds, cycles, mapCycleMap, rootVertex, aSet, onSphere, cuFromRoot);
+					cutInfo = SchottkyUtility.unwrapSchottkySurface(hds, cycles, mapCycleMap, rootVertex, aSet, onSphere, cuFromRoot, sel);
 				} catch (Exception e) {
 					JOptionPane.showMessageDialog(shrinkPanel, e.getMessage(), "Optimizer error", WARNING_MESSAGE);
 					e.printStackTrace();
@@ -218,6 +220,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				conformalDataPlugin.addHalfedgeMap("Uniformizing Map", hds, cutInfo);
 				TargetGeometry targetGeometry = TargetGeometry.calculateTargetGeometry(genus, 0);
 				dcp.createUniformization(hds, targetGeometry, cutInfo);
+				hif.addSelection(sel);
 			}
 		}
 	}
