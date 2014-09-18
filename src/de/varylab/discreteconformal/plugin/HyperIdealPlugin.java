@@ -16,7 +16,14 @@ import org.junit.Assert;
 
 import de.jreality.math.Pn;
 import de.jreality.plugin.scene.SceneShrinkPanel;
+import de.jtem.halfedge.Edge;
+import de.jtem.halfedge.Face;
+import de.jtem.halfedge.Node;
+import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.adapter.AbstractAdapter;
+import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jrworkspace.plugin.Controller;
@@ -46,6 +53,29 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		shrinkPanel.setTitle("Hyper-Ideal Uniformization");
 		shrinkPanel.add(lawsonButton);
 		lawsonButton.addActionListener(this);
+	}
+	
+	@Length
+	private class LawsonMetric extends AbstractAdapter<Double> {
+
+		public LawsonMetric() {
+			super(Double.class, true, false);
+		}
+		
+		@Override
+		public <
+			V extends Vertex<V, E, F>, 
+			E extends Edge<V, E, F>, 
+			F extends Face<V, E, F>
+		> Double getE(E e, AdapterSet a) {
+			return e.getIndex() < 24 ? 1.0 : Math.sqrt(2.0);
+		}
+		
+		@Override
+		public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
+			return true;
+		}
+		
 	}
 	
 	@Override
@@ -92,7 +122,8 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		TopologyAlgorithms.flipEdge(hds.getEdge(27));
 		TopologyAlgorithms.flipEdge(hds.getEdge(31));
 		TopologyAlgorithms.flipEdge(hds.getEdge(35));
-		
+
+		conformalDataPlugin.addDiscreteMetric("Lawsons Squares", hds, new AdapterSet(new LawsonMetric()));
 		
 		CoVertex root = hds.getVertex(2);
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();

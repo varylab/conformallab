@@ -525,11 +525,13 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		addData(dm);
 	}
 
+	@Deprecated
 	public void addDiscreteMap(String name, CoHDS surface, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		AdapterSet a = new AdapterSet(new CoDirectTextureAdapter(), new CoDirectPositionAdapter());
 		DiscreteMap map = DataUtility.toDiscreteMap(name, surface, a, TexturePosition4d.class, Position4d.class, cutInfo);
 		addData(map);
 	}
+	@Deprecated
 	public void addDiscreteEmbedding(String name, CoHDS surface, Selection selection, AdapterSet a, Class<? extends Annotation> type, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		DiscreteEmbedding de = DataUtility.toDiscreteEmbedding(name, surface, a, type, cutInfo);
 		if (selection != null) {
