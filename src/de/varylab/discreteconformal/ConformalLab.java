@@ -1,6 +1,9 @@
 package de.varylab.discreteconformal;
 
+import java.awt.Image;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import javax.swing.JFrame;
@@ -16,6 +19,7 @@ import org.pushingpixels.substance.api.skin.GraphiteSkin;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.JRViewer.ContentType;
 import de.jreality.plugin.basic.ConsolePlugin;
+import de.jreality.plugin.basic.View;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedgetools.JRHalfedgeViewer;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -51,6 +55,7 @@ import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutToDiskPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.FindPathPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.MapToConeCommand;
+import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
 import de.varylab.discreteconformal.plugin.visualizer.FlippedTriangles;
 import de.varylab.discreteconformal.plugin.visualizer.IndexMedialGraph;
@@ -116,6 +121,19 @@ public class ConformalLab implements Runnable {
 		}
 	}
 	
+	public static List<Image> getMainIconList() {
+		List<Image> iconList = new LinkedList<Image>();
+		iconList.add(ImageHook.getImage("logo16.png"));
+		iconList.add(ImageHook.getImage("logo24.png"));
+		iconList.add(ImageHook.getImage("logo32.png"));
+		iconList.add(ImageHook.getImage("logo48.png"));
+		iconList.add(ImageHook.getImage("logo64.png"));
+		iconList.add(ImageHook.getImage("logo128.png"));
+		iconList.add(ImageHook.getImage("logo256.png"));
+		iconList.add(ImageHook.getImage("logo512.png"));
+		iconList.add(ImageHook.getImage("logo1024.png"));
+		return iconList;
+	}
 	
 	@Override
 	public void run() {
@@ -127,7 +145,12 @@ public class ConformalLab implements Runnable {
 		Runnable jobStaticInit = new Runnable() {
 			@Override
 			public void run() {
+				View.setTitle("Discrete Conformal Lab");
+				View.setIcon(ImageHook.getIcon("logo1024.png"));
+				View.setIconList(getMainIconList());
 				JRViewer.setApplicationTitle("Discrete Conformal Lab");
+				Image appIcon = ImageHook.getImage("logo256.png");
+				JRViewer.setApplicationIcon(appIcon);
 				JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 				JRHalfedgeViewer.initHalfedgeFronted();
 				installLookAndFeel();

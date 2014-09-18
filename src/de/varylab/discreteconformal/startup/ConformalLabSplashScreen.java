@@ -16,6 +16,7 @@ import java.awt.geom.AffineTransform;
 import javax.swing.JPanel;
 
 import de.jtem.jrworkspace.plugin.simplecontroller.widget.SplashScreen;
+import de.varylab.discreteconformal.ConformalLab;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 
 public class ConformalLabSplashScreen extends SplashScreen {
@@ -54,7 +55,9 @@ public class ConformalLabSplashScreen extends SplashScreen {
 	}
 	
 	public ConformalLabSplashScreen(Image lowResImage, Image hiResImage) {
-//		setIconImage(ImageHook.getImage("icon_24.png"));
+		setIconImage(ImageHook.getImage("icon_24.png"));
+		setIconImages(ConformalLab.getMainIconList());
+		this.setTitle("Disceret Conformal Lab");
 		this.lowResImage = lowResImage;
 		this.hiResImage = hiResImage;
 		setBackground(new Color(1, 1, 1, 0));
