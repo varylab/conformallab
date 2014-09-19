@@ -145,12 +145,6 @@ public class ConformalLab implements Runnable {
 		Runnable jobStaticInit = new Runnable() {
 			@Override
 			public void run() {
-				View.setTitle("Discrete Conformal Lab");
-				View.setIcon(ImageHook.getIcon("logo1024.png"));
-				View.setIconList(getMainIconList());
-				JRViewer.setApplicationTitle("Discrete Conformal Lab");
-				Image appIcon = ImageHook.getImage("logo256.png");
-				JRViewer.setApplicationIcon(appIcon);
 				JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 				JRHalfedgeViewer.initHalfedgeFronted();
 				installLookAndFeel();
@@ -203,6 +197,11 @@ public class ConformalLab implements Runnable {
 	
 	
 	public static void main(final String[] args) throws Exception {
+		View.setTitle("Discrete Conformal Lab");
+		View.setIcon(ImageHook.getIcon("logo512.png"));
+		View.setIconList(getMainIconList());
+		JRViewer.setApplicationTitle("Discrete Conformal Lab");
+		JRViewer.setApplicationIcon(ImageHook.getImage("logo512.png"));
 		LoggingUtility.initLogging();
 		if (args.length == 0) { // gui mode
 			new ConformalLab().run();
