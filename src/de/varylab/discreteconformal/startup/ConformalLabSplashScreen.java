@@ -38,8 +38,8 @@ public class ConformalLabSplashScreen extends SplashScreen {
 		isWindows = false,
 		isLinux = false;
 	private double
-		statusX = 0.118,
-		statusY = 0.57,
+		statusX = 0.32,
+		statusY = 0.52,
 		fontSize = 0.02;
 	
 	static {
@@ -49,8 +49,8 @@ public class ConformalLabSplashScreen extends SplashScreen {
 	
 	public ConformalLabSplashScreen() {
 		this(
-			ImageHook.getImage("splash03_lores.png"),
-			ImageHook.getImage("splash03_hires.png")
+			ImageHook.getImage("splash2014_lores.png"),
+			ImageHook.getImage("splash2014_hires.png")
 		);
 	}
 	
