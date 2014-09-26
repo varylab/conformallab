@@ -54,15 +54,26 @@ public class DiscreteEllipticUtility {
 		Complex w1 = z1.minus(z0);
 		Complex w2 = z2.minus(z0);
 		Complex tau = w2.divide(w1);
-		
+		return normalizeModulus(tau);
+	}
+	
+	/**
+	 * Move tau to the fundamental domain of flat tori
+	 * @param tau
+	 * @return
+	 */
+	public static Complex normalizeModulus(Complex tau) {
 		int maxIter = 100;
 		// move tau into its fundamental domain
-		while ((abs(tau.re) > 0.5 || tau.im < 0 || tau.abs() > 1) && --maxIter > 0) {
+		while ((abs(tau.re) > 0.5 || tau.re < 0 || tau.im < 0 || tau.abs() > 1) && --maxIter > 0) {
 			if (abs(tau.re) > 0.5) {
 				tau.re -= signum(tau.re);
 			}
+			if (tau.re < 0) {
+				tau = new Complex(-tau.re, tau.im);
+			}
 			if (tau.im < 0) {
-				tau = tau.times(-1);
+				tau = tau.conjugate();
 			}
 			if (tau.abs() > 1) {
 				tau = tau.invert();
