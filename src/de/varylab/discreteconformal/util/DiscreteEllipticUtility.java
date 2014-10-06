@@ -1,8 +1,5 @@
 package de.varylab.discreteconformal.util;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.signum;
-
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,18 +62,19 @@ public class DiscreteEllipticUtility {
 	public static Complex normalizeModulus(Complex tau) {
 		int maxIter = 100;
 		// move tau into its fundamental domain
-		while ((abs(tau.re) > 0.5 || tau.re < 0 || tau.im < 0 || tau.abs() > 1) && --maxIter > 0) {
-			if (abs(tau.re) > 0.5) {
-				tau.re -= signum(tau.re);
+		while ((tau.re > 0.5 || tau.re < 0 || tau.im < 0 || tau.abs() > 1) && --maxIter > 0) {
+			if (tau.re > 0.5) {
+				tau.re += -1;
 			}
 			if (tau.re < 0) {
-				tau = new Complex(-tau.re, tau.im);
+				tau.re *= -1;
 			}
 			if (tau.im < 0) {
-				tau = tau.conjugate();
+				tau.im *= -1;
 			}
 			if (tau.abs() > 1) {
 				tau = tau.invert();
+				tau.im *= -1;
 			}
 		}
 		return tau;
@@ -188,10 +186,6 @@ public class DiscreteEllipticUtility {
 		glueEdges.addAll(path2c);
 	}
 	
-	
-	
-	
-	
 	public static Complex calculateHalfPeriodRatioMathLink(double[] p1, double[] p2, double[] p3, double[] p4, KernelLink l) throws MathLinkException {
 		// to the sphere
 		Pn.setToLength(p1, p1, 1.0, Pn.EUCLIDEAN);
@@ -213,7 +207,8 @@ public class DiscreteEllipticUtility {
 		Complex g2 = e1.times(e2).plus(e2.times(e3)).plus(e3.times(e1)).times(-4);
 		Complex g3 = e1.times(e2).times(e3).times(4);
 		Complex[] w1w3 = invokeWeierstrassHalfperiods(g2, g3, l);
-		return w1w3[1].divide(w1w3[0]);
+		Complex tau = w1w3[1].divide(w1w3[0]);
+		return normalizeModulus(tau);
 	}
 	
 
