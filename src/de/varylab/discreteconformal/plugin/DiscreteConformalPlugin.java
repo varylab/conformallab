@@ -597,7 +597,11 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
 		metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
 		conformalDataPlugin.addHalfedgeMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
-		createUniformization(surfaceUnwrapped, activeGeometry, cutInfo);
+		if (uniformizationChecker.isSelected()) {
+			createUniformization(surfaceUnwrapped, activeGeometry, cutInfo);
+		} else {
+			updateGeometry(activeGeometry);
+		}
 		if (unwrapper.getBoundaryMode() == ReadIsometricAngles) {
 			extractBoundaryAngles();
 		}
@@ -638,10 +642,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		this.surfaceUnwrapped = surfaceUnwrapped;
 		this.activeGeometry = targetGeometry;
 		this.cutInfo = cutInfo;
-		boolean doUniformization = uniformizationChecker.isSelected();
-		if (!doUniformization) {
-			return;
-		}
 		if (
 			(targetGeometry == TargetGeometry.Euclidean || targetGeometry == TargetGeometry.Hyperbolic) &&
 			 !cutInfo.getBranchSet().isEmpty()
