@@ -8,11 +8,12 @@ import static java.lang.Math.acos;
 import static org.junit.Assert.*;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class HyperIdealUtilityTest {
 
-	@Test
+	@Test@Ignore
 	public void testZeta13() throws Exception {
 		double ζ_13 = ζ_13(0.1, 0.1, 0.1);
 		double ζ_e = 0.1;
