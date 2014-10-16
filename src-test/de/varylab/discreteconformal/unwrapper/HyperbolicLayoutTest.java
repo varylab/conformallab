@@ -1,12 +1,12 @@
 package de.varylab.discreteconformal.unwrapper;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import cern.colt.Arrays;
 import de.jreality.plugin.JRViewer;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;

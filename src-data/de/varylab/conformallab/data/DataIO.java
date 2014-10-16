@@ -90,7 +90,7 @@ public class DataIO {
 			e = of.createDiscreteMetric((DiscreteMetric)data);
 		} else
 		if (data instanceof DiscreteEmbedding) {
-			// convert to HalfedgeEmbedding to avoid deprecated DiscreteMap
+			// convert to HalfedgeEmbedding to avoid deprecated DiscreteEmbedding
 			DiscreteEmbedding de = (DiscreteEmbedding)data;
 			HalfedgeEmbedding he = DataUtility.toHalfedgeEmbedding(de);
 			e = of.createHalfedgeEmbedding(he);

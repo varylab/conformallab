@@ -39,8 +39,8 @@ public class DataUtilityTest {
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
 		CoHDS hds = new CoHDS();
 		DataUtility.toHalfedge(de, new ConformalAdapterSet(), Position.class, hds, cutInfo);
-		Assert.assertEquals(2, genus);
-		Assert.assertEquals(2, HalfEdgeUtils.getGenus(hds));
+		Assert.assertEquals(0, genus);
+		Assert.assertEquals(0, HalfEdgeUtils.getGenus(hds));
 	}
 	
 	@Test

@@ -194,13 +194,19 @@ public class DataTypesTest {
 		DataIO.writeConformalData(de, out);
 		String xml = new String(out.toByteArray());
 		XMLAssert.assertXMLEqual(
-			"<?xml version='1.0' encoding='UTF-8'?>" + 
-			"<DiscreteEmbedding xmlns='http://www.varylab.com/conformallab/types'>\n" + 
-			"    <EmbeddedVertex index='0' w='0.0' z='0.0' y='0.0' x='3.141592653589793'/>\n" + 
-			"    <EmbeddedVertex index='1' w='0.0' z='0.0' y='2.718281828459045' x='0.0'/>\n" + 
-			"    <EmbeddedVertex index='2' w='3.141592653589793' z='0.0' y='0.0' x='0.0'/>\n" + 
-			"    <EmbeddedTriangle vertex3='2' vertex2='1' vertex1='0'/>\n" + 
-			"</DiscreteEmbedding>", xml
+			"<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n" + 
+			"<HalfedgeEmbedding xmlns='http://www.varylab.com/conformallab/types'>\n" + 
+			"    <Vertex x='3.141592653589793' y='0.0' z='0.0' w='0.0' index='0'/>\n" + 
+			"    <Vertex x='0.0' y='2.718281828459045' z='0.0' w='0.0' index='1'/>\n" + 
+			"    <Vertex x='0.0' y='0.0' z='0.0' w='3.141592653589793' index='2'/>\n" + 
+			"    <Halfedge left='0' target='1' next='1' opposite='3' index='0'/>\n" + 
+			"    <Halfedge left='0' target='2' next='2' opposite='4' index='1'/>\n" + 
+			"    <Halfedge left='0' target='0' next='0' opposite='5' index='2'/>\n" + 
+			"    <Halfedge left='-1' target='0' next='5' opposite='0' index='3'/>\n" + 
+			"    <Halfedge left='-1' target='1' next='3' opposite='1' index='4'/>\n" + 
+			"    <Halfedge left='-1' target='2' next='4' opposite='2' index='5'/>\n" + 
+			"    <Face index='0'/>\n" + 
+			"</HalfedgeEmbedding>", xml
 		);
 	}
 	
