@@ -56,6 +56,7 @@ import de.varylab.conformallab.data.types.DiscreteMetric;
 import de.varylab.conformallab.data.types.EmbeddedVertex;
 import de.varylab.conformallab.data.types.HalfedgeEmbedding;
 import de.varylab.conformallab.data.types.HalfedgeMap;
+import de.varylab.conformallab.data.types.HalfedgeSelection;
 import de.varylab.conformallab.data.types.HalfedgeVertex;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
 import de.varylab.conformallab.data.types.SchottkyData;
@@ -501,6 +502,10 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			}
 			TargetGeometry target = TargetGeometry.calculateTargetGeometry(genus, 0);
 			discreteConformalPlugin.createUniformization(domainHds, target, domainInfo);
+			if (domain.getSelection() != null) {
+				Selection s = DataUtility.toSelection(domain.getSelection(), domainHds);
+				hif.setSelection(s);
+			}
 		}		
 		if (data instanceof DiscreteMetric) {
 			DiscreteMetric dm = (DiscreteMetric)data;
@@ -540,8 +545,16 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		addData(de);
 	}
 	public void addHalfedgeMap(String name, CoHDS surface, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+		addHalfedgeMap(name, surface, new Selection(), cutInfo);
+	}
+	public void addHalfedgeMap(String name, CoHDS surface, Selection selection, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		AdapterSet a = new AdapterSet(new CoDirectTextureAdapter(), new CoDirectPositionAdapter());
 		HalfedgeMap map = DataUtility.toHalfedgeMap(name, surface, a, TexturePosition4d.class, Position4d.class, cutInfo);
+		if (selection != null) {
+			HalfedgeSelection hs = DataUtility.toHalfedgeSelection(selection);
+			map.getDomain().setSelection(hs);
+			map.getImage().setSelection(hs);
+		}
 		addData(map);
 	}	
 	public void addHalfedgeEmbedding(String name, CoHDS surface, Selection selection, AdapterSet a, Class<? extends Annotation> type, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {

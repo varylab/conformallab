@@ -217,7 +217,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 				} else {
 					conformalDataPlugin.addHalfedgeEmbedding("Output Klein Model Fuchsian Embedding", hds, null, kleinTextureAdapters, TexturePosition4d.class, cutInfo);
 				}
-				conformalDataPlugin.addHalfedgeMap("Uniformizing Map", hds, cutInfo);
+				conformalDataPlugin.addHalfedgeMap("Uniformizing Map", hds, sel, cutInfo);
 				TargetGeometry targetGeometry = TargetGeometry.calculateTargetGeometry(genus, 0);
 				dcp.createUniformization(hds, targetGeometry, cutInfo);
 				hif.addSelection(sel);
