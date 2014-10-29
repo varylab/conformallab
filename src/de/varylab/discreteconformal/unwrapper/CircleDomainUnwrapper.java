@@ -294,6 +294,7 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		// set boundary conditions
 		for (CoEdge e : HalfEdgeUtils.incomingEdges(v0)) {
 			CoVertex s = e.getStartVertex();
+			if (s.info != null) continue;
 			CustomVertexInfo info = new CustomVertexInfo();
 			info.boundaryMode = BoundaryMode.Isometric;
 			s.info = info;
@@ -344,12 +345,13 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		int n = prepareInvariantDataEuclidean(opt.getFunctional(), surface, BoundaryMode.QuantizedAngles, QuantizationMode.Straight, aSet);
 		CEuclideanApplication app = new CEuclideanApplication(surface);
 		Vec u = new Vec(n);
-		u.assemble();
+		u.zeroEntries();
 		for (CoEdge e : surface.getPositiveEdges()) {
 			if (e.getSolverIndex() >= 0) {
 				u.setValue(e.getSolverIndex(), e.getLambda(), InsertMode.INSERT_VALUES);
 			}
 		}
+		u.assemble();
 		app.setInitialSolutionVec(u);
 		Mat H = app.getHessianTemplate();
 		app.setHessianMat(H, H);

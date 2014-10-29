@@ -214,7 +214,7 @@ public class DataUtility {
 			ee.linkNextEdge(next);
 			ee.setLeftFace(left);
 		}
-		if (he.getIdentifications().size() != 0) {
+		if (he.getIdentifications().size() != 0 && cutInfoOUT != null) {
 			createCuttingInfo(hdsOUT, he, cutInfoOUT);
 		}
 	}
