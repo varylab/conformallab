@@ -5,6 +5,8 @@ import static java.lang.Math.PI;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -50,9 +52,10 @@ public class UnwrapJob extends AbstractJob {
 		selectedEdges = new TypedSelection<CoEdge>();
 	private TargetGeometry
 		targetGeometry = TargetGeometry.Automatic;
+	private CutStrategy
+		cutStrategy = CutStrategy.Automatic;
 	private boolean
-		usePetsc = false,
-		useSelectionCuts = false;
+		usePetsc = false;
 	private QuantizationMode
 		coneMode = QuantizationMode.AllAngles,
 		boundaryQuantizationMode = QuantizationMode.AllAngles;
@@ -65,14 +68,15 @@ public class UnwrapJob extends AbstractJob {
 		toleranceExp = -8;
 	
 	// result values -------
-	public int 
+	private int 
 		genus = -1;
-	public CoVertex
+	private CoVertex
 		layoutRoot = null;
-	public CuttingInfo<CoVertex, CoEdge, CoFace> 
+	private CuttingInfo<CoVertex, CoEdge, CoFace> 
 		cutInfo = null;
-	public Map<CoEdge, Double>
-		lengthMap = null;
+	private Map<CoEdge, Double>
+		lengthMap = null,
+		angleMap = null;
 	
 	
 	
@@ -114,9 +118,12 @@ public class UnwrapJob extends AbstractJob {
 //				unwrapper = new SphericalUnwrapper();
 				unwrapper = new StereographicUnwrapper();
 			}
-			if (!selectedVertices.isEmpty()) {
-				CoVertex cutRoot = selectedVertices.iterator().next();
-				unwrapper.setCutRoot(cutRoot);
+			if (cutStrategy == CutStrategy.Selection) {
+				Set<CoEdge> edgeSet = new TreeSet<>(selectedEdges);
+				unwrapper.setCutGraph(edgeSet);
+			}
+			if (cutStrategy == CutStrategy.NoCuts) {
+				unwrapper.setCutGraph(new HashSet<CoEdge>());
 			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
@@ -163,9 +170,12 @@ public class UnwrapJob extends AbstractJob {
 					unwrapper = uw;
 				}
 			}
-			if (useSelectionCuts) {
+			if (cutStrategy == CutStrategy.Selection) {
 				Set<CoEdge> edgeSet = new TreeSet<>(selectedEdges);
 				unwrapper.setCutGraph(edgeSet);
+			}
+			if (cutStrategy == CutStrategy.NoCuts) {
+				unwrapper.setCutGraph(new HashSet<CoEdge>());
 			}
 			if (!selectedVertices.isEmpty()) {
 				CoVertex cutRoot = selectedVertices.iterator().next();
@@ -206,9 +216,12 @@ public class UnwrapJob extends AbstractJob {
 			} else {
 				unwrapper = new HyperbolicUnwrapper();
 			}
-			if (useSelectionCuts) {
+			if (cutStrategy == CutStrategy.Selection) {
 				Set<CoEdge> edgeSet = new TreeSet<>(selectedEdges);
 				unwrapper.setCutGraph(edgeSet);
+			}
+			if (cutStrategy == CutStrategy.NoCuts) {
+				unwrapper.setCutGraph(new HashSet<CoEdge>());
 			}
 			if (!selectedVertices.isEmpty()) {
 				CoVertex cutRoot = selectedVertices.iterator().next();
@@ -231,7 +244,9 @@ public class UnwrapJob extends AbstractJob {
 		log.info("layout took " + nf.format((layoutTime - unwrapTime) / 1000.0) + "sec.");
 		int brokenCount = 0;
 		int curveVertices = 0;
+		angleMap = new HashMap<CoEdge, Double>();
 		for (CoEdge e : surface.getEdges()) {
+			angleMap.put(e, e.getAlpha());
 			if (e.getLeftFace() == null) continue;
 			if (e.getAlpha() >= Math.PI) {
 				brokenCount++;
@@ -314,11 +329,8 @@ public class UnwrapJob extends AbstractJob {
 		this.selectedEdges = selectedEdges;
 	}
 
-	public void setUseSelectionCuts(boolean useSelectionCuts) {
-		this.useSelectionCuts = useSelectionCuts;
-	}
-	public boolean isUseSelectionCuts() {
-		return useSelectionCuts;
+	public void setCutStrategy(CutStrategy cutStrategy) {
+		this.cutStrategy = cutStrategy;
 	}
 	
 	public void setTargetGeometry(TargetGeometry targetGeometry) {
@@ -326,6 +338,21 @@ public class UnwrapJob extends AbstractJob {
 	}
 	public TargetGeometry getTargetGeometry() {
 		return targetGeometry;
+	}
+	
+	public CoVertex getLayoutRoot() {
+		return layoutRoot;
+	}
+	
+	public Map<CoEdge, Double> getLengthMap() {
+		return lengthMap;
+	}
+	public Map<CoEdge, Double> getAngleMap() {
+		return angleMap;
+	}
+	
+	public CuttingInfo<CoVertex, CoEdge, CoFace> getCutInfo() {
+		return cutInfo;
 	}
 	
 }

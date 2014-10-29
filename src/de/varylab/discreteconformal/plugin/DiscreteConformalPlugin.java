@@ -41,6 +41,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
@@ -134,6 +135,8 @@ import de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility;
 import de.varylab.discreteconformal.uniformization.FundamentalVertex;
 import de.varylab.discreteconformal.uniformization.SurfaceCurveUtility;
 import de.varylab.discreteconformal.unwrapper.BoundaryMode;
+import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
+import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
@@ -149,6 +152,8 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 	public static final Integer
 		CHANNEL_BROKEN_TRIANGLES = 23435634,
 		CHANNEL_BOUNDARY_CONDITION = 1236644;
+	private Logger
+		log = Logger.getLogger(DiscreteConformalPlugin.class.getName());
 	
 	// plug-in section ------------------ 
 	private HalfedgeInterface
@@ -170,6 +175,8 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 	private CoHDS
 		surface = null,
 		surfaceUnwrapped = null;
+	private UnwrapJob
+		unwrapJob = null;
 	private TargetGeometry
 		activeGeometry = TargetGeometry.Automatic;
 	private List<CoVertex>
@@ -215,6 +222,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		coverToTextureButton = new JButton("Create Texture"),
 		checkGaussBonnetBtn = new JButton("Check Gauß-Bonnet"),
 		unwrapBtn = new JButton("Unwrap"),
+		doLayoutButton = new JButton("Recalculate Layout"),
 		quantizeToQuads = new JButton("Quads"),
 		reorderFacesButton = new JButton("Move Faces"),
 		reorderSelectedFacesButton = new JButton("Move Selected Faces"),
@@ -228,6 +236,8 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		domainCombo = new JComboBox<>(DomainPolygon.values());
 	private JComboBox<TargetGeometry>
 		targetGeometryCombo = new JComboBox<>(TargetGeometry.values());
+	private JComboBox<CutStrategy>
+		cutStrategy = new JComboBox<CutStrategy>(CutStrategy.values());
 	private ShrinkPanel
 		customNodePanel = new ShrinkPanel("Custom Nodes"),
 		boundaryPanel = new ShrinkPanel("Boundary"),
@@ -265,8 +275,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		useDistanceToCanonicalize = new JCheckBox("Use Isometry Distances"),
 		useCustomThetaChecker = new JCheckBox("Custom Theta"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
-		drawCurvesOnSurface = new JCheckBox("Draw Curves On Surface"),
-		useSelectionCutChecker = new JCheckBox("Use Selection Cut Graph");
+		drawCurvesOnSurface = new JCheckBox("Draw Curves On Surface");
 	private JRadioButton
 		cutXDirectionRadio = new JRadioButton("X"),
 		cutYDirectionRadio = new JRadioButton("Y", true);
@@ -323,6 +332,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		mapToConeButton.addActionListener(this);
 		insertHolomorphicImagePoints.addActionListener(this);
 		resetSurfaceButton.addActionListener(this);
+		doLayoutButton.addActionListener(this);
 		
 		unwrapBtn.addActionListener(this);
 		checkGaussBonnetBtn.addActionListener(this);
@@ -362,13 +372,15 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			shrinkPanel.add(new JLabel("Max Iterations"), c1);
 			shrinkPanel.add(maxIterationsSpinner, c2);
 			shrinkPanel.add(rescaleChecker, c2);
-			shrinkPanel.add(useSelectionCutChecker, c2);
+			shrinkPanel.add(new JLabel("Cut Strategy"), c1);
+			shrinkPanel.add(cutStrategy, c2);
 			shrinkPanel.add(new JLabel("Target Geometry"), c1);
 			shrinkPanel.add(targetGeometryCombo, c2);
 		}
 		shrinkPanel.add(unwrapBtn, c2);
 		if (expert) {
 			shrinkPanel.add(resetSurfaceButton, c2);
+			shrinkPanel.add(doLayoutButton, c2);
 			shrinkPanel.add(uniformizationChecker, c2);
 			shrinkPanel.add(checkGaussBonnetBtn, c2);
 		}
@@ -589,12 +601,12 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 	
 	@Override
 	public void jobFinished(Job job) {
-		UnwrapJob unwrapper = (UnwrapJob)job;
-		surfaceUnwrapped = unwrapper.getSurface();
+		unwrapJob = (UnwrapJob)job;
+		surfaceUnwrapped = unwrapJob.getSurface();
 		surfaceUnwrapped.revertNormalization();
-		cutInfo = unwrapper.cutInfo;
-		activeGeometry = unwrapper.getTargetGeometry();
-		metricErrorAdapter.setLengthMap(unwrapper.lengthMap);
+		cutInfo = unwrapJob.getCutInfo();
+		activeGeometry = unwrapJob.getTargetGeometry();
+		metricErrorAdapter.setLengthMap(unwrapJob.getLengthMap());
 		metricErrorAdapter.setSignature(Pn.EUCLIDEAN);
 		conformalDataPlugin.addHalfedgeMap("Uniformizing Map", surfaceUnwrapped, cutInfo);
 		if (uniformizationChecker.isSelected()) {
@@ -602,7 +614,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		} else {
 			updateGeometry(activeGeometry);
 		}
-		if (unwrapper.getBoundaryMode() == ReadIsometricAngles) {
+		if (unwrapJob.getBoundaryMode() == ReadIsometricAngles) {
 			extractBoundaryAngles();
 		}
 	}
@@ -770,9 +782,30 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			uw.setUsePetsc(numericsCombo.getSelectedIndex() == 0);
 			uw.setSelectedVertices(selection.getVertices(unwrapped));
 			uw.setSelectedEdges(selection.getEdges(unwrapped));
-			uw.setUseSelectionCuts(useSelectionCutChecker.isSelected());
+			uw.setCutStrategy((CutStrategy)cutStrategy.getSelectedItem());
 			uw.addJobListener(this);
 			jobQueue.queueJob(uw);
+		}
+		if (doLayoutButton == s) {
+			if (surfaceUnwrapped == null) return;
+			for (CoEdge ee : surfaceUnwrapped.getEdges()) {
+				// fill missing edge lengths
+				if (unwrapJob.getLengthMap().containsKey(ee)) {
+					unwrapJob.getLengthMap().put(ee.getOppositeEdge(), unwrapJob.getLengthMap().get(ee));
+				}
+			}
+			switch (activeGeometry) {
+			case Euclidean:
+				EuclideanLayout.doLayout(surfaceUnwrapped, unwrapJob.getLengthMap(), unwrapJob.getAngleMap());
+				break;
+			case Hyperbolic:
+				HyperbolicLayout.doLayout(surfaceUnwrapped, surfaceUnwrapped.getVertex(0), unwrapJob.getLengthMap());
+				break;
+			default:
+				log.warning("recalculation of layout not implemented for " + activeGeometry + " geometry");
+				break;
+			}
+			hif.update();
 		}
 		if (customModeCombo == s) {
 			for (Node<?,?,?> sel : customNodesList.getSelectedValuesList()) {
