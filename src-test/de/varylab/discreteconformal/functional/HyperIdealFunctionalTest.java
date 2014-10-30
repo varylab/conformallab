@@ -44,7 +44,7 @@ public class HyperIdealFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 	
 	@Override
 	public void init() {
-		CoHDS hds = HyperIdealUtility.createLawsonsSurface();
+		CoHDS hds = HyperIdealGenerator.createLawsonSquareTiled();
 		int n = functional.getDimension(hds);
 		Random rnd = new Random(); 
 		rnd.setSeed(1);

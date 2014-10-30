@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.functional;
 
 import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
-import static de.varylab.discreteconformal.functional.HyperIdealUtility.createLawsonsSurface;
 
 import java.io.FileOutputStream;
 import java.util.LinkedHashMap;
@@ -50,7 +49,7 @@ public class HyperIdealLayoutTest {
 	
 	@Test
 	public void testHyperIdealLayout() throws Exception {
-		CoHDS hds = createLawsonsSurface();
+		CoHDS hds = HyperIdealGenerator.createLawsonSquareTiled();
 		CHyperIdealApplication app = new CHyperIdealApplication(hds);
 		Vec u = new Vec(app.getDomainDimension());
 		for (int i = 0; i < app.getDomainDimension(); i++) {

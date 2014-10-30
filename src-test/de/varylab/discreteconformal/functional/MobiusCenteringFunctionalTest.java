@@ -88,13 +88,4 @@ public class MobiusCenteringFunctionalTest extends FunctionalTest<CoVertex, CoEd
 		System.out.println(g.norm(Norm.Two));
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 }

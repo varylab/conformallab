@@ -28,7 +28,7 @@ import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jtao.Tao;
-import de.varylab.discreteconformal.functional.HyperIdealUtility;
+import de.varylab.discreteconformal.functional.HyperIdealGenerator;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -43,7 +43,8 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 	private double[]
 		lawsonData = {1.1462158127870863, 1.1462158127870863, 1.1462158127870863, 1.1462158127870863, 1.7627471360523435, 1.7627471360523435, 1.7627471360523428, 1.7627471360523428, 1.7627471360523435, 1.7627471360523435, 1.7627471360523428, 1.7627471360523428, 1.7627471360523435, 1.7627471360523428, 1.7627471360523435, 1.7627471360523428, 2.633915759978531, 2.633915759978531, 2.633915759978531, 2.633915759978531, 2.633915759978531, 2.633915759978531};
 	private JButton
-		lawsonButton = new JButton("Lawson's Surface");
+		lawsonSquareTiledButton = new JButton("Lawson's Square Tiled"),
+		lawsonSquareTiledBranchButton = new JButton("Lawson's Square Tiled Branch");
 	private DiscreteConformalPlugin
 		conformalPlugin = null;
 	private ConformalDataPlugin
@@ -51,8 +52,12 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 	
 	public HyperIdealPlugin() {
 		shrinkPanel.setTitle("Hyper-Ideal Uniformization");
-		shrinkPanel.add(lawsonButton);
-		lawsonButton.addActionListener(this);
+		shrinkPanel.add(lawsonSquareTiledButton);
+		lawsonSquareTiledButton.addActionListener(this);
+	}
+	
+	static {
+		Tao.Initialize();
 	}
 	
 	@Length
@@ -80,8 +85,31 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 	
 	@Override
 	public void actionPerformed(ActionEvent ev) {
-		Tao.Initialize();
-		CoHDS hds = HyperIdealUtility.createLawsonsSurface();
+		if (lawsonSquareTiledBranchButton == ev.getSource()) {
+			uniformizeLawsonSquareTiled();
+		}
+		if (lawsonSquareTiledBranchButton == ev.getSource()) {
+			uniformizeLawsonSquareTiledBranch();
+		}
+	}
+
+	
+	private void uniformizeLawsonSquareTiledBranch() {
+		CoHDS hds = HyperIdealGenerator.createLawsonSquareTiledWithBranchPoints();
+		CHyperIdealApplication app = new CHyperIdealApplication(hds);
+		Vec u = new Vec(app.getDomainDimension());
+		for (int i = 0; i < app.getDomainDimension(); i++) {
+			u.setValue(i, lawsonData[i], INSERT_VALUES);
+		}
+		// initialize angles
+		app.evaluateObjectiveAndGradient(u, null);
+		Assert.assertEquals(2, HalfEdgeUtils.getGenus(hds));
+
+	}
+	
+	
+	private void uniformizeLawsonSquareTiled() {
+		CoHDS hds = HyperIdealGenerator.createLawsonSquareTiled();
 		CHyperIdealApplication app = new CHyperIdealApplication(hds);
 		Vec u = new Vec(app.getDomainDimension());
 		for (int i = 0; i < app.getDomainDimension(); i++) {
