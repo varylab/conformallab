@@ -121,7 +121,7 @@ public class HyperIdealFunctional <
 		double b2 = v2b ? x.get(var.getVarIndex(v2)) : 0.0;
 		double b3 = v3b ? x.get(var.getVarIndex(v3)) : 0.0;
 		if (a12 < 0 || a23 < 0 || a31 < 0 || b1 < 0 || b2 < 0 || b3 < 0) {
-			log.warning("arguments (a,b) must not be negative");
+//			log.warning("arguments (a,b) must not be negative");
 		}
 		double l12 = lij(b1, b2, a12, v1b, v2b);
 		double l23 = lij(b2, b3, a23, v2b, v3b);

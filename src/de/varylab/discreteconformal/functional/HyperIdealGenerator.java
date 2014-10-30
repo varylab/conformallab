@@ -36,7 +36,7 @@ public class HyperIdealGenerator {
 		for (CoEdge e : hds.getPositiveEdges()) {
 			e.setSolverIndex(index);
 			e.getOppositeEdge().setSolverIndex(index++);
-			if (index < 24) {
+			if (index < 16) {
 				e.setTheta(PI);
 				e.getOppositeEdge().setTheta(PI);
 			} else {

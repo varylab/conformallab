@@ -8,6 +8,7 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
@@ -44,6 +45,10 @@ public class HyperIdealFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 	
 	@Override
 	public void init() {
+		setEps(eps);
+		setError(error);
+		setFunctional(functional);
+		
 		CoHDS hds = HyperIdealGenerator.createLawsonSquareTiled();
 		int n = functional.getDimension(hds);
 		Random rnd = new Random(); 
@@ -56,11 +61,22 @@ public class HyperIdealFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 		setFunctional(functional);
 		setHDS(hds);
 		setXGradient(u);
-		setEps(eps);
-		setError(error);
 	}
 
-
-	
+	@Test
+	public void testGradientWithHyperIdealAndIdealPoints() throws Exception {
+		CoHDS hds = HyperIdealGenerator.createLawsonSquareTiledWithBranchPoints();
+		int n = functional.getDimension(hds);
+		Random rnd = new Random(); 
+		rnd.setSeed(1);
+		Vector x = new DenseVector(n);
+		for (Integer i = 0; i < x.size(); i++) {
+			x.set(i, 0.5 + abs(rnd.nextDouble()));
+		}
+		MyDomainValue u = new MyDomainValue(x);
+		setHDS(hds);
+		setXGradient(u);
+		super.testGradient();
+	}
 	
 }

@@ -1,5 +1,7 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
+import static de.jtem.jpetsc.NormType.NORM_FROBENIUS;
+
 import java.util.logging.Logger;
 
 import de.jtem.jpetsc.Vec;
@@ -43,7 +45,10 @@ public class CHyperIdealApplication extends TaoApplication implements TaoAppAddC
 		SimpleEnergy E = new SimpleEnergy();
 		TaoGradient G = g != null ? new TaoGradient(g) : null;
 		functional.evaluate(hds, u, E, G, null);
-		if (g != null) g.assemble();
+		if (g != null) {
+			g.assemble();
+			log.info("grad length: " + g.norm(NORM_FROBENIUS));
+		}
 		return E.get();
 	}
 	

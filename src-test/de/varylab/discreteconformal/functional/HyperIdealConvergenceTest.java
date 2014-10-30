@@ -23,9 +23,7 @@ public class HyperIdealConvergenceTest {
 
 	private Logger
 		log = Logger.getLogger(HyperIdealConvergenceTest.class.getName());
-	private double[]
-		expectedSolution = {1.1462158127870863, 1.1462158127870863, 1.1462158127870863, 1.1462158127870863, 1.7627471360523435, 1.7627471360523435, 1.7627471360523428, 1.7627471360523428, 1.7627471360523435, 1.7627471360523435, 1.7627471360523428, 1.7627471360523428, 1.7627471360523435, 1.7627471360523428, 1.7627471360523435, 1.7627471360523428, 2.633915759978531, 2.633915759978531, 2.633915759978531, 2.633915759978531, 2.633915759978531, 2.633915759978531};
-	
+
 	@BeforeClass
 	public static void initPetsc() {
 		NativePathUtility.set("native");
@@ -62,6 +60,14 @@ public class HyperIdealConvergenceTest {
 		Assert.assertEquals(ConvergenceFlags.CONVERGED_ATOL, optimizer.getSolutionStatus().reason);
 		UnwrapUtility.logSolutionStatus(optimizer, log);
 		double[] uVec = u.getArray();
+		double[] expectedSolution = {
+			1.1462158127870863, 1.1462158127870863, 1.1462158127870863, 1.1462158127870863, 
+			1.7627471360523435, 1.7627471360523435, 1.7627471360523428, 1.7627471360523428, 
+			1.7627471360523435, 1.7627471360523435, 1.7627471360523428, 1.7627471360523428, 
+			1.7627471360523435, 1.7627471360523428, 1.7627471360523435, 1.7627471360523428, 
+			2.633915759978531, 2.633915759978531, 2.633915759978531, 2.633915759978531, 
+			2.633915759978531, 2.633915759978531
+		};
 		Assert.assertArrayEquals(expectedSolution, uVec, 1E-6);
 		u.restoreArray();
 		log.info("solution: " + u.toString());
@@ -77,14 +83,14 @@ public class HyperIdealConvergenceTest {
 		rnd.setSeed(1);
 		Vec u = new Vec(n);
 		for (int i = 0; i < n; i++) {
-//			u.setValue(i, 0.5 + abs(rnd.nextDouble()), INSERT_VALUES);
-			u.setValue(i, 0.1*Math.abs(rnd.nextDouble()), INSERT_VALUES);
+//			u.setValue(i, 0.5 + Math.abs(rnd.nextDouble()), INSERT_VALUES);
+			u.setValue(i, 1.0 + 0.1*Math.abs(rnd.nextDouble()), INSERT_VALUES);
 		}
 		app.setInitialSolutionVec(u);
 		TaoVec lowerBounds = new TaoVec(n);
 		TaoVec upperBounds = new TaoVec(n);
 		lowerBounds.setToConstant(0.0);
-		upperBounds.setToConstant(Double.MAX_VALUE);
+		upperBounds.setToConstant(100.0);
 		log.info("start   : " + u.toString());
 		
 		Tao optimizer = new Tao(Tao.Method.LMVM);
@@ -92,11 +98,13 @@ public class HyperIdealConvergenceTest {
 		optimizer.setGradientTolerances(1E-9, 1E-9, 1E-9); 
 		optimizer.setTolerances(0, 0, 0, 0);
 		optimizer.setMaximumIterates(300);
-		//optimizer.setVariableBounds(lowerBounds, upperBounds);
+//		optimizer.setVariableBounds(lowerBounds, upperBounds);
 		optimizer.solve();
+		log.info(optimizer.getSolutionStatus().toString());
 		Assert.assertEquals(ConvergenceFlags.CONVERGED_ATOL, optimizer.getSolutionStatus().reason);
 		UnwrapUtility.logSolutionStatus(optimizer, log);
 		double[] uVec = u.getArray();
+		double[] expectedSolution = new double[28];
 		Assert.assertArrayEquals(expectedSolution, uVec, 1E-6);
 		u.restoreArray();
 		log.info("solution: " + u.toString());
