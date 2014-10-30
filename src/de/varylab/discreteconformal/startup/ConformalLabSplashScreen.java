@@ -57,7 +57,7 @@ public class ConformalLabSplashScreen extends SplashScreen {
 	public ConformalLabSplashScreen(Image lowResImage, Image hiResImage) {
 		setIconImage(ImageHook.getImage("icon_24.png"));
 		setIconImages(ConformalLab.getMainIconList());
-		this.setTitle("Disceret Conformal Lab");
+		this.setTitle("Discrete Conformal Lab");
 		this.lowResImage = lowResImage;
 		this.hiResImage = hiResImage;
 		setBackground(new Color(1, 1, 1, 0));

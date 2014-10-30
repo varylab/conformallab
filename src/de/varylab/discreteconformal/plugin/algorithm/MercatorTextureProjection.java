@@ -1,9 +1,5 @@
 package de.varylab.discreteconformal.plugin.algorithm;
 
-import java.util.Iterator;
-import java.util.Set;
-
-import de.jreality.math.Rn;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
@@ -11,21 +7,15 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition2d;
-import de.jtem.halfedgetools.adapter.type.generic.TexturePosition3d;
-import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
-import de.jtem.halfedgetools.plugin.algorithm.AlgorithmPlugin;
 import de.jtem.mfc.field.Complex;
-import de.varylab.discreteconformal.math.CP1;
-import de.varylab.discreteconformal.math.ComplexUtility;
+import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.CoVertex;
 
-public class MercatorTextureProjection extends AlgorithmPlugin {
+public class MercatorTextureProjection extends StereographicTextureProjection {
 
-	private HalfedgeInterface
-		masterInterface = null;
-	
 	public MercatorTextureProjection(HalfedgeInterface master) {
-		this.masterInterface = master;
+		super(master);
 	}
 
 	@Override
@@ -39,21 +29,53 @@ public class MercatorTextureProjection extends AlgorithmPlugin {
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>, 
 		HDS extends HalfEdgeDataStructure<V, E, F>
-	> void execute(HDS hds, AdapterSet a, HalfedgeInterface hi) {
-		// north and south pole normalization
-		Set<V> poles = hi.getSelection().getVertices(hds);
-		if (poles.size() == 3) {
-			Iterator<V> it = poles.iterator();
-			normalize(hds, it.next(), it.next(), it.next(), a);
-		}
-		// stereographic projection
-		for (V v : hds.getVertices()) {
-			double[] pos = a.getD(TexturePosition3d.class, v);
-			Complex c = ComplexUtility.stereographic(pos);
-			a.set(TexturePosition.class, v, new double[]{c.re, c.im});
-		}
+	> void execute(HDS hds2, AdapterSet a, HalfedgeInterface hi) {
+		super.execute(hds2, a, hi);
+		CoHDS hds = hi.get(new CoHDS());
+
+//		// create branch cut	
+//		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+//		double snapTolerance = 1E-20;
+//		int signature = Pn.EUCLIDEAN;
+//		Set<CoVertex> newVertices = new HashSet<>();
+//		double[][] segment = {{-1E10, 0, 1},{0, 0, 1}};
+//		createIntersectionVertices(segment, true, hds, hds, cutInfo, snapTolerance, signature, newVertices);
+//		triangulateByCuttingCorners(hds, a);
+//		Selection pathSelection = new Selection();
+//		pathSelection.addAll(newVertices);
+//		LinkedList<CoEdge> newCut = DiscreteConformalPlugin.selectCutPath(hds, newVertices, pathSelection);
+//		CuttingInfo<CoVertex, CoEdge, CoFace> newCutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
+//		CuttingUtility.cutAlongPath(newCut, newCutInfo);
+//		
+//		for (CoVertex v : newVertices) {
+//			boolean isUpper = false;
+//			double[] p = a.getD(TexturePosition2d.class, v);
+//			for (CoVertex vv : HalfEdgeUtilsExtra.getVertexStar(v)) {
+//				if (HalfEdgeUtils.isBoundaryVertex(vv)) continue;
+//				double[] pp = a.getD(TexturePosition2d.class, vv);
+//				if (pp[1] > 1E-8) {
+//					isUpper = true;
+//					break;
+//				}
+//			}
+//			double offset = 1E-8;
+//			if (isUpper) {
+//				a.set(TexturePosition.class, v, new double[]{p[0], offset});
+//				if (newCutInfo.vertexCopyMap.containsKey(v)) {
+//					CoVertex vv = newCutInfo.vertexCopyMap.get(v);
+//					a.set(TexturePosition.class, vv, new double[]{p[0], -offset});
+//				}
+//			} else {
+//				a.set(TexturePosition.class, v, new double[]{p[0], -offset});
+//				if (newCutInfo.vertexCopyMap.containsKey(v)) {
+//					CoVertex vv = newCutInfo.vertexCopyMap.get(v);
+//					a.set(TexturePosition.class, vv, new double[]{p[0], offset});
+//				}
+//			}
+//		}
+		
 		// complex logarithm
-		for (V v : hds.getVertices()) {
+		for (CoVertex v : hds.getVertices()) {
 			double[] pos = a.getD(TexturePosition2d.class, v);
 			Complex c = new Complex(pos[0], pos[1]);
 			c = c.log();
@@ -61,27 +83,7 @@ public class MercatorTextureProjection extends AlgorithmPlugin {
 		}
 		hi.update();
 		masterInterface.update();
-	}
-	
-	public static <
-		V extends Vertex<V, E, F>, 
-		E extends Edge<V, E, F>, 
-		F extends Face<V, E, F>, 
-		HDS extends HalfEdgeDataStructure<V, E, F>
-	> void normalize(HDS hds, V s, V mid, V n, AdapterSet a) {
-		double[] ps = a.getD(TexturePosition3d.class, s);
-		double[] pmid = a.getD(TexturePosition3d.class, mid);
-		double[] pn = a.getD(TexturePosition3d.class, n);
-		Complex cs = ComplexUtility.stereographic(ps);
-		Complex cmid = ComplexUtility.stereographic(pmid);
-		Complex cn = ComplexUtility.stereographic(pn);
-		Complex[] Tcp = CP1.standardProjectivity(null, cs, cmid, cn);
-		double[] Tp = CP1.convertPSL2CToSO31(null, Tcp);
-		for (V v : hds.getVertices()) {
-			double[] tp = a.getD(TexturePosition4d.class, v);
-			Rn.matrixTimesVector(tp, Tp, tp);
-			a.set(TexturePosition.class, v, tp);
-		}
+//		masterInterface.setSelection(new Selection(newCutInfo.edgeCutMap.keySet()));
 	}
 
 }
