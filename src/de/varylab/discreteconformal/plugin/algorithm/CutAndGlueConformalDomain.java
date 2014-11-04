@@ -4,7 +4,6 @@ import static de.jtem.halfedgetools.algorithm.triangulation.Triangulator.triangu
 import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.createIntersectionVertices;
 import static de.varylab.discreteconformal.unwrapper.EuclideanLayout.doLayout;
 import static de.varylab.discreteconformal.util.CuttingUtility.glueAll;
-import static javax.swing.JOptionPane.showMessageDialog;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -101,13 +100,11 @@ public class CutAndGlueConformalDomain extends AlgorithmDialogPlugin implements 
 		CoHDS hds = (CoHDS) data;
 		TypedSelection<CoVertex> sel = hif.getSelection().getVertices(hds);
 		if (sel.isEmpty()) {
-			showMessageDialog(getOptionParent(), "Please select a boundary vertex to define the cut location and direction");
-			return;
+			throw new RuntimeException("Please select a boundary vertex to define the cut location and direction");
 		}
 		CoVertex v = sel.iterator().next();
 		if (!HalfEdgeUtils.isBoundaryVertex(v)) {
-			showMessageDialog(getOptionParent(), "Please select a boundary vertex to define the cut location and direction");
-			return;
+			throw new RuntimeException("Please select a boundary vertex to define the cut location and direction");
 		}
 		double[][] segment = null;
 		if (orthogonalRadio.isSelected()) {

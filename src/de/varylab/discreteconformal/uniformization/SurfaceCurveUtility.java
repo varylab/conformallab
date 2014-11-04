@@ -362,7 +362,9 @@ public class SurfaceCurveUtility {
 		if (Double.isNaN(l2)) {
 			return target[1];
 		}
-		return Rn.linearCombination(null, l1, target[1], l2, target[0]);
+		double[] t0d = Pn.dehomogenize(null, target[0]);
+		double[] t1d = Pn.dehomogenize(null, target[1]);
+		return Rn.linearCombination(null, l1, t1d, l2, t0d);
 	}
 	
 	
