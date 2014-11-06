@@ -5,6 +5,7 @@ import static java.lang.Math.sqrt;
 import java.io.FileWriter;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -34,6 +35,8 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		qualityMeasure = QualityMeasure.MaxCrossRatio;
 	private double
 		measureExponent = 1.0;
+	private Logger
+		log = Logger.getLogger(ConvergenceQuality.class.getName());
 	
 	
 	public static enum QualityMeasure {
@@ -113,7 +116,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 	protected void perform() throws Exception {
 		writeComment("Quality measure: " + qualityMeasure);
 		writeComment("Measure exponent: " + measureExponent);
-		writeComment("index[1], absErr[2], argErr[3], reErr[4], imErr[5], qFun[6]");
+		writeComment("index[1], absErr[2], argErr[3], reErr[4], imErr[5], re[6], im[7], qFun[8]");
 		for (int i = 0; i < numSamples; i ++) {
 			if (reuse) rnd.setSeed(123);
 			CoHDS hds = new CoHDS();
@@ -150,7 +153,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
 				DiscreteEllipticUtility.generateEllipticImage(hds, 0, glueSet, branchIndices);
 				meshQuality = calculateQualityMeasure(qualityMeasure, measureExponent, hds);
-				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, 1E-8);
+				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, 1E-9);
 				if (qualityMeasure == QualityMeasure.MaxCircumCircle) {
 					meshQuality = calculateQualityMeasure(qualityMeasure, measureExponent, hds);
 				}
@@ -161,12 +164,12 @@ public class ConvergenceQuality extends ConvergenceSeries {
 				e.printStackTrace();
 				continue;
 			}
-			
+			log.info("tau = " + tau);
 			double absErr = tau.abs() - getExpectedTau().abs();
 			double argErr = tau.arg() - getExpectedTau().arg();
 			double reErr = tau.re - getExpectedTau().re;
 			double imErr = tau.im - getExpectedTau().im;
-			writeErrorLine(i + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + meshQuality);
+			writeErrorLine(i + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + tau.re + "\t" + tau.im + "\t" + meshQuality);
 		}
 	}
 	

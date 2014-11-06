@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -35,6 +37,8 @@ public abstract class ConvergenceSeries {
 		Noise
 	}
 	
+	private static Logger 
+		log = Logger.getLogger(ConvergenceSeries.class.getName());
 	protected Random
 		rnd = new Random();
 	protected double[][]
@@ -102,6 +106,8 @@ public abstract class ConvergenceSeries {
 		OptionSpec<String> fileNameSpec = p.accepts("name", "Name of the data series").withRequiredArg().ofType(String.class);
 		OptionSpec<String> inputObj = p.accepts("pin", "Predefined branch points as obj file").withRequiredArg().ofType(String.class);
 		OptionSpec<String> branchIndicesSpec = p.accepts("bpi", "Indices of the four branch points in the obj file").withRequiredArg().ofType(String.class).defaultsTo("0,1,2,3");
+		OptionSpec<Double> tauReSpec = p.accepts("tre", "Real part of expected \tau").withOptionalArg().ofType(Double.class);
+		OptionSpec<Double> tauImSpec = p.accepts("tim", "Imaginary part of expected \tau").withOptionalArg().ofType(Double.class);
 		p.accepts("help", "Prints Help Information");
 		OptionSet opts = series.configureAndParseOptions(p, args);
 		
@@ -162,8 +168,13 @@ public abstract class ConvergenceSeries {
 			"-linkname", "\"C:\\Program Files\\Wolfram Research\\Mathematica\\7.0\\MathKernel.exe\" " + 
 			"-mathlink"
 		};
-		KernelLink link = MathLinkFactory.createKernelLink(mlargs);
-		link.discardAnswer();
+		KernelLink link = null;
+		try {
+			link = MathLinkFactory.createKernelLink(mlargs);
+			link.discardAnswer();
+		} catch (Throwable e) {
+			log.log(Level.WARNING, "could not create mathematica link: ", e);
+		}
 		double[] p1 = series.vertices[series.branchIndices[0]];
 		double[] p2 = series.vertices[series.branchIndices[1]];
 		double[] p3 = series.vertices[series.branchIndices[2]];
@@ -174,9 +185,17 @@ public abstract class ConvergenceSeries {
 			p3 = Pn.homogenize(null, p3);
 			p4 = Pn.homogenize(null, p4);
 		}
-		series.tauExpected = DiscreteEllipticUtility.calculateHalfPeriodRatioMathLink(p1, p2, p3, p4, link);
+		Double tauRe = tauReSpec.value(opts);
+		Double tauIm = tauImSpec.value(opts);
+		if (link != null) {
+			series.tauExpected = DiscreteEllipticUtility.calculateHalfPeriodRatioMathLink(p1, p2, p3, p4, link);
+			link.close();
+		} else if (tauRe != null || tauIm != null) {
+			series.tauExpected = new Complex(tauRe, tauIm);
+		} else {
+			throw new Exception("Could not determine expected tau");
+		}
 		series.writeComment("Expected tau: " + series.tauExpected);
-		link.close();
 		
 		series.perform();
 		series.getErrorWriter().close();
@@ -211,7 +230,7 @@ public abstract class ConvergenceSeries {
 	
 	
 	protected void writeErrorLine(String line) throws IOException {
-		System.out.println(line);
+		log.info(line);
 		errorWriter.write(line + "\n");
 		errorWriter.flush();
 	}

@@ -57,6 +57,7 @@ import de.varylab.discreteconformal.plugin.algorithm.FindPathPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.MapToConeCommand;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
+import de.varylab.discreteconformal.plugin.visualizer.DiscreteConformalEquivalencemMeasure;
 import de.varylab.discreteconformal.plugin.visualizer.FlippedTriangles;
 import de.varylab.discreteconformal.plugin.visualizer.IndexMedialGraph;
 import de.varylab.discreteconformal.plugin.visualizer.IsothermicityMeasure;
@@ -99,6 +100,7 @@ public class ConformalLab implements Runnable {
 		s.add(new AddConeOfRevolutionCommand());
 		s.add(new ContractShortEdges());
 		s.add(new UniformizationTextureSpacePlugin());
+		s.add(new DiscreteConformalEquivalencemMeasure());
 		return s;
 	}
 	
