@@ -31,24 +31,10 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		reuse = false,
 		trainoptrand = false,
 		trianopt = false;
-	private QualityMeasure
-		qualityMeasure = QualityMeasure.MaxCrossRatio;
 	private double
 		measureExponent = 1.0;
 	private Logger
 		log = Logger.getLogger(ConvergenceQuality.class.getName());
-	
-	
-	public static enum QualityMeasure {
-		MaxCrossRatio,
-		MeanCrossRatio,
-		SumCrossRatio,
-		MaxMultiRatio,
-		MeanMultiRatio,
-		SumMultiRatio,
-		ElectrostaticEnergy,
-		MaxCircumCircle
-	}
 	
 	
 	public ConvergenceQuality() {
@@ -77,7 +63,6 @@ public class ConvergenceQuality extends ConvergenceSeries {
 
 	@Override
 	protected OptionSet configureAndParseOptions(OptionParser p, String... args) {
-		OptionSpec<String> qualityMeasureSpec = p.accepts("QM").withRequiredArg().defaultsTo("MaxCrossRatio");
 		OptionSpec<Double> measureExpSpec = p.accepts("exp", "Measure function exponent").withRequiredArg().ofType(Double.class).defaultsTo(1.0);
 		OptionSpec<Integer> numSamplesSpec = p.accepts("num", "Number of samples").withRequiredArg().ofType(Integer.class).defaultsTo(1);
 		OptionSpec<Integer> numExtraPointsSpec = p.accepts("extra", "Number of extra points").withRequiredArg().ofType(Integer.class).defaultsTo(0);
@@ -99,13 +84,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 				trianopt = false;
 			}
 		}
-		
-		qualityMeasure = QualityMeasure.valueOf(qualityMeasureSpec.value(opts));
-		if (qualityMeasure == null) {
-			throw new RuntimeException("Unknown quality measure in ConvergenceQuality");
-		}
 		measureExponent = measureExpSpec.value(opts);
-		
 		return opts;
 	}
 	
@@ -114,9 +93,18 @@ public class ConvergenceQuality extends ConvergenceSeries {
 	
 	@Override
 	protected void perform() throws Exception {
-		writeComment("Quality measure: " + qualityMeasure);
 		writeComment("Measure exponent: " + measureExponent);
-		writeComment("index[1], absErr[2], argErr[3], reErr[4], imErr[5], re[6], im[7], qFun[8]");
+		String description = "index[1]\tdistErr[2]\tabsErr[3]\targErr[4]\treErr[5]\timErr[6]\tre[7]\tim[8]\t";
+		description += "MaxCrossRatio\t";
+		description += "MeanCrossRatio\t";
+		description += "SumCrossRatio\t";
+		description += "MaxMultiRatio\t";
+		description += "MeanMultiRatio\t";
+		description += "SumMultiRatio\t";
+		description += "MaxCircleRadius\t";
+		description += "MeanCircleRadius\t";
+		description += "SumCircleRadius";
+		writeComment(description);
 		for (int i = 0; i < numSamples; i ++) {
 			if (reuse) rnd.setSeed(123);
 			CoHDS hds = new CoHDS();
@@ -147,19 +135,17 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			}
 			
 			// calculate quality measure for the closed surface
-			double meshQuality = 0;
 			Complex tau = null;
+			double[] crossRatioQuality = null;
+			double[] multiRatioQuality = null;
+			double[] circleRadiusQuality = null;
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
 				DiscreteEllipticUtility.generateEllipticImage(hds, 0, glueSet, branchIndices);
-				meshQuality = calculateQualityMeasure(qualityMeasure, measureExponent, hds);
+				crossRatioQuality = getMaxMeanSumCrossRatio(hds, measureExponent);
+				multiRatioQuality = getMaxMeanSumMultiRatio(hds, measureExponent);
 				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, 1E-9);
-				if (qualityMeasure == QualityMeasure.MaxCircumCircle) {
-					meshQuality = calculateQualityMeasure(qualityMeasure, measureExponent, hds);
-				}
-				if (Double.isInfinite(meshQuality) | Double.isNaN(meshQuality)) {
-					continue;
-				}
+				circleRadiusQuality = getMaxMeanSumCircumRadius(hds);
 			} catch (Exception e) {
 				e.printStackTrace();
 				continue;
@@ -169,34 +155,20 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			double argErr = tau.arg() - getExpectedTau().arg();
 			double reErr = tau.re - getExpectedTau().re;
 			double imErr = tau.im - getExpectedTau().im;
-			writeErrorLine(i + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + tau.re + "\t" + tau.im + "\t" + meshQuality);
+			double distErr = getExpectedTau().minus(tau).abs();
+			String logString = i + "\t" + distErr + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + tau.re + "\t" + tau.im + "\t";
+			logString += crossRatioQuality[0] + "\t";
+			logString += crossRatioQuality[1] + "\t";
+			logString += crossRatioQuality[2] + "\t";
+			logString += multiRatioQuality[0] + "\t";
+			logString += multiRatioQuality[1] + "\t";
+			logString += multiRatioQuality[2] + "\t";
+			logString += circleRadiusQuality[0] + "\t";
+			logString += circleRadiusQuality[1] + "\t";
+			logString += circleRadiusQuality[2];
+			writeErrorLine(logString);
 		}
 	}
-	
-	
-	
-	public static double calculateQualityMeasure(QualityMeasure qualityMeasure, double measureExponent, CoHDS hds) {
-		switch (qualityMeasure) {
-		case MaxCrossRatio:
-			return maxLengthCrossRatioFunction(hds, measureExponent);
-		case MeanCrossRatio:
-			return meanLengthCrossRatioFunction(hds, measureExponent);
-		case SumCrossRatio:
-			return sumLengthCrossRatioFunction(hds, measureExponent);
-		case MaxMultiRatio:
-			return maxMultiRatioFunction(hds, measureExponent);
-		case MeanMultiRatio:
-			return meanMultiRatioFunction(hds, measureExponent);
-		case SumMultiRatio:
-			return sumMultiRatioFunction(hds, measureExponent);
-		case ElectrostaticEnergy:
-			return electrostaticEnergy(hds);
-		case MaxCircumCircle:
-			return getMaxCircumRadius(hds) / getTextureArea(hds);
-		}
-		return 1.0;
-	}
-	
 	
 	public static double electrostaticEnergy(CoHDS hds) {
 		double E = 0.0; 
@@ -216,82 +188,43 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		return E;
 	}
 	
-	
-	
-	public static double maxLengthCrossRatioFunction(CoHDS hds, double exp) {
-		double r = 0.0;
+	public static double[] getMaxMeanSumCrossRatio(CoHDS hds, double exp) {
+		double rMax = 0.0;
+		double rSum = 0.0;
 		for (CoEdge e : hds.getPositiveEdges()) {
 			double q = getLengthCrossRatio(e);
 			double qfun = (q + 1/q)/2 - 1;
-			r = Math.max(r, Math.pow(qfun, exp));
+			qfun = Math.pow(qfun, exp);
+			rMax = Math.max(rMax, qfun);
+			rSum += qfun;
 		}
-		return r;
+		return new double[] {rMax, rSum / hds.numFaces(), rSum};
 	}
 	
-	
-	public static double meanLengthCrossRatioFunction(CoHDS hds, double exp) {
-		double r = 0.0;
-		for (CoEdge e : hds.getPositiveEdges()) {
-			double q = getLengthCrossRatio(e);
-			double qfun = (q + 1/q)/2 - 1;
-			r += Math.pow(qfun, exp);
-		}
-		return 2 * r / hds.numEdges();
-	}
-	
-	public static double sumLengthCrossRatioFunction(CoHDS hds, double exp) {
-		double r = 0.0;
-		for (CoEdge e : hds.getPositiveEdges()) {
-			double q = getLengthCrossRatio(e);
-			double qfun = (q + 1/q)/2 - 1;
-			r += Math.pow(qfun, exp);
-		}
-		return r;
-	}
-	
-	public static double maxMultiRatioFunction(CoHDS hds, double exp) {
-		double r = 0.0;
-		for (CoFace f : hds.getFaces()) {
-			double q = 1.0;
-			for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
-				q *= getLengthCrossRatio(e);
-			}
-			double qfun = (q + 1/q)/2 - 1;
-			r = Math.max(r, Math.pow(qfun, exp));
-		}
-		return r;
-	}
-	
-	public static double meanMultiRatioFunction(CoHDS hds, double exp) {
-		double r = 0.0;
+	public static double[] getMaxMeanSumMultiRatio(CoHDS hds, double exp) {
+		double rMax = 0.0;
+		double rSum = 0.0;
 		for (CoFace f : hds.getFaces()) {
 			double q = getLengthMultiRatio(f);
 			double qfun = (q + 1/q)/2 - 1;
-			r += Math.pow(qfun, exp);
+			qfun = Math.pow(qfun, exp);
+			rMax = Math.max(rMax, qfun);
+			rSum += qfun;
 		}
-		return r / hds.numFaces();
+		return new double[] {rMax, rSum / hds.numFaces(), rSum};
 	}
-	
-	public static double sumMultiRatioFunction(CoHDS hds, double exp) {
-		double r = 0.0;
-		for (CoFace f : hds.getFaces()) {
-			double q = getLengthMultiRatio(f);
-			double qfun = (q + 1/q)/2 - 1;
-			r += Math.pow(qfun, exp);
-		}
-		return r;
-	}
-	
-	public static double getMaxCircumRadius(CoHDS hds) {
-		double r = 0.0;
+
+	public static double[] getMaxMeanSumCircumRadius(CoHDS hds) {
+		double rMax = 0.0;
+		double rSum = 0.0;
 		for (CoFace f : hds.getFaces()) {
 			double rad = getTextureCircumCircleRadius(f);
-			if (rad > r) {
-				r = rad;
-			}
+			rMax = Math.max(rMax, rad);
+			rSum += rad;
 		}
-		return r;
+		return new double[] {rMax, rSum / hds.numFaces(), rSum};
 	}
+	
 	
 	public static double getTextureCircumCircleRadius(CoFace f) {
 		CoEdge e = f.getBoundaryEdge();

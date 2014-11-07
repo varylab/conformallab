@@ -1,6 +1,5 @@
 package de.varylab.discreteconformal.convergence;
 
-import java.io.FileWriter;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,20 +29,6 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 	
 	public ConvergenceSubdivision() {
 	}
-
-	public ConvergenceSubdivision(
-		double[][] vertices, 
-		int[] branchIndices,
-		Complex tauExpected, 
-		FileWriter errorWriter, 
-		int maxSubdivision,
-		LoopLinear loop
-	) {
-		super(vertices, branchIndices, tauExpected, errorWriter);
-		this.maxSubdivision = maxSubdivision;
-		this.loop = loop;
-	}
-
 
 	@Override
 	protected OptionSet configureAndParseOptions(OptionParser p, String... args) {
