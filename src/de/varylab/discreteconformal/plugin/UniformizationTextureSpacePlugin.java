@@ -23,7 +23,7 @@ import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
+import de.jtem.halfedgetools.adapter.type.generic.TexturePosition3d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.HalfedgeListener;
@@ -210,9 +210,9 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		}
 		Path2D circles = new Path2D.Double();
 		for (F f : surface.getFaces()) {
-			double[] p1 = a.getD(TexturePosition4d.class, f.getBoundaryEdge().getTargetVertex()); 
-			double[] p2 = a.getD(TexturePosition4d.class, f.getBoundaryEdge().getNextEdge().getTargetVertex()); 
-			double[] p3 = a.getD(TexturePosition4d.class, f.getBoundaryEdge().getPreviousEdge().getTargetVertex()); 
+			double[] p1 = a.getD(TexturePosition3d.class, f.getBoundaryEdge().getTargetVertex()); 
+			double[] p2 = a.getD(TexturePosition3d.class, f.getBoundaryEdge().getNextEdge().getTargetVertex()); 
+			double[] p3 = a.getD(TexturePosition3d.class, f.getBoundaryEdge().getPreviousEdge().getTargetVertex()); 
 			double[] c = GeometryUtility.circumCircle(p1, p2, p3);
 			Ellipse2D e = new Ellipse2D.Double(c[0] - c[3], c[1] - c[3], 2*c[3], 2*c[3]);
 			circles.append(e, false);
