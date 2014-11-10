@@ -146,7 +146,7 @@ public class SphericalUnwrapper implements Unwrapper, IterationMonitor {
 			double[] xm = {0.0, 0.0};
 			MaximizingFunctional f = new MaximizingFunctional(func, x);
 			MaximizingDerivative df = new MaximizingDerivative(func, x);
-			DBrent.search(-1E5, logScale, 1E5, xm, f, df, 1E-8, info);
+			DBrent.search(-1E5, logScale, 1E5, xm, f, df, 1E-7, info);
 //			System.out.println("dbrent iterations: " + info.getCurrentIter());
 			logScale = xm[0];
 			double[] dxArr = new double[func.getDomainDimension()];
@@ -154,7 +154,6 @@ public class SphericalUnwrapper implements Unwrapper, IterationMonitor {
 			Vector dxMinimize = new DenseVector(dxArr);
 			x.add(dxMinimize);
 			result = func.evaluate(x, grad, hess);
-			
 //			System.out.println("grad length: " + grad.norm(Norm.Two));
 			return result;
 		}
