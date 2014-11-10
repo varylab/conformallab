@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
-import no.uib.cipr.matrix.Vector.Norm;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.numericalMethods.calculus.function.RealFunctionOfOneVariable;
@@ -24,13 +23,14 @@ import de.varylab.discreteconformal.unwrapper.numerics.CSphericalOptimizable;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
+import de.varylab.mtjoptimization.IterationMonitor;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.Optimizable;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
 import de.varylab.mtjoptimization.stepcontrol.StepController;
 
-public class SphericalUnwrapper implements Unwrapper {
+public class SphericalUnwrapper implements Unwrapper, IterationMonitor {
 
 	private Logger
 		log = Logger.getLogger(getClass().getName());
@@ -126,23 +126,15 @@ public class SphericalUnwrapper implements Unwrapper {
 			x.add(dx);
 			Double result = func.evaluate(x, grad, hess);
 			Double gradLength = grad.norm(Two);
-			int counter = 0;
-			boolean success = true;
+			int counter = 10;
 			while (oldGradLength <= gradLength || gradLength.equals(Double.NaN)) {
+				if (--counter < 0) break;
 				dx.scale(0.5);
 				x.set(oldX).add(dx);
 				result = func.evaluate(x, grad, hess);
 				gradLength = grad.norm(Two);
-				counter++;
-				if (counter == 100) {
-					success = false;
-//					throw new RuntimeException("No valid step in step controller!");
-					break;
-				}
 			}
-			if (!success) {
-				result = maximize(x, func, grad, hess);
-			}
+			result = maximize(x, func, grad, hess);
 			return result;
 		}
 
@@ -155,7 +147,7 @@ public class SphericalUnwrapper implements Unwrapper {
 			MaximizingFunctional f = new MaximizingFunctional(func, x);
 			MaximizingDerivative df = new MaximizingDerivative(func, x);
 			DBrent.search(-1E5, logScale, 1E5, xm, f, df, 1E-8, info);
-			System.out.println("dbrent iterations: " + info.getCurrentIter());
+//			System.out.println("dbrent iterations: " + info.getCurrentIter());
 			logScale = xm[0];
 			double[] dxArr = new double[func.getDomainDimension()];
 			Arrays.fill(dxArr, logScale);
@@ -163,7 +155,7 @@ public class SphericalUnwrapper implements Unwrapper {
 			x.add(dxMinimize);
 			result = func.evaluate(x, grad, hess);
 			
-			System.out.println("grad length: " + grad.norm(Norm.Two));
+//			System.out.println("grad length: " + grad.norm(Norm.Two));
 			return result;
 		}
 		
@@ -200,6 +192,20 @@ public class SphericalUnwrapper implements Unwrapper {
 //		
 //	}
 	
+	
+	@Override
+	public void start(Double error) {
+	}
+
+	@Override
+	public void setIteration(Integer iterations, Double error) {
+		log.info(iterations + ": " + error);
+	}
+	
+	@Override
+	public void done(Double error) {
+		log.info("Minimization complete: gradient norm = " + error);
+	}
 
 	Vector calculateConformalFactors(CSphericalOptimizable opt) throws UnwrapException {
 		int n = opt.getDomainDimension();
@@ -210,9 +216,10 @@ public class SphericalUnwrapper implements Unwrapper {
 //		ArmijoStepController stepController = new ArmijoStepController();
 //		ShortGradientStepController stepController = new ShortGradientStepController();
 		optimizer.setStepController(stepController);
-		optimizer.setSolver(Solver.GMRES);
+		optimizer.setSolver(Solver.BiCGstab);
 		optimizer.setError(gradTolerance);
 		optimizer.setMaxIterations(maxIterations);
+		optimizer.setIterationMonitor(this);
 		try {
 			optimizer.minimize(u, opt);
 		} catch (NotConvergentException e) {

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.Vector;
 import de.jreality.math.Pn;
@@ -27,6 +28,9 @@ import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
 
 public class SphericalLayout {
 
+	private static Logger
+		log = Logger.getLogger(SphericalLayout.class.getName());
+	
 	public static CoVertex doLayout(CoHDS hds, CoVertex root, ConformalFunctional<CoVertex, CoEdge, CoFace> fun, Vector u) {
 		final Map<CoEdge, Double> lMap = getLengthMap(hds, fun, u);
 		
@@ -118,15 +122,22 @@ public class SphericalLayout {
 		}
 		
 		// check target lengths
+		double maxLengthError = 0.0;
 		for (CoEdge e : hds.getPositiveEdges()) {
 			double[] s = e.getStartVertex().T;
 			double[] t = e.getTargetVertex().T;
 			double distEuclidean = Pn.distanceBetween(s, t, Pn.EUCLIDEAN);
 			double distSpherical = 2 * Math.asin(distEuclidean / 2);
 			double distExpected = lMap.get(e);
-			if (Math.abs(distSpherical - distExpected) > 1E-8) {
-				System.err.println("error in spherical layout: expected length: " + distExpected + ", actual: " + distSpherical);
+			double lErr = Math.abs(distSpherical - distExpected);
+			if (lErr > maxLengthError) {
+				maxLengthError = lErr;
 			}
+		}
+		if (maxLengthError > 1E-8) {
+			log.warning("maximum layout length error: " + maxLengthError);
+		} else {
+			log.info("maximum layout length error: " + maxLengthError);
 		}
 		
 		return v1;

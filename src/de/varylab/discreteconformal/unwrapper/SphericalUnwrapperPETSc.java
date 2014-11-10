@@ -79,10 +79,10 @@ public class SphericalUnwrapperPETSc implements Unwrapper {
 //		app.computeGradient(u, G);
 //		System.out.println(G);
 		
-		Tao optimizer = new Tao(Tao.Method.LMVM);
+		Tao optimizer = new Tao(Tao.Method.CG);
 		optimizer.setApplication(app);
 		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance); 
-		optimizer.setTolerances(gradTolerance, gradTolerance, gradTolerance, gradTolerance);
+		optimizer.setTolerances(0, 0, 0, 0);
 		optimizer.setMaximumIterates(maxIterations);
 //		TaoVec lowerBounds = new TaoVec(n);
 //		TaoVec upperBounds = new TaoVec(n);

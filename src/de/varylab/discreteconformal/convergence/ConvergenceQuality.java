@@ -235,14 +235,6 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		return a*b*c / A / 4;
 	}
 	
-	public static double getTextureArea(CoHDS hds) {
-		double A = 0.0;
-		for (CoFace f : hds.getFaces()) {
-			A += getTextureTriangleArea(f);
-		}
-		return A;
-	}
-	
 	public static double getTextureTriangleArea(CoFace f) {
 		CoEdge e = f.getBoundaryEdge();
 		double a = e.getTexLength();
