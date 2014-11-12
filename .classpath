@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
+	<classpathentry excluding="de/varylab/discreteconformal/convergence/series/" kind="src" path="src"/>
 	<classpathentry kind="src" path="src-test"/>
 	<classpathentry kind="src" path="src-data"/>
 	<classpathentry kind="lib" path="lib/mtj.jar">

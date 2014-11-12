@@ -27,7 +27,7 @@ public class ElectrostaticSphereFunctionalTest extends FunctionalTest<CoVertex, 
 	public void init() {
 		CoHDS hds = new CoHDS();
 		hds.addNewVertices(10);
-				
+		rnd.setSeed(0);
 		Vector x = new DenseVector(30);
 		for (Integer i = 0; i < x.size() / 3; i++) {
 			double[] p = {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()};

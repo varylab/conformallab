@@ -4,6 +4,7 @@ import static de.jtem.mfc.field.Complex.fromPolar;
 import static de.varylab.discreteconformal.functional.Clausen.ImLi2;
 import static de.varylab.discreteconformal.math.MathUtility.arcosh;
 import static de.varylab.discreteconformal.math.MathUtility.arsinh;
+import static java.lang.Math.PI;
 import static java.lang.Math.acos;
 import static java.lang.Math.cos;
 import static java.lang.Math.cosh;
@@ -74,6 +75,14 @@ public class HyperIdealUtility {
 	 * @return the volume of the tetrahedron
 	 */
 	public static double calculateTetrahedronVolume(double A, double B, double C, double D, double E, double F) {
+		int piCounter = 0;
+		piCounter += A == PI ? 1 : 0;
+		piCounter += B == PI ? 1 : 0;
+		piCounter += C == PI ? 1 : 0;
+		piCounter += D == PI ? 1 : 0;
+		piCounter += E == PI ? 1 : 0;
+		piCounter += F == PI ? 1 : 0;
+		if (piCounter > 0) return 0.0;  // degenerate tetrahedron
 		double sA = sin(A), sB = sin(B), sC = sin(C), sD = sin(D), sE = sin(E), sF = sin(F);
 		double cA = cos(A), cB = cos(B), cC = cos(C), cD = cos(D), cE = cos(E), cF = cos(F);	
 		Complex ad = fromPolar(1, A + D);

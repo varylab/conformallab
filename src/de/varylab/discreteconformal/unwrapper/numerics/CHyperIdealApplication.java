@@ -49,6 +49,7 @@ public class CHyperIdealApplication extends TaoApplication implements TaoAppAddC
 			g.assemble();
 			log.info("grad length: " + g.norm(NORM_FROBENIUS));
 		}
+		log.info("E = " + E.E);
 		return E.get();
 	}
 	

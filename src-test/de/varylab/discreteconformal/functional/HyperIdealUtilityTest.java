@@ -70,4 +70,11 @@ public class HyperIdealUtilityTest {
 		assertEquals(Ve, V, 1E-12);
 	}
 	
+	@Test
+	public void testVolumeWithDegenerateTriangle() throws Exception {
+		double V = calculateTetrahedronVolume(0.0, PI, 0.0, 0.0, 0.0, PI);
+		Assert.assertEquals(0.0, V, 1E-12);
+		Assert.assertFalse("Volume must not be NaN", Double.isNaN(V));
+	}
+	
 }

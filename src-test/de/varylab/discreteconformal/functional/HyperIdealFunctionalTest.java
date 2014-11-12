@@ -79,4 +79,21 @@ public class HyperIdealFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 		super.testGradient();
 	}
 	
+	
+	@Test
+	public void testGradientInTheExtendedDomain() throws Exception {
+		CoHDS hds = HyperIdealGenerator.createLawsonSquareTiledWithBranchPoints();
+		int n = functional.getDimension(hds);
+		Random rnd = new Random(); 
+		rnd.setSeed(1);
+		Vector x = new DenseVector(n);
+		for (Integer i = 0; i < x.size(); i++) {
+			x.set(i, 1.2 + abs(rnd.nextDouble()));
+		}
+		MyDomainValue u = new MyDomainValue(x);
+		setHDS(hds);
+		setXGradient(u);
+		super.testGradient();
+	}
+	
 }
