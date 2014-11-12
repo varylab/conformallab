@@ -2,7 +2,6 @@ package de.varylab.discreteconformal.functional;
 
 import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
 
-import java.io.FileOutputStream;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -15,14 +14,8 @@ import org.junit.Test;
 import de.jreality.math.Pn;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
-import de.jtem.halfedgetools.adapter.type.generic.Position4d;
-import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.Tao;
-import de.varylab.conformallab.data.DataIO;
-import de.varylab.conformallab.data.DataUtility;
-import de.varylab.conformallab.data.types.DiscreteMap;
-import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -110,9 +103,9 @@ public class HyperIdealLayoutTest {
 		FundamentalPolygon P = FundamentalPolygonUtility.constructFundamentalPolygon(cutInfo, Pn.HYPERBOLIC);
 		System.out.println(P);
 		
-		ConformalAdapterSet a = new ConformalAdapterSet();
-		DiscreteMap map = DataUtility.toDiscreteMap("Lawson Hyper-Ideal Uniformization", hds, a, TexturePosition4d.class, Position4d.class, cutInfo);
-		DataIO.writeConformalData(map, new FileOutputStream("test.xml"));
+//		ConformalAdapterSet a = new ConformalAdapterSet();
+//		DiscreteMap map = DataUtility.toDiscreteMap("Lawson Hyper-Ideal Uniformization", hds, a, TexturePosition4d.class, Position4d.class, cutInfo);
+//		DataIO.writeConformalData(map, new FileOutputStream("test.xml"));
 	}
 	
 }

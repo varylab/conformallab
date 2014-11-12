@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.ConvergenceFlags;
 import de.jtem.jtao.Tao;
@@ -27,13 +28,23 @@ public class HyperIdealConvergenceTest {
 	private Logger
 		log = Logger.getLogger(HyperIdealConvergenceTest.class.getName());
 	private double 
-		tolerance = 1E-6;
+		tolerance = 1E-7;
 	
 	@BeforeClass
 	public static void initPetsc() {
 		NativePathUtility.set("native");
 		Tao.Initialize();
 		LoggingUtility.initLogging();
+		PETSc.optionsSetValue("-tao_lmm_vectors", "5");
+		PETSc.optionsSetValue("-tao_lmm_scale_type", "broyden");
+		PETSc.optionsSetValue("-tao_lmm_broyden_phi", "0.125");
+		PETSc.optionsSetValue("-tao_lmm_rescale_type", "scalar");
+		PETSc.optionsSetValue("-tao_lmm_rescale_history", "5");
+		PETSc.optionsSetValue("-tao_lmm_rescale_alpha", "5.0");
+		PETSc.optionsSetValue("-tao_lmm_rescale_beta", "0.5");
+		PETSc.optionsSetValue("-tao_lmm_limit_type", "relative");
+		PETSc.optionsSetValue("-tao_lmm_limit_mu", "1.0");
+		PETSc.optionsSetValue("-tao_lmm_limit_nu", "1.0");
 	}
 	
 	private void checkSolution(CoHDS hds) throws Exception {
@@ -42,7 +53,7 @@ public class HyperIdealConvergenceTest {
 			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
 				sum += e.getPreviousEdge().getBeta();
 			}
-			Assert.assertEquals(2*PI, sum, 1E-6);
+			Assert.assertEquals(2*PI, sum, tolerance);
 		}
 	}
 	
@@ -69,18 +80,18 @@ public class HyperIdealConvergenceTest {
 		optimizer.setApplication(app);
 		optimizer.setGradientTolerances(tolerance, 0, 0); 
 		optimizer.setTolerances(0, 0, 0, 0);
-		optimizer.setMaximumIterates(300);
+		optimizer.setMaximumIterates(50);
 		optimizer.solve();
 		Assert.assertEquals(ConvergenceFlags.CONVERGED_ATOL, optimizer.getSolutionStatus().reason);
 		UnwrapUtility.logSolutionStatus(optimizer, log);
 		double[] uVec = u.getArray();
 		double[] expectedSolution = {
-			1.1462158127870863, 1.1462158127870863, 1.1462158127870863, 1.1462158127870863, 
-			1.7627471360523435, 1.7627471360523435, 1.7627471360523428, 1.7627471360523428, 
-			1.7627471360523435, 1.7627471360523435, 1.7627471360523428, 1.7627471360523428, 
-			1.7627471360523435, 1.7627471360523428, 1.7627471360523435, 1.7627471360523428, 
-			2.633915759978531, 2.633915759978531, 2.633915759978531, 2.633915759978531, 
-			2.633915759978531, 2.633915759978531
+			1.1462158341786262, 1.1462158341786262, 1.1462158341786262, 1.1462158341786262, 
+			1.7627471737467797, 1.7627471737467797, 1.7627471737467866, 1.7627471737467866, 
+			1.7627471737467797, 1.7627471737467797, 1.7627471737467866, 1.7627471737467866, 
+			1.7627471737467797, 1.7627471737467866, 1.7627471737467797, 1.7627471737467866, 
+			2.633915794495759, 2.633915794495759, 2.633915794495759, 2.633915794495759, 
+			2.633915794495759, 2.633915794495759
 		};
 		Assert.assertArrayEquals(expectedSolution, uVec, 1E-6);
 		u.restoreArray();
@@ -94,12 +105,13 @@ public class HyperIdealConvergenceTest {
 	public void testHyperIdealConvergenceWithBranchPoints() throws Exception {
 		CoHDS hds = HyperIdealGenerator.createLawsonSquareTiledWithBranchPoints();
 		CHyperIdealApplication app = new CHyperIdealApplication(hds);
+		app.setFromOptions();
 		int n = app.getDomainDimension();
 		Random rnd = new Random(); 
 		rnd.setSeed(1);
 		Vec u = new Vec(n);
 		for (int i = 0; i < n; i++) {
-			u.setValue(i, 1E-12, INSERT_VALUES);//1.1 + 0.01*Math.abs(rnd.nextDouble()), INSERT_VALUES);
+			u.setValue(i, 0.1 + 0.01*Math.abs(rnd.nextDouble()), INSERT_VALUES);
 		}
 		app.setInitialSolutionVec(u);
 		Vec lowerBounds = new Vec(n);
@@ -113,10 +125,11 @@ public class HyperIdealConvergenceTest {
 		log.info("start   : " + u.toString());
 		
 		Tao optimizer = new Tao(Tao.Method.BLMVM);
+		optimizer.setFromOptions();
 		optimizer.setApplication(app);
 		optimizer.setGradientTolerances(tolerance, 0, 0); 
 		optimizer.setTolerances(0, 0, 0, 0);
-		optimizer.setMaximumIterates(100);
+		optimizer.setMaximumIterates(50);
 		optimizer.solve();
 		log.info(optimizer.getSolutionStatus().toString());
 		Assert.assertEquals(ConvergenceFlags.CONVERGED_ATOL, optimizer.getSolutionStatus().reason);
