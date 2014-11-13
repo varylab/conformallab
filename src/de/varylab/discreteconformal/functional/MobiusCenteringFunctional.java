@@ -5,120 +5,72 @@ import static de.jreality.math.Pn.innerProduct;
 import static de.jtem.halfedgetools.functional.FunctionalUtils.addRowToHessian;
 import static de.jtem.halfedgetools.functional.FunctionalUtils.addVectorToGradient;
 import static java.lang.Math.log;
+
+import java.lang.annotation.Annotation;
+import java.util.List;
+
 import no.uib.cipr.matrix.DenseMatrix;
-import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
-import de.jreality.math.Pn;
 import de.jreality.math.Rn;
+import de.jtem.halfedge.Edge;
+import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
+import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Energy;
 import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
-import de.varylab.discreteconformal.heds.CoEdge;
-import de.varylab.discreteconformal.heds.CoFace;
-import de.varylab.discreteconformal.heds.CoHDS;
-import de.varylab.discreteconformal.heds.CoVertex;
+import de.jtem.jpetsc.Mat;
+import de.jtem.jpetsc.PETSc;
+import de.jtem.jpetsc.Vec;
+import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
+import de.jtem.jtao.TaoAppAddHess;
+import de.jtem.jtao.TaoApplication;
 import de.varylab.discreteconformal.unwrapper.numerics.MTJDomain;
 import de.varylab.discreteconformal.unwrapper.numerics.MTJGradient;
 import de.varylab.discreteconformal.unwrapper.numerics.MTJHessian;
 import de.varylab.discreteconformal.unwrapper.numerics.SimpleEnergy;
-import de.varylab.mtjoptimization.NotConvergentException;
+import de.varylab.discreteconformal.unwrapper.numerics.TaoDomain;
+import de.varylab.discreteconformal.unwrapper.numerics.TaoGradient;
+import de.varylab.discreteconformal.unwrapper.numerics.TaoHessian;
+import de.varylab.discreteconformal.util.SparseUtility;
 import de.varylab.mtjoptimization.Optimizable;
-import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 
-public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, CoFace> {
+public class MobiusCenteringFunctional <
+	V extends Vertex<V, E, F>,
+	E extends Edge<V, E, F>,
+	F extends Face<V, E, F>,
+	DATAGET extends Annotation
+> implements Functional<V, E, F> {
 
 	private AdapterSet
-		aSet = null;
+		a = null;
+	private Class<DATAGET>
+		pos = null;
+	private List<V> 	
+		include = null; 
 	private double[]
 	    g1 = new double[4],
 		g2 = new double[4];
-	
-	public MobiusCenteringFunctional(AdapterSet a) {
-		this.aSet = a;
+
+	public MobiusCenteringFunctional(Class<DATAGET> pos, AdapterSet a) {
+		this(null, pos, a);
 	}
 	
-	
-	public Optimizable getOptimizatble(final CoHDS hds) {
-		return new Optimizable() {
-			
-			@Override
-			public Matrix getHessianTemplate() {
-				return new DenseMatrix(4, 4);
-			}
-			
-			@Override
-			public Integer getDomainDimension() {
-				return 4;
-			}
-			
-			@Override
-			public Double evaluate(Vector x, Vector gradient, Matrix hessian) {
-				MTJDomain u = new MTJDomain(x);
-				MTJGradient G = new MTJGradient(gradient);
-				MTJHessian H = new MTJHessian(hessian);
-				SimpleEnergy E = new SimpleEnergy();
-				MobiusCenteringFunctional.this.evaluate(hds, u, E, G, H);
-				return E.get();
-			}
-
-			@Override
-			public Double evaluate(Vector x, Vector gradient) {
-				MTJDomain u = new MTJDomain(x);
-				MTJGradient G = new MTJGradient(gradient);
-				SimpleEnergy E = new SimpleEnergy();
-				MobiusCenteringFunctional.this.evaluate(hds, u, E, G, null);
-				return E.get();
-			}
-
-			@Override
-			public Double evaluate(Vector x, Matrix hessian) {
-				MTJDomain u = new MTJDomain(x);
-				MTJHessian H = new MTJHessian(hessian);
-				SimpleEnergy E = new SimpleEnergy();
-				MobiusCenteringFunctional.this.evaluate(hds, u, E, null, H);
-				return E.get();
-			}
-
-			@Override
-			public Double evaluate(Vector x) {
-				MTJDomain u = new MTJDomain(x);
-				SimpleEnergy E = new SimpleEnergy();
-				MobiusCenteringFunctional.this.evaluate(hds, u, E, null, null);
-				return E.get();
-			}
-		}; 
-	}
-
-	
-	public void normalizeVertices(CoHDS hds) {
-		Optimizable opt = getOptimizatble(hds);
-		Vector x = new DenseVector(new double[] {0,0,0,1});
-		NewtonOptimizer min = new NewtonOptimizer();
-		min.setMaxIterations(100);
-		min.setError(1E-13);
-		try {
-			min.minimize(x, opt);
-		} catch (NotConvergentException e) {
-			e.printStackTrace();
-			return;
-		}
-		double xp[] = {x.get(0), x.get(1), x.get(2), x.get(3)};
-		double scale = 1 / Math.sqrt(-Pn.innerProduct(xp, xp, Pn.HYPERBOLIC));
-		Rn.times(xp, scale, xp);
-		System.out.println("sqrt(-<x,x>): " + Pn.norm(xp, Pn.HYPERBOLIC));
-		x = new DenseVector(xp);
-		
+	public MobiusCenteringFunctional(List<V> include, Class<DATAGET> pos, AdapterSet a) {
+		this.a = a;
+		this.pos = pos;
+		this.include = include;
 	}
 	
 	
 	@Override
-	public <HDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace>> void evaluate(
+	public <
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void evaluate(
 		HDS hds, 
 		DomainValue d, 
 		Energy E, 
@@ -136,8 +88,12 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 		if (H != null) {
 			H.setZero();
 		}
-		for (CoVertex v : hds.getVertices()) {
-			double[] p = aSet.getD(Position4d.class, v);
+		List<V> vertices = include;
+		if (vertices == null) {
+			vertices = hds.getVertices();
+		}
+		for (V v : vertices) {
+			double[] p = a.getD(pos, v);
 			double xp = innerProduct(p, x, HYPERBOLIC);
 			if (E != null) {
 				E.add(-log(xp / xx));
@@ -179,12 +135,16 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 	}
 
 	@Override
-	public <HDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace>> int getDimension(HDS hds) {
+	public <
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> int getDimension(HDS hds) {
 		return 4;
 	}
 
 	@Override
-	public <HDS extends HalfEdgeDataStructure<CoVertex, CoEdge, CoFace>> int[][] getNonZeroPattern(HDS hds) {
+	public <
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> int[][] getNonZeroPattern(HDS hds) {
 		int[][] nnz = new int[4][4];
 		for (int i = 0; i < nnz.length; i++) {
 			for (int j = 0; j < nnz[i].length; j++) {
@@ -192,6 +152,126 @@ public class MobiusCenteringFunctional implements Functional<CoVertex, CoEdge, C
 			}
 		}
 		return nnz;
+	}
+	
+	
+	public <
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> Optimizable getOptimizatble(HDS hds) {
+		return new MoebiusCenteringOptimizable<HDS>(hds);
+	}
+	
+	public <
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> TaoApplication getTaoApplication(HDS hds) {
+		return new MoebiusCenteringApplication<HDS>(hds);
+	}
+	
+	
+	public class MoebiusCenteringOptimizable <
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> implements Optimizable { 
+		
+		private MobiusCenteringFunctional<V, E, F, DATAGET>
+			mcf = MobiusCenteringFunctional.this;
+		private SimpleEnergy 
+			E = new SimpleEnergy();
+		private HDS
+			hds = null;
+		
+		public MoebiusCenteringOptimizable(HDS hds) {
+			this.hds = hds;
+		}
+		
+		@Override
+		public Matrix getHessianTemplate() {
+			return new DenseMatrix(4, 4);
+		}
+		
+		@Override
+		public Integer getDomainDimension() {
+			return mcf.getDimension(hds);
+		}
+		
+		@Override
+		public Double evaluate(Vector x, Vector gradient, Matrix hessian) {
+			MTJDomain u = new MTJDomain(x);
+			MTJGradient G = new MTJGradient(gradient);
+			MTJHessian H = new MTJHessian(hessian);
+			mcf.evaluate(hds, u, E, G, H);
+			return E.get();
+		}
+
+		@Override
+		public Double evaluate(Vector x, Vector gradient) {
+			MTJDomain u = new MTJDomain(x);
+			MTJGradient G = new MTJGradient(gradient);
+			mcf.evaluate(hds, u, E, G, null);
+			return E.get();
+		}
+
+		@Override
+		public Double evaluate(Vector x, Matrix hessian) {
+			MTJDomain u = new MTJDomain(x);
+			MTJHessian H = new MTJHessian(hessian);
+			mcf.evaluate(hds, u, E, null, H);
+			return E.get();
+		}
+
+		@Override
+		public Double evaluate(Vector x) {
+			MTJDomain u = new MTJDomain(x);
+			mcf.evaluate(hds, u, E, null, null);
+			return E.get();
+		}
+	};
+	
+
+	
+	public class MoebiusCenteringApplication <
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> extends TaoApplication implements TaoAppAddCombinedObjectiveAndGrad, TaoAppAddHess { 
+		
+		private SimpleEnergy 
+			E = new SimpleEnergy();
+		private HDS
+			hds = null;
+		
+		public MoebiusCenteringApplication(HDS hds) {
+			this.hds = hds;
+		}
+
+		@Override
+		public double evaluateObjectiveAndGradient(Vec x, Vec g) {
+			TaoDomain u = new TaoDomain(x);
+			TaoGradient G = new TaoGradient(g);
+			evaluate(hds, u, E, G, null);
+			g.assemble();
+			return E.get();
+		}
+
+		@Override
+		public PreconditionerType evaluateHessian(Vec x, Mat H, Mat Hpre) {
+			TaoDomain u = new TaoDomain(x);
+			TaoHessian taoHess = new TaoHessian(H);
+			evaluate(hds, u, null, null, taoHess);
+			H.assemble();
+			return PreconditionerType.SAME_NONZERO_PATTERN;
+		}
+		
+		public int getDomainDimension() {
+			return getDimension(hds);
+		}
+		
+		public Mat getHessianTemplate() {
+			int dim = getDomainDimension();
+			int[][] sparceStructure = getNonZeroPattern(hds);
+			int[] nonZeros = SparseUtility.getPETScNonZeros(sparceStructure);
+			Mat H = Mat.createSeqAIJ(dim, dim, PETSc.PETSC_DEFAULT, nonZeros);
+			H.assemble();
+			return H;
+		}
+		
 	}
 
 }
