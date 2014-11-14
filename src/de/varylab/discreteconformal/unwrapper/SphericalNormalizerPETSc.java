@@ -79,10 +79,10 @@ public class SphericalNormalizerPETSc {
 			log.warning("Mobius normalization did not succeed: " + status);
 			return;
 		}
-		double[] cm = getCenterOfMass(hds, a, get);
+		double[] cm = getCenterOfMass(include, a, get);
 		log.info("|CoM| before normalization: " + Pn.norm(cm, EUCLIDEAN));
 		int_normalize(x, hds, a, get, set);
-		cm = getCenterOfMass(hds, a, get);
+		cm = getCenterOfMass(include, a, get);
 		log.info("|CoM| after normalization: " + Pn.norm(cm, EUCLIDEAN));
 	}
 
@@ -108,12 +108,11 @@ public class SphericalNormalizerPETSc {
 		V extends Vertex<V, E, F>,
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>,
-		HDS extends HalfEdgeDataStructure<V, E, F>,
 		DATAGET extends Annotation
-	> double[] getCenterOfMass(HDS hds, AdapterSet a, Class<DATAGET> get) {
+	> double[] getCenterOfMass(List<V> vList, AdapterSet a, Class<DATAGET> get) {
 		double[] cm = new double[4];
 		double[] tmp = new double[4];
-		for (V v : hds.getVertices()) {
+		for (V v : vList) {
 			double[] p = a.getD(get, v);
 			Pn.dehomogenize(tmp, p);
 			Rn.add(cm, tmp, cm);
