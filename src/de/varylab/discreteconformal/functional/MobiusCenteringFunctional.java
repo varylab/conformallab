@@ -1,17 +1,19 @@
 package de.varylab.discreteconformal.functional;
 
-import static de.jreality.math.Pn.HYPERBOLIC;
-import static de.jreality.math.Pn.innerProduct;
 import static de.jtem.halfedgetools.functional.FunctionalUtils.addRowToHessian;
 import static de.jtem.halfedgetools.functional.FunctionalUtils.addVectorToGradient;
 import static java.lang.Math.log;
+import static java.lang.Math.sqrt;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
+import no.uib.cipr.matrix.Vector.Norm;
 import de.jreality.math.Rn;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -24,6 +26,7 @@ import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
 import de.jtem.jpetsc.Mat;
+import de.jtem.jpetsc.NormType;
 import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
@@ -46,6 +49,8 @@ public class MobiusCenteringFunctional <
 	DATAGET extends Annotation
 > implements Functional<V, E, F> {
 
+	private static Logger
+		log = Logger.getLogger(MobiusCenteringFunctional.class.getName());
 	private AdapterSet
 		a = null;
 	private Class<DATAGET>
@@ -53,8 +58,10 @@ public class MobiusCenteringFunctional <
 	private List<V> 	
 		include = null; 
 	private double[]
-	    g1 = new double[4],
-		g2 = new double[4];
+		p = new double[3],
+	    g = new double[3],
+	    h = new double[3];
+	    
 
 	public MobiusCenteringFunctional(Class<DATAGET> pos, AdapterSet a) {
 		this(null, pos, a);
@@ -66,6 +73,19 @@ public class MobiusCenteringFunctional <
 		this.include = include;
 	}
 	
+	private double dot(double[] p, double[] q) {
+		return p[0]*q[0] + p[1]*q[1] + p[2]*q[2] - 1.0;
+	}
+	
+	private double[] getPosition3D(V v) {
+		Arrays.fill(p, 0.0);
+		double[] pp = a.getD(pos, v);
+		System.arraycopy(pp, 0, p, 0, 3);
+		if (p.length == 4) {
+			Rn.times(p, 1/pp[3], p);
+		}
+		return p;
+	}
 	
 	@Override
 	public <
@@ -77,8 +97,8 @@ public class MobiusCenteringFunctional <
 		Gradient G, 
 		Hessian H
 	) {
-		double[] x = {d.get(0), d.get(1), d.get(2), d.get(3)};
-		double xx = innerProduct(x, x, HYPERBOLIC);
+		double[] x = {d.get(0), d.get(1), d.get(2)};
+		double xx = dot(x, x);
 		if (E != null) {
 			E.setZero();
 		}
@@ -93,32 +113,23 @@ public class MobiusCenteringFunctional <
 			vertices = hds.getVertices();
 		}
 		for (V v : vertices) {
-			double[] p = a.getD(pos, v);
-			double xp = innerProduct(p, x, HYPERBOLIC);
+			// project input data to the unit sphere
+			p = getPosition3D(v);
+			double xp = dot(x, p);
 			if (E != null) {
-				E.add(-log(xp / xx));
-				E.add(xx);
+				E.add(log(-xp / sqrt(-xx)));
 			}
 			if (G != null) {
-				Rn.times(g1, 2/xx, x);
-				Rn.times(g2, -1/xp, p);
-				g1[3] *= -1; g2[3] *= -1;
-				addVectorToGradient(G, 0, g1);
-				addVectorToGradient(G, 0, g2);
-				Rn.times(g1, 2, x);
-				g1[3] *= -1;
-				addVectorToGradient(G, 0, g1);
+				Rn.linearCombination(g, 1/xp, p, -1/xx, x);
+				addVectorToGradient(G, 0, g);
 			}
 			if (H != null) {
-				for (int i = 0; i < 4; i++) {
-					double sign = i == 3 ? -1 : 1;
-					Rn.times(g1, sign * p[i] / (xp*xp), p);
-					Rn.times(g2, -sign * 4*x[i]/(xx*xx), x);
-					g1[3] *= -1; g2[3] *= -1;
-					addRowToHessian(H, i, g2);
-					addRowToHessian(H, i, g1);
-					H.add(i, i, sign * 2 / xx);
-					H.add(i, i, sign * 2);
+				for (int i = 0; i < 3; i++) {
+					Rn.times(h, -p[i]/(xp*xp), p);
+					addRowToHessian(H, i, h);
+					Rn.times(h, 2*x[i]/(xx*xx), x);
+					addRowToHessian(H, i, h);
+					H.add(i, i, -1/xx);
 				}
 			}
 		}
@@ -138,14 +149,14 @@ public class MobiusCenteringFunctional <
 	public <
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> int getDimension(HDS hds) {
-		return 4;
+		return 3;
 	}
 
 	@Override
 	public <
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> int[][] getNonZeroPattern(HDS hds) {
-		int[][] nnz = new int[4][4];
+		int[][] nnz = new int[3][3];
 		for (int i = 0; i < nnz.length; i++) {
 			for (int j = 0; j < nnz[i].length; j++) {
 				nnz[i][j] = j;
@@ -185,7 +196,7 @@ public class MobiusCenteringFunctional <
 		
 		@Override
 		public Matrix getHessianTemplate() {
-			return new DenseMatrix(4, 4);
+			return new DenseMatrix(3, 3);
 		}
 		
 		@Override
@@ -199,6 +210,7 @@ public class MobiusCenteringFunctional <
 			MTJGradient G = new MTJGradient(gradient);
 			MTJHessian H = new MTJHessian(hessian);
 			mcf.evaluate(hds, u, E, G, H);
+			log.info("|g|=" + gradient.norm(Norm.Two));
 			return E.get();
 		}
 
@@ -246,6 +258,7 @@ public class MobiusCenteringFunctional <
 			TaoDomain u = new TaoDomain(x);
 			TaoGradient G = new TaoGradient(g);
 			evaluate(hds, u, E, G, null);
+			log.info("|g|=" + g.norm(NormType.NORM_FROBENIUS));
 			g.assemble();
 			return E.get();
 		}

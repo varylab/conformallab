@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.unwrapper;
 
 import static de.jreality.math.Pn.EUCLIDEAN;
-import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -30,7 +29,7 @@ public class SphericalNormalizerPETSc {
 	private static Logger
 		log = Logger.getLogger(SphericalNormalizerPETSc.class.getName());
 	private static double
-		tolerance = 1E-6;
+		tolerance = 1E-9;
 	private static int
 		maxIterations = 400;
 	
@@ -61,25 +60,24 @@ public class SphericalNormalizerPETSc {
 	> void normalize(HDS hds, List<V> include, AdapterSet a, Class<DATAGET> get, Class<DATASET> set) {
 		MobiusCenteringFunctional<V, E, F, DATAGET> f = new MobiusCenteringFunctional<>(include, get, a);
 		TaoApplication app = f.getTaoApplication(hds);
-		Vec x = new Vec(f.getDimension(hds));
-		x.set(0.0);
-		x.setValue(3, 1.0, INSERT_VALUES);
+		Vec x = new Vec(f.getDimension(hds)); x.set(0.0);
 		app.setInitialSolutionVec(x);
 		Mat H = SparseUtility.getHessianTemplate(f, hds);
 		app.setHessianMat(H, H);
 		
 		log.info("staring mobius normization");
-		Tao optimizer = new Tao(Tao.Method.CG);
+		Tao optimizer = new Tao(Tao.Method.NTR);
 		optimizer.setApplication(app);
 		optimizer.setTolerances(0, 0, 0, 0);
-		optimizer.setGradientTolerances(tolerance, tolerance, tolerance);
+		optimizer.setGradientTolerances(tolerance, 0, 0);
 		optimizer.setMaximumIterates(maxIterations);
 		optimizer.solve();
 		
 		GetSolutionStatusResult status = optimizer.getSolutionStatus();
 		UnwrapUtility.logSolutionStatus(optimizer, log);
 		if (status.reason.ordinal() > 4) {
-			throw new RuntimeException("normalization did not converge: " + status);
+			log.warning("Mobius normalization did not succeed: " + status);
+			return;
 		}
 		double[] cm = getCenterOfMass(hds, a, get);
 		log.info("|CoM| before normalization: " + Pn.norm(cm, EUCLIDEAN));
@@ -96,7 +94,7 @@ public class SphericalNormalizerPETSc {
 		DATAGET extends Annotation, 
 		DATASET extends Annotation
 	> void int_normalize(Vec c, HDS hds, AdapterSet a, Class<DATAGET> get, Class<DATASET> set){
-		double[] xp = c.getArray();
+		double[] xp = Pn.homogenize(null, c.getArray());
 		double[] TInv = P3.makeTranslationMatrix(null, xp, Pn.HYPERBOLIC);
 		double[] T = Rn.inverse(null, TInv);
 		for (V v : hds.getVertices()) {
@@ -117,7 +115,8 @@ public class SphericalNormalizerPETSc {
 		double[] tmp = new double[4];
 		for (V v : hds.getVertices()) {
 			double[] p = a.getD(get, v);
-			Rn.add(cm, Pn.dehomogenize(tmp, p), cm);
+			Pn.dehomogenize(tmp, p);
+			Rn.add(cm, tmp, cm);
 		}
 		return Pn.dehomogenize(cm, cm);
 	}
