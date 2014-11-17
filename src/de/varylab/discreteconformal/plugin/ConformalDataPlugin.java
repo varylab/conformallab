@@ -41,7 +41,6 @@ import de.jtem.halfedgetools.adapter.type.TexturePosition;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
-import de.jtem.halfedgetools.plugin.image.ImageHook;
 import de.jtem.halfedgetools.selection.Selection;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.sidecontainer.SideContainerPerspective;
@@ -68,6 +67,7 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.CoDirectPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoDirectTextureAdapter;
 import de.varylab.discreteconformal.heds.adapter.MappedEdgeLengthAdapter;
+import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
@@ -97,6 +97,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 	private JButton
 		exportButton = new JButton("Export...", ImageHook.getIcon("disk.png")),
 		importButton = new JButton("Import...", ImageHook.getIcon("folder.png")),
+		addActiveButton = new JButton("Add Active", ImageHook.getIcon("add.png")),
 		clearButton = new JButton("Clear");
 	private JFileChooser
 		fileChooser = new JFileChooser();
@@ -133,6 +134,10 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		shrinkPanel.add(importButton, c);
 		importButton.addActionListener(this);
+		c.gridwidth = GridBagConstraints.RELATIVE;
+		shrinkPanel.add(addActiveButton, c);
+		addActiveButton.addActionListener(this);
+		c.gridwidth = GridBagConstraints.REMAINDER;
 		shrinkPanel.add(clearButton, c);
 		clearButton.addActionListener(this);
 		
@@ -201,6 +206,10 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		}
 		if (clearButton == e.getSource()) {
 			clearData();
+		}
+		if (addActiveButton == e.getSource()) {
+			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = discreteConformalPlugin.getCurrentCutInfo();
+			addHalfedgeMap("Map", hif.get(new CoHDS()), hif.getSelection(), cutInfo);
 		}
 	}
 	
