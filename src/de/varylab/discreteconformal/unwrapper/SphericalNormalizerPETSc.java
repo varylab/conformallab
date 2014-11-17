@@ -31,7 +31,7 @@ public class SphericalNormalizerPETSc {
 	private static double
 		tolerance = 1E-9;
 	private static int
-		maxIterations = 400;
+		maxIterations = 100;
 	
 	static {
 		NativePathUtility.set("native");
@@ -75,8 +75,9 @@ public class SphericalNormalizerPETSc {
 		
 		GetSolutionStatusResult status = optimizer.getSolutionStatus();
 		UnwrapUtility.logSolutionStatus(optimizer, log);
-		if (status.reason.ordinal() > 4) {
+		if (status.reason.ordinal() > 1) {
 			log.warning("Mobius normalization did not converge: " + status);
+			if (status.gnorm > 1E-5) return;
 		}
 		double[] cm = getCenterOfMass(include, a, get);
 		log.info("|CoM| before normalization: " + Pn.norm(cm, EUCLIDEAN));
