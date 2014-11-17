@@ -263,6 +263,7 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		CoHDSUtility.createSurfaceCopy(hds, surface, vertexMap);
 		
 		CoVertex v0 = getVertexAtInfinity(surface);
+		List<CoVertex> boundary = new LinkedList<>(boundaryVertices(surface));
 		
 		// find reference vertices
 		CoVertex v1 = null;
@@ -302,6 +303,7 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		
 		// punch out the first vertex
 		TopologyAlgorithms.removeVertex(v0);
+		boundary.remove(v0);
 
 		// map to the upper half space
 		unwrapToHalfSpace(aSet, surface);
@@ -314,14 +316,13 @@ public class CircleDomainUnwrapper implements Unwrapper {
 		
 		// reinsert vertex 0
 		CoVertex v0New = surface.addNewVertex();
+		boundary.add(v0New);
 		v0New.P = v0.P;
 		v0New.T = new double[] {0,1,0,1};
 		
 		// normalize
 		try {
-			List<CoVertex> bVerts = new LinkedList<CoVertex>(boundaryVertices(surface));
-			bVerts.add(v0New);
-			SphericalNormalizerPETSc.normalize(surface, bVerts, aSet, TexturePosition4d.class, TexturePosition.class);
+			SphericalNormalizerPETSc.normalize(surface, boundary, aSet, TexturePosition4d.class, TexturePosition.class);
 		} catch (Exception e) {
 			log.info("Sphere normalization did not succeed: " + e.getMessage());
 		}

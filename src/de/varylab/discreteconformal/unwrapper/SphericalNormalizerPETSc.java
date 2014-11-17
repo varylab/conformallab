@@ -76,8 +76,7 @@ public class SphericalNormalizerPETSc {
 		GetSolutionStatusResult status = optimizer.getSolutionStatus();
 		UnwrapUtility.logSolutionStatus(optimizer, log);
 		if (status.reason.ordinal() > 4) {
-			log.warning("Mobius normalization did not succeed: " + status);
-			return;
+			log.warning("Mobius normalization did not converge: " + status);
 		}
 		double[] cm = getCenterOfMass(include, a, get);
 		log.info("|CoM| before normalization: " + Pn.norm(cm, EUCLIDEAN));

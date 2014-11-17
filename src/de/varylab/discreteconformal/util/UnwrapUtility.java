@@ -94,7 +94,6 @@ public class UnwrapUtility {
 		int bSize = 0;
 		int dim = 0;
 		double bSum = 0.0;
-		boolean firstBoundaryVertexDone = false;
 		for (CoVertex v : hds.getVertices()) {
 			if (!HalfEdgeUtils.isBoundaryVertex(v)) {
 				if (v.info != null && v.info.useCustomTheta) {
@@ -147,14 +146,7 @@ public class UnwrapUtility {
 				bSize++;
 				bSum += Math.PI - theta;
 				v.setTheta(theta);
-				if (!firstBoundaryVertexDone) {
-					// remove global scale to ensure unique solution, 
-					// will speed up convergence and improve accuracy
-					v.setSolverIndex(-1);
-					firstBoundaryVertexDone = true;
-				} else {
-					v.setSolverIndex(dim++);
-				}
+				v.setSolverIndex(dim++);
 				break;
 			case ConformalCurvature:
 				bSize++;
