@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.plugin;
 
 import static java.awt.BasicStroke.CAP_SQUARE;
 import static java.awt.BasicStroke.JOIN_ROUND;
+import static java.lang.Double.isNaN;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -11,6 +12,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.swing.JCheckBox;
 
@@ -22,6 +26,7 @@ import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition3d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -51,7 +56,9 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		polygonChecker = new JCheckBox("Polygon", true),
 		axesChecker = new JCheckBox("Axes", true),
 		boundaryChecker = new JCheckBox("Boundary", false),
-		faceCirclesChecker = new JCheckBox("Face Circles");
+		faceCirclesChecker = new JCheckBox("Face Circles"),
+		vertexCirclesWhiteChecker = new JCheckBox("White Vertex Circles"),
+		vertexCirclesBlackChecker = new JCheckBox("Black Vertex Circles");
 	private ColorChooseJButton
 		fundamentalColorButton = new ColorChooseJButton(new Color(0, 102, 204), true),
 		triangulationColorButton = new ColorChooseJButton(new Color(102, 102, 102), true),
@@ -66,7 +73,9 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		polygonComponent = new SceneComponent(),
 		boundaryEdgesComponent = new SceneComponent(),
 		triangulationComponent = new SceneComponent(),
-		faceCirclesComponent = new SceneComponent();
+		faceCirclesComponent = new SceneComponent(),
+		vertexCirclesWhiteComponent = new SceneComponent(),
+		vertexCirclesBlackComponent = new SceneComponent();
 	
 	public UniformizationTextureSpacePlugin() {
 		scene.addChild(fundamentalDomainComponent);
@@ -92,6 +101,10 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		faceCirclesComponent.setOutlinePaint(Color.DARK_GRAY);
 		faceCirclesComponent.setFilled(false);
 		scene.addChild(faceCirclesComponent);
+		vertexCirclesWhiteComponent.setFilled(false);
+		scene.addChild(vertexCirclesWhiteComponent);		
+		vertexCirclesBlackComponent.setFilled(false);
+		scene.addChild(vertexCirclesBlackComponent);			
 		
 		GridBagConstraints lc = LayoutFactory.createLeftConstraint();
 		GridBagConstraints rc = LayoutFactory.createRightConstraint();
@@ -107,6 +120,8 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		options.add(boundaryChecker, lc);
 		options.add(boundaryColorButton, rc);	
 		options.add(faceCirclesChecker, rc);
+		options.add(vertexCirclesWhiteChecker, rc);
+		options.add(vertexCirclesBlackChecker, rc);
 		
 		triangulationChecker.addActionListener(this);
 		triangulationColorButton.addColorChangedListener(this);
@@ -119,6 +134,8 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		fundamentalChecker.addActionListener(this);
 		fundamentalColorButton.addColorChangedListener(this);
 		faceCirclesChecker.addActionListener(this);
+		vertexCirclesWhiteChecker.addActionListener(this);
+		vertexCirclesBlackChecker.addActionListener(this);
 		
 		updateStates();
 	}
@@ -134,9 +151,13 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		boundaryEdgesComponent.setOutlinePaint(boundaryColorButton.getColor());
 		fundamentalDomainComponent.setVisible(fundamentalChecker.isSelected());
 		faceCirclesComponent.setVisible(faceCirclesChecker.isSelected());
+		vertexCirclesWhiteComponent.setVisible(vertexCirclesWhiteChecker.isSelected());
+		vertexCirclesBlackComponent.setVisible(vertexCirclesBlackChecker.isSelected());
 		Color fc = fundamentalColorButton.getColor();
 		Color fcAlpha = new Color(fc.getRed(), fc.getGreen(), fc.getBlue(), 51);
 		fundamentalDomainComponent.setPaint(fcAlpha);
+		vertexCirclesWhiteComponent.setOutlinePaint(fc);
+		vertexCirclesBlackComponent.setOutlinePaint(fc);
 		scene.fireAppearanceChange();
 	}
 	
@@ -145,6 +166,12 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		updateStates();
 		if (faceCirclesChecker == e.getSource()) {
 			updateFaceCircles(hif.get(), hif.getAdapters());
+		}
+		if (vertexCirclesWhiteChecker == e.getSource()) {
+			updateVertexCircles(hif.get(), hif.getAdapters(), true);
+		}
+		if (vertexCirclesBlackChecker == e.getSource()) {
+			updateVertexCircles(hif.get(), hif.getAdapters(), false);
 		}
 	}
 	
@@ -220,6 +247,75 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		faceCirclesComponent.setShape(circles);
 	}
 	
+	private <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> void updateVertexCircles(HDS surface, AdapterSet a, boolean white) {
+		if (white) {
+			if (!vertexCirclesWhiteChecker.isSelected()) {
+				vertexCirclesWhiteComponent.setShape(null);
+				return;
+			}
+		} else {
+			if (!vertexCirclesBlackChecker.isSelected()) {
+				vertexCirclesBlackComponent.setShape(null);
+				return;
+			}
+		}
+		Path2D circles = new Path2D.Double();
+		Set<V> lattice = getSublatticeVertices(surface, white);
+		for (V v : lattice) {
+			V v1 = v.getIncomingEdge().getStartVertex();
+			V v2 = v.getIncomingEdge().getNextEdge().getTargetVertex();
+			V v3 = v.getIncomingEdge().getOppositeEdge().getPreviousEdge().getStartVertex();
+			double[] p1 = a.getD(TexturePosition3d.class, v1); 
+			double[] p2 = a.getD(TexturePosition3d.class, v2); 
+			double[] p3 = a.getD(TexturePosition3d.class, v3); 
+			double[] c = GeometryUtility.circumCircle(p1, p2, p3);
+			if (isNaN(c[0]) || isNaN(c[1]) || isNaN(c[2]) || isNaN(c[3])) continue;
+			Ellipse2D e = new Ellipse2D.Double(c[0] - c[3], c[1] - c[3], 2*c[3], 2*c[3]);
+			circles.append(e, false);
+		}
+		if (white) {
+			vertexCirclesWhiteComponent.setShape(circles);
+		} else {
+			vertexCirclesBlackComponent.setShape(circles);
+		}
+	}
+	
+	
+	private <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>,
+		HDS extends HalfEdgeDataStructure<V, E, F>
+	> Set<V> getSublatticeVertices(HDS surface, boolean white) {
+		Set<V> result = new HashSet<>();
+		Set<V> visited = new HashSet<>();
+		if (surface.numVertices() == 0) return visited;
+		TreeSet<V> visitQueue = new TreeSet<>();
+		visitQueue.add(surface.getVertex(0));
+		while (!visitQueue.isEmpty()) {
+			V v = visitQueue.pollFirst();
+			visited.add(v);
+			if (white) result.add(v);
+			for (E e : HalfEdgeUtils.incomingEdges(v)) {
+				V vv = e.getStartVertex();
+				if (!white) result.add(vv);
+				for (E ee : HalfEdgeUtils.incomingEdges(vv)) {
+					V vvv = ee.getStartVertex();
+					if (!visited.contains(vvv)) {
+						visitQueue.add(vvv);
+					}
+				}
+			}
+		}
+		return result;
+	}
+	
+	
 	public void reset() {
 		boundaryComponent.setVisible(false);
 		triangulationComponent.setShape(null);
@@ -249,6 +345,8 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 	public void dataChanged(HalfedgeLayer layer) {
 		reset();
 		updateFaceCircles(layer.get(), layer.getEffectiveAdapters());
+		updateVertexCircles(hif.get(), hif.getAdapters(), true);
+		updateVertexCircles(hif.get(), hif.getAdapters(), false);
 	}
 	@Override
 	public void adaptersChanged(HalfedgeLayer layer) {
