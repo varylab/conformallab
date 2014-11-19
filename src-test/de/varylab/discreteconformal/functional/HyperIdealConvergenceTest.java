@@ -48,12 +48,18 @@ public class HyperIdealConvergenceTest {
 	}
 	
 	private void checkSolution(CoHDS hds) throws Exception {
-		for (CoVertex v :hds.getVertices()) {
+		for (CoVertex v : hds.getVertices()) {
 			double sum = 0.0;
 			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
 				sum += e.getPreviousEdge().getBeta();
+				log.info("beta@" + e + ": " + (e.getPreviousEdge().getBeta() / PI));
 			}
 			Assert.assertEquals(2*PI, sum, tolerance);
+		}
+		for (CoEdge e : hds.getPositiveEdges()) {
+			double sum = e.getAlpha() + e.getOppositeEdge().getAlpha();
+			log.info("alphaSum@" + e + ": " + (sum / PI));
+			Assert.assertEquals(e.getTheta(), sum, tolerance);
 		}
 	}
 	
@@ -151,10 +157,6 @@ public class HyperIdealConvergenceTest {
 		u.restoreArray();
 		app.evaluateObjectiveAndGradient(u, null);
 		checkSolution(hds);
-		
-		for (CoEdge e : HalfEdgeUtils.incomingEdges(hds.getVertex(2))) {
-			log.info("Beta: " + e.getPreviousEdge().getBeta());
-		}
 	}
 	
 }
