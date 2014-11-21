@@ -17,10 +17,7 @@ import static de.varylab.discreteconformal.unwrapper.BoundaryMode.ReadIsometricA
 import static de.varylab.discreteconformal.unwrapper.EuclideanLayout.calculateAngleSum;
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
 import static java.awt.Color.YELLOW;
-import static java.lang.Math.PI;
-import static java.lang.Math.atan2;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
-import static javax.swing.JOptionPane.WARNING_MESSAGE;
 import static javax.swing.JOptionPane.showMessageDialog;
 
 import java.awt.Color;
@@ -33,7 +30,6 @@ import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -72,7 +68,6 @@ import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.basic.ViewShrinkPanelPlugin;
-import de.jreality.plugin.content.ContentAppearance;
 import de.jreality.plugin.job.Job;
 import de.jreality.plugin.job.JobListener;
 import de.jreality.plugin.job.JobQueuePlugin;
@@ -80,29 +75,21 @@ import de.jreality.scene.Appearance;
 import de.jreality.scene.IndexedLineSet;
 import de.jreality.scene.PointSet;
 import de.jreality.scene.SceneGraphComponent;
-import de.jreality.scene.pick.Hit;
-import de.jreality.ui.AppearanceInspector;
 import de.jreality.ui.ColorChooseJButton.ColorChangedEvent;
 import de.jreality.ui.ColorChooseJButton.ColorChangedListener;
-import de.jreality.ui.TextureInspector;
 import de.jreality.util.NativePathUtility;
-import de.jtem.discretegroup.core.DiscreteGroup;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Node;
 import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.type.TexturePosition;
-import de.jtem.halfedgetools.adapter.type.generic.Position3d;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
-import de.jtem.halfedgetools.adapter.type.generic.TexturePosition3d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.HalfedgeLayer;
 import de.jtem.halfedgetools.plugin.SelectionInterface;
-import de.jtem.halfedgetools.plugin.image.ImageHook;
 import de.jtem.halfedgetools.selection.Selection;
 import de.jtem.halfedgetools.selection.SelectionListener;
 import de.jtem.halfedgetools.selection.TypedSelection;
@@ -129,7 +116,6 @@ import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.heds.adapter.MetricErrorAdapter;
 import de.varylab.discreteconformal.uniformization.CanonicalFormUtility;
-import de.varylab.discreteconformal.uniformization.CutAndGlueUtility;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility;
 import de.varylab.discreteconformal.uniformization.FundamentalVertex;
@@ -160,10 +146,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		hif = null;
 	private ConformalVisualizationPlugin
 		vis = null;
-	private ContentAppearance
-		contentAppearance = null;
-	private TextureSpaceViewer3D
-		domainVisualisationPlugin = null;
 	private JobQueuePlugin
 		jobQueue = null;
 	private ConformalDataPlugin
@@ -207,30 +189,15 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		polygonCurvesRoot = new SceneGraphComponent("Polygon Curves"),
 		axesCurvesRoot = new SceneGraphComponent("Axes Curves");
 	
-	private BufferedImage
-		activeDomainImage = null;
-		
-
 	// user interface section ------------
-	private JPanel
-		visButtonsPanel = new JPanel();
 	private JButton
-		saveTextureButton = new JButton("Save Texture"),
-		exportHyperbolicButton = new JButton(ImageHook.getIcon("disk.png")),
-		exportHyperbolicSVGButton = new JButton(ImageHook.getIcon("disk.png")),
 		moveToCenterButton = new JButton("Center Selected Vertex"),
-		coverToTextureButton = new JButton("Create Texture"),
 		checkGaussBonnetBtn = new JButton("Check Gauß-Bonnet"),
 		unwrapBtn = new JButton("Unwrap"),
 		doLayoutButton = new JButton("Recalculate Layout"),
-		quantizeToQuads = new JButton("Quads"),
-		reorderFacesButton = new JButton("Move Faces"),
-		reorderSelectedFacesButton = new JButton("Move Selected Faces"),
-		createCopiesButton = new JButton("Create Copies"),
 		extractCutPreparedButton = new JButton("Extract Cut-Prepared"),
 		extractCutPreparedDirectionButton = new JButton("Cut along line"),
 		mapToConeButton = new JButton("Create cone adapter"),
-		insertHolomorphicImagePoints = new JButton("Insert Holomorphic Image Points"),
 		resetSurfaceButton = new JButton("Reset Surface");
 	private JComboBox<DomainPolygon>
 		domainCombo = new JComboBox<>(DomainPolygon.values());
@@ -239,12 +206,11 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 	private JComboBox<CutStrategy>
 		cutStrategy = new JComboBox<CutStrategy>(CutStrategy.values());
 	private ShrinkPanel
-		customNodePanel = new ShrinkPanel("Custom Nodes"),
+		customNodePanel = new ShrinkPanel("Selected Nodes"),
 		boundaryPanel = new ShrinkPanel("Boundary"),
-		coneConfigPanel = new ShrinkPanel("Automatic Cones"),
-		modelPanel = new ShrinkPanel("Hyperbolic Model"),
+		coneConfigPanel = new ShrinkPanel("Cones"),
 		visualizationPanel = new ShrinkPanel("Visualization"),
-		texQuantizationPanel = new ShrinkPanel("Cone Texture Quantization");
+		toolsPanel = new ShrinkPanel("Tools");
 	private SpinnerNumberModel
 		coverMaxDistanceModel = new SpinnerNumberModel(0.9, 0.0, 10000.0, 0.01),
 		coverElementsModel = new SpinnerNumberModel(10000, 0, 100000, 1),
@@ -253,8 +219,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		numConesModel = new SpinnerNumberModel(0, 0, 100, 1),
 		toleranceExpModel = new SpinnerNumberModel(-8, -30, -1, 1),
 		maxIterationsModel = new SpinnerNumberModel(150, 1, 10000, 1),
-		reorderFacesCountModel = new SpinnerNumberModel(100, 1, 100000, 100),
-		createCopiesModel = new SpinnerNumberModel(10, 1, 1000, 1),
 		snapToleranceExpModel = new SpinnerNumberModel(-5, -20, 1, 1);
 	private JSpinner
 		coverMaxDistanceSpinner = new JSpinner(coverMaxDistanceModel),
@@ -264,16 +228,12 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		numConesSpinner = new JSpinner(numConesModel),
 		toleranceExpSpinner = new JSpinner(toleranceExpModel),
 		maxIterationsSpinner = new JSpinner(maxIterationsModel),
-		reorderFacesCountSpinner = new JSpinner(reorderFacesCountModel),
-		createCopiesSpinner = new JSpinner(createCopiesModel),
 		snapToleranceExpSpinner = new JSpinner(snapToleranceExpModel);
 	private JCheckBox
 		uniformizationChecker = new JCheckBox("Create Uniformization"), 
 		expertChecker = new JCheckBox("Expert Mode"),
-		rescaleChecker = new JCheckBox("Rescale Geometry", true),
-		circularEdgeChecker = new JCheckBox("Circular Edge"), 
-		useDistanceToCanonicalize = new JCheckBox("Use Isometry Distances"),
-		useCustomThetaChecker = new JCheckBox("Custom Theta"),
+		circularEdgeChecker = new JCheckBox("Circular"), 
+		useCustomThetaChecker = new JCheckBox("Theta"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
 		drawCurvesOnSurface = new JCheckBox("Draw Curves On Surface");
 	private JRadioButton
@@ -318,29 +278,18 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		customPhiSpinner.addChangeListener(this);
 		circularEdgeChecker.addActionListener(this);
 		moveToCenterButton.addActionListener(this);
-		saveTextureButton.addActionListener(this);
-		exportHyperbolicButton.addActionListener(this);
-		exportHyperbolicSVGButton.addActionListener(this);
 		coverElementsSpinner.addChangeListener(this);
 		coverMaxDistanceSpinner.addChangeListener(this);
 		drawCurvesOnSurface.addActionListener(this);
-		reorderFacesButton.addActionListener(this);
-		reorderSelectedFacesButton.addActionListener(this);
-		createCopiesButton.addActionListener(this);
 		extractCutPreparedButton.addActionListener(this);
 		extractCutPreparedDirectionButton.addActionListener(this);
 		mapToConeButton.addActionListener(this);
-		insertHolomorphicImagePoints.addActionListener(this);
 		resetSurfaceButton.addActionListener(this);
 		doLayoutButton.addActionListener(this);
-		
 		unwrapBtn.addActionListener(this);
 		checkGaussBonnetBtn.addActionListener(this);
 		domainCombo.addActionListener(this);
 		useProjectiveTexture.addActionListener(this);
-		coverToTextureButton.addActionListener(this);
-		quantizeToQuads.addActionListener(this);
-		
 		expertChecker.addActionListener(this);
 	}
 	
@@ -349,20 +298,18 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		shrinkPanel.removeAll();
 		shrinkPanel.setLayout(new GridBagLayout());
 		GridBagConstraints c1 = new GridBagConstraints();
-		c1.insets = new Insets(1,3,1,1);
+		c1.insets = new Insets(1,3,1,3);
 		c1.fill = GridBagConstraints.BOTH;
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 1.0;
 		c1.gridwidth = 1;
 		GridBagConstraints c2 = new GridBagConstraints();
-		c2.insets = new Insets(1,1,1,3);
+		c2.insets = new Insets(1,1,1,1);
 		c2.fill = GridBagConstraints.BOTH;
 		c2.anchor = GridBagConstraints.WEST;
 		c2.weightx = 1.0;
 		c2.gridwidth = GridBagConstraints.REMAINDER;
-		
 		shrinkPanel.add(expertChecker, c2);
-		
 		if (expert) {
 			numericsCombo.setLightWeightPopupEnabled(true);
 			numericsCombo.setSelectedIndex(0);
@@ -371,20 +318,18 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			shrinkPanel.add(toleranceExpSpinner, c2);
 			shrinkPanel.add(new JLabel("Max Iterations"), c1);
 			shrinkPanel.add(maxIterationsSpinner, c2);
-			shrinkPanel.add(rescaleChecker, c2);
 			shrinkPanel.add(new JLabel("Cut Strategy"), c1);
 			shrinkPanel.add(cutStrategy, c2);
 			shrinkPanel.add(new JLabel("Target Geometry"), c1);
 			shrinkPanel.add(targetGeometryCombo, c2);
+			shrinkPanel.add(uniformizationChecker, c2);
 		}
 		shrinkPanel.add(unwrapBtn, c2);
 		if (expert) {
-			shrinkPanel.add(resetSurfaceButton, c2);
-			shrinkPanel.add(doLayoutButton, c2);
-			shrinkPanel.add(uniformizationChecker, c2);
 			shrinkPanel.add(checkGaussBonnetBtn, c2);
+			shrinkPanel.add(doLayoutButton, c2);
+			shrinkPanel.add(resetSurfaceButton, c2);
 		}
-		
 		boundaryPanel.setLayout(new GridBagLayout());
 		boundaryPanel.removeAll();
 		boundaryPanel.add(new JLabel("Mode"), c1);
@@ -393,23 +338,21 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		boundaryPanel.add(boundaryQuantizationCombo, c2);
 		boundaryPanel.setShrinked(true);
 		shrinkPanel.add(boundaryPanel, c2);
-		
 		if (expert) {
 			coneConfigPanel.setLayout(new GridBagLayout());
 			coneConfigPanel.removeAll();
-			coneConfigPanel.add(new JLabel("Cones"), c1);
+			coneConfigPanel.add(new JLabel("Max"), c1);
 			coneConfigPanel.add(numConesSpinner, c2);
 			coneConfigPanel.add(new JLabel("Quantization"), c1);
 			coneConfigPanel.add(conesQuantizationModeCombo, c2);
 			coneConfigPanel.setShrinked(true);
 			shrinkPanel.add(coneConfigPanel, c2);
 		}
-		
 		customNodePanel.setLayout(new GridBagLayout());
 		customNodePanel.removeAll();
 		customNodePanel.add(selectionScroller, c2);
-		selectionScroller.setPreferredSize(new Dimension(10, 70));
-		selectionScroller.setMinimumSize(new Dimension(10, 70));
+		selectionScroller.setPreferredSize(new Dimension(10, 120));
+		selectionScroller.setMinimumSize(new Dimension(10, 120));
 		customNodePanel.add(useCustomThetaChecker, c1);
 		customNodePanel.add(customThetaSpinner, c2);
 		if (expert) {
@@ -420,14 +363,9 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			customNodePanel.add(circularEdgeChecker, c1);
 			customNodePanel.add(customPhiSpinner, c2);
 		}
+		c2.weighty = 1.0;
 		shrinkPanel.add(customNodePanel, c2);
-		
-		if (expert) {
-			texQuantizationPanel.setLayout(new GridBagLayout());
-			texQuantizationPanel.removeAll();
-			texQuantizationPanel.add(quantizeToQuads, c2);
-			shrinkPanel.add(texQuantizationPanel, c2);
-		}
+		c2.weighty = 0.0;
 		if (expert) {
 			visualizationPanel.setLayout(new GridBagLayout());
 			visualizationPanel.removeAll();
@@ -438,8 +376,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			visualizationPanel.add(new JLabel("Cover Distance"), c1);
 			visualizationPanel.add(coverMaxDistanceSpinner, c2);
 			visualizationPanel.add(drawCurvesOnSurface, c2);
-			visualizationPanel.add(useDistanceToCanonicalize, c2);
-			visualizationPanel.add(coverToTextureButton, c2);
 			visualizationPanel.add(new JLabel("Snap Tolerance Exp"), c1);
 			visualizationPanel.add(snapToleranceExpSpinner, c2);
 			visualizationPanel.add(extractCutPreparedButton, c2);
@@ -450,34 +386,18 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			cutPanel.add(extractCutPreparedDirectionButton);
 			visualizationPanel.add(cutPanel, c2);
 			visualizationPanel.add(mapToConeButton,c2);
-			visualizationPanel.add(insertHolomorphicImagePoints, c2);
-			visualizationPanel.add(visButtonsPanel, c2);
 			shrinkPanel.add(visualizationPanel, c2);
-			
 			ButtonGroup directionGroup = new ButtonGroup();
 			directionGroup.add(cutXDirectionRadio);
 			directionGroup.add(cutYDirectionRadio);
 		}
 		if (expert) {
-			visButtonsPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-			visButtonsPanel.removeAll();
-			visButtonsPanel.add(saveTextureButton);
-			visButtonsPanel.add(exportHyperbolicButton);
-			visButtonsPanel.add(exportHyperbolicSVGButton);
+			toolsPanel.setLayout(new GridBagLayout());
+			toolsPanel.removeAll();
+			toolsPanel.add(moveToCenterButton, c2);
+			toolsPanel.setShrinked(true);
+			shrinkPanel.add(toolsPanel, c2);
 		}
-		if (expert) {
-			modelPanel.setLayout(new GridBagLayout());
-			modelPanel.removeAll();
-			modelPanel.add(moveToCenterButton, c2);
-			modelPanel.add(createCopiesSpinner, c1);
-			modelPanel.add(createCopiesButton, c2);
-			modelPanel.add(reorderFacesCountSpinner, c1);
-			modelPanel.add(reorderFacesButton, c2);
-			modelPanel.add(reorderSelectedFacesButton, c2);
-			modelPanel.setShrinked(true);
-			shrinkPanel.add(modelPanel, c2);
-		}
-
 		shrinkPanel.revalidate();
 	}
 	
@@ -677,7 +597,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 					conformalDataPlugin.addUniformizationData("Opposite Edges Uniformization", oppositePolygon);
 					oppositePolygon.checkRelation();	
 					System.out.println("Constructing fast canonical polygon...");
-					canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon, useDistanceToCanonicalize.isSelected());
+					canonicalPolygon = FundamentalPolygonUtility.canonicalize(minimalPolygon, false);
 					System.out.println(canonicalPolygon);
 					conformalDataPlugin.addUniformizationData("Canonical Uniformization", canonicalPolygon);
 					canonicalPolygon.checkRelation();
@@ -746,22 +666,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			updateUniformization(activeGeometry);
 			return;
 		}
-		if (coverToTextureButton == s) {
-			if (activeDomainImage == null) {
-				JOptionPane.showMessageDialog(w, "No current domain image", "Cannot create texture", WARNING_MESSAGE);
-				return;
-			}
-			AppearanceInspector ai = contentAppearance.getAppearanceInspector();
-			TextureInspector ti = ai.getTextureInspector();
-			ti.addTexture("Hyperbolic Domain", activeDomainImage);
-			ti.setTextureScaleLock(false);
-			ti.setTextureUScale(0.5);
-			ti.setTextureVScale(-0.5);
-			ti.setTextureUTranslation(1.0);
-			ti.setTextureVTranslation(1.0);
-			ti.setTextureRotation(0.0);
-			ti.setTextureShear(0.0);
-		}
 		if (unwrapBtn == s) {
 			CoHDS unwrapped = getLoaderGeometry();
 			if (unwrapped == null) return;
@@ -770,7 +674,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			AdapterSet aSet = hif.getAdapters();
 			conformalDataPlugin.addDiscreteMetric("Input Discrete Metric", unwrapped, aSet);
 			conformalDataPlugin.addHalfedgeEmbedding("Input Discrete Position Embedding", unwrapped, selection, aSet, Position4d.class, null);
-			if (isRescaleGeometry()) unwrapped.normalizeCoordinates();
+			unwrapped.normalizeCoordinates();
 			UnwrapJob uw = new UnwrapJob(unwrapped, aSet);
 			uw.setTargetGeometry((TargetGeometry)targetGeometryCombo.getSelectedItem());
 			uw.setToleranceExponent(toleranceExpModel.getNumber().intValue());
@@ -851,85 +755,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 				showMessageDialog(w, e1.getMessage(), "Error", ERROR_MESSAGE);
 			}
 		}
-		if (quantizeToQuads == s) {
-			AdapterSet a = hif.getAdapters();
-			Selection sel = hif.getSelection();
-			List<CoVertex> cones = new LinkedList<CoVertex>();
-			CoHDS hds = hif.get(new CoHDS());
-			for (CoVertex v : hds.getVertices()) {
-				if (v.info != null && v.info.useCustomTheta) {
-					cones.add(v);
-				}
-			}
-			if (cones.size() > 2) throw new RuntimeException("More than two cones not supported");
-			Matrix T = contentAppearance.getAppearanceInspector().getTextureMatrix();
-			Matrix Ti = new Matrix(T); Ti.invert();
-			if (cones.size() == 0) return;
-			if (cones.size() == 1) { // translation only
-				CoVertex cv = cones.get(0);
-				double[] texpos = a.getD(TexturePosition4d.class, cv);
-				double[] quantPos = texpos.clone();
-				T.transformVector(quantPos);
-				Pn.dehomogenize(quantPos, quantPos);
-				double offset = sel.contains(cv) ? 0.25 : 0;
-				double difX = (quantPos[0] + offset) % 0.5;
-				double difY = (quantPos[1] + offset) % 0.5;
-				double[] difVec = {difX, difY, 0, 0};
-				Ti.transformVector(difVec);
-				Matrix QT = MatrixBuilder.euclidean().translate(-difVec[0], -difVec[1], 0).getMatrix();
-				for (CoVertex v : hds.getVertices()) {
-					double[] tp = hif.getAdapters().getD(TexturePosition4d.class, v);
-					double[] qtp = tp.clone();
-					QT.transformVector(qtp);
-					a.set(TexturePosition.class, v, qtp);
-				}
-			}
-			if (cones.size() == 2) { // affine transform
-				CoVertex cv1 = cones.get(0);
-				CoVertex cv2 = cones.get(1);
-				double[] texpos1 = a.getD(TexturePosition4d.class, cv1);
-				double[] texpos2 = a.getD(TexturePosition4d.class, cv2);
-				double[] quantPos1 = texpos1.clone();
-				double[] quantPos2 = texpos2.clone();
-				T.transformVector(quantPos1);
-				T.transformVector(quantPos2);
-				Pn.dehomogenize(quantPos1, quantPos1);
-				Pn.dehomogenize(quantPos2, quantPos2);
-				double dist = Rn.euclideanDistance(quantPos1, quantPos2);
-				double sDist = dist;
-				double distOffset = (!sel.contains(cv2) && sel.contains(cv1)) || (sel.contains(cv2) && !sel.contains(cv1)) ? 0.25 : 0;
-				dist -= (dist + distOffset) % 0.5;
-				dist = Math.max(dist, 0.5);
-				double angle = atan2(quantPos1[1] - quantPos2[1], quantPos1[0] - quantPos2[0]) % PI/2;
-				double offset = sel.contains(cv1) ? 0.25 : 0;
-				double difX1 = (quantPos1[0] + offset) % 0.5;
-				double difY1 = (quantPos1[1] + offset) % 0.5;
-				
-				MatrixBuilder PivotB = MatrixBuilder.euclidean();
-				PivotB.translate(quantPos1[0], quantPos1[1], 0);
-				
-				MatrixBuilder QB = MatrixBuilder.euclidean();
-				QB.scale(dist / sDist);
-				QB.rotate(-angle, new double[]{0,0,1});
-				QB.conjugateBy(PivotB.getMatrix().getArray());
-				QB.translate(-difX1, -difY1, 0);				
-				Matrix QT = QB.getMatrix();
-				QT.transformVector(quantPos1);
-				QT.transformVector(quantPos2);
-				System.out.println("new dist: " + Rn.euclideanDistance(quantPos1, quantPos2));
-				System.out.println("new angle: " + atan2(quantPos1[1] - quantPos2[1], quantPos1[0] - quantPos2[0]) % 2*PI);
-				QT = Matrix.conjugate(QT, Ti);
-				for (CoVertex v : hds.getVertices()) {
-					double[] tp = hif.getAdapters().getD(TexturePosition4d.class, v);
-					double[] qtp = tp.clone();
-					QT.transformVector(qtp);
-					Pn.dehomogenize(qtp, qtp);
-					a.set(TexturePosition.class, v, qtp);
-				}
-			}
-			System.out.println("Quantizing texture cones: " + cones);
-			hif.update();
-		}
 		if (moveToCenterButton == s) {
 			if (surfaceUnwrapped == null) return;
 			TypedSelection<CoVertex> sel = hif.getSelection().getVertices(surfaceUnwrapped);
@@ -950,17 +775,8 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			updateGeometry(activeGeometry);
 			updateUniformization(activeGeometry);				
 		}
-		if (reorderFacesButton == s) {
-			reorderFaces(false);
-		}
-		if (reorderSelectedFacesButton == s) {
-			reorderFaces(true);
-		}
 		if (expertChecker == s) {
 			createLayout();
-		}
-		if (createCopiesButton == s) {
-			createCopies();
 		}
 		if (extractCutPreparedButton == s) {
 			if (getActiveFundamentalPoygon() == null) {
@@ -1010,42 +826,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			CoEdge ce = cutInfo.edgeCutMap.keySet().iterator().next();
 			CoEdge opce = cutInfo.edgeCutMap.get(ce);
 			mapToCone(ce, opce); 
-		}
-		if (insertHolomorphicImagePoints == s) {
-			AdapterSet a = hif.getAdapters();
-			TypedSelection<CoVertex> vSet = hif.getSelection().getVertices(surfaceUnwrapped);
-			if (vSet.isEmpty()) {
-				JOptionPane.showMessageDialog(w, "Please select al least one vertex to map.");
-				return;
-			}
-			CoHDS intersected = copySurface(surface);
-			for (CoVertex v : vSet){
-				double[] tp = a.getD(TexturePosition3d.class, v);
-				double[] tpp = Rn.negate(null, tp);
-				for (CoFace f : surfaceUnwrapped.getFaces()) {
-					CoFace ff = intersected.getFace(f.getIndex());
-					List<CoVertex> fv = HalfEdgeUtils.boundaryVertices(f);
-					List<CoVertex> ffv = HalfEdgeUtils.boundaryVertices(ff);
-					if (CuttingUtility.isInConvexTextureFace(tpp, f, a)) {
-						double[] bary = new double[3];
-						double[] fp1 = a.getD(TexturePosition3d.class, fv.get(0));
-						double[] fp2 = a.getD(TexturePosition3d.class, fv.get(1));
-						double[] fp3 = a.getD(TexturePosition3d.class, fv.get(2));
-						double[] fpp1 = a.getD(Position3d.class, ffv.get(0));
-						double[] fpp2 = a.getD(Position3d.class, ffv.get(1));
-						double[] fpp3 = a.getD(Position3d.class, ffv.get(2));
-						Hit.convertToBary(bary, fp1, fp2, fp3, tpp);
-						double[][] corners = {fpp1, fpp2, fpp3};
-						double[] p = Rn.barycentricTriangleInterp(null, corners, bary);
-						CoVertex newVertex = TopologyAlgorithms.splitFace(ff);
-						newVertex.T = Pn.homogenize(null, tpp);
-						newVertex.P = Pn.homogenize(null, p);
-					}
-				}
-			}
-			HalfedgeLayer l = hif.createLayer("Weierstrass Points");
-			hif.activateLayer(l);
-			l.set(intersected);
 		}
 		if (resetSurfaceButton == s && surface != null) {
 			hif.set(surface);
@@ -1234,35 +1014,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		return new double[]{d[0], d[1], 0.0, 0.0};
 	}
 	
-	
-	private void createCopies() {
-		FundamentalPolygon p = getActiveFundamentalPoygon();
-		if (p == null) return;
-		int numCopies = createCopiesModel.getNumber().intValue();
-		DiscreteGroup g = p.getDiscreteGroup();
-		domainVisualisationPlugin.createCopies(g, numCopies);
-	}
-	
-	
-	private void reorderFaces(boolean selctedOnly) {
-		if (surfaceUnwrapped == null) return;
-		int signature = activeGeometry.getSignature();
-		FundamentalPolygon p = getActiveFundamentalPoygon();
-		if (selctedOnly) {
-			Selection s = hif.getSelection();
-			TypedSelection<CoFace> selectedFaces = s.getFaces(surfaceUnwrapped);
-			System.out.println("moving " + selectedFaces.size() + " faces...");
-			for (CoFace f : selectedFaces) {
-				CutAndGlueUtility.reglueSingleFace(f, cutInfo, signature);
-			}
-		} else {
-			int numFaces = reorderFacesCountModel.getNumber().intValue();	
-			CutAndGlueUtility.reglueOutsideFaces(surfaceUnwrapped, numFaces, p, cutInfo, signature);
-		}
-		updateGeometry(activeGeometry);
-		updateUniformization(activeGeometry);
-	}
-	
 	private FundamentalPolygon getActiveFundamentalPoygon() {
 		DomainPolygon domain = (DomainPolygon)domainCombo.getSelectedItem();
 		switch (domain) {
@@ -1330,8 +1081,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		hif.addAdapter(texturePositionAdapter, true);
 		hif.addSelectionListener(this);
 		vis = c.getPlugin(ConformalVisualizationPlugin.class);
-		contentAppearance = c.getPlugin(ContentAppearance.class);
-		domainVisualisationPlugin = c.getPlugin(TextureSpaceViewer3D.class);
 		jobQueue = c.getPlugin(JobQueuePlugin.class);
 		conformalDataPlugin = c.getPlugin(ConformalDataPlugin.class);
 		textureSpacePlugin = c.getPlugin(UniformizationTextureSpacePlugin.class);
@@ -1359,8 +1108,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		c.storeProperty(getClass(), "boundaryPanelShrinked", boundaryPanel.isShrinked());	
 		c.storeProperty(getClass(), "conesPanelShrinked", coneConfigPanel.isShrinked());	
 		c.storeProperty(getClass(), "visualizationPanelShrinked", visualizationPanel.isShrinked());	
-		c.storeProperty(getClass(), "modelPanelShrinked", modelPanel.isShrinked());	
-		c.storeProperty(getClass(), "coneTexQuantPanelShrinked", texQuantizationPanel.isShrinked());
+		c.storeProperty(getClass(), "modelPanelShrinked", toolsPanel.isShrinked());	
 		c.storeProperty(getClass(), "customVertexPanelShrinked", customNodePanel.isShrinked());
 		c.storeProperty(getClass(), "domainModeIndex", domainCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "doUniformization", uniformizationChecker.isSelected());
@@ -1383,8 +1131,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		boundaryPanel.setShrinked(c.getProperty(getClass(), "boundaryPanelShrinked", true));
 		coneConfigPanel.setShrinked(c.getProperty(getClass(), "conesPanelShrinked", true));
 		visualizationPanel.setShrinked(c.getProperty(getClass(), "visualizationPanelShrinked", true));
-		modelPanel.setShrinked(c.getProperty(getClass(), "modelPanelShrinked", true));
-		texQuantizationPanel.setShrinked(c.getProperty(getClass(), "coneTexQuantPanelShrinked", true));
+		toolsPanel.setShrinked(c.getProperty(getClass(), "modelPanelShrinked", true));
 		customNodePanel.setShrinked(c.getProperty(getClass(), "customVertexPanelShrinked", customNodePanel.isShrinked()));
 		domainCombo.setSelectedIndex(c.getProperty(getClass(), "domainModeIndex", domainCombo.getSelectedIndex()));
 		uniformizationChecker.setSelected(c.getProperty(getClass(), "doUniformization", false));
@@ -1400,9 +1147,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		return info;
 	}
 	
-	public boolean isRescaleGeometry() {
-		return rescaleChecker.isSelected();
-	}
 	public CuttingInfo<CoVertex, CoEdge, CoFace> getCurrentCutInfo() {
 		return cutInfo;
 	}
