@@ -1,7 +1,11 @@
 package de.varylab.discreteconformal.util;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.signum;
+
 import java.io.FileOutputStream;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -47,11 +51,14 @@ public class DiscreteEllipticUtility {
 	 * @return the half-period ratio tau
 	 */
 	public static Complex calculateHalfPeriodRatio(CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
-		CoVertex v0 = cutInfo.cutRoot;
-		CoVertex v1 = cutInfo.vertexCopyMap.get(v0);
-		if (v1 == null) throw new RuntimeException("Connot calculate modulus. No cut-root copies found");
-		CoVertex v2 = cutInfo.vertexCopyMap.get(v1);
-		if (v2 == null) throw new RuntimeException("Connot calculate modulus. No second cut-root copy found");
+		Set<CoVertex> branchSet = cutInfo.getCopies(cutInfo.cutRoot);
+		if (branchSet.size() != 4) {
+			log.warning("domain torus has more than one vertex");
+		}
+		Iterator<CoVertex> branchIt = branchSet.iterator();
+		CoVertex v0 = branchIt.next();
+		CoVertex v1 = branchIt.next();
+		CoVertex v2 = branchIt.next();
 		double[] t0 = v0.T;
 		double[] t1 = v1.T;
 		double[] t2 = v2.T;
@@ -62,7 +69,6 @@ public class DiscreteEllipticUtility {
 		Complex w2 = z2.minus(z0);
 		Complex tau = w2.divide(w1);
 		Complex tauNorm = normalizeModulus(tau);
-		log.info("normlizing modulus " + tau + " -> " + tauNorm);
 		return tauNorm;
 	}
 	
@@ -74,19 +80,15 @@ public class DiscreteEllipticUtility {
 	public static Complex normalizeModulus(Complex tau) {
 		int maxIter = 100;
 		// move tau into its fundamental domain
-		while ((tau.re > 0.5 || tau.re < 0 || tau.im < 0 || tau.abs() > 1) && --maxIter > 0) {
-			if (tau.abs() > 1) {
-				tau = tau.invert();
-				tau.im *= -1;
-			}			
-			if (tau.re > 0.5) {
-				tau.re += -1;
-			}
-			if (tau.re < 0) {
-				tau.re *= -1;
+		while ((abs(tau.re) > 0.5 || tau.im < 0 || tau.abs() < 1) && --maxIter > 0) {
+			if (abs(tau.re) > 0.5) {
+				tau.re -= signum(tau.re);
 			}
 			if (tau.im < 0) {
-				tau.im *= -1;
+				tau = tau.times(-1);
+			}
+			if (tau.abs() < 1) {
+				tau = tau.invert();
 			}
 		}
 		return tau;

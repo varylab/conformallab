@@ -15,4 +15,14 @@ public class DiscreteEllipticUtilityTest {
 		Assert.assertEquals(0.7787610619469026, tauNormalized.im, 1E-12);
 	}
 	
+	
+	@Test
+	public void testNormalizeModulusPeriodShift() throws Exception {
+		Complex tau1 = new Complex(0.3, 1.0);
+		Complex tau2 = new Complex(-0.7, 1.0);
+		Complex tau1Normalized = DiscreteEllipticUtility.normalizeModulus(tau1);
+		Complex tau2Normalized = DiscreteEllipticUtility.normalizeModulus(tau2);
+		Assert.assertEquals("the moduli should be equal", tau1Normalized, tau2Normalized);
+	}
+	
 }

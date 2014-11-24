@@ -15,6 +15,7 @@ import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.cr
 import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.createSurfaceCurves;
 import static de.varylab.discreteconformal.unwrapper.BoundaryMode.ReadIsometricAngles;
 import static de.varylab.discreteconformal.unwrapper.EuclideanLayout.calculateAngleSum;
+import static de.varylab.discreteconformal.util.DiscreteEllipticUtility.calculateHalfPeriodRatio;
 import static de.varylab.discreteconformal.util.UnwrapUtility.prepareInvariantDataEuclidean;
 import static java.awt.Color.YELLOW;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
@@ -97,6 +98,7 @@ import de.jtem.halfedgetools.util.HalfEdgeUtilsExtra;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.jtem.jrworkspace.plugin.sidecontainer.widget.ShrinkPanel;
+import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.adapter.ConeMapAdapter;
 import de.varylab.discreteconformal.adapter.CylinderMapAdapter;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
@@ -608,6 +610,10 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 				metricErrorAdapter.setSignature(signature);
 			} catch (Exception e) {
 				e.printStackTrace();
+			}
+			if (targetGeometry == TargetGeometry.Euclidean) {
+				Complex tau = calculateHalfPeriodRatio(cutInfo);
+				log.info("torus modulus: " + tau);
 			}
 		} else {
 			cutInfo = null;

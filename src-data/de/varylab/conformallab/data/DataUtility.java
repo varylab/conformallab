@@ -618,11 +618,12 @@ public class DataUtility {
 		cutInfoOUT.vertexCopyMap.clear();
 		for (VertexIdentification vi : he.getIdentifications()) {
 			V copyRoot = hds.getVertex(vi.getVertices().get(0));
+			V lastCopy = copyRoot;
 			for (int i : vi.getVertices()) {
 				V copy = hds.getVertex(i);
 				if (copy == copyRoot) continue;
-				cutInfoOUT.vertexCopyMap.put(copyRoot, copy);
-				copyRoot = copy;
+				cutInfoOUT.vertexCopyMap.put(lastCopy, copy);
+				lastCopy = copy;
 			}
 		}
 		cutInfoOUT.edgeCutMap.clear();
@@ -674,7 +675,15 @@ public class DataUtility {
 			readyEdges.add(e3);
 			readyEdges.add(e4);
 		}
-		cutInfoOUT.cutRoot = HalfEdgeUtils.boundaryVertices(hds).iterator().next();
+		int maxCopies = -1;
+		for (V v : HalfEdgeUtils.boundaryVertices(hds)) {
+			Set<V> copies = cutInfoOUT.getCopies(v);
+			if (copies.size() > maxCopies) {
+				maxCopies = copies.size();
+				cutInfoOUT.cutRoot = v;
+			}
+		}
+		
 	}
 
 	public static DiscreteMetric toDiscreteMetric(String name, CoHDS surface, AdapterSet a) {
