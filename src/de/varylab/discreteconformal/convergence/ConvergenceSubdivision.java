@@ -42,7 +42,7 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 	
 	@Override
 	protected void perform() throws Exception {
-		writeComment("numVertex[1], absErr[2], argErr[3], reErr[4], imErr[5], gradNormSq[6]");
+		writeComment("numVertex[1], absErr[2], argErr[3], reErr[4], imErr[5], re[6], im[7], gradNormSq[8]");
 		ConformalAdapterSet a = new ConformalAdapterSet();
 		TypedAdapterSet<double[]> da = a.querySet(double[].class);
 		for (int i = 0; i < maxSubdivision; i ++) {
@@ -75,7 +75,7 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
 				DiscreteEllipticUtility.generateEllipticImage(hds, 0, glueSet, branchIndices);
-				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, 1E-8);
+				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, 1E-9);
 			} catch (Exception e) {
 				System.out.println("Error: " + e.getMessage());
 				continue;
@@ -84,7 +84,7 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 			double argErr = tau.arg() - getExpectedTau().arg();
 			double reErr = tau.re - getExpectedTau().re;
 			double imErr = tau.im - getExpectedTau().im;
-			writeErrorLine(numVerts + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + EuclideanUnwrapperPETSc.lastGNorm);
+			writeErrorLine(numVerts + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + tau.re + "\t" + tau.im + "\t" + EuclideanUnwrapperPETSc.lastGNorm);
 		}
 	}
 

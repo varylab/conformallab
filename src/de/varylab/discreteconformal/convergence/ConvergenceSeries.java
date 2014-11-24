@@ -192,6 +192,7 @@ public abstract class ConvergenceSeries {
 			link.close();
 		} else if (tauRe != null || tauIm != null) {
 			series.tauExpected = new Complex(tauRe, tauIm);
+			series.tauExpected = DiscreteEllipticUtility.normalizeModulus(series.tauExpected);
 		} else {
 			throw new Exception("Could not determine expected tau");
 		}
