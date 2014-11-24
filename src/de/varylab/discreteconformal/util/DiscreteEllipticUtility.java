@@ -1,10 +1,13 @@
 package de.varylab.discreteconformal.util;
 
+import java.io.FileOutputStream;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
@@ -14,8 +17,13 @@ import de.jreality.math.Pn;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
+import de.jtem.halfedgetools.adapter.type.generic.Position4d;
+import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.mfc.field.Complex;
+import de.varylab.conformallab.data.DataIO;
+import de.varylab.conformallab.data.DataUtility;
+import de.varylab.conformallab.data.types.HalfedgeMap;
 import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -28,6 +36,8 @@ import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class DiscreteEllipticUtility {
 
+	private static Logger
+		log = Logger.getLogger(DiscreteEllipticUtility.class.getName());
 	
 	/**
 	 * Calculates the half-period ratio of an elliptic function. 
@@ -51,7 +61,9 @@ public class DiscreteEllipticUtility {
 		Complex w1 = z1.minus(z0);
 		Complex w2 = z2.minus(z0);
 		Complex tau = w2.divide(w1);
-		return normalizeModulus(tau);
+		Complex tauNorm = normalizeModulus(tau);
+		log.info("normlizing modulus " + tau + " -> " + tauNorm);
+		return tauNorm;
 	}
 	
 	/**
@@ -63,6 +75,10 @@ public class DiscreteEllipticUtility {
 		int maxIter = 100;
 		// move tau into its fundamental domain
 		while ((tau.re > 0.5 || tau.re < 0 || tau.im < 0 || tau.abs() > 1) && --maxIter > 0) {
+			if (tau.abs() > 1) {
+				tau = tau.invert();
+				tau.im *= -1;
+			}			
 			if (tau.re > 0.5) {
 				tau.re += -1;
 			}
@@ -70,10 +86,6 @@ public class DiscreteEllipticUtility {
 				tau.re *= -1;
 			}
 			if (tau.im < 0) {
-				tau.im *= -1;
-			}
-			if (tau.abs() > 1) {
-				tau = tau.invert();
 				tau.im *= -1;
 			}
 		}
@@ -86,7 +98,7 @@ public class DiscreteEllipticUtility {
 	 * First the elliptic function is approximated by calculating a conformally flat
 	 * metric. Then the corresponding triangle layout in the complex plane is calculated.
 	 * From this we obtain the periods by the coordinates of the indentified vertices
-	 * along the cutted paths. 
+	 * along the cut paths. 
 	 * @param hds A triangulated torus with vertices on the sphere.
 	 * @return The half-period ratio of the elliptic function
 	 */
@@ -102,6 +114,13 @@ public class DiscreteEllipticUtility {
 			return new Complex();
 		}
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = unwrapper.getCutInfo();
+		try {
+			HalfedgeMap map = DataUtility.toHalfedgeMap("subdivision map", hds, a, TexturePosition4d.class, Position4d.class, cutInfo);
+			FileOutputStream fout = new FileOutputStream("convergence.xml");
+			DataIO.writeConformalData(map, fout);
+		} catch (Exception e) {
+			log.log(Level.WARNING, e.getMessage(), e);
+		}
 		return calculateHalfPeriodRatio(cutInfo);
 	}
 
