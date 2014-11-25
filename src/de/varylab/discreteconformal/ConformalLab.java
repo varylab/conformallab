@@ -45,7 +45,8 @@ import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
 import de.varylab.discreteconformal.plugin.KoebePolyhedronPlugin;
 import de.varylab.discreteconformal.plugin.ProjectiveTexturePlugin;
 import de.varylab.discreteconformal.plugin.QuasiIsothermicPlugin;
-import de.varylab.discreteconformal.plugin.SphereEqualizerPlugin;
+import de.varylab.discreteconformal.plugin.SphericalEqualizerPlugin;
+import de.varylab.discreteconformal.plugin.SphericalNormalizationPlugin;
 import de.varylab.discreteconformal.plugin.TextureSpaceViewer3D;
 import de.varylab.discreteconformal.plugin.UniformizationTextureSpacePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.AddConeOfRevolutionCommand;
@@ -84,7 +85,7 @@ public class ConformalLab implements Runnable {
 		s.add(new CutAtEdgePlugin());
 		s.add(new FindPathPlugin());
 		s.add(new QuasiIsothermicPlugin());
-		s.add(new SphereEqualizerPlugin());
+		s.add(new SphericalEqualizerPlugin());
 		s.add(new IsothermicityMeasure());
 		s.add(new KoebePolyhedronPlugin());
 		s.add(new PrimitivesGenerator());
@@ -101,6 +102,7 @@ public class ConformalLab implements Runnable {
 		s.add(new ContractShortEdges());
 		s.add(new UniformizationTextureSpacePlugin());
 		s.add(new DiscreteConformalEquivalencemMeasure());
+		s.add(new SphericalNormalizationPlugin());
 		return s;
 	}
 	

@@ -1,10 +1,11 @@
 package de.varylab.discreteconformal.plugin;
 
+import static javax.swing.JOptionPane.showInputDialog;
+
+import java.awt.EventQueue;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.TreeSet;
-
-import javax.swing.JOptionPane;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -22,16 +23,19 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.SphereUtility;
 
-public class SphereEqualizerPlugin extends AlgorithmPlugin {
+public class SphericalEqualizerPlugin extends AlgorithmPlugin {
 
+	private String
+		iterationsString = null;
+	
 	@Override
 	public AlgorithmCategory getAlgorithmCategory() {
-		return AlgorithmCategory.Editing;
+		return AlgorithmCategory.Geometry;
 	}
 
 	@Override
 	public String getAlgorithmName() {
-		return "Sphere Equalizer";
+		return "Spherical Equalizer";
 	}
 
 	@Override
@@ -40,10 +44,16 @@ public class SphereEqualizerPlugin extends AlgorithmPlugin {
 		E extends Edge<V, E, F>,
 		F extends Face<V, E, F>, 
 		HDS extends HalfEdgeDataStructure<V, E, F>
-	> void execute(HDS hds, AdapterSet a, HalfedgeInterface hi) {
-		String iterString = JOptionPane.showInputDialog(getOptionParent(), "Number of iterations", 20);
-		if (iterString == null) return;
-		int iterations = Integer.parseInt(iterString);
+	> void execute(HDS hds, AdapterSet a, HalfedgeInterface hi) throws Exception {
+		Runnable r = new Runnable() {
+			@Override
+			public void run() {
+				iterationsString = showInputDialog(getOptionParent(), "Number of iterations", 20);				
+			}
+		};
+		EventQueue.invokeAndWait(r);
+		if (iterationsString == null) return;
+		int iterations = Integer.parseInt(iterationsString);
 		CoHDS chds = hi.get(new CoHDS());
 		Selection sel = hi.getSelection();
 		Set<CoVertex> fivedVertices = new TreeSet<CoVertex>(sel.getVertices(chds));
