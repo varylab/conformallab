@@ -3,14 +3,12 @@ package de.varylab.discreteconformal.util;
 import static java.lang.Math.abs;
 import static java.lang.Math.signum;
 
-import java.io.FileOutputStream;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.wolfram.jlink.KernelLink;
@@ -21,13 +19,8 @@ import de.jreality.math.Pn;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.type.generic.Position4d;
-import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
 import de.jtem.mfc.field.Complex;
-import de.varylab.conformallab.data.DataIO;
-import de.varylab.conformallab.data.DataUtility;
-import de.varylab.conformallab.data.types.HalfedgeMap;
 import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
@@ -120,13 +113,13 @@ public class DiscreteEllipticUtility {
 			return new Complex();
 		}
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = unwrapper.getCutInfo();
-		try {
-			HalfedgeMap map = DataUtility.toHalfedgeMap("subdivision map", hds, a, TexturePosition4d.class, Position4d.class, cutInfo);
-			FileOutputStream fout = new FileOutputStream("convergence.xml");
-			DataIO.writeConformalData(map, fout);
-		} catch (Exception e) {
-			log.log(Level.WARNING, e.getMessage(), e);
-		}
+//		try {
+//			HalfedgeMap map = DataUtility.toHalfedgeMap("subdivision map", hds, a, TexturePosition4d.class, Position4d.class, cutInfo);
+//			FileOutputStream fout = new FileOutputStream("convergence.xml");
+//			DataIO.writeConformalData(map, fout);
+//		} catch (Exception e) {
+//			log.log(Level.WARNING, e.getMessage(), e);
+//		}
 		return calculateHalfPeriodRatio(cutInfo);
 	}
 
