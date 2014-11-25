@@ -9,7 +9,7 @@ import joptsimple.OptionSpec;
 import de.jreality.math.Pn;
 import de.jtem.halfedgetools.adapter.TypedAdapterSet;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
-import de.jtem.halfedgetools.algorithm.subdivision.LoopLinear;
+import de.jtem.halfedgetools.algorithm.subdivision.Loop;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -23,8 +23,8 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 	private int 
 		maxSubdivision = 0,
 		numExtraPoints = 0;
-	private LoopLinear 
-		loop = new LoopLinear();
+	private Loop 
+		loop = new Loop();
 	
 	
 	public ConvergenceSubdivision() {
@@ -42,7 +42,7 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 	
 	@Override
 	protected void perform() throws Exception {
-		writeComment("numVertex[1], absErr[2], argErr[3], reErr[4], imErr[5], re[6], im[7], gradNormSq[8]");
+		writeComment("numVertex[1], absDifErr[2], absErr[3], argErr[4], reErr[5], imErr[6], re[7], im[8], gradNormSq[9]");
 		ConformalAdapterSet a = new ConformalAdapterSet();
 		TypedAdapterSet<double[]> da = a.querySet(double[].class);
 		for (int i = 0; i < maxSubdivision; i ++) {
@@ -65,6 +65,12 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 				CoHDS subdivided = new CoHDS();
 				loop.subdivide(hds, subdivided, da);
 				hds = subdivided;
+				// reset branch data
+				for (int vi = 0; vi < vertices.length; vi++) {
+					CoVertex v = hds.getVertex(vi);
+					v.P = new double[] {vertices[vi][0], vertices[vi][1], vertices[vi][2], 1.0};
+					Pn.setToLength(v.P, v.P, 1, Pn.EUCLIDEAN);
+				}
 				// project to the sphere in every step
 				for (CoVertex v : hds.getVertices()) {
 					Pn.setToLength(v.P, v.P, 1, Pn.EUCLIDEAN);
@@ -81,10 +87,11 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 				continue;
 			}
 			double absErr = tau.abs() - getExpectedTau().abs();
+			double absDifErr = tau.minus(getExpectedTau()).abs();
 			double argErr = tau.arg() - getExpectedTau().arg();
 			double reErr = tau.re - getExpectedTau().re;
 			double imErr = tau.im - getExpectedTau().im;
-			writeErrorLine(numVerts + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + tau.re + "\t" + tau.im + "\t" + EuclideanUnwrapperPETSc.lastGNorm);
+			writeErrorLine(numVerts + "\t" + absDifErr + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + tau.re + "\t" + tau.im + "\t" + EuclideanUnwrapperPETSc.lastGNorm);
 		}
 	}
 
