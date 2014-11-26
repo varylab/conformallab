@@ -49,6 +49,8 @@ public abstract class ConvergenceSeries {
 		errorWriter = null;
 	protected Complex
 		tauExpected = new Complex();
+	protected String
+		fileName = "data";
 	
 	
 	public ConvergenceSeries() {
@@ -103,7 +105,7 @@ public abstract class ConvergenceSeries {
 		OptionParser p = new OptionParser();
 		OptionSpec<String> methodSpec = p.accepts("M", "Convergence series method: Quality | Random | Subdivision").withRequiredArg().ofType(String.class);
 		OptionSpec<String> fileBaseSpec = p.accepts("base", "Base directory of the data series").withRequiredArg().ofType(String.class);
-		OptionSpec<String> fileNameSpec = p.accepts("name", "Name of the data series").withRequiredArg().ofType(String.class);
+		OptionSpec<String> fileNameSpec = p.accepts("name", "Name of the data series").withRequiredArg().ofType(String.class).defaultsTo("data");
 		OptionSpec<String> inputObj = p.accepts("pin", "Predefined branch points as obj file").withRequiredArg().ofType(String.class);
 		OptionSpec<String> branchIndicesSpec = p.accepts("bpi", "Indices of the four branch points in the obj file").withRequiredArg().ofType(String.class).defaultsTo("0,1,2,3");
 		OptionSpec<Double> tauReSpec = p.accepts("tre", "Real part of expected \tau").withOptionalArg().ofType(Double.class);
@@ -119,8 +121,8 @@ public abstract class ConvergenceSeries {
 		
 		// get file base directory
 		String fileBase = fileBaseSpec.value(opts);
-		String fileName = fileNameSpec.value(opts);
-		File errFile = new File(fileBase + "/" + fileName + ".dat");
+		series.fileName = fileNameSpec.value(opts);
+		File errFile = new File(fileBase + "/" + series.fileName + ".dat");
 		if (errFile.exists()) {
 			System.err.println("File " + errFile + " exists. Overwrite? (y/n)");
 			char c = (char)System.in.read();

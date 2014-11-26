@@ -92,6 +92,10 @@ public class DiscreteEllipticUtility {
 	}
 
 	
+	public static Complex calculateHalfPeriodRatio(CoHDS hds, double tol) {
+		return calculateHalfPeriodRatio(hds, tol, null);
+	}
+	
 	/**
 	 * Calculates the half-period ratio for a given doubly covered branched sphere.
 	 * First the elliptic function is approximated by calculating a conformally flat
@@ -101,10 +105,10 @@ public class DiscreteEllipticUtility {
 	 * @param hds A triangulated torus with vertices on the sphere.
 	 * @return The half-period ratio of the elliptic function
 	 */
-	public static Complex calculateHalfPeriodRatio(CoHDS hds, double tol) {
+	public static Complex calculateHalfPeriodRatio(CoHDS hds, double tol, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
 		Unwrapper unwrapper = new EuclideanUnwrapperPETSc();
 		unwrapper.setGradientTolerance(tol);
-		unwrapper.setMaxIterations(500);
+		unwrapper.setMaxIterations(1000);
 		AdapterSet a = new ConformalAdapterSet();
 		try {
 			unwrapper.unwrap(hds, 1, a);
@@ -112,15 +116,13 @@ public class DiscreteEllipticUtility {
 			e.printStackTrace();
 			return new Complex();
 		}
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = unwrapper.getCutInfo();
-//		try {
-//			HalfedgeMap map = DataUtility.toHalfedgeMap("subdivision map", hds, a, TexturePosition4d.class, Position4d.class, cutInfo);
-//			FileOutputStream fout = new FileOutputStream("convergence.xml");
-//			DataIO.writeConformalData(map, fout);
-//		} catch (Exception e) {
-//			log.log(Level.WARNING, e.getMessage(), e);
-//		}
-		return calculateHalfPeriodRatio(cutInfo);
+		CuttingInfo<CoVertex, CoEdge, CoFace> info = unwrapper.getCutInfo();
+		if (cutInfo != null) {
+			cutInfo.cutRoot = info.cutRoot;
+			cutInfo.edgeCutMap = info.edgeCutMap;
+			cutInfo.vertexCopyMap = info.vertexCopyMap;
+		}
+		return calculateHalfPeriodRatio(info);
 	}
 
 	
