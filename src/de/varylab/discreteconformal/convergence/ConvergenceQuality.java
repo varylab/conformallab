@@ -1,6 +1,10 @@
 package de.varylab.discreteconformal.convergence;
 
-import static java.lang.Math.sqrt;
+import static de.varylab.discreteconformal.convergence.ConvergenceUtility.getMaxMeanSumCircumRadius;
+import static de.varylab.discreteconformal.convergence.ConvergenceUtility.getMaxMeanSumCrossRatio;
+import static de.varylab.discreteconformal.convergence.ConvergenceUtility.getMaxMeanSumMultiRatio;
+import static de.varylab.discreteconformal.util.DiscreteEllipticUtility.calculateHalfPeriodRatio;
+import static de.varylab.discreteconformal.util.DiscreteEllipticUtility.generateEllipticImage;
 
 import java.io.FileWriter;
 import java.util.HashSet;
@@ -11,15 +15,11 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import de.jreality.math.Pn;
-import de.jreality.math.Rn;
-import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
-import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.SphereUtility;
-import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 
 public class ConvergenceQuality extends ConvergenceSeries {
 
@@ -141,10 +141,10 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			double[] circleRadiusQuality = null;
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
-				DiscreteEllipticUtility.generateEllipticImage(hds, 0, glueSet, branchIndices);
+				generateEllipticImage(hds, 0, glueSet, branchIndices);
 				crossRatioQuality = getMaxMeanSumCrossRatio(hds, measureExponent);
 				multiRatioQuality = getMaxMeanSumMultiRatio(hds, measureExponent);
-				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, 1E-9);
+				tau = calculateHalfPeriodRatio(hds, 1E-9);
 				circleRadiusQuality = getMaxMeanSumCircumRadius(hds);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -166,99 +166,8 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			logString += circleRadiusQuality[0] + "\t";
 			logString += circleRadiusQuality[1] + "\t";
 			logString += circleRadiusQuality[2];
-			writeErrorLine(logString);
+			writeData(logString);
 		}
 	}
-	
-	public static double electrostaticEnergy(CoHDS hds) {
-		double E = 0.0; 
-		for (CoVertex v : hds.getVertices()) {
-			double[] vPos = v.P;
-			Pn.dehomogenize(vPos, vPos);
-			for (CoVertex w : hds.getVertices()) {
-				if (v == w) continue;
-				double[] wPos = w.P;
-				Pn.dehomogenize(wPos, wPos);
-				double[] dir = Rn.subtract(null, vPos, wPos);
-				double dsq = Rn.innerProduct(dir, dir);
-				if (dsq == 0) continue;
-				E += 1 / dsq;
-			}
-		}
-		return E;
-	}
-	
-	public static double[] getMaxMeanSumCrossRatio(CoHDS hds, double exp) {
-		double rMax = 0.0;
-		double rSum = 0.0;
-		for (CoEdge e : hds.getPositiveEdges()) {
-			double q = getLengthCrossRatio(e);
-			double qfun = (q + 1/q)/2 - 1;
-			qfun = Math.pow(qfun, exp);
-			rMax = Math.max(rMax, qfun);
-			rSum += qfun;
-		}
-		return new double[] {rMax, rSum / hds.numFaces(), rSum};
-	}
-	
-	public static double[] getMaxMeanSumMultiRatio(CoHDS hds, double exp) {
-		double rMax = 0.0;
-		double rSum = 0.0;
-		for (CoFace f : hds.getFaces()) {
-			double q = getLengthMultiRatio(f);
-			double qfun = (q + 1/q)/2 - 1;
-			qfun = Math.pow(qfun, exp);
-			rMax = Math.max(rMax, qfun);
-			rSum += qfun;
-		}
-		return new double[] {rMax, rSum / hds.numFaces(), rSum};
-	}
-
-	public static double[] getMaxMeanSumCircumRadius(CoHDS hds) {
-		double rMax = 0.0;
-		double rSum = 0.0;
-		for (CoFace f : hds.getFaces()) {
-			double rad = getTextureCircumCircleRadius(f);
-			rMax = Math.max(rMax, rad);
-			rSum += rad;
-		}
-		return new double[] {rMax, rSum / hds.numFaces(), rSum};
-	}
-	
-	
-	public static double getTextureCircumCircleRadius(CoFace f) {
-		CoEdge e = f.getBoundaryEdge();
-		double a = e.getTexLength();
-		double b = e.getNextEdge().getTexLength();
-		double c = e.getPreviousEdge().getTexLength();
-		double A = getTextureTriangleArea(f);
-		return a*b*c / A / 4;
-	}
-	
-	public static double getTextureTriangleArea(CoFace f) {
-		CoEdge e = f.getBoundaryEdge();
-		double a = e.getTexLength();
-		double b = e.getNextEdge().getTexLength();
-		double c = e.getPreviousEdge().getTexLength();
-		return sqrt((a+b+c)*(b+c-a)*(c+a-b)*(a+b-c)) / 4;	
-	}
-	
-	
-	private static double getLengthCrossRatio(CoEdge e) {
-		double a = e.getNextEdge().getLength();
-		double b = e.getPreviousEdge().getLength();
-		double c = e.getOppositeEdge().getNextEdge().getLength();
-		double d = e.getOppositeEdge().getPreviousEdge().getLength();
-		return (a * c) / (b * d);
-	}
-	
-	private static double getLengthMultiRatio(CoFace f) {
-		double q = 1.0;
-		for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
-			q *= getLengthCrossRatio(e);
-		}
-		return q;
-	}
-	
 	
 }

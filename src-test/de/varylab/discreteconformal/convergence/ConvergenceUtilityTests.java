@@ -8,7 +8,7 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 
-public class TestConvergenceQuality {
+public class ConvergenceUtilityTests {
 
 	@Test
 	public void testGetTextureCircumRadius() throws Exception {
@@ -24,11 +24,11 @@ public class TestConvergenceQuality {
 		B.T = new double[] {1,0,0,1};
 		C.T = new double[] {0,1,0,1};
 		
-		double r = ConvergenceQuality.getTextureCircumCircleRadius(f);
+		double r = ConvergenceUtility.getTextureCircumCircleRadius(f);
 		Assert.assertEquals(Math.sqrt(2)/2, r, 1E-10);
 		
 		B.T = new double[] {0.5,0.5,0,1};
-		r = ConvergenceQuality.getTextureCircumCircleRadius(f);
+		r = ConvergenceUtility.getTextureCircumCircleRadius(f);
 		Assert.assertEquals(0.5, r, 1E-10);
 	}
 	
@@ -46,11 +46,11 @@ public class TestConvergenceQuality {
 		B.T = new double[] {1,0,0,1};
 		C.T = new double[] {0,1,0,1};
 		
-		double r = ConvergenceQuality.getTextureTriangleArea(f);
+		double r = ConvergenceUtility.getTextureTriangleArea(f);
 		Assert.assertEquals(0.5, r, 1E-10);
 		
 		B.T = new double[] {0.5,0.5,0,1};
-		r = ConvergenceQuality.getTextureTriangleArea(f);
+		r = ConvergenceUtility.getTextureTriangleArea(f);
 		Assert.assertEquals(0.25, r, 1E-10);
 	}
 	

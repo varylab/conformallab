@@ -110,7 +110,7 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 			double argErr = tau.arg() - getExpectedTau().arg();
 			double reErr = tau.re - getExpectedTau().re;
 			double imErr = tau.im - getExpectedTau().im;
-			writeErrorLine(numVerts + "\t" + absDifErr + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + tau.re + "\t" + tau.im + "\t" + EuclideanUnwrapperPETSc.lastGNorm);
+			writeData(numVerts + "\t" + absDifErr + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + tau.re + "\t" + tau.im + "\t" + EuclideanUnwrapperPETSc.lastGNorm);
 			HalfedgeMap map = DataUtility.toHalfedgeMap("map " + i, hds, a, TexturePosition4d.class, Position4d.class, cutInfo);
 			dataList.getData().add(map);
 		}

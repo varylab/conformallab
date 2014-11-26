@@ -150,7 +150,7 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 	}
 	
 	
-	private double[] calculateConformalFactors(CoHDS surface, AdapterSet aSet, CEuclideanApplication app) throws UnwrapException {
+	private synchronized double[] calculateConformalFactors(CoHDS surface, AdapterSet aSet, CEuclideanApplication app) throws UnwrapException {
 		UnwrapUtility.prepareInvariantDataEuclidean(app.getFunctional(), surface, boundaryMode, boundaryQuantMode, aSet);
 		// cones
 		cones = ConesUtility.setUpCones(surface, numCones); 

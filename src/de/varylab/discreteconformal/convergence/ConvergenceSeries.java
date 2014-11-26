@@ -32,7 +32,7 @@ public abstract class ConvergenceSeries {
 	
 	public static enum SeriesMethod {
 		Quality,
-		Random,
+		NumberOfPoints,
 		Subdivision,
 		Noise
 	}
@@ -90,8 +90,8 @@ public abstract class ConvergenceSeries {
 		case Quality:
 			series = new ConvergenceQuality();
 			break;
-		case Random:
-			series = new ConvergenceRandom();
+		case NumberOfPoints:
+			series = new ConvergenceNumberOfPoints();
 			break;
 		case Subdivision:
 			series = new ConvergenceSubdivision();
@@ -134,6 +134,7 @@ public abstract class ConvergenceSeries {
 			dirFile.mkdirs();
 		}
 		series.errorWriter = new FileWriter(errFile);
+		series.writeComment("Args: " + Arrays.toString(args).replace(",", ""));
 		series.writeComment("Series class: " + series.getClass());
 		series.writeComment("Error output file " + errFile);
 		
@@ -227,15 +228,19 @@ public abstract class ConvergenceSeries {
 		return p.parse(args);
 	}
 	
-	protected void writeComment(String comment) throws IOException {
-		writeErrorLine("#### " + comment + " ####");
+	protected synchronized void writeComment(String comment) throws IOException {
+		writeData("#### " + comment + " ####");
 	}
 	
 	
-	protected void writeErrorLine(String line) throws IOException {
+	protected synchronized void writeData(String line) {
 		log.info(line);
-		errorWriter.write(line + "\n");
-		errorWriter.flush();
+		try {
+			errorWriter.write(line + "\n");
+			errorWriter.flush();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 }

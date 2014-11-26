@@ -92,7 +92,7 @@ public class DiscreteEllipticUtility {
 	}
 
 	
-	public static Complex calculateHalfPeriodRatio(CoHDS hds, double tol) {
+	public static Complex calculateHalfPeriodRatio(CoHDS hds, double tol) throws Exception {
 		return calculateHalfPeriodRatio(hds, tol, null);
 	}
 	
@@ -105,17 +105,12 @@ public class DiscreteEllipticUtility {
 	 * @param hds A triangulated torus with vertices on the sphere.
 	 * @return The half-period ratio of the elliptic function
 	 */
-	public static Complex calculateHalfPeriodRatio(CoHDS hds, double tol, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) {
+	public static Complex calculateHalfPeriodRatio(CoHDS hds, double tol, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) throws Exception {
 		Unwrapper unwrapper = new EuclideanUnwrapperPETSc();
 		unwrapper.setGradientTolerance(tol);
 		unwrapper.setMaxIterations(1000);
 		AdapterSet a = new ConformalAdapterSet();
-		try {
-			unwrapper.unwrap(hds, 1, a);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return new Complex();
-		}
+		unwrapper.unwrap(hds, 1, a);
 		CuttingInfo<CoVertex, CoEdge, CoFace> info = unwrapper.getCutInfo();
 		if (cutInfo != null) {
 			cutInfo.cutRoot = info.cutRoot;

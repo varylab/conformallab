@@ -68,7 +68,7 @@ public class ConvergenceNoise extends ConvergenceSeries {
 			double argErr = tau.arg() - getExpectedTau().arg();
 			double reErr = tau.re - getExpectedTau().re;
 			double imErr = tau.im - getExpectedTau().im;
-			writeErrorLine(i + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr);
+			writeData(i + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr);
 		}
 
 	}
