@@ -14,7 +14,7 @@ import de.jtem.halfedgetools.adapter.TypedAdapterSet;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.computationalgeometry.ConvexHull;
-import de.jtem.halfedgetools.algorithm.subdivision.Loop;
+import de.jtem.halfedgetools.algorithm.subdivision.LoopLinear;
 import de.jtem.mfc.field.Complex;
 import de.varylab.conformallab.data.DataIO;
 import de.varylab.conformallab.data.DataUtility;
@@ -38,9 +38,8 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 	private int 
 		maxSubdivision = 0,
 		numExtraPoints = 0;
-	private Loop 
-		loop = new Loop();
-	
+	private LoopLinear
+		loop = new LoopLinear();
 	
 	public ConvergenceSubdivision() {
 	}
