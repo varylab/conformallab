@@ -152,8 +152,8 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		jobQueue = null;
 	private ConformalDataPlugin
 		conformalDataPlugin = null;
-	private UniformizationTextureSpacePlugin
-		textureSpacePlugin = null;
+	private UniformizationDomainPlugin
+		domainPlugin = null;
 	
 	// data section ---------------------
 	private CoHDS
@@ -214,8 +214,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		visualizationPanel = new ShrinkPanel("Visualization"),
 		toolsPanel = new ShrinkPanel("Tools");
 	private SpinnerNumberModel
-		coverMaxDistanceModel = new SpinnerNumberModel(0.9, 0.0, 10000.0, 0.01),
-		coverElementsModel = new SpinnerNumberModel(10000, 0, 100000, 1),
 		customThetaModel = new SpinnerNumberModel(360.0, 0.0, 10000.0, 1.0),
 		customPhiModel = new SpinnerNumberModel(180.0, 0.0, 360.0, 1.0),
 		numConesModel = new SpinnerNumberModel(0, 0, 100, 1),
@@ -223,8 +221,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		maxIterationsModel = new SpinnerNumberModel(150, 1, 10000, 1),
 		snapToleranceExpModel = new SpinnerNumberModel(-5, -20, 1, 1);
 	private JSpinner
-		coverMaxDistanceSpinner = new JSpinner(coverMaxDistanceModel),
-		coverElementsSpinner = new JSpinner(coverElementsModel),
 		customThetaSpinner = new JSpinner(customThetaModel),
 		customPhiSpinner = new JSpinner(customPhiModel),
 		numConesSpinner = new JSpinner(numConesModel),
@@ -280,8 +276,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		customPhiSpinner.addChangeListener(this);
 		circularEdgeChecker.addActionListener(this);
 		moveToCenterButton.addActionListener(this);
-		coverElementsSpinner.addChangeListener(this);
-		coverMaxDistanceSpinner.addChangeListener(this);
 		drawCurvesOnSurface.addActionListener(this);
 		extractCutPreparedButton.addActionListener(this);
 		extractCutPreparedDirectionButton.addActionListener(this);
@@ -371,12 +365,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		if (expert) {
 			visualizationPanel.setLayout(new GridBagLayout());
 			visualizationPanel.removeAll();
-			visualizationPanel.add(new JLabel("Domain"), c1);
-			visualizationPanel.add(domainCombo, c2);
-			visualizationPanel.add(new JLabel("Cover Elements"), c1);
-			visualizationPanel.add(coverElementsSpinner, c2);
-			visualizationPanel.add(new JLabel("Cover Distance"), c1);
-			visualizationPanel.add(coverMaxDistanceSpinner, c2);
 			visualizationPanel.add(drawCurvesOnSurface, c2);
 			visualizationPanel.add(new JLabel("Snap Tolerance Exp"), c1);
 			visualizationPanel.add(snapToleranceExpSpinner, c2);
@@ -500,12 +488,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 				edge.info.phi = Math.toRadians(phiDeg);
 				edge.getOppositeEdge().info.phi = Math.toRadians(phiDeg);
 			}
-		}
-		if (coverElementsSpinner == e.getSource()) {
-			updateUniformization(activeGeometry);
-		}
-		if (coverMaxDistanceSpinner == e.getSource()) {
-			updateUniformization(activeGeometry);
 		}
 	}
 	
@@ -639,8 +621,8 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 	protected void updateUniformizationDirect(TargetGeometry target) {
 		int signature = target.getSignature();
 		AdapterSet aSet = hif.getActiveAdapters();
-		int maxGroupElements = coverElementsModel.getNumber().intValue();
-		double maxDrawDistance = coverMaxDistanceModel.getNumber().doubleValue();
+		int maxGroupElements = domainPlugin.getMaxCoverElements();
+		double maxDrawDistance = domainPlugin.getMaxCoverDistance();
 		boolean drawCurves = drawCurvesOnSurface.isSelected();
 		hif.removeTemporaryGeometry(polygonCurvesRoot);
 		hif.removeTemporaryGeometry(axesCurvesRoot);
@@ -656,9 +638,9 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			axesCurvesRoot.setGeometry(axes);
 			hif.addTemporaryGeometry(axesCurvesRoot);
 		}
-		if (textureSpacePlugin != null) {
+		if (domainPlugin != null) {
 			HyperbolicModel model = vis.getSelectedHyperbolicModel();
-			textureSpacePlugin.createUniformization(surfaceUnwrapped, P, maxGroupElements, maxDrawDistance, model, target);
+			domainPlugin.createUniformization(surfaceUnwrapped, cuttedPolygon, minimalPolygon, canonicalPolygon, oppositePolygon, model, target);
 		}
 	}
 	
@@ -1089,7 +1071,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		vis = c.getPlugin(ConformalVisualizationPlugin.class);
 		jobQueue = c.getPlugin(JobQueuePlugin.class);
 		conformalDataPlugin = c.getPlugin(ConformalDataPlugin.class);
-		textureSpacePlugin = c.getPlugin(UniformizationTextureSpacePlugin.class);
+		domainPlugin = c.getPlugin(UniformizationDomainPlugin.class);
 		SelectionInterface sif = c.getPlugin(SelectionInterface.class);
 		sif.registerChannelName(CHANNEL_BROKEN_TRIANGLES, "Broken Triangles");
 		sif.registerChannelName(CHANNEL_BOUNDARY_CONDITION, "Boundary Conditions");
@@ -1107,7 +1089,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		c.storeProperty(getClass(), "boundaryModeIndex", boundaryModeCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "boundaryQuantModeIndex", boundaryQuantizationCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "numericsMethod", numericsCombo.getSelectedIndex());
-		c.storeProperty(getClass(), "coverRecursion", coverElementsModel.getNumber());
 		c.storeProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected());
 		c.storeProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber());
 		c.storeProperty(getClass(), "maxIterations", maxIterationsModel.getNumber());
@@ -1127,7 +1108,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		expertChecker.setSelected(c.getProperty(getClass(), "expertMode", expertChecker.isSelected()));
 		numConesModel.setValue(c.getProperty(getClass(), "numCones", numConesModel.getNumber().intValue()));
 		numericsCombo.setSelectedIndex(c.getProperty(getClass(), "numericsMethod", numericsCombo.getSelectedIndex()));
-		coverElementsModel.setValue(c.getProperty(getClass(), "coverRecursion", coverElementsModel.getNumber()));
 		useProjectiveTexture.setSelected(c.getProperty(getClass(), "useProjectiveTexture", useProjectiveTexture.isSelected()));
 		toleranceExpModel.setValue(c.getProperty(getClass(), "toleranceExponent", toleranceExpModel.getNumber()));
 		maxIterationsModel.setValue(c.getProperty(getClass(), "maxIterations", maxIterationsModel.getNumber()));

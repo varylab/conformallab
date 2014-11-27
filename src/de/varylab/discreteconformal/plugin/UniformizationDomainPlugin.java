@@ -17,6 +17,13 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JSeparator;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import de.jreality.ui.ColorChooseJButton;
 import de.jreality.ui.ColorChooseJButton.ColorChangedEvent;
@@ -43,10 +50,23 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.uniformization.VisualizationUtility;
 
-public class UniformizationTextureSpacePlugin extends Plugin implements TextureSpacePlugin, ColorChangedListener, ActionListener, HalfedgeListener {
+public class UniformizationDomainPlugin extends Plugin implements TextureSpacePlugin, ColorChangedListener, ActionListener, ChangeListener, HalfedgeListener {
 
 	private HalfedgeInterface
 		hif = null;
+	
+	// active data section
+	private CoHDS 
+		surface = null; 
+	private FundamentalPolygon 
+		Pcut = null, 
+		Pminimal = null, 
+		Pcanonical = null, 
+		Popposite = null; 
+	private HyperbolicModel 
+		model = HyperbolicModel.Poincaré;
+	private TargetGeometry 
+		geometry = TargetGeometry.Euclidean;
 	
 	private ShrinkPanel
 		options = new ShrinkPanel("Uniformization");
@@ -77,7 +97,16 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		vertexCirclesWhiteComponent = new SceneComponent(),
 		vertexCirclesBlackComponent = new SceneComponent();
 	
-	public UniformizationTextureSpacePlugin() {
+	private SpinnerNumberModel
+		coverMaxDistanceModel = new SpinnerNumberModel(0.9, 0.0, 0.8, 0.01),
+		coverElementsModel = new SpinnerNumberModel(1, 0, 10, 1);
+	private JSpinner
+		coverMaxDistanceSpinner = new JSpinner(coverMaxDistanceModel),
+		coverElementsSpinner = new JSpinner(coverElementsModel);
+	private JComboBox<DomainPolygon>
+		domainCombo = new JComboBox<>(DomainPolygon.values());
+	
+	public UniformizationDomainPlugin() {
 		scene.addChild(fundamentalDomainComponent);
 		scene.addChild(triangulationComponent);
 		triangulationComponent.setFilled(false);
@@ -122,6 +151,13 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		options.add(faceCirclesChecker, rc);
 		options.add(vertexCirclesWhiteChecker, rc);
 		options.add(vertexCirclesBlackChecker, rc);
+		options.add(new JSeparator(JSeparator.HORIZONTAL), rc);
+		options.add(new JLabel("Domain"), lc);
+		options.add(domainCombo, rc);
+		options.add(new JLabel("Cover Elements"), lc);
+		options.add(coverElementsSpinner, rc);
+		options.add(new JLabel("Cover Distance"), lc);
+		options.add(coverMaxDistanceSpinner, rc);
 		
 		triangulationChecker.addActionListener(this);
 		triangulationColorButton.addColorChangedListener(this);
@@ -136,6 +172,9 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		faceCirclesChecker.addActionListener(this);
 		vertexCirclesWhiteChecker.addActionListener(this);
 		vertexCirclesBlackChecker.addActionListener(this);
+		domainCombo.addActionListener(this);
+		coverElementsSpinner.addChangeListener(this);
+		coverMaxDistanceSpinner.addChangeListener(this);
 		
 		updateStates();
 	}
@@ -173,6 +212,19 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		if (vertexCirclesBlackChecker == e.getSource()) {
 			updateVertexCircles(hif.get(), hif.getAdapters(), false);
 		}
+		if (domainCombo == e.getSource()) {
+			updateUniformization();
+		}
+	}
+	
+	@Override
+	public void stateChanged(ChangeEvent e) {
+		if (coverElementsSpinner == e.getSource()) {
+			updateUniformization();
+		}	
+		if (coverMaxDistanceSpinner == e.getSource()) {
+			updateUniformization();
+		}
 	}
 	
 	@Override
@@ -180,7 +232,38 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 		updateStates();
 	}
 	
-	public void createUniformization(CoHDS surface, FundamentalPolygon P, int maxElements, double maxDistance, HyperbolicModel model, TargetGeometry geometry) {
+	public void updateUniformization() {
+		if (surface != null) {
+			createUniformization(surface, Pcut, Pminimal, Pcanonical, Popposite, model, geometry);
+		}
+	}
+	
+	public void createUniformization(
+		CoHDS surface, 
+		FundamentalPolygon Pcut,
+		FundamentalPolygon Pminimal,
+		FundamentalPolygon Pcanonical,
+		FundamentalPolygon Popposite,
+		HyperbolicModel model, 
+		TargetGeometry geometry
+	) {
+		this.surface = surface;
+		this.Pcut = Pcut;
+		this.Pminimal = Pminimal;
+		this.Pcanonical = Pcanonical;
+		this.Popposite = Popposite;
+		this.model = model;
+		this.geometry = geometry;
+		int maxElements = coverElementsModel.getNumber().intValue();
+		double maxDistance = coverMaxDistanceModel.getNumber().doubleValue();
+		DomainPolygon p = (DomainPolygon) domainCombo.getSelectedItem();
+		FundamentalPolygon P = null;
+		switch (p) {
+			case Minimal: P = Pminimal; break;
+			case Canonical: P = Pminimal; break;
+			case Opposite: P = Pcanonical; break;
+			default: P = Pcut; break;
+		}
 		Path2D axesPath = new Path2D.Float();
 		Path2D polyPath = new Path2D.Float();
 		Path2D triangulationPath = new Path2D.Float();
@@ -317,6 +400,11 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 	
 	
 	public void reset() {
+		surface = null;
+		Pcut = null;
+		Pminimal = null;
+		Pcanonical = null;
+		Popposite = null;
 		boundaryComponent.setVisible(false);
 		triangulationComponent.setShape(null);
 		axesComponent.setShape(null);
@@ -362,10 +450,32 @@ public class UniformizationTextureSpacePlugin extends Plugin implements TextureS
 	}
 	
 	@Override
+	public void storeStates(Controller c) throws Exception {
+		super.storeStates(c);
+		c.storeProperty(getClass(), "coverElements", coverElementsModel.getNumber());
+		c.storeProperty(getClass(), "coverDistance", coverMaxDistanceModel.getNumber());
+	}
+	
+	@Override
+	public void restoreStates(Controller c) throws Exception {
+		super.restoreStates(c);
+		coverElementsModel.setValue(c.getProperty(getClass(), "coverElements", coverElementsModel.getNumber()));
+		coverMaxDistanceModel.setValue(c.getProperty(getClass(), "coverDistance", coverMaxDistanceModel.getNumber()));
+	}
+	
+	@Override
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
 		hif.addHalfedgeListener(this);
+	}
+	
+	public int getMaxCoverElements() {
+		return coverElementsModel.getNumber().intValue();
+	}
+	
+	public double getMaxCoverDistance() {
+		return coverMaxDistanceModel.getNumber().doubleValue();
 	}
 
 }

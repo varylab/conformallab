@@ -48,7 +48,7 @@ import de.varylab.discreteconformal.plugin.QuasiIsothermicPlugin;
 import de.varylab.discreteconformal.plugin.SphericalEqualizerPlugin;
 import de.varylab.discreteconformal.plugin.SphericalNormalizationPlugin;
 import de.varylab.discreteconformal.plugin.TextureSpaceViewer3D;
-import de.varylab.discreteconformal.plugin.UniformizationTextureSpacePlugin;
+import de.varylab.discreteconformal.plugin.UniformizationDomainPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.AddConeOfRevolutionCommand;
 import de.varylab.discreteconformal.plugin.algorithm.ContractShortEdges;
 import de.varylab.discreteconformal.plugin.algorithm.CutAndGlueConformalDomain;
@@ -100,7 +100,7 @@ public class ConformalLab implements Runnable {
 		s.add(new MapToConeCommand());
 		s.add(new AddConeOfRevolutionCommand());
 		s.add(new ContractShortEdges());
-		s.add(new UniformizationTextureSpacePlugin());
+		s.add(new UniformizationDomainPlugin());
 		s.add(new DiscreteConformalEquivalencemMeasure());
 		s.add(new SphericalNormalizationPlugin());
 		return s;
