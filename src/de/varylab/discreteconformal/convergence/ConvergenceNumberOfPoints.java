@@ -97,7 +97,7 @@ public class ConvergenceNumberOfPoints extends ConvergenceSeries {
 						crossRatioQuality = ConvergenceUtility.getMaxMeanSumCrossRatio(hds, 1);
 						multiRatioQuality = ConvergenceUtility.getMaxMeanSumMultiRatio(hds, 1);
 						tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, 1E-9);
-						circleRadiusQuality = ConvergenceUtility.getMaxMeanSumCircumRadius(hds);
+						circleRadiusQuality = ConvergenceUtility.getMaxMeanSumScaleInvariantCircumRadius(hds);
 					} catch (Exception e) {
 						log.warning(e.getMessage());
 						return;

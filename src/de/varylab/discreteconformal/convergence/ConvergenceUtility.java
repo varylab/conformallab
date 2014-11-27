@@ -55,11 +55,12 @@ public class ConvergenceUtility {
 		return new double[] {rMax, rSum / hds.numFaces(), rSum};
 	}
 
-	public static double[] getMaxMeanSumCircumRadius(CoHDS hds) {
+	public static double[] getMaxMeanSumScaleInvariantCircumRadius(CoHDS hds) {
+		double sqrtA = Math.sqrt(getTextureTriangleAreaSum(hds));
 		double rMax = 0.0;
 		double rSum = 0.0;
 		for (CoFace f : hds.getFaces()) {
-			double rad = getTextureCircumCircleRadius(f);
+			double rad = getTextureCircumCircleRadius(f) / sqrtA;
 			rMax = Math.max(rMax, rad);
 			rSum += rad;
 		}
@@ -67,7 +68,7 @@ public class ConvergenceUtility {
 	}
 	
 	
-	public static double getTextureCircumCircleRadius(CoFace f) {
+	static double getTextureCircumCircleRadius(CoFace f) {
 		CoEdge e = f.getBoundaryEdge();
 		double a = e.getTexLength();
 		double b = e.getNextEdge().getTexLength();
@@ -76,7 +77,7 @@ public class ConvergenceUtility {
 		return a*b*c / A / 4;
 	}
 	
-	public static double getTextureTriangleArea(CoFace f) {
+	static double getTextureTriangleArea(CoFace f) {
 		CoEdge e = f.getBoundaryEdge();
 		double a = e.getTexLength();
 		double b = e.getNextEdge().getTexLength();
@@ -84,8 +85,16 @@ public class ConvergenceUtility {
 		return sqrt((a+b+c)*(b+c-a)*(c+a-b)*(a+b-c)) / 4;	
 	}
 	
+	static double getTextureTriangleAreaSum(CoHDS hds) {
+		double A = 0.0;
+		for (CoFace f : hds.getFaces()) {
+			A += getTextureTriangleArea(f);
+		}
+		return A;
+	}
 	
-	private static double getLengthCrossRatio(CoEdge e) {
+	
+	static double getLengthCrossRatio(CoEdge e) {
 		double a = e.getNextEdge().getLength();
 		double b = e.getPreviousEdge().getLength();
 		double c = e.getOppositeEdge().getNextEdge().getLength();
@@ -93,7 +102,7 @@ public class ConvergenceUtility {
 		return (a * c) / (b * d);
 	}
 	
-	private static double getLengthMultiRatio(CoFace f) {
+	static double getLengthMultiRatio(CoFace f) {
 		double q = 1.0;
 		for (CoEdge e : HalfEdgeUtils.boundaryEdges(f)) {
 			q *= getLengthCrossRatio(e);

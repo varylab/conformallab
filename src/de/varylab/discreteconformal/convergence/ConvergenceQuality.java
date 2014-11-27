@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.convergence;
 
-import static de.varylab.discreteconformal.convergence.ConvergenceUtility.getMaxMeanSumCircumRadius;
+import static de.varylab.discreteconformal.convergence.ConvergenceUtility.getMaxMeanSumScaleInvariantCircumRadius;
 import static de.varylab.discreteconformal.convergence.ConvergenceUtility.getMaxMeanSumCrossRatio;
 import static de.varylab.discreteconformal.convergence.ConvergenceUtility.getMaxMeanSumMultiRatio;
 import static de.varylab.discreteconformal.util.DiscreteEllipticUtility.calculateHalfPeriodRatio;
@@ -145,7 +145,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 				crossRatioQuality = getMaxMeanSumCrossRatio(hds, measureExponent);
 				multiRatioQuality = getMaxMeanSumMultiRatio(hds, measureExponent);
 				tau = calculateHalfPeriodRatio(hds, 1E-9);
-				circleRadiusQuality = getMaxMeanSumCircumRadius(hds);
+				circleRadiusQuality = getMaxMeanSumScaleInvariantCircumRadius(hds);
 			} catch (Exception e) {
 				e.printStackTrace();
 				continue;
