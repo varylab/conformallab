@@ -23,23 +23,17 @@ import static javax.swing.JOptionPane.showMessageDialog;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -47,8 +41,6 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
@@ -59,13 +51,9 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import de.jreality.geometry.Primitives;
-import de.jreality.math.FactoredMatrix;
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
-import de.jreality.math.P2;
-import de.jreality.math.P3;
 import de.jreality.math.Pn;
-import de.jreality.math.Rn;
 import de.jreality.plugin.JRViewer;
 import de.jreality.plugin.basic.ViewShrinkPanelPlugin;
 import de.jreality.plugin.job.Job;
@@ -84,7 +72,6 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
-import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -98,8 +85,6 @@ import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.jtem.jrworkspace.plugin.sidecontainer.widget.ShrinkPanel;
 import de.jtem.mfc.field.Complex;
-import de.varylab.discreteconformal.adapter.ConeMapAdapter;
-import de.varylab.discreteconformal.adapter.CylinderMapAdapter;
 import de.varylab.discreteconformal.functional.EuclideanFunctional;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
@@ -119,7 +104,6 @@ import de.varylab.discreteconformal.uniformization.CanonicalFormUtility;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility;
 import de.varylab.discreteconformal.uniformization.FundamentalVertex;
-import de.varylab.discreteconformal.uniformization.SurfaceCurveUtility;
 import de.varylab.discreteconformal.unwrapper.BoundaryMode;
 import de.varylab.discreteconformal.unwrapper.EuclideanLayout;
 import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
@@ -129,7 +113,6 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
-import de.varylab.discreteconformal.util.CuttingUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin 
@@ -194,8 +177,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		unwrapBtn = new JButton("Unwrap"),
 		doLayoutButton = new JButton("Recalculate Layout"),
 		extractCutPreparedButton = new JButton("Extract Cut-Prepared"),
-		extractCutPreparedDirectionButton = new JButton("Cut along line"),
-		mapToConeButton = new JButton("Create cone adapter"),
 		resetSurfaceButton = new JButton("Reset Surface");
 	private JComboBox<DomainPolygon>
 		domainCombo = new JComboBox<>(DomainPolygon.values());
@@ -207,7 +188,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		customNodePanel = new ShrinkPanel("Selected Nodes"),
 		boundaryPanel = new ShrinkPanel("Boundary"),
 		coneConfigPanel = new ShrinkPanel("Cones"),
-		visualizationPanel = new ShrinkPanel("Visualization"),
 		toolsPanel = new ShrinkPanel("Tools");
 	private SpinnerNumberModel
 		customThetaModel = new SpinnerNumberModel(360.0, 0.0, 10000.0, 1.0),
@@ -230,9 +210,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		useCustomThetaChecker = new JCheckBox("Theta"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
 		drawCurvesOnSurface = new JCheckBox("Draw Curves On Surface");
-	private JRadioButton
-		cutXDirectionRadio = new JRadioButton("X"),
-		cutYDirectionRadio = new JRadioButton("Y", true);
 	private JComboBox<String>
 		numericsCombo = new JComboBox<String>(new String[] {"Petsc/Tao Numerics", "Java/MTJ Numerics"});
 	private JComboBox<QuantizationMode>
@@ -274,8 +251,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		moveToCenterButton.addActionListener(this);
 		drawCurvesOnSurface.addActionListener(this);
 		extractCutPreparedButton.addActionListener(this);
-		extractCutPreparedDirectionButton.addActionListener(this);
-		mapToConeButton.addActionListener(this);
 		resetSurfaceButton.addActionListener(this);
 		doLayoutButton.addActionListener(this);
 		unwrapBtn.addActionListener(this);
@@ -359,27 +334,12 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		shrinkPanel.add(customNodePanel, c2);
 		c2.weighty = 0.0;
 		if (expert) {
-			visualizationPanel.setLayout(new GridBagLayout());
-			visualizationPanel.removeAll();
-			visualizationPanel.add(drawCurvesOnSurface, c2);
-			visualizationPanel.add(new JLabel("Snap Tolerance Exp"), c1);
-			visualizationPanel.add(snapToleranceExpSpinner, c2);
-			visualizationPanel.add(extractCutPreparedButton, c2);
-			JPanel cutPanel = new JPanel();
-			cutPanel.setLayout(new FlowLayout());
-			cutPanel.add(cutXDirectionRadio);
-			cutPanel.add(cutYDirectionRadio);
-			cutPanel.add(extractCutPreparedDirectionButton);
-			visualizationPanel.add(cutPanel, c2);
-			visualizationPanel.add(mapToConeButton,c2);
-			shrinkPanel.add(visualizationPanel, c2);
-			ButtonGroup directionGroup = new ButtonGroup();
-			directionGroup.add(cutXDirectionRadio);
-			directionGroup.add(cutYDirectionRadio);
-		}
-		if (expert) {
 			toolsPanel.setLayout(new GridBagLayout());
 			toolsPanel.removeAll();
+			toolsPanel.add(drawCurvesOnSurface, c2);
+			toolsPanel.add(new JLabel("Snap Tolerance Exp"), c1);
+			toolsPanel.add(snapToleranceExpSpinner, c2);
+			toolsPanel.add(extractCutPreparedButton, c2);
 			toolsPanel.add(moveToCenterButton, c2);
 			toolsPanel.setShrinked(true);
 			shrinkPanel.add(toolsPanel, c2);
@@ -800,179 +760,9 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			l.set(intersected);
 			l.setSelection(pathSelection);
 		}
-		if (extractCutPreparedDirectionButton == s) {
-			cutOrthogonalToPeriod();
-		}
-		if (mapToConeButton == s) {
-			CoEdge ce = cutInfo.edgeCutMap.keySet().iterator().next();
-			CoEdge opce = cutInfo.edgeCutMap.get(ce);
-			mapToCone(ce, opce); 
-		}
 		if (resetSurfaceButton == s && surface != null) {
 			hif.set(surface);
 		}
-	}
-
-
-	private void mapToCone(CoEdge ce, CoEdge opce) {
-		AdapterSet a = hif.getAdapters();
-		CoVertex 
-			v1 = ce.getStartVertex(), 
-			v2 = ce.getTargetVertex(),
-			w1 = opce.getTargetVertex(),
-			w2 = opce.getStartVertex();
-		System.out.println(v1 + "->" + w1);
-		System.out.println(v2 + "->" + w2);
-		double[]
-				p1 = P2.projectP3ToP2(null, a.getD(TexturePosition4d.class, v1)),
-				p2 = P2.projectP3ToP2(null, a.getD(TexturePosition4d.class, v2)),
-				q1 = P2.projectP3ToP2(null, a.getD(TexturePosition4d.class, w1)),
-				q2 = P2.projectP3ToP2(null, a.getD(TexturePosition4d.class, w2));
-		
-		FactoredMatrix M = new FactoredMatrix(P3.makeDirectIsometryFromFrames(null, v1.T, Rn.subtract(null, v2.T, v1.T), new double[]{0,0,1,0}, w1.T, Rn.subtract(null, w2.T, w1.T), new double[]{0,0,1,0}, Pn.EUCLIDEAN));
-		if(M.getRotationAngle() == 0) {
-			int direction = 0;
-			double[] t = M.getTranslation();
-			if(Math.abs(t[0]) < 1E-8) {
-				direction = 1;
-			} else if(Math.abs(t[1]) < 1E-8) {
-				direction = 0;
-			} else {
-				Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
-				JOptionPane.showMessageDialog(w, "Texture does not seem to be periodic in horizontal or vertical direction.");
-				return;
-			}
-			double dist = Math.abs(t[direction]);
-			CylinderMapAdapter cma = hif.getAdapters().query(CylinderMapAdapter.class);
-			if(cma == null) {
-				cma = new CylinderMapAdapter(v1, direction, dist);
-				hif.addAdapter(cma, false);
-			} else {
-				cma.initialize(v1,direction,dist);
-			}
-		} else {
-			double[] origin = Pn.dehomogenize(null, P2.pointFromLines(null, 
-					perpendicularBisector(p1, q1),
-					perpendicularBisector(p2, q2)
-					));
-			double period = getRotationAngle(p1,q1,origin);
-			ConeMapAdapter coneAdapter = hif.getAdapters().query(ConeMapAdapter.class);	
-			if(coneAdapter == null) {
-				coneAdapter = new ConeMapAdapter(origin, period);
-				hif.addAdapter(coneAdapter, false);
-			} else {
-				coneAdapter.initialize(origin, period);
-			}
-		}
-	}
-
-
-	private double getRotationAngle(double[] p, double[] q, double[] o) {
-		p = Pn.dehomogenize(null, p);
-		q = Pn.dehomogenize(null, q);
-		o = Pn.dehomogenize(null, o);
-		double[] v1 = Rn.subtract(null, p, o);
-		double[] v2 = Rn.subtract(null, q, o);
-		double alphaP = Math.atan2(v1[1], v1[0]);
-		double alphaQ = Math.atan2(v2[1], v2[0]);
-		return alphaQ - alphaP;
-	}
-
-
-	private double[] perpendicularBisector(double[] p,	double[] q) {
-		p = Pn.dehomogenize(null, p);
-		q = Pn.dehomogenize(null, q);
-		double[] midpoint = Rn.linearCombination(null, 0.5, p, 0.5, q);
-		double[] v = Rn.subtract(null, p, q);
-		return P2.lineFromPoints(null, midpoint, new double[]{-v[1],v[0],0});
-	}
-
-
-	private void cutOrthogonalToPeriod() {
-		AdapterSet a = hif.getAdapters();
-		TypedSelection<CoVertex> vSet = hif.getSelection().getVertices(surfaceUnwrapped);
-		if (vSet.isEmpty()) {
-			Window w = SwingUtilities.getWindowAncestor(shrinkPanel);
-			JOptionPane.showMessageDialog(w, "Please select vertices:\n - one vertex to define direction cut\n - two to define cut along line");
-			return;
-		}
-		
-		Set<CoVertex> roots = cutInfo.getCopies(cutInfo.cutRoot);
-		Iterator<CoVertex> it = roots.iterator();
-		CoVertex v1 = it.next(), v2 = it.next();
-
-		Iterator<CoVertex> selectedIterator = vSet.iterator();;
-		CoVertex refVertex = selectedIterator.next();
-		double[][] segment = new double[2][];
-		
-		double[] direction = getPeriodDirection(v1, v2);
-		segment[0] = Pn.dehomogenize(null, P2.projectP3ToP2(null, refVertex.T));
-		if (cutXDirectionRadio.isSelected()) {
-			segment[1] = new double[]{direction[0], direction[1],0.0};
-		} else if (cutYDirectionRadio.isSelected()) {
-			segment[1] = new double[]{-direction[1], direction[0], 0.0};
-		}
-		double[] cutline = P2.lineFromPoints(null, segment[0], segment[1]);
-		int signature = activeGeometry.getSignature();
-		CoHDS intersected = copySurface(surfaceUnwrapped);
-		for(CoVertex v : intersected.getVertices()) {
-			System.arraycopy(surfaceUnwrapped.getVertex(v.getIndex()).T, 0, v.T, 0, 4);
-		}
-		
-		double snapTolerance = Math.pow(10, snapToleranceExpModel.getNumber().intValue());
-		Set<CoVertex> newVertices = new HashSet<>();
-		try {
-			SurfaceCurveUtility.createIntersectionVertices(segment, false, intersected, surfaceUnwrapped, cutInfo, snapTolerance, signature, newVertices);
-		} catch (Exception ex) {
-			ex.printStackTrace(System.out);
-			return;
-		}
-		Triangulator.triangulateByCuttingCorners(intersected, a);
-		
-		Selection pathSelection = new Selection();
-		pathSelection.addAll(newVertices);
-		
-		LinkedList<CoEdge> newCut = selectCutPath(intersected, newVertices,	pathSelection);
-		
-		HalfedgeLayer l = hif.createLayer("Cut And Glued");
-		hif.activateLayer(l);
-		CuttingInfo<CoVertex, CoEdge, CoFace> newCutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
-		CuttingUtility.cutAlongPath(newCut, newCutInfo);
-		LinkedList<CoEdge> cutEdges = new LinkedList<CoEdge>(newCutInfo.edgeCutMap.values());
-		Collections.sort(cutEdges, new CutDirectionComparator(segment[1]));
-		
-		Set<CoVertex> leftSideOfCut = new HashSet<CoVertex>();
-		Set<CoVertex> rightSideOfCut = new HashSet<CoVertex>();
-		for (CoEdge e: new LinkedList<CoEdge>(cutEdges)) {
-			double startValue = Rn.innerProduct(segment[1], P2.projectP3ToP2(null, Pn.dehomogenize(null, e.getStartVertex().T)));
-			double targetValue = Rn.innerProduct(segment[1], P2.projectP3ToP2(null, Pn.dehomogenize(null, e.getTargetVertex().T))); 
-			if(e.getLeftFace() != null) {
-				cutEdges.remove(e);
-			} else if(startValue < targetValue) {
-				rightSideOfCut.add(e.getStartVertex());
-				rightSideOfCut.add(e.getTargetVertex());
-				cutEdges.remove(e);
-			} else {
-				leftSideOfCut.add(e.getStartVertex());
-				leftSideOfCut.add(e.getTargetVertex());
-			}
-		}
-
-		double d = Rn.innerProduct(cutline, segment[0]);
-		for(CoVertex v : intersected.getVertices()) {
-			if(leftSideOfCut.contains(v)) {
-				continue;
-			}
-			if( rightSideOfCut.contains(v) ||
-				Rn.innerProduct(cutline, Pn.dehomogenize(null, P2.projectP3ToP2(null, v.T))) < d 
-			){
-				pathSelection.add(v);
-				Rn.add(v.T, v.T, Rn.times(null, -v.T[3], direction));
-			}
-		}
-		
-		l.set(intersected);
-		l.setSelection(pathSelection);
 	}
 
 	public static LinkedList<CoEdge> selectCutPath(CoHDS intersected,	Set<CoVertex> newVertices, Selection pathSelection) {
@@ -987,14 +777,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 	}
 
 
-	private double[] getPeriodDirection(CoVertex v1, CoVertex v2) {
-		double[] 
-				t1 = Pn.dehomogenize(null, v1.T), 
-				t2 = Pn.dehomogenize(null, v2.T);
-		double[] d = Rn.subtract(null, t2, t1);
-		return new double[]{d[0], d[1], 0.0, 0.0};
-	}
-	
 	private FundamentalPolygon getActiveFundamentalPoygon() {
 		DomainPolygon domain = (DomainPolygon)domainCombo.getSelectedItem();
 		switch (domain) {
@@ -1086,7 +868,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		c.storeProperty(getClass(), "maxIterations", maxIterationsModel.getNumber());
 		c.storeProperty(getClass(), "boundaryPanelShrinked", boundaryPanel.isShrinked());	
 		c.storeProperty(getClass(), "conesPanelShrinked", coneConfigPanel.isShrinked());	
-		c.storeProperty(getClass(), "visualizationPanelShrinked", visualizationPanel.isShrinked());	
 		c.storeProperty(getClass(), "modelPanelShrinked", toolsPanel.isShrinked());	
 		c.storeProperty(getClass(), "customVertexPanelShrinked", customNodePanel.isShrinked());
 		c.storeProperty(getClass(), "domainModeIndex", domainCombo.getSelectedIndex());
@@ -1108,7 +889,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		boundaryQuantizationCombo.setSelectedIndex(c.getProperty(getClass(), "boundaryQuantModeIndex", boundaryQuantizationCombo.getSelectedIndex()));
 		boundaryPanel.setShrinked(c.getProperty(getClass(), "boundaryPanelShrinked", true));
 		coneConfigPanel.setShrinked(c.getProperty(getClass(), "conesPanelShrinked", true));
-		visualizationPanel.setShrinked(c.getProperty(getClass(), "visualizationPanelShrinked", true));
 		toolsPanel.setShrinked(c.getProperty(getClass(), "modelPanelShrinked", true));
 		customNodePanel.setShrinked(c.getProperty(getClass(), "customVertexPanelShrinked", customNodePanel.isShrinked()));
 		domainCombo.setSelectedIndex(c.getProperty(getClass(), "domainModeIndex", domainCombo.getSelectedIndex()));
@@ -1132,35 +912,4 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		this.cutInfo = cutInfo;
 	}
 
-	private class CutDirectionComparator implements Comparator<CoEdge> {
-		private double[] v = new double[]{1.0,0.0};
-		public CutDirectionComparator(double[] v) {
-			this.v = v;
-		}
-		
-		@Override
-		public int compare(CoEdge e1, CoEdge e2) {
-			double[] s1 = Pn.dehomogenize(null, P2.projectP3ToP2(null, e1.getStartVertex().T));
-			double[] t1 = Pn.dehomogenize(null, P2.projectP3ToP2(null, e1.getTargetVertex().T));
-			double[] s2 = Pn.dehomogenize(null, P2.projectP3ToP2(null, e2.getStartVertex().T));
-			double[] t2 = Pn.dehomogenize(null, P2.projectP3ToP2(null, e2.getTargetVertex().T));
-			double[] d1 = Rn.subtract(null, t1, s1);
-			double[] d2 = Rn.subtract(null, t2, s2);
-			if(Rn.innerProduct(v, d1) < 0) {
-				if(Rn.innerProduct(v, d2) > 0) {
-					return -1; // e1 points down and e2 up
-				} else { // both point down 
-					return -Double.compare(Rn.innerProduct(v, s1), Rn.innerProduct(v, s2));
-				}
-			} else if(Rn.innerProduct(v, d1) > 0) {
-				if(Rn.innerProduct(v, d2) < 0) {
-					return 1;
-				} else {
-					return Double.compare(Rn.innerProduct(v, s1), Rn.innerProduct(v, s2));
-				}
-			} else {
-				return 0;
-			}
-		}
-	}
 }
