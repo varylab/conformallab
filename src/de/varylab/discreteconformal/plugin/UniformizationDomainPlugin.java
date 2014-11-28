@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.plugin;
 
+import static de.varylab.discreteconformal.plugin.TargetGeometry.Hyperbolic;
 import static java.awt.BasicStroke.CAP_SQUARE;
 import static java.awt.BasicStroke.JOIN_ROUND;
 import static java.lang.Double.isNaN;
@@ -8,10 +9,12 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
+import java.awt.geom.Rectangle2D;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -25,6 +28,9 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import de.jreality.plugin.job.AbstractJob;
+import de.jreality.plugin.job.Job;
+import de.jreality.plugin.job.JobQueuePlugin;
 import de.jreality.ui.ColorChooseJButton;
 import de.jreality.ui.ColorChooseJButton.ColorChangedEvent;
 import de.jreality.ui.ColorChooseJButton.ColorChangedListener;
@@ -42,11 +48,13 @@ import de.jtem.halfedgetools.plugin.HalfedgeListener;
 import de.jtem.halfedgetools.plugin.texturespace.TextureSpacePlugin;
 import de.jtem.halfedgetools.util.GeometryUtility;
 import de.jtem.java2d.SceneComponent;
+import de.jtem.java2dx.Line2DDouble;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.Plugin;
 import de.jtem.jrworkspace.plugin.sidecontainer.widget.ShrinkPanel;
 import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.heds.CoHDS;
+import de.varylab.discreteconformal.heds.adapter.CoTexturePositionAdapter;
 import de.varylab.discreteconformal.uniformization.FundamentalPolygon;
 import de.varylab.discreteconformal.uniformization.VisualizationUtility;
 
@@ -54,6 +62,8 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 
 	private HalfedgeInterface
 		hif = null;
+	private JobQueuePlugin
+		jobQueue = null;
 	
 	// active data section
 	private CoHDS 
@@ -63,10 +73,8 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		Pminimal = null, 
 		Pcanonical = null, 
 		Popposite = null; 
-	private HyperbolicModel 
-		model = HyperbolicModel.Poincaré;
-	private TargetGeometry 
-		geometry = TargetGeometry.Euclidean;
+	private boolean
+		uniformizationUpdateRequested = false;
 	
 	private ShrinkPanel
 		options = new ShrinkPanel("Uniformization");
@@ -96,15 +104,23 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		faceCirclesComponent = new SceneComponent(),
 		vertexCirclesWhiteComponent = new SceneComponent(),
 		vertexCirclesBlackComponent = new SceneComponent();
+	private Shape
+		unitCircleShape = new Ellipse2D.Double(-1,-1,2,2);
 	
 	private SpinnerNumberModel
-		coverMaxDistanceModel = new SpinnerNumberModel(0.9, 0.0, 0.8, 0.01),
-		coverElementsModel = new SpinnerNumberModel(1, 0, 10, 1);
+		coverMaxDistanceModel = new SpinnerNumberModel(0.8, 0.0, 100.0, 0.01),
+		coverElementsModel = new SpinnerNumberModel(1, 0, 1000, 1);
 	private JSpinner
 		coverMaxDistanceSpinner = new JSpinner(coverMaxDistanceModel),
 		coverElementsSpinner = new JSpinner(coverElementsModel);
 	private JComboBox<DomainPolygon>
 		domainCombo = new JComboBox<>(DomainPolygon.values());
+	private JComboBox<HyperbolicModel>
+		modelCombo = new JComboBox<>(HyperbolicModel.values());
+	private JComboBox<InterpolationMethod>
+		interpolationCombo = new JComboBox<>(InterpolationMethod.values());
+	private JComboBox<TargetGeometry>
+		geometryCombo = new JComboBox<>(TargetGeometry.values());
 	
 	public UniformizationDomainPlugin() {
 		scene.addChild(fundamentalDomainComponent);
@@ -121,7 +137,6 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		polygonComponent.setStroke(new BasicStroke(2));
 		scene.addChild(boundaryComponent);
 		boundaryComponent.setOutlinePaint(Color.BLACK);
-		boundaryComponent.setShape(new Ellipse2D.Double(-1,-1,2,2));
 		boundaryComponent.setFilled(false);
 		boundaryComponent.setStroke(new BasicStroke(2));
 		boundaryComponent.setVisible(false);
@@ -152,13 +167,21 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		options.add(vertexCirclesWhiteChecker, rc);
 		options.add(vertexCirclesBlackChecker, rc);
 		options.add(new JSeparator(JSeparator.HORIZONTAL), rc);
+		options.add(new JLabel("Geometry"), lc);
+		options.add(geometryCombo, rc);
 		options.add(new JLabel("Domain"), lc);
 		options.add(domainCombo, rc);
 		options.add(new JLabel("Cover Elements"), lc);
 		options.add(coverElementsSpinner, rc);
 		options.add(new JLabel("Cover Distance"), lc);
 		options.add(coverMaxDistanceSpinner, rc);
+		options.add(new JLabel("Hyperbolic Model"), lc);
+		options.add(modelCombo, rc);
+		options.add(new JLabel("Interpolation"), lc);
+		options.add(interpolationCombo, rc);
 		
+		interpolationCombo.addActionListener(this);
+		modelCombo.addActionListener(this);
 		triangulationChecker.addActionListener(this);
 		triangulationColorButton.addColorChangedListener(this);
 		polygonChecker.addActionListener(this);
@@ -175,6 +198,7 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		domainCombo.addActionListener(this);
 		coverElementsSpinner.addChangeListener(this);
 		coverMaxDistanceSpinner.addChangeListener(this);
+		geometryCombo.addActionListener(this);
 		
 		updateStates();
 	}
@@ -215,6 +239,18 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		if (domainCombo == e.getSource()) {
 			updateUniformization();
 		}
+		if (geometryCombo == e.getSource()) {
+			if (getSelectedGeometry() == TargetGeometry.Euclidean) {
+				setHyperbolicModel(HyperbolicModel.Klein);
+			}
+			updateGeometry(true);
+		}
+		if (modelCombo == e.getSource()) {
+			updateGeometry(true);
+		}
+		if (interpolationCombo == e.getSource()) {
+			updateGeometry(true);
+		}
 	}
 	
 	@Override
@@ -226,6 +262,52 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 			updateUniformization();
 		}
 	}
+
+	private void updateGeometry(boolean updateUniformization) {
+		updateAdapters();
+		uniformizationUpdateRequested = updateUniformization;
+		hif.updateNoUndo();
+	}
+
+
+	public void updateAdapters() {
+		CoTexturePositionAdapter texturePositionAdapter = hif.getAdapters().query(CoTexturePositionAdapter.class);
+		texturePositionAdapter.setInterpolationMethod(getSelectedInterpolation());
+		texturePositionAdapter.setModel(getSelectedHyperbolicModel());
+	}
+	
+	
+	public InterpolationMethod getSelectedInterpolation() {
+		return (InterpolationMethod)interpolationCombo.getSelectedItem();
+	}
+
+	public HyperbolicModel getSelectedHyperbolicModel() {
+		return (HyperbolicModel)modelCombo.getSelectedItem();
+	}
+	
+	public void setHyperbolicModel(HyperbolicModel model) {
+		try {
+			modelCombo.removeActionListener(this);
+			modelCombo.setSelectedItem(model);
+		} finally {
+			modelCombo.addActionListener(this);
+		}
+		updateAdapters();
+	}
+	
+	public void setGeometry(TargetGeometry geometry) {
+		try {
+			geometryCombo.removeActionListener(this);
+			geometryCombo.setSelectedItem(geometry);
+		} finally {
+			geometryCombo.addActionListener(this);
+		}
+		updateAdapters();
+	}
+	
+	public TargetGeometry getSelectedGeometry() {
+		return (TargetGeometry)geometryCombo.getSelectedItem();
+	}
 	
 	@Override
 	public void colorChanged(ColorChangedEvent cce) {
@@ -234,7 +316,17 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 	
 	public void updateUniformization() {
 		if (surface != null) {
-			createUniformization(surface, Pcut, Pminimal, Pcanonical, Popposite, model, geometry);
+			Job j = new AbstractJob() {
+				@Override
+				public String getJobName() {
+					return "Uniformization Visualization";
+				}
+				@Override
+				protected void executeJob() throws Exception {
+					createUniformization(surface, Pcut, Pminimal, Pcanonical, Popposite);		
+				}
+			};
+			jobQueue.queueJob(j);
 		}
 	}
 	
@@ -243,25 +335,23 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		FundamentalPolygon Pcut,
 		FundamentalPolygon Pminimal,
 		FundamentalPolygon Pcanonical,
-		FundamentalPolygon Popposite,
-		HyperbolicModel model, 
-		TargetGeometry geometry
+		FundamentalPolygon Popposite
 	) {
 		this.surface = surface;
 		this.Pcut = Pcut;
 		this.Pminimal = Pminimal;
 		this.Pcanonical = Pcanonical;
 		this.Popposite = Popposite;
-		this.model = model;
-		this.geometry = geometry;
+		HyperbolicModel model = getSelectedHyperbolicModel();
+		TargetGeometry geometry = getSelectedGeometry();
 		int maxElements = coverElementsModel.getNumber().intValue();
 		double maxDistance = coverMaxDistanceModel.getNumber().doubleValue();
 		DomainPolygon p = (DomainPolygon) domainCombo.getSelectedItem();
 		FundamentalPolygon P = null;
 		switch (p) {
 			case Minimal: P = Pminimal; break;
-			case Canonical: P = Pminimal; break;
-			case Opposite: P = Pcanonical; break;
+			case Canonical: P = Pcanonical; break;
+			case Opposite: P = Popposite; break;
 			default: P = Pcut; break;
 		}
 		Path2D axesPath = new Path2D.Float();
@@ -290,7 +380,7 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		axesComponent.setShape(axesPath);
 		polygonComponent.setShape(polyPath);
 		fundamentalDomainComponent.setShape(fundamentalDomainPath);
-		boundaryComponent.setVisible(geometry == TargetGeometry.Hyperbolic);
+		boundaryComponent.setVisible(geometry == Hyperbolic);
 		
 		if (geometry == TargetGeometry.Automatic) {
 			geometry = TargetGeometry.calculateTargetGeometry(surface);
@@ -301,6 +391,17 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 			axesComponent.setVisible(false);
 			break;
 		default:
+			break;
+		}
+		switch (model) {
+		case Halfplane:
+			Rectangle2D bbox = polyPath.getBounds2D();
+			bbox = bbox.createUnion(axesPath.getBounds2D());
+			Shape realLineShape = new Line2DDouble(1.2*bbox.getMinX(), 0, 1.2*bbox.getMaxX(), 0); 
+			boundaryComponent.setShape(realLineShape);
+			break;
+		default:
+			boundaryComponent.setShape(unitCircleShape);
 			break;
 		}
 		
@@ -431,7 +532,12 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 
 	@Override
 	public void dataChanged(HalfedgeLayer layer) {
-		reset();
+		if (uniformizationUpdateRequested) {
+			updateUniformization();
+			uniformizationUpdateRequested = false;
+		} else {
+			reset();
+		}
 		updateFaceCircles(layer.get(), layer.getEffectiveAdapters());
 		updateVertexCircles(hif.get(), hif.getAdapters(), true);
 		updateVertexCircles(hif.get(), hif.getAdapters(), false);
@@ -468,6 +574,7 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
 		hif.addHalfedgeListener(this);
+		jobQueue = c.getPlugin(JobQueuePlugin.class);
 	}
 	
 	public int getMaxCoverElements() {

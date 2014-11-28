@@ -9,8 +9,7 @@ import static de.jreality.shader.CommonAttributes.SPHERES_DRAW;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.jtem.halfedge.util.HalfEdgeUtils.boundaryVertices;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Klein;
-import static de.varylab.discreteconformal.adapter.HyperbolicModel.Poincaré;
-import static de.varylab.discreteconformal.plugin.InterpolationMethod.Incircle;
+import static de.varylab.discreteconformal.plugin.TargetGeometry.Hyperbolic;
 import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.createIntersectionVertices;
 import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.createSurfaceCurves;
 import static de.varylab.discreteconformal.unwrapper.BoundaryMode.ReadIsometricAngles;
@@ -101,7 +100,6 @@ import de.jtem.jrworkspace.plugin.sidecontainer.widget.ShrinkPanel;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.adapter.ConeMapAdapter;
 import de.varylab.discreteconformal.adapter.CylinderMapAdapter;
-import de.varylab.discreteconformal.adapter.HyperbolicModel;
 import de.varylab.discreteconformal.functional.EuclideanFunctional;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
@@ -146,8 +144,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 	// plug-in section ------------------ 
 	private HalfedgeInterface
 		hif = null;
-	private ConformalVisualizationPlugin
-		vis = null;
 	private JobQueuePlugin
 		jobQueue = null;
 	private ConformalDataPlugin
@@ -493,13 +489,10 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 	
 	protected void updateGeometry(TargetGeometry target) {
 		if (surfaceUnwrapped == null) return;
-		HyperbolicModel model = Klein;
-		if (target == TargetGeometry.Hyperbolic) {
-			model = Poincaré;
+		if (target != Hyperbolic) {
+			domainPlugin.setHyperbolicModel(Klein);
 		}
-		vis.setHyperbolicModel(model, false);
 		hif.addLayerAdapter(metricErrorAdapter, false);
-		vis.setInterpolation(Incircle, false);
 		hif.set(surfaceUnwrapped);
 	}
 	
@@ -639,8 +632,8 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			hif.addTemporaryGeometry(axesCurvesRoot);
 		}
 		if (domainPlugin != null) {
-			HyperbolicModel model = vis.getSelectedHyperbolicModel();
-			domainPlugin.createUniformization(surfaceUnwrapped, cuttedPolygon, minimalPolygon, canonicalPolygon, oppositePolygon, model, target);
+			domainPlugin.setGeometry(target);
+			domainPlugin.createUniformization(surfaceUnwrapped, cuttedPolygon, minimalPolygon, canonicalPolygon, oppositePolygon);
 		}
 	}
 	
@@ -1068,7 +1061,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		hif.addAdapter(positionAdapter, true);
 		hif.addAdapter(texturePositionAdapter, true);
 		hif.addSelectionListener(this);
-		vis = c.getPlugin(ConformalVisualizationPlugin.class);
 		jobQueue = c.getPlugin(JobQueuePlugin.class);
 		conformalDataPlugin = c.getPlugin(ConformalDataPlugin.class);
 		domainPlugin = c.getPlugin(UniformizationDomainPlugin.class);

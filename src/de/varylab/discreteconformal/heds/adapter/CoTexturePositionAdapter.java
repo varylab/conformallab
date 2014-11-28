@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.heds.adapter;
 
+import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jtem.halfedgetools.adapter.AbstractTypedAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
@@ -58,10 +59,12 @@ public class CoTexturePositionAdapter extends AbstractTypedAdapter<CoVertex, CoE
 				switch (model) {
 					case Klein:
 						return t;
-					case Poincaré: 
+					case Poincaré:
 					default:
+						Pn.normalize(t, t, Pn.HYPERBOLIC);
 						return new double[] {t[0], t[1], 0.0, t[3] + 1};
 					case Halfplane:
+						Pn.normalize(t, t, Pn.HYPERBOLIC);
 						return new double[] {t[1], 1, 0.0, t[3] - t[0]};
 				}
 		}

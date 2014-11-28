@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.uniformization;
 
 import static de.jreality.math.Pn.HYPERBOLIC;
+import static de.jreality.math.Pn.normalize;
 import static de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility.context;
 import static java.awt.geom.Arc2D.OPEN;
 import static java.lang.Math.cos;
@@ -86,10 +87,9 @@ public class VisualizationUtility {
 				T.transformVector(s);
 				T.transformVector(t);
 				T.transformVector(m);
-				Pn.normalize(m, m, Pn.HYPERBOLIC);
-				double[] p1 = dehomogenize(s, model);
-				double[] p2 = dehomogenize(t, model);
-				double[] p3 = dehomogenize(m, model);
+				double[] p1 = dehomogenizeToModel(s, model);
+				double[] p2 = dehomogenizeToModel(t, model);
+				double[] p3 = dehomogenizeToModel(m, model);
 				Shape arc = createArc(p1, p2, p3, model);
 				triangulationPath.append(arc, false);
 				if (HalfEdgeUtils.isBoundaryEdge(e)) {
@@ -173,10 +173,9 @@ public class VisualizationUtility {
 		double[] f1 = {ev.get(0, i1) / ev.get(3, i1), ev.get(1, i1) / ev.get(3, i1), 0, 1.0};
 		double[] f2 = {ev.get(0, i2) / ev.get(3, i2), ev.get(1, i2) / ev.get(3, i2), 0, 1.0};
 		double[] f3 = Rn.linearCombination(null, 0.5, f1, 0.5, f2);
-		Pn.normalize(f3, f3, HYPERBOLIC);
-		double[] p1 = dehomogenize(f1, HyperbolicModel.Klein);
-		double[] p2 = dehomogenize(f2, HyperbolicModel.Klein);
-		double[] p3 = dehomogenize(f3, model);
+		double[] p1 = dehomogenizeToModel(f1, model);
+		double[] p2 = dehomogenizeToModel(f2, model);
+		double[] p3 = dehomogenizeToModel(f3, model);
 		if (segmentsOUT != null) {
 			segmentsOUT.add(new double[][] {p1, p2});
 		}
@@ -194,13 +193,12 @@ public class VisualizationUtility {
 			BigDecimal[] p1a = e.startPosition; 
 			BigDecimal[] p2a = e.nextEdge.startPosition;
 			BigDecimal[] p3a = RnBig.linearCombination(null, BIG_HALF, p1a, BIG_HALF, p2a, FundamentalPolygonUtility.context);
-			PnBig.normalize(p3a, p3a, HYPERBOLIC, context);
 			double[] p1ad = RnBig.toDouble(null, p1a);
 			double[] p2ad = RnBig.toDouble(null, p2a);
 			double[] p3ad = RnBig.toDouble(null, p3a);
-			double[] p1 = dehomogenize(p1ad, model);
-			double[] p2 = dehomogenize(p2ad, model);
-			double[] p3 = dehomogenize(p3ad, model);
+			double[] p1 = dehomogenizeToModel(p1ad, model);
+			double[] p2 = dehomogenizeToModel(p2ad, model);
+			double[] p3 = dehomogenizeToModel(p3ad, model);
 			if (segmentsOUT != null) {
 				segmentsOUT.add(new double[][] {p1, p2});
 			}
@@ -273,7 +271,8 @@ public class VisualizationUtility {
 	}
 	
 	
-	protected static double[] dehomogenize(double[] p, HyperbolicModel model) {
+	protected static double[] dehomogenizeToModel(double[] p, HyperbolicModel model) {
+		normalize(p, p, Pn.HYPERBOLIC);
 		double[] result = null;
 		switch (model) {
 		case Klein:

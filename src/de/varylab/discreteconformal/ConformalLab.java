@@ -36,7 +36,6 @@ import de.varylab.discreteconformal.datasource.CylinderEdgesDataSource;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.logging.LoggingUtility;
 import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
-import de.varylab.discreteconformal.plugin.ConformalVisualizationPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
 import de.varylab.discreteconformal.plugin.HyperIdealPlugin;
@@ -90,7 +89,6 @@ public class ConformalLab implements Runnable {
 		s.add(new KoebePolyhedronPlugin());
 		s.add(new PrimitivesGenerator());
 		s.add(new ProjectiveTexturePlugin());
-		s.add(new ConformalVisualizationPlugin());
 		s.add(new TextureSpaceViewer3D());
 		s.add(new IndexMedialGraph());
 		s.add(new ConformalDataPlugin());
