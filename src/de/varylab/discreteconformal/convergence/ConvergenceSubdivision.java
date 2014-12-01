@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import joptsimple.OptionSpecBuilder;
 import de.jreality.math.Pn;
 import de.jtem.halfedgetools.adapter.TypedAdapterSet;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
@@ -38,6 +39,8 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 	private int 
 		maxSubdivision = 0,
 		numExtraPoints = 0;
+	private boolean
+		useConvexHull = true;
 	private LoopLinear
 		loop = new LoopLinear();
 	
@@ -48,9 +51,11 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 	protected OptionSet configureAndParseOptions(OptionParser p, String... args) {
 		OptionSpec<Integer> mixSubdivisionSpec = p.accepts("max", "Maxmum number of subdivision steps").withRequiredArg().ofType(Integer.class).defaultsTo(0);
 		OptionSpec<Integer> numExtraPointsSpec = p.accepts("extra", "Number of extra points").withRequiredArg().ofType(Integer.class).defaultsTo(0);
+		OptionSpecBuilder noConvexHullSpec = p.accepts("noConvexHull", "Skip creating convex hull");
 		OptionSet result = p.parse(args);
 		maxSubdivision = mixSubdivisionSpec.value(result);
 		numExtraPoints = numExtraPointsSpec.value(result);
+		useConvexHull = !result.has(noConvexHullSpec);
 		return result;
 	}
 	
@@ -68,6 +73,7 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 				v.P = new double[] {vertices[vi][0], vertices[vi][1], vertices[vi][2], 1.0};
 				Pn.setToLength(v.P, v.P, 1, Pn.EUCLIDEAN);
 			}
+			CoVertex cutRoot = hds.getVertex(branchIndices[0]);
 			// extra points
 			for (int j = 0; j < numExtraPoints; j++) {
 				CoVertex v = hds.addNewVertex();
@@ -98,8 +104,8 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
-				DiscreteEllipticUtility.generateEllipticImage(hds, 0, glueSet, branchIndices);
-				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, 1E-9, cutInfo);
+				DiscreteEllipticUtility.generateEllipticImage(hds, 0, useConvexHull, glueSet, branchIndices);
+				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, cutRoot, 1E-9, cutInfo);
 			} catch (Exception e) {
 				System.out.println("Error: " + e.getMessage());
 				continue;

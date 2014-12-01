@@ -11,9 +11,11 @@ import joptsimple.OptionSpec;
 import de.jreality.math.Pn;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class ConvergenceNoise extends ConvergenceSeries {
 
@@ -48,11 +50,13 @@ public class ConvergenceNoise extends ConvergenceSeries {
 				v.P = vPos.clone();
 				Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 			}
+			CoVertex cutRoot = hds.getVertex(branchIndices[0]);
 			Complex tau = null;
+			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
-				DiscreteEllipticUtility.generateEllipticImage(hds, 0, glueSet, branchIndices);
-				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, 1E-8);
+				DiscreteEllipticUtility.generateEllipticImage(hds, 0, true, glueSet, branchIndices);
+				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, cutRoot, 1E-8, cutInfo);
 			} catch (Exception e) {
 				e.printStackTrace();
 				continue;

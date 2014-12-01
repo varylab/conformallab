@@ -91,11 +91,6 @@ public class DiscreteEllipticUtility {
 		return tau;
 	}
 
-	
-	public static Complex calculateHalfPeriodRatio(CoHDS hds, double tol) throws Exception {
-		return calculateHalfPeriodRatio(hds, tol, null);
-	}
-	
 	/**
 	 * Calculates the half-period ratio for a given doubly covered branched sphere.
 	 * First the elliptic function is approximated by calculating a conformally flat
@@ -105,11 +100,12 @@ public class DiscreteEllipticUtility {
 	 * @param hds A triangulated torus with vertices on the sphere.
 	 * @return The half-period ratio of the elliptic function
 	 */
-	public static Complex calculateHalfPeriodRatio(CoHDS hds, double tol, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) throws Exception {
+	public static Complex calculateHalfPeriodRatio(CoHDS hds, CoVertex cutRoot, double tol, CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo) throws Exception {
 		Unwrapper unwrapper = new EuclideanUnwrapperPETSc();
 		unwrapper.setGradientTolerance(tol);
 		unwrapper.setMaxIterations(1000);
 		AdapterSet a = new ConformalAdapterSet();
+		unwrapper.setCutRoot(cutRoot);
 		unwrapper.unwrap(hds, 1, a);
 		CuttingInfo<CoVertex, CoEdge, CoFace> info = unwrapper.getCutInfo();
 		if (cutInfo != null) {
@@ -129,10 +125,14 @@ public class DiscreteEllipticUtility {
 	 * The second sheet of the double cover is a copy of the first one glued along paths between each two branch points.
 	 * @param hds The initial vertices of the image, must have at least four vertices. The edges and faces are ignored 
 	 * @param numExtraPoints Number of extra random points added to the initial points
+	 * @param useConvexHull use edges of convex hull or 
 	 * @param glueEdges The edges 
 	 * @param branchVertices
 	 */
-	public static void generateEllipticImage(CoHDS hds, int numExtraPoints, Set<CoEdge> glueEdges, int... branchVertices) {
+	public static void generateEllipticImage(CoHDS hds, int numExtraPoints, boolean useConvexHull, Set<CoEdge> glueEdges, int... branchVertices) {
+		if (numExtraPoints > 0 && !useConvexHull) {
+			throw new IllegalArgumentException("cannot add extra points if useConvexHull is false");
+		}
 		if (hds.numVertices() < 4) {
 			throw new RuntimeException("No branch point set in generateEllipticCurve()");
 		} 
@@ -143,12 +143,6 @@ public class DiscreteEllipticUtility {
 		CoVertex v2 = hds.getVertex(branchVertices[1]);
 		CoVertex v3 = hds.getVertex(branchVertices[2]);
 		CoVertex v4 = hds.getVertex(branchVertices[3]);
-		for (CoEdge e : new HashSet<CoEdge>(hds.getEdges())) {
-			hds.removeEdge(e);
-		}
-		for (CoFace f : new HashSet<CoFace>(hds.getFaces())) {
-			hds.removeFace(f);
-		}
 	
 		// additional points
 		Random rnd = new Random();
@@ -157,14 +151,23 @@ public class DiscreteEllipticUtility {
 			v.P = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian(), 1.0};
 		}
 		
-		// on the sphere
+		// project to sphere
 		for (CoVertex v : hds.getVertices()) {
 			Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 		}
 		
-		// convex hull
-		ConformalAdapterSet a = new ConformalAdapterSet();
-		ConvexHull.convexHull(hds, a, 1E-8);
+		// create new triangulation via convex hull
+		if (useConvexHull) {
+			ConformalAdapterSet a = new ConformalAdapterSet();
+			for (CoEdge e : new HashSet<CoEdge>(hds.getEdges())) {
+				hds.removeEdge(e);
+			}
+			for (CoFace f : new HashSet<CoFace>(hds.getFaces())) {
+				hds.removeFace(f);
+			}
+			ConvexHull.convexHull(hds, a, 1E-8);
+		}
+		
 		int vOffset = hds.numVertices();
 		int eOffset = hds.numEdges();
 		HalfEdgeUtils.copy(hds, hds);

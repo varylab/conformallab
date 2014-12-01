@@ -17,9 +17,11 @@ import joptsimple.OptionSpec;
 import de.jreality.math.Pn;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.SphereUtility;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class ConvergenceQuality extends ConvergenceSeries {
 
@@ -114,6 +116,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 				v.P = new double[] {vertices[vi][0], vertices[vi][1], vertices[vi][2], 1.0};
 				Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 			}
+			CoVertex cutRoot = hds.getVertex(branchIndices[0]);
 			// extra points
 			for (int j = 0; j < numExtraPoints; j++) {
 				CoVertex v = hds.addNewVertex();
@@ -139,12 +142,13 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			double[] crossRatioQuality = null;
 			double[] multiRatioQuality = null;
 			double[] circleRadiusQuality = null;
+			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
-				generateEllipticImage(hds, 0, glueSet, branchIndices);
+				generateEllipticImage(hds, 0, true, glueSet, branchIndices);
 				crossRatioQuality = getMaxMeanSumCrossRatio(hds, measureExponent);
 				multiRatioQuality = getMaxMeanSumMultiRatio(hds, measureExponent);
-				tau = calculateHalfPeriodRatio(hds, 1E-9);
+				tau = calculateHalfPeriodRatio(hds, cutRoot, 1E-9, cutInfo);
 				circleRadiusQuality = getMaxMeanSumScaleInvariantCircumRadius(hds);
 			} catch (Exception e) {
 				e.printStackTrace();

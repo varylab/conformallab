@@ -13,10 +13,12 @@ import joptsimple.OptionSpec;
 import de.jreality.math.Pn;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.SphereUtility;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class ConvergenceNumberOfPoints extends ConvergenceSeries {
 
@@ -71,6 +73,7 @@ public class ConvergenceNumberOfPoints extends ConvergenceSeries {
 						v.P = new double[] {vertices[vi][0], vertices[vi][1], vertices[vi][2], 1.0};
 						Pn.setToLength(v.P, v.P, 1, Pn.EUCLIDEAN);
 					}
+					CoVertex cutRoot = hds.getVertex(branchIndices[0]);
 					// additional points
 					int numVertices = rnd.nextInt(maxExtraPoints - minExtraPoints) + minExtraPoints;
 					for (int j = 0; j < numVertices; j++) {
@@ -91,12 +94,13 @@ public class ConvergenceNumberOfPoints extends ConvergenceSeries {
 					double[] crossRatioQuality = null;
 					double[] multiRatioQuality = null;
 					double[] circleRadiusQuality = null;
+					CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
 					try {
 						Set<CoEdge> glueSet = new HashSet<CoEdge>();
-						DiscreteEllipticUtility.generateEllipticImage(hds, 0, glueSet, branchIndices);
+						DiscreteEllipticUtility.generateEllipticImage(hds, 0, true, glueSet, branchIndices);
 						crossRatioQuality = ConvergenceUtility.getMaxMeanSumCrossRatio(hds, 1);
 						multiRatioQuality = ConvergenceUtility.getMaxMeanSumMultiRatio(hds, 1);
-						tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, 1E-9);
+						tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, cutRoot, 1E-9, cutInfo);
 						circleRadiusQuality = ConvergenceUtility.getMaxMeanSumScaleInvariantCircumRadius(hds);
 					} catch (Exception e) {
 						log.warning(e.getMessage());
