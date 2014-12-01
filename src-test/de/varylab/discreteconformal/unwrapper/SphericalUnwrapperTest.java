@@ -148,7 +148,7 @@ public class SphericalUnwrapperTest {
 		
 		SphericalUnwrapper uw = new SphericalUnwrapper();
 		uw.setMaxIterations(200);
-		uw.setGradientTolerance(1E-12);
+		uw.setGradientTolerance(1E-10);
 		Vector u = uw.calculateConformalFactors(opt);
 		
 		Vector G = new DenseVector(u.size());
@@ -171,7 +171,7 @@ public class SphericalUnwrapperTest {
 		
 		SphericalUnwrapper uw = new SphericalUnwrapper();
 		uw.setMaxIterations(200);
-		uw.setGradientTolerance(1E-12);
+		uw.setGradientTolerance(1E-7);
 		Vector u = uw.calculateConformalFactors(opt);
 		
 		Vector G = new DenseVector(u.size());
