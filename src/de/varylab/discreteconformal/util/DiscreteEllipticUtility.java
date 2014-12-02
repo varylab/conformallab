@@ -3,10 +3,12 @@ package de.varylab.discreteconformal.util;
 import static java.lang.Math.abs;
 import static java.lang.Math.signum;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -128,8 +130,9 @@ public class DiscreteEllipticUtility {
 	 * @param useConvexHull use edges of convex hull or 
 	 * @param glueEdges The edges 
 	 * @param branchVertices
+	 * @param returns the vertex-wise hyperelliptic involution. At branch points one of the vertices is removed.
 	 */
-	public static void generateEllipticImage(CoHDS hds, int numExtraPoints, boolean useConvexHull, Set<CoEdge> glueEdges, int... branchVertices) {
+	public static Map<CoVertex, CoVertex> generateEllipticImage(CoHDS hds, int numExtraPoints, boolean useConvexHull, Set<CoEdge> glueEdges, int... branchVertices) {
 		if (numExtraPoints > 0 && !useConvexHull) {
 			throw new IllegalArgumentException("cannot add extra points if useConvexHull is false");
 		}
@@ -171,9 +174,12 @@ public class DiscreteEllipticUtility {
 		int vOffset = hds.numVertices();
 		int eOffset = hds.numEdges();
 		HalfEdgeUtils.copy(hds, hds);
+		Map<CoVertex, CoVertex> involution = new HashMap<>();
 		for (int i = 0; i < vOffset; i++) {
 			CoVertex v = hds.getVertex(i);
 			CoVertex vc = hds.getVertex(vOffset + i); 
+			involution.put(v, vc);
+			involution.put(vc, v);
 			double[] p = v.P;
 			vc.P = p.clone();
 		}
@@ -202,6 +208,7 @@ public class DiscreteEllipticUtility {
 		glueEdges.addAll(path2);
 		glueEdges.addAll(path1c);
 		glueEdges.addAll(path2c);
+		return involution;
 	}
 	
 	public static Complex calculateHalfPeriodRatioMathLink(double[] p1, double[] p2, double[] p3, double[] p4, KernelLink l) throws MathLinkException {

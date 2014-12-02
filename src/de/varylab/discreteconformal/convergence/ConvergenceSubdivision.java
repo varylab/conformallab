@@ -1,7 +1,10 @@
 package de.varylab.discreteconformal.convergence;
 
+import static de.varylab.discreteconformal.util.DiscreteEllipticUtility.generateEllipticImage;
+
 import java.io.FileOutputStream;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -73,7 +76,6 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 				v.P = new double[] {vertices[vi][0], vertices[vi][1], vertices[vi][2], 1.0};
 				Pn.setToLength(v.P, v.P, 1, Pn.EUCLIDEAN);
 			}
-			CoVertex cutRoot = hds.getVertex(branchIndices[0]);
 			// extra points
 			for (int j = 0; j < numExtraPoints; j++) {
 				CoVertex v = hds.addNewVertex();
@@ -101,13 +103,15 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 			dataList.getData().add(input);
 			int numVerts = hds.numVertices();
 			Complex tau = null;
+			CoVertex cutRoot = hds.getVertex(branchIndices[0]);
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
-				DiscreteEllipticUtility.generateEllipticImage(hds, 0, useConvexHull, glueSet, branchIndices);
+				Map<CoVertex, CoVertex> involution = generateEllipticImage(hds, 0, useConvexHull, glueSet, branchIndices);
+				if (!cutRoot.isValid()) cutRoot = involution.get(cutRoot);
 				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, cutRoot, 1E-9, cutInfo);
 			} catch (Exception e) {
-				System.out.println("Error: " + e.getMessage());
+				log.log(Level.WARNING, e.getMessage(), e);
 				continue;
 			}
 			double absErr = tau.abs() - getExpectedTau().abs();

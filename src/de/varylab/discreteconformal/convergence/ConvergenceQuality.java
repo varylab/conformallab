@@ -8,6 +8,7 @@ import static de.varylab.discreteconformal.util.DiscreteEllipticUtility.generate
 
 import java.io.FileWriter;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -116,7 +117,6 @@ public class ConvergenceQuality extends ConvergenceSeries {
 				v.P = new double[] {vertices[vi][0], vertices[vi][1], vertices[vi][2], 1.0};
 				Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 			}
-			CoVertex cutRoot = hds.getVertex(branchIndices[0]);
 			// extra points
 			for (int j = 0; j < numExtraPoints; j++) {
 				CoVertex v = hds.addNewVertex();
@@ -142,10 +142,12 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			double[] crossRatioQuality = null;
 			double[] multiRatioQuality = null;
 			double[] circleRadiusQuality = null;
+			CoVertex cutRoot = hds.getVertex(branchIndices[0]);
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
-				generateEllipticImage(hds, 0, true, glueSet, branchIndices);
+				Map<CoVertex, CoVertex> involution = generateEllipticImage(hds, 0, true, glueSet, branchIndices);
+				if (!cutRoot.isValid()) cutRoot = involution.get(cutRoot);
 				crossRatioQuality = getMaxMeanSumCrossRatio(hds, measureExponent);
 				multiRatioQuality = getMaxMeanSumMultiRatio(hds, measureExponent);
 				tau = calculateHalfPeriodRatio(hds, cutRoot, 1E-9, cutInfo);

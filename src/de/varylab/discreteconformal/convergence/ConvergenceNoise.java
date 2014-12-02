@@ -1,8 +1,11 @@
 package de.varylab.discreteconformal.convergence;
 
+import static de.varylab.discreteconformal.util.DiscreteEllipticUtility.calculateHalfPeriodRatio;
+import static de.varylab.discreteconformal.util.DiscreteEllipticUtility.generateEllipticImage;
 import static java.lang.Math.signum;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import joptsimple.OptionParser;
@@ -14,7 +17,6 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class ConvergenceNoise extends ConvergenceSeries {
@@ -50,13 +52,14 @@ public class ConvergenceNoise extends ConvergenceSeries {
 				v.P = vPos.clone();
 				Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 			}
-			CoVertex cutRoot = hds.getVertex(branchIndices[0]);
 			Complex tau = null;
+			CoVertex cutRoot = hds.getVertex(branchIndices[0]);
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
-				DiscreteEllipticUtility.generateEllipticImage(hds, 0, true, glueSet, branchIndices);
-				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, cutRoot, 1E-8, cutInfo);
+				Map<CoVertex, CoVertex> involution = generateEllipticImage(hds, 0, true, glueSet, branchIndices);
+				if (!cutRoot.isValid()) cutRoot = involution.get(cutRoot);
+				tau = calculateHalfPeriodRatio(hds, cutRoot, 1E-8, cutInfo);
 			} catch (Exception e) {
 				e.printStackTrace();
 				continue;
