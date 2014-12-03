@@ -28,11 +28,13 @@ public class ConvergenceQuality extends ConvergenceSeries {
 
 	private int 
 		numSamples = 1,
+		minExtraPoints = 0,
 		numExtraPoints = 0,
 		numOptSteps = 0;
 	private boolean 
+		numExtraRand = false,
 		reuse = false,
-		trainoptrand = false,
+		trianoptrand = false,
 		trianopt = false;
 	private double
 		measureExponent = 1.0;
@@ -69,8 +71,10 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		OptionSpec<Double> measureExpSpec = p.accepts("exp", "Measure function exponent").withRequiredArg().ofType(Double.class).defaultsTo(1.0);
 		OptionSpec<Integer> numSamplesSpec = p.accepts("num", "Number of samples").withRequiredArg().ofType(Integer.class).defaultsTo(1);
 		OptionSpec<Integer> numExtraPointsSpec = p.accepts("extra", "Number of extra points").withRequiredArg().ofType(Integer.class).defaultsTo(0);
+		OptionSpec<Integer> minExtraPointsSpec = p.accepts("minextra", "Minimum number of extra points when randomizing").withRequiredArg().ofType(Integer.class).defaultsTo(0);
 		OptionSpec<Integer> optStepsSpec = p.accepts("nopt", "Number of triangulation optimization steps").withRequiredArg().ofType(Integer.class).defaultsTo(1);
 		p.accepts("noptrand", "Randomize optimization steps");
+		p.accepts("extrarand", "Randomize number of extra points");
 		p.accepts("reuse", "Reuse extra points");
 		
 		OptionSet opts = p.parse(args);
@@ -79,7 +83,9 @@ public class ConvergenceQuality extends ConvergenceSeries {
 		numExtraPoints = numExtraPointsSpec.value(opts);
 		reuse = opts.has("reuse");
 		trianopt = opts.has("nopt");
-		trainoptrand = opts.has("noptrand");
+		trianoptrand = opts.has("noptrand");
+		numExtraRand = opts.has("extrarand");
+		minExtraPoints = minExtraPointsSpec.value(opts);
 		numOptSteps = 0;
 		if (trianopt) {
 			numOptSteps = opts.valueOf(optStepsSpec);
@@ -97,16 +103,16 @@ public class ConvergenceQuality extends ConvergenceSeries {
 	@Override
 	protected void perform() throws Exception {
 		writeComment("Measure exponent: " + measureExponent);
-		String description = "index[1]\tdistErr[2]\tabsErr[3]\targErr[4]\treErr[5]\timErr[6]\tre[7]\tim[8]\t";
-		description += "MaxCrossRatio\t";
-		description += "MeanCrossRatio\t";
-		description += "SumCrossRatio\t";
-		description += "MaxMultiRatio\t";
-		description += "MeanMultiRatio\t";
-		description += "SumMultiRatio\t";
-		description += "MaxCircleRadius\t";
-		description += "MeanCircleRadius\t";
-		description += "SumCircleRadius";
+		String description = "index[1]\tnumVertices[2]\tdistErr[3]\tabsErr[4]\targErr[5]\treErr[6]\timErr[7]\tre[8]\tim[9]\t";
+		description += "MaxCrossRatio[10]\t";
+		description += "MeanCrossRatio[11]\t";
+		description += "SumCrossRatio[12]\t";
+		description += "MaxMultiRatio[13]\t";
+		description += "MeanMultiRatio[14]\t";
+		description += "SumMultiRatio[15]\t";
+		description += "MaxCircleRadius[16]\t";
+		description += "MeanCircleRadius[17]\t";
+		description += "SumCircleRadius[18]";
 		writeComment(description);
 		for (int i = 0; i < numSamples; i ++) {
 			if (reuse) rnd.setSeed(123);
@@ -117,8 +123,12 @@ public class ConvergenceQuality extends ConvergenceSeries {
 				v.P = new double[] {vertices[vi][0], vertices[vi][1], vertices[vi][2], 1.0};
 				Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 			}
-			// extra points
-			for (int j = 0; j < numExtraPoints; j++) {
+			// extra points, possibly a random number of points
+			int numExtra = numExtraPoints;
+			if (numExtraRand) {
+				numExtra = rnd.nextInt(numExtraPoints - minExtraPoints) + minExtraPoints;
+			}
+			for (int j = 0; j < numExtra; j++) {
 				CoVertex v = hds.addNewVertex();
 				v.P = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian(), 1.0};
 				Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
@@ -131,7 +141,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 				fixedVertices.add(hds.getVertex(branchIndices[2]));
 				fixedVertices.add(hds.getVertex(branchIndices[3]));
 				int steps = numOptSteps;
-				if (trainoptrand) {
+				if (trianoptrand) {
 					steps = rnd.nextInt(numOptSteps + 1);
 				}
 				SphereUtility.equalizeSphereVertices(hds, fixedVertices, steps, 1E-6);
@@ -144,10 +154,12 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			double[] circleRadiusQuality = null;
 			CoVertex cutRoot = hds.getVertex(branchIndices[0]);
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
+			int numVertices = 0;
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
 				Map<CoVertex, CoVertex> involution = generateEllipticImage(hds, 0, true, glueSet, branchIndices);
 				if (!cutRoot.isValid()) cutRoot = involution.get(cutRoot);
+				numVertices = hds.numVertices();
 				crossRatioQuality = getMaxMeanSumCrossRatio(hds, measureExponent);
 				multiRatioQuality = getMaxMeanSumMultiRatio(hds, measureExponent);
 				tau = calculateHalfPeriodRatio(hds, cutRoot, 1E-9, cutInfo);
@@ -162,7 +174,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			double reErr = tau.re - getExpectedTau().re;
 			double imErr = tau.im - getExpectedTau().im;
 			double distErr = getExpectedTau().minus(tau).abs();
-			String logString = i + "\t" + distErr + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + tau.re + "\t" + tau.im + "\t";
+			String logString = i + "\t" + numVertices + "\t" + distErr + "\t" + absErr + "\t" + argErr + "\t" + reErr + "\t" + imErr + "\t" + tau.re + "\t" + tau.im + "\t";
 			logString += crossRatioQuality[0] + "\t";
 			logString += crossRatioQuality[1] + "\t";
 			logString += crossRatioQuality[2] + "\t";
