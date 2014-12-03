@@ -9,6 +9,7 @@ import static de.jreality.shader.CommonAttributes.SPHERES_DRAW;
 import static de.jreality.shader.CommonAttributes.VERTEX_DRAW;
 import static de.jtem.halfedge.util.HalfEdgeUtils.boundaryVertices;
 import static de.varylab.discreteconformal.adapter.HyperbolicModel.Klein;
+import static de.varylab.discreteconformal.adapter.HyperbolicModel.Poincaré;
 import static de.varylab.discreteconformal.plugin.TargetGeometry.Hyperbolic;
 import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.createIntersectionVertices;
 import static de.varylab.discreteconformal.uniformization.SurfaceCurveUtility.createSurfaceCurves;
@@ -451,6 +452,8 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		if (surfaceUnwrapped == null) return;
 		if (target != Hyperbolic) {
 			domainPlugin.setHyperbolicModel(Klein);
+		} else {
+			domainPlugin.setHyperbolicModel(Poincaré);
 		}
 		hif.addLayerAdapter(metricErrorAdapter, false);
 		hif.set(surfaceUnwrapped);
