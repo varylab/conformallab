@@ -49,6 +49,7 @@ public class DiscreteEllipticUtility {
 		Set<CoVertex> branchSet = cutInfo.getCopies(cutInfo.cutRoot);
 		if (branchSet.size() != 4) {
 			log.warning("domain torus has more than one vertex");
+			return new Complex(0, 0);
 		}
 		Iterator<CoVertex> branchIt = branchSet.iterator();
 		CoVertex v0 = branchIt.next();
