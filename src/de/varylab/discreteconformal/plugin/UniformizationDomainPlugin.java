@@ -558,15 +558,11 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 	@Override
 	public void storeStates(Controller c) throws Exception {
 		super.storeStates(c);
-		c.storeProperty(getClass(), "coverElements", coverElementsModel.getNumber());
-		c.storeProperty(getClass(), "coverDistance", coverMaxDistanceModel.getNumber());
 	}
 	
 	@Override
 	public void restoreStates(Controller c) throws Exception {
 		super.restoreStates(c);
-		coverElementsModel.setValue(c.getProperty(getClass(), "coverElements", coverElementsModel.getNumber()));
-		coverMaxDistanceModel.setValue(c.getProperty(getClass(), "coverDistance", coverMaxDistanceModel.getNumber()));
 	}
 	
 	@Override
