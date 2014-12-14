@@ -119,6 +119,9 @@ public class DiscreteEllipticUtility {
 		return calculateHalfPeriodRatio(info);
 	}
 
+	public static Map<CoVertex, CoVertex> generateEllipticImage(CoHDS hds, int numExtraPoints, Set<CoEdge> glueEdges, int... branchVertices) {
+		return generateEllipticImage(hds, numExtraPoints, true, true, glueEdges, branchVertices);
+	}
 	
 
 	/**
@@ -133,7 +136,7 @@ public class DiscreteEllipticUtility {
 	 * @param branchVertices
 	 * @param returns the vertex-wise hyperelliptic involution. At branch points one of the vertices is removed.
 	 */
-	public static Map<CoVertex, CoVertex> generateEllipticImage(CoHDS hds, int numExtraPoints, boolean useConvexHull, Set<CoEdge> glueEdges, int... branchVertices) {
+	public static Map<CoVertex, CoVertex> generateEllipticImage(CoHDS hds, int numExtraPoints, boolean projectToSphere, boolean useConvexHull, Set<CoEdge> glueEdges, int... branchVertices) {
 		if (numExtraPoints > 0 && !useConvexHull) {
 			throw new IllegalArgumentException("cannot add extra points if useConvexHull is false");
 		}
@@ -156,8 +159,10 @@ public class DiscreteEllipticUtility {
 		}
 		
 		// project to sphere
-		for (CoVertex v : hds.getVertices()) {
-			Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
+		if (projectToSphere) {
+			for (CoVertex v : hds.getVertices()) {
+				Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
+			}
 		}
 		
 		// create new triangulation via convex hull
@@ -204,11 +209,13 @@ public class DiscreteEllipticUtility {
 		SurgeryUtility.cutAndGluePaths(path1, path1c);
 		SurgeryUtility.cutAndGluePaths(path2, path2c);
 		
-		glueEdges.clear();
-		glueEdges.addAll(path1);
-		glueEdges.addAll(path2);
-		glueEdges.addAll(path1c);
-		glueEdges.addAll(path2c);
+		if (glueEdges != null) {
+			glueEdges.clear();
+			glueEdges.addAll(path1);
+			glueEdges.addAll(path2);
+			glueEdges.addAll(path1c);
+			glueEdges.addAll(path2c);
+		}
 		return involution;
 	}
 	

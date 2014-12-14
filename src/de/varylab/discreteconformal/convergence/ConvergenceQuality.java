@@ -157,7 +157,7 @@ public class ConvergenceQuality extends ConvergenceSeries {
 			int numVertices = 0;
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
-				Map<CoVertex, CoVertex> involution = generateEllipticImage(hds, 0, true, glueSet, branchIndices);
+				Map<CoVertex, CoVertex> involution = generateEllipticImage(hds, 0, glueSet, branchIndices);
 				if (!cutRoot.isValid()) cutRoot = involution.get(cutRoot);
 				numVertices = hds.numVertices();
 				crossRatioQuality = getMaxMeanSumCrossRatio(hds, measureExponent);

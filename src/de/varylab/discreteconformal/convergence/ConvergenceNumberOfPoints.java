@@ -103,7 +103,7 @@ public class ConvergenceNumberOfPoints extends ConvergenceSeries {
 					CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
 					try {
 						Set<CoEdge> glueSet = new HashSet<CoEdge>();
-						Map<CoVertex, CoVertex> involution = generateEllipticImage(hds, 0, true, glueSet, branchIndices);
+						Map<CoVertex, CoVertex> involution = generateEllipticImage(hds, 0, glueSet, branchIndices);
 						if (!cutRoot.isValid()) cutRoot = involution.get(cutRoot);
 						crossRatioQuality = getMaxMeanSumCrossRatio(hds, 1);
 						multiRatioQuality = getMaxMeanSumMultiRatio(hds, 1);

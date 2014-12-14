@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.unwrapper;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryEdge;
+import static java.lang.Math.abs;
 import static java.lang.Math.cosh;
 import static java.lang.Math.sinh;
 
@@ -162,7 +163,7 @@ public class HyperbolicLayout {
 			double dAC = lMap.get(ac);
 			double[] C = layoutTriangle(a.T, b.T, alpha, dAB, dBC, dAC);
 			if (C == null) {
-				log.warning("layout at face " + f + " skipped");
+				// solution too inaccurate at this front, try somewhere else
 				continue;
 			}
 			c.T = C;
@@ -202,7 +203,9 @@ public class HyperbolicLayout {
 		mb.getMatrix().transformVector(C);
 		Pn.normalize(C, C, Pn.HYPERBOLIC);
 		double dACcheck = Pn.distanceBetween(A, C, Pn.HYPERBOLIC);
-		if (Math.abs(dACcheck - dAC) > 1E-5) {
+		double check = abs(dACcheck - dAC);
+		if (check > 1E-3) {
+			// solution inaccurate
 			return null;
 		} else {
 			return C;

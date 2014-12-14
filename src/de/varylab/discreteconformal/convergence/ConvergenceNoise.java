@@ -57,7 +57,7 @@ public class ConvergenceNoise extends ConvergenceSeries {
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
-				Map<CoVertex, CoVertex> involution = generateEllipticImage(hds, 0, true, glueSet, branchIndices);
+				Map<CoVertex, CoVertex> involution = generateEllipticImage(hds, 0, glueSet, branchIndices);
 				if (!cutRoot.isValid()) cutRoot = involution.get(cutRoot);
 				tau = calculateHalfPeriodRatio(hds, cutRoot, 1E-8, cutInfo);
 			} catch (Exception e) {

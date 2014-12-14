@@ -107,7 +107,7 @@ public class ConvergenceSubdivision extends ConvergenceSeries {
 			CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
 			try {
 				Set<CoEdge> glueSet = new HashSet<CoEdge>();
-				Map<CoVertex, CoVertex> involution = generateEllipticImage(hds, 0, useConvexHull, glueSet, branchIndices);
+				Map<CoVertex, CoVertex> involution = generateEllipticImage(hds, 0, true, useConvexHull, glueSet, branchIndices);
 				if (!cutRoot.isValid()) cutRoot = involution.get(cutRoot);
 				tau = DiscreteEllipticUtility.calculateHalfPeriodRatio(hds, cutRoot, 1E-9, cutInfo);
 			} catch (Exception e) {
