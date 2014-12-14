@@ -90,11 +90,12 @@ public class HyperbolicLayoutTest {
 		
 		Assert.assertEquals(1.1, dBC, 1E-8);
 		
-		double[] CP = HyperbolicLayout.layoutTriangle(A, B, alpha, dBC, dAC);
+		double[] CP = HyperbolicLayout.layoutTriangle(A, B, alpha, dAB, dBC, dAC);
 		Pn.dehomogenize(C, C);
 		Pn.dehomogenize(CP, CP);
 		Assert.assertArrayEquals(C, CP, 1e-10);
 	}
+	
 	
 	@Test@Ignore
 	public void testDoLayout() {

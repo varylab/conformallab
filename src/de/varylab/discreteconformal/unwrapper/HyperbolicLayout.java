@@ -1,10 +1,8 @@
 package de.varylab.discreteconformal.unwrapper;
 
 import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
-import static java.lang.Math.PI;
-import static java.lang.Math.cos;
+import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryEdge;
 import static java.lang.Math.cosh;
-import static java.lang.Math.sin;
 import static java.lang.Math.sinh;
 
 import java.util.HashMap;
@@ -19,8 +17,8 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import no.uib.cipr.matrix.Vector;
+import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Pn;
-import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.varylab.discreteconformal.adapter.LengthMapWeightAdapter;
 import de.varylab.discreteconformal.functional.ConformalFunctional;
@@ -117,8 +115,8 @@ public class HyperbolicLayout {
 	}
 	
 	public static CoVertex doLayout(CoHDS hds, CoVertex root, Map<CoEdge, Double> lMap) {
-		final Set<CoVertex> visited = new HashSet<CoVertex>(hds.numVertices());
-		final Queue<CoVertex> Qv = new LinkedList<CoVertex>();
+		final Set<CoFace> visitedFaces = new HashSet<CoFace>();
+		final Set<CoVertex> visitedVertices = new HashSet<CoVertex>();
 		final Queue<CoEdge> Qe = new LinkedList<CoEdge>();
 		// start
 		final CoVertex v1;
@@ -139,115 +137,77 @@ public class HyperbolicLayout {
 		final CoEdge e0 = e1.getOppositeEdge();
 		final CoVertex v2 = e0.getTargetVertex();
 		// queued data
-		Qv.offer(v1);
-		Qv.offer(v2);
 		Qe.offer(e1);
 		Qe.offer(e0);
+		visitedVertices.add(v1);
+		visitedVertices.add(v2);
 
 		// vertices
-		Double d = lMap.get(e0);
-		
+		double d = lMap.get(e0);
 		v1.T = new double[] {0, 0, 0, 1};
 		v2.T = new double[] {sinh(d), 0, 0, cosh(d)};
-		Pn.normalize(v2.T, v2.T, Pn.HYPERBOLIC);
 		
-		visited.add(v1);
-		visited.add(v2);
-		
-		while (!Qv.isEmpty() && hds.numVertices() > visited.size()) {
-			final CoVertex v = Qv.poll();
-			final CoEdge inE = Qe.poll();
-			final CoEdge outE = inE.getOppositeEdge();
-			
-			CoEdge e = inE.getNextEdge();
-			while (e != outE) {
-				final CoEdge next = e.getNextEdge();
-				final CoEdge prev = e.getPreviousEdge();
-				final CoVertex aVertex = prev.getStartVertex();
-				final CoVertex bVertex = prev.getTargetVertex();
-				final CoVertex cVertex = e.getTargetVertex();
-
-				Double alpha = next.getAlpha();
-				if (e.getLeftFace() == null) { // a boundary edge
-					alpha = 2*PI - getAngleSum(v);
-					e = e.getOppositeEdge().getNextEdge();
-					continue;
-				}
-				if (!visited.contains(cVertex)) {
-					d = lMap.get(e);
-					double dCheck = lMap.get(next);
-					double[] A = aVertex.T;
-					double[] B = bVertex.T;
-					double[] C = layoutTriangle(A, B, alpha, d, dCheck);
-					if (C != null) {
-						cVertex.T = C;
-						visited.add(cVertex);
-						Qv.offer(cVertex);
-						Qe.offer(e);
-					} else {
-						log.warning("skipped layout of vertex " + cVertex);
-					}
-				}
-				e = e.getOppositeEdge().getNextEdge();
+		while (!Qe.isEmpty()) {
+			final CoEdge ab = Qe.poll();
+			final CoEdge bc = ab.getNextEdge();
+			final CoEdge ac = ab.getPreviousEdge();
+			final CoFace f = ab.getLeftFace();
+			if (visitedFaces.contains(f)) continue;
+			final CoVertex a = ab.getStartVertex();
+			final CoVertex b = ab.getTargetVertex();
+			final CoVertex c = bc.getTargetVertex();
+			final double alpha = ac.getAlpha();
+			double dAB = lMap.get(ab);
+			double dBC = lMap.get(bc);
+			double dAC = lMap.get(ac);
+			double[] C = layoutTriangle(a.T, b.T, alpha, dAB, dBC, dAC);
+			if (C == null) {
+				log.warning("layout at face " + f + " skipped");
+				continue;
+			}
+			c.T = C;
+			visitedFaces.add(f);
+			visitedVertices.add(c);
+			if (!(isBoundaryEdge(bc) || visitedFaces.contains(bc.getRightFace()))) {
+				Qe.offer(bc.getOppositeEdge());
+			}
+			if (!(isBoundaryEdge(ac) || visitedFaces.contains(ac.getRightFace()))) {
+				Qe.offer(ac.getOppositeEdge());
 			}
 		}
 		
-		if (visited.size() != hds.numVertices()) {
-			log.warning("only " + visited.size() + " of " + hds.numVertices() + " vertices have been layed out");
+		if (visitedFaces.size() != hds.numFaces()) {
+			log.warning("only " + visitedFaces.size() + " of " + hds.numFaces() + " faces have been visited");
+		}
+		if (visitedVertices.size() != hds.numVertices()) {
+			log.warning("only " + visitedVertices.size() + " of " + hds.numVertices() + " vertices have been visited");
 		}
 		return v1;
 	}
 	
 	
+	private static double[]
+		ZERO = {0,0,0,1};
 	
-	static double[] layoutTriangle(double[] A, double[] B, double alpha, double d, double dP) {
-		// calculation is in RP2
-		// project to RP2 
-		double[] A3 = {A[0], A[1], A[3]};
-		double[] B3 = {B[0], B[1], B[3]};
-		// polarize
-		double[] AHat = {A[0], A[1], -A[3]};
-		double[] BHat = {B[0], B[1], -B[3]};
-		double[] lAB = Rn.crossProduct(null, A3, B3);
-		normalize(lAB);
-		double[] At = Rn.crossProduct(null, lAB, BHat);
-		normalize(At);
-		double[] AtPerp = Rn.crossProduct(null, AHat, BHat);
-		normalize(AtPerp);
-		double[] Ct = Rn.linearCombination(null, cos(alpha), At, sin(alpha), AtPerp);
-		normalize(Ct);
-		double[] C1 = Rn.linearCombination(null, cosh(d), B3, sinh(d), Ct);
-		normalize(C1);
-		double[] C2 = Rn.linearCombination(null, cosh(d), B3, -sinh(d), Ct);
-		normalize(C2);
-		double d1 = Double.MAX_VALUE;
-		double d2 = Double.MAX_VALUE;
-		try {
-			d1 = Pn.distanceBetween(C1, A3, Pn.HYPERBOLIC);
-		} catch (IllegalArgumentException iae) {}
-		try {
-			d2 = Pn.distanceBetween(C2, A3, Pn.HYPERBOLIC);
-		} catch (IllegalArgumentException iae) {}
-		double dif1 = Math.abs(d1 - dP);
-		double dif2 = Math.abs(d2 - dP);
-		double[] C = dif1 < dif2 ? C1 : C2; 
-		double dif = dif1 < dif2 ? dif1 : dif2;
-		if (dif < 1E-5) {
-			// lift to RP3
-			return new double[] {C[0], C[1], 0, C[2]};
-		} else {
+	/*
+	 * perform hyperbolic stretch rotation
+	 */
+	static double[] layoutTriangle(double[] A, double[] B, double alpha, double dAB, double dBC, double dAC) {
+		MatrixBuilder mb = MatrixBuilder.hyperbolic();
+		mb.translateFromTo(ZERO, B);
+		mb.rotate(alpha, 0, 0, 1);
+		mb.scale((sinh(dBC)/cosh(dBC)) / (sinh(dAB)/cosh(dAB)));
+		mb.translate(B, ZERO);
+		double[] C = A.clone();
+		mb.getMatrix().transformVector(C);
+		Pn.normalize(C, C, Pn.HYPERBOLIC);
+		double dACcheck = Pn.distanceBetween(A, C, Pn.HYPERBOLIC);
+		if (Math.abs(dACcheck - dAC) > 1E-5) {
 			return null;
+		} else {
+			return C;
 		}
 	}
-	
-	
-	
-	
-	private static double[] normalize(double[] p) {
-		Pn.normalize(p, p, Pn.HYPERBOLIC);
-		return p;
-	}
-	
 	
 	/**
 	 * Calculate the angle sum at this vertex. Usually this will be 2PI, but at the boundary

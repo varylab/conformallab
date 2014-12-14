@@ -161,7 +161,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 			double[] t = e.getTargetVertex().T;
 			double lExpected = lMap.get(e);
 			double l = Pn.distanceBetween(s, t, Pn.HYPERBOLIC);
-			Assert.assertEquals(lExpected, l, 1E-7);
+			Assert.assertEquals(lExpected, l, 1E-6);
 		}
 		conformalDataPlugin.addHalfedgeMap("Uniformizing Map", hds, cutInfo);
 		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
