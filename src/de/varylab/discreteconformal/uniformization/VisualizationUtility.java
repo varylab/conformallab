@@ -170,8 +170,8 @@ public class VisualizationUtility {
 		double[] evl = evd.getRealEigenvalues();
 		int i1 = evl[0] > evl[1] ? (evl[0] > evl[2] ? 0 : 2) : (evl[1] > evl[2] ? 1 : 2);
 		int i2 = evl[0] < evl[1] ? (evl[0] < evl[2] ? 0 : 2) : (evl[1] < evl[2] ? 1 : 2);
-		double[] f1 = {ev.get(0, i1) / ev.get(3, i1), ev.get(1, i1) / ev.get(3, i1), 0, 1.0};
-		double[] f2 = {ev.get(0, i2) / ev.get(3, i2), ev.get(1, i2) / ev.get(3, i2), 0, 1.0};
+		double[] f1 = {ev.get(0, i1) / ev.get(3, i1), ev.get(1, i1) / ev.get(3, i1), 0, 1.0 + 1E-10};
+		double[] f2 = {ev.get(0, i2) / ev.get(3, i2), ev.get(1, i2) / ev.get(3, i2), 0, 1.0 + 1E-10};
 		double[] f3 = Rn.linearCombination(null, 0.5, f1, 0.5, f2);
 		double[] p1 = dehomogenizeToModel(f1, model);
 		double[] p2 = dehomogenizeToModel(f2, model);
