@@ -1,12 +1,17 @@
 package de.varylab.discreteconformal.unwrapper;
 
-import java.io.IOException;
-import java.util.Arrays;
+import static java.lang.Math.cosh;
+import static java.lang.Math.sinh;
 
+import java.io.IOException;
+
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import de.jreality.math.MatrixBuilder;
+import de.jreality.math.Pn;
 import de.jreality.plugin.JRViewer;
 import de.jreality.reader.ReaderOBJ;
 import de.jreality.scene.IndexedFaceSet;
@@ -47,10 +52,48 @@ public class HyperbolicLayoutTest {
 
 	@Test
 	public void testLayoutTriangle() throws Exception {
-		double[] A = {0,0,0,1};
-		double[] B = {0.1,0,0,1};
-		double[] C = HyperbolicLayout.layoutTriangle(A, B, Math.PI/5, 1, 1);
-		System.out.println(Arrays.toString(C));
+		double[] ZERO = {0,0,0,1};
+		double[] A = {-sinh(1.0)/cosh(1.0), 0.0, 0.0, 1.0};
+		double[] B = { 0.0, 0.0, 0.0, 1.0};
+		double alpha = Math.PI / 4;
+
+		// move points
+		double[] O = {0.2, 0.2, 0.0, 1};
+		MatrixBuilder Om = MatrixBuilder.hyperbolic();
+		Om.rotate(0.2, 0, 0, 1);
+		Om.translateFromTo(ZERO, O);
+		
+		Om.getMatrix().transformVector(A);
+		Om.getMatrix().transformVector(B);
+		
+		// check distance
+		double dAB = Pn.distanceBetween(A, B, Pn.HYPERBOLIC);
+		Assert.assertEquals(1.0, dAB, 1E-8);
+		
+		// stretch rotation
+		MatrixBuilder mb = MatrixBuilder.hyperbolic();
+		mb.translateFromTo(ZERO, B);
+		mb.rotate(alpha, 0, 0, 1);
+		mb.scale((sinh(1.1)/cosh(1.1)) / (sinh(1.0)/cosh(1.0)));
+		mb.translate(B, ZERO);
+		
+		// check B identity
+		double[] Bcheck = B.clone();
+		mb.getMatrix().transformVector(Bcheck);
+		Assert.assertArrayEquals(B, Bcheck, 1E-8);
+		
+		// create C
+		double[] C = A.clone();
+		mb.getMatrix().transformVector(C);
+		double dBC = Pn.distanceBetween(B, C, Pn.HYPERBOLIC);
+		double dAC = Pn.distanceBetween(A, C, Pn.HYPERBOLIC);
+		
+		Assert.assertEquals(1.1, dBC, 1E-8);
+		
+		double[] CP = HyperbolicLayout.layoutTriangle(A, B, alpha, dBC, dAC);
+		Pn.dehomogenize(C, C);
+		Pn.dehomogenize(CP, CP);
+		Assert.assertArrayEquals(C, CP, 1e-10);
 	}
 	
 	@Test@Ignore
