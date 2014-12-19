@@ -46,7 +46,7 @@ public class SelectHomotopyGeneratorsPlugin extends AlgorithmPlugin {
 		WeightAdapter<E> lengthWeights = new WeightAdapter<E>() {
 			@Override
 			public double getWeight(E e) {
-				return a.get(Length.class, e, Double.class);
+				return a.get(Length.class, e, Double.class).doubleValue();
 			}
 		};
 		List<Set<E>> paths = HomotopyUtility.getGeneratorPaths(root, lengthWeights);
