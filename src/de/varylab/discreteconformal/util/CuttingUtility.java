@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 
 import de.jreality.math.Rn;
 import de.jtem.halfedge.Edge;
@@ -32,6 +33,8 @@ import de.varylab.discreteconformal.util.Search.WeightAdapter;
 
 public class CuttingUtility {
 
+	private static Logger
+		log = Logger.getLogger(CuttingUtility.class.getName());
 	
 	public static class CuttingInfo <
 		V extends Vertex<V, E, F>,
@@ -238,13 +241,17 @@ public class CuttingUtility {
 		if (genus < 1) {
 			return context;
 		}
+		log.info("cutting manifold to disk...");
+		log.info("cut root is " + root);
 		for(Set<E> path : HomotopyUtility.getGeneratorPaths(root, wa)) {
+			log.info("path: " + path);
 			context._paths.add(path);
 		}
 		Set<E> masterPath = new TreeSet<E>(new NodeIndexComparator<E>());
 		for (Set<E> path : context._paths) {
 			masterPath.addAll(path);
 		}
+		log.info("cutting along edges: " + masterPath);
 		cutAtEdges(context, masterPath);
 		for (Set<E> path : context._paths) {
 			Set<E> coPath = new TreeSet<E>(new NodeIndexComparator<E>());

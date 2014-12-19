@@ -307,13 +307,7 @@ public class Search {
 		F extends Face<V, E, F>
 	>  TreeSet<E> getAllShortestPathsTree(V start, Set<V> ends, WeightAdapter<E> w, Set<V> avoid) {
 		Map<V, List<E>> paths = getAllShortestPaths(start, ends, w, avoid);
-		TreeSet<E> tree = new TreeSet<E>(new Comparator<E>() {
-			@Override
-			public int compare(E o1, E o2) {
-				return o1.getIndex() - o2.getIndex();
-			}
-			
-		});
+		TreeSet<E> tree = new TreeSet<E>(new NodeIndexComparator<E>());
 		for (V v : ends) {
 			List<E> path = paths.get(v);
 			for (E e : path) {
