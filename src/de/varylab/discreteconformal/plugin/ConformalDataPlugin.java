@@ -87,6 +87,8 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		schottkyPlugin = null;
 	private HyperellipticCurvePlugin
 		hyperellipticCurvePlugin = null;
+	private UniformizationDomainPlugin
+		domainPlugin = null;
 	
 	private DataModel
 		dataModel = new DataModel();
@@ -405,17 +407,8 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			button.setToolTipText("Load into UI");
 		}
 		
-		private void checkButtonStatus(JButton button, Object value) {
-			if (value instanceof UniformizationData) {
-				button.setEnabled(false);
-			} else {
-				button.setEnabled(true);
-			}
-		}
-		
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-			checkButtonStatus(button, value);
 			return button;
 		}
 
@@ -423,7 +416,6 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 			this.value = (ConformalData)value;
 			JButton loadButton = new JButton(ImageHook.getIcon("cog_go.png"));
-			checkButtonStatus(loadButton, value);
 			loadButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
@@ -532,6 +524,12 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			HyperEllipticAlgebraicCurve curve = (HyperEllipticAlgebraicCurve)data;
 			hyperellipticCurvePlugin.setCurve(DataUtility.toCurve(curve));
 		}
+		if (data instanceof UniformizationData) {
+			UniformizationData ud = (UniformizationData)data;
+			FundamentalPolygon p = DataUtility.toFundamentalPolygon(ud);
+			CoHDS surface = hif.get(new CoHDS());
+			domainPlugin.createUniformization(surface, p, p, p, p);
+		}
 	}
 
 	public void addDiscreteMetric(String name, CoHDS surface, AdapterSet a) {
@@ -613,6 +611,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 		discreteConformalPlugin = c.getPlugin(DiscreteConformalPlugin.class);
 		schottkyPlugin = c.getPlugin(SchottkyPlugin.class);
 		hyperellipticCurvePlugin = c.getPlugin(HyperellipticCurvePlugin.class);
+		domainPlugin = c.getPlugin(UniformizationDomainPlugin.class);
 	}
 	
 	@Override
