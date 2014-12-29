@@ -33,6 +33,7 @@ import java.awt.event.ActionListener;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.DefaultListModel;
@@ -515,8 +516,9 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		this.activeGeometry = targetGeometry;
 		this.cutInfo = cutInfo;
 		if (
-			(targetGeometry == TargetGeometry.Euclidean || targetGeometry == TargetGeometry.Hyperbolic) &&
-			 !cutInfo.getBranchSet().isEmpty()
+			(targetGeometry == TargetGeometry.Euclidean || 
+			targetGeometry == TargetGeometry.Hyperbolic) &&
+			!cutInfo.getBranchSet().isEmpty()
 		) {
 			int signature = targetGeometry.getSignature();
 			try {
@@ -547,7 +549,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 				}
 				metricErrorAdapter.setSignature(signature);
 			} catch (Exception e) {
-				e.printStackTrace();
+				log.log(Level.WARNING, e.getMessage(), e);
 			}
 			if (targetGeometry == TargetGeometry.Euclidean) {
 				Complex tau = calculateHalfPeriodRatio(cutInfo);
