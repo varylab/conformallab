@@ -309,6 +309,10 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		return (TargetGeometry)geometryCombo.getSelectedItem();
 	}
 	
+	public DomainPolygon getSelectedPoygonType() {
+		return (DomainPolygon)domainCombo.getSelectedItem();
+	}
+	
 	@Override
 	public void colorChanged(ColorChangedEvent cce) {
 		updateStates();

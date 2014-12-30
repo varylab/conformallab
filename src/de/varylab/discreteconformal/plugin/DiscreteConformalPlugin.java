@@ -180,8 +180,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		doLayoutButton = new JButton("Recalculate Layout"),
 		extractCutPreparedButton = new JButton("Extract Cut-Prepared"),
 		resetSurfaceButton = new JButton("Reset Surface");
-	private JComboBox<DomainPolygon>
-		domainCombo = new JComboBox<>(DomainPolygon.values());
 	private JComboBox<TargetGeometry>
 		targetGeometryCombo = new JComboBox<>(TargetGeometry.values());
 	private JComboBox<CutStrategy>
@@ -257,7 +255,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		doLayoutButton.addActionListener(this);
 		unwrapBtn.addActionListener(this);
 		checkGaussBonnetBtn.addActionListener(this);
-		domainCombo.addActionListener(this);
 		useProjectiveTexture.addActionListener(this);
 		expertChecker.addActionListener(this);
 	}
@@ -607,11 +604,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 	public void actionPerformed(ActionEvent e) {
 		Window w = SwingUtilities.getWindowAncestor(this.shrinkPanel);
 		Object s = e.getSource();
-		if (domainCombo == s) {
-			updateGeometry(activeGeometry);
-			updateUniformization(activeGeometry);
-			return;
-		}
 		if (unwrapBtn == s) {
 			CoHDS unwrapped = getLoaderGeometry();
 			if (unwrapped == null) return;
@@ -783,8 +775,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 
 
 	private FundamentalPolygon getActiveFundamentalPoygon() {
-		DomainPolygon domain = (DomainPolygon)domainCombo.getSelectedItem();
-		switch (domain) {
+		switch (domainPlugin.getSelectedPoygonType()) {
 			default:
 			case Cut:
 				return cuttedPolygon;
@@ -875,7 +866,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		c.storeProperty(getClass(), "conesPanelShrinked", coneConfigPanel.isShrinked());	
 		c.storeProperty(getClass(), "modelPanelShrinked", toolsPanel.isShrinked());	
 		c.storeProperty(getClass(), "customVertexPanelShrinked", customNodePanel.isShrinked());
-		c.storeProperty(getClass(), "domainModeIndex", domainCombo.getSelectedIndex());
 		c.storeProperty(getClass(), "doUniformization", uniformizationChecker.isSelected());
 	} 
 	
@@ -896,7 +886,6 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		coneConfigPanel.setShrinked(c.getProperty(getClass(), "conesPanelShrinked", true));
 		toolsPanel.setShrinked(c.getProperty(getClass(), "modelPanelShrinked", true));
 		customNodePanel.setShrinked(c.getProperty(getClass(), "customVertexPanelShrinked", customNodePanel.isShrinked()));
-		domainCombo.setSelectedIndex(c.getProperty(getClass(), "domainModeIndex", domainCombo.getSelectedIndex()));
 		uniformizationChecker.setSelected(c.getProperty(getClass(), "doUniformization", false));
 	}
 	
