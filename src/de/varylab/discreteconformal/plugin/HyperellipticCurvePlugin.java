@@ -77,9 +77,11 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 	private JPanel
 		geometryPanel = new JPanel();
 	private SpinnerNumberModel
+		randomSeedModel = new SpinnerNumberModel(0, 0, 10000000, 1),
 		extraPointsModel = new SpinnerNumberModel(100, 0, 10000, 1),
-		equalizationIterationsModel = new SpinnerNumberModel(10, 0, 100, 1);
+		equalizationIterationsModel = new SpinnerNumberModel(100, 0, 1000, 1);
 	private JSpinner
+		randomSeedSpinner = new JSpinner(randomSeedModel),
 		equalizationIterationsSpinner = new JSpinner(equalizationIterationsModel),
 		extraPointsSpinner = new JSpinner(extraPointsModel);
 	private JCheckBox
@@ -113,6 +115,8 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 		c2.weighty = 0.0;
 		geometryPanel.setBorder(BorderFactory.createTitledBorder("Triangulated Surface"));
 		geometryPanel.setLayout(new GridBagLayout());
+		geometryPanel.add(new JLabel("Random Seed"), c1);
+		geometryPanel.add(randomSeedSpinner, c2);
 		geometryPanel.add(new JLabel("Extra Random Points"), c1);
 		geometryPanel.add(extraPointsSpinner, c2);
 		geometryPanel.add(new JLabel("Point Equalizer Iterations"), c1);
@@ -150,6 +154,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		rnd.setSeed(randomSeedModel.getNumber().intValue());
 		AdapterSet a = hif.getAdapters();
 		// create a triangulated surface for the active curve
 		if (createButton == e.getSource()) {

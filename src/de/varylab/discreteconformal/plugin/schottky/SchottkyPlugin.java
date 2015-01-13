@@ -85,7 +85,7 @@ public class SchottkyPlugin extends ShrinkPanelPlugin implements ActionListener 
 		resetButton = new JButton("Reset");
 	private SpinnerNumberModel
 		randomSeedModel = new SpinnerNumberModel(0, 0, 10000000, 1),
-		equalizationIterationsModel = new SpinnerNumberModel(10, 0, 100, 1),
+		equalizationIterationsModel = new SpinnerNumberModel(100, 0, 1000, 1),
 		cirleResModel = new SpinnerNumberModel(20, 4, 1000, 1),
 		extraPointsModel = new SpinnerNumberModel(400, 0, 10000, 1);
 	private JSpinner
