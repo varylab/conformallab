@@ -50,8 +50,7 @@ public class SurfaceCurveUtility {
 			includePoygon, includeAxes, 
 			axesSegments, polySegments, 
 			null, null, null
-		);
-		
+		);		
 		List<double[][][]> allCurves = new ArrayList<double[][][]>();
 		if (includeAxes) {
 			for (double[][] ds : axesSegments) {
@@ -65,30 +64,11 @@ public class SurfaceCurveUtility {
 				allCurves.addAll(I);
 			}
 		}
-		
-//		CoHDS result = new CoHDS();
 		double[][] vData = new double[allCurves.size() * 2][];
 		double[][] tData = new double[allCurves.size() * 2][2];
 		int[][] eData = new int[allCurves.size()][2];
 		int index = 0;
 		for (double[][][] s : allCurves) {
-//			CoEdge e = result.addNewEdge();
-//			CoEdge eOpp = result.addNewEdge();
-//			e.linkOppositeEdge(eOpp);
-//			e.linkNextEdge(eOpp);
-//			eOpp.linkNextEdge(e);
-//			CoVertex v0 = result.addNewVertex();
-//			CoVertex v1 = result.addNewVertex();
-//			e.setTargetVertex(v0);
-//			eOpp.setTargetVertex(v1);
-//			v0.T[0] = s[0][0][0];
-//			v0.T[1] = s[0][0][1];
-//			v1.T[0] = s[0][1][0];
-//			v1.T[1] = s[0][1][1];
-//			v0.P = s[1][0];
-//			v1.P = s[1][1];
-//			Pn.normalize(v0.T, v0.T, Pn.HYPERBOLIC);
-//			Pn.normalize(v1.T, v1.T, Pn.HYPERBOLIC);
 			vData[index + 0] = s[1][0];
 			vData[index + 1] = s[1][1];
 			tData[index + 0][0] = s[0][0][0];
