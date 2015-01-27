@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.plugin;
 
+import static de.varylab.discreteconformal.plugin.InterpolationMethod.Incircle;
 import static de.varylab.discreteconformal.plugin.TargetGeometry.Hyperbolic;
 import static java.awt.BasicStroke.CAP_SQUARE;
 import static java.awt.BasicStroke.JOIN_ROUND;
@@ -179,7 +180,8 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		options.add(modelCombo, rc);
 		options.add(new JLabel("Interpolation"), lc);
 		options.add(interpolationCombo, rc);
-		
+
+		interpolationCombo.setSelectedItem(Incircle);
 		interpolationCombo.addActionListener(this);
 		modelCombo.addActionListener(this);
 		triangulationChecker.addActionListener(this);

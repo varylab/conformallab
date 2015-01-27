@@ -125,6 +125,10 @@ public class UnwrapJob extends AbstractJob {
 			if (cutStrategy == CutStrategy.NoCuts) {
 				unwrapper.setCutGraph(new HashSet<CoEdge>());
 			}
+			if (!selectedVertices.isEmpty()) {
+				CoVertex cutRoot = selectedVertices.iterator().next();
+				unwrapper.setCutRoot(cutRoot);
+			}
 			unwrapper.setGradientTolerance(gradTolerance);
 			unwrapper.setMaxIterations(maxIterations);
 			unwrapper.unwrap(surface, genus, aSet);
