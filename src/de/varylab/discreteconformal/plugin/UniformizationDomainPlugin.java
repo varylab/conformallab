@@ -365,6 +365,7 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		Path2D triangulationPath = new Path2D.Float();
 		Path2D boundaryPath = new Path2D.Float();
 		Path2D fundamentalDomainPath = new Path2D.Float();
+		P.normalizeEdgeList();
 		VisualizationUtility.createUniversalCover(
 			P, 
 			model, 
