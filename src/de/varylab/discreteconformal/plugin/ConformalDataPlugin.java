@@ -528,7 +528,7 @@ public class ConformalDataPlugin extends ShrinkPanelPlugin implements ActionList
 			UniformizationData ud = (UniformizationData)data;
 			FundamentalPolygon p = DataUtility.toFundamentalPolygon(ud);
 			CoHDS surface = hif.get(new CoHDS());
-			domainPlugin.createUniformization(surface, p, p, p, p);
+			domainPlugin.createUniformization(surface, p, p, p, p, p);
 		}
 	}
 

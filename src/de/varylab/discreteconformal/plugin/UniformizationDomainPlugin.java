@@ -73,7 +73,8 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		Pcut = null, 
 		Pminimal = null, 
 		Pcanonical = null, 
-		Popposite = null; 
+		Popposite = null,
+		Pkeen = null;
 	private boolean
 		uniformizationUpdateRequested = false;
 	
@@ -329,7 +330,7 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 				}
 				@Override
 				protected void executeJob() throws Exception {
-					createUniformization(surface, Pcut, Pminimal, Pcanonical, Popposite);		
+					createUniformization(surface, Pcut, Pminimal, Pcanonical, Popposite, Pkeen);		
 				}
 			};
 			jobQueue.queueJob(j);
@@ -341,13 +342,15 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		FundamentalPolygon Pcut,
 		FundamentalPolygon Pminimal,
 		FundamentalPolygon Pcanonical,
-		FundamentalPolygon Popposite
+		FundamentalPolygon Popposite,
+		FundamentalPolygon Pkeen
 	) {
 		this.surface = surface;
 		this.Pcut = Pcut;
 		this.Pminimal = Pminimal;
 		this.Pcanonical = Pcanonical;
 		this.Popposite = Popposite;
+		this.Pkeen = Pkeen;
 		HyperbolicModel model = getSelectedHyperbolicModel();
 		TargetGeometry geometry = getSelectedGeometry();
 		int maxElements = coverElementsModel.getNumber().intValue();
@@ -358,6 +361,7 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 			case Minimal: P = Pminimal; break;
 			case Canonical: P = Pcanonical; break;
 			case Opposite: P = Popposite; break;
+			case Keen: P = Pkeen; break;
 			default: P = Pcut; break;
 		}
 		Path2D axesPath = new Path2D.Float();

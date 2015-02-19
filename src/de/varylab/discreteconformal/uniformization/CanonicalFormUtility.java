@@ -1,13 +1,138 @@
 package de.varylab.discreteconformal.uniformization;
 
+import static de.varylab.discreteconformal.math.RnBig.matrixTimesVector;
+import static de.varylab.discreteconformal.uniformization.FundamentalPolygonUtility.context;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import de.jreality.math.Matrix;
+import de.jreality.math.P2;
+import de.varylab.discreteconformal.adapter.HyperbolicModel;
+import de.varylab.discreteconformal.math.P2Big;
+import de.varylab.discreteconformal.math.PnBig;
+import de.varylab.discreteconformal.math.RnBig;
+
 
 public class CanonicalFormUtility {
 
+	public static FundamentalPolygon createKeenPolygon(FundamentalPolygon Q) {
+		// find A and B
+		FundamentalEdge A = null;
+		FundamentalEdge B = null;
+		for (FundamentalEdge e : Q.getEdges()) {
+			if (
+				e.nextEdge.nextEdge == e.partner && 
+				e.nextEdge.partner == e.partner.nextEdge
+			) {
+				A = e; B = e.partner.nextEdge; // as defined by Keen
+				break;
+			}
+		}
+		List<double[][]> axes = new ArrayList<double[][]>();
+		VisualizationUtility.createAxis(A.motionBig, HyperbolicModel.Klein, axes);
+		VisualizationUtility.createAxis(B.motionBig, HyperbolicModel.Klein, axes);
+		double[][] ap = axes.get(0);
+		double[][] bp = axes.get(1);
+		double[] a = P2.lineFromPoints(null, ap[0], ap[1]);
+		double[] b = P2.lineFromPoints(null, bp[0], bp[1]);
+		BigDecimal[] p0 = P2Big.imbedP2InP3(null, RnBig.toBig(null, P2.pointFromLines(null, a, b)));
+		PnBig.dehomogenize(p0, p0, context);
+		List<FundamentalEdge> eList = new ArrayList<FundamentalEdge>();
+		BigDecimal[] p2 = matrixTimesVector(null, A.motionBig, p0, context);
+		BigDecimal[] p3 = matrixTimesVector(null, B.motionBig, p0, context);
+		BigDecimal[] p1 = matrixTimesVector(null, A.motionBig, p3, context);
+		BigDecimal[] p4 = matrixTimesVector(null, B.motionBig, p2, context);
+		PnBig.dehomogenize(p1, p1, context);
+		PnBig.dehomogenize(p2, p2, context);
+		PnBig.dehomogenize(p3, p3, context);
+		PnBig.dehomogenize(p4, p4, context);
+		FundamentalEdge ae = new FundamentalEdge(0);
+		FundamentalEdge be = new FundamentalEdge(1);
+		FundamentalEdge aae = new FundamentalEdge(2);
+		FundamentalEdge bbe = new FundamentalEdge(3);
+		ae.startPosition = p1;
+		be.startPosition = p2;
+		aae.startPosition = p0;
+		bbe.startPosition = p3;
+		eList.add(ae);
+		eList.add(be);
+		eList.add(aae);
+		eList.add(bbe);
+		ae.nextEdge = be;
+		be.nextEdge = aae;
+		aae.nextEdge = bbe;
+		ae.partner = aae;
+		aae.partner = ae;
+		be.partner = bbe;
+		bbe.partner = be;
+		ae.motionBig = A.motionBig;
+		be.motionBig = B.partner.motionBig;
+		aae.motionBig = A.partner.motionBig;
+		bbe.motionBig = B.motionBig;
+		
+		int g = Q.getGenus();
+		FundamentalEdge first = ae;
+		int index = 4;
+		for (int i = 0; i < g - 1; i++) {
+			A = B.nextEdge;
+			B = A.partner.nextEdge;
+			ae = new FundamentalEdge(index++);
+			bbe.nextEdge = ae;
+			be = new FundamentalEdge(index++);
+			aae = new FundamentalEdge(index++);
+			bbe = new FundamentalEdge(index++);
+			p3 = matrixTimesVector(null, A.partner.motionBig, p4, context);
+			p2 = matrixTimesVector(null, B.partner.motionBig, p3, context);
+			p1 = matrixTimesVector(null, A.motionBig, p2, context);
+			ae.startPosition = p4;
+			be.startPosition = p1;
+			aae.startPosition = p2;
+			bbe.startPosition = p3;
+			eList.add(ae);
+			eList.add(be);
+			eList.add(aae);
+			eList.add(bbe);
+			ae.nextEdge = be;
+			be.nextEdge = aae;
+			aae.nextEdge = bbe;
+			ae.partner = aae;
+			aae.partner = ae;
+			be.partner = bbe;
+			bbe.partner = be;
+			ae.motionBig = A.motionBig;
+			be.motionBig = B.partner.motionBig;
+			aae.motionBig = A.partner.motionBig;
+			bbe.motionBig = B.motionBig;
+			p4 = matrixTimesVector(null, B.motionBig, p1, context);
+			PnBig.dehomogenize(p1, p1, context);
+			PnBig.dehomogenize(p2, p2, context);
+			PnBig.dehomogenize(p3, p3, context);
+			PnBig.dehomogenize(p4, p4, context);
+		}
+		bbe.nextEdge = first;
+		
+		FundamentalVertex v = new FundamentalVertex(0);
+		FundamentalEdge last = null;
+		for (FundamentalEdge e : eList) {
+			e.end = v;
+			e.start = v;
+			e.motion = new Matrix(RnBig.toDouble(null, e.motionBig));
+			if (last != null) e.prevEdge = last;
+			e.sourceEdgeCount = -1;
+			last = e;
+		}
+		eList.get(0).prevEdge = last;
+		FundamentalPolygon P = new FundamentalPolygon(eList);
+		P.normalizeEdgeList();
+		return P;
+	}
+	
+	
 	/**
 	 * Input: Minimal fundamental polygon with one vertex and 4g sides
 	 * @param P

@@ -152,7 +152,8 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		cuttedPolygon = null,
 		minimalPolygon = null,
 		oppositePolygon = null,
-		canonicalPolygon = null;
+		canonicalPolygon = null,
+		keenPolygon = null;
 	private CuttingInfo<CoVertex, CoEdge, CoFace> 
 		cutInfo = null;
 
@@ -540,9 +541,15 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 					System.out.println(canonicalPolygon);
 					conformalDataPlugin.addUniformizationData("Canonical Uniformization", canonicalPolygon);
 					canonicalPolygon.checkRelation();
+					System.out.println("Constructing Keen polygon...");
+					keenPolygon = CanonicalFormUtility.createKeenPolygon(canonicalPolygon);
+					System.out.println(keenPolygon);
+					conformalDataPlugin.addUniformizationData("Keen Uniformization", keenPolygon);
+					keenPolygon.checkRelation();
 				} else {
 					oppositePolygon = minimalPolygon;
 					canonicalPolygon = minimalPolygon;
+					keenPolygon = minimalPolygon;
 				}
 				metricErrorAdapter.setSignature(signature);
 			} catch (Exception e) {
@@ -558,6 +565,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			minimalPolygon = null;
 			oppositePolygon = null;
 			canonicalPolygon = null;
+			keenPolygon = null;
 		}
 		updateGeometry(targetGeometry);
 		updateUniformization(targetGeometry);
@@ -595,7 +603,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		}
 		if (domainPlugin != null) {
 			domainPlugin.setGeometry(target);
-			domainPlugin.createUniformization(surfaceUnwrapped, cuttedPolygon, minimalPolygon, canonicalPolygon, oppositePolygon);
+			domainPlugin.createUniformization(surfaceUnwrapped, cuttedPolygon, minimalPolygon, canonicalPolygon, oppositePolygon, keenPolygon);
 		}
 	}
 	
@@ -784,7 +792,9 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			case Canonical:
 				return canonicalPolygon;
 			case Opposite:
-				return oppositePolygon;			
+				return oppositePolygon;
+			case Keen:
+				return keenPolygon;
 		}
 	}
 	

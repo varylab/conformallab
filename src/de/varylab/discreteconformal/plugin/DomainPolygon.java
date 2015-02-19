@@ -4,5 +4,6 @@ public enum DomainPolygon {
 	Cut,
 	Minimal,
 	Opposite,
-	Canonical
+	Canonical,
+	Keen
 }
