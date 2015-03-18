@@ -1,6 +1,7 @@
 package de.varylab.discreteconformal.functional;
 
 import static de.jtem.mfc.field.Complex.fromPolar;
+import static de.varylab.discreteconformal.functional.Clausen.Л;
 import static de.varylab.discreteconformal.functional.Clausen.ImLi2;
 import static de.varylab.discreteconformal.math.MathUtility.arcosh;
 import static de.varylab.discreteconformal.math.MathUtility.arsinh;
@@ -13,6 +14,7 @@ import static java.lang.Math.sin;
 import static java.lang.Math.sinh;
 import de.jreality.math.Matrix;
 import de.jtem.mfc.field.Complex;
+
 
 public class HyperIdealUtility {
 
@@ -67,11 +69,27 @@ public class HyperIdealUtility {
 		return acos(n/d);
 	}
 	
+	/**
+	 * Calculates the hyperbolic volume of the hyperidel tetrahedron with dihedral angles
+	 * γ1, γ2, and γ3 at the ideal vertex. Formula taken from <a href="http://arxiv.org/abs/math/0603097">here</a>
+	 * @return the volume of the hyperideal tetrahedron
+	 */
+	public static double calculateTetrahedronVolumeWithIdealVertexAtGamma(
+		double γ1, double γ2, double γ3,
+		double α12, double α23, double α31 
+	) {
+		double result = Л(γ1) + Л(γ2) + Л(γ3);
+		result += Л((PI + α31 - α12 - γ1)/2) + Л((PI + α12 - α23 - γ2)/2) - Л((PI + α23 - α31 - γ3)/2);
+		result += Л((PI - α31 + α12 - γ1)/2) + Л((PI - α12 + α23 - γ2)/2) - Л((PI - α23 + α31 - γ3)/2);
+		result += Л((PI + α31 + α12 - γ1)/2) + Л((PI + α12 + α23 - γ2)/2) - Л((PI + α23 + α31 - γ3)/2);
+		result += Л((PI - α31 - α12 - γ1)/2) + Л((PI - α12 - α23 - γ2)/2) - Л((PI - α23 - α31 - γ3)/2);
+		return result / 2;
+	}
 	
 	/**
 	 * Calculates the hyperbolic volume of the generalized 
 	 * hyperbolic tetrahedron with dihedral angles α and β.
-	 * Formula taken from </a href="http://dx.doi.org/10.1007/0-387-29555-0_13">here</a>.
+	 * Formula taken from <a href="http://dx.doi.org/10.1007/0-387-29555-0_13">here</a>.
 	 * @return the volume of the tetrahedron
 	 */
 	public static double calculateTetrahedronVolume(double A, double B, double C, double D, double E, double F) {

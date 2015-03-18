@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.functional;
 
 import static de.varylab.discreteconformal.functional.Clausen.Л;
 import static de.varylab.discreteconformal.functional.HyperIdealUtility.calculateTetrahedronVolume;
+import static de.varylab.discreteconformal.functional.HyperIdealUtility.calculateTetrahedronVolumeWithIdealVertexAtGamma;
 import static de.varylab.discreteconformal.functional.HyperIdealUtility.ζ_13;
 import static java.lang.Math.PI;
 import static java.lang.Math.acos;
@@ -57,16 +58,16 @@ public class HyperIdealUtilityTest {
 	}
 	
 	@Test
-	public void testVolumeHyperidealSingleVertex() throws Exception {
+	public void testVolumeSingleHyperidealVertex() throws Exception {
 		double βi = PI / 5;
 		double βj = PI / 4;
 		double βk = PI / 4;
-		double ai = PI + βi - βj - βk;
-		double aj = PI + βj - βi - βk;
-		double ak = PI + βk - βi - βj;
-		double aijk = PI - βk - βi - βj;
-		double Ve = 0.5 * (Л(βi) + Л(βj) + Л(βk) + Л(ai/2) + Л(aj/2) + Л(ak/2) + Л(aijk/2));
-		double V = calculateTetrahedronVolume(βi, βj, βk, ai/2, aj/2, ak/2);
+		double ai = (PI + βi - βj - βk) / 2;
+		double aj = (PI + βj - βi - βk) / 2;
+		double ak = (PI + βk - βi - βj) /2;
+		double aijk = (PI - βk - βi - βj) / 2;
+		double Ve = 0.5 * (Л(βi) + Л(βj) + Л(βk) + Л(ai) + Л(aj) + Л(ak) + Л(aijk));
+		double V = calculateTetrahedronVolume(βi, βj, βk, ai, aj, ak);
 		assertEquals(Ve, V, 1E-12);
 	}
 	
@@ -75,6 +76,20 @@ public class HyperIdealUtilityTest {
 		double V = calculateTetrahedronVolume(0.0, PI, 0.0, 0.0, 0.0, PI);
 		Assert.assertEquals(0.0, V, 1E-12);
 		Assert.assertFalse("Volume must not be NaN", Double.isNaN(V));
+	}
+	
+	@Test
+	public void testCompareGeneralAndSingleIdealVolumeFormulas() {
+		double EPS = 0;
+		double βi = PI / 3;
+		double βj = PI / 3;
+		double βk = PI / 3;
+		double ai = PI / 3 - EPS;
+		double aj = PI / 3 - EPS;
+		double ak = PI / 3 - EPS;
+		double Ve = calculateTetrahedronVolumeWithIdealVertexAtGamma(βi, βj, βk, ai, aj, ak);
+		double V = calculateTetrahedronVolume(βi, βj, βk, ai, aj, ak);
+		assertEquals(Ve, V, 1E-12);
 	}
 	
 }
