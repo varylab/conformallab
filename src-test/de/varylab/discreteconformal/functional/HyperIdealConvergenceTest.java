@@ -35,7 +35,7 @@ public class HyperIdealConvergenceTest {
 		NativePathUtility.set("native");
 		Tao.Initialize();
 		LoggingUtility.initLogging();
-		PETSc.optionsSetValue("-tao_lmm_vectors", "5");
+		PETSc.optionsSetValue("-tao_lmm_vectors", "20");
 		PETSc.optionsSetValue("-tao_lmm_scale_type", "broyden");
 		PETSc.optionsSetValue("-tao_lmm_broyden_phi", "0.125");
 		PETSc.optionsSetValue("-tao_lmm_rescale_type", "scalar");

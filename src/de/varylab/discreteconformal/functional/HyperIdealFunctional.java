@@ -213,21 +213,17 @@ public class HyperIdealFunctional <
 		double aa = a12*α12 + a23*α23 + a31*α31;
 		double bb = b1*β1 + b2*β2 + b3*β3;
 		double V = 0.0;
-		double V0 = calculateTetrahedronVolume(β1, β2, β3, α23, α31, α12);
 		if (var.isVariable(v1) && var.isVariable(v2) && var.isVariable(v3)) {
-			V = V0;
+			V = calculateTetrahedronVolume(β1, β2, β3, α23, α31, α12);
 		} else {
 			if (!var.isVariable(v1)) {
 				V = calculateTetrahedronVolumeWithIdealVertexAtGamma(β1, α31, α12, α23, β2, β3);
-				System.out.println("case 1: " + (β1 + α31 + α12) + "\t|V0-V|=" + Math.abs(V0 - V));
 			} else
 			if (!var.isVariable(v2)) {
 				V = calculateTetrahedronVolumeWithIdealVertexAtGamma(β2, α12, α23, α31, β3, β1);
-				System.out.println("case 2: " + (β2 + α12 + α23) + "\t|V0-V|=" + Math.abs(V0 - V));
 			} else
 			if (!var.isVariable(v3)) {
 				V = calculateTetrahedronVolumeWithIdealVertexAtGamma(β3, α23, α31, α12, β1, β2);
-				System.out.println("case 3: " + (β3 + α23 + α31) + "\t|V0-V|=" + Math.abs(V0 - V));
 			}
 		}
 		return aa + bb + 2*V;
