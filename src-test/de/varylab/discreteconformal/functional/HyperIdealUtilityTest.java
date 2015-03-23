@@ -80,13 +80,27 @@ public class HyperIdealUtilityTest {
 	
 	@Test
 	public void testCompareGeneralAndSingleIdealVolumeFormulas() {
-		double EPS = 0;
+		double EPS = 0.1;
 		double βi = PI / 3;
 		double βj = PI / 3;
 		double βk = PI / 3;
 		double ai = PI / 3 - EPS;
 		double aj = PI / 3 - EPS;
 		double ak = PI / 3 - EPS;
+		double Ve = calculateTetrahedronVolumeWithIdealVertexAtGamma(βi, βj, βk, ai, aj, ak);
+		double V = calculateTetrahedronVolume(βi, βj, βk, ai, aj, ak);
+		assertEquals(Ve, V, 1E-12);
+	}
+	
+	@Test
+	public void testCompareGeneralAndSingleIdealVolumeFormulas2() {
+		double βi = 0.6623267054958116;
+		double βj = 1.437248992086214;
+		double βk = 1.0420169560077686;
+		double ai = 0.6896178197389236;
+		double aj = 0.5195634857410114;
+		double ak = 0.6304500578493993;
+		assertEquals(PI, βi + βj + βk, 1E-12);
 		double Ve = calculateTetrahedronVolumeWithIdealVertexAtGamma(βi, βj, βk, ai, aj, ak);
 		double V = calculateTetrahedronVolume(βi, βj, βk, ai, aj, ak);
 		assertEquals(Ve, V, 1E-12);

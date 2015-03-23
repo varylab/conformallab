@@ -76,13 +76,13 @@ public class HyperIdealUtility {
 	 */
 	public static double calculateTetrahedronVolumeWithIdealVertexAtGamma(
 		double γ1, double γ2, double γ3,
-		double α12, double α23, double α31 
+		double α23, double α31, double α12 
 	) {
 		double result = Л(γ1) + Л(γ2) + Л(γ3);
-		result += Л((PI + α31 - α12 - γ1)/2) + Л((PI + α12 - α23 - γ2)/2) - Л((PI + α23 - α31 - γ3)/2);
-		result += Л((PI - α31 + α12 - γ1)/2) + Л((PI - α12 + α23 - γ2)/2) - Л((PI - α23 + α31 - γ3)/2);
-		result += Л((PI + α31 + α12 - γ1)/2) + Л((PI + α12 + α23 - γ2)/2) - Л((PI + α23 + α31 - γ3)/2);
-		result += Л((PI - α31 - α12 - γ1)/2) + Л((PI - α12 - α23 - γ2)/2) - Л((PI - α23 - α31 - γ3)/2);
+		result += Л((PI + α31 - α12 - γ1)/2) + Л((PI + α12 - α23 - γ2)/2) + Л((PI + α23 - α31 - γ3)/2);
+		result += Л((PI - α31 + α12 - γ1)/2) + Л((PI - α12 + α23 - γ2)/2) + Л((PI - α23 + α31 - γ3)/2);
+		result += Л((PI + α31 + α12 - γ1)/2) + Л((PI + α12 + α23 - γ2)/2) + Л((PI + α23 + α31 - γ3)/2);
+		result += Л((PI - α31 - α12 - γ1)/2) + Л((PI - α12 - α23 - γ2)/2) + Л((PI - α23 - α31 - γ3)/2);
 		return result / 2;
 	}
 	
