@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry combineaccessrules="false" kind="src" path="/itextpdf"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/java2d"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/halfedgetools"/>
 	<classpathentry excluding="de/varylab/discreteconformal/convergence/series/" kind="src" path="src"/>
 	<classpathentry kind="src" path="src-test"/>
 	<classpathentry kind="src" path="src-data"/>
@@ -66,12 +69,12 @@
 	<classpathentry kind="lib" path="lib/substance/trident-7.2.1.jar"/>
 	<classpathentry kind="lib" path="lib/itext/itext-pdfa-5.5.5.jar"/>
 	<classpathentry kind="lib" path="lib/itext/itext-xtra-5.5.5.jar"/>
-	<classpathentry kind="lib" path="lib/itext/itextpdf-5.5.5.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="lib/MTJOptimization.jar"/>
 	<classpathentry kind="lib" path="lib/arpack-combo.jar"/>
 	<classpathentry kind="lib" path="lib/netlib-java.jar"/>
 	<classpathentry kind="lib" path="lib/parallelcolt-0.9.4.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="lib" path="lib/itext/itextpdf-5.5.5_dgdgitlab.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
