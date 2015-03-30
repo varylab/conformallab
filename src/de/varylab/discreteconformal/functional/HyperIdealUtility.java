@@ -157,4 +157,7 @@ public class HyperIdealUtility {
 		return (U1 - U2) / 2;
 	}
 	
+	
+	
+	
 }

@@ -64,7 +64,7 @@ public class HyperIdealFunctionalTest extends FunctionalTest<CoVertex, CoEdge, C
 		setXGradient(u);
 	}
 	
-	@Test@Ignore
+	@Test@Ignore@Override
 	public void testHessian() throws Exception {
 	}
 
