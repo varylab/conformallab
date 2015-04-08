@@ -34,7 +34,7 @@ public class HyperIdealHyperellipticUtilityTest extends Assert {
 		CoFace fr = HalfEdgeUtils.constructFaceByVertices(hds, a, d, b).getLeftFace();
 		CoEdge e = HalfEdgeUtils.findEdgeBetweenFaces(fl, fr);
 		HyperIdealHyperellipticUtility.calculateCircleIntersections(hds);
-		assertEquals(PI/2, e.getAlpha(), 1e-8);
+		assertEquals(PI/2, e.getTheta(), 1e-8);
 	}
 	
 	@Test
@@ -53,7 +53,7 @@ public class HyperIdealHyperellipticUtilityTest extends Assert {
 		CoFace fr = HalfEdgeUtils.constructFaceByVertices(hds, a, d, b).getLeftFace();
 		CoEdge e = HalfEdgeUtils.findEdgeBetweenFaces(fl, fr);
 		HyperIdealHyperellipticUtility.calculateCircleIntersections(hds);
-		assertEquals(PI/2, e.getAlpha(), 1e-8);
+		assertEquals(PI/2, e.getTheta(), 1e-8);
 	}
 	
 }

@@ -158,7 +158,7 @@ public class HyperIdealFunctional <
 			α12 = PI;
 			α23 = 0;
 			α31 = 0;
-			log.info("triangle inequality violated at face " + f);
+//			log.info("triangle inequality violated at face " + f);
 		} else if (l23 > l12 + l31) {
 			β1 = PI;
 			β2 = 0;
@@ -166,7 +166,7 @@ public class HyperIdealFunctional <
 			α12 = 0;
 			α23 = PI;
 			α31 = 0;
-			log.info("triangle inequality violated at face " + f);
+//			log.info("triangle inequality violated at face " + f);
 		} else if (l31 > l12 + l23) {
 			β1 = 0;
 			β2 = PI;
@@ -174,7 +174,7 @@ public class HyperIdealFunctional <
 			α12 = 0;
 			α23 = 0;
 			α31 = PI;
-			log.info("triangle inequality violated at face " + f);
+//			log.info("triangle inequality violated at face " + f);
 		} else {
 			β1 = ζ(l12, l31, l23);
 			β2 = ζ(l23, l12, l31);

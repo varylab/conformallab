@@ -123,7 +123,7 @@ public class HyperIdealConvergenceTest {
 		Vec lowerBounds = new Vec(n);
 		Vec upperBounds = new Vec(n);
 		lowerBounds.set(-Double.MAX_VALUE);
-		for (int i = 0; i < 16; i++) {
+		for (int i = 0; i < 6; i++) {
 			lowerBounds.setValue(i, 1E-12, INSERT_VALUES);
 		}
 		upperBounds.set(Double.MAX_VALUE);
