@@ -1,9 +1,9 @@
 package de.varylab.discreteconformal.functional;
 
+import static de.jreality.math.Pn.ELLIPTIC;
 import static java.lang.Math.PI;
 import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Pn;
-import de.jreality.math.Rn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -19,29 +19,26 @@ public class HyperIdealHyperellipticUtility {
 			double[] b = Pn.dehomogenize(null, e.getTargetVertex().P);
 			double[] c = Pn.dehomogenize(null, e.getNextEdge().getTargetVertex().P);
 			double[] d = Pn.dehomogenize(null, e.getOppositeEdge().getNextEdge().getTargetVertex().P);
-			double dist1 = Pn.distanceBetween(a, b, Pn.EUCLIDEAN);
+			
 			// rotate such that no vertex is north
-			double[] center = {0,0,0};
-			Rn.add(center, center, a);
-			Rn.add(center, center, b);
-			Rn.add(center, center, c);
-			Rn.normalize(center, center);
-			MatrixBuilder m = MatrixBuilder.euclidean().rotateFromTo(center, new double[]{0,0,1});
+			double[] center = Pn.linearInterpolation(null, a, b, 0.5, ELLIPTIC);
+			Pn.setToLength(center, center, 1.0, Pn.EUCLIDEAN);			
+			MatrixBuilder m = MatrixBuilder.euclidean().rotateFromTo(center, new double[]{0,0,-1});
 			m.getMatrix().transformVector(a);
 			m.getMatrix().transformVector(b);
 			m.getMatrix().transformVector(c);
 			m.getMatrix().transformVector(d);
 			
 			// move all vertices south
-//			m = MatrixBuilder.hyperbolic().translateFromTo(new double[]{0,0,0,1}, new double[]{0,0,-0.9,1.0});
-//			m.getMatrix().transformVector(a);
-//			m.getMatrix().transformVector(b);
-//			m.getMatrix().transformVector(c);
-//			m.getMatrix().transformVector(d);
-//			Pn.dehomogenize(a, a);
-//			Pn.dehomogenize(b, b);
-//			Pn.dehomogenize(c, c);
-//			Pn.dehomogenize(d, d);
+			m = MatrixBuilder.hyperbolic().translateFromTo(new double[]{0,0,0,1}, new double[]{0,0,-0.9,1.0});
+			m.getMatrix().transformVector(a);
+			m.getMatrix().transformVector(b);
+			m.getMatrix().transformVector(c);
+			m.getMatrix().transformVector(d);
+			Pn.dehomogenize(a, a);
+			Pn.dehomogenize(b, b);
+			Pn.dehomogenize(c, c);
+			Pn.dehomogenize(d, d);
 			
 			double thresh = 1.0 - 1e-3;
 			if (a[2] > thresh || b[2] > thresh || c[2] > thresh || d[2] > thresh) {

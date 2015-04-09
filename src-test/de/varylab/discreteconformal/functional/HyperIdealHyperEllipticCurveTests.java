@@ -74,20 +74,13 @@ public class HyperIdealHyperEllipticCurveTests {
 			}
 			switch (v.getIndex()) {
 			case 0: case 1: case 2: case 3: case 6: case 7:
-//				Assert.assertEquals(4*PI, thetaSum, 1e-8);
+				Assert.assertEquals(4*PI, thetaSum, 1e-8);
 				v.setSolverIndex(index++);
 				break;
 			default:
-//				Assert.assertEquals(2*PI, thetaSum, 1e-8);
+				Assert.assertEquals(2*PI, thetaSum, 1e-8);
 				v.setSolverIndex(-1);	
 			}
-		}
-		
-		// edge angles and indices
-		for (CoEdge e : hds.getPositiveEdges()) {
-			System.out.println(e + ": " + e.getTheta());
-			e.setSolverIndex(index);
-			e.getOppositeEdge().setSolverIndex(index++);
 		}
 		
 		// optimize
@@ -98,7 +91,7 @@ public class HyperIdealHyperEllipticCurveTests {
 		rnd.setSeed(1);
 		Vec u = new Vec(n);
 		for (int i = 0; i < n; i++) {
-			u.setValue(i, 10.5 + 0.01*Math.abs(rnd.nextDouble()), INSERT_VALUES);
+			u.setValue(i, 0.1 + 0.01*Math.abs(rnd.nextDouble()), INSERT_VALUES);
 		}
 		app.setInitialSolutionVec(u);
 		Vec lowerBounds = new Vec(n);
@@ -114,7 +107,7 @@ public class HyperIdealHyperEllipticCurveTests {
 		Tao optimizer = new Tao(Tao.Method.BLMVM);
 		optimizer.setFromOptions();
 		optimizer.setApplication(app);
-		optimizer.setGradientTolerances(1E-8, 0, 0); 
+		optimizer.setGradientTolerances(1E-7, 0, 0); 
 		optimizer.setTolerances(0, 0, 0, 0);
 		optimizer.setMaximumIterates(50);
 		optimizer.solve();
@@ -122,6 +115,5 @@ public class HyperIdealHyperEllipticCurveTests {
 		Assert.assertEquals(ConvergenceFlags.CONVERGED_ATOL, optimizer.getSolutionStatus().reason);
 		UnwrapUtility.logSolutionStatus(optimizer, log);
 	}
-	
 	
 }
