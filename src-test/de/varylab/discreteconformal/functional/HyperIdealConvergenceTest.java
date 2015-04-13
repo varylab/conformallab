@@ -163,7 +163,7 @@ public class HyperIdealConvergenceTest {
 	
 	
 	@Test
-	public void testCreateDataOnHyperEllipticCurveLawson() throws Exception {
+	public void testHyperIdealConvergenceWithHyperEllipticCurveLawson() throws Exception {
 		CoHDS hds = HyperIdealGenerator.createLawsonHyperelliptic();
 		// optimize
 		CHyperIdealApplication app = new CHyperIdealApplication(hds);
@@ -173,7 +173,11 @@ public class HyperIdealConvergenceTest {
 		rnd.setSeed(1);
 		Vec u = new Vec(n);
 		for (int i = 0; i < n; i++) {
-			u.setValue(i, 0.01 + 0.1*rnd.nextDouble(), INSERT_VALUES);
+			if (i < 6) {
+				u.setValue(i, 2.0 + 0.01*Math.abs(rnd.nextDouble()), INSERT_VALUES);
+			} else {
+				u.setValue(i, 0.0, INSERT_VALUES);	
+			}
 		}
 		app.setInitialSolutionVec(u);
 		Vec lowerBounds = new Vec(n);

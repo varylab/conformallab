@@ -150,7 +150,7 @@ public class HyperIdealFunctional <
 		double l31 = lij(b3, b1, a31, v3b, v1b);
 		if (l12 < 1E-12 && l23 < 1E-12 && l31 < 1E012) {
 			log.warning("clamping too small lengths to 1E-12");
-			l12 = 1E-12; a23 = 1E-12; a31 = 1E-12;
+			l12 = 1E-12; l23 = 1E-12; l31 = 1E-12;
 		}
 		double β1, β2, β3;
 		double α12, α23, α31;
