@@ -10,14 +10,22 @@ import static java.lang.Math.acos;
 import static java.lang.Math.cos;
 import static java.lang.Math.cosh;
 import static java.lang.Math.exp;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.sin;
 import static java.lang.Math.sinh;
+
+import java.util.logging.Logger;
+
 import de.jreality.math.Matrix;
 import de.jtem.mfc.field.Complex;
 
 
 public class HyperIdealUtility {
 
+	private static Logger
+		log = Logger.getLogger(HyperIdealUtility.class.getName());
+	
 	/**
 	 * Calculates a third length in a right angled hyperbolic hexagon
 	 * with given lengths x, y, and z
@@ -66,7 +74,12 @@ public class HyperIdealUtility {
 		double sy = sinh(y);
 		double n = cx*cy - cz;
 		double d = sx*sy;
-		return acos(n/d);
+		double nbd = n/d;
+		if (Math.abs(nbd) > 1) {
+			log.warning("value clamped to abs(value) = 1: val = " + nbd);
+			nbd = max(-1, min(nbd, 1.0));
+		}
+		return acos(nbd);
 	}
 	
 	/**
@@ -153,11 +166,7 @@ public class HyperIdealUtility {
 			- ImLi2(bdf.times(z2).times(-1)) 
 			- ImLi2(cde.times(z2).times(-1))
 		);
-		
 		return (U1 - U2) / 2;
 	}
-	
-	
-	
 	
 }

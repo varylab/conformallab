@@ -10,6 +10,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import cern.colt.Arrays;
 import de.jreality.util.NativePathUtility;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.jpetsc.PETSc;
@@ -25,7 +26,7 @@ import de.varylab.discreteconformal.util.UnwrapUtility;
 
 public class HyperIdealConvergenceTest {
 
-	private Logger
+	private static Logger
 		log = Logger.getLogger(HyperIdealConvergenceTest.class.getName());
 	private double 
 		tolerance = 1E-7;
@@ -47,8 +48,9 @@ public class HyperIdealConvergenceTest {
 		PETSc.optionsSetValue("-tao_lmm_limit_nu", "1.0");
 	}
 	
-	private void checkSolution(CoHDS hds) throws Exception {
+	public static void checkSolution(CoHDS hds, double tolerance) throws Exception {
 		for (CoVertex v : hds.getVertices()) {
+			log.info("checking angle sum at " + v);
 			double sum = 0.0;
 			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
 				sum += e.getPreviousEdge().getBeta();
@@ -103,7 +105,7 @@ public class HyperIdealConvergenceTest {
 		u.restoreArray();
 		log.info("solution: " + u.toString());
 		app.evaluateObjectiveAndGradient(u, null);
-		checkSolution(hds);
+		checkSolution(hds, tolerance);
 	}
 	
 	
@@ -156,7 +158,65 @@ public class HyperIdealConvergenceTest {
 		Assert.assertArrayEquals(expectedSolution, uVec, 1E-6);
 		u.restoreArray();
 		app.evaluateObjectiveAndGradient(u, null);
-		checkSolution(hds);
+		checkSolution(hds, tolerance);
 	}
+	
+	
+	@Test
+	public void testCreateDataOnHyperEllipticCurveLawson() throws Exception {
+		CoHDS hds = HyperIdealGenerator.createLawsonHyperelliptic();
+		// optimize
+		CHyperIdealApplication app = new CHyperIdealApplication(hds);
+		app.setFromOptions();
+		int n = app.getDomainDimension();
+		Random rnd = new Random(); 
+		rnd.setSeed(1);
+		Vec u = new Vec(n);
+		for (int i = 0; i < n; i++) {
+			u.setValue(i, 0.01 + 0.1*rnd.nextDouble(), INSERT_VALUES);
+		}
+		app.setInitialSolutionVec(u);
+		Vec lowerBounds = new Vec(n);
+		Vec upperBounds = new Vec(n);
+		lowerBounds.set(-Double.MAX_VALUE);
+		for (int i = 0; i < 6; i++) {
+			lowerBounds.setValue(i, 1E-12, INSERT_VALUES);
+		}
+		upperBounds.set(Double.MAX_VALUE);
+		app.setVariableBounds(lowerBounds, upperBounds);
+		log.info("start   : " + u.toString());
+		
+		Tao optimizer = new Tao(Tao.Method.BLMVM);
+		optimizer.setFromOptions();
+		optimizer.setApplication(app);
+		optimizer.setGradientTolerances(1E-8, 0, 0); 
+		optimizer.setTolerances(0, 0, 0, 0);
+		optimizer.setMaximumIterates(50);
+		optimizer.solve();
+		log.info(optimizer.getSolutionStatus().toString());
+		Assert.assertEquals(ConvergenceFlags.CONVERGED_ATOL, optimizer.getSolutionStatus().reason);
+		UnwrapUtility.logSolutionStatus(optimizer, log);
+		
+		double[] uVec = u.getArray();
+		System.out.println(Arrays.toString(uVec));
+//		double[] expectedSolution = {
+//			1.3169578891731424, 1.3169578927823975, 1.3169579011731716, 1.3169579020905602, 
+//			2.2924316583333115, 2.2924316392049833, 2.292431678989581, 2.292431643089526, 
+//			2.2924316941659173, 2.292431674031334, 2.2924316940930196, 2.2924316825837465, 
+//			2.292431682108128, 2.292431635825035, 2.292431663416895, 2.2924316882259688, 
+//			1.1959012101177978E-8, -2.0563476436963373E-8, -4.456976728393993E-8, -1.8429237951612702E-8, 
+//			-6.6205808102341355E-9, 1.5717234379207197E-8, -1.7293648067715866E-8, -4.483256556006885E-8, 
+//			-9.573468060377547E-10, -3.1141227023802106E-8, 1.0908622136947316E-8, 4.776674403327454E-8, 
+//			7.312334494445497E-9, 3.7181879656685486E-8, 2.14898248315642E-8, 2.8691886984531554E-9, 
+//			6.47831816268519E-9, -3.331867297470249E-9, 1.2954234834539E-8, 3.051358129457958E-8, 
+//			4.344545817244695E-9, 1.2223017352538969E-8, -1.6138776412832104E-8, -2.7556701966816714E-8
+//		};
+//		Assert.assertArrayEquals(expectedSolution, uVec, 1E-6);
+		u.restoreArray();
+		app.evaluateObjectiveAndGradient(u, null);
+
+		HyperIdealConvergenceTest.checkSolution(hds, 1E-7);
+	}
+	
 	
 }

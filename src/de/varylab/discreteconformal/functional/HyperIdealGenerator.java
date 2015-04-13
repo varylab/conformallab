@@ -2,18 +2,28 @@ package de.varylab.discreteconformal.functional;
 
 import static java.lang.Math.PI;
 
+import java.io.InputStream;
 import java.util.List;
+
+import javax.xml.bind.JAXBException;
 
 import org.junit.Assert;
 
 import de.jtem.halfedge.util.HalfEdgeUtils;
+import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.TypedAdapterSet;
+import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.algorithm.subdivision.StellarLinear;
 import de.jtem.halfedgetools.algorithm.triangulation.Triangulator;
+import de.varylab.conformallab.data.DataIO;
+import de.varylab.conformallab.data.DataUtility;
+import de.varylab.conformallab.data.types.HalfedgeEmbedding;
 import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.heds.CoEdge;
+import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class HyperIdealGenerator {
 
@@ -147,6 +157,41 @@ public class HyperIdealGenerator {
 		hds.getEdge(23).linkNextEdge(hds.getEdge(20));
 		
 		HalfEdgeUtils.fillAllHoles(hds);
+		return hds;
+	}
+
+	public static CoHDS createLawsonHyperelliptic() throws JAXBException {
+		InputStream in = HyperIdealGenerator.class.getResourceAsStream("lawson_curve_source.xml");
+		HalfedgeEmbedding he = DataIO.readConformalData(HalfedgeEmbedding.class, in);
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
+		CoHDS hds = new CoHDS();
+		AdapterSet a = new ConformalAdapterSet();
+		DataUtility.toHalfedge(he, a, Position.class, hds, cutInfo);
+		HyperIdealHyperellipticUtility.calculateCircleIntersections(hds);
+		
+		// vertex data
+		int index = 0;
+		for (CoVertex v : hds.getVertices()) {
+			v.setTheta(2*PI);
+			double thetaSum = 0.0;
+			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+				thetaSum += e.getTheta();
+			}
+			switch (v.getIndex()) {
+			case 0: case 1: case 2: case 3: case 6: case 7:
+				Assert.assertEquals(4*PI, thetaSum, 1e-8);
+				v.setSolverIndex(index++);
+				break;
+			default:
+				Assert.assertEquals(2*PI, thetaSum, 1e-8);
+				v.setSolverIndex(-1);	
+			}
+		}
+		// edge angles and indices
+		for (CoEdge e : hds.getPositiveEdges()) {
+			e.setSolverIndex(index);
+			e.getOppositeEdge().setSolverIndex(index++);
+		}
 		return hds;
 	}
 
