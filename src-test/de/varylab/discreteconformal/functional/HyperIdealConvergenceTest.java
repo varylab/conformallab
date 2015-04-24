@@ -174,7 +174,7 @@ public class HyperIdealConvergenceTest {
 		Vec u = new Vec(n);
 		for (int i = 0; i < n; i++) {
 			if (i < 6) {
-				u.setValue(i, 2.0 + 0.01*Math.abs(rnd.nextDouble()), INSERT_VALUES);
+				u.setValue(i, 1.0 + 0.01*Math.abs(rnd.nextDouble()), INSERT_VALUES);
 			} else {
 				u.setValue(i, 0.0, INSERT_VALUES);	
 			}
@@ -182,20 +182,20 @@ public class HyperIdealConvergenceTest {
 		app.setInitialSolutionVec(u);
 		Vec lowerBounds = new Vec(n);
 		Vec upperBounds = new Vec(n);
-		lowerBounds.set(-Double.MAX_VALUE);
+		lowerBounds.set(-4);
 		for (int i = 0; i < 6; i++) {
 			lowerBounds.setValue(i, 1E-12, INSERT_VALUES);
 		}
-		upperBounds.set(Double.MAX_VALUE);
+		upperBounds.set(4);
 		app.setVariableBounds(lowerBounds, upperBounds);
 		log.info("start   : " + u.toString());
 		
 		Tao optimizer = new Tao(Tao.Method.BLMVM);
 		optimizer.setFromOptions();
 		optimizer.setApplication(app);
-		optimizer.setGradientTolerances(1E-8, 0, 0); 
+		optimizer.setGradientTolerances(1E-6, 0, 0); 
 		optimizer.setTolerances(0, 0, 0, 0);
-		optimizer.setMaximumIterates(50);
+		optimizer.setMaximumIterates(100);
 		optimizer.solve();
 		log.info(optimizer.getSolutionStatus().toString());
 		Assert.assertEquals(ConvergenceFlags.CONVERGED_ATOL, optimizer.getSolutionStatus().reason);
@@ -219,7 +219,7 @@ public class HyperIdealConvergenceTest {
 		u.restoreArray();
 		app.evaluateObjectiveAndGradient(u, null);
 
-		HyperIdealConvergenceTest.checkSolution(hds, 1E-7);
+		HyperIdealConvergenceTest.checkSolution(hds, 1E-6);
 	}
 	
 	
