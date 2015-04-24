@@ -184,7 +184,8 @@ public class HyperIdealGenerator {
 				break;
 			default:
 				Assert.assertEquals(2*PI, thetaSum, 1e-8);
-				v.setSolverIndex(-1);	
+				v.setSolverIndex(-1);
+				break;
 			}
 		}
 		// edge angles and indices
