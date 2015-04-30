@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.functional;
 
 import static de.jreality.math.Pn.ELLIPTIC;
-import static java.lang.Math.PI;
 import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Pn;
 import de.jtem.halfedge.util.HalfEdgeUtils;
@@ -52,7 +51,7 @@ public class HyperIdealHyperellipticUtility {
 			Complex dc = ComplexUtility.stereographic(d);
 			double alpha = Math.abs(cc.minus(bc).divide(cc.minus(ac)).arg());
 			double beta = Math.abs(dc.minus(bc).divide(dc.minus(ac)).arg());
-			double theta = PI - alpha - beta;
+			double theta = alpha + beta;
 			e.setTheta(theta);
 			e.getOppositeEdge().setTheta(theta);
 		}

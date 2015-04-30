@@ -173,17 +173,11 @@ public class HyperIdealGenerator {
 		int index = 0;
 		for (CoVertex v : hds.getVertices()) {
 			v.setTheta(2*PI);
-			double thetaSum = 0.0;
-			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
-				thetaSum += e.getTheta();
-			}
 			switch (v.getIndex()) {
 			case 0: case 1: case 2: case 3: case 6: case 7:
-				Assert.assertEquals(4*PI, thetaSum, 1e-8);
 				v.setSolverIndex(index++);
 				break;
 			default:
-				Assert.assertEquals(2*PI, thetaSum, 1e-8);
 				v.setSolverIndex(-1);
 				break;
 			}
