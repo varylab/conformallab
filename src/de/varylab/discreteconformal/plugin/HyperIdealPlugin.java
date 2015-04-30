@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
 
@@ -27,6 +28,7 @@ import de.jtem.halfedgetools.adapter.AbstractAdapter;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
+import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jtao.Tao;
@@ -42,19 +44,25 @@ import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener {
 
+	private Logger
+		log = Logger.getLogger(HyperIdealPlugin.class.getName());
 	private JButton
 		lawsonSquareTiledButton = new JButton("Lawson's Square Tiled"),
-		lawsonSquareTiledBranchButton = new JButton("Lawson's Square Tiled Branch");
+		lawsonSquareTiledBranchButton = new JButton("Lawson's Square Tiled Branch"),
+		hyperellipticCurveButton = new JButton("Uniformize Hyperelliptic Curve");
 	private DiscreteConformalPlugin
 		conformalPlugin = null;
 	private ConformalDataPlugin
 		conformalDataPlugin = null;
+	private HalfedgeInterface
+		hif = new HalfedgeInterface();
 	
 	public HyperIdealPlugin() {
 		shrinkPanel.setTitle("Hyper-Ideal Uniformization");
-		shrinkPanel.setLayout(new GridLayout(2, 1));
+		shrinkPanel.setLayout(new GridLayout(3, 1));
 		shrinkPanel.add(lawsonSquareTiledButton);
 		shrinkPanel.add(lawsonSquareTiledBranchButton);
+		shrinkPanel.add(hyperellipticCurveButton);
 		lawsonSquareTiledButton.addActionListener(this);
 		lawsonSquareTiledBranchButton.addActionListener(this);
 	}
@@ -94,8 +102,16 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		if (lawsonSquareTiledBranchButton == ev.getSource()) {
 			uniformizeLawsonSquareTiledBranch();
 		}
+		if (hyperellipticCurveButton == ev.getSource()) {
+			uniformizeHyperellipticCurve();
+		}
 	}
 
+	
+	private void uniformizeHyperellipticCurve() {
+		log.info("not yet implemeneted");
+		hif.get(new CoHDS());
+	}
 	
 	private void uniformizeLawsonSquareTiledBranch() {
 		CoHDS hds = HyperIdealGenerator.createLawsonSquareTiledWithBranchPoints();
@@ -291,6 +307,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		super.install(c);
 		conformalPlugin = c.getPlugin(DiscreteConformalPlugin.class);
 		conformalDataPlugin = c.getPlugin(ConformalDataPlugin.class);
+		hif = c.getPlugin(HalfedgeInterface.class);
 	}
 	
 }
