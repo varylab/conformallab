@@ -5,7 +5,6 @@ import static de.varylab.discreteconformal.math.MathUtility.arcosh;
 import static java.lang.Math.PI;
 import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
-import static java.lang.Math.toDegrees;
 
 import java.util.Random;
 import java.util.logging.Logger;
@@ -184,19 +183,16 @@ public class HyperIdealConvergenceTest {
 			// an edge not connected to a branch point
 			if (i != 0 && i != 1 && i != 2 && i != 3 && i != 6 && i != 7 &&
 				j != 0 && j != 1 && j != 2 && j != 3 && j != 6 && j != 7) {
-				u.setValue(e.getSolverIndex(), -1.574520725161491, INSERT_VALUES);
-				log.info("mid-pole edge: " + toDegrees(e.getTheta()));
+				u.setValue(e.getSolverIndex(), log(0.5*(sqrt(2) - 1)), INSERT_VALUES);
 				continue;
 			}
 			// edge from a branch point to the north or south pole
 			if (i == 4 || i == 5 || i == 8 || i == 9 || j == 4 || j == 5 || j == 8 || j == 9) {
 				u.setValue(e.getSolverIndex(), log(sqrt(0.5*(2 - sqrt(2))*(2 + sqrt(3)))), INSERT_VALUES);
-				log.info("branch-pole edge: " + toDegrees(e.getTheta()));
 				continue;
 			} 
 			// edge from a branch point to the mid point on the equator
 			else {
-				log.info("branch-mid edge: " +  toDegrees(e.getTheta()));
 				u.setValue(e.getSolverIndex(), log(0.5*sqrt(0.5*(2 - sqrt(2))*(2 - sqrt(3)))), INSERT_VALUES);
 				continue;
 			}
