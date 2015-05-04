@@ -3,10 +3,12 @@ package de.varylab.discreteconformal.plugin;
 import static de.jtem.jpetsc.InsertMode.INSERT_VALUES;
 import static de.jtem.jpetsc.NormType.NORM_FROBENIUS;
 import static de.varylab.discreteconformal.plugin.TargetGeometry.Hyperbolic;
+import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -29,10 +31,18 @@ import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.algorithm.topology.TopologyAlgorithms;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
+import de.jtem.halfedgetools.selection.Selection;
+import de.jtem.jpetsc.PETSc;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jrworkspace.plugin.Controller;
+import de.jtem.jtao.ConvergenceFlags;
 import de.jtem.jtao.Tao;
+import de.varylab.conformallab.data.DataIO;
+import de.varylab.conformallab.data.DataUtility;
+import de.varylab.conformallab.data.types.HalfedgeEmbedding;
+import de.varylab.conformallab.data.types.HalfedgeSelection;
 import de.varylab.discreteconformal.functional.HyperIdealGenerator;
+import de.varylab.discreteconformal.functional.HyperIdealHyperellipticUtility;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -44,11 +54,12 @@ import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener {
 
-	private Logger
+	private static Logger
 		log = Logger.getLogger(HyperIdealPlugin.class.getName());
 	private JButton
 		lawsonSquareTiledButton = new JButton("Lawson's Square Tiled"),
 		lawsonSquareTiledBranchButton = new JButton("Lawson's Square Tiled Branch"),
+		lawsonHyperellipticButton = new JButton("Lawson's Hyperelliptic"),		
 		hyperellipticCurveButton = new JButton("Uniformize Hyperelliptic Curve");
 	private DiscreteConformalPlugin
 		conformalPlugin = null;
@@ -59,12 +70,15 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 	
 	public HyperIdealPlugin() {
 		shrinkPanel.setTitle("Hyper-Ideal Uniformization");
-		shrinkPanel.setLayout(new GridLayout(3, 1));
+		shrinkPanel.setLayout(new GridLayout(4, 1));
 		shrinkPanel.add(lawsonSquareTiledButton);
 		shrinkPanel.add(lawsonSquareTiledBranchButton);
+		shrinkPanel.add(lawsonHyperellipticButton);
 		shrinkPanel.add(hyperellipticCurveButton);
 		lawsonSquareTiledButton.addActionListener(this);
 		lawsonSquareTiledBranchButton.addActionListener(this);
+		lawsonHyperellipticButton.addActionListener(this);
+		hyperellipticCurveButton.addActionListener(this);
 	}
 	
 	static {
@@ -102,15 +116,114 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		if (lawsonSquareTiledBranchButton == ev.getSource()) {
 			uniformizeLawsonSquareTiledBranch();
 		}
+		if (lawsonHyperellipticButton == ev.getSource()) {
+			try {
+				uniformizeLawsonHyperelliptic();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 		if (hyperellipticCurveButton == ev.getSource()) {
 			uniformizeHyperellipticCurve();
 		}
 	}
 
+
+	public static void setSolverIndicesForCurve(CoHDS hds, Selection s) {
+		// selected vertices are variables
+		int index = 0;
+		for (CoVertex v : hds.getVertices()) {
+			if (s.contains(v)) {
+				v.setSolverIndex(index++);
+			}
+		}
+		// all edges are variables
+		for (CoEdge e : hds.getPositiveEdges()) {
+			e.setSolverIndex(index);
+			e.getOppositeEdge().setSolverIndex(index++);
+		}
+	}
+	
+	public static CHyperIdealApplication createTaoApplication(CoHDS hds) {
+		CHyperIdealApplication app = new CHyperIdealApplication(hds);
+		PETSc.optionsSetValue("-tao_lmm_vectors", "20");
+		PETSc.optionsSetValue("-tao_lmm_scale_type", "broyden");
+		PETSc.optionsSetValue("-tao_lmm_broyden_phi", "0.125");
+		PETSc.optionsSetValue("-tao_lmm_rescale_type", "scalar");
+		PETSc.optionsSetValue("-tao_lmm_rescale_history", "5");
+		PETSc.optionsSetValue("-tao_lmm_rescale_alpha", "5.0");
+		PETSc.optionsSetValue("-tao_lmm_rescale_beta", "0.5");
+		PETSc.optionsSetValue("-tao_lmm_limit_type", "relative");
+		PETSc.optionsSetValue("-tao_lmm_limit_mu", "1.0");
+		PETSc.optionsSetValue("-tao_lmm_limit_nu", "1.0");		
+		app.setFromOptions();
+		int g = HalfEdgeUtils.getGenus(hds);
+		int n = app.getDomainDimension();
+		Vec u = new Vec(n); u.set(0.0);
+		app.setInitialSolutionVec(u);
+		Vec lowerBounds = new Vec(n);
+		Vec upperBounds = new Vec(n);
+		lowerBounds.set(-Double.MAX_VALUE);
+		// set lower bound for branch vertices
+		for (int i = 0; i < 2*g+2; i++) {
+			lowerBounds.setValue(i, 1E-12, INSERT_VALUES);
+		}
+		upperBounds.set(Double.MAX_VALUE);
+		app.setVariableBounds(lowerBounds, upperBounds);
+		return app;
+	}
+	
+
+	public static Tao optimizeHyperIdealApplication(CHyperIdealApplication app, double tolerance) {
+		Tao optimizer = new Tao(Tao.Method.BLMVM);
+		optimizer.setFromOptions();
+		optimizer.setApplication(app);
+		optimizer.setGradientTolerances(tolerance, 0, 0); 
+		optimizer.setTolerances(0, 0, 0, 0);
+		optimizer.setMaximumIterates(50);
+		optimizer.solve();
+		return optimizer;
+	}
 	
 	private void uniformizeHyperellipticCurve() {
-		log.info("not yet implemeneted");
-		hif.get(new CoHDS());
+		CoHDS hds = hif.get(new CoHDS());
+		HyperIdealHyperellipticUtility.calculateCircleIntersections(hds);
+		Selection sel = hif.getSelection();
+		setSolverIndicesForCurve(hds, sel);
+		CHyperIdealApplication app = createTaoApplication(hds);
+		Tao tao = optimizeHyperIdealApplication(app, 1E-6);
+		log.info(tao.getSolutionStatus().toString());
+		if (tao.getSolutionStatus().reason != ConvergenceFlags.CONVERGED_ATOL) {
+			throw new RuntimeException("No solution found: " + tao.getSolutionStatus());
+		}
+		Vec u = app.getSolutionVec();
+		CoVertex root = hds.getVertex(0);
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(hds, root, null);
+		Map<CoEdge, Double> lMap = new LinkedHashMap<>();
+		for (CoEdge e : hds.getPositiveEdges()) {
+			if (e.getLeftFace() == null) {
+				e = e.getOppositeEdge();
+			}
+			double l = app.getEdgeLength(e, u);
+			lMap.put(e, l);
+			lMap.put(e.getOppositeEdge(), l);
+		}
+		
+		// write beta angles to alpha for the layout
+		for (CoEdge e : hds.getEdges()) {
+			e.setAlpha(e.getBeta());
+		}
+		
+		HyperbolicLayout.doLayout(hds, root, lMap);
+		for (CoEdge e : hds.getPositiveEdges()) {
+			double[] s = e.getStartVertex().T;
+			double[] t = e.getTargetVertex().T;
+			double lExpected = lMap.get(e);
+			double l = Pn.distanceBetween(s, t, Pn.HYPERBOLIC);
+			Assert.assertEquals(lExpected, l, 1E-6);
+		}
+		conformalDataPlugin.addHalfedgeMap("Hyperidel Uniformizing Map", hds, cutInfo);
+		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
 	}
 	
 	private void uniformizeLawsonSquareTiledBranch() {
@@ -302,6 +415,59 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
 	}
 	
+	
+	
+	private CuttingInfo<CoVertex, CoEdge, CoFace> cutAndLayoutSurface(CoHDS hds, CoVertex root, Selection cutSelection, CHyperIdealApplication app) {
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
+		Set<CoEdge> cutEdges = cutSelection.getEdges(hds); 
+		CuttingUtility.cutAtEdges(cutInfo, cutEdges);
+		cutInfo.cutRoot = root;
+		Assert.assertEquals(0, HalfEdgeUtils.getGenus(hds));
+		
+		Map<CoEdge, Double> lMap = new LinkedHashMap<>();
+		for (CoEdge e : hds.getPositiveEdges()) {
+			if (e.getLeftFace() == null) {
+				e = e.getOppositeEdge();
+			}
+			double l = app.getEdgeLength(e, app.getSolutionVec());
+			lMap.put(e, l);
+			lMap.put(e.getOppositeEdge(), l);
+		}
+		
+		// write beta angles to alpha for the layout
+		for (CoEdge e : hds.getEdges()) {
+			e.setAlpha(e.getBeta());
+		}
+		
+		HyperbolicLayout.doLayout(hds, root, lMap);
+		for (CoEdge e : hds.getPositiveEdges()) {
+			double[] s = e.getStartVertex().T;
+			double[] t = e.getTargetVertex().T;
+			double lExpected = lMap.get(e);
+			double l = Pn.distanceBetween(s, t, Pn.HYPERBOLIC);
+			Assert.assertEquals(lExpected, l, 1E-5);
+		}		
+		return cutInfo;
+	}
+	
+	
+	private void uniformizeLawsonHyperelliptic() throws Exception {
+		CoHDS hds = HyperIdealGenerator.createLawsonHyperelliptic();
+		InputStream in = HyperIdealGenerator.class.getResourceAsStream("lawson_curve_source.xml");
+		HalfedgeSelection halfedgeSelection = DataIO.readConformalData(HalfedgeEmbedding.class, in).getSelection();
+		Selection cutSelection = DataUtility.toSelection(halfedgeSelection, hds);		
+		Selection branchSelection = new Selection(hds.getVertex(0), hds.getVertex(1), hds.getVertex(2), hds.getVertex(3), hds.getVertex(6), hds.getVertex(7));
+		HyperIdealPlugin.setSolverIndicesForCurve(hds, branchSelection);
+		CHyperIdealApplication app =  HyperIdealPlugin.createTaoApplication(hds);
+		Tao optimizer = HyperIdealPlugin.optimizeHyperIdealApplication(app, 1E-6);
+		log.info(optimizer.getSolutionStatus().toString());	
+		CoVertex root = hds.getVertex(9);
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, cutSelection, app);
+		conformalDataPlugin.addHalfedgeMap("Uniformizing Map", hds, cutInfo);
+		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
+	}
+	
+	
 	@Override
 	public void install(Controller c) throws Exception {
 		super.install(c);
@@ -309,5 +475,5 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		conformalDataPlugin = c.getPlugin(ConformalDataPlugin.class);
 		hif = c.getPlugin(HalfedgeInterface.class);
 	}
-	
+
 }
