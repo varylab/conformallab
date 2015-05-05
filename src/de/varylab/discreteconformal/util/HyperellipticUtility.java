@@ -2,9 +2,11 @@ package de.varylab.discreteconformal.util;
 
 import static de.varylab.discreteconformal.util.PathUtility.getVerticesOnPath;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -21,7 +23,16 @@ import de.varylab.discreteconformal.heds.CoVertex;
 public class HyperellipticUtility {
 
 	
-	public static void generateHyperellipticImage(CoHDS hds, int numExtraPoints, Set<CoEdge> glueEdges, int... branchVertices) {
+	/**
+	 * Generates a two-sheeted version of hds branched at the vertices with 
+	 * indices specified by branchVertices.
+	 * @param hds
+	 * @param numExtraPoints
+	 * @param glueEdges
+	 * @param branchVertices
+	 * @return the set of branch vertices in the result
+	 */
+	public static Set<CoVertex> generateHyperellipticImage(CoHDS hds, int numExtraPoints, Set<CoEdge> glueEdges, int... branchVertices) {
 		if (hds.numVertices() < 4) {
 			throw new RuntimeException("Not enough vertices in generateHyperellipticImage()");
 		} 
@@ -64,15 +75,20 @@ public class HyperellipticUtility {
 		int vOffset = hds.numVertices();
 		int eOffset = hds.numEdges();
 		HalfEdgeUtils.copy(hds, hds);
+		Map<CoVertex, CoVertex> sheetVertexMap = new HashMap<>(); 
 		for (int i = 0; i < vOffset; i++) {
 			CoVertex v = hds.getVertex(i);
 			CoVertex vc = hds.getVertex(vOffset + i); 
 			double[] p = v.P;
 			vc.P = p.clone();
+			sheetVertexMap.put(v, vc);
+			sheetVertexMap.put(vc, v);
 		}
+		
 		
 		glueEdges.clear();
 		Set<CoVertex> avoid = new HashSet<CoVertex>(branchList);
+		Set<CoVertex> originalBranchVertices = new HashSet<>(branchList);
 		while (!branchList.isEmpty()) {
 			CoVertex start = branchList.remove(0);
 			CoVertex end = branchList.remove(0);
@@ -90,7 +106,17 @@ public class HyperellipticUtility {
 			glueEdges.addAll(path1);
 			glueEdges.addAll(path1c);
 		}
+		
+		// create result branch vertices
+		Set<CoVertex> resultBranchVertices = new HashSet<>();
+		for (CoVertex v : originalBranchVertices) {
+			CoVertex bv = v;
+			if (!v.isValid()) {
+				bv = sheetVertexMap.get(v);
+			}
+			resultBranchVertices.add(bv);
+		}
+		return resultBranchVertices;
 	}
-	
 	
 }

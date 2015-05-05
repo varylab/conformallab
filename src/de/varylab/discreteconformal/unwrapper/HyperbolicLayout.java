@@ -202,13 +202,18 @@ public class HyperbolicLayout {
 		double[] C = A.clone();
 		mb.getMatrix().transformVector(C);
 		Pn.normalize(C, C, Pn.HYPERBOLIC);
-		double dACcheck = Pn.distanceBetween(A, C, Pn.HYPERBOLIC);
-		double check = abs(dACcheck - dAC);
-		if (check > 1E-3) {
-			// solution inaccurate
+		try {
+			double dACcheck = Pn.distanceBetween(A, C, Pn.HYPERBOLIC);
+			double check = abs(dACcheck - dAC);
+			if (check > 1E-3) {
+				// solution inaccurate
+				return null;
+			} else {
+				return C;
+			}
+		} catch (IllegalArgumentException e) {
+			// Points cannot lie on or outside the hyperbolic absolute
 			return null;
-		} else {
-			return C;
 		}
 	}
 	

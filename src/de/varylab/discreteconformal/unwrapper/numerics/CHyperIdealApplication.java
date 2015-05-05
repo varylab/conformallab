@@ -40,16 +40,16 @@ public class CHyperIdealApplication extends TaoApplication implements TaoAppAddC
 	
 	@Override
 	public double evaluateObjectiveAndGradient(Vec x, Vec g) {
-		log.info("eval@" + x);
+		log.fine("eval@" + x);
 		TaoDomain u = new TaoDomain(x);
 		SimpleEnergy E = new SimpleEnergy();
 		TaoGradient G = g != null ? new TaoGradient(g) : null;
 		functional.evaluate(hds, u, E, G, null);
 		if (g != null) {
 			g.assemble();
-			log.info("grad length: " + g.norm(NORM_FROBENIUS));
+			log.fine("grad length: " + g.norm(NORM_FROBENIUS));
 		}
-		log.info("E = " + E.E);
+		log.fine("E = " + E.E);
 		return E.get();
 	}
 	

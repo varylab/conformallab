@@ -179,19 +179,19 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		optimizer.setApplication(app);
 		optimizer.setGradientTolerances(tolerance, 0, 0); 
 		optimizer.setTolerances(0, 0, 0, 0);
-		optimizer.setMaximumIterates(50);
+		optimizer.setMaximumIterates(100);
 		optimizer.solve();
 		return optimizer;
 	}
 	
-	private CuttingInfo<CoVertex, CoEdge, CoFace> cutAndLayoutSurface(CoHDS hds, CoVertex root, Selection cutSelection, CHyperIdealApplication app) {
+	private CuttingInfo<CoVertex, CoEdge, CoFace> cutAndLayoutSurface(CoHDS hds, CoVertex cutRoot, CoVertex layoutRoot, Selection cutSelection, CHyperIdealApplication app) {
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
 		if (cutSelection != null) {
 			Set<CoEdge> cutEdges = cutSelection.getEdges(hds); 
 			CuttingUtility.cutAtEdges(cutInfo, cutEdges);
-			cutInfo.cutRoot = root;
+			cutInfo.cutRoot = cutRoot;
 		} else {
-			cutInfo = cutManifoldToDisk(hds, root, null);
+			cutInfo = cutManifoldToDisk(hds, cutRoot, null);
 		}
 		Assert.assertEquals(0, HalfEdgeUtils.getGenus(hds));
 		
@@ -210,13 +210,16 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 			e.setAlpha(e.getBeta());
 		}
 		
-		HyperbolicLayout.doLayout(hds, root, lMap);
+		HyperbolicLayout.doLayout(hds, layoutRoot, lMap);
 		for (CoEdge e : hds.getPositiveEdges()) {
 			double[] s = e.getStartVertex().T;
 			double[] t = e.getTargetVertex().T;
 			double lExpected = lMap.get(e);
 			double l = Pn.distanceBetween(s, t, Pn.HYPERBOLIC);
-			Assert.assertEquals(lExpected, l, 1E-5);
+			double dif = Math.abs(lExpected - l);
+			if (dif > 1E-5) {
+				log.warning("layout accuracy: " + dif);
+			}
 		}		
 		return cutInfo;
 	}
@@ -227,14 +230,14 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		Selection sel = hif.getSelection();
 		setSolverIndicesForCurve(hds, sel);
 		CHyperIdealApplication app = createTaoApplication(hds);
-		Tao tao = optimizeHyperIdealApplication(app, 1E-6);
+		Tao tao = optimizeHyperIdealApplication(app, 1E-8);
 		log.info(tao.getSolutionStatus().toString());
 		if (tao.getSolutionStatus().reason != ConvergenceFlags.CONVERGED_ATOL) {
-			throw new RuntimeException("No solution found: " + tao.getSolutionStatus());
+			log.warning("Solution accuracy is not whithin the required bounds: " + tao.getSolutionStatus());
 		}
 		CoVertex root = hds.getVertex(0);
 		Selection cutSelection = sel.getEdges().size() != 0 ? sel : null;
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, cutSelection, app);
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, null, cutSelection, app);
 		conformalDataPlugin.addHalfedgeMap("Hyperidel Uniformizing Map", hds, cutInfo);
 		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
 	}
@@ -279,7 +282,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		cutEdges.add(hds.getEdge(21));
 		
 		CoVertex root = hds.getVertex(2);
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, cutEdges, app);
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, root, cutEdges, app);
 		conformalDataPlugin.addHalfedgeMap("Uniformizing Map", hds, cutInfo);
 		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
 	}
@@ -339,7 +342,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		conformalDataPlugin.addDiscreteMetric("Lawsons Squares", hds, new AdapterSet(new LawsonMetric()));
 		
 		CoVertex root = hds.getVertex(2);
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, cutEdges, app);
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, root, cutEdges, app);
 		
 		// stair case of quads
 //		hds.getVertex(0).P = new double[]{0,0,0,1};
@@ -388,7 +391,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		Tao optimizer = HyperIdealPlugin.optimizeHyperIdealApplication(app, 1E-6);
 		log.info(optimizer.getSolutionStatus().toString());	
 		CoVertex root = hds.getVertex(9);
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, cutSelection, app);
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, root, cutSelection, app);
 		conformalDataPlugin.addHalfedgeMap("Uniformizing Map", hds, cutInfo);
 		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
 	}
