@@ -10,7 +10,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -185,26 +184,23 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		return optimizer;
 	}
 	
-	private void uniformizeHyperellipticCurve() {
-		CoHDS hds = hif.get(new CoHDS());
-		HyperIdealHyperellipticUtility.calculateCircleIntersections(hds);
-		Selection sel = hif.getSelection();
-		setSolverIndicesForCurve(hds, sel);
-		CHyperIdealApplication app = createTaoApplication(hds);
-		Tao tao = optimizeHyperIdealApplication(app, 1E-6);
-		log.info(tao.getSolutionStatus().toString());
-		if (tao.getSolutionStatus().reason != ConvergenceFlags.CONVERGED_ATOL) {
-			throw new RuntimeException("No solution found: " + tao.getSolutionStatus());
+	private CuttingInfo<CoVertex, CoEdge, CoFace> cutAndLayoutSurface(CoHDS hds, CoVertex root, Selection cutSelection, CHyperIdealApplication app) {
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
+		if (cutSelection != null) {
+			Set<CoEdge> cutEdges = cutSelection.getEdges(hds); 
+			CuttingUtility.cutAtEdges(cutInfo, cutEdges);
+			cutInfo.cutRoot = root;
+		} else {
+			cutInfo = cutManifoldToDisk(hds, root, null);
 		}
-		Vec u = app.getSolutionVec();
-		CoVertex root = hds.getVertex(0);
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutManifoldToDisk(hds, root, null);
+		Assert.assertEquals(0, HalfEdgeUtils.getGenus(hds));
+		
 		Map<CoEdge, Double> lMap = new LinkedHashMap<>();
 		for (CoEdge e : hds.getPositiveEdges()) {
 			if (e.getLeftFace() == null) {
 				e = e.getOppositeEdge();
 			}
-			double l = app.getEdgeLength(e, u);
+			double l = app.getEdgeLength(e, app.getSolutionVec());
 			lMap.put(e, l);
 			lMap.put(e.getOppositeEdge(), l);
 		}
@@ -220,11 +216,29 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 			double[] t = e.getTargetVertex().T;
 			double lExpected = lMap.get(e);
 			double l = Pn.distanceBetween(s, t, Pn.HYPERBOLIC);
-			Assert.assertEquals(lExpected, l, 1E-6);
+			Assert.assertEquals(lExpected, l, 1E-5);
+		}		
+		return cutInfo;
+	}
+	
+	private void uniformizeHyperellipticCurve() {
+		CoHDS hds = hif.get(new CoHDS());
+		HyperIdealHyperellipticUtility.calculateCircleIntersections(hds);
+		Selection sel = hif.getSelection();
+		setSolverIndicesForCurve(hds, sel);
+		CHyperIdealApplication app = createTaoApplication(hds);
+		Tao tao = optimizeHyperIdealApplication(app, 1E-6);
+		log.info(tao.getSolutionStatus().toString());
+		if (tao.getSolutionStatus().reason != ConvergenceFlags.CONVERGED_ATOL) {
+			throw new RuntimeException("No solution found: " + tao.getSolutionStatus());
 		}
+		CoVertex root = hds.getVertex(0);
+		Selection cutSelection = sel.getEdges().size() != 0 ? sel : null;
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, cutSelection, app);
 		conformalDataPlugin.addHalfedgeMap("Hyperidel Uniformizing Map", hds, cutInfo);
 		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
 	}
+	
 	
 	private void uniformizeLawsonSquareTiledBranch() {
 		CoHDS hds = HyperIdealGenerator.createLawsonSquareTiledWithBranchPoints();
@@ -247,11 +261,12 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		}
 		// initialize angles
 		Vec G = new Vec(app.getDomainDimension());
+		app.setInitialSolutionVec(u);
 		app.evaluateObjectiveAndGradient(u, G);
 		Assert.assertEquals(0.0, G.norm(NORM_FROBENIUS), 1E-6);
 		Assert.assertEquals(2, HalfEdgeUtils.getGenus(hds));
 
-		Set<CoEdge> cutEdges = new LinkedHashSet<>();
+		Selection cutEdges = new Selection();
 		// six quads around a vertex
 		cutEdges.add(hds.getEdge(2));
 		cutEdges.add(hds.getEdge(1));
@@ -264,34 +279,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		cutEdges.add(hds.getEdge(21));
 		
 		CoVertex root = hds.getVertex(2);
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
-		CuttingUtility.cutAtEdges(cutInfo, cutEdges);
-		cutInfo.cutRoot = root;
-		Assert.assertEquals(0, HalfEdgeUtils.getGenus(hds));
-		
-		Map<CoEdge, Double> lMap = new LinkedHashMap<>();
-		for (CoEdge e : hds.getPositiveEdges()) {
-			if (e.getLeftFace() == null) {
-				e = e.getOppositeEdge();
-			}
-			double l = app.getEdgeLength(e, u);
-			lMap.put(e, l);
-			lMap.put(e.getOppositeEdge(), l);
-		}
-		
-		// write beta angles to alpha for the layout
-		for (CoEdge e : hds.getEdges()) {
-			e.setAlpha(e.getBeta());
-		}
-		
-		HyperbolicLayout.doLayout(hds, root, lMap);
-		for (CoEdge e : hds.getPositiveEdges()) {
-			double[] s = e.getStartVertex().T;
-			double[] t = e.getTargetVertex().T;
-			double lExpected = lMap.get(e);
-			double l = Pn.distanceBetween(s, t, Pn.HYPERBOLIC);
-			Assert.assertEquals(lExpected, l, 1E-6);
-		}
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, cutEdges, app);
 		conformalDataPlugin.addHalfedgeMap("Uniformizing Map", hds, cutInfo);
 		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
 	}
@@ -313,11 +301,11 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 			u.setValue(i, lawsonData[i], INSERT_VALUES);
 		}
 		// initialize angles
+		app.setInitialSolutionVec(u);
 		app.evaluateObjectiveAndGradient(u, null);
-
 		Assert.assertEquals(2, HalfEdgeUtils.getGenus(hds));
 		
-		Set<CoEdge> cutEdges = new LinkedHashSet<>();
+		Selection cutEdges = new Selection();
 		// stair case of quads
 //		cutEdges.add(hds.getEdge(0));
 //		cutEdges.add(hds.getEdge(1));
@@ -351,10 +339,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		conformalDataPlugin.addDiscreteMetric("Lawsons Squares", hds, new AdapterSet(new LawsonMetric()));
 		
 		CoVertex root = hds.getVertex(2);
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
-		CuttingUtility.cutAtEdges(cutInfo, cutEdges);
-		cutInfo.cutRoot = root;
-		Assert.assertEquals(0, HalfEdgeUtils.getGenus(hds));
+		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, cutEdges, app);
 		
 		// stair case of quads
 //		hds.getVertex(0).P = new double[]{0,0,0,1};
@@ -387,67 +372,8 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		hds.getVertex(11).P = new double[]{0,0,0,1};
 		hds.getVertex(12).P = new double[]{0,1,0,1};
 		
-		Map<CoEdge, Double> lMap = new LinkedHashMap<>();
-		for (CoEdge e : hds.getPositiveEdges()) {
-			if (e.getLeftFace() == null) {
-				e = e.getOppositeEdge();
-			}
-			double l = app.getEdgeLength(e, u);
-			lMap.put(e, l);
-			lMap.put(e.getOppositeEdge(), l);
-		}
-		
-		// write beta angles to alpha for the layout
-		for (CoEdge e : hds.getEdges()) {
-			e.setAlpha(e.getBeta());
-		}
-		
-		HyperbolicLayout.doLayout(hds, root, lMap);
-		for (CoEdge e : hds.getPositiveEdges()) {
-			double[] s = e.getStartVertex().T;
-			double[] t = e.getTargetVertex().T;
-			double lExpected = lMap.get(e);
-			double l = Pn.distanceBetween(s, t, Pn.HYPERBOLIC);
-			Assert.assertEquals(lExpected, l, 1E-5);
-		}
-		
 		conformalDataPlugin.addHalfedgeMap("Uniformizing Map", hds, cutInfo);
 		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
-	}
-	
-	
-	
-	private CuttingInfo<CoVertex, CoEdge, CoFace> cutAndLayoutSurface(CoHDS hds, CoVertex root, Selection cutSelection, CHyperIdealApplication app) {
-		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = new CuttingInfo<>();
-		Set<CoEdge> cutEdges = cutSelection.getEdges(hds); 
-		CuttingUtility.cutAtEdges(cutInfo, cutEdges);
-		cutInfo.cutRoot = root;
-		Assert.assertEquals(0, HalfEdgeUtils.getGenus(hds));
-		
-		Map<CoEdge, Double> lMap = new LinkedHashMap<>();
-		for (CoEdge e : hds.getPositiveEdges()) {
-			if (e.getLeftFace() == null) {
-				e = e.getOppositeEdge();
-			}
-			double l = app.getEdgeLength(e, app.getSolutionVec());
-			lMap.put(e, l);
-			lMap.put(e.getOppositeEdge(), l);
-		}
-		
-		// write beta angles to alpha for the layout
-		for (CoEdge e : hds.getEdges()) {
-			e.setAlpha(e.getBeta());
-		}
-		
-		HyperbolicLayout.doLayout(hds, root, lMap);
-		for (CoEdge e : hds.getPositiveEdges()) {
-			double[] s = e.getStartVertex().T;
-			double[] t = e.getTargetVertex().T;
-			double lExpected = lMap.get(e);
-			double l = Pn.distanceBetween(s, t, Pn.HYPERBOLIC);
-			Assert.assertEquals(lExpected, l, 1E-5);
-		}		
-		return cutInfo;
 	}
 	
 	
