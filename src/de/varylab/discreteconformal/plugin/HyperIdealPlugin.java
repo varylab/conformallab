@@ -238,7 +238,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		CoVertex root = hds.getVertex(0);
 		Selection cutSelection = sel.getEdges().size() != 0 ? sel : null;
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, null, cutSelection, app);
-		conformalDataPlugin.addHalfedgeMap("Hyperidel Uniformizing Map", hds, cutInfo);
+		conformalDataPlugin.addHalfedgeMap("Hyperideal Uniformizing Map", hds, cutInfo);
 		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
 	}
 	
