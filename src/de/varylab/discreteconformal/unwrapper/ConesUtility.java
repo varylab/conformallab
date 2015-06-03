@@ -205,7 +205,6 @@ public class ConesUtility {
 				}
 				break;
 			case Triangles:
-			case Hexagons:
 				if (theta < PI / 12) {
 					theta = 2 * PI;
 					result.remove(v);
@@ -218,6 +217,19 @@ public class ConesUtility {
 					}
 				}
 				break;
+			case Hexagons:
+				if (theta < PI / 6) {
+					theta = 2 * PI;
+					result.remove(v);
+				} else {
+					double q = theta % (PI/3);
+					if (q > PI/6) {
+						theta += (PI/3 - q);
+					} else {
+						theta -= q;
+					}
+				}
+				break;				
 			}
 			v.setTheta(theta);
 			v.setSolverIndex(0);

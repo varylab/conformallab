@@ -310,7 +310,6 @@ public class UnwrapUtility {
 				theta -= q;
 			}
 			break;
-
 		}
 		return sign * theta;
 	}

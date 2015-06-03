@@ -185,10 +185,9 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 
 		if (!cones.isEmpty()) {
 			if (conesMode != QuantizationMode.AllAngles) {
-				// calculating cones
+				log.info("performing cone angle quantization");
 				cones = ConesUtility.quantizeCones(surface, cones, conesMode);
 				
-				// optimizing conformal structure
 				CEuclideanApplication app2 = new CEuclideanApplication(surface);
 				n = app2.getDomainDimension();
 	
@@ -199,13 +198,13 @@ public class EuclideanUnwrapperPETSc implements Unwrapper {
 				app2.setHessianMat(H, H);
 				
 				optimizer.setApplication(app2);
-				optimizer.setGradientTolerances(1E-5, 0, 0);
 				optimizer.solve();
 				
 				status = optimizer.getSolutionStatus();
-				System.out.println("Cone Quantization: " + status);
 				if (status.reason.cvalue() < 0) {
-					throw new UnwrapException("Cone quantization did not succeed: " + status);
+					log.warning("Cone quantization did not succeed: " + status);
+				} else {
+					UnwrapUtility.logSolutionStatus(optimizer, log);
 				}
 			}
 		}
