@@ -134,7 +134,7 @@ public class UnwrapUtility {
 					if (edge.getLeftFace() == null) {
 						for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
 							if (e.getLeftFace() == null) continue;
-							theta += (getAngle(e, aSet) % PI);
+							theta += getAngle(e, aSet);
 						}
 						QuantizationMode qMode = qm;
 						if (v.info != null) {
