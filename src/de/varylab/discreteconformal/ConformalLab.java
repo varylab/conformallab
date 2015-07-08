@@ -39,6 +39,7 @@ import de.varylab.discreteconformal.plugin.ConformalDataPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteConformalPlugin;
 import de.varylab.discreteconformal.plugin.DiscreteRiemannPlugin;
 import de.varylab.discreteconformal.plugin.HyperIdealPlugin;
+import de.varylab.discreteconformal.plugin.HyperIdealVisualizationPlugin;
 import de.varylab.discreteconformal.plugin.HyperellipticCurveGenerator;
 import de.varylab.discreteconformal.plugin.HyperellipticCurvePlugin;
 import de.varylab.discreteconformal.plugin.KoebePolyhedronPlugin;
@@ -65,7 +66,6 @@ import de.varylab.discreteconformal.plugin.visualizer.IsothermicityMeasure;
 import de.varylab.discreteconformal.plugin.visualizer.ThetaVisualizer;
 import de.varylab.discreteconformal.startup.ConformalLabSplashScreen;
 import de.varylab.discreteconformal.startup.TrebuchetFontSet;
-
 
 public class ConformalLab implements Runnable {
 
@@ -103,6 +103,7 @@ public class ConformalLab implements Runnable {
 		s.add(new DiscreteConformalEquivalencemMeasure());
 		s.add(new SphericalNormalizationPlugin());
 		s.add(new SelectHomotopyGeneratorsPlugin());
+		s.add(new HyperIdealVisualizationPlugin());
 		return s;
 	}
 	

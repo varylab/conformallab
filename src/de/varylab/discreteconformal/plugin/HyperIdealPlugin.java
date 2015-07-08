@@ -46,6 +46,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.adapter.HyperIdealRadiusAdapter;
 import de.varylab.discreteconformal.unwrapper.HyperbolicLayout;
 import de.varylab.discreteconformal.unwrapper.numerics.CHyperIdealApplication;
 import de.varylab.discreteconformal.util.CuttingUtility;
@@ -237,6 +238,8 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		}
 		CoVertex root = hds.getVertex(0);
 		Selection cutSelection = sel.getEdges().size() != 0 ? sel : null;
+		double[] solution = tao.getSolution().getArrayReadOnly();
+		hif.addAdapter(new HyperIdealRadiusAdapter(solution), false);
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, null, cutSelection, app);
 		conformalDataPlugin.addHalfedgeMap("Hyperideal Uniformizing Map", hds, cutInfo);
 		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
@@ -282,6 +285,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		cutEdges.add(hds.getEdge(21));
 		
 		CoVertex root = hds.getVertex(2);
+		hif.addAdapter(new HyperIdealRadiusAdapter(lawsonData), false);
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, root, cutEdges, app);
 		conformalDataPlugin.addHalfedgeMap("Uniformizing Map", hds, cutInfo);
 		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
@@ -375,6 +379,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		hds.getVertex(11).P = new double[]{0,0,0,1};
 		hds.getVertex(12).P = new double[]{0,1,0,1};
 		
+		hif.addAdapter(new HyperIdealRadiusAdapter(lawsonData), false);
 		conformalDataPlugin.addHalfedgeMap("Uniformizing Map", hds, cutInfo);
 		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
 	}
@@ -392,6 +397,8 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		log.info(optimizer.getSolutionStatus().toString());	
 		CoVertex root = hds.getVertex(9);
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, root, cutSelection, app);
+		double[] solution = optimizer.getSolution().getArrayReadOnly();
+		hif.addAdapter(new HyperIdealRadiusAdapter(solution), false);
 		conformalDataPlugin.addHalfedgeMap("Uniformizing Map", hds, cutInfo);
 		conformalPlugin.createUniformization(hds, Hyperbolic, cutInfo);
 	}
