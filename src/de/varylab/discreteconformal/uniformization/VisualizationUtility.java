@@ -255,7 +255,7 @@ public class VisualizationUtility {
 	 * Calculate the circum-center of a triangle in affine coordinates
 	 * @return
 	 */
-	protected static double[] getCircumCenter(double[] A, double[] B, double[] C) {
+	public static double[] getCircumCenter(double[] A, double[] B, double[] C) {
 		double a = Rn.euclideanDistance(B, C);
 		double b = Rn.euclideanDistance(C, A);
 		double c = Rn.euclideanDistance(A, B);
