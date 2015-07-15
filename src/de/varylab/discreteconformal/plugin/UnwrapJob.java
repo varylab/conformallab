@@ -32,7 +32,8 @@ import de.varylab.discreteconformal.unwrapper.EuclideanUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.QuantizationMode;
-import de.varylab.discreteconformal.unwrapper.StereographicUnwrapper;
+import de.varylab.discreteconformal.unwrapper.SphericalUnwrapper;
+import de.varylab.discreteconformal.unwrapper.SphericalUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
@@ -112,11 +113,11 @@ public class UnwrapJob extends AbstractJob {
 			log.info("Spherical unwrap...");
 			Unwrapper unwrapper = null;
 			if (usePetsc) {
-//				unwrapper = new SphericalUnwrapperPETSc();
-				unwrapper = new StereographicUnwrapper();
+				unwrapper = new SphericalUnwrapperPETSc();
+//				unwrapper = new StereographicUnwrapper();
 			} else {
-//				unwrapper = new SphericalUnwrapper();
-				unwrapper = new StereographicUnwrapper();
+				unwrapper = new SphericalUnwrapper();
+//				unwrapper = new StereographicUnwrapper();
 			}
 			if (cutStrategy == CutStrategy.Selection) {
 				Set<CoEdge> edgeSet = new TreeSet<>(selectedEdges);

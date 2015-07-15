@@ -11,14 +11,18 @@ import static java.lang.Math.sqrt;
 import static java.lang.Math.tan;
 import static java.lang.Math.tanh;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Energy;
 import de.jtem.halfedgetools.functional.Gradient;
@@ -252,9 +256,20 @@ public class HyperbolicCircularHolesFunctional <
 			final V
 				vi = e.getStartVertex(),
 				vj = e.getTargetVertex();
+			final E
+				ejk = e.getNextEdge(),
+				eki = e.getPreviousEdge(),
+				ejm = e.getOppositeEdge().getNextEdge(),
+				emi = e.getOppositeEdge().getPreviousEdge();
 			final int
 				i = var.getVarIndex(vi),
 				j = var.getVarIndex(vj);
+			final int
+				eij_i = var.getVarIndex(e),
+				ejk_i = var.getVarIndex(ejk),
+				eki_i = var.getVarIndex(eki),
+				ejm_i = var.getVarIndex(ejm),
+				emi_i = var.getVarIndex(emi);
 			final double 
 				ui = var.isVariable(vi) ? u.get(var.getVarIndex(vi)) : 0.0,
 				uj = var.isVariable(vj) ? u.get(var.getVarIndex(vj)) : 0.0;
@@ -278,6 +293,74 @@ public class HyperbolicCircularHolesFunctional <
 				H.add(i, j, Hij);
 				H.add(j, i, Hij);
 			}
+			
+			// quadratic lambda terms
+			if (var.isVariable(e)) {
+				H.add(eij_i, eij_i, cot);
+			}
+//			if (var.isVariable(ejk)) {
+//				H.add(ejk_i, ejk_i, 0.25*cot);
+//			}
+//			if (var.isVariable(eki)) {
+//				H.add(eki_i, eki_i, 0.25*cot);
+//			}
+//			if (var.isVariable(ejm)) {
+//				H.add(ejm_i, ejm_i, 0.25*cot);
+//			}
+//			if (var.isVariable(emi)) {
+//				H.add(emi_i, emi_i, 0.25*cot);
+//			}
+//			if (var.isVariable(e1) && var.isVariable(e2)) {
+//				H.add(e1i, e2i, -cotE[2] / 2);
+//				H.add(e2i, e1i, -cotE[2] / 2);
+//			}
+//			if (var.isVariable(e2) && var.isVariable(e3)) {
+//				H.add(e2i, e3i, -cotE[0] / 2);
+//				H.add(e3i, e2i, -cotE[0] / 2);
+//			}			
+//			if (var.isVariable(e3) && var.isVariable(e1)) {
+//				H.add(e3i, e1i, -cotE[1] / 2);
+//				H.add(e1i, e3i, -cotE[1] / 2);
+//			}	
+//			
+//			// mixed terms
+//			if (var.isVariable(v1) && var.isVariable(e1)) {
+//				H.add(v1i, e1i, cotE[1] / 2);
+//				H.add(e1i, v1i, cotE[1] / 2);
+//			}
+//			if (var.isVariable(v1) && var.isVariable(e2)) {
+//				H.add(v1i, e2i, cotE[0] / 2);
+//				H.add(e2i, v1i, cotE[0] / 2);
+//			}			
+//			if (var.isVariable(v2) && var.isVariable(e2)) {
+//				H.add(v2i, e2i, cotE[2] / 2);
+//				H.add(e2i, v2i, cotE[2] / 2);
+//			}
+//			if (var.isVariable(v2) && var.isVariable(e3)) {
+//				H.add(v2i, e3i, cotE[1] / 2);
+//				H.add(e3i, v2i, cotE[1] / 2);
+//			}	
+//			if (var.isVariable(v3) && var.isVariable(e3)) {
+//				H.add(v3i, e3i, cotE[0] / 2);
+//				H.add(e3i, v3i, cotE[0] / 2);
+//			}
+//			if (var.isVariable(v3) && var.isVariable(e1)) {
+//				H.add(v3i, e1i, cotE[2] / 2);
+//				H.add(e1i, v3i, cotE[2] / 2);
+//			}
+//			
+//			if (var.isVariable(v1) && var.isVariable(e3)) {
+//				H.add(v1i, e3i, -cotV[0] / 2);
+//				H.add(e3i, v1i, -cotV[0] / 2);
+//			}
+//			if (var.isVariable(v2) && var.isVariable(e1)) {
+//				H.add(v2i, e1i, -cotV[1] / 2);
+//				H.add(e1i, v2i, -cotV[1] / 2);
+//			}
+//			if (var.isVariable(v3) && var.isVariable(e2)) {
+//				H.add(v3i, e2i, -cotV[2] / 2);
+//				H.add(e2i, v3i, -cotV[2] / 2);
+//			}			
 		}
 	}
 	
@@ -360,35 +443,108 @@ public class HyperbolicCircularHolesFunctional <
 		}
 		return valid;
 	}
-	
+
 	@Override
 	public <
 		HDS extends HalfEdgeDataStructure<V,E,F>
 	> int[][] getNonZeroPattern(HDS hds) {
-		int n = getDimension(hds);
-		int[][] nz = new int[n][];
+		int n = 0;
 		for (V v : hds.getVertices()) {
-			if (!var.isVariable(v)) {
-				continue;
+			if (var.isVariable(v)) {
+				n++;
 			}
-			int i = var.getVarIndex(v);
-			List<E> star = incomingEdges(v);
-			Set<Integer> nzList = new HashSet<Integer>();
-			nzList.add(var.getVarIndex(v));
+		}
+		for (E e : hds.getPositiveEdges()) {
+			if (var.isVariable(e)) {
+				n++;
+			}
+		}
+		Map<Integer, TreeSet<Integer>> nonZeros = new HashMap<Integer, TreeSet<Integer>>();
+		for (int i = 0; i < n; i++) {
+			nonZeros.put(i, new TreeSet<Integer>());
+		}
+		for (V v : hds.getVertices()) {
+			if (!var.isVariable(v)) continue;
+			List<E> star = HalfEdgeUtils.incomingEdges(v);
+			Set<Integer> nonZeroIndices = nonZeros.get(var.getVarIndex(v));
+			nonZeroIndices.add(var.getVarIndex(v));
 			for (E e : star) {
-				V sv = e.getOppositeEdge().getTargetVertex();
-				if (var.isVariable(sv)) {
-					nzList.add(var.getVarIndex(sv));
+				V connectedVertex = e.getOppositeEdge().getTargetVertex();
+				if (var.isVariable(connectedVertex)) {
+					nonZeroIndices.add(var.getVarIndex(connectedVertex));
+				}
+				if (var.isVariable(e)) {
+					nonZeroIndices.add(var.getVarIndex(e));
+				}
+				if (var.isVariable(e.getPreviousEdge())) {
+					nonZeroIndices.add(var.getVarIndex(e.getPreviousEdge()));
 				}
 			}
-			nz[i] = new int[nzList.size()];
-			int j = 0;
-			for (Integer index : nzList) {
-				nz[i][j++] = index;
+		}
+		for (E e : hds.getEdges()) {
+			if (!var.isVariable(e)) continue;
+			Set<Integer> nonZeroIndices = nonZeros.get(var.getVarIndex(e));
+			
+			// quadratic derivative
+			nonZeroIndices.add(var.getVarIndex(e));
+			
+			// mixed edge derivatives
+			if (var.isVariable(e.getNextEdge())) {
+				nonZeroIndices.add(var.getVarIndex(e.getNextEdge()));
+			}
+			if (var.isVariable(e.getPreviousEdge())) {
+				nonZeroIndices.add(var.getVarIndex(e.getPreviousEdge()));
+			}
+			
+			// mixed vertex derivatives
+			if (var.isVariable(e.getTargetVertex())) {
+				nonZeroIndices.add(var.getVarIndex(e.getTargetVertex()));
+			}
+			if (var.isVariable(e.getNextEdge().getTargetVertex())) {
+				nonZeroIndices.add(var.getVarIndex(e.getNextEdge().getTargetVertex()));
+			}
+		}
+		int[][] nz = new int[n][];
+		for (int j = 0; j < n; j++) {
+			Set<Integer> nonZeroIndices = nonZeros.get(j);
+			nz[j] = new int[nonZeroIndices.size()];
+			int i = 0;
+			for (Integer index : nonZeroIndices) {
+				nz[j][i++] = index;
 			}
 		}
 		return nz;
+
 	}
+	
+//	@Override
+//	public <
+//		HDS extends HalfEdgeDataStructure<V,E,F>
+//	> int[][] getNonZeroPattern(HDS hds) {
+//		int n = getDimension(hds);
+//		int[][] nz = new int[n][];
+//		for (V v : hds.getVertices()) {
+//			if (!var.isVariable(v)) {
+//				continue;
+//			}
+//			int i = var.getVarIndex(v);
+//			List<E> star = incomingEdges(v);
+//			Set<Integer> nzList = new HashSet<Integer>();
+//			nzList.add(var.getVarIndex(v));
+//			for (E e : star) {
+//				V sv = e.getOppositeEdge().getTargetVertex();
+//				if (var.isVariable(sv)) {
+//					nzList.add(var.getVarIndex(sv));
+//				}
+//			}
+//			nz[i] = new int[nzList.size()];
+//			int j = 0;
+//			for (Integer index : nzList) {
+//				nz[i][j++] = index;
+//			}
+//		}
+//		return nz;
+//	}
 	
 	@Override
 	public boolean hasGradient() {

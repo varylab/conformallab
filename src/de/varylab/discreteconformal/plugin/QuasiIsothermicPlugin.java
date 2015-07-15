@@ -68,6 +68,7 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.adapter.PseudoConformalStructureAdapter;
 import de.varylab.discreteconformal.plugin.generator.TestVectorFieldGenerator;
 import de.varylab.discreteconformal.unwrapper.UnwrapException;
 import de.varylab.discreteconformal.unwrapper.circlepattern.CirclePatternLayout;
@@ -326,12 +327,12 @@ public class QuasiIsothermicPlugin extends ShrinkPanelPlugin implements ActionLi
 				double lcrExpected = lcrMap.get(e);
 				assert Math.abs(elcr - lcrExpected) < 1E-5 : "length cross-ratio is not as expected: " + elcr + " : " + lcrExpected; 
 			}
-			
 			QuasiisothermicUtility.alignLayout(hds, initAlphas, a);
+			hif.update();
+			hif.addAdapter(new PseudoConformalStructureAdapter(lcrPseudoMap), false);
 		} catch (UnwrapException e) {
 			e.printStackTrace();
 		}
-		hif.update();
 	}
 	
 	

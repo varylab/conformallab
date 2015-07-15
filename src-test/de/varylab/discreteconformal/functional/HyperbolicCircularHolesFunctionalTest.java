@@ -56,16 +56,16 @@ public class HyperbolicCircularHolesFunctionalTest extends FunctionalTest<CoVert
 		for (CoFace f : hds.getFaces()) {
 			if (!HalfEdgeUtils.isInteriorFace(f)) continue;
 			CoEdge e1 = f.getBoundaryEdge();
-			CoEdge e2 = e1.getNextEdge();
-			CoEdge e3 = e2.getNextEdge();
+//			CoEdge e2 = e1.getNextEdge();
+//			CoEdge e3 = e2.getNextEdge();
 			CustomEdgeInfo info = new CustomEdgeInfo();
 			info.circularHoleEdge = true;
 			e1.info = info;
-			e2.info = info;
-			e3.info = info;
+//			e2.info = info;
+//			e3.info = info;
 			e1.getOppositeEdge().info = info;
-			e2.getOppositeEdge().info = info;
-			e3.getOppositeEdge().info = info;
+//			e2.getOppositeEdge().info = info;
+//			e3.getOppositeEdge().info = info;
 			break;
 		}
 		
@@ -90,7 +90,7 @@ public class HyperbolicCircularHolesFunctionalTest extends FunctionalTest<CoVert
 		setError(error);
 	}
 	
-	@Override@Test@Ignore
+	@Override@Test
 	public void testHessian() throws Exception {
 		super.testHessian();
 	}
