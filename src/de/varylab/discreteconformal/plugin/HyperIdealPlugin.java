@@ -106,6 +106,39 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 			return true;
 		}
 		
+		@Override
+		public double getPriority() {
+			return 1000.0;
+		}
+		
+	}
+	
+	@Length
+	private class LawsonBranchedMetric extends AbstractAdapter<Double> {
+
+		public LawsonBranchedMetric() {
+			super(Double.class, true, false);
+		}
+		
+		@Override
+		public <
+			V extends Vertex<V, E, F>, 
+			E extends Edge<V, E, F>, 
+			F extends Face<V, E, F>
+		> Double getE(E e, AdapterSet a) {
+			return e.getIndex() < 24 ? 1.0 : Math.sqrt(2.0) / 2;
+		}
+		
+		@Override
+		public <N extends Node<?, ?, ?>> boolean canAccept(Class<N> nodeClass) {
+			return true;
+		}
+		
+		@Override
+		public double getPriority() {
+			return 1000.0;
+		}
+		
 	}
 	
 	@Override
@@ -284,6 +317,8 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		cutEdges.add(hds.getEdge(18));
 		cutEdges.add(hds.getEdge(21));
 		
+		conformalDataPlugin.addDiscreteMetric("Lawson Squares Metric", hds, new AdapterSet(new LawsonBranchedMetric()));
+		
 		CoVertex root = hds.getVertex(2);
 		hif.addAdapter(new HyperIdealRadiusAdapter(lawsonData), false);
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, root, cutEdges, app);
@@ -343,7 +378,7 @@ public class HyperIdealPlugin extends SceneShrinkPanel implements ActionListener
 		TopologyAlgorithms.flipEdge(hds.getEdge(31));
 		TopologyAlgorithms.flipEdge(hds.getEdge(35));
 
-		conformalDataPlugin.addDiscreteMetric("Lawsons Squares", hds, new AdapterSet(new LawsonMetric()));
+		conformalDataPlugin.addDiscreteMetric("Lawson Squares Metric", hds, new AdapterSet(new LawsonMetric()));
 		
 		CoVertex root = hds.getVertex(2);
 		CuttingInfo<CoVertex, CoEdge, CoFace> cutInfo = cutAndLayoutSurface(hds, root, root, cutEdges, app);
