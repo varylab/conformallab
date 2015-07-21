@@ -6,7 +6,7 @@ import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
 import de.jtem.jtao.TaoAppAddHess;
 import de.jtem.jtao.TaoApplication;
-import de.varylab.discreteconformal.functional.HyperbolicCircularHolesFunctional;
+import de.varylab.discreteconformal.functional.HyperbolicCyclicFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -33,14 +33,14 @@ public class CHyperbolicApplication extends TaoApplication implements
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	private HyperbolicCircularHolesFunctional<CoVertex, CoEdge, CoFace> 
-		functional = new HyperbolicCircularHolesFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	private HyperbolicCyclicFunctional<CoVertex, CoEdge, CoFace> 
+		functional = new HyperbolicCyclicFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 
 	public CHyperbolicApplication(CoHDS hds) {
 		this.hds = hds;
 	}
 	
-	public HyperbolicCircularHolesFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
+	public HyperbolicCyclicFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
 		return functional;
 	}
 	

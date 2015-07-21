@@ -87,12 +87,14 @@ import de.jtem.jrworkspace.plugin.Controller;
 import de.jtem.jrworkspace.plugin.PluginInfo;
 import de.jtem.jrworkspace.plugin.sidecontainer.widget.ShrinkPanel;
 import de.jtem.mfc.field.Complex;
-import de.varylab.discreteconformal.functional.EuclideanFunctional;
+import de.varylab.discreteconformal.functional.EuclideanCyclicFunctional;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Lambda;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Phi;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Theta;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
+import de.varylab.discreteconformal.functional.hds.MyConformalAdapters;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -691,11 +693,12 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			QuantizationMode boundaryQuantMode = (QuantizationMode)boundaryQuantizationCombo.getSelectedItem();
 			try {
 				Theta<CoVertex, CoEdge> theta = new CTheta();
+				Phi<CoEdge> phi = new MyConformalAdapters.CPhi();
 				Variable<CoVertex, CoEdge> variable = new CVariable();
 				Lambda<CoEdge> lambda = new CLambda();
 				Alpha<CoEdge> alpha = new CAlpha();
 				InitialEnergy<CoFace> initE = new CInitialEnergy();
-				EuclideanFunctional<CoVertex, CoEdge, CoFace> fun = new EuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, initE);
+				EuclideanCyclicFunctional<CoVertex, CoEdge, CoFace> fun = new EuclideanCyclicFunctional<CoVertex, CoEdge, CoFace>(variable, theta, phi, lambda, alpha, initE);
 				prepareInvariantDataEuclidean(fun, hds, boundaryMode, boundaryQuantMode, hif.getAdapters());
 			} catch (Exception e1) {
 				showMessageDialog(w, e1.getMessage(), "Error", ERROR_MESSAGE);

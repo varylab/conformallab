@@ -34,7 +34,7 @@ import de.varylab.discreteconformal.functional.FunctionalAdapters.Theta;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
 import de.varylab.discreteconformal.math.MathUtility;
 
-public class HyperbolicCircularHolesFunctional <
+public class HyperbolicCyclicFunctional <
 	V extends Vertex<V, E, F>,
 	E extends Edge<V, E, F>,
 	F extends Face<V, E, F>
@@ -52,7 +52,7 @@ public class HyperbolicCircularHolesFunctional <
 		initE = null;
 	
 	
-	public HyperbolicCircularHolesFunctional(
+	public HyperbolicCyclicFunctional(
 		Variable<V, E> var,
 		Theta<V, E> theta,
 		Lambda<E> lambda,

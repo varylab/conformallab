@@ -4,6 +4,11 @@ import java.util.Random;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
+
+import org.junit.Ignore;
+import org.junit.Test;
+
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.functional.FunctionalTest;
 import de.jtem.halfedgetools.functional.MyDomainValue;
@@ -12,16 +17,20 @@ import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
+import de.varylab.discreteconformal.heds.CustomEdgeInfo;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
-import de.varylab.discreteconformal.util.TestUtility;
 import de.varylab.discreteconformal.util.UnwrapUtility;
+import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 
-public class EuclideanFunctionalTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
+public class HyperbolicCyclicFunctionalTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
 
+	public static final Double
+		eps = 1E-5,
+		error = 1E-4;
 	private CTheta
 		theta = new CTheta();
 	private CVariable
@@ -32,15 +41,38 @@ public class EuclideanFunctionalTest extends FunctionalTest<CoVertex, CoEdge, Co
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	public EuclideanFunctional<CoVertex, CoEdge, CoFace>
-		functional = new EuclideanFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	private HyperbolicCyclicFunctional<CoVertex, CoEdge, CoFace>
+		functional = new HyperbolicCyclicFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	
 	
 	@Override
 	public void init() {
-		CoHDS hds = TestUtility.readOBJ(EuclideanFunctionalTest.class, "square01.obj"); 
+		CoHDS hds = new CoHDS(); 
+		AdapterSet aSet = new ConformalAdapterSet();
+		createTriangulatedCube(hds, aSet);
+		hds.removeFace(hds.getFace(0));
 		
-		AdapterSet a = new ConformalAdapterSet();
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(functional, hds, a);
+//		one triangle of edges is circular
+		for (CoFace f : hds.getFaces()) {
+			if (!HalfEdgeUtils.isInteriorFace(f)) continue;
+			CoEdge e1 = f.getBoundaryEdge();
+//			CoEdge e2 = e1.getNextEdge();
+//			CoEdge e3 = e2.getNextEdge();
+			CustomEdgeInfo info = new CustomEdgeInfo();
+			info.circularHoleEdge = true;
+			e1.info = info;
+//			e2.info = info;
+//			e3.info = info;
+			e1.getOppositeEdge().info = info;
+//			e2.getOppositeEdge().info = info;
+//			e3.getOppositeEdge().info = info;
+			break;
+		}
+		
+		ZeroU zeroU = new ZeroU();
+		UnwrapUtility.prepareInvariantDataHyperbolicAndSpherical(functional, hds, aSet, zeroU);
+		
+		int n = functional.getDimension(hds);
 		Random rnd = new Random(); 
 		rnd.setSeed(1);
 		
@@ -54,6 +86,13 @@ public class EuclideanFunctionalTest extends FunctionalTest<CoVertex, CoEdge, Co
 		setHDS(hds);
 		setXGradient(u);
 		setXHessian(u);
+		setEps(eps);
+		setError(error);
+	}
+	
+	@Override@Test
+	public void testHessian() throws Exception {
+		super.testHessian();
 	}
 	
 	

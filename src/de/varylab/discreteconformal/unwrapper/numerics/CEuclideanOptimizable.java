@@ -3,7 +3,7 @@ package de.varylab.discreteconformal.unwrapper.numerics;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
-import de.varylab.discreteconformal.functional.EuclideanNewFunctional;
+import de.varylab.discreteconformal.functional.EuclideanCyclicFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -32,14 +32,14 @@ public class CEuclideanOptimizable implements Optimizable {
 		energy = new CInitialEnergy();
 	private CAlpha
 		alpha = new CAlpha();
-	private EuclideanNewFunctional<CoVertex, CoEdge, CoFace>
-		functional = new EuclideanNewFunctional<CoVertex, CoEdge, CoFace>(variable, theta, phi, lambda, alpha, energy);
+	private EuclideanCyclicFunctional<CoVertex, CoEdge, CoFace>
+		functional = new EuclideanCyclicFunctional<CoVertex, CoEdge, CoFace>(variable, theta, phi, lambda, alpha, energy);
 
 	public CEuclideanOptimizable(CoHDS hds) {
 		this.hds = hds;
 	}
 	
-	public EuclideanNewFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
+	public EuclideanCyclicFunctional<CoVertex, CoEdge, CoFace> getFunctional() {
 		return functional;
 	}
 	
