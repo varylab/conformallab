@@ -4,10 +4,6 @@ import java.util.Random;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
-
-import org.junit.Ignore;
-import org.junit.Test;
-
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.functional.FunctionalTest;
@@ -56,16 +52,16 @@ public class HyperbolicCyclicFunctionalTest extends FunctionalTest<CoVertex, CoE
 		for (CoFace f : hds.getFaces()) {
 			if (!HalfEdgeUtils.isInteriorFace(f)) continue;
 			CoEdge e1 = f.getBoundaryEdge();
-//			CoEdge e2 = e1.getNextEdge();
-//			CoEdge e3 = e2.getNextEdge();
+			CoEdge e2 = e1.getNextEdge();
+			CoEdge e3 = e2.getNextEdge();
 			CustomEdgeInfo info = new CustomEdgeInfo();
 			info.circularHoleEdge = true;
 			e1.info = info;
-//			e2.info = info;
+			e2.info = info;
 //			e3.info = info;
 			e1.getOppositeEdge().info = info;
-//			e2.getOppositeEdge().info = info;
-//			e3.getOppositeEdge().info = info;
+			e2.getOppositeEdge().info = info;
+			e3.getOppositeEdge().info = info;
 			break;
 		}
 		
@@ -89,11 +85,5 @@ public class HyperbolicCyclicFunctionalTest extends FunctionalTest<CoVertex, CoE
 		setEps(eps);
 		setError(error);
 	}
-	
-	@Override@Test
-	public void testHessian() throws Exception {
-		super.testHessian();
-	}
-	
 	
 }
