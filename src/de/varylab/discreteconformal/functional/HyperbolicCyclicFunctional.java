@@ -256,14 +256,14 @@ public class HyperbolicCyclicFunctional <
 			final V
 				vi = e.getStartVertex(),
 				vj = e.getTargetVertex();
+			final int
+				i = var.getVarIndex(vi),
+				j = var.getVarIndex(vj);
 			final E
 				ejk = e.getNextEdge(),
 				eki = e.getPreviousEdge(),
 				eim = e.getOppositeEdge().getNextEdge(),
-				emj = e.getOppositeEdge().getPreviousEdge();
-			final int
-				i = var.getVarIndex(vi),
-				j = var.getVarIndex(vj);
+				emj = e.getOppositeEdge().getPreviousEdge();			
 			final int
 				ij = var.getVarIndex(e),
 				jk = var.getVarIndex(ejk),
@@ -271,10 +271,10 @@ public class HyperbolicCyclicFunctional <
 				im = var.getVarIndex(eim),
 				mj = var.getVarIndex(emj);
 			final double 
-				ui = var.isVariable(vi) ? u.get(var.getVarIndex(vi)) : 0.0,
-				uj = var.isVariable(vj) ? u.get(var.getVarIndex(vj)) : 0.0;
+				ui = var.isVariable(vi) ? u.get(i) : 0.0,
+				uj = var.isVariable(vj) ? u.get(j) : 0.0;
 			final double 
-				λij = var.isVariable(e) ? u.get(var.getVarIndex(e)) : lambda.getLambda(e) + ui + uj;
+				λij = (var.isVariable(e) ? u.get(ij) : lambda.getLambda(e)) + ui + uj;
 			final double
 				lij = 2*MathUtility.arsinh(exp(λij / 2));
 			double 
@@ -392,9 +392,9 @@ public class HyperbolicCyclicFunctional <
 			λi = var.isVariable(ejk) ? u.get(var.getVarIndex(ejk)) : lambda.getLambda(ejk),
 			λj = var.isVariable(eki) ? u.get(var.getVarIndex(eki)) : lambda.getLambda(eki);
 		final double 
-			λij = λk + (var.isVariable(eij) ? 0 : ui + uj),
-			λjk = λi + (var.isVariable(ejk) ? 0 : uj + uk),
-			λki = λj + (var.isVariable(eki) ? 0 : uk + ui);
+			λij = λk + ui + uj,
+			λjk = λi + uj + uk,
+			λki = λj + uk + ui;
 		final double
 			lij = 2 * MathUtility.arsinh(exp(λij / 2)),
 			ljk = 2 * MathUtility.arsinh(exp(λjk / 2)),

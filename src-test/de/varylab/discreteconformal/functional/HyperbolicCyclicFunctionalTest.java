@@ -14,6 +14,7 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.CustomEdgeInfo;
+import de.varylab.discreteconformal.logging.LoggingUtility;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
@@ -43,6 +44,7 @@ public class HyperbolicCyclicFunctionalTest extends FunctionalTest<CoVertex, CoE
 	
 	@Override
 	public void init() {
+		LoggingUtility.initLogging();
 		CoHDS hds = new CoHDS(); 
 		AdapterSet aSet = new ConformalAdapterSet();
 		createTriangulatedCube(hds, aSet);
@@ -58,7 +60,7 @@ public class HyperbolicCyclicFunctionalTest extends FunctionalTest<CoVertex, CoE
 			info.circularHoleEdge = true;
 			e1.info = info;
 			e2.info = info;
-//			e3.info = info;
+			e3.info = info;
 			e1.getOppositeEdge().info = info;
 			e2.getOppositeEdge().info = info;
 			e3.getOppositeEdge().info = info;
@@ -73,8 +75,15 @@ public class HyperbolicCyclicFunctionalTest extends FunctionalTest<CoVertex, CoE
 		rnd.setSeed(1);
 		
 		Vector x = new DenseVector(n);
+		// random u values
 		for (Integer i = 0; i < x.size(); i++) {
 			x.set(i, rnd.nextDouble() - 0.5);
+		}
+		// set lambda values to start lengths
+		for (CoEdge e : hds.getPositiveEdges()) {
+			if (e.getSolverIndex() >= 0) {
+				x.set(e.getSolverIndex(), lambda.getLambda(e));
+			}
 		}
 		MyDomainValue u = new MyDomainValue(x);
 		
