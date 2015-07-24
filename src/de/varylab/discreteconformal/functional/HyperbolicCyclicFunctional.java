@@ -1,6 +1,5 @@
 package de.varylab.discreteconformal.functional;
 
-import static de.jtem.halfedge.util.HalfEdgeUtils.incomingEdges;
 import static de.varylab.discreteconformal.functional.Clausen.Л;
 import static java.lang.Math.PI;
 import static java.lang.Math.atan2;
@@ -11,14 +10,17 @@ import static java.lang.Math.sqrt;
 import static java.lang.Math.tan;
 import static java.lang.Math.tanh;
 
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
 import de.jtem.halfedge.HalfEdgeDataStructure;
 import de.jtem.halfedge.Vertex;
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.functional.DomainValue;
 import de.jtem.halfedgetools.functional.Energy;
 import de.jtem.halfedgetools.functional.Gradient;
@@ -30,7 +32,7 @@ import de.varylab.discreteconformal.functional.FunctionalAdapters.Theta;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
 import de.varylab.discreteconformal.math.MathUtility;
 
-public class HyperbolicCircularHolesFunctional <
+public class HyperbolicCyclicFunctional <
 	V extends Vertex<V, E, F>,
 	E extends Edge<V, E, F>,
 	F extends Face<V, E, F>
@@ -48,7 +50,7 @@ public class HyperbolicCircularHolesFunctional <
 		initE = null;
 	
 	
-	public HyperbolicCircularHolesFunctional(
+	public HyperbolicCyclicFunctional(
 		Variable<V, E> var,
 		Theta<V, E> theta,
 		Lambda<E> lambda,
@@ -147,46 +149,16 @@ public class HyperbolicCircularHolesFunctional <
 			final double
 				αi = alpha.getAlpha(ejk),
 				αj = alpha.getAlpha(eki),
-				αk = alpha.getAlpha(eij),
-				αij = 0.5 * (PI - αi - αj + αk),
-				αjk = 0.5 * (PI - αj - αk + αi),
-				αki = 0.5 * (PI - αk - αi + αj);
+				αk = alpha.getAlpha(eij);
 			if (G != null) {
 				if (var.isVariable(vi)) {
-					if (var.isVariable(eij) || var.isVariable(eki)) {
-						if (!var.isVariable(eij)) {
-							G.add(ivi, αij - PI/2);
-						}
-						if (!var.isVariable(eki)) {
-							G.add(ivi, αki - PI/2);
-						}
-					} else {
-						G.add(ivi, -alpha.getAlpha(ejk));
-					}
+					G.add(ivi, -αi);
 				}
 				if (var.isVariable(vj)) {
-					if (var.isVariable(eij) || var.isVariable(ejk)) {
-						if (!var.isVariable(eij)) {
-							G.add(ivj, αij - PI/2);
-						}
-						if (!var.isVariable(ejk)) {
-							G.add(ivj, αjk - PI/2);
-						}
-					} else {
-						G.add(ivj, -alpha.getAlpha(eki));
-					}
+					G.add(ivj, -αj);
 				}
 				if (var.isVariable(vk)) {
-					if (var.isVariable(ejk) || var.isVariable(eki)) {
-						if (!var.isVariable(ejk)) {
-							G.add(ivk, αjk - PI/2);
-						}
-						if (!var.isVariable(eki)) {
-							G.add(ivk, αki - PI/2);
-						}
-					} else {
-						G.add(ivk, -alpha.getAlpha(eij));
-					}	
+					G.add(ivk, -αk);
 				}
 			}
 		}
@@ -223,6 +195,8 @@ public class HyperbolicCircularHolesFunctional <
 		// Face Energy
 		for(final E e : hds.getPositiveEdges()) {
 			double cot = 0.0;
+			double cot_k = 0.0;
+			double cot_m = 0.0;
 			if (e.getLeftFace() != null) {
 				E ek = e;
 				boolean valid = triangleEnergyAndAlphas(u, ek.getLeftFace(), null, initE); 
@@ -233,20 +207,20 @@ public class HyperbolicCircularHolesFunctional <
 						αk = alpha.getAlpha(ek);
 					final double
 						βk = 0.5 * (PI - αi - αj + αk);
-					cot += 1 / tan(βk);
+					cot += (cot_k = 1 / tan(βk));
 				}
 			}
 			if (e.getRightFace() != null) {
-				E el = e.getOppositeEdge();
-				boolean valid = triangleEnergyAndAlphas(u, el.getLeftFace(), null, initE);
+				E em = e.getOppositeEdge();
+				boolean valid = triangleEnergyAndAlphas(u, em.getLeftFace(), null, initE);
 				if (valid) {
 					final double
-						αi = alpha.getAlpha(el.getPreviousEdge()),
-						αj = alpha.getAlpha(el.getNextEdge()),
-						αl = alpha.getAlpha(el);
+						αi = alpha.getAlpha(em.getPreviousEdge()),
+						αj = alpha.getAlpha(em.getNextEdge()),
+						αm = alpha.getAlpha(em);
 					final double
-						βl = 0.5 * (PI - αi - αj + αl);
-					cot += 1 / tan(βl);
+						βm = 0.5 * (PI - αi - αj + αm);
+					cot += (cot_m = 1 / tan(βm));
 				}
 			}
 			final V
@@ -255,11 +229,22 @@ public class HyperbolicCircularHolesFunctional <
 			final int
 				i = var.getVarIndex(vi),
 				j = var.getVarIndex(vj);
+			final E
+				ejk = e.getNextEdge(),
+				eki = e.getPreviousEdge(),
+				eim = e.getOppositeEdge().getNextEdge(),
+				emj = e.getOppositeEdge().getPreviousEdge();			
+			final int
+				ij = var.getVarIndex(e),
+				jk = var.getVarIndex(ejk),
+				ki = var.getVarIndex(eki),
+				im = var.getVarIndex(eim),
+				mj = var.getVarIndex(emj);
 			final double 
-				ui = var.isVariable(vi) ? u.get(var.getVarIndex(vi)) : 0.0,
-				uj = var.isVariable(vj) ? u.get(var.getVarIndex(vj)) : 0.0;
+				ui = var.isVariable(vi) ? u.get(i) : 0.0,
+				uj = var.isVariable(vj) ? u.get(j) : 0.0;
 			final double 
-				λij = lambda.getLambda(e) + ui + uj;
+				λij = (var.isVariable(e) ? u.get(ij) : lambda.getLambda(e)) + ui + uj;
 			final double
 				lij = 2*MathUtility.arsinh(exp(λij / 2));
 			double 
@@ -278,6 +263,75 @@ public class HyperbolicCircularHolesFunctional <
 				H.add(i, j, Hij);
 				H.add(j, i, Hij);
 			}
+			
+			// quadratic lambda terms
+			if (var.isVariable(e)) {
+				H.add(ij, ij, 0.5*cot*tan2);
+			}
+			if (var.isVariable(ejk)) {
+				H.add(jk, jk, 0.5*cot_k);
+			}
+			if (var.isVariable(eki)) {
+				H.add(ki, ki, 0.5*cot_k);
+			}
+			if (var.isVariable(eim)) {
+				H.add(im, im, 0.5*cot_m);
+			}
+			if (var.isVariable(emj)) {
+				H.add(mj, mj, 0.5*cot_m);
+			}
+			// mixed lambda terms
+			if (var.isVariable(ejk) && var.isVariable(eki)) {
+				H.add(jk, ki, -0.5*cot_k);
+				H.add(ki, jk, -0.5*cot_k);
+			}
+			if (var.isVariable(eim) && var.isVariable(emj)) {
+				H.add(im, mj, -0.5*cot_m);
+				H.add(mj, im, -0.5*cot_m);
+			}			
+			// mixed lambda and u terms for both sides
+			if (var.isVariable(vi) && var.isVariable(e)) {
+				H.add(i, ij, 0.5*cot*tan2);
+				H.add(ij, i, 0.5*cot*tan2);
+			}	
+			if (var.isVariable(vj) && var.isVariable(e)) {
+				H.add(j, ij, 0.5*cot*tan2);
+				H.add(ij, j, 0.5*cot*tan2);
+			}
+			// mixed lambda and u terms for the k side of edge
+			if (var.isVariable(vi) && var.isVariable(eki)) {
+				H.add(i, ki, 0.5*cot_k);
+				H.add(ki, i, 0.5*cot_k);
+			}
+			if (var.isVariable(vi) && var.isVariable(ejk)) {
+				H.add(i, jk, -0.5*cot_k);
+				H.add(jk, i, -0.5*cot_k);
+			}
+			if (var.isVariable(vj) && var.isVariable(eki)) {
+				H.add(j, ki, -0.5*cot_k);
+				H.add(ki, j, -0.5*cot_k);
+			}
+			if (var.isVariable(vj) && var.isVariable(ejk)) {
+				H.add(j, jk, 0.5*cot_k);
+				H.add(jk, j, 0.5*cot_k);
+			}
+			// mixed lambda and u terms for the m side of edge
+			if (var.isVariable(vi) && var.isVariable(eim)) {
+				H.add(i, im, 0.5*cot_m);
+				H.add(im, i, 0.5*cot_m);
+			}
+			if (var.isVariable(vi) && var.isVariable(emj)) {
+				H.add(i, mj, -0.5*cot_m);
+				H.add(mj, i, -0.5*cot_m);
+			}
+			if (var.isVariable(vj) && var.isVariable(eim)) {
+				H.add(j, im, -0.5*cot_m);
+				H.add(im, j, -0.5*cot_m);
+			}
+			if (var.isVariable(vj) && var.isVariable(emj)) {
+				H.add(j, mj, 0.5*cot_m);
+				H.add(mj, j, 0.5*cot_m);
+			}			
 		}
 	}
 	
@@ -308,9 +362,9 @@ public class HyperbolicCircularHolesFunctional <
 			λi = var.isVariable(ejk) ? u.get(var.getVarIndex(ejk)) : lambda.getLambda(ejk),
 			λj = var.isVariable(eki) ? u.get(var.getVarIndex(eki)) : lambda.getLambda(eki);
 		final double 
-			λij = λk + (var.isVariable(eij) ? 0 : ui + uj),
-			λjk = λi + (var.isVariable(ejk) ? 0 : uj + uk),
-			λki = λj + (var.isVariable(eki) ? 0 : uk + ui);
+			λij = λk + ui + uj,
+			λjk = λi + uj + uk,
+			λki = λj + uk + ui;
 		final double
 			lij = 2 * MathUtility.arsinh(exp(λij / 2)),
 			ljk = 2 * MathUtility.arsinh(exp(λjk / 2)),
@@ -360,36 +414,81 @@ public class HyperbolicCircularHolesFunctional <
 		}
 		return valid;
 	}
-	
+
 	@Override
 	public <
 		HDS extends HalfEdgeDataStructure<V,E,F>
 	> int[][] getNonZeroPattern(HDS hds) {
-		int n = getDimension(hds);
-		int[][] nz = new int[n][];
+		int n = 0;
 		for (V v : hds.getVertices()) {
-			if (!var.isVariable(v)) {
-				continue;
+			if (var.isVariable(v)) {
+				n++;
 			}
-			int i = var.getVarIndex(v);
-			List<E> star = incomingEdges(v);
-			Set<Integer> nzList = new HashSet<Integer>();
-			nzList.add(var.getVarIndex(v));
+		}
+		for (E e : hds.getPositiveEdges()) {
+			if (var.isVariable(e)) {
+				n++;
+			}
+		}
+		Map<Integer, TreeSet<Integer>> nonZeros = new HashMap<Integer, TreeSet<Integer>>();
+		for (int i = 0; i < n; i++) {
+			nonZeros.put(i, new TreeSet<Integer>());
+		}
+		for (V v : hds.getVertices()) {
+			if (!var.isVariable(v)) continue;
+			List<E> star = HalfEdgeUtils.incomingEdges(v);
+			Set<Integer> nonZeroIndices = nonZeros.get(var.getVarIndex(v));
+			nonZeroIndices.add(var.getVarIndex(v));
 			for (E e : star) {
-				V sv = e.getOppositeEdge().getTargetVertex();
-				if (var.isVariable(sv)) {
-					nzList.add(var.getVarIndex(sv));
+				V connectedVertex = e.getOppositeEdge().getTargetVertex();
+				if (var.isVariable(connectedVertex)) {
+					nonZeroIndices.add(var.getVarIndex(connectedVertex));
+				}
+				if (var.isVariable(e)) {
+					nonZeroIndices.add(var.getVarIndex(e));
+				}
+				if (var.isVariable(e.getPreviousEdge())) {
+					nonZeroIndices.add(var.getVarIndex(e.getPreviousEdge()));
 				}
 			}
-			nz[i] = new int[nzList.size()];
-			int j = 0;
-			for (Integer index : nzList) {
-				nz[i][j++] = index;
+		}
+		for (E e : hds.getEdges()) {
+			if (!var.isVariable(e)) continue;
+			Set<Integer> nonZeroIndices = nonZeros.get(var.getVarIndex(e));
+			
+			// quadratic derivative
+			nonZeroIndices.add(var.getVarIndex(e));
+			
+			// mixed edge derivatives
+			if (var.isVariable(e.getNextEdge())) {
+				nonZeroIndices.add(var.getVarIndex(e.getNextEdge()));
+			}
+			if (var.isVariable(e.getPreviousEdge())) {
+				nonZeroIndices.add(var.getVarIndex(e.getPreviousEdge()));
+			}
+			
+			// mixed vertex derivatives
+			if (var.isVariable(e.getTargetVertex())) {
+				nonZeroIndices.add(var.getVarIndex(e.getTargetVertex()));
+			}
+			if (var.isVariable(e.getNextEdge().getTargetVertex())) {
+				nonZeroIndices.add(var.getVarIndex(e.getNextEdge().getTargetVertex()));
+			}
+		}
+		int[][] nz = new int[n][];
+		for (int j = 0; j < n; j++) {
+			Set<Integer> nonZeroIndices = nonZeros.get(j);
+			nz[j] = new int[nonZeroIndices.size()];
+			int i = 0;
+			for (Integer index : nonZeroIndices) {
+				nz[j][i++] = index;
 			}
 		}
 		return nz;
+
 	}
 	
+
 	@Override
 	public boolean hasGradient() {
 		return true;

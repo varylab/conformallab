@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.jpetsc.InsertMode;
 import de.jtem.jpetsc.Mat;
 import de.jtem.jpetsc.Vec;
 import de.jtem.jtao.ConvergenceFlags;
@@ -110,21 +109,11 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper {
 		UnwrapUtility.prepareInvariantDataHyperbolicAndSpherical(app.getFunctional(), surface, aSet, zeroU);
 		int n = app.getDomainDimension(); 
 		Vec u = new Vec(n);
-		// set variable lambda start values
-		boolean hasCircularEdges = false;
-		for (CoEdge e : surface.getPositiveEdges()) {
-			if (e.getSolverIndex() >= 0) {
-				u.setValue(e.getSolverIndex(), e.getLambda(), InsertMode.INSERT_VALUES);
-				hasCircularEdges = true;
-			}
-		}
 		app.setInitialSolutionVec(u);
-		if (!hasCircularEdges) {
-			Mat H = app.getHessianTemplate();
-			app.setHessianMat(H, H);
-		}
+		Mat H = app.getHessianTemplate();
+		app.setHessianMat(H, H);
 		
-		Tao optimizer = new Tao(hasCircularEdges ? Tao.Method.LMVM : Tao.Method.NTR);
+		Tao optimizer = new Tao(Tao.Method.NTR);
 		optimizer.setApplication(app);
 		optimizer.setGradientTolerances(gradTolerance, gradTolerance, gradTolerance); 
 		optimizer.setTolerances(0, 0, 0, 0);

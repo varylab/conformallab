@@ -7,7 +7,7 @@ import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
 import de.jtem.jtao.TaoAppAddHess;
 import de.jtem.jtao.TaoApplication;
 import de.varylab.discreteconformal.functional.ConformalFunctional;
-import de.varylab.discreteconformal.functional.EuclideanNewFunctional;
+import de.varylab.discreteconformal.functional.EuclideanCyclicFunctional;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -37,8 +37,8 @@ public class CEuclideanApplication extends TaoApplication implements
 		energy = new CInitialEnergy();
 	private CAlpha
 		alpha = new CAlpha();
-	private EuclideanNewFunctional<CoVertex, CoEdge, CoFace>
-		functional = new EuclideanNewFunctional<CoVertex, CoEdge, CoFace>(variable, theta, phi, lambda, alpha, energy);
+	private EuclideanCyclicFunctional<CoVertex, CoEdge, CoFace>
+		functional = new EuclideanCyclicFunctional<CoVertex, CoEdge, CoFace>(variable, theta, phi, lambda, alpha, energy);
 		
 
 	public CEuclideanApplication(CoHDS hds) {

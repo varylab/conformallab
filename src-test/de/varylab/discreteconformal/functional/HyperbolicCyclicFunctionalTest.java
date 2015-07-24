@@ -4,10 +4,6 @@ import java.util.Random;
 
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
-
-import org.junit.Ignore;
-import org.junit.Test;
-
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.functional.FunctionalTest;
@@ -18,6 +14,7 @@ import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.CustomEdgeInfo;
+import de.varylab.discreteconformal.logging.LoggingUtility;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
@@ -26,7 +23,7 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 
-public class HyperbolicCircularHolesFunctionalTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
+public class HyperbolicCyclicFunctionalTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
 
 	public static final Double
 		eps = 1E-5,
@@ -41,12 +38,13 @@ public class HyperbolicCircularHolesFunctionalTest extends FunctionalTest<CoVert
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	private HyperbolicCircularHolesFunctional<CoVertex, CoEdge, CoFace>
-		functional = new HyperbolicCircularHolesFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
+	private HyperbolicCyclicFunctional<CoVertex, CoEdge, CoFace>
+		functional = new HyperbolicCyclicFunctional<CoVertex, CoEdge, CoFace>(variable, theta, lambda, alpha, energy);
 	
 	
 	@Override
 	public void init() {
+		LoggingUtility.initLogging();
 		CoHDS hds = new CoHDS(); 
 		AdapterSet aSet = new ConformalAdapterSet();
 		createTriangulatedCube(hds, aSet);
@@ -77,8 +75,15 @@ public class HyperbolicCircularHolesFunctionalTest extends FunctionalTest<CoVert
 		rnd.setSeed(1);
 		
 		Vector x = new DenseVector(n);
+		// random u values
 		for (Integer i = 0; i < x.size(); i++) {
 			x.set(i, rnd.nextDouble() - 0.5);
+		}
+		// set lambda values to start lengths
+		for (CoEdge e : hds.getPositiveEdges()) {
+			if (e.getSolverIndex() >= 0) {
+				x.set(e.getSolverIndex(), lambda.getLambda(e));
+			}
 		}
 		MyDomainValue u = new MyDomainValue(x);
 		
@@ -89,11 +94,5 @@ public class HyperbolicCircularHolesFunctionalTest extends FunctionalTest<CoVert
 		setEps(eps);
 		setError(error);
 	}
-	
-	@Override@Test@Ignore
-	public void testHessian() throws Exception {
-		super.testHessian();
-	}
-	
 	
 }

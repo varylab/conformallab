@@ -29,7 +29,7 @@ import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
 import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
-public class EuclideanNewConvergenceTest  {
+public class EuclideanCyclicConvergenceTest  {
 
 	private CTheta
 		theta = new CTheta();
@@ -43,12 +43,12 @@ public class EuclideanNewConvergenceTest  {
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	public EuclideanNewFunctional<CoVertex, CoEdge, CoFace>
-		functional = new EuclideanNewFunctional<CoVertex, CoEdge, CoFace>(variable, theta, phi, lambda, alpha, energy);
+	public EuclideanCyclicFunctional<CoVertex, CoEdge, CoFace>
+		functional = new EuclideanCyclicFunctional<CoVertex, CoEdge, CoFace>(variable, theta, phi, lambda, alpha, energy);
 	
 	@Test
 	public void testEuclideanConvergence() {
-		CoHDS hds = TestUtility.readOBJ(EuclideanNewConvergenceTest.class, "cathead.obj"); 
+		CoHDS hds = TestUtility.readOBJ(EuclideanCyclicConvergenceTest.class, "cathead.obj"); 
 		
 //		 one edge is circular
 		CoEdge circularEdge = null;

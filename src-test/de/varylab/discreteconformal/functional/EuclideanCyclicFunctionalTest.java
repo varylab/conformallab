@@ -21,7 +21,7 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 import de.varylab.discreteconformal.util.TestUtility;
 import de.varylab.discreteconformal.util.UnwrapUtility;
 
-public class EuclideanNewFunctionalTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
+public class EuclideanCyclicFunctionalTest extends FunctionalTest<CoVertex, CoEdge, CoFace> {
 
 	private CTheta
 		theta = new CTheta();
@@ -35,12 +35,12 @@ public class EuclideanNewFunctionalTest extends FunctionalTest<CoVertex, CoEdge,
 		alpha = new CAlpha();
 	private CInitialEnergy
 		energy = new CInitialEnergy();
-	public EuclideanNewFunctional<CoVertex, CoEdge, CoFace>
-		functional = new EuclideanNewFunctional<CoVertex, CoEdge, CoFace>(variable, theta, phi, lambda, alpha, energy);
+	public EuclideanCyclicFunctional<CoVertex, CoEdge, CoFace>
+		functional = new EuclideanCyclicFunctional<CoVertex, CoEdge, CoFace>(variable, theta, phi, lambda, alpha, energy);
 	
 	@Override
 	public void init() {
-		CoHDS hds = TestUtility.readOBJ(EuclideanNewConvergenceTest.class, "square01.obj"); 
+		CoHDS hds = TestUtility.readOBJ(EuclideanCyclicConvergenceTest.class, "square01.obj"); 
 		
 		// one triangle of edges is circular
 		for (CoFace f : hds.getFaces()) {
