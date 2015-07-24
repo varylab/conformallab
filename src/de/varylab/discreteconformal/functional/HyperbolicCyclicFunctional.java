@@ -149,46 +149,16 @@ public class HyperbolicCyclicFunctional <
 			final double
 				αi = alpha.getAlpha(ejk),
 				αj = alpha.getAlpha(eki),
-				αk = alpha.getAlpha(eij),
-				αij = 0.5 * (PI - αi - αj + αk),
-				αjk = 0.5 * (PI - αj - αk + αi),
-				αki = 0.5 * (PI - αk - αi + αj);
+				αk = alpha.getAlpha(eij);
 			if (G != null) {
 				if (var.isVariable(vi)) {
-					if (var.isVariable(eij) || var.isVariable(eki)) {
-						if (!var.isVariable(eij)) {
-							G.add(ivi, αij - PI/2);
-						}
-						if (!var.isVariable(eki)) {
-							G.add(ivi, αki - PI/2);
-						}
-					} else {
-						G.add(ivi, -alpha.getAlpha(ejk));
-					}
+					G.add(ivi, -αi);
 				}
 				if (var.isVariable(vj)) {
-					if (var.isVariable(eij) || var.isVariable(ejk)) {
-						if (!var.isVariable(eij)) {
-							G.add(ivj, αij - PI/2);
-						}
-						if (!var.isVariable(ejk)) {
-							G.add(ivj, αjk - PI/2);
-						}
-					} else {
-						G.add(ivj, -alpha.getAlpha(eki));
-					}
+					G.add(ivj, -αj);
 				}
 				if (var.isVariable(vk)) {
-					if (var.isVariable(ejk) || var.isVariable(eki)) {
-						if (!var.isVariable(ejk)) {
-							G.add(ivk, αjk - PI/2);
-						}
-						if (!var.isVariable(eki)) {
-							G.add(ivk, αki - PI/2);
-						}
-					} else {
-						G.add(ivk, -alpha.getAlpha(eij));
-					}	
+					G.add(ivk, -αk);
 				}
 			}
 		}
