@@ -13,6 +13,7 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.CustomEdgeInfo;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
+import de.varylab.discreteconformal.logging.LoggingUtility;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
@@ -40,8 +41,8 @@ public class EuclideanCyclicFunctionalTest extends FunctionalTest<CoVertex, CoEd
 	
 	@Override
 	public void init() {
+		LoggingUtility.initLogging();
 		CoHDS hds = TestUtility.readOBJ(EuclideanCyclicConvergenceTest.class, "square01.obj"); 
-		
 		// one triangle of edges is circular
 		for (CoFace f : hds.getFaces()) {
 			if (!HalfEdgeUtils.isInteriorFace(f)) continue;

@@ -6,6 +6,7 @@ import static java.lang.Math.atan2;
 import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
+import static java.lang.Math.tan;
 
 import java.util.HashMap;
 import java.util.List;
@@ -91,14 +92,10 @@ public class EuclideanCyclicFunctional <
 	> int getDimension(HDS hds) {
 		int dim = 0;
 		for (V v : hds.getVertices()) {
-			if (var.isVariable(v)) {
-				dim++;
-			}
+			if (var.isVariable(v)) dim++;
 		}
 		for (E e : hds.getPositiveEdges()) {
-			if (var.isVariable(e)) {
-				dim++;
-			}
+			if (var.isVariable(e)) dim++;
 		}
 		return dim;
 	}
@@ -114,23 +111,13 @@ public class EuclideanCyclicFunctional <
 			final Gradient G
 	) {
 		// Vertex Energy
-		if (E != null) {
-			E.setZero();
-		}
-		if (G != null) {
-			G.setZero();
-		}
+		if (E != null) E.setZero();
+		if (G != null) G.setZero();
 		for (final V v : hds.getVertices()) {
-			if (!var.isVariable(v)) {
-				continue;
-			}
+			if (!var.isVariable(v)) continue;
 			int i = var.getVarIndex(v);
-			if (E != null) {
-				E.add(theta.getTheta(v) * u.get(i));
-			}
-			if (G != null) {
-				G.add(var.getVarIndex(v), theta.getTheta(v));
-			}
+			if (E != null) E.add(theta.getTheta(v) * u.get(i));
+			if (G != null) G.add(var.getVarIndex(v), theta.getTheta(v));
 		}
 		// Face Energy
 		for (final F t : hds.getFaces()) {
@@ -147,16 +134,14 @@ public class EuclideanCyclicFunctional <
 				v2i = var.getVarIndex(v2),
 				v3i = var.getVarIndex(v3);
 			triangleEnergyAndAlphas(u, t, E, initE);
+			final double
+				α1 = alpha.getAlpha(e1),
+				α2 = alpha.getAlpha(e2),
+				α3 = alpha.getAlpha(e3);
 			if (G != null) {
-				if (var.isVariable(v1)) {
-					G.add(v1i, -alpha.getAlpha(e3));
-				}
-				if (var.isVariable(v2)) {
-					G.add(v2i, -alpha.getAlpha(e1));
-				}
-				if (var.isVariable(v3)) {
-					G.add(v3i, -alpha.getAlpha(e2));
-				}
+				if (var.isVariable(v1)) G.add(v1i, -α1);
+				if (var.isVariable(v2)) G.add(v2i, -α2);
+				if (var.isVariable(v3)) G.add(v3i, -α3);
 			}
 		}
 		// Circular Edges Gradient
@@ -181,113 +166,66 @@ public class EuclideanCyclicFunctional <
 	) {
 		H.setZero();
 		// Face Energy
-		for (final F t : hds.getFaces()) {
+		for (final E eij : hds.getEdges()) {
+			if (eij.getLeftFace() == null) continue;
 			final E 
-				e1 = t.getBoundaryEdge(),
-				e2 = e1.getNextEdge(),
-				e3 = e1.getPreviousEdge();
+				ejk = eij.getNextEdge(),
+				eki = eij.getPreviousEdge();
 			final V 
-				v1 = e1.getTargetVertex(),
-				v2 = e2.getTargetVertex(),
-				v3 = e3.getTargetVertex();
+				vi = eij.getTargetVertex(),
+				vj = eij.getStartVertex();
 			final int
-				v1i = var.getVarIndex(v1),
-				v2i = var.getVarIndex(v2),
-				v3i = var.getVarIndex(v3);
-			final int
-				e1i = var.getVarIndex(e1),
-				e2i = var.getVarIndex(e2),
-				e3i = var.getVarIndex(e3);
-			final double[] 
-			     cotE = {0, 0, 0},
-			     cotV = {0, 0, 0};
-			triangleHessian(hds, u, t, cotE, cotV);
+				i = var.getVarIndex(vi),
+				j = var.getVarIndex(vj),
+				jk = var.getVarIndex(ejk),
+				ki = var.getVarIndex(eki);
+			if (!triangleEnergyAndAlphas(u, eij.getLeftFace(), null, initE)) continue;
+			final double
+				αk = alpha.getAlpha(eij);
+			final double 
+				cot = 1 / tan(αk);			
+			final double 
+				w = 0.5 * cot;
 			// edge hessian
-			if (var.isVariable(v1) && var.isVariable(v3)) {
-				H.add(v1i, v3i, -cotE[0] / 2);
-				H.add(v3i, v1i, -cotE[0] / 2);
+			if (var.isVariable(vi)) {
+				H.add(i, i, w);
 			}
-			if (var.isVariable(v2) && var.isVariable(v1)) {
-				H.add(v2i, v1i, -cotE[1] / 2);
-				H.add(v1i, v2i, -cotE[1] / 2);
+			if (var.isVariable(vj)) {
+				H.add(j, j, w);
 			}
-			if (var.isVariable(v3) && var.isVariable(v2)) {
-				H.add(v2i, v3i, -cotE[2] / 2);
-				H.add(v3i, v2i, -cotE[2] / 2);
+			if (var.isVariable(vi) && var.isVariable(vj)) {
+				H.add(i, j, -w);
+				H.add(j, i, -w);
 			}
-			// vertex hessian
-			if (var.isVariable(v1)) {
-				H.add(v1i, v1i, cotV[0] / 2);
-			}
-			if (var.isVariable(v2)) {
-				H.add(v2i, v2i, cotV[1] / 2);
-			}
-			if (var.isVariable(v3)) {
-				H.add(v3i, v3i, cotV[2] / 2);
-			}
-			
 			// quadratic lambda terms
-			if (var.isVariable(e1)) {
-				H.add(e1i, e1i, cotV[1] / 2);
+			if (var.isVariable(ejk)) {
+				H.add(jk, jk, w);
 			}
-			if (var.isVariable(e2)) {
-				H.add(e2i, e2i, cotV[2] / 2);
+			if (var.isVariable(eki)) {
+				H.add(ki, ki, w);
 			}
-			if (var.isVariable(e3)) {
-				H.add(e3i, e3i, cotV[0] / 2);
+			// mixed lambda terms
+			if (var.isVariable(ejk) && var.isVariable(eki)) {
+				H.add(jk, ki, -w);
+				H.add(ki, jk, -w);
 			}
-			if (var.isVariable(e1) && var.isVariable(e2)) {
-				H.add(e1i, e2i, -cotE[2] / 2);
-				H.add(e2i, e1i, -cotE[2] / 2);
+			// mixed lambda and u terms
+			if (var.isVariable(vi) && var.isVariable(eki)) {
+				H.add(i, ki, -w);
+				H.add(ki, i, -w);
 			}
-			if (var.isVariable(e2) && var.isVariable(e3)) {
-				H.add(e2i, e3i, -cotE[0] / 2);
-				H.add(e3i, e2i, -cotE[0] / 2);
-			}			
-			if (var.isVariable(e3) && var.isVariable(e1)) {
-				H.add(e3i, e1i, -cotE[1] / 2);
-				H.add(e1i, e3i, -cotE[1] / 2);
-			}	
-			
-			// mixed terms
-			if (var.isVariable(v1) && var.isVariable(e1)) {
-				H.add(v1i, e1i, cotE[1] / 2);
-				H.add(e1i, v1i, cotE[1] / 2);
+			if (var.isVariable(vi) && var.isVariable(ejk)) {
+				H.add(i, jk, w);
+				H.add(jk, i, w);
 			}
-			if (var.isVariable(v1) && var.isVariable(e2)) {
-				H.add(v1i, e2i, cotE[0] / 2);
-				H.add(e2i, v1i, cotE[0] / 2);
-			}			
-			if (var.isVariable(v2) && var.isVariable(e2)) {
-				H.add(v2i, e2i, cotE[2] / 2);
-				H.add(e2i, v2i, cotE[2] / 2);
+			if (var.isVariable(vj) && var.isVariable(eki)) {
+				H.add(j, ki, w);
+				H.add(ki, j, w);
 			}
-			if (var.isVariable(v2) && var.isVariable(e3)) {
-				H.add(v2i, e3i, cotE[1] / 2);
-				H.add(e3i, v2i, cotE[1] / 2);
-			}	
-			if (var.isVariable(v3) && var.isVariable(e3)) {
-				H.add(v3i, e3i, cotE[0] / 2);
-				H.add(e3i, v3i, cotE[0] / 2);
+			if (var.isVariable(vj) && var.isVariable(ejk)) {
+				H.add(j, jk, -w);
+				H.add(jk, j, -w);
 			}
-			if (var.isVariable(v3) && var.isVariable(e1)) {
-				H.add(v3i, e1i, cotE[2] / 2);
-				H.add(e1i, v3i, cotE[2] / 2);
-			}
-			
-			if (var.isVariable(v1) && var.isVariable(e3)) {
-				H.add(v1i, e3i, -cotV[0] / 2);
-				H.add(e3i, v1i, -cotV[0] / 2);
-			}
-			if (var.isVariable(v2) && var.isVariable(e1)) {
-				H.add(v2i, e1i, -cotV[1] / 2);
-				H.add(e1i, v2i, -cotV[1] / 2);
-			}
-			if (var.isVariable(v3) && var.isVariable(e2)) {
-				H.add(v3i, e2i, -cotV[2] / 2);
-				H.add(e2i, v3i, -cotV[2] / 2);
-			}
-			
 		}
 	}
 	
@@ -342,7 +280,8 @@ public class EuclideanCyclicFunctional <
 			t31 = +l12+l23-l31,
 			t23 = +l12-l23+l31,
 			t12 = -l12+l23+l31;
-		if (t31 > 0 && t23 > 0 && t12 > 0) {
+		boolean valid = t31 > 0 && t23 > 0 && t12 > 0;
+		if (valid) {
 			final double 
 				l123 = l12 + l23 + l31,
 				denom = sqrt(t12 * t23 * t31 * l123);
@@ -359,14 +298,13 @@ public class EuclideanCyclicFunctional <
 		if (E != null) {
 			E.add(α1*λ̃2 + α2*λ̃3 + α3*λ̃1);
 			E.add(2*Л(α1) + 2*Л(α2) + 2*Л(α3));
-//			E.add(-PI * (λt1 + λt2 + λt3) / 2);
 			E.add(-(Φ1*λ1 + Φ2*λ2 + Φ3*λ3) / 2 - PI * (u1 + u2 + u3));
 			E.add(-initialEnergy.getInitialEnergy(f));
 		}
 		alpha.setAlpha(e1, α2);
 		alpha.setAlpha(e2, α3);
 		alpha.setAlpha(e3, α1);
-		return true;
+		return valid;
 	}
 	
 	
@@ -436,17 +374,7 @@ public class EuclideanCyclicFunctional <
 	public <
 		HDS extends HalfEdgeDataStructure<V,E,F>
 	> int[][] getNonZeroPattern(HDS hds) {
-		int n = 0;
-		for (V v : hds.getVertices()) {
-			if (var.isVariable(v)) {
-				n++;
-			}
-		}
-		for (E e : hds.getPositiveEdges()) {
-			if (var.isVariable(e)) {
-				n++;
-			}
-		}
+		int n = getDimension(hds);
 		Map<Integer, TreeSet<Integer>> nonZeros = new HashMap<Integer, TreeSet<Integer>>();
 		for (int i = 0; i < n; i++) {
 			nonZeros.put(i, new TreeSet<Integer>());
