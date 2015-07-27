@@ -173,7 +173,6 @@ public class EuclideanCyclicFunctional <
 			final Hessian H
 	) {
 		H.setZero();
-		// Face Energy
 		for (final E eij : hds.getEdges()) {
 			if (eij.getLeftFace() == null) continue;
 			final E 
@@ -236,7 +235,6 @@ public class EuclideanCyclicFunctional <
 			}
 		}
 	}
-	
 	
 	@Override
 	public boolean triangleEnergyAndAlphas(
@@ -313,68 +311,6 @@ public class EuclideanCyclicFunctional <
 		alpha.setAlpha(e2, α3);
 		alpha.setAlpha(e3, α1);
 		return valid;
-	}
-	
-	
-	
-	public void triangleHessian(
-		// combinatorics	
-			final HalfEdgeDataStructure<V, E, F> hds,
-		// input	
-			final DomainValue u,
-			final F f,
-		// output	
-			final double[] cotE, 
-			final double[] cotV
-	) {
-		final E
-			e1 = f.getBoundaryEdge(),
-			e2 = e1.getNextEdge(),
-			e3 = e1.getPreviousEdge();
-		final V 
-			v1 = e1.getTargetVertex(),
-			v2 = e2.getTargetVertex(),
-			v3 = e3.getTargetVertex();
-		final double 
-			u1 = var.isVariable(v1) ? u.get(var.getVarIndex(v1)) : 0.0,
-			u2 = var.isVariable(v2) ? u.get(var.getVarIndex(v2)) : 0.0,
-			u3 = var.isVariable(v3) ? u.get(var.getVarIndex(v3)) : 0.0;
-		final double
-			λ1 = var.isVariable(e1) ? u.get(var.getVarIndex(e1)) : lambda.getLambda(e1),
-			λ2 = var.isVariable(e2) ? u.get(var.getVarIndex(e2)) : lambda.getLambda(e2),
-			λ3 = var.isVariable(e3) ? u.get(var.getVarIndex(e3)) : lambda.getLambda(e3);
-		final double
-			x12 = λ2 + u1 + u2,
-			x23 = λ3 + u2 + u3,
-			x31 = λ1 + u3 + u1;
-		final double 
-			xmean = (x12 + x23 + x31) / 3;
-		final double 
-			l12 = exp((x12 - xmean) / 2),
-			l23 = exp((x23 - xmean) / 2),
-			l31 = exp((x31 - xmean) / 2);
-		final double
-			t31 = +l12+l23-l31,
-			t23 = +l12-l23+l31,
-			t12 = -l12+l23+l31;
-		double 
-			cot1 = 0.0,
-			cot2 = 0.0,
-			cot3 = 0.0;
-		if (t31 > 0 && t23 > 0 && t12 > 0) {
-			final double
-				l123 = l12 + l23 + l31,
-				denom = sqrt(t12 * t23 * t31 * l123) * 2;
-			cot1 = (t23*l123 - t31*t12) / denom;
-			cot2 = (t31*l123 - t12*t23) / denom;
-			cot3 = (t12*l123 - t23*t31) / denom;
-		}
-		cotE[0] = cot2;
-		cotE[1] = cot3;
-		cotE[2] = cot1;
-		cotV[0] = cot2 + cot3;
-		cotV[1] = cot3 + cot1;
-		cotV[2] = cot1 + cot2;
 	}
 	
 	

@@ -77,7 +77,7 @@ public class HyperbolicCyclicFunctionalTest extends FunctionalTest<CoVertex, CoE
 		Vector x = new DenseVector(n);
 		// random u values
 		for (Integer i = 0; i < x.size(); i++) {
-			x.set(i, rnd.nextGaussian());
+			x.set(i, rnd.nextDouble() - 0.5);
 		}
 		// set lambda values to start lengths
 		for (CoEdge e : hds.getPositiveEdges()) {

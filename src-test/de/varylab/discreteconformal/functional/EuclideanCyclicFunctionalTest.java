@@ -71,7 +71,7 @@ public class EuclideanCyclicFunctionalTest extends FunctionalTest<CoVertex, CoEd
 		rnd.setSeed(1);
 		// random u values
 		for (Integer i = 0; i < x.size(); i++) {
-			x.set(i, rnd.nextGaussian());
+			x.set(i, rnd.nextDouble() - 0.5);
 		}
 		// set lambda values to start lengths		
 		for (CoEdge e : hds.getPositiveEdges()) {
