@@ -146,6 +146,7 @@ public class EuclideanCyclicFunctional <
 				if (var.isVariable(vi)) G.add(i, -αi);
 				if (var.isVariable(vj)) G.add(j, -αj);
 				if (var.isVariable(vk)) G.add(k, -αk);
+				// circular edges
 				if (var.isVariable(eij)) {
 					G.add(ij, αk);
 					if (eij.isPositive()) G.add(ij, -phi.getPhi(eij));
@@ -155,22 +156,12 @@ public class EuclideanCyclicFunctional <
 					if (ejk.isPositive()) G.add(jk, -phi.getPhi(ejk));
 				}
 				if (var.isVariable(eki)) {
-					G.add(ki, αj - phi.getPhi(eki)/2);
+					G.add(ki, αj);
 					if (eki.isPositive()) G.add(ki, -phi.getPhi(eki));
 				}
 				
 			}
 		}
-//		// Circular Edges Gradient
-//		if (G != null) {
-//			for (final E e : hds.getPositiveEdges()) {
-//				if (!var.isVariable(e)) continue;
-//				int i = var.getVarIndex(e);
-//				double αk = alpha.getAlpha(e);
-//				double αl = alpha.getAlpha(e.getOppositeEdge());
-//				G.add(i, αk + αl - phi.getPhi(e));
-//			}
-//		}
 	}
 	
 	
