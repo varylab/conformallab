@@ -48,7 +48,6 @@ public class HyperbolicCyclicFunctionalTest extends FunctionalTest<CoVertex, CoE
 		CoHDS hds = new CoHDS(); 
 		AdapterSet aSet = new ConformalAdapterSet();
 		createTriangulatedCube(hds, aSet);
-		hds.removeFace(hds.getFace(0));
 		
 //		one triangle of edges is circular
 		for (CoFace f : hds.getFaces()) {
