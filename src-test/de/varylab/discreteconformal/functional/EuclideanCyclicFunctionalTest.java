@@ -1,5 +1,7 @@
 package de.varylab.discreteconformal.functional;
 
+import java.util.Random;
+
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedge.util.HalfEdgeUtils;
@@ -65,6 +67,13 @@ public class EuclideanCyclicFunctionalTest extends FunctionalTest<CoVertex, CoEd
 		a.add(new CoPositionAdapter());
 		int n = UnwrapUtility.prepareInvariantDataEuclidean(functional, hds, a);
 		Vector x = new DenseVector(n);
+		Random rnd = new Random(); 
+		rnd.setSeed(1);
+		// random u values
+		for (Integer i = 0; i < x.size(); i++) {
+			x.set(i, rnd.nextGaussian());
+		}
+		// set lambda values to start lengths		
 		for (CoEdge e : hds.getPositiveEdges()) {
 			if (e.getSolverIndex() >= 0) {
 				x.set(e.getSolverIndex(), e.getLambda());
@@ -77,5 +86,12 @@ public class EuclideanCyclicFunctionalTest extends FunctionalTest<CoVertex, CoEd
 		setXGradient(u);
 		setXHessian(u);
 	}
+	
+	
+	
+	
+	
+	
+	
 	
 }

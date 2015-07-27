@@ -122,38 +122,55 @@ public class EuclideanCyclicFunctional <
 		// Face Energy
 		for (final F t : hds.getFaces()) {
 			final E 
-				e1 = t.getBoundaryEdge(),
-				e2 = e1.getNextEdge(),
-				e3 = e1.getPreviousEdge();
+				eij = t.getBoundaryEdge(),
+				ejk = eij.getNextEdge(),
+				eki = eij.getPreviousEdge();
 			final V 
-				v1 = e1.getTargetVertex(),
-				v2 = e2.getTargetVertex(),
-				v3 = e3.getTargetVertex();
+				vi = eki.getTargetVertex(),
+				vj = eij.getTargetVertex(),
+				vk = ejk.getTargetVertex();
 			final int
-				v1i = var.getVarIndex(v1),
-				v2i = var.getVarIndex(v2),
-				v3i = var.getVarIndex(v3);
+				i = var.getVarIndex(vi),
+				j = var.getVarIndex(vj),
+				k = var.getVarIndex(vk);
+			final int
+				ij = var.getVarIndex(eij),
+				jk = var.getVarIndex(ejk),
+				ki = var.getVarIndex(eki);
 			triangleEnergyAndAlphas(u, t, E, initE);
 			final double
-				α1 = alpha.getAlpha(e1),
-				α2 = alpha.getAlpha(e2),
-				α3 = alpha.getAlpha(e3);
+				αi = alpha.getAlpha(ejk),
+				αj = alpha.getAlpha(eki),
+				αk = alpha.getAlpha(eij);
 			if (G != null) {
-				if (var.isVariable(v1)) G.add(v1i, -α1);
-				if (var.isVariable(v2)) G.add(v2i, -α2);
-				if (var.isVariable(v3)) G.add(v3i, -α3);
+				if (var.isVariable(vi)) G.add(i, -αi);
+				if (var.isVariable(vj)) G.add(j, -αj);
+				if (var.isVariable(vk)) G.add(k, -αk);
+				if (var.isVariable(eij)) {
+					G.add(ij, αk);
+					if (eij.isPositive()) G.add(ij, -phi.getPhi(eij));
+				}
+				if (var.isVariable(ejk)) {
+					G.add(jk, αi);
+					if (ejk.isPositive()) G.add(jk, -phi.getPhi(ejk));
+				}
+				if (var.isVariable(eki)) {
+					G.add(ki, αj - phi.getPhi(eki)/2);
+					if (eki.isPositive()) G.add(ki, -phi.getPhi(eki));
+				}
+				
 			}
 		}
-		// Circular Edges Gradient
-		if (G != null) {
-			for (final E e : hds.getPositiveEdges()) {
-				if (!var.isVariable(e)) continue;
-				int i = var.getVarIndex(e);
-				double αk = alpha.getAlpha(e);
-				double αl = alpha.getAlpha(e.getOppositeEdge());
-				G.add(i, αk + αl - phi.getPhi(e));
-			}
-		}
+//		// Circular Edges Gradient
+//		if (G != null) {
+//			for (final E e : hds.getPositiveEdges()) {
+//				if (!var.isVariable(e)) continue;
+//				int i = var.getVarIndex(e);
+//				double αk = alpha.getAlpha(e);
+//				double αl = alpha.getAlpha(e.getOppositeEdge());
+//				G.add(i, αk + αl - phi.getPhi(e));
+//			}
+//		}
 	}
 	
 	

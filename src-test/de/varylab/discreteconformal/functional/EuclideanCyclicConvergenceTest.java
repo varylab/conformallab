@@ -59,10 +59,11 @@ public class EuclideanCyclicConvergenceTest  {
 				continue;
 			}
 			circularEdge = e;
-			e.info = new CustomEdgeInfo();
-			e.info.circularHoleEdge = true;
-			e.info.phi = Math.PI - 0.1; // with modified angle sum phi
-			e.getOppositeEdge().info = e.info;
+			CustomEdgeInfo info = new CustomEdgeInfo();
+			info.circularHoleEdge = true;
+			info.phi = Math.PI - 0.1; // with modified angle sum phi
+			e.info = info;
+			e.getOppositeEdge().info = info;
 			break;
 		}
 		
