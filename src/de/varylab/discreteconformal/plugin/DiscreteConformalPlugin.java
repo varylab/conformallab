@@ -818,6 +818,11 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 				v.info = null;
 			}
 		}
+		for (CoEdge e : surface.getEdges()) {
+			if (!customEdges.contains(e) && !customEdges.contains(e.getOppositeEdge())) {
+				e.info = null;
+			}
+		}
 		Triangulator.triangulateSingleSource(surface);
 		return surface;
 	}

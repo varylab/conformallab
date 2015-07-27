@@ -1,5 +1,7 @@
 package de.varylab.discreteconformal.functional;
 
+import java.util.Random;
+
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
 import de.jtem.halfedge.util.HalfEdgeUtils;
@@ -13,6 +15,7 @@ import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.CustomEdgeInfo;
 import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
+import de.varylab.discreteconformal.logging.LoggingUtility;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CAlpha;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
@@ -40,8 +43,8 @@ public class EuclideanCyclicFunctionalTest extends FunctionalTest<CoVertex, CoEd
 	
 	@Override
 	public void init() {
+		LoggingUtility.initLogging();
 		CoHDS hds = TestUtility.readOBJ(EuclideanCyclicConvergenceTest.class, "square01.obj"); 
-		
 		// one triangle of edges is circular
 		for (CoFace f : hds.getFaces()) {
 			if (!HalfEdgeUtils.isInteriorFace(f)) continue;
@@ -64,6 +67,13 @@ public class EuclideanCyclicFunctionalTest extends FunctionalTest<CoVertex, CoEd
 		a.add(new CoPositionAdapter());
 		int n = UnwrapUtility.prepareInvariantDataEuclidean(functional, hds, a);
 		Vector x = new DenseVector(n);
+		Random rnd = new Random(); 
+		rnd.setSeed(1);
+		// random u values
+		for (Integer i = 0; i < x.size(); i++) {
+			x.set(i, rnd.nextDouble() - 0.5);
+		}
+		// set lambda values to start lengths		
 		for (CoEdge e : hds.getPositiveEdges()) {
 			if (e.getSolverIndex() >= 0) {
 				x.set(e.getSolverIndex(), e.getLambda());
@@ -76,5 +86,12 @@ public class EuclideanCyclicFunctionalTest extends FunctionalTest<CoVertex, CoEd
 		setXGradient(u);
 		setXHessian(u);
 	}
+	
+	
+	
+	
+	
+	
+	
 	
 }

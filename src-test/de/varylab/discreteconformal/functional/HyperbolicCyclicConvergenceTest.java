@@ -1,6 +1,6 @@
 package de.varylab.discreteconformal.functional;
 
-import static de.jtem.halfedge.util.HalfEdgeUtils.isBoundaryVertex;
+import static java.lang.Math.PI;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
@@ -8,6 +8,7 @@ import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.junit.Assert;
 import org.junit.Test;
 
+import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.varylab.discreteconformal.ConformalAdapterSet;
 import de.varylab.discreteconformal.functional.hds.MyConformalAdapters.CPhi;
@@ -21,15 +22,16 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
-import de.varylab.discreteconformal.unwrapper.numerics.CEuclideanOptimizable;
+import de.varylab.discreteconformal.unwrapper.numerics.CHyperbolicOptimizable;
 import de.varylab.discreteconformal.util.TestUtility;
 import de.varylab.discreteconformal.util.UnwrapUtility;
+import de.varylab.discreteconformal.util.UnwrapUtility.ZeroU;
 import de.varylab.mtjoptimization.NotConvergentException;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer;
 import de.varylab.mtjoptimization.newton.NewtonOptimizer.Solver;
 import de.varylab.mtjoptimization.stepcontrol.ArmijoStepController;
 
-public class EuclideanCyclicConvergenceTest  {
+public class HyperbolicCyclicConvergenceTest  {
 
 	private CTheta
 		theta = new CTheta();
@@ -48,29 +50,30 @@ public class EuclideanCyclicConvergenceTest  {
 	
 	@Test
 	public void testEuclideanConvergence() {
-		CoHDS hds = TestUtility.readOBJ(EuclideanCyclicConvergenceTest.class, "cathead.obj"); 
+		CoHDS hds = TestUtility.readOBJ(HyperbolicCyclicConvergenceTest.class, "hyperbolic_convergence_model.obj"); 
 		
-//		 one edge is circular
-		CoEdge circularEdge = null;
-		for (CoEdge e : hds.getPositiveEdges()) {
-			CoVertex s = e.getStartVertex();
-			CoVertex t = e.getTargetVertex();
-			if (isBoundaryVertex(s) || isBoundaryVertex(t)) {
-				continue;
-			}
-			circularEdge = e;
+//		one triangle of edges is circular
+		for (CoFace f : hds.getFaces()) {
+			if (!HalfEdgeUtils.isInteriorFace(f)) continue;
+			CoEdge e1 = f.getBoundaryEdge();
+			CoEdge e2 = e1.getNextEdge();
+			CoEdge e3 = e2.getNextEdge();
 			CustomEdgeInfo info = new CustomEdgeInfo();
 			info.circularHoleEdge = true;
-			info.phi = Math.PI - 0.1; // with modified angle sum phi
-			e.info = info;
-			e.getOppositeEdge().info = info;
+			e1.info = info;
+			e2.info = info;
+			e3.info = info;
+			e1.getOppositeEdge().info = info;
+			e2.getOppositeEdge().info = info;
+			e3.getOppositeEdge().info = info;
 			break;
 		}
 		
 		// optimization
-		CEuclideanOptimizable opt = new CEuclideanOptimizable(hds);
+		CHyperbolicOptimizable opt = new CHyperbolicOptimizable(hds);
 		AdapterSet a = new ConformalAdapterSet();
-		int n = UnwrapUtility.prepareInvariantDataEuclidean(opt.getFunctional(), hds, a);
+		ZeroU zeroU = new ZeroU();
+		int n = UnwrapUtility.prepareInvariantDataHyperbolicAndSpherical(opt.getFunctional(), hds, a, zeroU);
 		DenseVector u = new DenseVector(n);
 		// set variable lambda start values
 		for (CoEdge e : hds.getPositiveEdges()) {
@@ -90,7 +93,14 @@ public class EuclideanCyclicConvergenceTest  {
 		} catch (NotConvergentException e) {
 			Assert.fail(e.getLocalizedMessage());
 		}
-		Assert.assertEquals(Math.PI - 0.1, circularEdge.getAlpha() + circularEdge.getOppositeEdge().getAlpha(), 1E-12);
+		// check flatness
+		for (CoVertex v : hds.getVertices()) {
+			double alpha = 0.0;
+			for (CoEdge e : HalfEdgeUtils.incomingEdges(v)) {
+				alpha += e.getPreviousEdge().getAlpha();
+			}
+			Assert.assertEquals(2*PI, alpha, 1E-8);
+		}
 	}
 	
 	

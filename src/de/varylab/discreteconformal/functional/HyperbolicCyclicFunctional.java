@@ -84,22 +84,6 @@ public class HyperbolicCyclicFunctional <
 		}
 	};
 	
-	@Override
-	public <
-		HDS extends HalfEdgeDataStructure<V,E,F>
-	> int getDimension(HDS hds) {
-		int dim = 0;
-		for (V v : hds.getVertices()) {
-			if (var.isVariable(v)) dim++;
-		}
-		for (E e : hds.getPositiveEdges()) {
-			if (var.isVariable(e)) dim++;
-		}
-		return dim;
-	}
-	
-	
-	
 	public void conformalEnergyAndGradient(
 		// combinatorics
 			final HalfEdgeDataStructure<V, E, F> hds,
@@ -129,37 +113,25 @@ public class HyperbolicCyclicFunctional <
 				vj = ejk.getStartVertex(),
 				vk = eki.getStartVertex();
 			final int
-				ivi = var.getVarIndex(vi),
-				ivj = var.getVarIndex(vj),
-				ivk = var.getVarIndex(vk);
+				i = var.getVarIndex(vi),
+				j = var.getVarIndex(vj),
+				k = var.getVarIndex(vk);
+			final int
+				ij = var.getVarIndex(eij),
+				jk = var.getVarIndex(ejk),
+				ki = var.getVarIndex(eki);
 			triangleEnergyAndAlphas(u, t, E, initE);
 			final double
 				αi = alpha.getAlpha(ejk),
 				αj = alpha.getAlpha(eki),
 				αk = alpha.getAlpha(eij);
 			if (G != null) {
-				if (var.isVariable(vi)) G.add(ivi, -αi);
-				if (var.isVariable(vj)) G.add(ivj, -αj);
-				if (var.isVariable(vk)) G.add(ivk, -αk);
-			}
-		}
-		// Circular Edges Gradient
-		if (G != null) {
-			for (final E eij : hds.getPositiveEdges()) {
-				if (!var.isVariable(eij)) continue;
-				E eji = eij.getOppositeEdge();
-				E ejl = eij.getNextEdge();
-				E eli = ejl.getNextEdge();
-				E eik = eji.getNextEdge();
-				E ekj = eik.getNextEdge();
-				int i = var.getVarIndex(eij);
-				double αij = alpha.getAlpha(eij);
-				double αji = alpha.getAlpha(eji);
-				double αjl = alpha.getAlpha(ejl);
-				double αli = alpha.getAlpha(eli);
-				double αik = alpha.getAlpha(eik);
-				double αkj = alpha.getAlpha(ekj);
-				G.add(i, 0.5 * (αij + αji - αjl - αli - αik - αkj));
+				if (var.isVariable(vi)) G.add(i, -αi);
+				if (var.isVariable(vj)) G.add(j, -αj);
+				if (var.isVariable(vk)) G.add(k, -αk);
+				if (var.isVariable(eij)) G.add(ij, (αk - αi - αj) / 2);
+				if (var.isVariable(ejk)) G.add(jk, (αi - αj - αk) / 2);
+				if (var.isVariable(eki)) G.add(ki, (αj - αk - αi) / 2);
 			}
 		}
 	}
@@ -223,7 +195,6 @@ public class HyperbolicCyclicFunctional <
 				H.add(i, j, Hij);
 				H.add(j, i, Hij);
 			}
-			
 			// quadratic lambda terms
 			if (var.isVariable(e)) {
 				H.add(ij, ij, w * tan2);
@@ -346,6 +317,21 @@ public class HyperbolicCyclicFunctional <
 			alpha.setAlpha(eki, αj);
 		}
 		return valid;
+	}
+	
+	
+	@Override
+	public <
+		HDS extends HalfEdgeDataStructure<V,E,F>
+	> int getDimension(HDS hds) {
+		int dim = 0;
+		for (V v : hds.getVertices()) {
+			if (var.isVariable(v)) dim++;
+		}
+		for (E e : hds.getPositiveEdges()) {
+			if (var.isVariable(e)) dim++;
+		}
+		return dim;
 	}
 
 	@Override
