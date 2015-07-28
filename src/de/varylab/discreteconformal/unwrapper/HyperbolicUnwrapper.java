@@ -66,7 +66,7 @@ public class HyperbolicUnwrapper implements Unwrapper {
 
 		HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(u);
 		if (cutRoot == null) {
-			cutRoot = surface.getVertex(getMinUIndex(u));
+			cutRoot = surface.getVertex(getMinVertexUIndex(u, surface.numVertices()));
 		}
 		if (cutGraph != null) {
 			cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();
@@ -80,10 +80,10 @@ public class HyperbolicUnwrapper implements Unwrapper {
 	}
 	
 
-	protected static int getMinUIndex(Vector u) {
+	protected static int getMinVertexUIndex(Vector u, int numVertices) {
 		int index = 0;
 		double iVal = u.get(0);
-		for (int i = 1; i < u.size(); i++) {
+		for (int i = 1; i < Math.min(u.size(), numVertices); i++) {
 			double val = u.get(i);
 			if (iVal < val) {
 				index = i;

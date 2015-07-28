@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.unwrapper;
 
+import static de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapper.getMinVertexUIndex;
 import static de.varylab.discreteconformal.util.CuttingUtility.cutManifoldToDisk;
 
 import java.util.LinkedHashMap;
@@ -75,7 +76,7 @@ public class HyperbolicUnwrapperPETSc implements Unwrapper {
 		if (cutAndLayout) {
 			HyperbolicLengthWeightAdapter hypWa = new HyperbolicLengthWeightAdapter(uVec);
 			if (cutRoot == null) {
-				cutRoot = surface.getVertex(HyperbolicUnwrapper.getMinUIndex(uVec));
+				cutRoot = surface.getVertex(getMinVertexUIndex(uVec, surface.numVertices()));
 			}
 			if (cutGraph != null) {
 				cutInfo = new CuttingInfo<CoVertex, CoEdge, CoFace>();

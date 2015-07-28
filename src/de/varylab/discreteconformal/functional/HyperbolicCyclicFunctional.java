@@ -1,7 +1,6 @@
 package de.varylab.discreteconformal.functional;
 
 import static de.varylab.discreteconformal.functional.Clausen.Л;
-import static de.varylab.discreteconformal.math.MathUtility.arsinh;
 import static java.lang.Math.PI;
 import static java.lang.Math.atan2;
 import static java.lang.Math.exp;
@@ -84,6 +83,26 @@ public class HyperbolicCyclicFunctional <
 		}
 	};
 	
+	@Override
+	public <
+		HDS extends HalfEdgeDataStructure<V,E,F>
+	> int getDimension(HDS hds) {
+		int dim = 0;
+		for (V v : hds.getVertices()) {
+			if (var.isVariable(v)) {
+				dim++;
+			}
+		}
+		for (E e : hds.getPositiveEdges()) {
+			if (var.isVariable(e)) {
+				dim++;
+			}
+		}
+		return dim;
+	}
+	
+	
+	
 	public void conformalEnergyAndGradient(
 		// combinatorics
 			final HalfEdgeDataStructure<V, E, F> hds,
@@ -94,13 +113,23 @@ public class HyperbolicCyclicFunctional <
 			final Gradient G
 	) {
 		// Vertex Energy
-		if (E != null) E.setZero();
-		if (G != null) G.setZero();
+		if (E != null) {
+			E.setZero();
+		}
+		if (G != null) {
+			G.setZero();
+		}
 		for (final V v : hds.getVertices()) {
-			if (!var.isVariable(v)) continue;
+			if (!var.isVariable(v)) {
+				continue;
+			}
 			int i = var.getVarIndex(v);
-			if (E != null) E.add(theta.getTheta(v) * u.get(i));
-			if (G != null) G.add(var.getVarIndex(v), theta.getTheta(v));
+			if (E != null) {
+				E.add(theta.getTheta(v) * u.get(i));
+			}
+			if (G != null) {
+				G.add(var.getVarIndex(v), theta.getTheta(v));
+			}
 		}
 		// Face Energy
 		for (final F t : hds.getFaces()) {
@@ -113,25 +142,43 @@ public class HyperbolicCyclicFunctional <
 				vj = ejk.getStartVertex(),
 				vk = eki.getStartVertex();
 			final int
-				i = var.getVarIndex(vi),
-				j = var.getVarIndex(vj),
-				k = var.getVarIndex(vk);
-			final int
-				ij = var.getVarIndex(eij),
-				jk = var.getVarIndex(ejk),
-				ki = var.getVarIndex(eki);
+				ivi = var.getVarIndex(vi),
+				ivj = var.getVarIndex(vj),
+				ivk = var.getVarIndex(vk);
 			triangleEnergyAndAlphas(u, t, E, initE);
 			final double
 				αi = alpha.getAlpha(ejk),
 				αj = alpha.getAlpha(eki),
 				αk = alpha.getAlpha(eij);
 			if (G != null) {
-				if (var.isVariable(vi)) G.add(i, -αi);
-				if (var.isVariable(vj)) G.add(j, -αj);
-				if (var.isVariable(vk)) G.add(k, -αk);
-				if (var.isVariable(eij)) G.add(ij, (αk - αi - αj) / 2);
-				if (var.isVariable(ejk)) G.add(jk, (αi - αj - αk) / 2);
-				if (var.isVariable(eki)) G.add(ki, (αj - αk - αi) / 2);
+				if (var.isVariable(vi)) {
+					G.add(ivi, -αi);
+				}
+				if (var.isVariable(vj)) {
+					G.add(ivj, -αj);
+				}
+				if (var.isVariable(vk)) {
+					G.add(ivk, -αk);
+				}
+			}
+		}
+		// Circular Edges Gradient
+		if (G != null) {
+			for (final E eij : hds.getPositiveEdges()) {
+				if (!var.isVariable(eij)) continue;
+				E eji = eij.getOppositeEdge();
+				E ejl = eij.getNextEdge();
+				E eli = ejl.getNextEdge();
+				E eik = eji.getNextEdge();
+				E ekj = eik.getNextEdge();
+				int i = var.getVarIndex(eij);
+				double αij = alpha.getAlpha(eij);
+				double αji = alpha.getAlpha(eji);
+				double αjl = alpha.getAlpha(ejl);
+				double αli = alpha.getAlpha(eli);
+				double αik = alpha.getAlpha(eik);
+				double αkj = alpha.getAlpha(ekj);
+				G.add(i, 0.5 * (αij + αji - αjl - αli - αik - αkj));
 			}
 		}
 	}
@@ -146,17 +193,36 @@ public class HyperbolicCyclicFunctional <
 	) {
 		H.setZero();
 		// Face Energy
-		for(final E e : hds.getEdges()) {
-			if (e.getLeftFace() == null) continue;
-			if (!triangleEnergyAndAlphas(u, e.getLeftFace(), null, initE));
-			final double
-				αi = alpha.getAlpha(e.getPreviousEdge()),
-				αj = alpha.getAlpha(e.getNextEdge()),
-				αk = alpha.getAlpha(e);
-			final double
-				βk = 0.5 * (PI - αi - αj + αk);
-			final double 
-				cot = 1 / tan(βk);
+		for(final E e : hds.getPositiveEdges()) {
+			double cot = 0.0;
+			double cot_k = 0.0;
+			double cot_m = 0.0;
+			if (e.getLeftFace() != null) {
+				E ek = e;
+				boolean valid = triangleEnergyAndAlphas(u, ek.getLeftFace(), null, initE); 
+				if (valid) {
+					final double
+						αi = alpha.getAlpha(ek.getPreviousEdge()),
+						αj = alpha.getAlpha(ek.getNextEdge()),
+						αk = alpha.getAlpha(ek);
+					final double
+						βk = 0.5 * (PI - αi - αj + αk);
+					cot += (cot_k = 1 / tan(βk));
+				}
+			}
+			if (e.getRightFace() != null) {
+				E em = e.getOppositeEdge();
+				boolean valid = triangleEnergyAndAlphas(u, em.getLeftFace(), null, initE);
+				if (valid) {
+					final double
+						αi = alpha.getAlpha(em.getPreviousEdge()),
+						αj = alpha.getAlpha(em.getNextEdge()),
+						αm = alpha.getAlpha(em);
+					final double
+						βm = 0.5 * (PI - αi - αj + αm);
+					cot += (cot_m = 1 / tan(βm));
+				}
+			}
 			final V
 				vi = e.getStartVertex(),
 				vj = e.getTargetVertex();
@@ -165,26 +231,28 @@ public class HyperbolicCyclicFunctional <
 				j = var.getVarIndex(vj);
 			final E
 				ejk = e.getNextEdge(),
-				eki = e.getPreviousEdge();
+				eki = e.getPreviousEdge(),
+				eim = e.getOppositeEdge().getNextEdge(),
+				emj = e.getOppositeEdge().getPreviousEdge();			
 			final int
 				ij = var.getVarIndex(e),
 				jk = var.getVarIndex(ejk),
-				ki = var.getVarIndex(eki);
+				ki = var.getVarIndex(eki),
+				im = var.getVarIndex(eim),
+				mj = var.getVarIndex(emj);
 			final double 
 				ui = var.isVariable(vi) ? u.get(i) : 0.0,
 				uj = var.isVariable(vj) ? u.get(j) : 0.0;
 			final double 
 				λij = (var.isVariable(e) ? u.get(ij) : lambda.getLambda(e)) + ui + uj;
 			final double
-				lij = 2*arsinh(exp(λij / 2));
+				lij = 2*MathUtility.arsinh(exp(λij / 2));
 			double 
 				tan2 = tanh(lij / 2);
 			tan2 *= tan2;
-			final double
-				w = 0.5 * cot;
 			final double 
-				Hii = w * (1 + tan2),
-				Hij = w * (tan2 - 1);
+				Hii = 0.5 * cot * (1 + tan2),
+				Hij = 0.5 * cot * (tan2 - 1);
 			if (var.isVariable(vi)) {
 				H.add(i, i, Hii);
 			}
@@ -195,47 +263,75 @@ public class HyperbolicCyclicFunctional <
 				H.add(i, j, Hij);
 				H.add(j, i, Hij);
 			}
+			
 			// quadratic lambda terms
 			if (var.isVariable(e)) {
-				H.add(ij, ij, w * tan2);
+				H.add(ij, ij, 0.5*cot*tan2);
 			}
 			if (var.isVariable(ejk)) {
-				H.add(jk, jk, w);
+				H.add(jk, jk, 0.5*cot_k);
 			}
 			if (var.isVariable(eki)) {
-				H.add(ki, ki, w);
+				H.add(ki, ki, 0.5*cot_k);
+			}
+			if (var.isVariable(eim)) {
+				H.add(im, im, 0.5*cot_m);
+			}
+			if (var.isVariable(emj)) {
+				H.add(mj, mj, 0.5*cot_m);
 			}
 			// mixed lambda terms
 			if (var.isVariable(ejk) && var.isVariable(eki)) {
-				H.add(jk, ki, -w);
-				H.add(ki, jk, -w);
+				H.add(jk, ki, -0.5*cot_k);
+				H.add(ki, jk, -0.5*cot_k);
 			}
+			if (var.isVariable(eim) && var.isVariable(emj)) {
+				H.add(im, mj, -0.5*cot_m);
+				H.add(mj, im, -0.5*cot_m);
+			}			
 			// mixed lambda and u terms for both sides
 			if (var.isVariable(vi) && var.isVariable(e)) {
-				H.add(i, ij, w * tan2);
-				H.add(ij, i, w * tan2);
+				H.add(i, ij, 0.5*cot*tan2);
+				H.add(ij, i, 0.5*cot*tan2);
 			}	
 			if (var.isVariable(vj) && var.isVariable(e)) {
-				H.add(j, ij, w * tan2);
-				H.add(ij, j, w * tan2);
+				H.add(j, ij, 0.5*cot*tan2);
+				H.add(ij, j, 0.5*cot*tan2);
 			}
 			// mixed lambda and u terms for the k side of edge
 			if (var.isVariable(vi) && var.isVariable(eki)) {
-				H.add(i, ki, w);
-				H.add(ki, i, w);
+				H.add(i, ki, 0.5*cot_k);
+				H.add(ki, i, 0.5*cot_k);
 			}
 			if (var.isVariable(vi) && var.isVariable(ejk)) {
-				H.add(i, jk, -w);
-				H.add(jk, i, -w);
+				H.add(i, jk, -0.5*cot_k);
+				H.add(jk, i, -0.5*cot_k);
 			}
 			if (var.isVariable(vj) && var.isVariable(eki)) {
-				H.add(j, ki, -w);
-				H.add(ki, j, -w);
+				H.add(j, ki, -0.5*cot_k);
+				H.add(ki, j, -0.5*cot_k);
 			}
 			if (var.isVariable(vj) && var.isVariable(ejk)) {
-				H.add(j, jk, w);
-				H.add(jk, j, w);
+				H.add(j, jk, 0.5*cot_k);
+				H.add(jk, j, 0.5*cot_k);
 			}
+			// mixed lambda and u terms for the m side of edge
+			if (var.isVariable(vi) && var.isVariable(eim)) {
+				H.add(i, im, 0.5*cot_m);
+				H.add(im, i, 0.5*cot_m);
+			}
+			if (var.isVariable(vi) && var.isVariable(emj)) {
+				H.add(i, mj, -0.5*cot_m);
+				H.add(mj, i, -0.5*cot_m);
+			}
+			if (var.isVariable(vj) && var.isVariable(eim)) {
+				H.add(j, im, -0.5*cot_m);
+				H.add(im, j, -0.5*cot_m);
+			}
+			if (var.isVariable(vj) && var.isVariable(emj)) {
+				H.add(j, mj, 0.5*cot_m);
+				H.add(mj, j, 0.5*cot_m);
+			}			
 		}
 	}
 	
@@ -318,27 +414,22 @@ public class HyperbolicCyclicFunctional <
 		}
 		return valid;
 	}
-	
-	
-	@Override
-	public <
-		HDS extends HalfEdgeDataStructure<V,E,F>
-	> int getDimension(HDS hds) {
-		int dim = 0;
-		for (V v : hds.getVertices()) {
-			if (var.isVariable(v)) dim++;
-		}
-		for (E e : hds.getPositiveEdges()) {
-			if (var.isVariable(e)) dim++;
-		}
-		return dim;
-	}
 
 	@Override
 	public <
 		HDS extends HalfEdgeDataStructure<V,E,F>
 	> int[][] getNonZeroPattern(HDS hds) {
-		int n = getDimension(hds);
+		int n = 0;
+		for (V v : hds.getVertices()) {
+			if (var.isVariable(v)) {
+				n++;
+			}
+		}
+		for (E e : hds.getPositiveEdges()) {
+			if (var.isVariable(e)) {
+				n++;
+			}
+		}
 		Map<Integer, TreeSet<Integer>> nonZeros = new HashMap<Integer, TreeSet<Integer>>();
 		for (int i = 0; i < n; i++) {
 			nonZeros.put(i, new TreeSet<Integer>());
@@ -394,6 +485,7 @@ public class HyperbolicCyclicFunctional <
 			}
 		}
 		return nz;
+
 	}
 	
 
