@@ -34,6 +34,7 @@ import de.varylab.discreteconformal.unwrapper.HyperbolicUnwrapperPETSc;
 import de.varylab.discreteconformal.unwrapper.QuantizationMode;
 import de.varylab.discreteconformal.unwrapper.SphericalUnwrapper;
 import de.varylab.discreteconformal.unwrapper.SphericalUnwrapperPETSc;
+import de.varylab.discreteconformal.unwrapper.StereographicUnwrapper;
 import de.varylab.discreteconformal.unwrapper.Unwrapper;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
@@ -56,7 +57,8 @@ public class UnwrapJob extends AbstractJob {
 	private CutStrategy
 		cutStrategy = CutStrategy.Automatic;
 	private boolean
-		usePetsc = false;
+		usePetsc = false,
+		useStereographicSphericalUniformization = true;
 	private QuantizationMode
 		coneMode = QuantizationMode.AllAngles,
 		boundaryQuantizationMode = QuantizationMode.AllAngles;
@@ -113,11 +115,17 @@ public class UnwrapJob extends AbstractJob {
 			log.info("Spherical unwrap...");
 			Unwrapper unwrapper = null;
 			if (usePetsc) {
-				unwrapper = new SphericalUnwrapperPETSc();
-//				unwrapper = new StereographicUnwrapper();
+				if (useStereographicSphericalUniformization) {
+					unwrapper = new StereographicUnwrapper();
+				} else {
+					unwrapper = new SphericalUnwrapperPETSc();
+				}
 			} else {
-				unwrapper = new SphericalUnwrapper();
-//				unwrapper = new StereographicUnwrapper();
+				if (useStereographicSphericalUniformization) {
+					unwrapper = new StereographicUnwrapper();
+				} else {
+					unwrapper = new SphericalUnwrapper();
+				}
 			}
 			if (cutStrategy == CutStrategy.Selection) {
 				Set<CoEdge> edgeSet = new TreeSet<>(selectedEdges);
@@ -358,6 +366,14 @@ public class UnwrapJob extends AbstractJob {
 	
 	public CuttingInfo<CoVertex, CoEdge, CoFace> getCutInfo() {
 		return cutInfo;
+	}
+	
+	public boolean isUseStereographicSphericalUniformization() {
+		return useStereographicSphericalUniformization;
+	}
+
+	public void setUseStereographicSphericalUniformization(boolean useStereographicSphericalUniformization) {
+		this.useStereographicSphericalUniformization = useStereographicSphericalUniformization;
 	}
 	
 }

@@ -94,7 +94,6 @@ import de.varylab.discreteconformal.functional.FunctionalAdapters.Lambda;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Phi;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Theta;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
-import de.varylab.discreteconformal.functional.hds.MyConformalAdapters;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -117,6 +116,7 @@ import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CInitialEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CLambda;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CTheta;
 import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CPhi;
 import de.varylab.discreteconformal.util.CuttingUtility.CuttingInfo;
 
 public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin 
@@ -212,7 +212,8 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 		circularEdgeChecker = new JCheckBox("Circular"), 
 		useCustomThetaChecker = new JCheckBox("Theta"),
 		useProjectiveTexture = new JCheckBox("Projective Texture", true),
-		drawCurvesOnSurface = new JCheckBox("Draw Curves On Surface");
+		drawCurvesOnSurface = new JCheckBox("Draw Curves On Surface"),
+		stereographicChecker = new JCheckBox("Stereographic Spherical Uniformization", true);
 	private JComboBox<String>
 		numericsCombo = new JComboBox<String>(new String[] {"Petsc/Tao Numerics", "Java/MTJ Numerics"});
 	private JComboBox<QuantizationMode>
@@ -292,6 +293,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			shrinkPanel.add(new JLabel("Target Geometry"), c1);
 			shrinkPanel.add(targetGeometryCombo, c2);
 			shrinkPanel.add(uniformizationChecker, c2);
+			shrinkPanel.add(stereographicChecker, c2);
 		}
 		shrinkPanel.add(unwrapBtn, c2);
 		if (expert) {
@@ -635,6 +637,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			uw.setSelectedVertices(selection.getVertices(unwrapped));
 			uw.setSelectedEdges(selection.getEdges(unwrapped));
 			uw.setCutStrategy((CutStrategy)cutStrategy.getSelectedItem());
+			uw.setUseStereographicSphericalUniformization(stereographicChecker.isSelected());
 			uw.addJobListener(this);
 			jobQueue.queueJob(uw);
 		}
@@ -693,7 +696,7 @@ public class DiscreteConformalPlugin extends ViewShrinkPanelPlugin
 			QuantizationMode boundaryQuantMode = (QuantizationMode)boundaryQuantizationCombo.getSelectedItem();
 			try {
 				Theta<CoVertex, CoEdge> theta = new CTheta();
-				Phi<CoEdge> phi = new MyConformalAdapters.CPhi();
+				Phi<CoEdge> phi = new CPhi();
 				Variable<CoVertex, CoEdge> variable = new CVariable();
 				Lambda<CoEdge> lambda = new CLambda();
 				Alpha<CoEdge> alpha = new CAlpha();

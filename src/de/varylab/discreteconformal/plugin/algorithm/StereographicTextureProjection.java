@@ -16,7 +16,6 @@ import de.jtem.halfedgetools.adapter.type.generic.TexturePosition4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
 import de.jtem.halfedgetools.plugin.algorithm.AlgorithmPlugin;
 import de.jtem.mfc.field.Complex;
-import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.math.CP1;
@@ -45,16 +44,14 @@ public class StereographicTextureProjection extends AlgorithmPlugin {
 	> void execute(HDS hds2, AdapterSet a, HalfedgeInterface hi) {
 		// north and south pole normalization
 		CoHDS hds = hi.get(new CoHDS());
-		Set<CoFace> poles = hi.getSelection().getFaces(hds);
-		Set<CoVertex> mid = hi.getSelection().getVertices(hds);
-		if (poles.size() == 2 && mid.size() == 1) {
-			Iterator<CoFace> polesIt = poles.iterator();
-			Iterator<CoVertex> midIt = mid.iterator();
-			normalize(hds, polesIt.next(), midIt.next(), polesIt.next(), a);
+		Set<CoVertex> vertexSel = hi.getSelection().getVertices(hds);
+		if (vertexSel.size() == 3) {
+			Iterator<CoVertex> vertexIt = vertexSel.iterator();
+			normalize(hds, vertexIt.next(), vertexIt.next(), vertexIt.next(), a);
 		} else {
 			throw new RuntimeException(
-				"Please select two faces and a vertex to "
-				+ "define, the poles and a point on the equator."
+				"Please select three vertices to define the north pole, "
+				+ "the equator, and the south pole."
 			);
 		}
 		for (CoVertex v : hds.getVertices()) {
@@ -72,7 +69,7 @@ public class StereographicTextureProjection extends AlgorithmPlugin {
 		E extends Edge<V, E, F>, 
 		F extends Face<V, E, F>, 
 		HDS extends HalfEdgeDataStructure<V, E, F>
-	> void normalize(CoHDS hds, F s, V mid, F n, AdapterSet a) {
+	> void normalize(CoHDS hds, V s, V mid, V n, AdapterSet a) {
 		double[] ps = a.getD(TextureBaryCenter3d.class, s);
 		double[] pmid = a.getD(TexturePosition3d.class, mid);
 		double[] pn = a.getD(TextureBaryCenter3d.class, n);
