@@ -44,6 +44,7 @@ public class VisualizationUtility {
 		double maxDrawDistance,
 		boolean drawPolygon,
 		boolean drawAxes,
+		boolean drawAllAxes,
 		List<double[][]> axesSegments,
 		List<double[][]> polygonSegments,
 		Path2D axesPath,
@@ -57,8 +58,9 @@ public class VisualizationUtility {
 			createTransformedDomain(
 				P, 
 				sBig,
-				drawPolygon, isFirst & drawAxes, 
-				model, 
+				drawPolygon, 
+				drawAxes & (isFirst | drawAllAxes), 
+				model,
 				axesSegments, polygonSegments, 
 				axesPath, 
 				polygonPath,
@@ -114,9 +116,9 @@ public class VisualizationUtility {
 	) {
 		FundamentalPolygon rP = FundamentalPolygonUtility.copyPolygon(poly);
 		for (FundamentalEdge ce : rP.getEdges()) {
-			BigDecimal[] domainInv = RnBig.inverse(null, T, context);
-			RnBig.times(ce.motionBig, ce.motionBig, T, context);
-			RnBig.times(ce.motionBig, domainInv, ce.motionBig, context);
+			BigDecimal[] Ti = RnBig.inverse(null, T, context);
+			RnBig.times(ce.motionBig, ce.motionBig, Ti, context);
+			RnBig.times(ce.motionBig, T, ce.motionBig, context);
 			RnBig.matrixTimesVector(ce.startPosition, T, ce.startPosition, context);
 			PnBig.normalize(ce.startPosition, ce.startPosition, HYPERBOLIC, context);
 		}

@@ -47,7 +47,7 @@ public class SurfaceCurveUtility {
 			poly, 
 			Klein,
 			maxElements, maxDrawDistance, 
-			includePoygon, includeAxes, 
+			includePoygon, includeAxes, false, 
 			axesSegments, polySegments, 
 			null, null, null
 		);		
@@ -105,7 +105,7 @@ public class SurfaceCurveUtility {
 			poly, 
 			Klein, 
 			200, 10, 
-			true, false, 
+			true, false, false,
 			axesSegments, polySegments, 
 			null, null, null
 		);

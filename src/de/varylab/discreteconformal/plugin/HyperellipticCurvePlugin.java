@@ -196,7 +196,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 			for (CoVertex bv : branchVertices) {
 				branchIndices[i++] = bv.getIndex();
 			}
-			branchVertices = HyperellipticUtility.generateHyperellipticImage(hds, 0, glueSet, branchIndices);
+			branchVertices = HyperellipticUtility.generateHyperellipticImage(hds, true, 0, true, glueSet, branchIndices);
 			
 			int genus = HalfEdgeUtils.getGenus(hds);
 			HyperEllipticAlgebraicCurve heac = DataUtility.toHyperEllipticAlgebraicCurve("Hyperelliptic Curve g" + genus, getCurve());

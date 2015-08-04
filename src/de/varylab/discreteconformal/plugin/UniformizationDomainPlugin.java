@@ -85,6 +85,8 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		triangulationChecker = new JCheckBox("Triangulation", true),
 		polygonChecker = new JCheckBox("Polygon", true),
 		axesChecker = new JCheckBox("Axes", true),
+		drawAllAxes = new JCheckBox("Draw all Axes", false),
+		dashedAxes = new JCheckBox("Dashed Axes", true),
 		boundaryChecker = new JCheckBox("Boundary", false),
 		faceCirclesChecker = new JCheckBox("Face Circles"),
 		vertexCirclesWhiteChecker = new JCheckBox("White Vertex Circles"),
@@ -163,6 +165,8 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		options.add(polygonColorButton, rc);
 		options.add(axesChecker, lc);
 		options.add(axesColorButton, rc);
+		options.add(drawAllAxes, lc);		
+		options.add(dashedAxes, rc);		
 		options.add(boundaryChecker, lc);
 		options.add(boundaryColorButton, rc);	
 		options.add(faceCirclesChecker, rc);
@@ -191,6 +195,8 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		polygonColorButton.addColorChangedListener(this);
 		axesChecker.addActionListener(this);
 		axesColorButton.addColorChangedListener(this);
+		drawAllAxes.addActionListener(this);
+		dashedAxes.addActionListener(this);
 		boundaryChecker.addActionListener(this);
 		boundaryColorButton.addColorChangedListener(this);
 		fundamentalChecker.addActionListener(this);
@@ -224,6 +230,11 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		fundamentalDomainComponent.setPaint(fcAlpha);
 		vertexCirclesWhiteComponent.setOutlinePaint(fc);
 		vertexCirclesBlackComponent.setOutlinePaint(fc);
+		if (dashedAxes.isSelected()) {
+			axesComponent.setStroke(new BasicStroke(2, CAP_SQUARE, JOIN_ROUND, 1, new float[] {5, 7}, 1));
+		} else {
+			axesComponent.setStroke(new BasicStroke(2));
+		}
 		scene.fireAppearanceChange();
 	}
 	
@@ -252,6 +263,9 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 			updateGeometry(true);
 		}
 		if (interpolationCombo == e.getSource()) {
+			updateGeometry(true);
+		}
+		if (drawAllAxes == e.getSource()) {
 			updateGeometry(true);
 		}
 	}
@@ -355,6 +369,7 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 		TargetGeometry geometry = getSelectedGeometry();
 		int maxElements = coverElementsModel.getNumber().intValue();
 		double maxDistance = coverMaxDistanceModel.getNumber().doubleValue();
+		boolean allAxes = drawAllAxes.isSelected();
 		DomainPolygon p = (DomainPolygon) domainCombo.getSelectedItem();
 		FundamentalPolygon P = null;
 		switch (p) {
@@ -374,7 +389,7 @@ public class UniformizationDomainPlugin extends Plugin implements TextureSpacePl
 			P, 
 			model, 
 			maxElements, maxDistance, 
-			true, true, 
+			true, true, allAxes,
 			null, null,
 			axesPath, polyPath, fundamentalDomainPath
 		);

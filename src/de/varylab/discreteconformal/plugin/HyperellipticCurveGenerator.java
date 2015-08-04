@@ -26,7 +26,7 @@ import de.jtem.halfedgetools.selection.Selection;
 import de.jtem.jrworkspace.plugin.Controller;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
-import de.varylab.discreteconformal.util.DiscreteEllipticUtility;
+import de.varylab.discreteconformal.util.HyperellipticUtility;
 
 public class HyperellipticCurveGenerator extends AlgorithmDialogPlugin {
 	
@@ -39,14 +39,14 @@ public class HyperellipticCurveGenerator extends AlgorithmDialogPlugin {
 	private JSpinner
 		numPointsSpinner = new JSpinner(numPointsModel);
 	private JCheckBox
-		projectChecker = new JCheckBox("Project To Sphere", true),
-		convexHullChecker = new JCheckBox("Project To Sphere", true);
+		projectChecker = new JCheckBox("Project To Sphere", false),
+		convexHullChecker = new JCheckBox("Use Convex Hull", false);
 	
 	public HyperellipticCurveGenerator() {
 		GridBagConstraints lc = LayoutFactory.createLeftConstraint();
 		GridBagConstraints rc = LayoutFactory.createRightConstraint();
 		options.setLayout(new GridBagLayout());
-		options.add(new JLabel("Random Points"), lc);
+		options.add(new JLabel("Add Random Vertices"), lc);
 		options.add(numPointsSpinner, rc);
 		options.add(projectChecker, rc);
 		options.add(convexHullChecker, rc);
@@ -76,7 +76,7 @@ public class HyperellipticCurveGenerator extends AlgorithmDialogPlugin {
 	> void executeAfterDialog(HDS h, AdapterSet a, final HalfedgeInterface hif) {
 		int numPoints = numPointsModel.getNumber().intValue();
 		boolean project = projectChecker.isSelected();
-		boolean convecHull = convexHullChecker.isSelected();
+		boolean convexHull = convexHullChecker.isSelected();
 		Selection sel = hif.getSelection();
 		int[] branchIndices = new int[sel.getVertices().size()];
 		int i = 0;
@@ -85,7 +85,7 @@ public class HyperellipticCurveGenerator extends AlgorithmDialogPlugin {
 		}
 		CoHDS hds = hif.get(new CoHDS());
 		Set<CoEdge> glueSet = new HashSet<CoEdge>();
-		DiscreteEllipticUtility.generateEllipticImage(hds, numPoints, project, convecHull, glueSet, branchIndices);
+		HyperellipticUtility.generateHyperellipticImage(hds, convexHull, numPoints, project, glueSet, branchIndices);
 		hif.set(hds);
 		Selection s = new Selection();
 		s.addAll(glueSet, SHEET_PATHS_CHANEL);

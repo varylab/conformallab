@@ -26,18 +26,29 @@ public class HyperellipticUtility {
 	/**
 	 * Generates a two-sheeted version of hds branched at the vertices with 
 	 * indices specified by branchVertices.
-	 * @param hds
-	 * @param numExtraPoints
-	 * @param glueEdges
-	 * @param branchVertices
+	 * @param hds the base data structure for one sheet
+	 * @param useConvexHull use a convex hull algorithm to create new edges and faces
+	 * @param numExtraPoints add a number of extra points on S^2
+	 * @param glueEdges the set of edges that has been used to cut and re-glue the two sheets
+	 * @param branchVertices set indices of the vertices that will be used as branch vertices
 	 * @return the set of branch vertices in the result
 	 */
-	public static Set<CoVertex> generateHyperellipticImage(CoHDS hds, int numExtraPoints, Set<CoEdge> glueEdges, int... branchVertices) {
+	public static Set<CoVertex> generateHyperellipticImage(
+		CoHDS hds, 
+		boolean useConvexHull,
+		int numExtraPoints, 
+		boolean projectToSphere,
+		Set<CoEdge> glueEdges, 
+		int... branchVertices
+	) {
 		if (hds.numVertices() < 4) {
 			throw new RuntimeException("Not enough vertices in generateHyperellipticImage()");
 		} 
 		if (branchVertices.length < 3) {
 			throw new RuntimeException("Not enough branch points specified in generateHyperellipticImage()");
+		}
+		if (useConvexHull && numExtraPoints > 0) {
+			throw new RuntimeException("connot have extra vertices without convex hull generation in generateHyperellipticImage()");
 		}
 		List<CoVertex> branchList = new LinkedList<CoVertex>();
 		for (int i : branchVertices) {
@@ -50,28 +61,32 @@ public class HyperellipticUtility {
 			v.P = new double[] {0.0, 0.0, 1.0, 1.0};
 			branchList.add(v);
 		}
-		for (CoEdge e : new HashSet<CoEdge>(hds.getEdges())) {
-			hds.removeEdge(e);
+		if (numExtraPoints > 0) {
+			// additional points
+			Random rnd = new Random();
+			for (int i = 0; i < numExtraPoints; i++) {
+				CoVertex v = hds.addNewVertex();
+				v.P = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian(), 1.0};
+			}
 		}
-		for (CoFace f : new HashSet<CoFace>(hds.getFaces())) {
-			hds.removeFace(f);
+		if (projectToSphere) {
+			// on the sphere
+			for (CoVertex v : hds.getVertices()) {
+				Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
+			}
 		}
-	
-		// additional points
-		Random rnd = new Random();
-		for (int i = 0; i < numExtraPoints; i++) {
-			CoVertex v = hds.addNewVertex();
-			v.P = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian(), 1.0};
+		if (useConvexHull) {
+			// clean up and create new edges and faces of the convex hull
+			for (CoEdge e : new HashSet<CoEdge>(hds.getEdges())) {
+				hds.removeEdge(e);
+			}
+			for (CoFace f : new HashSet<CoFace>(hds.getFaces())) {
+				hds.removeFace(f);
+			}
+			ConformalAdapterSet a = new ConformalAdapterSet();
+			ConvexHull.convexHull(hds, a, 1E-8);
 		}
-		
-		// on the sphere
-		for (CoVertex v : hds.getVertices()) {
-			Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
-		}
-		
-		// convex hull
-		ConformalAdapterSet a = new ConformalAdapterSet();
-		ConvexHull.convexHull(hds, a, 1E-8);
+
 		int vOffset = hds.numVertices();
 		int eOffset = hds.numEdges();
 		HalfEdgeUtils.copy(hds, hds);
@@ -84,7 +99,6 @@ public class HyperellipticUtility {
 			sheetVertexMap.put(v, vc);
 			sheetVertexMap.put(vc, v);
 		}
-		
 		
 		glueEdges.clear();
 		Set<CoVertex> avoid = new HashSet<CoVertex>(branchList);
