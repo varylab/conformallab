@@ -18,8 +18,6 @@ import de.jreality.math.Rn;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Radius;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
-import de.jtem.halfedgetools.plugin.HalfedgeLayer;
-import de.jtem.halfedgetools.plugin.HalfedgeListener;
 import de.jtem.halfedgetools.plugin.texturespace.TextureSpacePlugin;
 import de.jtem.java2d.SceneComponent;
 import de.jtem.jrworkspace.plugin.Controller;
@@ -30,7 +28,7 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.heds.adapter.HyperIdealRadiusAdapter;
 import de.varylab.discreteconformal.uniformization.VisualizationUtility;
 
-public class HyperIdealVisualizationPlugin extends Plugin implements TextureSpacePlugin, HalfedgeListener, ActionListener {
+public class HyperIdealVisualizationPlugin extends Plugin implements TextureSpacePlugin, ActionListener {
 
 	private HalfedgeInterface
 		hif = null;
@@ -130,28 +128,9 @@ public class HyperIdealVisualizationPlugin extends Plugin implements TextureSpac
 	}
 	
 	@Override
-	public void dataChanged(HalfedgeLayer layer) {
-		updateCircles(layer.get(new CoHDS()));
-	}
-	@Override
-	public void adaptersChanged(HalfedgeLayer layer) {
-	}
-	@Override
-	public void activeLayerChanged(HalfedgeLayer old, HalfedgeLayer active) {
-		updateCircles(active.get(new CoHDS()));
-	}
-	@Override
-	public void layerCreated(HalfedgeLayer layer) {
-	}
-	@Override
-	public void layerRemoved(HalfedgeLayer layer) {
-	}
-	
-	@Override
 	public void install(Controller c) throws Exception {
 		super.install(c);
 		hif = c.getPlugin(HalfedgeInterface.class);
-		hif.addHalfedgeListener(this);
 	}
 
 }
