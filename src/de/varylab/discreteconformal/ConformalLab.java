@@ -56,6 +56,7 @@ import de.varylab.discreteconformal.plugin.algorithm.CutAtEdgePlugin;
 import de.varylab.discreteconformal.plugin.algorithm.CutToDiskPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.FindPathPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.MapToConeCommand;
+import de.varylab.discreteconformal.plugin.algorithm.Moebius3d;
 import de.varylab.discreteconformal.plugin.algorithm.SelectHomotopyGeneratorsPlugin;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
@@ -104,6 +105,7 @@ public class ConformalLab implements Runnable {
 		s.add(new SphericalNormalizationPlugin());
 		s.add(new SelectHomotopyGeneratorsPlugin());
 		s.add(new HyperIdealVisualizationPlugin());
+		s.add(new Moebius3d());
 		return s;
 	}
 	
