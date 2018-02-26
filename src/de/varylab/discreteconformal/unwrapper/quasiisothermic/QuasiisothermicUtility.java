@@ -71,6 +71,7 @@ public class QuasiisothermicUtility {
 			this.angleMap = betaMap;
 		}
 		
+		@SuppressWarnings("unlikely-arg-type")
 		@Override
 		public <
 			VV extends Vertex<VV, EE, FF>,
