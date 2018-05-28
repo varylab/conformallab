@@ -44,7 +44,6 @@ public class ElectrostaticSphereFunctional <
 		if (G != null) { G.setZero(); }
 		int n = this.getDimension(hds);
 		int nsq = n * n;
-		final double EXP = 1.0;
 		double[] vPos = new double[3];
 		double[] wPos = new double[3];
 		double[] dir = new double[3];
@@ -55,21 +54,16 @@ public class ElectrostaticSphereFunctional <
 			// electrostatic term
 			for (V w : hds.getVertices()) {
 				if (v == w) continue;
-				int wi = var.getVarIndex(w);
 				this.getPosition(w, x, wPos);
-				double exp = !var.isVariable(v) || !var.isVariable(w) ? EXP : -EXP;
 				Rn.subtract(dir, wPos, vPos);
 				double dsq = Rn.innerProduct(dir, dir);
 				if (E != null) {
-					E.add(Math.pow(dsq, exp));
+					E.add(0.5 / dsq);
 				}
 				if (G != null) {
-					Rn.times(g, exp * 2 * Math.pow(dsq, exp - 1), dir);
+					Rn.times(g, 2 / (dsq * dsq), dir);
 					if (var.isVariable(v)) {
-						FunctionalUtils.subtractVectorFromGradient(G, vi * 3, g);
-					}
-					if (var.isVariable(w)) {
-						FunctionalUtils.addVectorToGradient(G, wi * 3, g);
+						FunctionalUtils.addVectorToGradient(G, vi * 3, g);
 					}
 				}
 			}
