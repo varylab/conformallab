@@ -9,6 +9,8 @@ import de.jtem.jtao.Tao;
 import de.jtem.jtao.TaoAppAddCombinedObjectiveAndGrad;
 import de.jtem.jtao.TaoApplication;
 import de.varylab.discreteconformal.functional.ElectrostaticSphereFunctional;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Position;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoFace;
 import de.varylab.discreteconformal.heds.CoHDS;
@@ -16,6 +18,8 @@ import de.varylab.discreteconformal.heds.CoVertex;
 import de.varylab.discreteconformal.unwrapper.numerics.SimpleEnergy;
 import de.varylab.discreteconformal.unwrapper.numerics.TaoDomain;
 import de.varylab.discreteconformal.unwrapper.numerics.TaoGradient;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CPosition;
+import de.varylab.discreteconformal.unwrapper.numerics.Adapters.CVariable;
 
 public class SphereUtility {
 
@@ -50,17 +54,30 @@ public class SphereUtility {
 	
 	public static void equalizeSphereVertices(CoHDS hds, Set<CoVertex> fixed, int steps, double tol) {
 		Tao.Initialize();
-		ElectrostaticSphereFunctional<CoVertex, CoEdge, CoFace> fun = new ElectrostaticSphereFunctional<CoVertex, CoEdge, CoFace>();
-		fun.setFixedVertices(fixed);
+		Variable<CoVertex, CoEdge> var = new CVariable();
+		Position<CoVertex> pos = new CPosition();
+		ElectrostaticSphereFunctional<CoVertex, CoEdge, CoFace> fun = new ElectrostaticSphereFunctional<CoVertex, CoEdge, CoFace>(var, pos);
 		SphereOptimizationApplication app = new SphereOptimizationApplication(hds, fun);
+		
+		int index = 0; 
+		for (CoVertex v : hds.getVertices()) {
+			if (fixed.contains(v)) {
+				v.setSolverIndex(-1);
+			} else {
+				v.setSolverIndex(index++);
+			}
+		}
 		
 		int n = fun.getDimension(hds);
 		Vec u = new Vec(n);
 		for (CoVertex v : hds.getVertices()) {
-			Pn.dehomogenize(v.P, v.P);
-			u.setValue(v.getIndex() * 3 + 0, v.P[0], InsertMode.INSERT_VALUES);
-			u.setValue(v.getIndex() * 3 + 1, v.P[1], InsertMode.INSERT_VALUES);
-			u.setValue(v.getIndex() * 3 + 2, v.P[2], InsertMode.INSERT_VALUES);
+			if (!fixed.contains(v)) {
+				index = v.getSolverIndex();
+				Pn.dehomogenize(v.P, v.P);
+				u.setValue(index * 3 + 0, v.P[0], InsertMode.INSERT_VALUES);
+				u.setValue(index * 3 + 1, v.P[1], InsertMode.INSERT_VALUES);
+				u.setValue(index * 3 + 2, v.P[2], InsertMode.INSERT_VALUES);
+			}
 		}
 		app.setInitialSolutionVec(u);
 		
@@ -71,11 +88,13 @@ public class SphereUtility {
 		optimizer.setMaximumIterates(steps);
 		optimizer.solve();
 		for (CoVertex v : hds.getVertices()) {
-			int i = v.getIndex() * 3;
-			v.P[0] = u.getValue(i + 0);
-			v.P[1] = u.getValue(i + 1);
-			v.P[2] = u.getValue(i + 2);
-			v.P[3] = 1.0;
+			if (!fixed.contains(v)) {
+				int i = v.getSolverIndex() * 3;
+				v.P[0] = u.getValue(i + 0);
+				v.P[1] = u.getValue(i + 1);
+				v.P[2] = u.getValue(i + 2);
+				v.P[3] = 1.0;
+			}
 			Pn.setToLength(v.P, v.P, 1.0, Pn.EUCLIDEAN);
 		}
 	}

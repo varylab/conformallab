@@ -44,4 +44,8 @@ public interface FunctionalAdapters {
 		public double getInitialEnergy(F f);
 	}
 	
+	public static interface Position <V extends Vertex<V, ?, ?>> {
+		public double[] getPosition(V v);
+	}
+	
 }

@@ -58,6 +58,7 @@ import de.varylab.discreteconformal.plugin.algorithm.FindPathPlugin;
 import de.varylab.discreteconformal.plugin.algorithm.MapToConeCommand;
 import de.varylab.discreteconformal.plugin.algorithm.Moebius3d;
 import de.varylab.discreteconformal.plugin.algorithm.SelectHomotopyGeneratorsPlugin;
+import de.varylab.discreteconformal.plugin.distortion.DistortionPlugin;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.plugin.schottky.SchottkyPlugin;
 import de.varylab.discreteconformal.plugin.visualizer.DiscreteConformalEquivalencemMeasure;
@@ -106,6 +107,7 @@ public class ConformalLab implements Runnable {
 		s.add(new SelectHomotopyGeneratorsPlugin());
 		s.add(new HyperIdealVisualizationPlugin());
 		s.add(new Moebius3d());
+		s.add(new DistortionPlugin());
 		return s;
 	}
 	

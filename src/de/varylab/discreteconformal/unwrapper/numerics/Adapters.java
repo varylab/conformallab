@@ -1,10 +1,12 @@
 package de.varylab.discreteconformal.unwrapper.numerics;
 
+import de.jreality.math.Pn;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Alpha;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Beta;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.InitialEnergy;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Lambda;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Phi;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Position;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Theta;
 import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
 import de.varylab.discreteconformal.heds.CoEdge;
@@ -90,6 +92,13 @@ public abstract class Adapters {
 		@Override
 		public double getInitialEnergy(CoFace f) {
 			return f.getInitialEnergy();
+		}
+	}
+	
+	public static class CPosition implements Position<CoVertex> {
+		@Override
+		public double[] getPosition(CoVertex v) {
+			return Pn.dehomogenize(null, v.P);
 		}
 	}
 	

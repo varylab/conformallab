@@ -1,8 +1,5 @@
 package de.varylab.discreteconformal.functional;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import de.jreality.math.Rn;
 import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.Face;
@@ -14,6 +11,8 @@ import de.jtem.halfedgetools.functional.Functional;
 import de.jtem.halfedgetools.functional.FunctionalUtils;
 import de.jtem.halfedgetools.functional.Gradient;
 import de.jtem.halfedgetools.functional.Hessian;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Position;
+import de.varylab.discreteconformal.functional.FunctionalAdapters.Variable;
 
 public class ElectrostaticSphereFunctional <
 	V extends Vertex<V, E, F>,
@@ -21,58 +20,61 @@ public class ElectrostaticSphereFunctional <
 	F extends Face<V, E, F>
 > implements Functional<V, E, F> {
 
+	private Variable<V, E>
+		var = null;
+	private Position<V>
+		pos = null;
 	
-	private Set<V>
-		fixedVertices = new HashSet<V>();
-
-	
-	public void setFixedVertices(Set<V> fixedVertices) {
-		this.fixedVertices = fixedVertices;
+	public ElectrostaticSphereFunctional(Variable<V, E> variable, Position<V> position) {
+		this.var = variable;
+		this.pos = position;
 	}
-	
 	
 	@Override
 	public <
 		HDS extends HalfEdgeDataStructure<V, E, F>
 	> void evaluate(
 		HDS hds,
-		DomainValue x, 
-		Energy E, 
-		Gradient G, 
+		DomainValue x,
+		Energy E,
+		Gradient G,
 		Hessian H
 	) {
-		if (E != null) {
-			E.setZero();
-		}
-		if (G != null) {
-			G.setZero();
-		}
-		if (H != null) {
-			evaluateHessian(hds, x, H);
-		}
-		int nsq = hds.numVertices() * hds.numVertices();
+		if (E != null) { E.setZero(); }
+		if (G != null) { G.setZero(); }
+		int n = this.getDimension(hds);
+		int nsq = n * n;
+		final double EXP = 1.0;
 		double[] vPos = new double[3];
 		double[] wPos = new double[3];
 		double[] dir = new double[3];
 		double[] g = new double[3];
 		for (V v : hds.getVertices()) {
-			if (fixedVertices.contains(v)) continue;
-			FunctionalUtils.getPosition(v, x, vPos);
+			int vi = var.getVarIndex(v);
+			this.getPosition(v, x, vPos);
 			// electrostatic term
 			for (V w : hds.getVertices()) {
 				if (v == w) continue;
-				FunctionalUtils.getPosition(w, x, wPos);
+				int wi = var.getVarIndex(w);
+				this.getPosition(w, x, wPos);
+				double exp = !var.isVariable(v) || !var.isVariable(w) ? EXP : -EXP;
 				Rn.subtract(dir, wPos, vPos);
 				double dsq = Rn.innerProduct(dir, dir);
 				if (E != null) {
-					E.add(1 / dsq);
+					E.add(Math.pow(dsq, exp));
 				}
 				if (G != null) {
-					Rn.times(g, 4 / (dsq * dsq), dir);
-					FunctionalUtils.addVectorToGradient(G, v.getIndex() * 3, g);
+					Rn.times(g, exp * 2 * Math.pow(dsq, exp - 1), dir);
+					if (var.isVariable(v)) {
+						FunctionalUtils.subtractVectorFromGradient(G, vi * 3, g);
+					}
+					if (var.isVariable(w)) {
+						FunctionalUtils.addVectorToGradient(G, wi * 3, g);
+					}
 				}
 			}
 			// spherical term
+			if (!var.isVariable(v)) { continue; }
 			double vdotv = Rn.innerProduct(vPos, vPos) - 1;
 			if (E != null) {
 				double ds = vdotv * vdotv;
@@ -81,36 +83,24 @@ public class ElectrostaticSphereFunctional <
 			if (G != null) {
 				double factor = 4 * nsq * vdotv;
 				Rn.times(g, factor, vPos);
-				FunctionalUtils.addVectorToGradient(G, v.getIndex() * 3, g);
+				FunctionalUtils.addVectorToGradient(G, vi * 3, g);
 			}
 		}
 	}
 	
 	
-	public <
-		HDS extends HalfEdgeDataStructure<V, E, F>
-	> void evaluateHessian(
-		HDS hds,
-		DomainValue x, 
-		Hessian H
-	) {
-//		int nsq = hds.numVertices() * hds.numVertices();
-		double[] vPos = new double[3];
-		double[] wPos = new double[3];
-		double[] dir = new double[3];
-		for (V v : hds.getVertices()) {
-			if (fixedVertices.contains(v)) continue;
-			FunctionalUtils.getPosition(v, x, vPos);
-			// electrostatic term
-			for (V w : hds.getVertices()) {
-				if (v == w) continue;
-				FunctionalUtils.getPosition(w, x, wPos);
-				Rn.subtract(dir, wPos, vPos);
-//				double dsq = Rn.innerProduct(dir, dir);
-				
-			}
+	private void getPosition(V v, DomainValue x, double[] pos) {
+		if (var.isVariable(v)) {
+			int vi = this.var.getVarIndex(v);
+			pos[0] = x.get(vi * 3 + 0);
+			pos[1] = x.get(vi * 3 + 1);
+			pos[2] = x.get(vi * 3 + 2);
+		} else {
+			double[] vPos = this.pos.getPosition(v);
+			System.arraycopy(vPos, 0, pos, 0, 3);
 		}
-	}	
+	}
+	
 	
 	@Override
 	public boolean hasGradient() {
@@ -124,9 +114,13 @@ public class ElectrostaticSphereFunctional <
 
 	@Override
 	public <
-		HDS extends HalfEdgeDataStructure<V, E, F>
+		HDS extends HalfEdgeDataStructure<V,E,F>
 	> int getDimension(HDS hds) {
-		return hds.numVertices() * 3;
+		int dim = 0;
+		for (V v : hds.getVertices()) {
+			if (var.isVariable(v)) { dim++;	}
+		}
+		return dim * 3;
 	}
 
 	@Override
