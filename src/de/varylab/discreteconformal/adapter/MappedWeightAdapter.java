@@ -72,4 +72,8 @@ public class MappedWeightAdapter extends AbstractAdapter<Double> {
 		return name;
 	}
 	
+	public Map<Edge<?, ?, ?>, Double> getWeights() {
+		return wMap;
+	}
+	
 }

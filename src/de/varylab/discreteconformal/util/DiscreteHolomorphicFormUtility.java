@@ -114,6 +114,8 @@ public class DiscreteHolomorphicFormUtility {
 			bc.setQuick(g + i, 2 * Math.PI);
 
 			// solve the system
+			System.out.println(M);
+			System.out.println(bc);
 			solve(M, x, bc);
 
 			// Build linear combinations of the harmonic differentials

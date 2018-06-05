@@ -61,6 +61,9 @@ public class DiscreteRiemannUtility {
 		// Get the homology basis of the surface.
 		V rootV = hds.getVertex(0);
 		List<List<E>> basis = getCanonicalHomologyBasis(rootV, adapters, wa);
+		for (List<E> cycle : basis) {
+			System.out.println("Cycle: " + cycle);
+		}
 		DoubleMatrix2D[] omega1 = getHolomorphicFormsOnPrimalMesh(hds, basis, adapters);
 		DoubleMatrix2D[] omega2 = getHolomorphicFormsOnDualMesh(hds, basis, adapters);
 
