@@ -453,7 +453,7 @@ public class DiscreteHarmonicFormUtility {
 		DoubleMatrix2D laplaceop = LaplaceUtility.getPrimalLaplacian(hds,
 				adapters);
 
-		DoubleMatrix1D diag = DoubleFactory1D.dense.make(n);
+		DoubleMatrix1D diag = DoubleFactory1D.dense.make(n); 
 		for (int i = 0; i < n; i++) {
 			diag.setQuick(i, laplaceop.getQuick(i, i));
 		}
@@ -463,8 +463,8 @@ public class DiscreteHarmonicFormUtility {
 		double[] bcond = new double[n];
 		Double weight;
 
-		CotanWeightAdapter ca = new CotanWeightAdapter();
-		adapters.add(ca);
+//		CotanWeightAdapter ca = new CotanWeightAdapter();
+//		adapters.add(ca);
 
 		// the function shall have a jump of 1 crossing the cycle
 		for (E e : edgesEndingAtLeftOfCycle) {
@@ -473,7 +473,7 @@ public class DiscreteHarmonicFormUtility {
 			bcond[e.getTargetVertex().getIndex()] -= weight;
 		}
 
-		adapters.remove(ca);
+//		adapters.remove(ca);
 
 		DoubleMatrix1D b = DoubleFactory1D.dense.make(bcond);
 

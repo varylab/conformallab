@@ -1,5 +1,6 @@
 package de.varylab.discreteconformal.holomorphicformsexperiments;
 
+import static de.jtem.halfedgetools.algorithm.triangulation.Delaunay.constructDelaunay;
 import static de.varylab.discreteconformal.util.DiscreteRiemannUtility.getHolomorphicForms;
 import static de.varylab.discreteconformal.util.LaplaceUtility.calculateCotanWeights;
 
@@ -8,6 +9,7 @@ import java.util.List;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.generic.UndirectedEdgeIndex;
+import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.algorithm.triangulation.MappedLengthAdapter;
 import de.jtem.mfc.field.Complex;
 import de.varylab.discreteconformal.adapter.MappedWeightAdapter;
@@ -24,7 +26,7 @@ import de.varylab.discreteconformal.heds.CoVertex;
  */
 public class FourLeavedClover {
 
-	private static Complex TAU = new Complex(1, 2. / 3.);
+	private static Complex TAU = new Complex(5. / 4., 2. / 3.);
 	private static Complex I = new Complex(0, 1);
 	private static double l0 = 1.0;
 	private static double l1 = I.minus(I.times(TAU)).abs();
@@ -32,7 +34,18 @@ public class FourLeavedClover {
 	private static double l3 = Math.sqrt(2);
 	private static double l4 = Math.sqrt(2) * FourLeavedClover.l1;
 	private static double l5 = Math.sqrt(2) * FourLeavedClover.l2;
+	private static Loop loop = new Loop();
 
+	@Length
+	private static class HighPriorityLengthAdapter extends MappedLengthAdapter {
+		
+		@Override
+		public double getPriority() {
+			return 100;
+		}
+		
+	}
+	
 	private static List<CoEdge> createFace(CoHDS S, MappedLengthAdapter l) {
 		CoFace f0 = S.addNewFace();
 		CoFace f1 = S.addNewFace();
@@ -113,13 +126,13 @@ public class FourLeavedClover {
 	}
 
 	public static void main(String[] args) {
-		CoHDS S = new CoHDS();
-		S.addNewVertices(4);
-		MappedLengthAdapter l = new MappedLengthAdapter();
-		List<CoEdge> f0 = FourLeavedClover.createFace(S, l);
-		List<CoEdge> f1 = FourLeavedClover.createFace(S, l);
-		List<CoEdge> f2 = FourLeavedClover.createFace(S, l);
-		List<CoEdge> f3 = FourLeavedClover.createFace(S, l);
+		CoHDS Sstart = new CoHDS();
+		Sstart.addNewVertices(4);
+		MappedLengthAdapter l = new HighPriorityLengthAdapter();
+		List<CoEdge> f0 = FourLeavedClover.createFace(Sstart, l);
+		List<CoEdge> f1 = FourLeavedClover.createFace(Sstart, l);
+		List<CoEdge> f2 = FourLeavedClover.createFace(Sstart, l);
+		List<CoEdge> f3 = FourLeavedClover.createFace(Sstart, l);
 		f3.get(3).linkOppositeEdge(f0.get(4)); // a
 		f2.get(3).linkOppositeEdge(f3.get(4)); // b
 		f1.get(3).linkOppositeEdge(f2.get(4)); // c
@@ -132,20 +145,32 @@ public class FourLeavedClover {
 		f2.get(5).linkOppositeEdge(f3.get(0));
 		f1.get(5).linkOppositeEdge(f2.get(0));
 		f0.get(5).linkOppositeEdge(f1.get(0));
+		
+		AdapterSet a = new AdapterSet(l, new UndirectedEdgeIndex());
+		CoHDS S2 = new CoHDS();
+		FourLeavedClover.loop.subdivide(Sstart, S2, a);
+		CoHDS S3 = new CoHDS();
+		FourLeavedClover.loop.subdivide(S2, S3, a);
+		CoHDS S4 = new CoHDS();
+		FourLeavedClover.loop.subdivide(S3, S4, a);
+		CoHDS S5 = new CoHDS();
+		FourLeavedClover.loop.subdivide(S4, S5, a);
+		CoHDS S = new CoHDS();
+		FourLeavedClover.loop.subdivide(S5, S, a);
+		
 		int g = HalfEdgeUtils.getGenus(S);
 		boolean valid = HalfEdgeUtils.isValidSurface(S, true);
 		System.out.println(S);
 		System.out.println("Valid: " + valid);
-		System.out.println("Genus " + g);
+		System.out.println("Genus " + g);		
 		
-		AdapterSet a = new AdapterSet(l, new UndirectedEdgeIndex());
-//		MappedLengthAdapter la = constructDelaunay(S, a);
-//		a.add(la);
+		constructDelaunay(S, a);
 		MappedWeightAdapter cotanWeights = calculateCotanWeights(S, a);
 		System.out.println(cotanWeights.getWeights());
 		a.add(cotanWeights);
 		Complex[][] dhs = getHolomorphicForms(S, a, null);
-		System.out.println(dhs);
+		System.out.println(dhs.length);
+		System.out.println(dhs[0].length);
 	}
 
 }

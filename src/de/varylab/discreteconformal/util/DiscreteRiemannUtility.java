@@ -170,9 +170,11 @@ public class DiscreteRiemannUtility {
 						+ omega2[0].getQuick(i, j));
 			}
 		}
-		
-		System.out.println("Apply Siegel Reduction:");
+	
 		final ComplexMatrix PeriodMatrix= new ComplexMatrix(realPeriods.toArray(),imagPeriods.toArray());
+		System.out.println("Period Matrix:");
+		System.out.println(PeriodMatrix);
+		System.out.println("Apply Siegel Reduction:");
 		SiegelReduction siegel= new SiegelReduction(PeriodMatrix);
 		ComplexMatrix normalizedPeriodMatrix= siegel.getReducedPeriodMatrix();
 		
