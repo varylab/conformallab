@@ -6,6 +6,7 @@ import static de.varylab.discreteconformal.util.LaplaceUtility.calculateCotanWei
 
 import java.util.List;
 
+import de.jtem.halfedge.Edge;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.generic.UndirectedEdgeIndex;
@@ -147,16 +148,17 @@ public class FourLeavedClover {
 		f0.get(5).linkOppositeEdge(f1.get(0));
 		
 		AdapterSet a = new AdapterSet(l, new UndirectedEdgeIndex());
+//		MappedLengthAdapter dl = constructDelaunay(Sstart, a);
 		CoHDS S2 = new CoHDS();
 		FourLeavedClover.loop.subdivide(Sstart, S2, a);
-		CoHDS S3 = new CoHDS();
-		FourLeavedClover.loop.subdivide(S2, S3, a);
-		CoHDS S4 = new CoHDS();
-		FourLeavedClover.loop.subdivide(S3, S4, a);
-		CoHDS S5 = new CoHDS();
-		FourLeavedClover.loop.subdivide(S4, S5, a);
+//		CoHDS S3 = new CoHDS();
+//		FourLeavedClover.loop.subdivide(S2, S3, a);
+//		CoHDS S4 = new CoHDS();
+//		FourLeavedClover.loop.subdivide(S3, S4, a);
+//		CoHDS S5 = new CoHDS();
+//		FourLeavedClover.loop.subdivide(S2, S5, a);
 		CoHDS S = new CoHDS();
-		FourLeavedClover.loop.subdivide(S5, S, a);
+		FourLeavedClover.loop.subdivide(S2, S, a);
 		
 		int g = HalfEdgeUtils.getGenus(S);
 		boolean valid = HalfEdgeUtils.isValidSurface(S, true);
@@ -166,6 +168,10 @@ public class FourLeavedClover {
 		
 		constructDelaunay(S, a);
 		MappedWeightAdapter cotanWeights = calculateCotanWeights(S, a);
+		for (Edge<?,?,?> e : cotanWeights.getWeights().keySet()) {
+			double w = cotanWeights.getWeights().get(e);
+			if (w < 0.0) { System.out.println("negative weight found at edge " + e + ": " + w); }
+		}
 		System.out.println(cotanWeights.getWeights());
 		a.add(cotanWeights);
 		Complex[][] dhs = getHolomorphicForms(S, a, null);

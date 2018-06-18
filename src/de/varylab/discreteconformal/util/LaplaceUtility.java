@@ -79,8 +79,8 @@ public class LaplaceUtility {
 		DoubleMatrix2D M= DoubleFactory2D.sparse.make(hds.numVertices(),
 				hds.numVertices());
 		
-		CotanWeightAdapter ca= new CotanWeightAdapter();
-		adapters.add(ca);
+//		CotanWeightAdapter ca= new CotanWeightAdapter();
+//		adapters.add(ca);
 		
 		Double weight;
 		int i, j;
@@ -95,7 +95,7 @@ public class LaplaceUtility {
 			M.set(j, i, weight);
 		}
 		
-		adapters.remove(ca);
+//		adapters.remove(ca);
 		return M;
 
 	}
@@ -123,8 +123,8 @@ public class LaplaceUtility {
 		DoubleMatrix2D M= DoubleFactory2D.sparse.make(hds.numFaces(),
 				hds.numFaces());
 		
-		CotanWeightAdapter ca = new CotanWeightAdapter();
-		adapters.add(ca);
+//		CotanWeightAdapter ca = new CotanWeightAdapter();
+//		adapters.add(ca);
 		
 		double weight;
 		int i, j;
@@ -139,7 +139,7 @@ public class LaplaceUtility {
 			M.set(j, i, weight);
 		}
 		
-		adapters.remove(ca);
+//		adapters.remove(ca);
 		return M;
 
 	}
