@@ -186,7 +186,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 		LoggingUtility.initLogging();
 		AdapterSet a = AdapterSet.createGenericAdapters();
 		a.add(new CoPositionAdapter());
-		Random rnd = new Random(0);
+		Random rnd = new Random(1);
 		Complex[] b = new Complex[] {
 			new Complex(1, 1),
 			new Complex(-1, 1),
@@ -201,9 +201,9 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 		SiegelReduction siegel = new SiegelReduction(P);
 		P = siegel.getReducedPeriodMatrix();
 		
-		int[] numextra = new int[] {0, 0, 0};
-		int[] numextrabranch = new int[] {10, 100, 1000};
-		int numEqualizerIterations = 0;
+		int[] numextra = new int[] {40, 400, 4000, 8000, 16000};
+		int[] numextrabranch = new int[] {0, 0, 0, 0, 0};
+		int numEqualizerIterations = 5;
 		ComplexMatrix[] rP = new ComplexMatrix[numextra.length];
 		CoHDS[] rS = new CoHDS[numextra.length];
 		for (int i = 0; i < numextra.length; i++) {
@@ -217,11 +217,11 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 			rS[i] = S;
 		}
 
-		System.out.printf("REF:  %1$s\n", P);
-		System.out.printf("|REF|:  %1$s\n", P.normSqr());
+		System.out.printf(" REF  :  %1$s\n", P);
+		System.out.printf("|REF| :  %1$s\n", P.normSqr());
 		for (int i = 0; i < numextra.length; i++) {
-			System.out.printf("S[%2$d]: %1$s\n", rS[i], i);
-			System.out.printf("P[%2$d]: %1$s\n", rP[i], i);
+			System.out.printf(" S[%2$d] : %1$s\n", rS[i], i);
+			System.out.printf(" P[%2$d] : %1$s\n", rP[i], i);
 			System.out.printf("|P[%2$d]|: %1$s\n", rP[i].normSqr(), i);
 		}
 	}
