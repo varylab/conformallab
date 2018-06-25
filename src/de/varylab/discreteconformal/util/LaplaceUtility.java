@@ -12,7 +12,6 @@ import de.jtem.halfedge.Vertex;
 import de.jtem.halfedgetools.adapter.AdapterSet;
 import de.jtem.halfedgetools.adapter.type.Length;
 import de.jtem.halfedgetools.adapter.type.Weight;
-import de.varylab.discreteconformal.adapter.CotanWeightAdapter;
 import de.varylab.discreteconformal.adapter.MappedWeightAdapter;
 
 /**

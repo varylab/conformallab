@@ -35,6 +35,15 @@ public class DiscreteRiemannUtility {
 	
 	private static DenseDoubleAlgebra dalgebra = new DenseDoubleAlgebra();
 	
+	public static class Result {
+		public Complex[][] forms;
+		public ComplexMatrix periodMatrix;
+		public Result(Complex[][] forms, ComplexMatrix periodMatrix) {
+			this.forms = forms;
+			this.periodMatrix = periodMatrix;
+		}
+	}
+	
 	/**
 	 * Returns a basis of holomorphic differentials on the surface hds. The rows
 	 * represent holomorphic forms. In the i-th column the value on the positive
@@ -58,38 +67,48 @@ public class DiscreteRiemannUtility {
 		AdapterSet adapters,
 		WeightAdapter<E> wa
 	) {
+		Result r = getHolomorphicFormsAndPeriodMatrix(hds, adapters, wa);
+		return r.forms;
+	}
+		
+		public static <
+		V extends Vertex<V, E, F>,
+		E extends Edge<V, E, F>,
+		F extends Face<V, E, F>
+	> Result getHolomorphicFormsAndPeriodMatrix(
+		HalfEdgeDataStructure<V, E, F> hds, 
+		AdapterSet adapters,
+		WeightAdapter<E> wa
+	) {		
 		// Get the homology basis of the surface.
 		V rootV = hds.getVertex(0);
 		List<List<E>> basis = getCanonicalHomologyBasis(rootV, adapters, wa);
-		for (List<E> cycle : basis) {
-			System.out.println("Cycle: " + cycle);
-		}
 		DoubleMatrix2D[] omega1 = getHolomorphicFormsOnPrimalMesh(hds, basis, adapters);
 		DoubleMatrix2D[] omega2 = getHolomorphicFormsOnDualMesh(hds, basis, adapters);
 
 		// to normalize the differentials we need the a-periods and its dual
 		// cycles
-		List<List<E>> acycles = CanonicalBasisUtility.getACycles(basis);
-		List<List<E>> dualacycles = DualityUtility.getDualPaths(hds,acycles);
+//		List<List<E>> acycles = CanonicalBasisUtility.getACycles(basis);
+//		List<List<E>> dualacycles = DualityUtility.getDualPaths(hds,acycles);
 
 		// write cycles to matrices
-		DoubleMatrix2D A = EdgeUtility.cyclesToMatrix(adapters, hds, acycles);
-		DoubleMatrix2D dualA = EdgeUtility.cyclesToMatrix(adapters, hds, dualacycles);
+//		DoubleMatrix2D A = EdgeUtility.cyclesToMatrix(adapters, hds, acycles);
+//		DoubleMatrix2D dualA = EdgeUtility.cyclesToMatrix(adapters, hds, dualacycles);
 
-		System.out.println("A - PERIODS:");
-		System.out.println("real part of primal construction:");
-		SimpleMatrixPrintUtility.print(dalgebra.mult(omega1[0], A), 4);
-		System.out.println();
-		System.out.println("imaginary part of primal construction:");
-		SimpleMatrixPrintUtility.print(dalgebra.mult(omega1[1], dualA), 4);
-		System.out.println();
-		System.out.println("A - PERIODS:");
-		System.out.println("real part of dual construction:");
-		SimpleMatrixPrintUtility.print(dalgebra.mult(omega2[0], dualA), 4);
-		System.out.println();
-		System.out.println("imaginary part of dual construction:");
-		SimpleMatrixPrintUtility.print(dalgebra.mult(omega2[1], A), 4);
-		System.out.println();
+//		System.out.println("A - PERIODS:");
+//		System.out.println("real part of primal construction:");
+//		SimpleMatrixPrintUtility.print(dalgebra.mult(omega1[0], A), 4);
+//		System.out.println();
+//		System.out.println("imaginary part of primal construction:");
+//		SimpleMatrixPrintUtility.print(dalgebra.mult(omega1[1], dualA), 4);
+//		System.out.println();
+//		System.out.println("A - PERIODS:");
+//		System.out.println("real part of dual construction:");
+//		SimpleMatrixPrintUtility.print(dalgebra.mult(omega2[0], dualA), 4);
+//		System.out.println();
+//		System.out.println("imaginary part of dual construction:");
+//		SimpleMatrixPrintUtility.print(dalgebra.mult(omega2[1], A), 4);
+//		System.out.println();
 
 		// to normalize the differentials we need the a-periods and its dual
 		// cycles
@@ -107,20 +126,20 @@ public class DiscreteRiemannUtility {
 		DoubleMatrix2D dualReal = dalgebra.mult(omega2[0], dualB);
 		DoubleMatrix2D dualImag = dalgebra.mult(omega2[1], B);
 
-		System.out.println("PERIOD MATRIX:");
-		System.out.println("real part of primal construction:");
-		SimpleMatrixPrintUtility.print(primalReal, 4);
-		System.out.println();
-		System.out.println("imaginary part of primal construction:");
-		SimpleMatrixPrintUtility.print(primalImag, 4);
-		System.out.println();
-		System.out.println("PERIOD MATRIX:");
-		System.out.println("real part of dual construction:");
-		SimpleMatrixPrintUtility.print(dualReal, 4);
-		System.out.println();
-		System.out.println("imaginary part of dual construction:");
-		SimpleMatrixPrintUtility.print(dualImag, 4);
-		System.out.println();
+//		System.out.println("PERIOD MATRIX:");
+//		System.out.println("real part of primal construction:");
+//		SimpleMatrixPrintUtility.print(primalReal, 4);
+//		System.out.println();
+//		System.out.println("imaginary part of primal construction:");
+//		SimpleMatrixPrintUtility.print(primalImag, 4);
+//		System.out.println();
+//		System.out.println("PERIOD MATRIX:");
+//		System.out.println("real part of dual construction:");
+//		SimpleMatrixPrintUtility.print(dualReal, 4);
+//		System.out.println();
+//		System.out.println("imaginary part of dual construction:");
+//		SimpleMatrixPrintUtility.print(dualImag, 4);
+//		System.out.println();
 
 		DoubleMatrix2D realPeriods = DoubleFactory2D.dense.make(primalReal
 				.rows(), primalReal.columns());
@@ -146,19 +165,19 @@ public class DiscreteRiemannUtility {
 			}
 		}
 			
-		System.out.println("PERIOD MATRIX (mean):");
-		System.out.println("real part:");
-		SimpleMatrixPrintUtility.print(realPeriods, 4);
-		System.out.println();
-		System.out.println("symmetry:");
-		SimpleMatrixPrintUtility.print(realsymm);
-		System.out.println();
-		System.out.println("imaginary part:");
-		SimpleMatrixPrintUtility.print(imagPeriods, 4);
-		System.out.println();
-		System.out.println("symmetry:");
-		SimpleMatrixPrintUtility.print(imagsymm);
-		System.out.println();
+//		System.out.println("PERIOD MATRIX (mean):");
+//		System.out.println("real part:");
+//		SimpleMatrixPrintUtility.print(realPeriods, 4);
+//		System.out.println();
+//		System.out.println("symmetry:");
+//		SimpleMatrixPrintUtility.print(realsymm);
+//		System.out.println();
+//		System.out.println("imaginary part:");
+//		SimpleMatrixPrintUtility.print(imagPeriods, 4);
+//		System.out.println();
+//		System.out.println("symmetry:");
+//		SimpleMatrixPrintUtility.print(imagsymm);
+//		System.out.println();
 
 		int m = omega1[0].rows();
 		int n = omega1[0].columns();
@@ -183,9 +202,7 @@ public class DiscreteRiemannUtility {
 		ComplexMatrix normalizedPeriodMatrix2 = normalizedPeriodMatrix.times(new Complex(0, 1.0/(2*PI)));
 		normalizedPeriodMatrix2.print("Normalizes Period Matrix 1:");
 		
-		
-		// use the private method
-		return array;
+		return new Result(array, normalizedPeriodMatrix);
 	}
 
 }
