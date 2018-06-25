@@ -34,6 +34,9 @@ public class LaplaceUtility {
 			double leftcotanalpha = getLeftWeight(e, a);
 			double rightcotanalpha = getLeftWeight(e.getOppositeEdge(), a);
 			double w = 0.5 * (leftcotanalpha + rightcotanalpha);
+			if (Math.abs(w) < 1E-8) {
+				w = Math.signum(w) * 1E-8;
+			}
 			map.put(e, w);
 		}
 		MappedWeightAdapter result = new MappedWeightAdapter(map);

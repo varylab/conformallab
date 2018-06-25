@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.holomorphicformsexperiments;
 import static de.jtem.halfedgetools.algorithm.triangulation.Delaunay.constructDelaunay;
 import static de.varylab.discreteconformal.util.DiscreteRiemannUtility.getHolomorphicForms;
 import static de.varylab.discreteconformal.util.LaplaceUtility.calculateCotanWeights;
+import static java.lang.Math.sqrt;
 
 import java.util.List;
 
@@ -27,12 +28,12 @@ import de.varylab.discreteconformal.heds.CoVertex;
  */
 public class FourLeavedClover {
 
-	private static Complex TAU = new Complex(5. / 4., 2. / 3.);
+	private static Complex TAU = new Complex(5.0 / 4.0, 2.0 / 3.0);
 	private static Complex I = new Complex(0, 1);
 	private static double l0 = 1.0;
 	private static double l1 = I.minus(I.times(TAU)).abs();
 	private static double l2 = TAU.abs();
-	private static double l3 = Math.sqrt(2);
+	private static double l3 = sqrt(2);
 	private static double l4 = Math.sqrt(2) * FourLeavedClover.l1;
 	private static double l5 = Math.sqrt(2) * FourLeavedClover.l2;
 	private static Loop loop = new Loop();
@@ -149,16 +150,16 @@ public class FourLeavedClover {
 		
 		AdapterSet a = new AdapterSet(l, new UndirectedEdgeIndex());
 //		MappedLengthAdapter dl = constructDelaunay(Sstart, a);
-		CoHDS S2 = new CoHDS();
-		FourLeavedClover.loop.subdivide(Sstart, S2, a);
+//		CoHDS S2 = new CoHDS();
+//		FourLeavedClover.loop.subdivide(Sstart, S2, a);
 //		CoHDS S3 = new CoHDS();
 //		FourLeavedClover.loop.subdivide(S2, S3, a);
 //		CoHDS S4 = new CoHDS();
 //		FourLeavedClover.loop.subdivide(S3, S4, a);
 //		CoHDS S5 = new CoHDS();
-//		FourLeavedClover.loop.subdivide(S2, S5, a);
+//		FourLeavedClover.loop.subdivide(S4, S5, a);
 		CoHDS S = new CoHDS();
-		FourLeavedClover.loop.subdivide(S2, S, a);
+		FourLeavedClover.loop.subdivide(Sstart, S, a);
 		
 		int g = HalfEdgeUtils.getGenus(S);
 		boolean valid = HalfEdgeUtils.isValidSurface(S, true);
@@ -170,9 +171,12 @@ public class FourLeavedClover {
 		MappedWeightAdapter cotanWeights = calculateCotanWeights(S, a);
 		for (Edge<?,?,?> e : cotanWeights.getWeights().keySet()) {
 			double w = cotanWeights.getWeights().get(e);
-			if (w < 0.0) { System.out.println("negative weight found at edge " + e + ": " + w); }
+			if (w < 0.0) {
+				System.out.println("negative weight found at edge " + e + ": " + w);
+			} else {
+				System.out.println(e + ": " + w);
+			}
 		}
-		System.out.println(cotanWeights.getWeights());
 		a.add(cotanWeights);
 		Complex[][] dhs = getHolomorphicForms(S, a, null);
 		System.out.println(dhs.length);

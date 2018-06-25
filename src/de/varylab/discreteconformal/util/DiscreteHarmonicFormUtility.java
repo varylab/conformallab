@@ -556,6 +556,7 @@ public class DiscreteHarmonicFormUtility {
 		// the function shall have a jump of 1 crossing the cycle
 		for (E e : edgesEndingAtLeftOfCycle) {
 			weight = 1. / adapters.get(Weight.class, e, Double.class);
+			System.out.println(weight);
 			bcond[e.getRightFace().getIndex()] += weight;
 			bcond[e.getLeftFace().getIndex()] -= weight;
 		}
