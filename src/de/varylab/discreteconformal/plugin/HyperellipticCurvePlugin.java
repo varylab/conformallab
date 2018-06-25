@@ -3,6 +3,7 @@ package de.varylab.discreteconformal.plugin;
 import static de.jreality.ui.LayoutFactory.createLeftConstraint;
 import static de.jreality.ui.LayoutFactory.createRightConstraint;
 import static de.varylab.discreteconformal.math.ComplexUtility.inverseStereographic;
+import static de.varylab.discreteconformal.math.ComplexUtility.stereographic;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -18,13 +19,14 @@ import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
+import de.jreality.math.Matrix;
+import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Pn;
 import de.jreality.plugin.basic.View;
 import de.jtem.blas.ComplexMatrix;
@@ -74,14 +76,14 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 		geometryPanel = new JPanel();
 	private SpinnerNumberModel
 		randomSeedModel = new SpinnerNumberModel(0, 0, 10000000, 1),
-		extraPointsModel = new SpinnerNumberModel(100, 0, 10000, 1),
-		equalizationIterationsModel = new SpinnerNumberModel(100, 0, 1000, 1);
+		extraPointsModel = new SpinnerNumberModel(0, 0, 10000, 1),
+		extraPointsAtBranchModel = new SpinnerNumberModel(100, 0, 10000, 1),
+		equalizationIterationsModel = new SpinnerNumberModel(0, 0, 1000, 1);
 	private JSpinner
 		randomSeedSpinner = new JSpinner(randomSeedModel),
 		equalizationIterationsSpinner = new JSpinner(equalizationIterationsModel),
-		extraPointsSpinner = new JSpinner(extraPointsModel);
-	private JCheckBox
-		normalizerBranchPointPositionsChecker = new JCheckBox("Normalize Branch Points", true);
+		extraPointsSpinner = new JSpinner(extraPointsModel),
+		extraPointsAtBranchSpinner = new JSpinner(extraPointsAtBranchModel);
 	private JButton
 		createButton = new JButton("Create Triangulated Surface");
 	
@@ -115,9 +117,10 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 		geometryPanel.add(randomSeedSpinner, c2);
 		geometryPanel.add(new JLabel("Extra Random Points"), c1);
 		geometryPanel.add(extraPointsSpinner, c2);
+		geometryPanel.add(new JLabel("Extra Random Points At Branches"), c1);
+		geometryPanel.add(extraPointsAtBranchSpinner, c2);		
 		geometryPanel.add(new JLabel("Point Equalizer Iterations"), c1);
 		geometryPanel.add(equalizationIterationsSpinner, c2);
-		geometryPanel.add(normalizerBranchPointPositionsChecker, c2);
 		geometryPanel.add(createButton, c2);
 		shrinkPanel.add(geometryPanel, c2);
 		
@@ -151,52 +154,17 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		rnd.setSeed(randomSeedModel.getNumber().intValue());
-		AdapterSet a = hif.getAdapters();
-		// create a triangulated surface for the active curve
 		if (createButton == e.getSource()) {
-			CoHDS hds = new CoHDS();
-			Set<CoVertex> branchVertices = new HashSet<CoVertex>();
-			for (Complex z : getBranchPoints()) {
-				double[] p = inverseStereographic(z);
-				CoVertex v = hds.addNewVertex();
-				a.set(Position.class, v, p);
-				branchVertices.add(v);
-			}
-			// add north pole if needed
-			if (branchVertices.size() % 2 == 1) {
-				CoVertex v = hds.addNewVertex();
-				a.set(Position.class, v, new double[] {0, 0, 1});
-				branchVertices.add(v);
-			}
-			try {
-				if (normalizerBranchPointPositionsChecker.isSelected()) {
-					SphericalNormalizerPETSc.normalize(hds, a, Position4d.class, Position.class);
-				}
-			} catch (Exception e1) {
-				log.warning("could not normalize branch points " + e1.getLocalizedMessage());
-			}
-			int numextra = extraPointsModel.getNumber().intValue();
-			List<CoVertex> extraVertices = new LinkedList<CoVertex>();
-			// additional points
-			for (int j = 0; j < numextra; j++) {
-				CoVertex v = hds.addNewVertex();
-				double[] p = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian(), 1.0};
-				Pn.setToLength(p, p, 1, Pn.EUCLIDEAN);
-				a.set(Position.class, v, p);
-				extraVertices.add(v);
-			}
-			// equalization
-			int numIterations = equalizationIterationsModel.getNumber().intValue();
-			if (numIterations > 0) {
-				SphereUtility.equalizeSphereVertices(hds, branchVertices, numIterations, 1E-6);
-			}
-			Set<CoEdge> glueSet = new HashSet<CoEdge>();
-			int[] branchIndices = new int[branchVertices.size()];
-			int i = 0;
-			for (CoVertex bv : branchVertices) {
-				branchIndices[i++] = bv.getIndex();
-			}
-			branchVertices = HyperellipticUtility.generateHyperellipticImage(hds, true, 0, true, glueSet, branchIndices);
+			Set<CoVertex> branchVertices = new HashSet<>();
+			CoHDS hds = HyperellipticCurvePlugin.generateCurve(
+				getBranchPoints(),
+				extraPointsModel.getNumber().intValue(),
+				extraPointsAtBranchModel.getNumber().intValue(),
+				equalizationIterationsModel.getNumber().intValue(),
+				rnd,
+				hif.getAdapters(),
+				branchVertices
+			);
 			
 			int genus = HalfEdgeUtils.getGenus(hds);
 			HyperEllipticAlgebraicCurve heac = DataUtility.toHyperEllipticAlgebraicCurve("Hyperelliptic Curve g" + genus, getCurve());
@@ -205,6 +173,77 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 			Selection branchSelection = new Selection(branchVertices);
 			hif.setSelection(branchSelection);
 		}
+	}
+	
+	public static CoHDS generateCurve(
+		Complex[] branchPoints,
+		int numextra,
+		int numextrabranch,
+		int numEqualizerIterations,
+		Random rnd,
+		AdapterSet a,
+		Set<CoVertex> branchVerticesOUT
+	) {
+		CoHDS hds = new CoHDS();
+		Set<CoVertex> branchVertices = new HashSet<>();
+		for (Complex z : branchPoints) {
+			double[] p = inverseStereographic(z);
+			CoVertex v = hds.addNewVertex();
+			a.set(Position.class, v, p);
+			branchVertices.add(v);
+		}
+		// add north pole if needed
+		if (branchVertices.size() % 2 == 1) {
+			CoVertex v = hds.addNewVertex();
+			a.set(Position.class, v, new double[] {0, 0, 1});
+			branchVertices.add(v);
+		}
+		try {
+			SphericalNormalizerPETSc.normalize(hds, a, Position4d.class, Position.class);
+		} catch (Exception e1) {
+			log.warning("could not normalize branch points " + e1.getLocalizedMessage());
+		}
+		
+		List<CoVertex> extraVertices = new LinkedList<CoVertex>();
+		// additional points
+		for (int j = 0; j < numextra; j++) {
+			CoVertex v = hds.addNewVertex();
+			double[] p = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian(), 1.0};
+			Pn.setToLength(p, p, 1, Pn.EUCLIDEAN);
+			a.set(Position.class, v, p);
+			extraVertices.add(v);
+		}
+		
+		for (CoVertex bv : branchVertices) {
+			double[] branchPos = a.getD(Position4d.class, bv); 
+			Matrix T = MatrixBuilder.euclidean().rotateFromTo(new double[] {0, 0, 1}, branchPos).getMatrix();
+			for (int i = 0; i < numextrabranch; i++) {
+				double[] p = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), -Math.abs(rnd.nextGaussian()), 1.0};
+				Pn.setToLength(p, p, 1, Pn.EUCLIDEAN);
+				Complex pos = stereographic(p);
+				pos = pos.times(pos);
+				double[] extraPos = inverseStereographic(pos);
+				T.transformVector(extraPos);
+				CoVertex extraV = hds.addNewVertex();
+				a.set(Position.class, extraV, extraPos);
+			}
+		}
+		
+		// equalization
+		if (numEqualizerIterations > 0) {
+			SphereUtility.equalizeSphereVertices(hds, branchVertices, numEqualizerIterations, 1E-6);
+		}
+		Set<CoEdge> glueSet = new HashSet<CoEdge>();
+		int[] branchIndices = new int[branchVertices.size()];
+		int i = 0;
+		for (CoVertex bv : branchVertices) {
+			branchIndices[i++] = bv.getIndex();
+		}
+		branchVertices = HyperellipticUtility.generateHyperellipticImage(hds, true, 0, true, glueSet, branchIndices);
+		if (branchVerticesOUT != null) {
+			branchVerticesOUT.addAll(branchVertices);
+		}
+		return hds;
 	}
 	
 	@Override
