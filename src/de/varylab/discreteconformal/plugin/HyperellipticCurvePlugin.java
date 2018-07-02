@@ -4,7 +4,6 @@ import static de.jreality.ui.LayoutFactory.createLeftConstraint;
 import static de.jreality.ui.LayoutFactory.createRightConstraint;
 import static de.varylab.discreteconformal.math.ComplexUtility.inverseStereographic;
 import static de.varylab.discreteconformal.math.ComplexUtility.stereographic;
-import static de.varylab.discreteconformal.util.LaplaceUtility.calculateCotanWeights;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -33,7 +32,6 @@ import de.jreality.plugin.basic.View;
 import de.jtem.blas.ComplexMatrix;
 import de.jtem.halfedge.util.HalfEdgeUtils;
 import de.jtem.halfedgetools.adapter.AdapterSet;
-import de.jtem.halfedgetools.adapter.generic.UndirectedEdgeIndex;
 import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
 import de.jtem.halfedgetools.plugin.HalfedgeInterface;
@@ -47,12 +45,9 @@ import de.jtem.riemann.surface.BranchPoint;
 import de.jtem.riemann.theta.SiegelReduction;
 import de.varylab.conformallab.data.DataUtility;
 import de.varylab.conformallab.data.types.HyperEllipticAlgebraicCurve;
-import de.varylab.discreteconformal.adapter.MappedWeightAdapter;
 import de.varylab.discreteconformal.heds.CoEdge;
 import de.varylab.discreteconformal.heds.CoHDS;
 import de.varylab.discreteconformal.heds.CoVertex;
-import de.varylab.discreteconformal.heds.adapter.CoPositionAdapter;
-import de.varylab.discreteconformal.logging.LoggingUtility;
 import de.varylab.discreteconformal.plugin.hyperelliptic.Curve;
 import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeEvent;
 import de.varylab.discreteconformal.plugin.hyperelliptic.CurveChangeEvent.EventType;
@@ -61,8 +56,6 @@ import de.varylab.discreteconformal.plugin.hyperelliptic.CurveEditor;
 import de.varylab.discreteconformal.plugin.image.ImageHook;
 import de.varylab.discreteconformal.unwrapper.SphereUtility;
 import de.varylab.discreteconformal.unwrapper.SphericalNormalizerPETSc;
-import de.varylab.discreteconformal.util.DiscreteRiemannUtility;
-import de.varylab.discreteconformal.util.DiscreteRiemannUtility.Result;
 import de.varylab.discreteconformal.util.HyperellipticUtility;
 import de.varylab.discreteconformal.util.SimpleMatrixPrintUtility;
 
@@ -179,50 +172,6 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 			hif.set(hds);
 			Selection branchSelection = new Selection(branchVertices);
 			hif.setSelection(branchSelection);
-		}
-	}
-	
-	public static void main(String[] args) {
-		LoggingUtility.initLogging();
-		AdapterSet a = AdapterSet.createGenericAdapters();
-		a.add(new CoPositionAdapter());
-		Random rnd = new Random(1);
-		Complex[] b = new Complex[] {
-			new Complex(1, 1),
-			new Complex(-1, 1),
-			new Complex(-1, -1),
-			new Complex(1, -1)
-		};
-		BranchPoint[] bb = new BranchPoint[b.length];
-		for (int i = 0; i < b.length; i++) bb[i] = new BranchPoint(b[i]);
-		Curve C = new Curve(bb);
-		C.setEps(1E-15);
-		ComplexMatrix P = C.getPeriodMatrix();
-		SiegelReduction siegel = new SiegelReduction(P);
-		P = siegel.getReducedPeriodMatrix();
-		
-		int[] numextra = new int[] {40, 400, 4000, 8000, 16000};
-		int[] numextrabranch = new int[] {0, 0, 0, 0, 0};
-		int numEqualizerIterations = 5;
-		ComplexMatrix[] rP = new ComplexMatrix[numextra.length];
-		CoHDS[] rS = new CoHDS[numextra.length];
-		for (int i = 0; i < numextra.length; i++) {
-			CoHDS S = HyperellipticCurvePlugin.generateCurve(b, numextra[i], numextrabranch[i], numEqualizerIterations, rnd, a, null);
-			MappedWeightAdapter cotanWeights = calculateCotanWeights(S, a);
-			AdapterSet aa = new AdapterSet(a);
-			aa.add(new UndirectedEdgeIndex());
-			aa.add(cotanWeights);
-			Result r = DiscreteRiemannUtility.getHolomorphicFormsAndPeriodMatrix(S, aa, null);
-			rP[i] = r.periodMatrix;
-			rS[i] = S;
-		}
-
-		System.out.printf(" REF  :  %1$s\n", P);
-		System.out.printf("|REF| :  %1$s\n", P.normSqr());
-		for (int i = 0; i < numextra.length; i++) {
-			System.out.printf(" S[%2$d] : %1$s\n", rS[i], i);
-			System.out.printf(" P[%2$d] : %1$s\n", rP[i], i);
-			System.out.printf("|P[%2$d]|: %1$s\n", rP[i].normSqr(), i);
 		}
 	}
 	
