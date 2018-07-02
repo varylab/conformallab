@@ -44,11 +44,12 @@ public class Convergence01 {
 		
 		int[] numextra = new int[] {0, 0, 0, 0, 0};
 		int[] numextrabranch = new int[] {10, 100, 1000, 2000, 4000};
+		boolean useFibonacciPoints = false;
 		int numEqualizerIterations = 5;
 		ComplexMatrix[] rP = new ComplexMatrix[numextra.length];
 		CoHDS[] rS = new CoHDS[numextra.length];
 		for (int i = 0; i < numextra.length; i++) {
-			CoHDS S = HyperellipticCurvePlugin.generateCurve(b, numextra[i], numextrabranch[i], numEqualizerIterations, rnd, a, null);
+			CoHDS S = HyperellipticCurvePlugin.generateCurve(b, numextra[i], numextrabranch[i], useFibonacciPoints, numEqualizerIterations, rnd, a, null);
 			MappedWeightAdapter cotanWeights = calculateCotanWeights(S, a);
 			AdapterSet aa = new AdapterSet(a);
 			aa.add(new UndirectedEdgeIndex());

@@ -4,6 +4,11 @@ import static de.jreality.ui.LayoutFactory.createLeftConstraint;
 import static de.jreality.ui.LayoutFactory.createRightConstraint;
 import static de.varylab.discreteconformal.math.ComplexUtility.inverseStereographic;
 import static de.varylab.discreteconformal.math.ComplexUtility.stereographic;
+import static java.lang.Math.PI;
+import static java.lang.Math.acos;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+import static java.lang.Math.sqrt;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -19,6 +24,7 @@ import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -84,6 +90,8 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 		equalizationIterationsSpinner = new JSpinner(equalizationIterationsModel),
 		extraPointsSpinner = new JSpinner(extraPointsModel),
 		extraPointsAtBranchSpinner = new JSpinner(extraPointsAtBranchModel);
+	private JCheckBox
+		fibonacciChecker = new JCheckBox("Use Fibonacci Points", true);
 	private JButton
 		createButton = new JButton("Create Triangulated Surface");
 	
@@ -118,7 +126,8 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 		geometryPanel.add(new JLabel("Extra Random Points"), c1);
 		geometryPanel.add(extraPointsSpinner, c2);
 		geometryPanel.add(new JLabel("Extra Random Points At Branches"), c1);
-		geometryPanel.add(extraPointsAtBranchSpinner, c2);		
+		geometryPanel.add(extraPointsAtBranchSpinner, c2);
+		geometryPanel.add(fibonacciChecker, c2);
 		geometryPanel.add(new JLabel("Point Equalizer Iterations"), c1);
 		geometryPanel.add(equalizationIterationsSpinner, c2);
 		geometryPanel.add(createButton, c2);
@@ -160,6 +169,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 				getBranchPoints(),
 				extraPointsModel.getNumber().intValue(),
 				extraPointsAtBranchModel.getNumber().intValue(),
+				fibonacciChecker.isSelected(),
 				equalizationIterationsModel.getNumber().intValue(),
 				rnd,
 				hif.getAdapters(),
@@ -179,6 +189,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 		Complex[] branchPoints,
 		int numextra,
 		int numextrabranch,
+		boolean fibonacci,
 		int numEqualizerIterations,
 		Random rnd,
 		AdapterSet a,
@@ -208,8 +219,15 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 		// additional points
 		for (int j = 0; j < numextra; j++) {
 			CoVertex v = hds.addNewVertex();
-			double[] p = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian(), 1.0};
-			Pn.setToLength(p, p, 1, Pn.EUCLIDEAN);
+			double[] p;
+			if (fibonacci) {
+				double phi = acos(1 - 2 * (j + 0.5) / numextra);
+				double theta = PI * (1 + sqrt(5)) * j;
+				p = new double[] {cos(theta) * sin(phi), sin(theta) * sin(phi), cos(phi), 1.0};
+			} else {
+				p = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian(), 1.0};
+				Pn.setToLength(p, p, 1, Pn.EUCLIDEAN);
+			}
 			a.set(Position.class, v, p);
 			extraVertices.add(v);
 		}
@@ -218,11 +236,20 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 			double[] branchPos = a.getD(Position4d.class, bv); 
 			Matrix T = MatrixBuilder.euclidean().rotateFromTo(new double[] {0, 0, 1}, branchPos).getMatrix();
 			for (int i = 0; i < numextrabranch; i++) {
-				double[] p = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), -Math.abs(rnd.nextGaussian()), 1.0};
-				Pn.setToLength(p, p, 1, Pn.EUCLIDEAN);
-				Complex pos = stereographic(p);
-				pos = pos.times(pos);
-				double[] extraPos = inverseStereographic(pos);
+				double[] extraPos;
+				if (fibonacci) {
+					double phi = acos(1 - 2 * (i + 0.5) / numextrabranch);
+					double theta = PI * (1 + sqrt(5)) * i;
+					double[] p = new double[] {cos(theta) * sin(phi), sin(theta) * sin(phi), cos(phi / 2), 1.0};
+					Complex pos = stereographic(p);
+					extraPos = inverseStereographic(pos);
+				} else {
+					double[] p = new double[] {rnd.nextGaussian(), rnd.nextGaussian(), Math.abs(rnd.nextGaussian()), 1.0};
+					Pn.setToLength(p, p, 1, Pn.EUCLIDEAN);
+					Complex pos = stereographic(p);
+					pos = pos.times(pos);
+					extraPos = inverseStereographic(pos);
+				}
 				T.transformVector(extraPos);
 				CoVertex extraV = hds.addNewVertex();
 				a.set(Position.class, extraV, extraPos);
