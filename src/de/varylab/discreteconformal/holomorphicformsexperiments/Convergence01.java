@@ -25,14 +25,12 @@ public class Convergence01 {
 		LoggingUtility.initLogging();
 		AdapterSet a = AdapterSet.createGenericAdapters();
 		a.add(new CoPositionAdapter());
-		Random rnd = new Random(1);
+		Random rnd = new Random(0);
 		Complex[] b = new Complex[] {
 			new Complex(0.5, 0.4),
 			new Complex(-0.3, 0.2),
 			new Complex(-0.1, -0.0),
-			new Complex(0.1, -0.2),
-			new Complex(0.3, 0.4),
-			new Complex(0.5, 0.6)
+			new Complex(0.1, -0.2)
 		};
 		BranchPoint[] bb = new BranchPoint[b.length];
 		for (int i = 0; i < b.length; i++) bb[i] = new BranchPoint(b[i]);
@@ -42,13 +40,13 @@ public class Convergence01 {
 		SiegelReduction siegel = new SiegelReduction(P);
 		P = siegel.getReducedPeriodMatrix();
 		
-		int[] numextra = new int[] {0, 0, 0, 0, 0};
-		int[] numextrabranch = new int[] {10, 100, 1000, 2000, 4000};
-		boolean useFibonacciPoints = false;
-		int numEqualizerIterations = 5;
+		int[] numextra = new int[] {0, 0, 0, 0, 0, 0}; //{40, 400, 4000, 8000, 16000, 32000};
+		int[] numextrabranch = new int[] {10, 100, 1000, 2000, 4000, 8000}; //{0, 0, 0, 0, 0, 0}; 
+		boolean useFibonacciPoints = true;
+		int numEqualizerIterations = 0;
 		ComplexMatrix[] rP = new ComplexMatrix[numextra.length];
 		CoHDS[] rS = new CoHDS[numextra.length];
-		for (int i = 0; i < numextra.length; i++) {
+		for (int i = 0; i < numextrabranch.length; i++) {
 			CoHDS S = HyperellipticCurvePlugin.generateCurve(b, numextra[i], numextrabranch[i], useFibonacciPoints, numEqualizerIterations, rnd, a, null);
 			MappedWeightAdapter cotanWeights = calculateCotanWeights(S, a);
 			AdapterSet aa = new AdapterSet(a);
