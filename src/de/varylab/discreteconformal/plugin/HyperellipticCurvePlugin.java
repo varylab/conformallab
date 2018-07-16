@@ -166,7 +166,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 		if (createButton == e.getSource()) {
 			Set<CoVertex> branchVertices = new HashSet<>();
 			CoHDS hds = HyperellipticCurvePlugin.generateCurve(
-				getBranchPoints(),
+				getBranchPoints(), true,
 				extraPointsModel.getNumber().intValue(),
 				extraPointsAtBranchModel.getNumber().intValue(),
 				fibonacciChecker.isSelected(),
@@ -187,6 +187,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 	
 	public static CoHDS generateCurve(
 		Complex[] branchPoints,
+		boolean normalizeBranchPoints,
 		int numextra,
 		int numextrabranch,
 		boolean fibonacci,
@@ -209,10 +210,12 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 			a.set(Position.class, v, new double[] {0, 0, 1});
 			branchVertices.add(v);
 		}
-		try {
-			SphericalNormalizerPETSc.normalize(hds, a, Position4d.class, Position.class);
-		} catch (Exception e1) {
-			log.warning("could not normalize branch points " + e1.getLocalizedMessage());
+		if (normalizeBranchPoints) {
+			try {
+				SphericalNormalizerPETSc.normalize(hds, a, Position4d.class, Position.class);
+			} catch (Exception e1) {
+				log.warning("could not normalize branch points " + e1.getLocalizedMessage());
+			}
 		}
 		
 		List<CoVertex> extraVertices = new LinkedList<CoVertex>();
