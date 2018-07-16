@@ -78,7 +78,7 @@ public class FibonacciClusteringG1 {
 		SiegelReduction siegel = new SiegelReduction(P);
 		P = siegel.getReducedPeriodMatrix();
 
-		final int count = 3;
+		final int count = 6;
 		final Random rnd = new Random(4);
 		
 		// Clustering Random
@@ -205,9 +205,7 @@ public class FibonacciClusteringG1 {
 		HR_job.join();
 		HF_job.join();
 		
-		String packagePath = FibonacciClusteringG1.class.getName().replace('.', '/');
-		String filePath = String.format("src/%1$s.r", packagePath);
-		Formatter out = new Formatter(filePath);
+		Formatter out = new Formatter("FibonacciClusteringG1.r");
 		out.format(FibonacciClusteringG1.rTemplate,
 			P.normSqr(),
 			join(CR_rPnorm),
