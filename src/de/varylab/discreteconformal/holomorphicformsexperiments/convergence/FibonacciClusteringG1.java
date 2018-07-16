@@ -32,26 +32,31 @@ public class FibonacciClusteringG1 {
 		"clusteringRandom <- abs(c(%2$s) - ref)\n" +
 		"clusteringRandom_range <- c(%3$s)\n" + 
 		"clusteringFibonacci <- abs(c(%4$s) - ref)\n" +
-		"clusteringFibonacci_range <- abs(c(%5$s) - ref)\n" +
+		"clusteringFibonacci_range <- c(%5$s)\n" +
 		"homogeneousRandom <- abs(c(%6$s) - ref)\n" + 
-		"homogeneousRandom_range <- abs(c(%7$s) - ref)\n" + 
+		"homogeneousRandom_range <- c(%7$s)\n" + 
 		"homogeneousFibonacci <- abs(c(%8$s) - ref)\n" +
-		"homogeneousFibonacci_range <- abs(c(%9$s) - ref)\n" +
+		"homogeneousFibonacci_range <- c(%9$s)\n" +
+		"\n" +
+		"xlim = range(clusteringRandom_range, clusteringFibonacci_range, homogeneousRandom_range, homogeneousFibonacci_range)\n" + 
+		"ylim = range(clusteringRandom, clusteringFibonacci, homogeneousRandom, homogeneousFibonacci)\n" + 
 		"\n" + 
-		"plot(y=clusteringRandom, ylab=\"Error\", x=clusteringRandom_range, xlab=\"Max Edge Length\", log=\"xy\", type=\"o\", pch=22, lty=1, col=1\n" +
-		"lines(y=clusteringFibonacci, x=clusteringFibonacci_range, type=\"o\", pch=22, lty=1, col=2, ylim=g_range)\n" +
-		"lines(y=homogeneousRandom, x=homogeneousRandom_range, type=\"o\", pch=22, lty=1, col=3, ylim=g_range)\n" + 
-		"lines(y=homogeneousFibonacci, x=homogeneousFibonacci_range, type=\"o\", pch=22, lty=1, col=4, ylim=g_range)\n" + 
+		"plot(\n" + 
+		"	y=clusteringRandom, ylab=\"Error\", ylim=ylim,\n" + 
+		"	x=clusteringRandom_range, xlab=\"Max Edge Length\", xlim=xlim,\n" + 
+		"	log=\"xy\", type=\"o\", pch=22, lty=1, col=1\n" + 
+		")\n" + 
+		"lines(y=clusteringFibonacci, x=clusteringFibonacci_range, type=\"o\", pch=22, lty=1, col=2)\n" + 
+		"lines(y=homogeneousRandom, x=homogeneousRandom_range, type=\"o\", pch=22, lty=1, col=3)\n" + 
+		"lines(y=homogeneousFibonacci, x=homogeneousFibonacci_range, type=\"o\", pch=22, lty=1, col=4)\n" + 
 		"\n" + 
 		"legend(\"topright\", c(\"Clustering Random\",\"Clustering Fibonacci\",\"Homogeneous Random\",\"Homogeneous Fibonacci\"), col=c(1,2,3,4), lty=1);\n" + 
-		"title(\"General Torus\")\n" +
-		"\n";
+		"title(\"General Torus\")";
 	
 	public static void main(String[] args) throws Exception {
 		LoggingUtility.initLogging();
 		AdapterSet a = AdapterSet.createGenericAdapters();
 		a.add(new CoPositionAdapter());
-		Random rnd = new Random(4);
 		Complex[] b = new Complex[] {
 			new Complex(0.5, 0.4),
 			new Complex(-0.3, 0.2),
@@ -66,7 +71,8 @@ public class FibonacciClusteringG1 {
 		SiegelReduction siegel = new SiegelReduction(P);
 		P = siegel.getReducedPeriodMatrix();
 
-		int count = 2;
+		int count = 6;
+		Random rnd = new Random(4);
 		
 		// Clustering Random
 		CoHDS[] CR_rS = new CoHDS[count];
