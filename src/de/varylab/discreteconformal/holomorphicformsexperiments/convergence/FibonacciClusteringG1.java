@@ -2,6 +2,7 @@ package de.varylab.discreteconformal.holomorphicformsexperiments.convergence;
 
 import static de.varylab.discreteconformal.util.LaplaceUtility.calculateCotanWeights;
 
+import java.util.Arrays;
 import java.util.Formatter;
 import java.util.HashSet;
 import java.util.Random;
@@ -13,6 +14,7 @@ import de.jtem.halfedgetools.adapter.generic.UndirectedEdgeIndex;
 import de.jtem.halfedgetools.adapter.type.Position;
 import de.jtem.halfedgetools.adapter.type.generic.Position3d;
 import de.jtem.halfedgetools.adapter.type.generic.Position4d;
+import de.jtem.halfedgetools.io.HalfedgeIO;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.surface.BranchPoint;
 import de.jtem.riemann.theta.SiegelReduction;
@@ -57,17 +59,19 @@ public class FibonacciClusteringG1 {
 		"\n" + 
 		"legend(\"topright\", c(\"Clustering Random\",\"Clustering Fibonacci\",\"Homogeneous Random\",\"Homogeneous Fibonacci\"), col=c(1,2,3,4), lty=1);\n" + 
 		"title(\"General Torus\")";
+	public static String filename = "FibonacciClusteringG1";
 	
 	public static void main(String[] args) throws Exception {
 		LoggingUtility.initLogging();
 		final AdapterSet a = AdapterSet.createGenericAdapters();
 		a.add(new CoPositionAdapter());
-		final Complex[] b = normalizeBranchPoints(a, new Complex[] {
+		Complex[] b_raw = new Complex[] {
 			new Complex(0.5, 0.4),
 			new Complex(-0.3, 0.2),
 			new Complex(-0.1, -0.0),
 			new Complex(0.1, -0.2)
-		});
+		};
+		final Complex[] b = normalizeBranchPoints(a, b_raw);
 		
 		
 		BranchPoint[] bb = new BranchPoint[b.length];
@@ -79,7 +83,7 @@ public class FibonacciClusteringG1 {
 		P = siegel.getReducedPeriodMatrix();
 
 		final int count = 6;
-		final Random rnd = new Random(4);
+		final Random rnd = new Random(1);
 		
 		// Clustering Random
 		final CoHDS[] CR_rS = new CoHDS[count];
@@ -182,7 +186,7 @@ public class FibonacciClusteringG1 {
 					false, // use clustering
 					new int[] {40, 400, 4000, 8000, 16000, 32000}, // homogeneous points
 					new int[] {0, 0, 0, 0, 0, 0}, // clustered points
-					false, // use fibonacci for clustering
+					true, // use fibonacci for clustering
 					0, // equalizer iterations to apply
 					HF_rP, // period matrix output
 					HF_rS, // surface output
@@ -205,7 +209,7 @@ public class FibonacciClusteringG1 {
 		HR_job.join();
 		HF_job.join();
 		
-		Formatter out = new Formatter("FibonacciClusteringG1.r");
+		Formatter out = new Formatter(FibonacciClusteringG1.filename + ".r");
 		out.format(FibonacciClusteringG1.rTemplate,
 			P.normSqr(),
 			join(CR_rPnorm),
@@ -219,6 +223,7 @@ public class FibonacciClusteringG1 {
 		);
 		
 		out.format("# ---------------------------\n");
+		out.format("# Branch Data: %1$s\n", Arrays.toString(b_raw));
 		out.format("#  REF  : %1$s\n", P);
 		out.format("# |REF| : %1$s\n", P.normSqr());
 		out.format("# Clustering Random ---------\n");
@@ -228,6 +233,7 @@ public class FibonacciClusteringG1 {
 			out.format("# |P[%2$d]|: %1$s\n", CR_rP[i].normSqr(), i);
 			out.format("# |L[%2$d]|: %1$s\n", CR_maxLengths[i], i);
 			out.format("# |a[%2$d]|: %1$s\n", CR_minAngle[i], i);
+			HalfedgeIO.writeOBJ(CR_rS[i], a, FibonacciClusteringG1.filename + "_CR_" + i + ".obj");
 		}
 		out.format("# Clustering Fibonacci ------\n");
 		for (int i = 0; i < count; i++) {
@@ -236,6 +242,7 @@ public class FibonacciClusteringG1 {
 			out.format("# |P[%2$d]|: %1$s\n", CF_rP[i].normSqr(), i);
 			out.format("# |L[%2$d]|: %1$s\n", CF_maxLengths[i], i);
 			out.format("# |a[%2$d]|: %1$s\n", CF_minAngle[i], i);
+			HalfedgeIO.writeOBJ(CF_rS[i], a, FibonacciClusteringG1.filename + "_CF_" + i + ".obj");
 		}
 		out.format("# Homogeneous Random --------\n");
 		for (int i = 0; i < count; i++) {
@@ -244,6 +251,7 @@ public class FibonacciClusteringG1 {
 			out.format("# |P[%2$d]|: %1$s\n", HR_rP[i].normSqr(), i);
 			out.format("# |L[%2$d]|: %1$s\n", HR_maxLengths[i], i);
 			out.format("# |a[%2$d]|: %1$s\n", HR_minAngle[i], i);
+			HalfedgeIO.writeOBJ(HR_rS[i], a, FibonacciClusteringG1.filename + "_HR_" + i + ".obj");
 		}
 		out.format("# Homogeneous Fibonacci -----\n");
 		for (int i = 0; i < count; i++) {
@@ -252,6 +260,7 @@ public class FibonacciClusteringG1 {
 			out.format("# |P[%2$d]|: %1$s\n", HF_rP[i].normSqr(), i);
 			out.format("# |L[%2$d]|: %1$s\n", HF_maxLengths[i], i);
 			out.format("# |a[%2$d]|: %1$s\n", HF_minAngle[i], i);
+			HalfedgeIO.writeOBJ(HF_rS[i], a, FibonacciClusteringG1.filename + "_HF_" + i + ".obj");
 		}
 		out.close();
 	}
@@ -299,20 +308,24 @@ public class FibonacciClusteringG1 {
 		double[] minAngle
 	) {
 		for (int i = 0; i < count; i++) {
-			Set<CoVertex> branchVertices = new HashSet<>();
-			CoHDS S = HyperellipticCurvePlugin.generateCurve(
-				b, false, numextra[i], numextrabranch[i], useFibonacciPoints, numEqualizerIterations, rnd, a, branchVertices
-			);
-			MappedWeightAdapter cotanWeights = calculateCotanWeights(S, a);
-			AdapterSet aa = new AdapterSet(a);
-			aa.add(new UndirectedEdgeIndex());
-			aa.add(cotanWeights);
-			Result r = DiscreteRiemannUtility.getHolomorphicFormsAndPeriodMatrix(S, aa, null);
-			rP[i] = r.periodMatrix;
-			rS[i] = S;
-			rPnorm[i] = r.periodMatrix.normSqr();
-			maxLengths[i] = Utility.calculateLargestEdgeLength(S, a, branchVertices, clustering);
-			minAngle[i] = Utility.calculateSmallestAngle(S, a);
+			try {
+				Set<CoVertex> branchVertices = new HashSet<>();
+				CoHDS S = HyperellipticCurvePlugin.generateCurve(
+					b, false, numextra[i], numextrabranch[i], useFibonacciPoints, numEqualizerIterations, rnd, a, branchVertices
+				);
+				MappedWeightAdapter cotanWeights = calculateCotanWeights(S, a);
+				AdapterSet aa = new AdapterSet(a);
+				aa.add(new UndirectedEdgeIndex());
+				aa.add(cotanWeights);
+				Result r = DiscreteRiemannUtility.getHolomorphicFormsAndPeriodMatrix(S, aa, null);
+				rP[i] = r.periodMatrix;
+				rS[i] = S;
+				rPnorm[i] = r.periodMatrix.normSqr();
+				maxLengths[i] = Utility.calculateLargestEdgeLength(S, a, branchVertices, clustering);
+				minAngle[i] = Utility.calculateSmallestAngle(S, a);
+			} catch (Exception e) {
+				System.err.println(e);
+			}
 		}
 	}
 	

@@ -24,17 +24,18 @@ public class Utility {
 		boolean branchClustering
 	) {
 		double maxLength = 0.0;
+		double NEIGHBORHOOD_THRESHOLD = 0.05;
 		for (CoEdge e : S.getPositiveEdges()) {
 			double length = a.get(Length.class, e, Double.class);
 			if (length > maxLength) { maxLength = length; }
 		}
 		if (branchClustering) {
 			for (CoVertex b : branch) {
-				double[] branchPos = a.getD(Position4d.class, b);
+				double[] branchPos = a.getD(Position4d.class, b).clone();
 				Matrix T = MatrixBuilder.euclidean().rotateFromTo(branchPos, new double[] {0, 0, 1}).getMatrix();
 				for (CoEdge e : S.getPositiveEdges()) {
-					double[] es = a.getD(Position4d.class, e.getStartVertex());
-					double[] et = a.getD(Position4d.class, e.getTargetVertex());
+					double[] es = a.getD(Position4d.class, e.getStartVertex()).clone();
+					double[] et = a.getD(Position4d.class, e.getTargetVertex()).clone();
 					// rotate branch point up north
 					T.transformVector(es);
 					T.transformVector(et);
@@ -42,7 +43,7 @@ public class Utility {
 					Complex esc = ComplexUtility.stereographic(es);
 					Complex etc = ComplexUtility.stereographic(et);
 					// only consider a neighborhood of the branch point
-					if (esc.abs() > 0.5 || etc.abs() > 0.5) { continue; }
+					if (esc.abs() > NEIGHBORHOOD_THRESHOLD || etc.abs() > NEIGHBORHOOD_THRESHOLD) { continue; }
 					esc = esc.sqr();
 					etc = etc.sqr();
 					// project back

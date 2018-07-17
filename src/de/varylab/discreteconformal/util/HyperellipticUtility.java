@@ -47,7 +47,7 @@ public class HyperellipticUtility {
 		if (branchVertices.length < 3) {
 			throw new RuntimeException("Not enough branch points specified in generateHyperellipticImage()");
 		}
-		if (useConvexHull && numExtraPoints > 0) {
+		if (!useConvexHull && numExtraPoints > 0) {
 			throw new RuntimeException("connot have extra vertices without convex hull generation in generateHyperellipticImage()");
 		}
 		List<CoVertex> branchList = new LinkedList<CoVertex>();
