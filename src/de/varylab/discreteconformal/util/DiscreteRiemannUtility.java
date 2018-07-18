@@ -37,9 +37,11 @@ public class DiscreteRiemannUtility {
 	
 	public static class Result {
 		public Complex[][] forms;
+		public ComplexMatrix periodMatrix_original;
 		public ComplexMatrix periodMatrix;
-		public Result(Complex[][] forms, ComplexMatrix periodMatrix) {
+		public Result(Complex[][] forms, ComplexMatrix periodMatrix_original, ComplexMatrix periodMatrix) {
 			this.forms = forms;
+			this.periodMatrix_original = periodMatrix_original;
 			this.periodMatrix = periodMatrix;
 		}
 	}
@@ -202,7 +204,7 @@ public class DiscreteRiemannUtility {
 		ComplexMatrix normalizedPeriodMatrix2 = normalizedPeriodMatrix.times(new Complex(0, 1.0/(2*PI)));
 		normalizedPeriodMatrix2.print("Normalizes Period Matrix 1:");
 		
-		return new Result(array, normalizedPeriodMatrix);
+		return new Result(array, PeriodMatrix, normalizedPeriodMatrix);
 	}
 
 }
