@@ -24,7 +24,7 @@ public class Utility {
 		boolean branchClustering
 	) {
 		double maxLength = 0.0;
-		double NEIGHBORHOOD_THRESHOLD = 0.05;
+		double NEIGHBORHOOD_THRESHOLD = 0.5;
 		for (CoEdge e : S.getPositiveEdges()) {
 			double length = a.get(Length.class, e, Double.class);
 			if (length > maxLength) { maxLength = length; }

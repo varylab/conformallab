@@ -59,7 +59,7 @@ public class FibonacciClusteringG1 {
 		"\n" + 
 		"legend(\"topright\", c(\"Clustering Random\",\"Clustering Fibonacci\",\"Homogeneous Random\",\"Homogeneous Fibonacci\"), col=c(1,2,3,4), lty=1);\n" + 
 		"title(\"General Torus\")";
-	public static String filename = "FibonacciClusteringG1";
+	public static String filename = "FibonacciClusteringG1-01";
 	
 	public static void main(String[] args) throws Exception {
 		LoggingUtility.initLogging();
@@ -82,8 +82,8 @@ public class FibonacciClusteringG1 {
 		SiegelReduction siegel = new SiegelReduction(P);
 		P = siegel.getReducedPeriodMatrix();
 
-		final int count = 6;
-		final Random rnd = new Random(1);
+		final int count = 4;
+		final Random rnd = new Random(2);
 		
 		// Clustering Random
 		final CoHDS[] CR_rS = new CoHDS[count];

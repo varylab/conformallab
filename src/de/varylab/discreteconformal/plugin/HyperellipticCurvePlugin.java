@@ -243,7 +243,7 @@ public class HyperellipticCurvePlugin extends ShrinkPanelPlugin implements Curve
 				if (fibonacci) {
 					double phi = acos(1 - 2 * (i + 0.5) / numextrabranch);
 					double theta = PI * (1 + sqrt(5)) * i;
-					double[] p = new double[] {cos(theta) * sin(phi), sin(theta) * sin(phi), cos(phi / 2), 1.0};
+					double[] p = new double[] {cos(theta) * sin(phi), sin(theta) * sin(phi), cos(phi / 4), 1.0};
 					Complex pos = stereographic(p);
 					extraPos = inverseStereographic(pos);
 				} else {
