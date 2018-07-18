@@ -80,9 +80,9 @@ public class FibonacciClusteringG2 {
 		for (int i = 0; i < b.length; i++) bb[i] = new BranchPoint(b[i]);
 		Curve C = new Curve(bb);
 		C.setEps(1E-15);
-		ComplexMatrix P = C.getPeriodMatrix();
-		SiegelReduction siegel = new SiegelReduction(P);
-		P = siegel.getReducedPeriodMatrix();
+		ComplexMatrix Po = C.getPeriodMatrix();
+		SiegelReduction siegel = new SiegelReduction(Po);
+		ComplexMatrix P = siegel.getReducedPeriodMatrix();
 
 		final int count = 4;
 		final Random rnd = new Random(2);
@@ -234,7 +234,8 @@ public class FibonacciClusteringG2 {
 		
 		out.format("# ---------------------------\n");
 		out.format("# Branch Data: %1$s\n", Arrays.toString(b_raw));
-		out.format("#  REF  : %1$s\n", commentOut(P));
+		out.format("#  REF Po:%1$s\n", commentOut(Po));
+		out.format("#  REF P: %1$s\n", commentOut(P));
 		out.format("# |REF| : %1$s\n", P.normSqr());
 		out.format("# Clustering Random ---------\n");
 		for (int i = 0; i < count; i++) {
