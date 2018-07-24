@@ -82,7 +82,7 @@ public class FibonacciClusteringG1 {
 		SiegelReduction siegel = new SiegelReduction(P);
 		P = siegel.getReducedPeriodMatrix();
 
-		final int count = 4;
+		final int count = 5;
 		final Random rnd = new Random(2);
 		
 		// Clustering Random
