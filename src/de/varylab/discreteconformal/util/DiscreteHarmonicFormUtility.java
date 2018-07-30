@@ -550,8 +550,8 @@ public class DiscreteHarmonicFormUtility {
 		double[] bcond = new double[n];
 		double weight;
 
-//		CotanWeightAdapter ca = new CotanWeightAdapter();
-//		adapters.add(ca);
+		CotanWeightAdapter ca = new CotanWeightAdapter();
+		adapters.add(ca);
 
 		// the function shall have a jump of 1 crossing the cycle
 		for (E e : edgesEndingAtLeftOfCycle) {
@@ -560,7 +560,7 @@ public class DiscreteHarmonicFormUtility {
 			bcond[e.getLeftFace().getIndex()] -= weight;
 		}
 
-//		adapters.remove(ca);
+		adapters.remove(ca);
 
 		DoubleMatrix1D b = DoubleFactory1D.dense.make(bcond);
 
