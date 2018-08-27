@@ -60,18 +60,19 @@ public class FibonacciClusteringG2 {
 		"legend(\"topright\", c(\"Clustering Random\",\"Clustering Fibonacci\",\"Homogeneous Random\",\"Homogeneous Fibonacci\"), col=c(1,2,3,4), lty=1);\n" + 
 		"title(\"g = 2\")\n\n";
 	
-	public static String filename = "FibonacciClusteringG2-01";
+	public static String filename = "FibonacciClusteringG2-Lawson-01";
 	
 	public static void main(String[] args) throws Exception {
 		LoggingUtility.initLogging();
 		final AdapterSet a = AdapterSet.createGenericAdapters();
 		a.add(new CoPositionAdapter());
 		Complex[] b_raw = new Complex[] {
-			new Complex(0.5, 0.4),
-			new Complex(-0.3, 0.2),
-			new Complex(-0.1, -0.0),
-			new Complex(0.1, -0.2),
-			new Complex(0.0, 0.0)
+			new Complex(-0.5, -0.8660254037844386),
+			new Complex(0.5, -0.8660254037844386),
+			new Complex(1.0, 0.0),
+			new Complex(0.5, 0.8660254037844386),
+			new Complex(-0.5, 0.8660254037844386),
+			new Complex(-1.0, 0.0)
 		};
 		final Complex[] b = normalizeBranchPoints(a, b_raw);
 		
@@ -84,8 +85,8 @@ public class FibonacciClusteringG2 {
 		SiegelReduction siegel = new SiegelReduction(Po);
 		ComplexMatrix P = siegel.getReducedPeriodMatrix();
 
-		final int count = 5;
-		final Random rnd = new Random(2);
+		final int count = 4;
+		final Random rnd = new Random(0);
 		
 		// Clustering Random
 		final CoHDS[] CR_rS = new CoHDS[count];
