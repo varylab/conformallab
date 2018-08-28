@@ -255,10 +255,10 @@ public class LawsonG2Scattering {
 		});
 		
 		// start calculation
-//		CR_job.start();
+		CR_job.start();
 		CF_job.start();
-//		HR_job.start();
-//		HF_job.start();
+		HR_job.start();
+		HF_job.start();
 	}
 
 	private static Complex[] normalizeBranchPoints(final AdapterSet a, Complex[] b_raw) {
