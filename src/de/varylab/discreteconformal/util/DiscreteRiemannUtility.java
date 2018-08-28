@@ -202,7 +202,7 @@ public class DiscreteRiemannUtility {
 		normalizedPeriodMatrix.print("Normalized Period Matrix 2PI:");
 
 		ComplexMatrix normalizedPeriodMatrix2 = normalizedPeriodMatrix.times(new Complex(0, 1.0/(2*PI)));
-		normalizedPeriodMatrix2.print("Normalizes Period Matrix 1:");
+		normalizedPeriodMatrix2.print("Normalized Period Matrix 1:");
 		
 		return new Result(array, PeriodMatrix, normalizedPeriodMatrix);
 	}
